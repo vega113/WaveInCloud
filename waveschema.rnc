@@ -1,0 +1,142 @@
+
+## Represents our three possible IQ children
+start = delta | request | applieddelta
+
+## Wave id's are split into two pieces, the unique id and the domain name
+waveid =
+  attribute wave-id { xsd:string }
+  & attribute wave-domain { xsd:string }
+
+## Wavelet id's are split into two pieces, the unique id and the domain name
+waveletid =
+  attribute wavelet-id { xsd:string }
+  & attribute wavelet-domain { xsd:string }
+
+## These are the attributes common to all our elements
+commonattributes = waveid & waveletid
+
+## Attributes common to deltas (pre/post transformed)
+deltaattributes =
+  attribute version { xsd:integer }
+  & attribute hash { xsd:string }
+  & attribute timestamp { xsd: string }
+
+## Request for historical wave operations
+request =
+  element request {
+    commonattributes,
+    attribute start { xsd:integer },
+    attribute end { xsd:integer }
+  }
+
+## A delta between two wavelet versions. This immutable structure is created
+## by an 'origin' server. This is either the master server, on behalf of its
+## own clients, or a remote server and passed to the master server. Either way,
+## this identifies operations which are intended to be applied at the state
+## represented by (version, hash, timestamp) in commonattributes.
+## Note that the tag can be used by originators, in order to later identify
+## deltas returned as updates through <applieddelta>, and recognise that
+## the operations contained within may have already been applied and that
+## a state requiring operational transform steps has been reached.
+delta =
+  element delta {
+    commonattributes,
+    deltaattributes,
+    attribute tag { xsd:string }
+    waveop+
+  }
+
+## Represents the post-transform state of a delta as calculated by a master
+## server hosting a wavelet. The delta attributes included (version, hash, timestamp)
+## represent the *actual* place the submitted delta (included immutably as <delta>)
+## has been applied. That is, this structure contains both the *actual* place the
+## delta has been applied, as well as the original intended target.
+## This element is sent as part of normal wavelet updates (IE users are applying
+## operations to this wavelet, here is a delta),
+## and as part of the response to a <request> (IE here are the deltas you requested)
+applieddelta =
+  element applieddelta {
+    deltaattributes,
+    attribute opsapplied { xsd:integer },
+    attribute serversignature { xsd:string },
+    delta
+  }
+
+## Used to represent an XML attribute inside an XML element that is embedded in a wave
+singleattribute =
+  element attribute {
+    attribute name { xsd:string },
+    attribute value { xsd:string }
+  }
+
+## Used to specify which XML attribute is being updated. Empty value 
+## implies deletion.
+updateattribute =
+  element attribute {
+    attribute name { xsd:string },
+    attribute value { xsd:string }?
+  }
+
+## Serialization of a wave operation
+waveop =
+  element waveop {
+    attribute order-tag { xsd:string },
+    attribute verification-hint { xsd:string },
+    element submitdocument {
+
+         ## Document id being submitted
+         attribute document-id { xsd:string }
+       }
+     | element addparticipant {
+         
+         ## User id being added to the wave
+         attribute user-id { xsd:string }
+       }
+     | element removeparticipant {
+         
+         ## User id being removed from the wave
+         attribute user-id { xsd:string }
+       }
+     | element documentcontentmutation {
+
+         # List of many different mutation types
+         (element skip {
+           
+           ## Number of characters to move the insertion point forward
+           attribute size { xsd:integer }
+         }
+         | element characters {
+             
+             ## Actual characters
+             attribute characters { xsd:string }
+           }
+         | element deletecharacters {
+             
+             ## Number of characters to delete forward
+             attribute size { xsd:integer }
+           }
+         | element elementstart {
+             
+             ## Name of XML element
+             attribute name { xsd:string }
+           }
+         | element elementend { empty }
+         | element antielementstart { empty }
+         | element antielementend { singleattribute* }
+         | element deleteelementstart { empty }
+         | element deleteleementend { empty }
+         | element deleteantielementstart { empty }
+         | element deleteantielementend { empty }
+         | element setattributes { singleattribute* }
+         | element updateattributes { updateattribute* }
+         | element startannotation { singleattribute }
+         | element endannotation {
+             
+             ## Name of annotation this end pairs with
+             attribute name { xsd:string }
+           })+,
+
+         # Document id being mutated
+         attribute document-id { xsd:string }
+       }
+  }

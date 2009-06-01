@@ -1,0 +1,593 @@
+<?xml version="1.0"?>
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
+<!ENTITY rfc3920 PUBLIC '' 'http://xml.resource.org/public/rfc/bibxml/reference.RFC.3920.xml'>
+<!ENTITY OWTP "Google Wave Federation Protocol">
+]>
+<?rfc toc="yes"?>
+<?rfc symrefs="yes"?>
+<?rfc sortrefs="yes"?>
+<?rfc compact="yes"?>
+<!--- This processing instruction ensures the formatters don't output text implying this is a real RFC, since we are just using this as a nice formatting for now -->
+<?rfc private=" "?>
+<rfc>
+  <front>
+    <title>Google Wave Federation Protocol</title>
+    <author initials="D." surname="Berlin" fullname="Daniel Berlin" role="editor">
+      <organization>Google, Inc. </organization>
+      <address>
+          <email>dannyb@google.com</email>
+      </address>
+    </author>
+    <date year="2009" month="April"/>
+    <abstract>
+      <t>
+      </t>
+    </abstract>
+  </front>
+  <middle>
+    <section title="Introduction" anchor="intro">
+      <section title="Overview" anchor="intro-overview">
+	<t>The &OWTP; is an open extension to <xref target="RFC3920">XMPP core</xref> protocol to allow near real-time communication between two wave servers.  This document in particular defines the wire protocol used to communicate between these servers.  In addition to this document, one should read the <eref target="https://sites.google.com/a/waveprotocol.org/wave-protocol/whitepapers/google-wave-architecture">architecture overview</eref> and <eref target="https://sites.google.com/a/waveprotocol.org/wave-protocol/whitepapers/operational-transform">operational transform</eref> documents.</t>  
+
+      </section>
+      <section title="Terminology" anchor="intro-terms">
+        <t>The capitalized key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in <xref target="TERMS">BCP 14, RFC 2119</xref>.</t>
+      </section>      
+    </section>
+    <section title="Generalized Architecture" anchor="arch">      
+      <t>Waves are a new medium for communication that could be described as a new form of multi-user document. Conceptually, waves do not exist themselves, instead being made up of a set of one or more wavelets which in turn contain one or more documents. A wave is visualised to participants primarily through display of its root conversation wavelet, which is discovered through convention (wavelet of ID '&lt;waveid&gt;~conversation/root'). Users become notified of wavelets by being added as participants, ala being invited to edit and participate in a multi-user document. It is also worth noting that wavelets have create-on-use semantics, and as such, users must create a new wave by adding themselves to its (currently non-existant) root wavelet.</t>
+
+      <!--<t>More information on wave[let] and document identifiers, may be found in Alex North's identifier document. </t> -->
+
+      <section title="Wavelets" anchor="wavelets">
+<t>While the root conversation wavelet of any wave should be located on the WSP indicated through parsing of the wave ID (ala '&lt;domain&gt;:w/&lt;id&gt;', e.g. 'gwave.com:w/fXd23kLp'), further wavelets inside a wave may be hosted on any WSP. The most obvious reasoning for this choice is that a user should primarily contain data - that may only be most relevant to them - within their own WSP. This is most notably the case in terms of private replies, which allow a subset of wave participants to interact privately within the already visualised wave. Private wavelets may also be used for internal participant storage; for example, to store information about what parts of a wave this user has already read.</t>
+      </section>
+      <section title="Documents" anchor="documents">
+<t>Each wavelet is a container for any number of uniquely named XML documents. This set of documents are authoritatively located on the WSP that provides the given wavelet, and can not span between providers or be rehomed into alternative wavelets.
+To support this idiom, any single document operation may only target a single wavelet. The actions within this operation may optionally effect a single part of the contained set, but can not effect documents outside the target wavelet.</t>
+<t>For background, however, a wavelet will contain a root document along with potentially any number of other documents arranged in a heirarchical-like conversation structure.</t>
+      </section>
+      <section title="Operations" anchor="operations">
+      <t>While documents and wavelets exist conceptually, they are made concrete only through wave operations.  Wave operations are discrete delta operations that, when composed, produce a set of wavelets and documents. </t>
+      <t>Operations are also the basic unit used in concurrency control for waves.  <eref target="https://sites.google.com/a/waveprotocol.org/wave-protocol/whitepapers/operational-transform">Concurrency control</eref> in waves is done by transformation of incoming operations.</t>
+      </section>
+      <section title="Client vs server in the wave federation architecture">
+        <t> In the wave federation architecture, the distinction between a client and a server is only used to distinguish which side initiates the connection.  Servers will end up being clients to other servers in order to transmit wavelet operations, and servers for other clients, in order to receive wavelet operations. </t>
+        <t>An example set of events and resulting connections for a wave to illustrate these dualities:</t>
+        <figure anchor="duality-figure">
+          <preamble>Example when a server receives a delta operation from a client that needs to be applied to a wave it is not authoritative for</preamble>
+          <artwork><![CDATA[
+Non-Authoritative         Authoritative
+    Server                   Server
+-----------------         -------------
+     |                          |
+     |  establish connection    |
+     |  --------------------->  |
+     |                          |
+     |  send delta operation    |
+     |  --------------------->  |
+     |                          |
+     |  receive response        |                  All non-authoritative 
+     |  <---------------------  |                      servers with 
+                                |                      participants
+                                |                      ----------
+                                |  establish connection   |
+                                |  -------------------->  |
+                                |                         |
+                                |  send delta operation   |
+                                |  -------------------->  |
+                                |                         |
+                                |  receive response       |
+                                |  <--------------------  |
+]]></artwork>
+        </figure>
+        <t> As the <xref target="duality-figure">example</xref> shows, a given wave server can sometimes be a client, and sometimes be a server in this protocol.</t>
+      </section>
+      <section title="Wave ownership and server authority" anchor="server-authority">
+        <t>The operational transform used for concurrency control in
+        wave is [currently] based on mutation of a shared object
+        owned by a central master.  As a result, in order to achieve
+        federation while still respecting the concurrency control
+        protocol, only one server may 'own', or be 'authoritative'
+        for a given wave (and its operations), regardless of
+        whether the participants use different service
+        providers.</t>
+        
+        <t>It is implied and expected that a wave server may not be
+        authoritative for all waves it currently knows about, or
+        that users are participants in.</t>
+        
+        <t>The wave server where the wave is created
+        (IE that has the first operation) is considered the
+        authoritative source of operations for that wave.</t>
+        
+        <t>The concurrency control protocol will be distributed at
+        some point in the future, but for now, this means the
+        federation protocol resolves around authoritative servers
+        sending operations to other non-authoritative servers
+        (mirroring the authoritative version of the wave), and
+        non-authoritative servers sending operations received from
+        clients to the authoritative server in order to be
+          processed.  The protocol described in this document is
+        geared towards enabling this to happen.</t>
+        
+      </section>
+    </section>    
+    <section title="User ids" anchor="user-ids">
+      <t> Text about format of user ids and authority of a given client/server to act on behalf of a given user id</t>
+    </section>
+    <section title="Connection initiation">
+      <t>As an XMPP extension, this protocol expects a bidirectional stream to be established according to the XMPP core specification.</t>
+      <t>The connection MUST be secured using the TLS feature of XMPP.</t>
+    </section>
+    <section title="Operation transfer">
+        <t>The <xref target="server-authority">authoritative wave
+        server</xref> for a given wave is responsible for federating
+        the operations for that wave to external participants.  To
+        that end, for each external participant in a wave, the <xref
+        target="server-authority">authoritative wave server</xref>
+        MUST initiate connections to the external server responsible
+        for that participant, and transmit operations to the external
+        sever as it receives operations.</t>
+        <t>A non-authoritative wave server for a given wave MUST
+        initiate connections to the authoritative wave server and
+        transmit received client operations to, and report any errors back to teh client (in effect, acting as a proxy between the client and the authoritative wave server).</t>
+      </section>
+    <section title="IQ based requests" anchor="xml-elements">
+      <t>The &OWTP; defines a set of elements that occur in XMPP &lt;iq&gt; stanzas.  These elements are, in effect, wave protocol messages, and are used to transfer wave operations and report results.  All of these elements MUST be supported by an &OWTP; implementation</t>
+      <t>The two types of messages that the wave protocol defines are
+      <list style='hanging'>
+	<t><xref target="element-request">Request Message</xref></t>
+	<t><xref target="element-delta">Delta Element</xref></t>
+      </list>
+      These messages have a small set of common attributes that are shared between them.
+      </t>
+      <section title="Common attributes" anchor="elements-attributes">
+        <t> The following are attributes common to all messages defined below:</t>
+	<section title="wave-id" anchor="element-attributes-wave-id">
+	  <t>The REQUIRED 'wave-id' attribute specifies the unique id portion of the wave identifier the message's operation is intending to operate on.</t>
+	</section>
+	<section title="wave-domain" anchor="element-attributes-wave-domain">
+	  <t>The REQUIRED 'wave-domain' attribute specifies the hostname portion of the wave identifier the message's operation is intending to operate on.</t>
+	</section>
+        <section title="wavelet-id"  anchor="elements-attributes-wavelet-id">
+          <t>The REQUIRED 'wavelet-id' attribute specifies the unique id portion of the <xref target="wavelets"> wavelet</xref> identifier the message's operation is intending to operate on.</t>
+        </section>
+	<section title="wavelet-domain" anchor="element-attributes-wavelet-domain">
+	  <t>The REQUIRED 'wavelet-domain' attribute specifies the hostname portion of the wave identifier the message's operation is intending to operate on.</t>
+	</section>
+      </section>
+      <section title="Request element" anchor="element-request">
+        <t>The request message is used to request historical delta operations from a server.
+	These messages are represented in XMPP through a &lt;request&gt; element.
+	It MUST be used with an &lt;iq&gt; element of type 'get'.</t>
+        <section title="Request element attributes" anchor="element-request-attributes">
+          <t>In addition to the common attributes, the request element MUST contains two additional attributes:</t>
+          <t> The REQUIRED 'start' attribute defines the beginning of the range of versions for which delta operations are being requested.</t>
+          <t> The REQUIRED 'end' attribute defines the end of the range of versions for which delta operations are being requested.</t>
+        </section>
+        <section title="Request element semantics">
+          <t>Normally, the first operation a wave server will see for a non-locally hosted wave is an add participant operation for some participant on that wave-server.  In order to have a complete set of operations for the wave, the wave server will need to request the earlier operations from the authoritative wave server using the request element.</t>
+          <t>Additionally, the request messages may be used as a recovery mechanism in case operations from the authoritative server have been lost due to some catastrophic failure.</t>
+          <t>Implementations MUST implement the operational transform method to handle concurrency. The request message is not meant to be used as part of a method of concurrency control.</t>
+          <t>The following rules apply to request elements:</t>
+          <t><list style='numbers'>         
+            <t>The 'wavelet-id' attribute is REQUIRED for request elements</t>
+            <t>The 'start' attribute is REQUIRED for request elements</t>
+            <t>The 'end' attribiute is REQUIRED for request elements</t>
+            <t>The numeric value of the 'start' attribute MUST be less than the numeric value of the 'end' attributed</t>
+	    <t>The receiving entity MUST validate that the requesting entity should have access to these operations before returning them.  More on this can be found in the Access control whitepater.</t>
+	    <t>On receiving a request message, the receiving entity MUST reply with an &lt;iq&gt; stanza of type 'result' containing the wave operations request, or an &lt;iq&gt; stanza of type 'error' containing error information</t>
+	    <t>A request must succeed or fail as a whole. A server MUST NOT return only some of the operations requested (e.g. if a request is made for a range of ops that is invalid, a server MUST NOT return a partial response consisting of the valid portion of the range)</t>
+	  </list>
+          </t>         
+          <section title="Successful request example">
+	    <t>An example of a client making a request for 10 historical operations looks like this:</t>
+            <figure>
+              <preamble>Step 1: Client issues a request for 10 operations</preamble>
+              <artwork><![CDATA[
+<iq id='19' from='user@wave.com/waveserver'
+    to='user@otherwave.com/waveserver' type='get'>
+      <request wave-id='a12f4d'
+               wave-domain='wave.com'
+               wavelet-id='f42cdL'
+	       wavelet-domain='wave.com'
+               start='0' end='10' 
+               xmlns='urn:googlep:wave:requests'/>
+</iq>
+              ]]></artwork>
+            </figure>        
+            <figure>
+              <preamble>Step 2: Server hands back 10 operations</preamble>
+              <artwork><![CDATA[
+<iq id='19' from='user@otherwave.com/waveserver'
+    to='user@wave.com/waveserver'
+    type='result'>
+    <applieddelta xmlns='urn:google:wave:deltas'>
+       <delta>
+         <waveop>...</waveop>
+         <waveop>...</waveop>
+       </delta>
+    </applieddelta>
+</iq>             
+              ]]></artwork>
+            </figure>       
+          </section>
+          <section title="Unsuccessful request example">
+	    <t>An example of a client brokenly requesting operations 10-12 follows.  Because the client has reversed the start and the end, it will get an error back.</t>
+            <figure>
+              <preamble>Step 1: Client issues request</preamble>
+              <artwork><![CDATA[
+<iq id='20' from='user@wave.com/waveserver'
+    to='user@otherwave.com/waveserver' type='get'>
+      <request wave-id='a12f4d'
+               wave-domain='wave.com'
+               wavelet-id='f42cdL'
+	       wavelet-domain='wave.com'
+               start='12' end='10'
+               xmlns='urn:google:wave:requests'/>
+</iq>
+              ]]></artwork>
+            </figure>
+            <figure>
+              <preamble>Step 2: Server issues a response</preamble>
+              <artwork><![CDATA[
+<iq id='20' type='error'>
+  <error type='modify'>
+    <bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+  </error>
+</iq>
+              ]]></artwork>
+	    </figure>
+          </section>
+        </section>
+      </section>
+      <section title="Delta element" anchor="element-delta">
+        <t>The applied delta message is at the heart of the &OWTP;  The majority of messages seen by a client or server will be of this form.</t>
+        <t>These messages are represented using &lt;applieddelta&gt; elements.  These contain a &lt;delta&gt; element, which contain one or more <xref target="op-serialization">serialized wavelet operations</xref> as children.  These wavelet operations should be applied to the wavelet specified by the 'wavelet-id' attribute, and error or success returned in a proper &lt;iq&gt; stanza.
+A given wavelet operation MUST be retransmitted if the connection has closed without receiving successful acknowledgement from the receiving entity.  Delta elements have the following additional attributes:</t>
+        <section title="Delta element attributes">
+          <t>The OPTIONAL 'authoritative' attribute specifies whether the wavelet operations contained in the delta message are from an <xref target="server-authority">authoritative wave server</xref>.</t>
+
+        </section>
+        <section title="Delta element semantics">
+          <t>The following rules apply to delta elements:</t>
+          <t><list style='numbers'>         
+	    <t>The 'wave-id' attribute is REQUIRED for delta elements</t>
+            <t>The 'wavelet-id' attribute is REQUIRED for delta elements</t>
+            <t>A delta element MAY contain more than one operation</t>
+            <t>The receiving entity MUST verify the order tag</t>
+            <t>The delta element MUST contain only operations for the wavelet specified in the 'wavelet-id' attribute.</t>
+            <t>The receiving entity MUST verify the requesting entity is allowed to submit operations to this wave.</t>
+            <t>A non-authoritative server for a wavelet entity MUST only send untransformed operations to the authoritative wave server.</t>
+        <t>On receiving a valid delta element, if the server is the <xref target="server-authority">authoritative</xref> for this wave, the server MUST apply concurrency control as specified in the operational transform documentation to the operations.</t>
+	<t>The receiving server MUST issue an approriate response message in response to a delta request</t>
+            </list>
+          </t>
+        </section>
+          <section title="Successful delta example">
+	    <t>An example where a client is sent a delta message by a wave server, and successfully processes it, follows:</t>
+            <figure>
+              <preamble>Step 1: Client is sent  delta</preamble>
+              <artwork><![CDATA[
+<iq id='21' from='user@wave.com/waveserver'
+    to='user@otherwave.com/waveserver' type='set'>
+    <delta wave-id='wave.com:w/f42cdL'
+           wavelet-id="f12cdf42cdL" authoritative='true'
+           order-tag='de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3'
+	   verification-tag="f919211828218213812381238123'>
+      <waveop> ... </waveop>
+      <waveop> ... </waveop>
+    </delta>
+</iq>
+              ]]></artwork>
+            </figure>        
+            <figure>
+              <preamble>Step 2: Client sends a successful ack</preamble>
+              <artwork><![CDATA[
+<iq id='21' type='result'/>	  
+              ]]></artwork>
+            </figure>       
+          </section>
+          <section title="Unsuccessful delta example">
+	    <t>An example where the client is sent a delta from a server without access to that wave follows:</t>
+            <figure>
+              <preamble>Step 1: Client receives an invalid delta message</preamble>
+              <artwork><![CDATA[
+<iq id='22' from='user@wave.com/waveserver'
+    to='user@otherwave.com/waveserver' type='set'>
+    <delta wave-id='wave.com:w/f42cdL'
+           wavelet-id="f12cdf42cdL" authoritative='true'
+           order-tag='de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3'
+	   verification-tag="f919211828218213812381238123'>
+      <waveop> ... </waveop>
+      <waveop> ... </waveop>
+    </delta>
+</iq>
+              ]]></artwork>
+            </figure>        
+            <figure>
+              <preamble>Step 2: Client sends an error response</preamble>
+              <artwork><![CDATA[
+<iq id='22' type='error'>
+  <error type='auth'>
+     <forbidden xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+  </error>
+</iq>
+              ]]></artwork>
+            </figure>       
+          </section>
+      </section>
+    <section title="Wavelet operation serialization" anchor="op-serialization">
+      <t>Wavelet operations are serialized into XML as a tree of XML elements.
+	The top level element for any wavelet operation is an 'waveop' element.</t>
+      <t>The REQUIRED 'order-tag' attribute specifies a cryptographic order tag to ensure integrity of the messages.  Please see <eref target="https://sites.google.com/a/waveprotocol.org/wave-protocol/whitepapers/wave-protocol-verification">General Verifiable Federation</eref> for information on how to generate this field</t>
+      <t>The REQUIRED 'verification-hint' attribute specifies a cryptographic verification hint to ensure integrity.  Please see <eref target="https://sites.google.com/a/waveprotocol.org/wave-protocol/whitepapers/wave-protocol-verification">General Verifiable Federation</eref> for information on how to generate this field</t>
+      <t>The &lt;waveop&gt; element is simply a container element, and MUST contain ONE of the following elements:</t>
+      <section title="noop" anchor="noop-element">
+        <t>The &lt;noop&gt; element is used to indicate a blank operation. It has no attributes and no child elements.</t>
+      </section>
+<!--
+      <section title="adddocument" anchor="adddocument-element">
+        <t>The &lt;adddocument&gt; element is used to signal the addition of a <xref target="documents">document</xref> to a wavelet.  It has three attributes:</t>
+        <t><list style="symbols">
+          <t>The REQUIRED 'document-id' attribute, which specifies a globally unique id for the document being created</t>
+          <t>The OPTIONAL 'parent-id' attribute, which specifies a document id for the parent of this document, if there is one. Having no parent id implies this document is the root of a conversation.</t> 
+          <t>The receiving entity MUST verify the parent id of a document is valid if the 'parent-id' attribute is specified.</t>     
+        </list>
+        </t>    
+      </section>
+      <section title="tombstonedocument" anchor="tombstonedocument-element">
+        <t>The &lt;tombstonedocument&gt; element is used to mark a
+        single <xref target="documents">document</xref> as either
+        deleted or active. ALL documents, immediately after they are
+        created, are marked as active. This element has two attributes:</t>
+        <t><list style="symbols">
+          <t>The REQUIRED 'document-id' attribute, which specifies the
+          <xref target="documents">docuemnt</xref> which is to be marked</t>
+          <t>The REQUIRED 'istombstone' attribute, which MUST take either
+          the value 'true', indicating that this document is to be be marked
+          as deleted, or 'false', which indicates that this document is to
+          be marked as active.</t>
+        </list>
+        </t>
+      </section>
+-->
+      <section title="submitdocument" anchor="submitdocument-element">
+        <t>The &lt;submitdocument&gt; element is used to signal that a
+        document was submitted by the user. The main use of the submit document element is to mark points in the operation stream where playback should stop.</t>
+      </section>
+      <section title="addparticipant" anchor="addparticipant-element">
+        <t>The &lt;addparticipant&gt; element is used to add a participant to a wave.  It has one attribute, the REQUIRED 'user-id' attribute, which specifies the <xref target="user-ids">user id</xref> of the participant.</t>
+        <t>The receiving entity MUST verify the user id is allowed to be added to the wave. To achieve this, the receiving entity MUST ensure the 'from' attribute specifies a current participant of the wave, and that the 'from' attribute specifies a user that the sending entity is allowed to be authoritative for (CLEAN UP THIS LANGUAGE)</t>
+      </section>
+      <section title="removeparticipant" anchor="removeparticipant-element">
+        <t>The &lt;removeparticipant&gt; element is used to removed a participant to a wave.  It has one attribute, the REQUIRED 'user-id' attribute, which specifies the <xref target="user-ids">user id</xref> of the participant.</t>
+	<t>The receiving entity MUST verify the user id is allowed to be removed from the wave by the remover</t>
+      </section>
+      <section title="documentcontentmutation" anchor="documentcontentmutation-element">
+        <t>The &lt;documentcontentmutation&gt; element is used to specify a modification of a document's textual content.</t>
+          <section title="Content mutation semantics" anchor="contentmutation-semantics">
+            <t>Content mutations for a document operation operate on a theoretical XML text document with a current operation point. This current operation point is also referred to as the 'cursor'. Much like the cursor in a text editor, this specifies where the next operation in the stream should be applied. The cursor begins at position zero. 'documentskip' operations are used to explicitly modify the current operation point, and the remainder of the operations are used to modify the actual textual content of the document, however these other operations may also implicitly effect the location of the current operation point.</t>
+            <t>Note that the cursor treats every start-tag and end-tag within the XML as having a character length of one. For example, if a cursor is located before the start-tag &lt;blip&gt; and is moved forward by one, it will now be located immediately after this start-tag &lt;blip&gt;.</t>
+            <t>Internally, XML documents within wave MUST NOT contain the empty-element tag, i.e., a merged start and end tag. That is, the tag &lt;foo /&gt; is disallowed, and MUST be stored as &lt;foo&gt;&lt;/foo&gt;. This is even the case for tags which would normally be represented as an empty-element, such as &lt;br /&gt;.</t>
+            <t>It should be understood that this encoding is in no way assumed to be the most efficient way to encode XML documents as a set of operations.  It is in fact, quite wasteful space-wise.  However, the document operations specified below are easily composable and transformable, which is a requirement for concurrency control transforms.  They also are used to accurately represent the history of the document for playback (which is why there are deletecharacters elements, etc).  More efficient encodings of these operations will be explored as the process of drafting this document continues.</t>
+          </section>
+        <section title="Content mutation elements" anchor="contentmutation-children">
+          <t>A content mutation consists of one or more of the following child elements:</t>
+          <t>The &lt;documentskip&gt; element is used to specify portions of the document that are not modified by the content mutation.  It has one REQUIRED attribute, 'size', which specifies the number of characters since the last mutation operation to skip before applying the next mutation operation. As a result, this element is used to modify the current operation point for the next content mutation operation.</t>
+          <t>The &lt;documentcharacters&gt; element is used to specify text additions to the document.  It has one REQUIRED attribute, 'characters', which specifies the characters to be added to the document at the current insertion point. After this operation, the cursor will be located after the inserted characters.</t>
+          <t>The &lt;documentelementstart&gt; element is used to specify the beginning of a tagged element in the document.  It has one REQUIRED attribute, 'name', which specifies the tag name of the element to be added to the document at the current insertion point.  The &lt;documentelementstart&gt; element can OPTIONALLY have any number of children used to specify attributes for this element.  These children are &lt;attribute&gt; elements, which have two REQUIRED attributes, 'name' and 'value', specifying the name and value of the attribute for the element, respectively. After this operation, the cursor will move forward one step, i.e., after the newly inserted start-tag.</t>
+          <t>The &lt;documentelementend&gt; element is used to specify the end of a tagged element.  It is REQUIRED that every &lt;documentelementstart&gt; element have a matching &lt;documentelementend&gt; element. After this operation, the cursor will move forward one step, i.e., after the newly inserted end-tag.</t>
+          <t>The &lt;antidocumentelementstart&gt; element is used to specify the beginning of a "split" element in the document. It takes NO attributes. Functionally, it will insert an end-tag element which matches with the nearest start-tag to the left of the cursor. It will also move the cursor one position forward, after this inserted end-tag.</t>
+          <t>The &lt;endantidocumentelementstart&gt; element is used to specify the end of a split element in the document. The &lt;endantidocumentelementstart&gt; can OPTIONALLY have any number of children used to specify attributes for this element. These children are &lt;attribute&gt; elements, which have two REQUIRED attributes, 'name' and 'value', specifying the name and value of the attribute for the element, respectively. After this operation, the cursor will move forward one step, i.e., after the newly inserted start-tag. This element MUST be paired with a &lt;antidocumentelementstart&gt; element.</t>
+          <t>The &lt;documentdeletecharacters&gt; element is used to specify text deletions from the document.  It has one REQUIRED attribute, 'size', which specifies the number of characters to be deleted from the document.  This operation deletes characters AFTER this cursor, and does not modify the cursor location. All deletion operations will, of course, immediately reduce the total length of the document.</t>
+          <t>The &lt;documentdeleteelementstart&gt; indicates the deletion of the start-tag directly under the cursor. i.e., the position directly after the cursor. It MUST be paired with a later &lt;documentdeleteantielementend&gt;. This pairing - on its own - MUST NOT delete the textual content between these two points. The cursor does not move as a result of this operation. Again, this operation will reduce the total length of the document. A notable side effect of this is that deleting a matching start-tag and end-tag, which are next to each other, requires two delete operations and NO cursor moves.</t>
+          <t>The &lt;documentdeleteelementend&gt; indicates the deletion of the end-tag directly under the cursor. It MUST be paired with a previous &lt;documentdeleteelementstart&gt;. The cursor does not move as a result of this operation.</t>
+          <t>The &lt;documentdeleteantielementstart&gt; indicates the deletion of the end-tag directly under the cursor. It MUST be paired with a later &lt;documentdeleteantielementend&gt; containing the same tag, at the same tree level within the XML document. The cursor does not move as a result of this operation.</t>
+          <t>The &lt;documentdeleteantielementend&gt; indicates the deletion of an start-tag directly under the cursor. It MUST be paired with a previous &lt;documentdeleteantielementstart&gt; element containing the same tag. The cursor does not move as a result of this operation.</t>
+          <t>The &lt;documentsetattributes&gt; element is used to set XML attributes on the start-tag (e.g. &lt;blip&gt;) directly under the cursor. It first MUST clear all previous attributes on this start-tag. It then MUST iterate through the OPTIONAL set of child &lt;attribute&gt; elements and apply their key/value pairs as attributes to the start-tag.</t>
+          <t>The &lt;documentupdateattributes&lt; element is used in the same way as &lt;documentsetattributes&gt;, except that it does not first clear attributes, and only updates the attributes on the start-tag. Note that if the 'value' attribute of an &lt;attribute&gt; is NOT set, then this indicates the deletion of the named attribute.</t>
+          <t>The &lt;documentstartannotation&lt; begins the mark-up of a ranged annotation, an extension to XML used within the &OWTP;. This annotation is uniquely identifed by a key and may span across normal XML tag boundaries. It has one REQUIRED attribute, 'key', and one OPTIONAL attribute, 'value'. If the value is NOT set, then this denotes the deletion of a ranged annotation.</t>
+          <t>The &lt;documentendannotation&lt; denotes the end of a ranged annotation, and contains a single attribute of 'key'. This pairs the end of this annotation with the previous &lt;documentstartannotation&gt;</t>
+        </section>
+      </section>
+    </section>
+  </section>
+  </middle>
+  <back>
+   
+    <references title="Normative References">
+  <reference anchor="TERMS">
+<front>
+<title abbrev='RFC Key Words'>Key words for use in RFCs to Indicate Requirement Levels</title>
+<author initials='S.' surname='Bradner' fullname='Scott Bradner'>
+<organization>Harvard University</organization>
+<address>
+<postal>
+<street>1350 Mass.  Ave.</street>
+<street>Cambridge</street>
+<street>MA 02138</street></postal>
+<phone>- +1 617 495 3864</phone>
+<email>sob@harvard.edu</email></address></author>
+<date month='March' year='1997' />
+<area>General</area>
+<keyword>keyword</keyword>
+<abstract>
+<t>
+   In many standards track documents several words are used to signify
+   the requirements in the specification.  These words are often
+   capitalized.  This document defines these words as they should be
+   interpreted in IETF documents.  Authors who follow these guidelines
+   should incorporate this phrase near the beginning of their document:
+
+<list>
+<t>
+      The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL
+      NOT&quot;, &quot;SHOULD&quot;, &quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;,  &quot;MAY&quot;, and
+      &quot;OPTIONAL&quot; in this document are to be interpreted as described in
+      RFC 2119.
+</t></list></t>
+<t>
+   Note that the force of these words is modified by the requirement
+   level of the document in which they are used.
+</t></abstract></front>
+<seriesInfo name='BCP' value='14' />
+<seriesInfo name='RFC' value='2119' />
+<format type='TXT' octets='4723' target='ftp://ftp.isi.edu/in-notes/rfc2119.txt' />
+<format type='HTML' octets='14486' target='http://xml.resource.org/public/rfc/html/rfc2119.html' />
+<format type='XML' octets='5661' target='http://xml.resource.org/public/rfc/xml/rfc2119.xml' />
+</reference>
+&rfc3920;
+  </references>
+ <section title="Protocol Schema">
+      <t>The protocol schema, as RelaxNG compact:</t>
+ <figure>
+          <artwork><![CDATA[
+## Represents our three possible IQ children
+start = delta | request | applieddelta
+
+## Wave id's are split into two pieces, the unique id and the domain name
+waveid =
+  attribute wave-id { xsd:string }
+  & attribute wave-domain { xsd:string }
+
+## Wavelet id's are split into two pieces, the unique id and the domain name
+waveletid =
+  attribute wavelet-id { xsd:string }
+  & attribute wavelet-domain { xsd:string }
+
+## These are the attributes common to all our elements
+commonattributes = waveid & waveletid
+
+## Attributes common to deltas (pre/post transformed)
+deltaattributes =
+  attribute version { xsd:integer }
+  & attribute hash { xsd:string }
+  & attribute timestamp { xsd: string }
+
+## Request for historical wave operations
+request =
+  element request {
+    commonattributes,
+    attribute start { xsd:integer },
+    attribute end { xsd:integer }
+  }
+
+## A delta between two wavelet versions. This immutable structure is created
+## by an 'origin' server. This is either the master server, on behalf of its
+## own clients, or a remote server and passed to the master server. Either way,
+## this identifies operations which are intended to be applied at the state
+## represented by (version, hash, timestamp) in commonattributes.
+## Note that the tag can be used by originators, in order to later identify
+## deltas returned as updates through <applieddelta>, and recognise that
+## the operations contained within may have already been applied and that
+## a state requiring operational transform steps has been reached.
+delta =
+  element delta {
+    commonattributes,
+    deltaattributes,
+    attribute tag { xsd:string }
+    waveop+
+  }
+
+## Represents the post-transform state of a delta as calculated by a master
+## server hosting a wavelet. The delta attributes included (version, hash, timestamp)
+## represent the *actual* place the submitted delta (included immutably as <delta>)
+## has been applied. That is, this structure contains both the *actual* place the
+## delta has been applied, as well as the original intended target.
+## This element is sent as part of normal wavelet updates (IE users are applying
+## operations to this wavelet, here is a delta),
+## and as part of the response to a <request> (IE here are the deltas you requested)
+applieddelta =
+  element applieddelta {
+    deltaattributes,
+    attribute opsapplied { xsd:integer },
+    attribute serversignature { xsd:string },
+    delta
+  }
+
+## Used to represent an XML attribute inside an XML element that is embedded in a wave
+singleattribute =
+  element attribute {
+    attribute name { xsd:string },
+    attribute value { xsd:string }
+  }
+
+## Used to specify which XML attribute is being updated. Empty value 
+## implies deletion.
+updateattribute =
+  element attribute {
+    attribute name { xsd:string },
+    attribute value { xsd:string }?
+  }
+
+## Serialization of a wave operation
+waveop =
+  element waveop {
+    attribute order-tag { xsd:string },
+    attribute verification-hint { xsd:string },
+    element submitdocument {
+
+         ## Document id being submitted
+         attribute document-id { xsd:string }
+       }
+     | element addparticipant {
+         
+         ## User id being added to the wave
+         attribute user-id { xsd:string }
+       }
+     | element removeparticipant {
+         
+         ## User id being removed from the wave
+         attribute user-id { xsd:string }
+       }
+     | element documentcontentmutation {
+
+         # List of many different mutation types
+         (element skip {
+           
+           ## Number of characters to move the insertion point forward
+           attribute size { xsd:integer }
+         }
+         | element characters {
+             
+             ## Actual characters
+             attribute characters { xsd:string }
+           }
+         | element deletecharacters {
+             
+             ## Number of characters to delete forward
+             attribute size { xsd:integer }
+           }
+         | element elementstart {
+             
+             ## Name of XML element
+             attribute name { xsd:string }
+           }
+         | element elementend { empty }
+         | element antielementstart { empty }
+         | element antielementend { singleattribute* }
+         | element deleteelementstart { empty }
+         | element deleteleementend { empty }
+         | element deleteantielementstart { empty }
+         | element deleteantielementend { empty }
+         | element setattributes { singleattribute* }
+         | element updateattributes { updateattribute* }
+         | element startannotation { singleattribute }
+         | element endannotation {
+             
+             ## Name of annotation this end pairs with
+             attribute name { xsd:string }
+           })+,
+
+         # Document id being mutated
+         attribute document-id { xsd:string }
+       }
+  }
+
+	  ]]></artwork>
+ </figure>
+    </section>
+  </back>
+</rfc>
