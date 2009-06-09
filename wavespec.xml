@@ -504,8 +504,8 @@ indicated in 'version-truncated-at'.</t>
 								<t>'wavelet-name' -- REQUIRED wavelet name attribute.</t>
 								<t>&lt;delta/&gt; -- REQUIRED delta element to be submitted.</t>
 								<t>&lt;signature/&gt; -- REQUIRED signature element as signed by the originator of the delta.</t>
-								<t>&lt;address-access-path/&gt; -- OPTIONAL ONE OR MORE elements describing a path through the  
-								<eref target="http://www.waveprotocol.org/whitepapers/access-control">address access control graph</eref>.</t>
+								<t>&lt;address-access/&gt; -- ZERO OR MORE elements describing nodes on an address access path through the  
+								<eref target="http://www.waveprotocol.org/whitepapers/access-control">address access graph</eref> leading to the author address in the delta.</t>
 							</list>
 						</t>
 					</section>
@@ -533,9 +533,7 @@ indicated in 'version-truncated-at'.</t>
              <operation> .... </operation>
       </delta>
       <signature>...</signature>
-      <address-path>
-        <address>crazymonkey@otherwave.com</address>
-      </address-path>
+      <address-access address='crazymonkey@otherwave.com'/>
     </submit-request>
 </iq>
 ]]></artwork>

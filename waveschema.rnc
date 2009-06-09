@@ -37,7 +37,7 @@ submit-request =
     attribute wavelet-name { xsd:string },
     delta,
     signature,
-    address-access-path
+    address-access*
   }
 
 ## Response to submit-request. Used in iq result stanza.
@@ -67,10 +67,10 @@ hashed-version =
   }
 
 ## Describes a path through the address access control graph.
-address-access-path =
+address-access =
   element address-access {
     attribute address { xsd:string }
-  }*
+  }
 
 ## Contains a sequence of one or more operations grouped for communication to
 ## and between servers.
