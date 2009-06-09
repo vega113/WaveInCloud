@@ -42,7 +42,7 @@
 		<note title="Document Status">
 			<t>This document represents work in progress. It omits details that we are unable to capture at this 
 			point and we expect parts of the protocol to change. Please also note that while we revise the 
-			protocol and whitepapers, some transient inconsistencies will occur.
+			protocol and white papers, some transient inconsistencies will occur.
 		</t>
 		</note>
 	</front>
@@ -146,7 +146,7 @@
 				structure in the wave. For detailed information on the 
 				structure of documents, please refer to the 
 				<eref target="http://sites.google.com/a/waveprotocol.org/wave-protocol/whitepapers/operational-transform">Google
-            Wave Operational Transformation</eref> whitepaper.</t>
+            Wave Operational Transformation</eref> white paper.</t>
 			</section>
 			<section title="Operations" anchor="operations">
 				<t>Operations are mutations on wavelets. The state of a wavelet is
@@ -559,7 +559,7 @@ indicated in 'version-truncated-at'.</t>
 		<section title="Wavelet Operations" anchor="wavelet-ops">
 			<t>Wavelet operations mutate wavelets. The top level element for any wavelet operation is an &lt;operation/&gt; element. 
 						</t>
-			<t>The &lt;operation/&gt; element is simply a container element, and MUST contain ONE of the four elements
+			<t>The &lt;operation/&gt; element is simply a container element, and MUST contain exactly ONE of the four elements
 			&lt;noop/&gt;, &lt;add-participant/&gt;, &lt;remove-participant/&gt;, and &lt;mutate-document/&gt;, which are specified below.
 						The current implementation has the following three further operations &lt;submit-document/&gt;, &lt;add-document/&gt;,
 						&lt;tombstone-document/&gt; that are deprecated and are
@@ -585,17 +585,17 @@ indicated in 'version-truncated-at'.</t>
 					 a current operation point, also referred to as the 'cursor'. Much like the cursor in a text editor, this specifies 
 					where the next operation in the stream should be applied. The cursor begins at position zero. &lt;skip/&gt; operations
 					 are used to explicitly modify the current operation point, and the remainder of the operations are used to modify the 
-					 actual textual content of the document, however these other operations may also implicitly effect the location of the 
+					 actual textual content of the document. However these other operations may also implicitly affect the location of the 
 					 current operation point.</t>
 					<t>Note that the cursor treats every start-tag and end-tag within the XML as having a character length of one. For example, 
 					if a cursor is located before the start-tag &lt;blip&gt; and is moved forward by one, it will now be located immediately after 
 					this start-tag &lt;blip&gt;.</t>
-					<t>Internally, XML documents within wave MUST NOT contain the empty-element tag, i.e., a merged start and end tag. That is, the 
+					<t>Internally, XML documents within a wave MUST NOT contain the empty-element tag, i.e., a merged start and end tag. That is, the 
 					tag &lt;foo /&gt; is disallowed, and MUST be stored as &lt;foo&gt;&lt;/foo&gt;. This is even the case for tags which would 
 					normally be represented as an empty-element, such as &lt;br /&gt;.</t>
 					<t>It should be understood that this encoding is in no way assumed to be the most efficient way to encode XML documents as a 
 					set of operations.  However, the document operations specified below are easily 
-					composable and transformable, which is a requirement for concurrency control transforms.  They also are used to accurately 
+					composable and transformable, which is a requirement for concurrency control transforms.  They are also used to accurately 
 					represent the history of the document for playback.</t>
 				</section>
 				<section title="Document mutation elements" anchor="mutation-children">
