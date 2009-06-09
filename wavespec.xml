@@ -683,10 +683,10 @@ indicated in 'version-truncated-at'.</t>
 
 							<list>
 								<t>
-						      The key words &quot;""""""""""MUST&quot;"""""""""", &quot;""""""""""MUST NOT&quot;"""""""""", &quot;""""""""""REQUIRED&quot;"""""""""", &quot;""""""""""SHALL&quot;"""""""""", &quot;""""""""""SHALL
-						      NOT&quot;"""""""""", &quot;""""""""""SHOULD&quot;"""""""""", &quot;""""""""""SHOULD NOT&quot;"""""""""", &quot;""""""""""RECOMMENDED&quot;"""""""""",  &quot;""""""""""MAY&quot;"""""""""", and
-						      &quot;""""""""""OPTIONAL&quot;"""""""""" in this document are to be interpreted as described in
-						      RFC 2119.
+								  The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL
+								  NOT&quot;, &quot;SHOULD&quot;, &quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;,  &quot;MAY&quot;, and
+								  &quot;OPTIONAL&quot; in this document are to be interpreted as described in
+								  RFC 2119.
 								</t>
 							</list>
 						</t>
