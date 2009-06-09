@@ -169,8 +169,8 @@
           wavelet operations by operational transformation and writes and reads
           wavelet operations to and from the wave store. Typically, the wave
           service serves waves to users of the wave provider which connect to
-          the wave service frontend (see "Google Wave Data Model and
-          Client-Server Protocol"), and we shall assume this in the following
+          the wave service frontend (see <eref target="http://sites.google.com/a/waveprotocol.org/wave-protocol/whitepapers/internal-client-server-protocol">Google Wave Data Model and
+          Client-Server Protocol</eref>), and we shall assume this in the following
           description of the wave service architecture. More importantly, for
           the purpose of federation, the wave service shares waves with
           participants from other providers by communicating with these wave
@@ -277,7 +277,7 @@
 			<section title="IQ Based Stanzas" anchor="iq-stanzas">
 				<t>The federation protocol involves two parties: a wave federation host and wave
         federation remote as described <xref target="host-and-remote">above</xref>. The
-        top level IQ stanzas are devided into two types: those that are part of the "update stream", and those part of the "service stream".
+        top level IQ stanzas are divided into two types: those that are part of the "update stream", and those part of the "service stream".
         The <xref target="iq-elements-update-stream">update stream</xref> is initiated by a federation host to a federation remote and carries 
         <xref target="elements-update">&lt;update/&gt;</xref>s from the host to the remote. 
         The <xref target="iq-elements-service-stream">service stream</xref> is initiated by the federation remote to the federation host and
@@ -461,7 +461,7 @@ version number (exclusive).  Truncation will occur if the
 the requested end version (exclusive), or until the latest version if the request did not contain the end version, or up to the version
 indicated in 'version-truncated-at'.</t>
 								<t>&lt;commit-notice/&gt; -- OPTIONAL element indicating that some range of the returned deltas has not been
-								 commited to persistent storage by the hosting wave server. The &lt;commit-notice/&gt; indicates up to which 
+								 committed to persistent storage by the hosting wave server. The &lt;commit-notice/&gt; indicates up to which 
 								 version the server has committed.</t>
 							</list>
 						</t>
