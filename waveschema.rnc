@@ -144,11 +144,11 @@ document-mutation-element =
   | element update-attributes {
       update-attribute*
     }
-  | element start-annotation {
+  | element commence-annotation {
       attribute name { xsd:string },
       attribute value { xsd:string }?
     }
-  | element end-annotation {
+  | element conclude-annotation {
       attribute name { xsd:string }
     }
 
