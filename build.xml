@@ -1,0 +1,217 @@
+<!--
+ * Copyright (C) 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+
+  Author: dhanji@google.com (Dhanji R. Prasanna)
+ -->
+<project name="fedone" default="dist">
+  <description>Google Wave Reference Implementation</description>
+
+  <property file="build.properties"/>
+
+  <!-- Classpath of external dependencies -->
+  <path id="fedone.classpath">
+    <fileset dir="${lib}">
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="${lib.runtime}">
+      <include name="*/*.jar"/>
+    </fileset>
+  </path>
+
+  <!-- Classpath for testing only -->
+  <path id="fedone.test.classpath">
+    <fileset dir="${lib.test}">
+      <include name="*.jar"/>
+      <include name="*/*.jar"/>
+    </fileset>
+  </path>
+
+  <target name="clean" description="Cleans up the build artifacts and temporary directories">
+    <delete dir="${build}"/>
+  </target>
+
+  <target name="init">
+    <mkdir dir="${core.classes}"/>
+    <mkdir dir="${test.classes}"/>
+    <mkdir dir="${instr.classes}"/>
+    <mkdir dir="${dir.distribute}"/>
+    <mkdir dir="${staging}"/>
+  </target>
+
+  <!-- compiles pre-generated proto sources; does NOT generate protos -->
+  <target name="proto_compile" depends="init">
+    <javac sourcepath="" srcdir="proto_src" destdir="${core.classes}" debug="on"
+        target="1.5">
+      <include name="**/*.java"/>
+
+      <!-- example sources exclude rule, applies after includes -->
+      <!-- <exclude name="com/google/sitebricks/example/**"/> -->
+
+      <classpath refid="fedone.classpath"/>
+    </javac>
+  </target>
+
+  <target name="compile" depends="proto_compile">
+    <javac sourcepath="" srcdir="${src}" destdir="${core.classes}" debug="on"
+        target="1.5">
+      <include name="**/*.java"/>
+
+      <!-- example sources exclude rule, applies after includes -->
+      <!-- <exclude name="com/google/sitebricks/example/**"/> -->
+
+      <classpath refid="fedone.classpath"/>
+    </javac>
+
+    <!-- copy non binary resources in src tree to output classpath -->
+    <copy todir="${core.classes}">
+      <fileset dir="${src}">
+        <include name="**/*.xml"/>
+        <include name="**/*.html"/>
+        <include name="**/*.properties"/>
+        <include name="**/*.proto"/>
+
+        <!-- example sources exclude rule, applies after includes -->
+        <!-- <exclude name="com/google/sitebricks/example/**"/> -->
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- TODO: EXAMPLE ONLY, DELETE ME -->
+  <target name="flagex" depends="compile" description="DELETE ME">
+    <java fork="yes"
+      classname="org.waveprotocol.wave.examples.fedone.federation.xmpp.FlagExampleMain"
+
+      args="--port=1203 --component_name=blah --server_hostname=adas
+      --server_ip=127.0.0.1">
+       <classpath>
+        <path refid="fedone.classpath"/>
+        <pathelement location="${core.classes}"/>
+      </classpath>
+    </java>
+  </target>
+
+  <target name="test" depends="compile" description="Runs all the unit tests in the project">
+    <javac sourcepath="" srcdir="${test}" destdir="${test.classes}" debug="on"
+        target="1.5">
+      <include name="**/*.java"/>
+
+      <!-- example sources exclude rule, applies after includes -->
+      <!-- <exclude name="com/google/sitebricks/example/**"/> -->
+
+      <classpath>
+        <path refid="fedone.classpath"/>
+        <path refid="fedone.test.classpath"/>
+        <pathelement location="${core.classes}"/>
+      </classpath>
+    </javac>
+
+    <!-- copy non binary resources in src tree to output classpath -->
+    <copy todir="${test.classes}">
+      <fileset dir="${test}">
+        <include name="**/*.xml"/>
+        <include name="**/*.html"/>
+        <include name="**/*.properties"/>
+        <include name="**/*.proto"/>
+
+        <!-- example sources exclude rule, applies after includes -->
+        <!-- <exclude name="com/google/sitebricks/example/**"/> -->
+      </fileset>
+    </copy>
+
+    <taskdef resource="emma_ant.properties">
+      <classpath refid="fedone.test.classpath"/>
+    </taskdef>
+
+    <copy todir="${instr.classes}">
+      <fileset dir="${core.classes}" includes="**/*"/>
+    </copy>
+
+    <path id="fedone.instr.classpath" >
+      <pathelement location="${instr.classes}" />
+    </path>
+
+    <!-- instrument built classfiles for code coverage -->
+    <emma enabled="false">
+      <instr instrpathref="fedone.instr.classpath"
+          destdir="${instr.classes}"
+          metadatafile="${build}/metadata.emma"
+          merge="false"
+          mode="overwrite"
+      />
+    </emma>
+
+    <taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
+      <classpath refid="fedone.test.classpath"/>
+    </taskdef>
+
+    <junit fork="yes" showoutput="yes">
+      <classpath>
+        <path refid="fedone.classpath"/>
+        <path refid="fedone.test.classpath"/>
+        <pathelement location="${instr.classes}"/>
+        <pathelement location="${test.classes}"/>
+      </classpath>
+      <batchtest>
+        <fileset dir="${test}">
+          <include name="**/*Test.java"/>
+        </fileset>
+      </batchtest>
+      <formatter type="xml"/>
+      <jvmarg value="-Demma.coverage.out.file=${build}/coverage.emma" />
+      <jvmarg value="-Demma.coverage.out.merge=false" />
+    </junit>
+
+    <emma enabled="false">
+      <report sourcepath="${src}" >
+        <fileset dir="${build}" >
+          <include name="*.emma" />
+        </fileset>
+        <html outfile="test_coverage.html"/>
+      </report>
+    </emma>
+
+  </target>
+
+  <!-- ###JOCHEN make depend on test -->
+  <target name="dist" depends="compile" description="Compiles, tests and assembles runnable artifacts">
+    <!-- we unzip and copy all the runtime deps into a staging dir first -->
+    <unzip dest="${staging}">
+      <fileset dir="${lib}">
+        <include name="*.jar"/>
+      </fileset>
+      <fileset dir="${lib.runtime}">
+	<include name="*/*.jar"/>
+      </fileset>
+    </unzip>
+    <copy todir="${staging}" preservelastmodified="true">
+      <fileset dir="${core.classes}">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <jar destfile="${jar.outfile}" basedir="${staging}">
+      <manifest>
+        <!-- Application entry point -->
+        <attribute name="Main-Class"
+            value="org.waveprotocol.wave.examples.fedone.ServerMain"/>
+
+        <attribute name="Implementation-Vendor" value="Google, Inc."/>
+        <attribute name="Implementation-Title" value="Google Wave Reference Impl"/>
+        <attribute name="Implementation-Version" value="${fedone.version}"/>
+      </manifest>
+    </jar>
+  </target>
+</project>
+

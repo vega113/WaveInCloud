@@ -1,0 +1,28 @@
+<project name="fedone_proto" default="compile">
+  <description>Generation of Protocol Buffers</description>
+
+  <property file="build.properties"/>
+  <property file="build-proto.properties"/>
+
+  <target name="compile" >
+    <exec executable="protoc">
+      <arg value="--proto_path=src/"/>
+      <arg value="--java_out=proto_src"/>
+      <arg value="${src}/org/waveprotocol/wave/protocol/common.proto"/>
+    </exec>
+
+    <exec executable="protoc">
+      <arg value="--proto_path=src/"/>
+      <arg value="--proto_path=${protoc_dist}/src/"/>
+      <arg value="--java_out=proto_src"/>
+      <arg value="${src}/org/waveprotocol/wave/examples/fedone/rpc/rpc.proto"/>
+    </exec>
+
+    <exec executable="protoc">
+      <arg value="--proto_path=src/"/>
+      <arg value="--proto_path=${protoc_dist}/src"/>
+      <arg value="--java_out=proto_src"/>
+      <arg value="${src}/org/waveprotocol/wave/examples/fedone/waveserver/waveclient-rpc.proto"/>
+    </exec>
+  </target>
+</project>

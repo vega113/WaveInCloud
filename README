@@ -1,0 +1,41 @@
+Build:
+
+This code requires Java 6.  If you are on Mac OS X, you'll need to install it
+from http://www.apple.com/support/downloads/javaformacosx105update1.html - 
+OS X ships with Java 5 by default.
+
+Wave Protocol uses Ant to build. To run the tests, run:
+
+<code>
+  ant test
+</code>
+
+To build the server, run just 
+<code>
+  ant
+</code>
+
+It will be left in dist/fedone-X.Y.jar
+
+Wave Protocol communicates using Protocol Buffers 
+<http://code.google.com/p/protobuf/>
+Because of the difficulty of distributing binaries, we do not include the 
+protocol compiler in this distribution. Therefore, to rebuild updated 
+protocol buffer files, you will need to install the binary protoc 
+in your environment by fetching the protobuf code from the website 
+above.
+
+Additionally, you will have to update the build-proto.properties file to
+point to the unpacked source distribution of the protocol buffers release.
+
+Then, after updating a proto file, run
+
+<code>
+  ant -f build-proto.xml
+</code>
+
+Note: this generates files into proto_src. If files here exist without 
+write permission, you will get permission denied errors from this step.
+
+Note also that you don't need protoc unless you want to change the proto
+files.
