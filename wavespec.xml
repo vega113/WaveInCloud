@@ -1,8 +1,9 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE rfc SYSTEM "http://xml.resource.org/authoring/rfc2629.dtd" [
 <!ENTITY rfc3920 PUBLIC '' 'http://xml.resource.org/public/rfc/bibxml/reference.RFC.3920.xml'>
 <!ENTITY OWTP "Google Wave Federation Protocol">
 <!ENTITY rncschema SYSTEM "waveschema.xml">
+<!ENTITY waveproto SYSTEM "waveproto.xml">
 <!NOTATION rnc PUBLIC "RNC schema file">
 ]>
 <?rfc toc="yes"?>
@@ -14,6 +15,12 @@
 <rfc>
 	<front>
 		<title>Google Wave Federation Protocol Over XMPP</title>
+		<author initials="A." surname="Baxter" fullname="Anthony Baxter">
+			<organization>Google, Inc. </organization>
+			<address>
+				<email>arb@google.com</email>
+			</address>
+		</author>
 		<author initials="J." surname="Bekmann" fullname="Jochen Bekmann">
 			<organization>Google, Inc. </organization>
 			<address>
@@ -38,7 +45,7 @@
 				<email>thorogood@google.com</email>
 			</address>
 		</author>
-		<date year="2009" month="June"/>
+		<date year="2009" month="July"/>
 		<note title="Document Status">
 			<t>This document represents work in progress. It omits details that we are unable to capture at this 
 			point and we expect parts of the protocol to change. Please also note that while we revise the 
@@ -133,13 +140,13 @@
           regardless of where the other wavelets in the wave are hosted.</t>
 			</section>
 			<section title="Documents" anchor="documents">
-				<t>Each wavelet is a container for any number of uniquely named
-          documents. A document has an id that is unique within its containing
-          wavelet and is composed of an XML document and a set of "stand-off"
-          annotations. Stand-off annotations are pointers into the XML document
+				<t>Each wavelet is a container for any number of
+          documents. Each document has an id that is unique within its containing
+          wavelet. It is composed of an XML document and a set of
+          annotations. Annotations are key-value pairs that span arbitrary ranges of the XML document
           and are independent of the XML document structure. They are used to
           represent text formatting, spelling suggestions and hyper-links.</t>
-				<t>Some documents represent rich text messages in the wavelet. 
+				<t>Some documents represent rich-text messages in the wavelet. 
 				These are known as "blips". The blips in a wave form a threaded 
 				conversation. Others represent data, for example tags, and are 
 				not displayed to the user as part of the threaded conversation 
@@ -250,20 +257,12 @@
 			<section title="Connection Initiation and Lifetime">
 				<t>As an XMPP extension, this protocol expects a bidirectional stream to
 				 be established according to the XMPP core specification.</t>
-				<t>The connection MUST be secured using the TLS feature of XMPP.
-				It is RECOMMENDED that communication is encrypted (namely by using a non-identity TLS cipher).</t>
-				<t>There are two kinds of XMPP streams shared between a federation host and a federation remote: 
-				an <xref target="iq-elements-update-stream">update stream</xref> and a 
-				<xref target="iq-elements-service-stream">service stream</xref>. Both may be initiated on demand
-				(i.e. whenever needed) and are independent of each other.				
-				</t>
-				<t>All communication is made using IQ based stanzas, the stanzas of type "get" and "set" contain a unique 'id' attribute,
-				 they are sent from the initiator to the receiver. The receiver MUST eventually reply to each "get" or "set" stanza with
-				 a stanza of type "result" or "error" and the corresponding 'id' attribute.
-				 The sender MUST NOT resend the "get" or "set" stanza for the duration of the XMPP connection. In the absence of a
-				 reply, the sender SHOULD timeout and tear down the XMPP connection, then reconnect and retry. (The exact specification
-				 of timeout duration, error stanzas and behaviour on receipt of errors is not yet specified).				
-				</t>
+                               <t>The connection MUST be secured using the TLS feature of XMPP.
+                                 It is RECOMMENDED that communication is encrypted (namely by using a non-identity TLS cipher).</t>
+                               <t>
+                                 All communication except wavelet updates are
+                                 sent via <xref target="XEP0060">PubSub</xref> events. Wavelet updates are sent using Message stanzas.
+                               </t>
 			</section>
 			<section title="Cryptographic Certificates and Signatures" anchor="security-note">
 				<t>In the section below there are references to cryptographic signatures and certificates used to generate them.</t>
@@ -271,27 +270,38 @@
 	            <eref target="https://sites.google.com/a/waveprotocol.org/wave-protocol/whitepapers/wave-protocol-verification">General Verifiable Federation</eref>
 	            gives a detailed explanation of how we expect to make all changes to wavelets attributable to their originating servers
 	            and render the federation protocol immune to a number of attacks. The techniques described in the paper have not yet been fully
-	            implemented or incorporated into this protocol specification, these will be complemented with a certificate management and exchange
-	            protocol.</t>
+                    implemented or incorporated into this protocol specification, however certificates are exchanged using the get signer and post 
+                    signer XMPP messages.
+	            </t>
 			</section>
-			<section title="IQ Based Stanzas" anchor="iq-stanzas">
+			<section title="Stanzas" anchor="iq-stanzas">
 				<t>The federation protocol involves two parties: a wave federation host and wave
         federation remote as described <xref target="host-and-remote">above</xref>. The
-        top level IQ stanzas are divided into two types: those that are part of the "update stream", and those part of the "service stream".
-        The <xref target="iq-elements-update-stream">update stream</xref> is initiated by a federation host to a federation remote and carries 
+        top level stanzas are divided into two types: those that are part of the "update stanzas", and those part of the "service stanzas".
+        The <xref target="iq-elements-update-stream">update stanzas</xref> are initiated by a federation host to a federation remote and carry 
         <xref target="elements-update">&lt;update/&gt;</xref>s from the host to the remote. 
-        The <xref target="iq-elements-service-stream">service stream</xref> is initiated by the federation remote to the federation host and
-        carries <xref target="elements-submit-request">&lt;submit-request/&gt;</xref>s and 
-        <xref target="elements-submit-response">&lt;submit-response/&gt;</xref>s, as well as 
+        The <xref target="iq-elements-service-stream">service stanzas</xref> are initiated by the federation remote to the federation host and
+        carry <xref target="elements-submit-request">&lt;submit-request/&gt;</xref>s and 
+        <xref target="elements-submit-response">&lt;submit-response/&gt;</xref>s, 
         <xref target="elements-history-request">&lt;history-request/&gt;</xref>s and 
-        <xref target="elements-history-response">&lt;history-response/&gt;</xref>s.</t>
+        <xref target="elements-history-response">&lt;history-response/&gt;</xref>s,
+
+<!--
+        <xref target="signer-get-request">   &lt;signer-get-request/&gt;  </xref>s and 
+        <xref target="signer-get-response">  &lt;signer-get-response/&gt; </xref>s,
+
+        <xref target="signer-post-request">  &lt;signer-post-request/&gt; </xref>s and  
+        <xref target="signer-post-response"> &lt;signer-post-response/&gt;</xref>s.
+-->
+        &lt;signer-get-request/&gt;s and 
+        &lt;signer-get-response/&gt;s,
+
+        &lt;signer-post-request/&gt;s and  
+        &lt;signer-post-response/&gt;s.
+</t>
 				<section title="Commonly used attributes" anchor="attributes">
-					<t>These IQ stanzas commonly contain the following attributes:</t>
-					<section title="address" anchor="wave-address">
-						<t>A wave address is identified by a string formatted as an email
-            address (RFC 2822). </t>
-					</section>
-					<section title="wavelet-name" anchor="elements-wavelet-name">
+					<t>These stanzas commonly contain the following attributes:</t>
+                                        <section title="wavelet-name" anchor="elements-wavelet-name">
 						<t>The 'wavelet-name' attribute is an encoded form of the following components:</t>
 						<t>
 							<list style="symbols">
@@ -329,16 +339,15 @@
 						It is used to indicate that the wave server has committed deltas up to this point.
 							<list style="symbols">
 								<t>'version' -- REQUIRED attribute which contains the version of the wavelet.</t>
-								<t>'history-hash' -- REQUIRED attribute which is the value of the rolling history hash at the given version.</t>
 							</list>
 						</t>
 					</section>
 					<section title="delta" anchor="elements-delta">
 						<t>The &lt;delta/&gt; element contains a sequence of one or more operations grouped for communication to and between wave servers:
 							<list style="symbols">
-								<t>'author' -- REQUIRED <xref target="wave-address">wave-address</xref> attribute of the contributor. Must be a wavelet participant.</t>
-								<t>&lt;hashed-version/&gt; -- REQUIRED element version and history hash that this delta was intended to be applied to (pre-OT).</t>
-								<t>&lt;operation/&gt; -- REQUIRED ONE OR MORE <xref target="wavelet-ops">operation</xref> elements.</t>
+								<t>'wavelet-name' -- REQUIRED <xref target="elements-wavelet-name">wavelet-name</xref>.</t>
+								<t>&lt;operation/&gt; -- The operation is carried as the text of the &lt;delta&gt; element 
+                                                                  as a Base64 encoded protocol buffer.</t>
 							</list>
 						</t>
 					</section>
@@ -346,49 +355,22 @@
 						<t>The &lt;applied-delta/&gt; element contains a delta which has been successfully applied to a wavelet by a wave server, along with 
 						supplementary information about the result of the application.
 							<list style="symbols">
-								<t>'operations-applied' -- REQUIRED attribute with the number of operations applied by the wave server after transforming the submitted delta.</t>
-								<t>'application-timestamp' -- REQUIRED timestamp (milliseconds since epoch) attribute recording the time of delta application.</t>
-								<t>&lt;delta/&gt; -- REQUIRED <xref target="elements-delta">delta</xref> element.</t>
-								<t>&lt;signature/&gt; -- REQUIRED <xref target="elements-signature">signature</xref> element. It signs the delta with the certificate
-								of the delta's author's domain.</t>
-								<t>&lt;hashed-version/&gt; -- REQUIRED element containing the history hash and version of the wavelet after the delta was applied.</t>
+
+								<t>&lt;operation/&gt; -- The operation is carried as the text of the &lt;applied-delta&gt; element 
+                                                                  as a Base64 encoded protocol buffer.</t>
 							</list>
 						</t>
-					</section>
-					<section title="signature" anchor="elements-signature">
-						<t>The &lt;signature/&gt; element is used to sign a delta with the author's domain's certificate. This signature is used by downstream wave providers to verify
-						that the author's wave provider was in fact the source of the delta.
-						</t>
-						<t>The  &lt;signature/&gt; element includes a reference to the certificate used for the signing, the cryptographic signature and possibly a timestamp. 
-						As noted in the <xref target="security-note">Cryptographic Certificates and Signatures</xref> section, the details have not yet
-						been fully determined.		
-					</t>
 					</section>
 				</section>
-				<section title="Update Stream" anchor="iq-elements-update-stream">
-					<t>The update stream sends and acknowledges updates.</t>
-					<section title="update" anchor="elements-update">
-						<t>The  &lt;update/&gt; element is used within an IQ stanza of type "set", and a unique 'id' attribute. 
+				<section title="Update Stanzas" anchor="iq-elements-update-stream">
+					<t>The wavelet-update operation is sent as a Message stanza.</t>
+					<section title="wavelet-update" anchor="elements-update">
+						<t>The  &lt;wavelet-update/&gt; element is used within a Message stanza. 
 						It is used to push new wavelet 
 						operations applied to a local wavelet to the wave providers of any remote participants.
-						The federation remote responds with an empty IQ stanza of type "result" with the matching 'id' attribute to 
-						acknowledge the update.</t>
-						<t>
-							<list style="symbols">
-								<t>&lt;wavelet-update/&gt; -- the update MUST contain ONE OR MORE &lt;wavelet-update/&gt; elements. The 
-								syntax for a &lt;wavelet-update/&gt; is the following: 
-		  					<list style="symbols">
-										<t>'wavelet-name' -- REQUIRED wavelet name attribute.</t>
-										<t>&lt;applied-delta/&gt; -- the update MAY contain ZERO OR MORE &lt;applied-delta/&gt; elements.</t>
-										<t>&lt;commit-notice/&gt; -- OPTIONAL element informing the downstream wave server that the upstream wavelet 
-									server has committed the wavelet operations up to the specified version to persistent storage.
-										</t>
-									</list>
-								</t>
-							</list>
-						</t>
+                                              </t>
 						<t>When the requester is resending updates after reconnecting a XMPP stream, 
-						the &lt;update/&gt; MAY omit the &lt;applied-delta/&gt; elements but MUST resend the 
+						the &lt;wavelet-update/&gt; MAY omit the &lt;applied-delta/&gt; elements but MUST resend the 
 						&lt;commit-notice/&gt; elements. In this case the &lt;commit-notice/&gt; informs the receiver of the existence 
 						of updates, and it is
 						up to the receiver to request these using a &lt;history-request/&gt; on a service stream.</t>
@@ -398,65 +380,73 @@
 						<figure>
 							<preamble>Step 1: otherwave.com's federation host sends an update to the federation remote:</preamble>
 							<artwork><![CDATA[
-<iq id='19' type='set'>
-    <update>
-      <wavelet-update wavelet-name='otherwave.com/acmewave.com$w+35mn/conv+897xvc'>  
-         <applied-delta operations-applied=2 application-timestamp=897234>
-           <hashed-version version=123 history-hash='234bcbde'/>
-           <delta author='bob@acmewave.com'>
-             <hashed-version version=120 history-hash='1e2acc34bc'/>
-             <operation> .... </operation>
-             <operation> .... </operation>
-           </delta>
-           <signature>...</signature>
-         </applied-delta>
-         <commit-notice version=125 history-hash='234feb234ba'/>
-      </wavelet-update>
-    </update>
-</iq>
+<message type="normal" 
+  from="wave.initech-corp.com" 
+  id="1-1" to="wave.acmewave.com">
+  <request xmlns="urn:xmpp:receipts"/>
+  <event xmlns="http://jabber.org/protocol/pubsub#event">
+    <items>
+      <item>
+        <wavelet-update 
+          xmlns="http://waveprotocol.org/protocol/0.2/waveserver" 
+          wavelet-name="acmewave.com/initech-corp.com!a/b">
+          <applied-delta><![CDATA[CiI...MwE] ]></applied-delta>
+        </wavelet-update>
+      </item>
+    </items>
+  </event>
+</message>
 ]]></artwork>
 						</figure>
 						<figure>
 							<preamble>Step 2: The federation remote acknowledges the update, indicating success.</preamble>
 							<artwork><![CDATA[
-<iq id='19' type='result'/>
+<message id="1-1"
+  from="wave.acmewave.com"
+  to="wave.initech-corp.com">
+  <received
+    xmlns="urn:xmpp:receipts"/>
+</message>
 ]]></artwork>
 						</figure>
 					</section>
 				</section>
-				<section title="Service Stream" anchor="iq-elements-service-stream">
-					<t>The service stream sends requests and responses for the submission of operations and wavelet history retrieval.</t>
-					<section title="history-request" anchor="elements-history-request">
-						<t>The &lt;history-request/&gt; element is used within an IQ stanza of type "get". It is sent by a federation 
+				<section title="Service Stanzas" anchor="iq-elements-service-stream">
+					<t>The service stanzas are for the submission of operations and wavelet history retrieval.</t>
+					<section title="History Request" anchor="elements-history-request">
+						<t>The &lt;delta-history/&gt; element is used within a <xref target="XEP0060">PubSub</xref> event. 
+                                                  It is sent by a federation 
 						remote to request wavelet operations from the hosting wave
             providers. The response by the host provider's federation host will contain the operations
             for the requested version range.
             													<list style="symbols">
 								<t>'wavelet-name' -- REQUIRED attribute.</t>
 								<t>'start-version' -- REQUIRED attribute with version number (inclusive) from which to retrieve the wavelet's history. (Note that 
-the start version MUST fall on a delta boundary).</t>
+the start version MUST fall on a delta boundary).</t>         
+
+								<t>'start-version-hash' -- REQUIRED attribute with the hash for the associated start version.</t>
 								<t>'end-version' -- OPTIONAL attribute with ending version number (exclusive) up to which to retrieve the wavelet's history. (Note that 
 the end version MUST fall on a delta boundary).</t>
+								<t>'end-version-hash' -- REQUIRED attribute with the hash for the associated end version.</t>
 								<t>'response-length-limit' -- OPTIONAL attribute containing advice from the requester about the preferred
   response limit, measured as the aggregate number of characters in the XML
-  serialisation of the applied deltas in the response.  The responder is
+  serialization of the applied deltas in the response.  The responder is
   advised but not required to respect the limit.  Moreover, the responder
   may operate with a lower limit of its own and send back a smaller message
   than requested.  When the responder exercises either its own or the
-  requesters limit, it will return only a prefix of the requested wavelet deltas.
+  requester's limit, it will return only a prefix of the requested wavelet deltas.
   Unless the version range is empty, the responder will always return a minimum of
   one wavelet delta (the first) even if its length exceeds the responders or
   requester's limits.</t>
 							</list>
 						</t>
 					</section>
-					<section title="history-response" anchor="elements-history-response">
-						<t>The &lt;history-response/&gt; element is used within an IQ stanza of type "result". 
-						It satisfies requests for wavelet operations in response to a &lt;history-request/&gt; from a federation remote.
+					<section title="History Response" anchor="elements-history-response">
+						<t>The response to a History Request contains: 
 		  					<list style="symbols">
-								<t>'version-truncated-at' -- OPTIONAL attribute indicating that the returned deltas were truncated at the given 
+								<t>&lt;history-truncated&gt; -- OPTIONAL attribute indicating that the returned deltas were truncated at the given 
 version number (exclusive).  Truncation will occur if the 
-<xref target="elements-history-request">&lt;history-request/&gt;</xref> specified a 'response-length-limit' attribute or the responder imposed its own limit.</t>
+<xref target="elements-history-request">&lt;delta-history/&gt;</xref> specified a 'response-length-limit' attribute or the responder imposed its own limit.</t>
 								<t>&lt;applied-delta/&gt; -- the update contains ZERO OR MORE &lt;applied-delta/&gt; elements, starting from the requested version up to 
 the requested end version (exclusive), or until the latest version if the request did not contain the end version, or up to the version
 indicated in 'version-truncated-at'.</t>
@@ -469,48 +459,64 @@ indicated in 'version-truncated-at'.</t>
 					<section title="Successful history request / history response example">
 						<figure>
 							<preamble>Step 1: A federation remote makes a
-							<xref target="elements-history-request">history-request</xref> to the foobar.com federation host:</preamble>
+							<xref target="elements-history-request">history-request</xref> to the acmewave.com federation host:</preamble>
 							<artwork><![CDATA[
-<iq id='239' type='get'>
-    <history-request start-version=123 response-length-limit=100 
-        wavelet-name='foobar.com/acmewave.com$xc867/nbm345'/>
+<iq type="get" id="1-1" from="wave.initech-corp.com" to="wave.acmewave.com">
+  <pubsub xmlns="http://jabber.org/protocol/pubsub">
+    <items node="wavelet">
+      <delta-history 
+        xmlns="http://waveprotocol.org/protocol/0.2/waveserver"
+        start-version="12" 
+        start-version-hash="" 
+        end-version="2345" 
+        end-version-hash=""
+        response-length-limit="300000"
+        wavelet-name="acmewave.com/initech-corp.com!a/b"/> 
+    </items>
+  </pubsub>
 </iq>
 ]]></artwork>
 						</figure>
 						<figure>
-							<preamble>Step 2: foobar.com's federation host returns the requested history.</preamble>
+							<preamble>Step 2: acmewave.com's federation host returns the requested history.</preamble>
 							<artwork><![CDATA[
-<iq id='239' type='result'>
-  <history-response>
-    <applied-delta operations-applied=2 application-timestamp=897234>
-      <hashed-version version=123 history-hash='234bcbde'/>
-      <delta author='bob@acmewave.com'>
-        <hashed-version version=120 history-hash='2acc34bc'/>
-        <operation> .... </operation>
-        <operation> .... </operation>
-      </delta>
-      <signature>...</signature>        
-    </applied-delta>
-  </history-response>
+<iq type="result" id="1-1" from="wave.acmewave.com" to="wave.initech-corp.com">
+  <pubsub xmlns="http://jabber.org/protocol/pubsub">
+    <items>
+      <item>
+        <applied-delta 
+          xmlns="http://waveprotocol.org/protocol/0.2/waveserver">
+            <![CDATA[CiI...MwE] ]>
+        </applied-delta>
+      </item>
+      <item>
+        <commit-notice 
+          xmlns="http://waveprotocol.org/protocol/0.2/waveserver" 
+          version="2344"/>
+      </item>
+      <item>
+        <history-truncated 
+          xmlns="http://waveprotocol.org/protocol/0.2/waveserver" 
+          version="2300"/>
+      </item>
+    </items>
+  </pubsub>
 </iq>
 ]]></artwork>
 						</figure>
 					</section>
-					<section title="submit-request" anchor="elements-submit-request">
-						<t>The &lt;submit-request/&gt; element is used within an IQ stanza of type "set".
+					<section title="Submit Request" anchor="elements-submit-request">
+						<t>The &lt;submit-request/&gt; element is used within a <xref target="XEP0060">PubSub</xref> event.
 						The federation remote submits wavelet operations to the hosting wave provider.
             A &lt;submit-response/&gt; will be returned.
 	            <list style="symbols">
-								<t>'wavelet-name' -- REQUIRED wavelet name attribute.</t>
 								<t>&lt;delta/&gt; -- REQUIRED delta element to be submitted.</t>
-								<t>&lt;signature/&gt; -- REQUIRED signature element as signed by the originator of the delta.</t>
-								<t>&lt;address-access/&gt; -- ZERO OR MORE elements describing nodes on an address access path through the  
-								<eref target="http://www.waveprotocol.org/whitepapers/access-control">address access graph</eref> leading to the author address in the delta.</t>
 							</list>
 						</t>
 					</section>
 					<section title="submit-response" anchor="elements-submit-response">
-						<t>A &lt;submit-response/&gt;  element is used within an IQ stanza of type "result". It is returned by a federation host 
+						<t>A &lt;submit-response/&gt;  element is used within a <xref target="XEP0060">PubSub</xref> response.
+                                                  It is returned by a federation host 
 						after the hosting wave server has processed the submitted delta.
 						<list style="symbols">
 								<t>'operations-applied' -- REQUIRED attribute with the number of operations applied by the wave server after transforming the submitted delta.</t>
@@ -523,30 +529,45 @@ indicated in 'version-truncated-at'.</t>
 					</section>
 					<section title="Successful submit request / submit response example">
 						<figure>
-							<preamble>Step 1: The federation remote makes an submit request to the foowave.com federation host:</preamble>
+							<preamble>Step 1: The federation remote makes an submit request to the initech-corp.com federation host:</preamble>
 							<artwork><![CDATA[
-<iq id='54312' type='set'>
-    <submit-request wavelet-name='foowave.com/acmewave.com$345345/fsda'>
-      <delta author='primates@acmewave.com'>
-             <hashed-version version=100 history-hash='938bc36'/>
-             <operation> .... </operation>
-             <operation> .... </operation>
-      </delta>
-      <signature>...</signature>
-      <address-access address='crazymonkey@otherwave.com'/>
-    </submit-request>
+
+<iq type="set" id="1-1" from="wave.initech-corp.com" to="wave.acmewave.com">
+  <pubsub xmlns="http://jabber.org/protocol/pubsub">
+    <publish node="wavelet">
+      <item>
+        <submit-request 
+          xmlns="http://waveprotocol.org/protocol/0.2/waveserver">
+          <delta wavelet-name="acmewave.com/initech-corp.com!a/b">
+            <![CDATA[CiA...NvbQ==] ]>
+          </delta>
+        </submit-request>
+      </item>
+    </publish>
+  </pubsub>
 </iq>
 ]]></artwork>
 						</figure>
 						<figure>
-							<preamble>Step 2: The foowave.com federation host returns a response to the submit request. Note that this example
+							<preamble>Step 2: The initech-corp.com federation host returns a response to the submit request. Note that this example
 							shows the case where a different party submitted a delta at version 100 with 3 operations before this submit-request was received.
 							The requester's submitted delta was thus transformed before it was applied, and as a result the version number at which it was applied was 103.</preamble>
 							<artwork><![CDATA[
-<iq id='54312' type='result'>
-    <submit-response operations-applied=2 application-timestamp=2794824789>
-      <hashed-version version=105 history-hash='024bcbd879'/>
-    </submit-response>
+<iq type="result" id="1-1" from="wave.acmewave.com" to="wave.initech-corp.com">
+  <pubsub xmlns="http://jabber.org/protocol/pubsub">
+    <publish>
+      <item>
+        <submit-response 
+          xmlns="http://waveprotocol.org/protocol/0.2/waveserver" 
+          application-timestamp="1234567890" 
+          operations-applied="2">
+          <hashed-version 
+            history-hash="" 
+            version="1234"/>
+        </submit-response>
+      </item>
+    </publish>
+  </pubsub>
 </iq>
 ]]></artwork>
 						</figure>
@@ -554,105 +575,378 @@ indicated in 'version-truncated-at'.</t>
 				</section>
 			</section>
 		</section>
-		<section title="Wavelet Operations" anchor="wavelet-ops">
-			<t>Wavelet operations mutate wavelets. The top level element for any wavelet operation is an &lt;operation/&gt; element. 
-						</t>
-			<t>The &lt;operation/&gt; element is simply a container element, and MUST contain exactly ONE of the four elements
-			&lt;noop/&gt;, &lt;add-participant/&gt;, &lt;remove-participant/&gt;, and &lt;mutate-document/&gt;, which are specified below.
-						The current implementation has the following three further operations &lt;submit-document/&gt;, &lt;add-document/&gt;,
-						&lt;tombstone-document/&gt; that are deprecated and are
-						omitted from this document because they are expected to be eliminated before this document is finalized.
-						</t>
-			<section title="noop" anchor="noop-element">
-				<t>The &lt;noop/&gt; element is used to indicate a blank operation. It has no attributes and no child elements.</t>
-			</section>
-			<section title="add-participant" anchor="add-participant-element">
-				<t>The &lt;add-participant/&gt; element is used to add a participant to a wave.  It has one attribute, the REQUIRED 'address' attribute,
-				 which specifies the <xref target="wave-address">wave address</xref> of the participant.</t>
-			</section>
-			<section title="remove-participant" anchor="remove-participant-element">
-				<t>The &lt;remove-participant/&gt; element is used to removed a participant from a wave.  It has one attribute, the REQUIRED 
-				'address' attribute, which specifies the <xref target="wave-address">wave address</xref> of the participant.</t>
-			</section>
-			<section title="mutate-document" anchor="mutate-document-element">
-				<t>The &lt;mutate-document/&gt; element is used to specify a modification of a document's content. It MUST contain a 'document-id'
-				attribute, and ONE OR MORE <eref target="mutation-children">document mutation elements.</eref>
-				</t>
-				<section title="Document mutation semantics" anchor="mutation-semantics">
-					<t>Content mutations for a document operation operate on a XML document with "stand-off" annotations. The mutations maintain
-					 a current operation point, also referred to as the 'cursor'. Much like the cursor in a text editor, this specifies 
-					where the next operation in the stream should be applied. The cursor begins at position zero. &lt;skip/&gt; operations
-					 are used to explicitly modify the current operation point, and the remainder of the operations are used to modify the 
-					 actual textual content of the document. However these other operations may also implicitly affect the location of the 
-					 current operation point.</t>
-					<t>Note that the cursor treats every start-tag and end-tag within the XML as having a character length of one. For example, 
-					if a cursor is located before the start-tag &lt;blip&gt; and is moved forward by one, it will now be located immediately after 
-					this start-tag &lt;blip&gt;.</t>
-					<t>Internally, XML documents within a wave MUST NOT contain the empty-element tag, i.e., a merged start and end tag. That is, the 
-					tag &lt;foo /&gt; is disallowed, and MUST be stored as &lt;foo&gt;&lt;/foo&gt;. This is even the case for tags which would 
-					normally be represented as an empty-element, such as &lt;br /&gt;.</t>
-					<t>It should be understood that this encoding is in no way assumed to be the most efficient way to encode XML documents as a 
-					set of operations.  However, the document operations specified below are easily 
-					composable and transformable, which is a requirement for concurrency control transforms.  They are also used to accurately 
-					represent the history of the document for playback.</t>
-				</section>
-				<section title="Document mutation elements" anchor="mutation-children">
-					<t>The &lt;skip/&gt; element is used to specify portions of the document that are not modified by the content mutation.  It has one REQUIRED attribute, 'size', specifying the number of positions (characters or tags) by which the cursor is to be advanced before applying the next mutation operation.</t>
-					<t>The &lt;characters/&gt; element is used to specify text additions to the document.  It has one REQUIRED attribute, 'characters', which specifies the characters to be added to the document at the current insertion point. After this operation, the cursor will be located after the inserted characters.</t>
-					<t>The &lt;element-start/&gt; element is used to specify the beginning of a tagged element in the document.  It has one REQUIRED attribute, 'name', which specifies the tag name of the element to be added to the document at the current insertion point.  The &lt;element-start/&gt; element can OPTIONALLY have any number of children used to specify attributes for this element.  These children are &lt;attribute/&gt; elements, which have two REQUIRED attributes, 'name' and 'value', specifying the name and value of the attribute for the element, respectively. After this operation, the cursor will move forward one step, i.e., after the newly inserted start-tag.</t>
-					<t>The &lt;element-end/&gt; element is used to specify the end of a tagged element.  It is REQUIRED that every &lt;element-start/&gt; element have a matching &lt;element-end/&gt; element. After this operation, the cursor will move forward one step, i.e., after the newly inserted end-tag.</t>
-					<t>The &lt;anti-element-start/&gt; element is used to specify the beginning of a "split" element in the document. It takes NO attributes. Functionally, it will insert an end-tag element which matches with the nearest start-tag to the left of the cursor. It will also move the cursor one position forward, after this inserted end-tag.</t>
-					<t>The &lt;anti-element-end/&gt; element is used to specify the end of a split element in the document. The &lt;anti-element-end/&gt; can OPTIONALLY have any number of children used to specify attributes for this element. These children are &lt;attribute/&gt; elements, which have two REQUIRED attributes, 'name' and 'value', specifying the name and value of the attribute for the element, respectively. After this operation, the cursor will move forward one step, i.e., after the newly inserted start-tag. This element MUST be paired with a &lt;anti-element-start/&gt; element.</t>
-					<t>The &lt;delete-characters/&gt; element is used to specify text deletions from the document.  It has one REQUIRED attribute, 'size', which specifies the number of characters to be deleted from the document.  This operation deletes characters AFTER this cursor, and does not modify the cursor location. All deletion operations will, of course, immediately reduce the total length of the document.</t>
-					<t>The &lt;delete-element-start/&gt; element indicates the deletion of the start-tag directly under the cursor. i.e., the position directly after the cursor. To preserve well-formedness of the document being modified, this MUST be paired with a later &lt;delete-element-end/&gt; at the position of the end-tag. After the operation, the cursor is positioned immediately after the deleted start-tag. Again, this operation will reduce the total length of the document.</t>
-					<t>The &lt;delete-element-end/&gt; element indicates the deletion of the end-tag directly under the cursor. It MUST be paired with a previous &lt;delete-element-start/&gt;. The cursor does not move as a result of this operation.</t>
-					<t>The &lt;delete-anti-element-start/&gt; element indicates the deletion of the end-tag directly under the cursor. It MUST be paired with a later &lt;delete-anti-element-end/&gt; containing the same tag, at the same tree level within the XML document. The cursor does not move as a result of this operation.</t>
-					<t>The &lt;delete-anti-element-end/&gt; element indicates the deletion of an start-tag directly under the cursor. It MUST be paired with a previous &lt;delete-anti-element-start/&gt; element containing the same tag. The cursor does not move as a result of this operation.</t>
-					<t>The &lt;set-attributes/&gt; element is used to set XML attributes on the start-tag (e.g. &lt;blip&gt;) directly under the cursor. It first clears all previous attributes on this start-tag. It then iterates through the OPTIONAL set of child &lt;attribute/&gt; elements and applies their key/value pairs as attributes to the start-tag.</t>
-					<t>The &lt;update-attributes/&gt; element is used in the same way as &lt;set-attributes/&gt;, except that it does not first clear attributes, and only updates the attributes on the start-tag. Note that if the 'value' attribute of an &lt;attribute/&gt; is NOT set, then this indicates the deletion of the named attribute.</t>
-					<t>The &lt;commence-annotation/&gt; element has one REQUIRED attribute, 'key', and one OPTIONAL attribute, 'value'. It can be used to apply key/value annotations on a range of the XML document. The annotation applies from the current cursor position up to the cursor position at the point when the next &lt;commence-annotation/&gt; or &lt;conclude-annotation/&gt; element with the same key is encountered. The two endpoints of an annotation may fall on any cursor position in the XML document, independent of the document's hierarchical structure. If value is unspecified, the annotation with the specified key will be removed, starting at the current cursor position. Note that several &lt;commence-annotation/&gt; elements with the same key may occur in sequence, however they MUST eventually be followed by a single &lt;conclude-annotation/&gt; element with the same key.</t>
-					<t>The &lt;conclude-annotation/&gt; element denotes the end of an annotation range, and contains a single attribute of 'key'. From the current cursor position onwards, the annotation with the specified key will not be applied to or removed from the document unless another &lt;commence-annotation/&gt; element is encountered.</t>
-				</section>
-			</section><!--			
-			<section title="Currently used operations, but to be deprecated:">
-				<t>The following operations are currently used, and we expect will be supported in the first iteration of our protocol,
-			however they will be deprecated soon after.</t>
-				<section title="add-document" anchor="add-document-element">
-					<t>The &lt;add-document/&gt; element is used to append a <xref target="documents">document</xref> to a wavelet.  It has three attributes:</t>
-					<t>
-						<list style="symbols">
-							<t>'document-id' - - REQUIRED attribute specifying a wavelet-wide unique id for the document being created</t>
-							<t>'parent-id' - - OPTIONAL attribute, which specifies a document id for the parent of this document, if there is one. Having no parent id implies this document is the root of a conversation.</t>
-							<t>The receiving entity MUST verify the parent id of a document is valid if the 'parent-id' attribute is specified.</t>
-						</list>
-					</t>
-				</section>
-				<section title="tombstone-document" anchor="tombstone-document-element">
-					<t>The &lt;tombstonedocument&gt; element is used to mark a
-	        single <xref target="documents">document</xref> as either
-	        deleted or active. ALL documents, immediately after they are
-	        created, are marked as active. This element has two attributes:</t>
-					<t>
-						<list style="symbols">
-							<t>'document-id' - - REQUIRED attribute which specifies the
-	          <xref target="documents">document</xref> which is to be marked</t>
-							<t>'istombstone' - - REQUIRED attribute which MUST take either
-	          the value 'true', indicating that this document is to be be marked
-	          as deleted, or 'false', which indicates that this document is to
-	          be marked as active.</t>
-						</list>
-					</t>
-				</section>
-				<section title="submit-document" anchor="submit-document-element">
-					<t>The &lt;submit-document/&gt; element is used to signal that a
-	        document was submitted by the user. The main use of the submit document element is to mark points in the operation stream where playback should stop.</t>
-				</section>
-			</section>
--->
-		</section>
+		<section title="Wavelet Update" anchor="wavelet-ops">
+			<t>Wavelet update operations mutate wavelets.  The actual operation is a signed protocol buffer
+                          that is included in the applied-delta element Base64 encoded text. The wavelet update 
+                          MAY contain multple applied-delta's and an optional commit-notice. The wavelet update
+                          response is an XMPP receipt of the form specified in XEP-0184.
+                        </t>
+                        <t> Here is an example exchange:</t>
+                        <figure>
+				<artwork><![CDATA[
+<message type="normal" from="wave.initech-corp.com" id="1-1" to="wave.acmewave.com">
+  <request xmlns="urn:xmpp:receipts"/>
+  <event xmlns="http://jabber.org/protocol/pubsub#event">
+    <items>
+      <item>
+        <wavelet-update xmlns="http://waveprotocol.org/protocol/0.2/waveserver" wavelet-name="acmewave.com/initech-corp.com!a/b">
+          <applied-delta><![CDATA[CiIKIAoFCNIJEgASF2ZvenppZUBpbml0ZWNoLWNvcnAuY29tEgUI0gkSABgCINKF2MwE] ]></applied-delta>
+        </wavelet-update>
+      </item>
+    </items>
+  </event>
+</message>
+]]></artwork>
+						</figure>
+
+                        <figure>
+				<artwork><![CDATA[
+<message id="1-1" from="wave.acmewave.com" to="wave.initech-corp.com">
+  <received xmlns="urn:xmpp:receipts"/>
+</message>
+]]></artwork>
+						</figure>
+
+    </section>
+    <section title="Get Signer" anchor="get-signer">
+      <t>A remote wave server issues a signer-request to request
+        certificates for wavelets where the signer of the wavelet is currently
+        unknown. The request is sent to the wave server that hosts the wavelet.
+        The provided history-hash identifies the delta for which the 
+        certificate is being requested.
+      </t>
+                        <t> Here is an example exchange:</t>
+                        <figure>
+				<artwork><![CDATA[
+<iq type="get" id="1-1" from="wave.initech-corp.com" to="wave.acmewave.com">
+  <pubsub xmlns="http://jabber.org/protocol/pubsub">
+    <items node="signer">
+      <signer-request xmlns="http://waveprotocol.org/protocol/0.2/waveserver"
+        history-hash="somehash" version="1234"
+        wavelet-name="acmewave.com/initech-corp.com!a/b"/> </items>
+  </pubsub>
+</iq>
+]]></artwork>
+						</figure>
+
+        <t>The hosting wave server replies with a chain of certificates
+          sent Base64 encoded in the certificate elements. Each certificate element
+          represents a single certificate. The order of the certificate elements
+          goes from the first which is the closest certificate, to the last
+          certificate which is the root for the certificate chain. 
+          More details on signing are still to be added to this document.
+        </t>
+
+                        <figure>
+				<artwork><![CDATA[
+<iq type="result" id="1-1" from="wave.acmewave.com" to="wave.initech-corp.com">
+  <pubsub xmlns="http://jabber.org/protocol/pubsub">
+    <items>
+      <signature xmlns="http://waveprotocol.org/protocol/0.2/waveserver"
+        domain="initech-corp.com" algorithm="SHA256">
+        <certificate><![CDATA[Q0VS...VElPTg==] ]></certificate>
+        <certificate><![CDATA[QkV...LRQ==] ]></certificate>
+      </signature>
+    </items>
+  </pubsub>
+</iq>
+]]></artwork>
+                                                </figure>
+
+    </section>
+    <section title="Post Signer" anchor="post-signer">
+      <t>Before submitting a wavelet delta for the first time, a remote wave
+        server will supply the certificate chain 
+        that will allow the hosting wave server to authenticate the signed wave
+        delta.
+        More details on signing are still to be added to this document.
+      </t>
+                        <t> Here is an example exchange:</t>
+                        <figure>
+				<artwork><![CDATA[
+<iq type="set" id="1-1" from="wave.initech-corp.com" to="wave.acmewave.com">
+  <pubsub xmlns="http://jabber.org/protocol/pubsub">
+    <publish node="signer">
+      <item>
+        <signature xmlns="http://waveprotocol.org/protocol/0.2/waveserver"
+          domain="initech-corp.com" algorithm="SHA256">
+          <certificate><![CDATA[Q0V...Tg==] ]></certificate>
+          <certificate><![CDATA[QkV...RQ==] ]></certificate>
+        </signature>
+      </item>
+    </publish>
+  </pubsub>
+</iq>
+
+]]></artwork>
+						</figure>
+      <t>The hosting wave server acks the message.
+      </t>
+
+                        <figure>
+				<artwork><![CDATA[
+<iq type="set" id="1-1" from="wave.initech-corp.com" to="wave.acmewave.com">
+  <pubsub xmlns="http://jabber.org/protocol/pubsub">
+    <publish>
+      <item node="signer">
+        <signature-response xmlns="http://waveprotocol.org/protocol/0.2/waveserver" />
+      </item>
+    </publish>
+  </pubsub>
+</iq>
+]]></artwork>
+                                                </figure>
+
+
+
+    </section>
+    <section title="Documents">
+          <t>A document is a sequence of items, where each item is a character,
+            a start tag, or an end tag.  Each item has a key-value map of
+            annotations.</t>
+            
+          <t>Characters are Unicode code points.  Certain control characters,
+            special characters and noncharacters are not permitted.</t>
+            
+          <t>Start tags consist of a type and attributes.  The type is an XML
+            name.  The attributes form a key-value map, where keys and values
+            are strings.  Certain Unicode control characters, special characters
+            and noncharacters are permitted neither in the type nor in attribute
+            names or values.</t>
+
+          <t>Each end tag terminates the rightmost unterminated start tag; the
+            tag name is implicit.  The number of start tags in the document
+            equals the number of end tags, and for every prefix of the document,
+            the number of start tags equals or exceeds the number of end tags.
+            Thus, start and end tags nest properly, and there are no
+            self-closing tags.</t>
+
+          <t>Annotation keys and values are strings.  Certain Unicode control
+            characters, special characters and noncharacters are not permitted.
+            If the map has no entry for a given key, we sometimes say that the
+            value for that key is null.  While each item conceptually has its
+            own annotation map, implementations may find it more efficient to
+            have just one annotation map for each consecutive run of items with
+            the same annotations.</t>
+
+          <t>Note that a naive serialization of the document without annotations
+            into a string is not formally an XML document because it can have
+            multiple elements and characters at the top level, while XML
+            requires a single root element.  How to interpret the document as
+            XML is up to the application; options include making sure at the
+            application level that the entire document contents are inside a
+            single element even if the protocol does not enforce this; ignoring
+            all content other than the first element; or wrapping the entire
+            document in an implicit root element whose type and attributes are
+            not represented inside the document.</t>
+         <section title="Document operations">
+           <t>A document operation is a set of instructions that specify how to
+             process an input document, reading its sequence of items from left
+             to right, to generate an output document.  For the purpose of this
+             specification, the operation does not modify the input document,
+             although implementations that perform destructive updates are
+             possible.</t>
+           <t>Document operations are invertible; for any document operation op
+             that turns an input document A into an output document B, an
+             inverse operation that turns B into A can always be derived from op
+             without knowledge of A or B.</t>
+           <t>A document operation consists of a sequence of document operation
+             components that are executed in order.  During this process, two
+             pieces of state need to be maintained in addition to the document
+             being processed:
+             <list style="symbols">
+               <t>the current location ('cursor') in the input document, either
+                 to the left of the first item, between two items, or to the
+                 right of the last item of the input document, and</t>
+               <t>the current annotations update, which is a map of annotation
+                 keys to pairs (old-value, new-value), where old-value and
+                 new-value are either null or an annotation value.</t>
+             </list>
+             Initially, the cursor is to the left of the first item, and the
+             annotations update is empty.</t>
+           <t>
+             After the final component, the annotations update must be empty,
+             and the cursor must be to the right of the last item in the input
+             document.
+           </t>
+           </section>
+           <section title="Document operation components">
+           <t>Document operation components can be divided into four classes:
+             <list style="symbols">
+               <t>update components (retain, replaceAttributes,
+                 updateAttributes) move the cursor over a consecutive range of
+                 input items and generate corresponding but potentially modified
+                 items in the output document;</t>
+               <t>insertion components (characters, elementStart, elementEnd)
+                 generate items in the output document without moving the
+                 cursor;</t>
+               <t>deletion components (deleteCharacters, deleteElementStart,
+                 deleteElementEnd) move the cursor over a consecutive range
+                 of input items without generating any output;</t>
+               <t>annotation boundaries (annotationBoundary) change the current
+                 annotations update but do not directly affect the document or
+                 the cursor.</t>
+             </list>
+           </t>
+           <t>The different component classes have the following interaction
+             with annotations:
+             <list style="symbols">
+               <t>For update components, the old values in the annotations
+                 update match the annotation values of each item in the input
+                 document that the component processes.  The generated items in
+                 the output document will have the same annotations as the
+                 corresponding input items, except for the annotation keys in
+                 the annotations update; for those keys, the generated items
+                 will have the new values.
+               </t>
+               <t>
+                 For insertion components, the old values in the annotations
+                 update match the annotations of the item to the left of the
+                 cursor.  The inserted items are annotated with the new values
+                 from the annotations update in addition to any annotations on
+                 the item to the left of the cursor with keys that are not part
+                 of the annotations update.  <vspace/> If the cursor is at the
+                 beginning of the document, the old values in the annotations
+                 update are null, and the inserted items are annotated with the
+                 new values from the annotations update.
+               </t>
+               <t>For deletion components, the old values in the annotations
+                 update match the annotations of each item in the input document
+                 processed by the component, and the new values match the
+                 annotations of the rightmost item generated so far.  All
+                 annotation keys that have different values in the processed
+                 item and the rightmost item generated so far are present in the
+                 annotations update.  <vspace/> If no items have been generated
+                 so far, the new values are null, and all annotation keys of the
+                 deleted items must be present in the annotations update.
+               </t>
+             </list>
+           </t>
+             <t>
+             <list style="hanging">
+                <t hangText="retain(itemCount)">
+                  The cursor moves over the next itemCount items, and they are
+                  copied to the output document, with annotations as described
+                  above.  The argument itemCount is a positive integer.</t>
+                <t hangText="replaceAttributes(oldAttributes, newAttributes)">
+                  The cursor moves over the next item, which must be a start tag
+                  with the attributes oldAttributes.  A start tag with the same
+                  type but the attributes newAttributes is generated in the
+                  output.  Its annotations are as described above.
+                  <vspace/>
+                  The arguments oldAttributes and newAttributes are key-value
+                  maps.</t>
+                <t hangText="updateAttributes(attributesUpdate)">
+                  The cursor moves over the next item, which must be a start
+                  tag.  A start tag with the same type is generated in the
+                  output, with annotations as described above.  <vspace/> The
+                  argument attributesUpdate is a map of attribute names to pairs
+                  (oldValue, newValue), where oldValue and newValue are either
+                  null or an attribute value.  The oldValues match the
+                  attributes of the start tag in the input document; an oldValue
+                  of null means no such attribute is present.  The generated
+                  start tag has the new values for the attributes in
+                  attributesUpdate.  Attributes in the input whose names are not
+                  listed are transferred to the output unchanged.
+                </t>
+                <t hangText="characters(characters)">
+                  The specified characters are inserted into the output
+                  document, with annotations as described above.
+                </t>
+                <t hangText="elementStart(type, attributes)">
+                  An element start with type type and attributes attributes is
+                  inserted into the output document, with annotations as
+                  described above.  <vspace/> This component must be terminated
+                  with an elementEnd.  Between an elementStart and its
+                  corresponding elementEnd, only insertion components are
+                  permitted.
+                </t>
+                <t hangText="elementEnd">
+                  An element end is inserted into the output document, with
+                  annotations as described above.  <vspace/>This component
+                  terminates the most recent unterminated elementStart.  It must
+                  not occur without a corresponding elementStart.
+                </t>
+                <t hangText="deleteCharacters(characters)">
+                  This component moves the cursor over the specified characters
+                  in the input document without generating any output.  The
+                  characters must match the actual characters in the input
+                  document, and the current annotations update must match as
+                  described above.
+                </t>
+                <t hangText="deleteElementStart(type, attributes)">
+                  This component moves the cursor over the specified element
+                  start in the input document without generating any output.
+                  There must be an element start to the right of the cursor, and
+                  its type and attributes must match the arguments.  The current
+                  annotations update must match as described
+                  above. <vspace/>This component must be terminated with a
+                  deleteElementEnd.  Between a deleteElementStart and its
+                  corresponding deleteElementEnd, only deletion components are
+                  permitted.
+                </t>
+                <t hangText="deleteElementEnd">
+                  This component moves the cursor over an element end in the
+                  input document without generating any output.  There must be
+                  an element end to the right of the cursor.  The current
+                  annotations update must match as described
+                  above. <vspace/>This component terminates the most recent
+                  unterminated deleteElementStart.  It must not occur without a
+                  corresponding deleteElementStart.
+                </t>
+                <t hangText="annotation-boundary(ends, changes)">
+                  This component modifies the current annotations update.  Ends
+                  is a set of annotation keys; these keys are removed from the
+                  annotations update.  Changes is a map of annotation keys to
+                  pairs (oldValue, newValue), where oldValue and newValue are
+                  either null or an annotation value; these entries are added to
+                  the annotations update, or replace entries in the annotations
+                  update that have the same key.  The keys in ends and changes
+                  must be disjoint.
+
+                  <vspace/>An operation must not contain two consecutive
+                  annotationBoundary components.  Ends must only contain keys
+                  that are part of the current annotations update.
+                </t>
+             </list>
+             </t>
+           </section>
+
+</section>
 	</middle>
 	<back>
 		<references title="References">
+                  <reference anchor="XEP0060">
+				<front>
+					<title abbrev="PubSub">XMPP
+                                          Publish Suscribe</title>
+					<author fullname="Peter Millard">
+						<organization></organization>
+					</author>
+					<author fullname="Peter Saint-Andre">
+						<organization></organization>
+					</author>
+					<author fullname="Ralph Meijer">
+						<organization></organization>
+					</author>
+					<date month="September" year="2008"/>
+					<area>XMPP</area>
+					<keyword>keyword</keyword>
+					<abstract>
+                                          <t>
+                                            This specification defines an XMPP protocol extension for generic
+                                            publish-subscribe functionality. The protocol enables XMPP entities to create
+                                            nodes (topics) at a pubsub service and publish information at those nodes; an
+                                            event notification (with or without payload) is then broadcasted to all
+                                            entities that have subscribed to the node. Pubsub therefore adheres to the
+                                            classic Observer design pattern and can serve as the foundation for a wide
+                                            variety of applications, including news feeds, content syndication, rich
+                                            presence, geolocation, workflow systems, network management systems, and any
+                                            other application that requires event notifications.  </t>
+					</abstract>
+				</front>
+				<format type="HTML" target="http://xmpp.org/extensions/xep-0060.html"/>
+			</reference>
 			<reference anchor="TERMS">
 				<front>
 					<title abbrev="RFC Key Words">Key words for use in RFCs to Indicate Requirement Levels</title>
@@ -681,9 +975,9 @@ indicated in 'version-truncated-at'.</t>
 
 							<list>
 								<t>
-								  The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL
-								  NOT&quot;, &quot;SHOULD&quot;, &quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;,  &quot;MAY&quot;, and
-								  &quot;OPTIONAL&quot; in this document are to be interpreted as described in
+								  The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+								  NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+								  "OPTIONAL" in this document are to be interpreted as described in
 								  RFC 2119.
 								</t>
 							</list>
@@ -699,12 +993,19 @@ indicated in 'version-truncated-at'.</t>
 				<format type="TXT" octets="4723" target="ftp://ftp.isi.edu/in-notes/rfc2119.txt"/>
 				<format type="HTML" octets="14486" target="http://xml.resource.org/public/rfc/html/rfc2119.html"/>
 				<format type="XML" octets="5661" target="http://xml.resource.org/public/rfc/xml/rfc2119.xml"/>
-			</reference>&rfc3920;
+			</reference>
+			&rfc3920;
 		</references>
 		<section title="Protocol Schema">
 			<t>The protocol schema, as RelaxNG compact:</t>
 			<figure>
 				<artwork>&rncschema;</artwork>
+			</figure>
+		</section>
+		<section title="Protocol Buffers">
+			<t>The protocol buffer definitions</t>
+			<figure>
+				<artwork>&waveproto;</artwork>
 			</figure>
 		</section>
 	</back>
