@@ -1,0 +1,12 @@
+URL: http://code.google.com/p/google-collections/
+Version: 1.0-rc2
+License: Apache 2.0
+
+License File: COPYING
+
+Description:
+Google Collections are many collection types that make programming in Java more
+collected.
+
+Local Modifications:
+No modifications.
