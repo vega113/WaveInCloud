@@ -90,7 +90,7 @@ public class ServerRpcProvider {
       synchronized (registeredServices) {
         for (RegisteredServiceMethod serviceMethod : registeredServices.values()) {
           protoChannel.expectMessage(serviceMethod.service.getRequestPrototype(serviceMethod.method));
-          LOG.info("Expecting: " + serviceMethod.method.getFullName());
+          LOG.fine("Expecting: " + serviceMethod.method.getFullName());
         }
       }
       protoChannel.expectMessage(Rpc.CancelRpc.getDefaultInstance());
@@ -126,7 +126,7 @@ public class ServerRpcProvider {
                         // This RPC is over - remove it from the map.
                         boolean failed = message instanceof Rpc.RpcFinished
                             ? ((Rpc.RpcFinished) message).getFailed() : false;
-                        LOG.info("RPC " + sequenceNo + " is now finished, failed = " + failed);
+                        LOG.fine("RPC " + sequenceNo + " is now finished, failed = " + failed);
                         if (failed) {
                           LOG.info("error = " + ((Rpc.RpcFinished) message).getErrorText());
                         }
@@ -188,7 +188,7 @@ public class ServerRpcProvider {
       @Override
       public void run() {
         try {
-          LOG.info("ServerRpcProvider acceptorThread waiting for connections.");
+          LOG.fine("ServerRpcProvider acceptorThread waiting for connections.");
           while (true) {
             SocketChannel serverSocket = server.accept();
             incomingConnections.add(new Connection(serverSocket));
@@ -224,7 +224,7 @@ public class ServerRpcProvider {
     if (!acceptorThread.isDone()) {
       throw new IllegalStateException("Server acceptor thread has not stopped.");
     }
-    LOG.info("server shutdown.");
+    LOG.fine("server shutdown.");
   }
 
   /**

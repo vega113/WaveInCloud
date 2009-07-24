@@ -92,7 +92,7 @@ public class ClientRpcChannel implements RpcChannel {
     protoChannel = new SequencedProtoChannel(channel, callback, threadPool);
     protoChannel.expectMessage(Rpc.RpcFinished.getDefaultInstance());
     protoChannel.startAsyncRead();
-    LOG.info("Opened a new ClientRpcChannel to " + serverAddress);
+    LOG.fine("Opened a new ClientRpcChannel to " + serverAddress);
   }
 
   /**
@@ -138,7 +138,7 @@ public class ClientRpcChannel implements RpcChannel {
     synchronized (activeMethodMap) {
       activeMethodMap.put(sequenceNo, controller);
     }
-    LOG.info("Calling a new RPC (seq " + sequenceNo + "), method " + method.getFullName() + " for "
+    LOG.fine("Calling a new RPC (seq " + sequenceNo + "), method " + method.getFullName() + " for "
         + channel);
 
     // Kick off the RPC by sending the request to the server end-point.

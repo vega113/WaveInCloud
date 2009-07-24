@@ -323,8 +323,6 @@ public class ClientBackend {
    * @param waveletUpdate the wavelet update
    */
   public void receiveWaveletUpdate(ProtocolWaveletUpdate waveletUpdate) {
-    LOG.info("Update: " + waveletUpdate);
-
     // Extract relevant fields
     List<ProtocolWaveletDelta> protobufDeltas = waveletUpdate.getAppliedDeltaList();
 

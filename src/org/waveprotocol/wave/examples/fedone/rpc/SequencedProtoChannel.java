@@ -135,7 +135,7 @@ public class SequencedProtoChannel {
                     callback.unknown(incomingSequenceNo, messageType, unknownFieldSet);
                   } else {
                     // TODO: change to LOG.debug
-                    LOG.info("Received message (" + messageType + ", seq "
+                    LOG.fine("Received message (" + messageType + ", seq "
                         + incomingSequenceNo + ") from: " + channel);
                     Message.Builder builder = prototype.newBuilderForType();
                     inputStream.readMessage(builder, null);
@@ -207,7 +207,7 @@ public class SequencedProtoChannel {
             + CodedOutputStream.computeStringSizeNoTag(messageType)
             + CodedOutputStream.computeMessageSizeNoTag(message);
     // TODO: change to LOG.debug
-    LOG.info("Sending message (" + message.getDescriptorForType().getFullName() + ", seq "
+    LOG.fine("Sending message (" + message.getDescriptorForType().getFullName() + ", seq "
         + sequenceNo + ") to: " + channel);
     // Only one message should be written at at time.
     synchronized (outputStream) {
