@@ -324,14 +324,16 @@ public class ConsoleClient implements WaveletOperationListener {
    * @param id the index into the inbox
    */
   private void doOpenWave(int id) {
-    List<WaveId> index = IndexUtils.getIndexEntries(backend.getIndexWave());
+    if (isConnected()) {
+      List<WaveId> index = IndexUtils.getIndexEntries(backend.getIndexWave());
 
-    if (!isConnected()) {
-      out.println("Error: not connected, run \"/connect\"");
-    } else if (id >= index.size()) {
-      out.println("Error: id is out of range");
+      if (id >= index.size()) {
+        out.println("Error: id is out of range");
+      } else {
+        setOpenWave(backend.getWave(index.get(id)));
+      }
     } else {
-      setOpenWave(backend.getWave(index.get(id)));
+      notConnected();
     }
   }
 
@@ -350,7 +352,11 @@ public class ConsoleClient implements WaveletOperationListener {
    * Add a new wave.
    */
   private void newWave() {
-    backend.createNewWave();
+    if (isConnected()) {
+      backend.createNewWave();
+    } else {
+      notConnected();
+    }
   }
 
   /**
@@ -359,9 +365,13 @@ public class ConsoleClient implements WaveletOperationListener {
    * @param name name of the participant to add
    */
   private void addParticipant(String name) {
-    backend.sendWaveletOperation(
-        getOpenWavelet(),
-        new AddParticipant(new ParticipantId(name)));
+    if (isConnected()) {
+      backend.sendWaveletOperation(
+          getOpenWavelet(),
+          new AddParticipant(new ParticipantId(name)));
+    } else {
+      notConnected();
+    }
   }
 
   /**
@@ -370,9 +380,20 @@ public class ConsoleClient implements WaveletOperationListener {
    * @param name name of the participant to remove
    */
   private void removeParticipant(String name) {
-    backend.sendWaveletOperation(
-        getOpenWavelet(),
-        new RemoveParticipant(new ParticipantId(name)));
+    if (isConnected()) {
+      backend.sendWaveletOperation(
+          getOpenWavelet(),
+          new RemoveParticipant(new ParticipantId(name)));
+    } else {
+      notConnected();
+    }
+  }
+
+  /**
+   * Print error message if user is not connected to a server.
+   */
+  private void notConnected() {
+    out.println("Error: not connected, run \"/connect\"");
   }
 
   /**
