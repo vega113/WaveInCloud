@@ -50,7 +50,7 @@ public class ServerMain {
       run(flags);
       return;
     } catch (IOException e) {
-      LOG.severe("IOException when running client: " + e.getMessage());
+      LOG.severe("IOException when running server: " + e.getMessage());
     }
   }
 
