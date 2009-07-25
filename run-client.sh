@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# This script will start the federated wave server.
+# This script will start the wave client.
 # Please see http://code.google.com/p/wave-protocol/wiki/Installation for
 # instructions on how to configure the flags.
 #
