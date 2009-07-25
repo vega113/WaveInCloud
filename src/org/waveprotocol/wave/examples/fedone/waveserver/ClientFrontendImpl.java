@@ -206,8 +206,7 @@ public class ClientFrontendImpl implements ClientFrontend {
         //if (!deltaSequence.getEndVersion().equals(userManager.getWaveletVersion(waveletName))) {
         //  throw new IllegalStateException(..)
         // }
-        openListener.onUpdate(waveletName,
-            deltaSequence.getDeltas(), deltaSequence.getEndVersion());
+        openListener.onUpdate(waveletName, deltaSequence, deltaSequence.getEndVersion());
       }
 
     }
@@ -367,7 +366,7 @@ public class ClientFrontendImpl implements ClientFrontend {
           if (op.hasRemoveParticipant()) {
             ParticipantId p = new ParticipantId(op.getRemoveParticipant());
             participantUpdate(waveletName, p,
-                deltaSequence.subSequence(0, i + 1), newParticipants.remove(p), true, "");
+                deltaSequence.subList(0, i + 1), newParticipants.remove(p), true, "");
           }
         }
       }

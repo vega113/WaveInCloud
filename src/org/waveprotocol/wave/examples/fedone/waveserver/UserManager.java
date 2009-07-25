@@ -163,7 +163,7 @@ final class UserManager {
     List<OpenListener> listeners = matchSubscriptions(waveletName);
     for (OpenListener listener : listeners) {
       try {
-        listener.onUpdate(waveletName, deltas.getDeltas(), deltas.getEndVersion());
+        listener.onUpdate(waveletName, deltas, deltas.getEndVersion());
       } catch (IllegalStateException e) {
         // TODO: remove the listener
       }

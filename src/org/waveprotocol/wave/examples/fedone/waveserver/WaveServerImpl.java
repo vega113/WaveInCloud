@@ -138,7 +138,7 @@ public class WaveServerImpl implements WaveServer {
           if (clientListener != null) {
             Map<String, BufferedDocOp> documentState =
               getWavelet(waveletName).getWaveletData().getDocuments();
-            clientListener.waveletUpdate(waveletName, result.getDeltas(),
+            clientListener.waveletUpdate(waveletName, result,
                 result.getEndVersion(), documentState);
           }
           if (committedHashedVersion != null &&

@@ -23,6 +23,7 @@ import com.google.common.collect.Iterables;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
+import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -32,7 +33,7 @@ import java.util.List;
  *
  *
  */
-public class DeltaSequence implements Iterable<ProtocolWaveletDelta> {
+public final class DeltaSequence extends AbstractList<ProtocolWaveletDelta> {
   private final ImmutableList<ProtocolWaveletDelta> deltas;
   private final ProtocolHashedVersion endVersion;
 
@@ -70,20 +71,11 @@ public class DeltaSequence implements Iterable<ProtocolWaveletDelta> {
     return new DeltaSequence(ImmutableList.<ProtocolWaveletDelta>of(), version);
   }
 
-  /**
-   * Constructs a DeltaSequence containing only a subSequence of this sequence's
-   * deltas, indexed by position in the sequence.
-   *
-   * @param start The index of the first delta in {@link #getDeltas()} to
-   *              include in the subsequence.
-   * @param end One past the index of the last delta in {@link #getDeltas()} to
-   *            include in the subsequence
-   * @return A DeltaSequence that contains only {@code getGeltas().subList(start, end)}.
-   */
-  DeltaSequence subSequence(int start, int end) {
+  @Override
+  public DeltaSequence subList(int start, int end) {
     List<ProtocolWaveletDelta> subDeltas = deltas.subList(start, end);
     ProtocolHashedVersion subEndVersion =
-      (end == deltas.size()) ? deltas.get(end).getHashedVersion() : endVersion;
+      (end == deltas.size()) ? endVersion : deltas.get(end).getHashedVersion();
       return new DeltaSequence(subDeltas, subEndVersion);
   }
 
@@ -103,8 +95,19 @@ public class DeltaSequence implements Iterable<ProtocolWaveletDelta> {
     return endVersion;
   }
 
-  boolean isEmpty() {
+  @Override
+  public boolean isEmpty() {
     return deltas.isEmpty();
+  }
+
+  @Override
+  public int size() {
+    return deltas.size();
+  }
+
+  @Override
+  public ProtocolWaveletDelta get(int index) {
+    return deltas.get(index);
   }
 
   ProtocolHashedVersion getStartVersion() {
@@ -121,25 +124,5 @@ public class DeltaSequence implements Iterable<ProtocolWaveletDelta> {
     return String.format("%d delta%s (version %d .. %d): %s", deltas.size(),
         (deltas.size() == 1 ? "" : "s"),
         getStartVersion().getVersion(), getEndVersion().getVersion(), deltas);
-  }
-
-  @Override
-  public int hashCode() {
-    int result = 17;
-    result = 31 * result + deltas.hashCode();
-    result = 31 * result + endVersion.hashCode();
-    return result;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    } else if (!(obj instanceof DeltaSequence)) {
-      return false;
-    } else {
-      DeltaSequence that = (DeltaSequence) obj;
-      return endVersion.equals(that.endVersion) && deltas.equals(that.deltas);
-    }
   }
 }

@@ -147,7 +147,7 @@ public class ClientFrontendImplTest extends TestCase {
     clientFrontend.openRequest(USER, WAVE_ID, ImmutableSet.of("nonexisting-wavelet"),
         Integer.MAX_VALUE, listener);
     clientFrontend.waveletUpdate(
-        WAVELET_NAME, DELTAS.getDeltas(), DELTAS.getEndVersion(), DOCUMENT_STATE);
+        WAVELET_NAME, DELTAS, DELTAS.getEndVersion(), DOCUMENT_STATE);
     verify(listener);
   }
 
@@ -187,7 +187,7 @@ public class ClientFrontendImplTest extends TestCase {
     OpenListener listener = createMock(OpenListener.class);
     clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, listener);
 
-    listener.onUpdate(WAVELET_NAME, DELTAS.getDeltas(), DELTAS.getEndVersion());
+    listener.onUpdate(WAVELET_NAME, DELTAS, DELTAS.getEndVersion());
     EasyMock.replay(listener);
     clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "");
     EasyMock.verify(listener);
@@ -254,7 +254,7 @@ public class ClientFrontendImplTest extends TestCase {
     ProtocolWaveletDelta delta = makeDelta(USER, startVersion, operations);
     DeltaSequence deltas = createUnsignedDeltas(ImmutableList.of(delta));
     clientFrontend.waveletUpdate(
-        WAVELET_NAME, deltas.getDeltas(), deltas.getEndVersion(), documentState);
+        WAVELET_NAME, deltas, deltas.getEndVersion(), documentState);
   }
 
   private BufferedDocOp makeAppend(int retain, String text) {

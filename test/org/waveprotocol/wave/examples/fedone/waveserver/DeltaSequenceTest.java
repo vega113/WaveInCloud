@@ -68,7 +68,7 @@ public class DeltaSequenceTest extends TestCase {
     DeltaSequence empty = DeltaSequence.empty(PROTO_START_VERSION);
     assertEquals(PROTO_START_VERSION, empty.getStartVersion());
     assertEquals(PROTO_START_VERSION, empty.getEndVersion());
-    assertEquals(ImmutableList.<ProtocolWaveletDelta>of(), empty.getDeltas());
+    assertEquals(ImmutableList.<ProtocolWaveletDelta>of(), empty);
   }
 
   public void testNegativeEndVersion() {
@@ -116,5 +116,27 @@ public class DeltaSequenceTest extends TestCase {
     } catch (IllegalArgumentException expected) {
       // pass
     }
+  }
+
+  /**
+   * Tests DeltaSequence.subList() on both empty and nonempty delta sequences.
+   */
+  public void testSubList() {
+    DeltaSequence empty = DeltaSequence.empty(PROTO_START_VERSION);
+    assertEquals(empty, empty.subList(0, 0));
+
+    DeltaSequence deltas = new DeltaSequence(protoDeltas, protoEndVersion);
+    assertEquals(deltas, deltas.subList(0, deltas.size()));
+
+    assertEquals(empty, deltas.subList(0, 0));
+
+    // Check test data set up as expected by the test below
+    assertEquals(2, deltas.size());
+    assertTrue(deltas.getEndVersion().getVersion() > ops.size());
+
+    // Now construct a sublist with just the first delta
+    DeltaSequence subDeltas = deltas.subList(0, 1);
+    assertEquals(START_VERSION + ops.size(), subDeltas.getEndVersion().getVersion());
+    assertEquals(deltas.getStartVersion(), subDeltas.getStartVersion());
   }
 }
