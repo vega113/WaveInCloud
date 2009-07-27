@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.UnknownFieldSet;
@@ -202,7 +203,8 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       };
 
   /** A comparator to be used in a TreeSet for transformed deltas. */
-  private static final Comparator<ProtocolWaveletDelta> transformedDeltaComparator =
+  @VisibleForTesting
+  static final Comparator<ProtocolWaveletDelta> transformedDeltaComparator =
       new Comparator<ProtocolWaveletDelta>() {
         @Override
         public int compare(ProtocolWaveletDelta first, ProtocolWaveletDelta second) {

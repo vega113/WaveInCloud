@@ -21,7 +21,6 @@ import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSeria
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -86,12 +85,14 @@ public class ClientFrontendImpl implements ClientFrontend {
     final AtomicLong timestamp;  // last modified time
     private final ProtocolHashedVersion version0;
     private ProtocolHashedVersion currentVersion;
+    private String digest;
 
     PerWavelet(WaveletName waveletName) {
       this.participants = Collections.synchronizedSet(Sets.<ParticipantId>newHashSet());
       this.timestamp = new AtomicLong(0);
       this.version0 = WaveletOperationSerializer.serialize(HashedVersion.versionZero(waveletName));
       this.currentVersion = version0;
+      this.digest = "";
     }
 
     synchronized ProtocolHashedVersion getCurrentVersion() {
@@ -102,8 +103,6 @@ public class ClientFrontendImpl implements ClientFrontend {
       this.currentVersion = version;
     }
   }
-
-  final Map<WaveId, String> waveDigests;
 
   /**
    * Constructs the name of the index wave wavelet that refers to the
@@ -161,8 +160,6 @@ public class ClientFrontendImpl implements ClientFrontend {
     perUser = mapMaker.makeComputingMap(new Function<ParticipantId, UserManager>() {
       @Override public UserManager apply(ParticipantId from) { return new UserManager(); }
     });
-
-    waveDigests = mapMaker.makeComputingMap(Functions.constant(""));
   }
 
   @Override
@@ -197,7 +194,7 @@ public class ClientFrontendImpl implements ClientFrontend {
             waveletProvider.requestHistory(sourceWaveletName, startVersion, endVersion),
             endVersion);
         if (isIndexWave) { // Construct fake index wave deltas from the deltas
-          String newDigest = waveDigests.get(waveletName.waveId);
+          String newDigest = perWavelet.get(sourceWaveletName).digest;
           deltaSequence = createIndexDeltas(startVersion, deltaSequence, "", newDigest);
         }
 
@@ -208,7 +205,6 @@ public class ClientFrontendImpl implements ClientFrontend {
         // }
         openListener.onUpdate(waveletName, deltaSequence, deltaSequence.getEndVersion());
       }
-
     }
   }
 
@@ -282,12 +278,14 @@ public class ClientFrontendImpl implements ClientFrontend {
    *        Must not be empty.
    * @param add whether the participant is added by the first delta
    * @param remove whether the participant is removed by the last delta
+   * @param oldDigest The digest text of the wavelet as seen by participant
+   *                  before the deltas are applied
    * @param newDigest The digest text of the wavelet as seen by participant
    *                  after the deltas are applied
    */
   @VisibleForTesting
   void participantUpdate(WaveletName waveletName, ParticipantId participant,
-      DeltaSequence newDeltas, boolean add, boolean remove, String newDigest) {
+      DeltaSequence newDeltas, boolean add, boolean remove, String oldDigest, String newDigest) {
     final DeltaSequence deltasToSend;
     if (add && newDeltas.getStartVersion().getVersion() > 0) {
       ProtocolHashedVersion version0 = perWavelet.get(waveletName).version0;
@@ -314,10 +312,8 @@ public class ClientFrontendImpl implements ClientFrontend {
       ProtocolHashedVersion indexVersion =
         perUser.get(participant).getWaveletVersion(indexWaveletName);
 
-      String oldDigest = waveDigests.get(waveletName.waveId);
       DeltaSequence indexDeltas = createIndexDeltas(indexVersion, deltasToSend,
           oldDigest, newDigest);
-      waveDigests.put(waveletName.waveId, newDigest);
       if (!indexDeltas.isEmpty()) {
         perUser.get(participant).onUpdate(indexWaveletName, indexDeltas);
       }
@@ -340,47 +336,58 @@ public class ClientFrontendImpl implements ClientFrontend {
     }
 
     final PerWavelet waveletInfo = perWavelet.get(waveletName);
+    final long expectedVersion;
+    final String oldDigest;
+    final Set<ParticipantId> remainingParticipants;
+
     synchronized(waveletInfo) {
-      String newDigest = digest(ClientUtils.render(documentState.values()));
+      expectedVersion = waveletInfo.getCurrentVersion().getVersion();
+      oldDigest = waveletInfo.digest;
+      remainingParticipants = Sets.newHashSet(waveletInfo.participants);
+    }
 
-      DeltaSequence deltaSequence = new DeltaSequence(newDeltas, endVersion);
+    DeltaSequence deltaSequence = new DeltaSequence(newDeltas, endVersion);
 
-      // TODO(tobiast): compare HashedVersion rather than just the version
-      long expectedVersion = waveletInfo.getCurrentVersion().getVersion();
-      if (expectedVersion != deltaSequence.getStartVersion().getVersion()) {
-        throw new IllegalStateException("Expected deltas starting at version " +
-            expectedVersion + ", got " +
-            deltaSequence.getStartVersion().getVersion());
-      }
+    // TODO(tobiast): compare HashedVersion rather than just the version
+    if (expectedVersion != deltaSequence.getStartVersion().getVersion()) {
+      throw new IllegalStateException("Expected deltas starting at version " +
+          expectedVersion + ", got " +
+          deltaSequence.getStartVersion().getVersion());
+    }
 
-      // Participants added during the course of newDeltas
-      Set<ParticipantId> newParticipants = Sets.newHashSet();
+    String newDigest = digest(ClientUtils.render(documentState.values()));
 
-      for (int i = 0; i < newDeltas.size(); i++) {
-        ProtocolWaveletDelta delta = newDeltas.get(i);
-        // Participants added or removed in this delta get the whole delta
-        for (ProtocolWaveletOperation op : delta.getOperationList()) {
-          if (op.hasAddParticipant()) {
-            newParticipants.add(new ParticipantId(op.getAddParticipant()));
-          }
-          if (op.hasRemoveParticipant()) {
-            ParticipantId p = new ParticipantId(op.getRemoveParticipant());
-            participantUpdate(waveletName, p,
-                deltaSequence.subList(0, i + 1), newParticipants.remove(p), true, "");
-          }
+    // Participants added during the course of newDeltas
+    Set<ParticipantId> newParticipants = Sets.newHashSet();
+
+    for (int i = 0; i < newDeltas.size(); i++) {
+      ProtocolWaveletDelta delta = newDeltas.get(i);
+      // Participants added or removed in this delta get the whole delta
+      for (ProtocolWaveletOperation op : delta.getOperationList()) {
+        if (op.hasAddParticipant()) {
+          ParticipantId p = new ParticipantId(op.getAddParticipant());
+          remainingParticipants.add(p);
+          newParticipants.add(p);
+        }
+        if (op.hasRemoveParticipant()) {
+          ParticipantId p = new ParticipantId(op.getRemoveParticipant());
+          remainingParticipants.remove(p);
+          participantUpdate(waveletName, p,
+              deltaSequence.subList(0, i + 1), newParticipants.remove(p), true, oldDigest, "");
         }
       }
-      // Need to create a copy because perWavelet.get(waveletName).participants
-      // can change in the loop below
-      Iterable<ParticipantId> participants = ImmutableList.copyOf(
-          Iterables.concat(newParticipants, waveletInfo.participants));
-      // Send out deltas to those who end up being participants at the end
-      // (either because they already were, or because they were added).
-      for (ParticipantId p : participants) {
-        boolean isNew = newParticipants.contains(p);
-        participantUpdate(waveletName, p, deltaSequence, isNew, false, newDigest);
-      }
+    }
+
+    // Send out deltas to those who end up being participants at the end
+    // (either because they already were, or because they were added).
+    for (ParticipantId p : remainingParticipants) {
+      boolean isNew = newParticipants.contains(p);
+      participantUpdate(waveletName, p, deltaSequence, isNew, false, oldDigest, newDigest);
+    }
+
+    synchronized(waveletInfo) {
       waveletInfo.setCurrentVersion(deltaSequence.getEndVersion());
+      waveletInfo.digest = newDigest;
     }
   }
 
@@ -461,7 +468,8 @@ public class ClientFrontendImpl implements ClientFrontend {
     return builder.finish();
   }
 
-  private static ProtocolWaveletDelta createDigestDelta(HashedVersion version,
+  @VisibleForTesting
+  static ProtocolWaveletDelta createDigestDelta(HashedVersion version,
       String oldDigest, String newDigest) {
     if (oldDigest.equals(newDigest)) {
       return null;
