@@ -25,12 +25,12 @@ import jline.ConsoleReader;
 
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexEntry;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexUtils;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
-import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
@@ -83,7 +83,7 @@ public class ConsoleClient implements WaveletOperationListener {
   public void run(String[] args) throws IOException {
     // Initialise screen and move cursor to bottom left corner
     reader.clearScreen();
-    reader.setDefaultPrompt("> ");
+    reader.setDefaultPrompt("(not connected) ");
     out.println(ANSIBuffer.ANSICodes.gotoxy(reader.getTermheight(), 1));
 
     // Set up scrolling -- these are the opposite to how you would expect because of the way that
@@ -196,7 +196,7 @@ public class ConsoleClient implements WaveletOperationListener {
         try {
           doOpenWave(Integer.parseInt(args.get(0)));
         } catch (NumberFormatException e) {
-          out.println("Error: " + args.get(0) + " is not a valid id");
+          out.println("Error: " + args.get(0) + " is not a number");
         }
       } else {
         badArgs(cmd);
@@ -220,7 +220,7 @@ public class ConsoleClient implements WaveletOperationListener {
     } else {
       out.println("Recognised commands:");
       out.println("  /connect  user@domain server port  connect to server:port as user@domain");
-      out.println("  /open     id                       open a wave given an inbox id");
+      out.println("  /open     entry                    open a wave given an inbox entry");
       out.println("  /new                               create and open a new wave");
       out.println("  /add      participantId            add a participant to a wave");
       out.println("  /remove   participantId            remove a participant from a wave");
@@ -270,6 +270,7 @@ public class ConsoleClient implements WaveletOperationListener {
     }
 
     backend.addWaveletOperationListener(this);
+    reader.setDefaultPrompt(ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_RED_FG, userAtDomain + "> "));
 
     render();
   }
@@ -311,26 +312,27 @@ public class ConsoleClient implements WaveletOperationListener {
    * @return the open wavelet of the open wave, or null if no wave is open
    */
   private WaveletData getOpenWavelet() {
-    if (openWave == null) {
-      return null;
-    } else {
-      return backend.getConversationRoot(openWave.getWave());
-    }
+    return (openWave == null) ? null : ClientUtils.getConversationRoot(openWave.getWave());
   }
 
   /**
-   * Open a wave with a given id, where the id is the index into the inbox.
+   * Open a wave with a given entry (index in the inbox).
    *
-   * @param id the index into the inbox
+   * @param entry into the inbox
    */
-  private void doOpenWave(int id) {
+  private void doOpenWave(int entry) {
     if (isConnected()) {
-      List<WaveId> index = IndexUtils.getIndexEntries(backend.getIndexWave());
+      List<IndexEntry> index = IndexUtils.getIndexEntries(backend.getIndexWave());
 
-      if (id >= index.size()) {
-        out.println("Error: id is out of range");
+      if (entry >= index.size()) {
+        out.print("Error: entry is out of range, ");
+        if (index.isEmpty()) {
+          out.println("there are no available waves (try \"/new\")");
+        } else {
+          out.println("expecting [0.." + (index.size() - 1) + "] (for example, \"/open 0\")");
+        }
       } else {
-        setOpenWave(backend.getWave(index.get(id)));
+        setOpenWave(backend.getWave(index.get(entry).getWaveId()));
       }
     } else {
       errorNotConnected();
@@ -343,8 +345,11 @@ public class ConsoleClient implements WaveletOperationListener {
    * @param wave to set as open
    */
   private void setOpenWave(WaveViewData wave) {
-    openWave = new ScrollableWaveView(backend, wave);
-    backend.ensureConversationRoot(openWave.getWave()); // otherwise it gets complicated
+    if (ClientUtils.getConversationRoot(wave) == null) {
+      wave.createWavelet(ClientUtils.getConversationRootId(wave));
+    }
+
+    openWave = new ScrollableWaveView(wave);
     render();
   }
 
@@ -510,10 +515,24 @@ public class ConsoleClient implements WaveletOperationListener {
 
   @Override
   public void participantRemoved(WaveletData wavelet, ParticipantId participantId) {
+    if (isWaveOpen() && participantId.equals(backend.getUserId())) {
+      // We might have been removed from our open wave (an impressively verbose check...)
+      if (wavelet.getWaveletName().waveId.equals(openWave.getWave().getWaveId())) {
+        openWave = null;
+      }
+    }
   }
 
   @Override
   public void noOp(WaveletData wavelet) {
+  }
+
+  @Override
+  public void onDeltaSequenceStart(WaveletData wavelet) {
+  }
+
+  @Override
+  public void onDeltaSequenceEnd(WaveletData wavelet) {
     render();
   }
 

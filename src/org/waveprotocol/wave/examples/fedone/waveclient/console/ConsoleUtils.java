@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.console;
 
+import com.google.common.collect.ImmutableList;
+
 import jline.ANSIBuffer;
 
 import java.util.List;
@@ -38,6 +40,9 @@ public class ConsoleUtils {
 
   /** ANSI code for underlined text. */
   public static final int ANSI_UNDERLINE = 4;
+
+  /** ANSI code for red foreground text. */
+  public static final int ANSI_RED_FG = 31;
 
   /** ANSI code for green foreground text. */
   public static final int ANSI_GREEN_FG = 32;
@@ -115,7 +120,6 @@ public class ConsoleUtils {
     }
   }
 
-
   /**
    * Wrap a string in a list of ANSI escape codes, then reset at the end.
    *
@@ -132,6 +136,17 @@ public class ConsoleUtils {
 
     builder.append(ANSIBuffer.ANSICodes.attrib(ANSI_NO_ATTRS));
     return builder.toString();
+  }
+
+  /**
+   * Wrap a string in a single ANSI escape code, then reset at the end.
+   *
+   * @param ansiCode to apply to the string
+   * @param string to apply the code to
+   * @return string with applied ANSI code
+   */
+  public static String ansiWrap(int ansiCode, String string) {
+    return ansiWrap(ImmutableList.of(ansiCode), string);
   }
 
   /**

@@ -17,10 +17,9 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.console;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
@@ -28,7 +27,6 @@ import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.Collections;
 import java.util.List;
@@ -43,17 +41,12 @@ public class ScrollableWaveView extends ConsoleScrollable {
   /** Wave we are wrapping. */
   private final WaveViewData wave;
 
-  /** Backend this wave belongs to. */
-  private final ClientBackend backend;
-
   /**
    * Create new scrollable wave view.
    *
-   * @param backend the wave belongs to
    * @param wave to render
    */
-  public ScrollableWaveView(ClientBackend backend, WaveViewData wave) {
-    this.backend = backend;
+  public ScrollableWaveView(WaveViewData wave) {
     this.wave = wave;
   }
 
@@ -67,19 +60,14 @@ public class ScrollableWaveView extends ConsoleScrollable {
   @Override
   public synchronized List<String> render(final int width, final int height) {
     final List<String> lines = Lists.newArrayList();
-    final WaveletData convRoot = backend.getConversationRoot(wave);
     final StringBuilder currentLine = new StringBuilder();
 
-    for (BufferedDocOp document : convRoot.getDocuments().values()) {
+    for (BufferedDocOp document : ClientUtils.getConversationRoot(wave).getDocuments().values()) {
       document.apply(new InitializationCursorAdapter(
           new DocInitializationCursor() {
             @Override public void characters(String s) {
               currentLine.append(ConsoleUtils.renderNice(s));
-
-              while (currentLine.length() >= width) {
-                lines.add(currentLine.substring(0, width));
-                currentLine.delete(0, width);
-              }
+              wrap(lines, width, currentLine);
             }
 
             @Override public void elementStart(String type, Attributes attrs) {
@@ -93,8 +81,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
                 currentLine.delete(0, currentLine.length() - 1);
 
                 lines.add(ConsoleUtils.blankLine(width));
-                lines.add(ConsoleUtils.ansiWrap(
-                    ImmutableList.of(ConsoleUtils.ANSI_GREEN_FG),
+                lines.add(ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_GREEN_FG,
                     ConsoleUtils.ensureWidth(width, attrs.get(ConsoleUtils.LINE_AUTHOR))));
               } else {
                 throw new IllegalArgumentException("Unsupported element type " + type);
@@ -111,8 +98,12 @@ public class ScrollableWaveView extends ConsoleScrollable {
       lines.add(currentLine.toString());
     }
 
-    // Also render a little header
+    // Also render a header, not too big...
     List<String> header = renderHeader(width);
+
+    while (header.size() > height / 2) {
+      header.remove(header.size() - 1);
+    }
 
     // In this case, actually want to scroll from the bottom
     Collections.reverse(lines);
@@ -131,7 +122,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
    * @return list of lines that make up the header
    */
   private List<String> renderHeader(int width) {
-    List<ParticipantId> participants = backend.getConversationRoot(wave).getParticipants();
+    List<ParticipantId> participants = ClientUtils.getConversationRoot(wave).getParticipants();
     StringBuilder participantLineBuilder = new StringBuilder();
 
     if (participants.isEmpty()) {
@@ -146,12 +137,34 @@ public class ScrollableWaveView extends ConsoleScrollable {
       }
     }
 
-    String participantLine = ConsoleUtils.ensureWidth(width, participantLineBuilder.toString());
     List<String> lines = Lists.newArrayList();
 
-    lines.add(ConsoleUtils.ansiWrap(ImmutableList.of(ConsoleUtils.ANSI_YELLOW_FG), participantLine));
+    wrap(lines, width, participantLineBuilder);
+    if (participantLineBuilder.length() > 0) {
+      lines.add(participantLineBuilder.toString());
+    }
+
+    for (int i = 0; i < lines.size(); i++) {
+      lines.set(i, ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_YELLOW_FG, lines.get(i)));
+    }
+
     lines.add(ConsoleUtils.ensureWidth(width, "----"));
 
     return lines;
+  }
+
+  /**
+   * Wrap a line by continually removing characters from a string and adding to a list of lines,
+   * until the line is shorter than width.
+   *
+   * @param lines to append the wrapped string to
+   * @param width to wrap
+   * @param line to wrap
+   */
+  private void wrap(List<String> lines, int width, StringBuilder line) {
+    while (line.length() >= width) {
+      lines.add(line.substring(0, width));
+      line.delete(0, width);
+    }
   }
 }

@@ -21,8 +21,8 @@ import com.google.common.collect.Lists;
 
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexEntry;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexUtils;
-import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 
 import java.util.List;
@@ -59,11 +59,11 @@ public class ScrollableInbox extends ConsoleScrollable {
 
   @Override
   public List<String> render(int width, int height) {
-    List<WaveId> indexEntries = IndexUtils.getIndexEntries(indexWave);
+    List<IndexEntry> indexEntries = IndexUtils.getIndexEntries(indexWave);
     List<String> lines = Lists.newArrayList();
 
     for (int i = 0; i < indexEntries.size(); i++) {
-      WaveViewData wave = backend.getWave(indexEntries.get(i));
+      WaveViewData wave = backend.getWave(indexEntries.get(i).getWaveId());
       StringBuilder line = new StringBuilder(String.format("%4d) ", i));
 
       boolean isOpen = false;
@@ -71,7 +71,7 @@ public class ScrollableInbox extends ConsoleScrollable {
 
       if (wave == null) {
         line.append("..");
-      } else if (backend.getConversationRoot(wave) == null) {
+      } else if (ClientUtils.getConversationRoot(wave) == null) {
         line.append("...");
       } else {
         if (openWave != null && wave.equals(openWave)) {
@@ -79,8 +79,7 @@ public class ScrollableInbox extends ConsoleScrollable {
         }
 
         line.append(String.format("(%s) ", wave.getWaveId().getId()));
-        String digest = ClientUtils.renderDocuments(wave);
-        line.append(ConsoleUtils.renderNice(digest));
+        line.append(ConsoleUtils.renderNice(indexEntries.get(i).getDigest()));
       }
 
       List<Integer> ansiCodes = Lists.newArrayList();

@@ -64,23 +64,25 @@ public class IndexUtils {
   }
 
   /**
-   * Retrieve a list of wave ids from an index wave.
+   * Retrieve a list of index entries from an index wave.
    *
    * @param indexWave the wave to retrieve the index from
-   * @return list of wave ids
+   * @return list of index entries
    */
-  public static List<WaveId> getIndexEntries(WaveViewData indexWave) {
-    List<WaveId> waveIds = Lists.newArrayList();
-
+  public static List<IndexEntry> getIndexEntries(WaveViewData indexWave) {
     if (!isIndexWave(indexWave)) {
       throw new IllegalArgumentException("Wave is not the index wave");
     }
 
-    // The wave id is encoded as the wavelet id
+    List<IndexEntry> indexEntries = Lists.newArrayList();
+
     for (WaveletData wavelet : indexWave.getWavelets()) {
-      waveIds.add(WaveId.deserialise(wavelet.getWaveletName().waveletId.serialise()));
+      // The wave id is encoded as the wavelet id
+      WaveId waveId = WaveId.deserialise(wavelet.getWaveletName().waveletId.serialise());
+      String digest = ClientUtils.render(wavelet.getDocuments().values());
+      indexEntries.add(new IndexEntry(waveId, digest));
     }
 
-    return waveIds;
+    return indexEntries;
   }
 }

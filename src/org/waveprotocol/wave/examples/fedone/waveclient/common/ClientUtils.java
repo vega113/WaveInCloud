@@ -24,6 +24,9 @@ import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
 import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
+import org.waveprotocol.wave.model.id.IdConstants;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -87,18 +90,6 @@ public class ClientUtils {
   }
 
   /**
-   * Get the digest (summary) of a wave as a String, by extracting some sort of relevant
-   * information from the default document of the conversation root.
-   *
-   * @param wave to get digest of
-   * @return digest of wave
-   */
-  public static String getWaveDigest(WaveViewData wave) {
-    // Currently, just extract the first line of the rendered document
-    return renderDocuments(wave).split("\n")[0];
-  }
-
-  /**
    * Create a document operation for the insertion of text, inserting at a given index.
    *
    * @param text text to insert
@@ -159,4 +150,27 @@ public class ClientUtils {
     return new DocOpBuilder().finish();
   }
 
+  /**
+   * Get the conversation root wavelet of a wave.
+   *
+   * @param wave to get conversation root of
+   * @return conversation root wavelet of the wave
+   */
+  public static WaveletData getConversationRoot(WaveViewData wave) {
+    return wave.getWavelet(getConversationRootId(wave));
+  }
+
+  /**
+   * @return the conversation root wavelet id of a wave.
+   */
+  public static WaveletId getConversationRootId(WaveViewData wave) {
+    return getConversationRootId(wave.getWaveId());
+  }
+
+  /**
+   * @return the conversation root wavelet id corresponding to a wave id.
+   */
+  public static WaveletId getConversationRootId(WaveId waveId) {
+    return new WaveletId(waveId.getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET);
+  }
 }

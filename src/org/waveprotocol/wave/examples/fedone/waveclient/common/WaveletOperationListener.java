@@ -21,9 +21,8 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 /**
- * Notification interface for wavelet operations.  The corresponding methods are called for every
- * operation that is received, and for more efficient rendering a noOp is called at the end of a
- * set of operations from a delta.
+ * Notification interface for wavelet operations, with an additional two methods defined with
+ * efficient rendering in mind.
  *
  *
  */
@@ -58,4 +57,15 @@ public interface WaveletOperationListener {
    * @param wavelet the wavelet (not) operated on
    */
   public void noOp(WaveletData wavelet);
+
+  /**
+   * Invoked before a sequence of deltas is applied.
+   */
+  public void onDeltaSequenceStart(WaveletData wavelet);
+
+  /**
+   * Invoked after a sequence of deltas has been applied.  It will probably be most appropriate to
+   * do any rendering for wavelet changes in this method.
+   */
+  public void onDeltaSequenceEnd(WaveletData wavelet);
 }

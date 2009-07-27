@@ -35,7 +35,6 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSu
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
-import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -323,7 +322,6 @@ public class ClientBackend {
    * @param waveletUpdate the wavelet update
    */
   public void receiveWaveletUpdate(ProtocolWaveletUpdate waveletUpdate) {
-    // Extract relevant fields
     List<ProtocolWaveletDelta> protobufDeltas = waveletUpdate.getAppliedDeltaList();
 
     WaveletName waveletName;
@@ -342,9 +340,12 @@ public class ClientBackend {
 
     WaveViewData wave = clientView.getData();
     WaveletData wavelet = wave.getWavelet(waveletName.waveletId);
-
     if (wavelet == null) {
       wavelet = wave.createWavelet(waveletName.waveletId);
+    }
+
+    for (WaveletOperationListener listener : waveletOperationListeners) {
+      listener.onDeltaSequenceStart(wavelet);
     }
 
     // Apply operations to the wavelet
@@ -359,26 +360,25 @@ public class ClientBackend {
         } catch (OperationException e) {
           LOG.warning("OperationException when applying " + op + " to " + wavelet);
         }
-
-        // If this is a remove participant on ourselves we need to remove the wavelet locally,
-        // important for the way the client is handling the index wave.
-        // TODO: this is wrong for anything other than the index wave, and dubious even then
-        if (op instanceof RemoveParticipant &&
-            ((RemoveParticipant) op).getParticipantId().equals(getUserId())) {
-          wave.removeWavelet(waveletName.waveletId);
-        }
       }
 
-      // Update wavelet version
       clientView.setWaveletVersion(waveletName.waveletId,
           WaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()));
     }
 
-    notifyWaveletOperationListeners(wavelet, new NoOp());
+    // If we have been removed from this wavelet then remove the data too, since if we're re-added
+    // then the deltas will come from version 0, not the latest version we've seen
+    if (!wavelet.getParticipants().contains(getUserId())) {
+      wave.removeWavelet(waveletName.waveletId);
+    }
 
     // If it was an update to the index wave, might need to open/close some more waves
     if (IndexUtils.isIndexWave(wave)) {
       syncWithIndexWave(wave);
+    }
+
+    for (WaveletOperationListener listener : waveletOperationListeners) {
+      listener.onDeltaSequenceEnd(wavelet);
     }
   }
 
@@ -393,29 +393,20 @@ public class ClientBackend {
   }
 
   /**
-   * Synchronise the state with the index wave by opening any waves that are referred to but not
-   * present, and closing any waves that are present but not referred to.
+   * Synchronise with the index wave by opening any waves that appear in the index but that we
+   * don't have an RPC open request to.
    *
-   * @param indexWave the index wave to synchronise with
+   * @param indexWave to synchronise with
    */
   private void syncWithIndexWave(WaveViewData indexWave) {
-    List<WaveId> indexEntries = IndexUtils.getIndexEntries(indexWave);
+    List<IndexEntry> indexEntries = IndexUtils.getIndexEntries(indexWave);
 
-    // This is somewhat inefficient, it would be better to only look at the changes to the index
-    // wave since last time this was run (that is, be less lazy in receiveWaveletUpdate)
-    for (WaveId indexEntry : indexEntries) {
-      if (!waveControllers.containsKey(indexEntry)) {
-        // TODO: Subscribe only to the "conv+root" wavelet, but it must also be
-        // qualified with the wavelet domain.
-        openWave(indexEntry, ImmutableList.of(""));
+    for (IndexEntry indexEntry : indexEntries) {
+      if (!waveControllers.containsKey(indexEntry.getWaveId())) {
+        WaveId waveId = indexEntry.getWaveId();
+        openWave(waveId, ImmutableList.of(ClientUtils.getConversationRootId(waveId).serialise()));
       }
     }
-
-//    for (WaveId waveEntry : waves.keySet()) {
-//      if (!IndexUtils.isIndexWaveId(waveEntry) && !indexEntries.contains(waveEntry)) {
-//        waves.remove(waveEntry);
-//      }
-//    }
   }
 
   /**
@@ -436,36 +427,6 @@ public class ClientBackend {
         listener.noOp(wavelet);
       }
     }
-  }
-
-  /**
-   * Ensure that a wave has a conversation root, and create it if missing (locally).
-   *
-   * @param wave to check
-   */
-  public void ensureConversationRoot(WaveViewData wave) {
-    WaveletData convRoot = getConversationRoot(wave);
-
-    if (convRoot == null) {
-      wave.createWavelet(getConversationRootId(wave));
-    }
-  }
-
-  /**
-   * Get the conversation root wavelet of a wave.
-   *
-   * @param wave to get conversation root of
-   * @return conversation root wavelet of the wave
-   */
-  public WaveletData getConversationRoot(WaveViewData wave) {
-    return wave.getWavelet(getConversationRootId(wave));
-  }
-
-  /**
-   * @return the conversation root wavelet id of a wave.
-   */
-  private WaveletId getConversationRootId(WaveViewData wave) {
-    return new WaveletId(wave.getWaveId().getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET);
   }
 
   /**
