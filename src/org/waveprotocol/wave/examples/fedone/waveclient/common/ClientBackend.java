@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
+import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
@@ -163,9 +164,8 @@ public class ClientBackend {
     this.hashedVersionFactory = new HashedVersionZeroFactoryImpl();
 
     // Opening the index wave will kickstart the process of receiving waves
-    WaveId indexWaveId = IndexUtils.createIndexWaveId();
     List<String> waveletIdPrefixes = ImmutableList.of("");
-    openWave(indexWaveId, waveletIdPrefixes);
+    openWave(CommonConstants.INDEX_WAVE_ID, waveletIdPrefixes);
   }
 
   /**
@@ -264,7 +264,7 @@ public class ClientBackend {
    * @return the special wave containing the index data
    */
   public WaveViewData getIndexWave() {
-    return getWave(IndexUtils.createIndexWaveId());
+    return getWave(CommonConstants.INDEX_WAVE_ID);
   }
 
   /**
@@ -373,7 +373,7 @@ public class ClientBackend {
     }
 
     // If it was an update to the index wave, might need to open/close some more waves
-    if (IndexUtils.isIndexWave(wave)) {
+    if (wave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
       syncWithIndexWave(wave);
     }
 
@@ -399,7 +399,7 @@ public class ClientBackend {
    * @param indexWave to synchronise with
    */
   private void syncWithIndexWave(WaveViewData indexWave) {
-    List<IndexEntry> indexEntries = IndexUtils.getIndexEntries(indexWave);
+    List<IndexEntry> indexEntries = ClientUtils.getIndexEntries(indexWave);
 
     for (IndexEntry indexEntry : indexEntries) {
       if (!waveControllers.containsKey(indexEntry.getWaveId())) {

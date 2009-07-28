@@ -26,7 +26,6 @@ import jline.ConsoleReader;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexEntry;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexUtils;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
@@ -322,7 +321,7 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void doOpenWave(int entry) {
     if (isConnected()) {
-      List<IndexEntry> index = IndexUtils.getIndexEntries(backend.getIndexWave());
+      List<IndexEntry> index = ClientUtils.getIndexEntries(backend.getIndexWave());
 
       if (entry >= index.size()) {
         out.print("Error: entry is out of range, ");

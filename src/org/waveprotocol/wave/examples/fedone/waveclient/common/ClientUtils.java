@@ -17,6 +17,9 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.common;
 
+import com.google.common.collect.Lists;
+
+import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
@@ -30,6 +33,7 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -148,6 +152,29 @@ public class ClientUtils {
    */
   public static BufferedDocOp createEmptyDocument() {
     return new DocOpBuilder().finish();
+  }
+
+  /**
+   * Retrieve a list of index entries from an index wave.
+   *
+   * @param indexWave the wave to retrieve the index from
+   * @return list of index entries
+   */
+  public static List<IndexEntry> getIndexEntries(WaveViewData indexWave) {
+    if (!indexWave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
+      throw new IllegalArgumentException(indexWave + " is not the index wave");
+    }
+
+    List<IndexEntry> indexEntries = Lists.newArrayList();
+
+    for (WaveletData wavelet : indexWave.getWavelets()) {
+      // The wave id is encoded as the wavelet id
+      WaveId waveId = WaveId.deserialise(wavelet.getWaveletName().waveletId.serialise());
+      String digest = ClientUtils.render(wavelet.getDocuments().values());
+      indexEntries.add(new IndexEntry(waveId, digest));
+    }
+
+    return indexEntries;
   }
 
   /**

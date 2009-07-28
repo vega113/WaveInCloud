@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
 import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -71,9 +72,6 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  */
 public class ClientFrontendImpl implements ClientFrontend {
-  // TODO: Share a constant with the client, e.g. use IndexUtils.createIndexWaveId()
-  @VisibleForTesting
-  static final WaveId INDEX_WAVE_ID = new WaveId("", "indexwave");
   @VisibleForTesting
   static final ParticipantId DIGEST_AUTHOR = new ParticipantId("digest-author");
   @VisibleForTesting
