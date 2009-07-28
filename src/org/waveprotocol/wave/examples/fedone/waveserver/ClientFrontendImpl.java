@@ -278,10 +278,9 @@ public class ClientFrontendImpl implements ClientFrontend {
    *        Must not be empty.
    * @param add whether the participant is added by the first delta
    * @param remove whether the participant is removed by the last delta
-   * @param oldDigest The digest text of the wavelet as seen by participant
-   *                  before the deltas are applied
-   * @param newDigest The digest text of the wavelet as seen by participant
-   *                  after the deltas are applied
+   * @param oldDigest The digest text of the wavelet before the deltas are
+   *                  applied (but including all changes from preceding deltas)
+   * @param newDigest The digest text of the wavelet after the deltas are applied
    */
   @VisibleForTesting
   void participantUpdate(WaveletName waveletName, ParticipantId participant,
@@ -292,6 +291,7 @@ public class ClientFrontendImpl implements ClientFrontend {
       ProtocolHashedVersion firstKnownDelta = newDeltas.getStartVersion();
       deltasToSend = newDeltas.prepend(
           waveletProvider.requestHistory(waveletName, version0, firstKnownDelta));
+      oldDigest = "";
     } else {
       deltasToSend = newDeltas;
     }
