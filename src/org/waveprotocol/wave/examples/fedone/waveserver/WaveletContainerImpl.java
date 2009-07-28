@@ -315,11 +315,17 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     String error = null;
     try {
       for (WaveletOperation op : transformedClientOps) {
-          op.apply(waveletData);
-          applied += 1; // Single ops are only of length one.
+        op.apply(waveletData);
+        applied += 1; // Single ops are only of length one.
       }
     } catch (OperationException e) {
       error = e.getMessage();
+    }
+
+    // Remove any ops that weren't successfully applied before creating transformed delta
+    if (applied != transformedClientOps.size()) {
+      LOG.warning(String.format("%d/%d ops were applied", applied, transformedClientOps.size()));
+      transformedClientOps = transformedClientOps.subList(0, applied);
     }
 
     WaveletDelta transformedDelta = new WaveletDelta(new ParticipantId(submittedDelta.getAuthor()),

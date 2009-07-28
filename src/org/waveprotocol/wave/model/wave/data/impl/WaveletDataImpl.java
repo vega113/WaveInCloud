@@ -101,7 +101,7 @@ public class WaveletDataImpl implements WaveletData {
 
   @Override
   public boolean addParticipant(ParticipantId p) {
-    return participants.add(p);
+    return (participants.contains(p) ? false : participants.add(p));
   }
 
   @Override
