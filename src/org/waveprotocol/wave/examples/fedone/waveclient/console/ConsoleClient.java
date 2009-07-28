@@ -370,9 +370,16 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void addParticipant(String name) {
     if (isWaveOpen()) {
-      backend.sendWaveletOperation(
-          getOpenWavelet(),
-          new AddParticipant(new ParticipantId(name)));
+      ParticipantId addId = new ParticipantId(name);
+
+      // TODO: I would prefer to not have this check and let the server reject any duplicate add
+      // participant, but this is an unresolved issue in the server.
+      // See http://code.google.com/p/wave-protocol/issues/detail?id=28
+      if (!getOpenWavelet().getParticipants().contains(addId)) {
+        backend.sendWaveletOperation(getOpenWavelet(), new AddParticipant(addId));
+      } else {
+        out.println("Error: " + name + " is already a participant on this wave");
+      }
     } else {
       errorNoWaveOpen();
     }
@@ -385,9 +392,14 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void removeParticipant(String name) {
     if (isWaveOpen()) {
-      backend.sendWaveletOperation(
-          getOpenWavelet(),
-          new RemoveParticipant(new ParticipantId(name)));
+      ParticipantId removeId = new ParticipantId(name);
+
+      // TODO: I would prefer not to have this check either
+      if (getOpenWavelet().getParticipants().contains(removeId)) {
+        backend.sendWaveletOperation(getOpenWavelet(), new RemoveParticipant(removeId));
+      } else {
+        out.println("Error: " + name + " is not a participant on this wave");
+      }
     } else {
       errorNoWaveOpen();
     }
