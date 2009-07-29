@@ -32,5 +32,4 @@ java -jar dist/fedone-0.2.jar \
   --certificate_private_key=$PRIVATE_KEY_FILENAME \
   --certificate_files=$CERTIFICATE_FILENAME_LIST \
   --certificate_domain=$CERTIFICATE_DOMAIN_NAME \
-  --waveserver_disable_verification=false
-
+  --waveserver_disable_verification=true
