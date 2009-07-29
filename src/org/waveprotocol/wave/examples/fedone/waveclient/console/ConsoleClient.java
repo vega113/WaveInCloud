@@ -371,7 +371,13 @@ public class ConsoleClient implements WaveletOperationListener {
   private void addParticipant(String name) {
     if (isWaveOpen()) {
       ParticipantId addId = new ParticipantId(name);
-      backend.sendWaveletOperation(getOpenWavelet(), new AddParticipant(addId));
+
+      // Don't send an invalid op, although the server should be robust enough to deal with it
+      if (!getOpenWavelet().getParticipants().contains(addId)) {
+        backend.sendWaveletOperation(getOpenWavelet(), new AddParticipant(addId));
+      } else {
+        out.println("Error: " + name + " is already a participant on this wave");
+      }
     } else {
       errorNoWaveOpen();
     }
@@ -385,7 +391,12 @@ public class ConsoleClient implements WaveletOperationListener {
   private void removeParticipant(String name) {
     if (isWaveOpen()) {
       ParticipantId removeId = new ParticipantId(name);
-      backend.sendWaveletOperation(getOpenWavelet(), new RemoveParticipant(removeId));
+
+      if (getOpenWavelet().getParticipants().contains(removeId)) {
+        backend.sendWaveletOperation(getOpenWavelet(), new RemoveParticipant(removeId));
+      } else {
+        out.println("Error: " + name + " is not a participant on this wave");
+      }
     } else {
       errorNoWaveOpen();
     }
