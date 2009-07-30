@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
@@ -83,8 +83,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
   }
 
   @Override
-  public DeltaSequence update(List<ProtocolAppliedWaveletDelta> appliedDeltas,
-      final String domain, WaveletFederationProvider federationProvider)
+  public void update(List<ProtocolAppliedWaveletDelta> appliedDeltas, final String domain,
+      WaveletFederationProvider federationProvider, final RemoteWaveletDeltaCallback deltaCallback)
       throws WaveServerException {
     acquireWriteLock();
     try {
@@ -92,6 +92,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       List<ProtocolWaveletDelta> result = new LinkedList<ProtocolWaveletDelta>();
       ProtocolHashedVersion expectedVersion =
           WaveletOperationSerializer.serialize(currentVersion);
+      boolean haveRequestedHistory = false;
+
       // Insert all available deltas into pendingDeltas.
       for (ProtocolAppliedWaveletDelta appliedDelta : appliedDeltas) {
         LOG.info("Delta incoming: " + appliedDelta);
@@ -102,12 +104,17 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       while (pendingDeltas.size() > 0) {
         ProtocolAppliedWaveletDelta appliedDelta = pendingDeltas.first();
         ProtocolHashedVersion appliedAt = appliedDelta.getHashedVersionAppliedAt();
-        // We don't have the right version - fall out, set up callback.
+
+        // If we don't have the right version it implies there is a history we need, so set up a
+        // callback to request it and fall out of this update
         if (appliedAt.getVersion() > expectedVersion.getVersion()) {
-          // TODO: callback logic
+          LOG.info("Missing history from " + expectedVersion.getVersion() + "-"
+              + appliedAt.getVersion() + ", requesting from upstream for " + waveletName);
+
           if (federationProvider != null) {
-            LOG.info("Missing history from " + expectedVersion.getVersion() + "-"
-                + appliedAt.getVersion() + ", requesting from upstream for " + waveletName);
+            // TODO: only one request history should be pending at any one time?
+            // We should derive a new one whenever the active one is finished,
+            // based on the current state of pendingDeltas.
             federationProvider.requestHistory(waveletName, domain, expectedVersion, appliedAt, -1,
                 new HistoryResponseListener() {
                   @Override
@@ -118,32 +125,31 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                   @Override
                   public void onSuccess(Set<ProtocolAppliedWaveletDelta> deltaSet,
                       long lastCommittedVersion, long versionTruncatedAt) {
-                    // Don't let this call instantiate another callback - pass
-                    // null as the provider.
                     LOG.info("Got response callback: " + waveletName + ", lcv "
                         + lastCommittedVersion + " sizeof(deltaSet) = " + deltaSet.size());
-                    try {
-                      //update(ImmutableList.copyOf(deltaSet), domain, null);
-                      acquireWriteLock();
-                      // NB. This won't trigger an update until an up-to-date delta is received
-                      for (ProtocolAppliedWaveletDelta appliedDelta : deltaSet) {
-                        LOG.info("Delta incoming from remote: " + appliedDelta);
-                        pendingDeltas.add(appliedDelta);
-                      }
-                    } finally {
-                      releaseWriteLock();
+
+                    // Try updating again with the new set of deltas, with a null federation
+                    // provider since we shouldn't need to reach here again
+                    List<ProtocolAppliedWaveletDelta> deltaList = Lists.newArrayList();
+                    for (ProtocolAppliedWaveletDelta newAppliedDelta : deltaSet) {
+                      LOG.info("Delta incoming from history: " + newAppliedDelta);
+                      deltaList.add(newAppliedDelta);
                     }
-                    // TODO: Only one requestHistory should be
-                    // pending at any one time. We should derive a new one
-                    // whenever the active one is finished, based on the current
-                    // state of pendingDeltas.
+
+                    try {
+                      update(deltaList, domain, null, deltaCallback);
+                    } catch (WaveServerException e) {
+                      LOG.severe("Exception when re-running update with history: " + e);
+                    }
                   }
                 });
+            haveRequestedHistory = true;
+          } else {
+            LOG.severe("History request resulted in non-contiguous deltas!");
           }
           break;
         }
 
-        // Is this delta at the correct version to be applied?
         if (appliedAt.getVersion() == expectedVersion.getVersion()) {
           LOG.info("RemoteWaveletContainer found delta exactly where we need: " + appliedAt);
           try {
@@ -172,12 +178,22 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
 
           // TODO: does waveletData update?
           expectedVersion = WaveletOperationSerializer.serialize(currentVersion);
+        } else {
+          LOG.warning("Got delta from the past: " + appliedDelta);
         }
+
         pendingDeltas.remove(appliedDelta);
       }
-      DeltaSequence deltaSequence = new DeltaSequence(result, expectedVersion);
-      LOG.info("Returning contiguous block: " + deltaSequence);
-      return deltaSequence;
+
+      if (!haveRequestedHistory) {
+        DeltaSequence deltaSequence = new DeltaSequence(result, expectedVersion);
+        LOG.info("Returning contiguous block: " + deltaSequence);
+        deltaCallback.ready(deltaSequence);
+      } else if (!result.isEmpty()) {
+        LOG.severe("History requested but non-empty result, non-contiguous deltas?");
+      } else {
+        LOG.info("History requested, ignoring callback");
+      }
     } finally {
       releaseWriteLock();
     }

@@ -43,19 +43,18 @@ interface RemoteWaveletContainer extends WaveletContainer {
    * version zero, then they will be immediately transformed and returned to the
    * client. If they do not, then an asynchronous callback will be kicked off to
    * request the missing deltas.
-   * 
+   *
    * @param appliedDeltas the list of deltas for the update.
    * @param domain the listener domain where these deltas were receievd
    * @param federationProvider the provider where missing data may be sourced
-   * @return a transformed version of the applied delta and the hashed version
-   *         after application
-   *
-   *         If the received update completes the history of a wavelet, the
-   *         complete transformed history will be returned.
+   * @param updateCallback for asynchronous notification when deltas are ready
+   *        to be processed, providing a transformed version of the applied
+   *        delta and the hashed version after application
    * @throws WaveServerException
    */
-  DeltaSequence update(List<ProtocolAppliedWaveletDelta> appliedDeltas, String domain,
-      WaveletFederationProvider federationProvider) throws WaveServerException;
+  void update(List<ProtocolAppliedWaveletDelta> appliedDeltas, String domain,
+      WaveletFederationProvider federationProvider, RemoteWaveletDeltaCallback updateCallback)
+      throws WaveServerException;
 
   /**
    * Indicate that the remote wave server has committed the wavelet to disk.

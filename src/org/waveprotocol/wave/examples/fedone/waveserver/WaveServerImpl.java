@@ -112,7 +112,7 @@ public class WaveServerImpl implements WaveServer {
     return new WaveletFederationListener() {
 
       @Override
-      public void waveletUpdate(WaveletName waveletName,
+      public void waveletUpdate(final WaveletName waveletName,
           List<ProtocolAppliedWaveletDelta> appliedDeltas,
           ProtocolHashedVersion committedHashedVersion,
           WaveletUpdateCallback callback) {
@@ -132,19 +132,30 @@ public class WaveServerImpl implements WaveServer {
         }
         String error = null;
         try {
-          DeltaSequence result =
-              getOrCreateRemoteWavelet(waveletName).update(appliedDeltas, domain,
-                  federationRemote);
-          if (clientListener != null) {
-            Map<String, BufferedDocOp> documentState =
-              getWavelet(waveletName).getWaveletData().getDocuments();
-            clientListener.waveletUpdate(waveletName, result,
-                result.getEndVersion(), documentState);
-          }
-          if (committedHashedVersion != null &&
-              getOrCreateRemoteWavelet(waveletName).committed(committedHashedVersion)) {
+          final RemoteWaveletContainer remoteWavelet = getOrCreateRemoteWavelet(waveletName);
+
+          // Update this remote wavelet with the immediately incoming delta, providing a callback
+          // so that incoming historic deltas (as well as this delta) can be given to the
+          // clientListener at a later point
+          remoteWavelet.update(appliedDeltas, domain, federationRemote,
+              new RemoteWaveletDeltaCallback() {
+                public void ready(DeltaSequence result) {
+                  if (clientListener != null) {
+                    Map<String, BufferedDocOp> documentState =
+                        getWavelet(waveletName).getWaveletData().getDocuments();
+                    clientListener.waveletUpdate(waveletName, result, result.getEndVersion(),
+                        documentState);
+                  } else {
+                    LOG.warning("Got valid deltaSequence for " + waveletName
+                        + ", clientListener is null");
+                  }
+                }
+              });
+          if (committedHashedVersion != null && remoteWavelet.committed(committedHashedVersion)) {
             if (clientListener != null) {
               clientListener.waveletCommitted(waveletName, committedHashedVersion);
+            } else {
+              LOG.warning("Client listener is null");
             }
           }
           // TODO: when we support federated groups, forward to federationHosts too.
