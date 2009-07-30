@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script will start the federated wave server.
 # Please see http://code.google.com/p/wave-protocol/wiki/Installation for
