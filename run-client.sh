@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script will start the wave client.
 # Please see http://code.google.com/p/wave-protocol/wiki/Installation for
