@@ -33,7 +33,7 @@ option java_outer_classname = "WaveClientRpc";
 
 service ProtocolWaveClientRpc {
   rpc Open (ProtocolOpenRequest) returns (ProtocolWaveletUpdate) {
-    option (rpc.isStreamingRpc) = true;
+    option (rpc.is_streaming_rpc) = true;
   };
   rpc Submit (ProtocolSubmitRequest) returns (ProtocolSubmitResponse);
 }
@@ -48,10 +48,10 @@ service ProtocolWaveClientRpc {
  * in date order, capped by the maximumWavelets parameter.
  */
 message ProtocolOpenRequest {
-  required string participantId = 1;
-  required string waveId = 2;
-  repeated string waveletIdPrefix = 3;
-  optional int32  maximumWavelets = 4;
+  required string participant_id = 1;
+  required string wave_id = 2;
+  repeated string wavelet_id_prefix = 3;
+  optional int32 maximum_wavelets = 4;
 }
 
 /**
@@ -60,25 +60,25 @@ message ProtocolOpenRequest {
  */
 message ProtocolWaveletUpdate {
   // Specifies the wavelet name in the URI netpath notation.
-  required string waveletName = 1;
+  required string wavelet_name = 1;
 
   // Zero or more deltas for this wavelet, streamed in order.
-  repeated protocol.ProtocolWaveletDelta appliedDelta = 2;
+  repeated protocol.ProtocolWaveletDelta applied_delta = 2;
   
   // Indicates that the host server has committed the wavelet to disk at the
   // given version.
-  optional protocol.ProtocolHashedVersion commitNotice = 3;
+  optional protocol.ProtocolHashedVersion commit_notice = 3;
 
   // Resulting version of the wavelet after all deltas have been applied
   // May only be missing if there are no appliedDeltas
-  optional protocol.ProtocolHashedVersion resultingVersion = 4;
+  optional protocol.ProtocolHashedVersion resulting_version = 4;
 }
 
 /**
  * The client requests that the given delta be applied to the wavelet.
  */
 message ProtocolSubmitRequest {
-  required string waveletName = 1;
+  required string wavelet_name = 1;
   required protocol.ProtocolWaveletDelta delta = 2;
 }
 
@@ -88,6 +88,6 @@ message ProtocolSubmitRequest {
  * number of operations successfully applied to the wavelet by the server.
  */
 message ProtocolSubmitResponse {
-  required int32 operationsApplied = 1;
-  optional string errorMessage = 2;
+  required int32 operations_applied = 1;
+  optional string error_message = 2;
 }

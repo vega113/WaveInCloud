@@ -41,8 +41,8 @@ extend google.protobuf.MethodOptions {
    * result to the callback provided to the interface implementation. Or, by
    * raising an error condition as normal (through setFailed on the controller).
    */
-  // TODO: get assigned ids
-  optional bool isStreamingRpc = 100000 [default = false];
+  // TODO: Create a message type for options instead of using a single bool.
+  optional bool is_streaming_rpc = 1003 [default = false];
 }
 
 /**
@@ -64,5 +64,5 @@ message CancelRpc {
  */
 message RpcFinished {
   required bool failed = 1;
-  optional string errorText = 2;
+  optional string error_text = 2;
 }

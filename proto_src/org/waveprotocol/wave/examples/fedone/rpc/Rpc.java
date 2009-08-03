@@ -269,8 +269,8 @@ public final class Rpc {
     public boolean hasFailed() { return hasFailed; }
     public boolean getFailed() { return failed_; }
     
-    // optional string errorText = 2;
-    public static final int ERRORTEXT_FIELD_NUMBER = 2;
+    // optional string error_text = 2;
+    public static final int ERROR_TEXT_FIELD_NUMBER = 2;
     private boolean hasErrorText;
     private java.lang.String errorText_ = "";
     public boolean hasErrorText() { return hasErrorText; }
@@ -521,7 +521,7 @@ public final class Rpc {
         return this;
       }
       
-      // optional string errorText = 2;
+      // optional string error_text = 2;
       public boolean hasErrorText() {
         return result.hasErrorText();
       }
@@ -548,7 +548,7 @@ public final class Rpc {
     }
   }
   
-  public static final int ISSTREAMINGRPC_FIELD_NUMBER = 100000;
+  public static final int IS_STREAMING_RPC_FIELD_NUMBER = 1003;
   public static
     com.google.protobuf.GeneratedMessage.GeneratedExtension<
       com.google.protobuf.DescriptorProtos.MethodOptions,
@@ -574,11 +574,11 @@ public final class Rpc {
     java.lang.String descriptorData =
       "\n3org/waveprotocol/wave/examples/fedone/" +
       "rpc/rpc.proto\022\003rpc\032 google/protobuf/desc" +
-      "riptor.proto\"\013\n\tCancelRpc\"0\n\013RpcFinished" +
-      "\022\016\n\006failed\030\001 \002(\010\022\021\n\terrorText\030\002 \001(\t:?\n\016i" +
-      "sStreamingRpc\022\036.google.protobuf.MethodOp" +
-      "tions\030\240\215\006 \001(\010:\005falseB0\n)org.waveprotocol" +
-      ".wave.examples.fedone.rpcB\003Rpc";
+      "riptor.proto\"\013\n\tCancelRpc\"1\n\013RpcFinished" +
+      "\022\016\n\006failed\030\001 \002(\010\022\022\n\nerror_text\030\002 \001(\t:@\n\020" +
+      "is_streaming_rpc\022\036.google.protobuf.Metho" +
+      "dOptions\030\353\007 \001(\010:\005falseB0\n)org.waveprotoc" +
+      "ol.wave.examples.fedone.rpcB\003Rpc";
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(

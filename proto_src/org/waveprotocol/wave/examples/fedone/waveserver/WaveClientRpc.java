@@ -32,22 +32,22 @@ public final class WaveClientRpc {
       return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_ProtocolOpenRequest_fieldAccessorTable;
     }
     
-    // required string participantId = 1;
-    public static final int PARTICIPANTID_FIELD_NUMBER = 1;
+    // required string participant_id = 1;
+    public static final int PARTICIPANT_ID_FIELD_NUMBER = 1;
     private boolean hasParticipantId;
     private java.lang.String participantId_ = "";
     public boolean hasParticipantId() { return hasParticipantId; }
     public java.lang.String getParticipantId() { return participantId_; }
     
-    // required string waveId = 2;
-    public static final int WAVEID_FIELD_NUMBER = 2;
+    // required string wave_id = 2;
+    public static final int WAVE_ID_FIELD_NUMBER = 2;
     private boolean hasWaveId;
     private java.lang.String waveId_ = "";
     public boolean hasWaveId() { return hasWaveId; }
     public java.lang.String getWaveId() { return waveId_; }
     
-    // repeated string waveletIdPrefix = 3;
-    public static final int WAVELETIDPREFIX_FIELD_NUMBER = 3;
+    // repeated string wavelet_id_prefix = 3;
+    public static final int WAVELET_ID_PREFIX_FIELD_NUMBER = 3;
     private java.util.List<java.lang.String> waveletIdPrefix_ =
       java.util.Collections.emptyList();
     public java.util.List<java.lang.String> getWaveletIdPrefixList() {
@@ -58,8 +58,8 @@ public final class WaveClientRpc {
       return waveletIdPrefix_.get(index);
     }
     
-    // optional int32 maximumWavelets = 4;
-    public static final int MAXIMUMWAVELETS_FIELD_NUMBER = 4;
+    // optional int32 maximum_wavelets = 4;
+    public static final int MAXIMUM_WAVELETS_FIELD_NUMBER = 4;
     private boolean hasMaximumWavelets;
     private int maximumWavelets_ = 0;
     public boolean hasMaximumWavelets() { return hasMaximumWavelets; }
@@ -333,7 +333,7 @@ public final class WaveClientRpc {
       }
       
       
-      // required string participantId = 1;
+      // required string participant_id = 1;
       public boolean hasParticipantId() {
         return result.hasParticipantId();
       }
@@ -354,7 +354,7 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // required string waveId = 2;
+      // required string wave_id = 2;
       public boolean hasWaveId() {
         return result.hasWaveId();
       }
@@ -375,7 +375,7 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // repeated string waveletIdPrefix = 3;
+      // repeated string wavelet_id_prefix = 3;
       public java.util.List<java.lang.String> getWaveletIdPrefixList() {
         return java.util.Collections.unmodifiableList(result.waveletIdPrefix_);
       }
@@ -415,7 +415,7 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // optional int32 maximumWavelets = 4;
+      // optional int32 maximum_wavelets = 4;
       public boolean hasMaximumWavelets() {
         return result.hasMaximumWavelets();
       }
@@ -464,15 +464,15 @@ public final class WaveClientRpc {
       return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_ProtocolWaveletUpdate_fieldAccessorTable;
     }
     
-    // required string waveletName = 1;
-    public static final int WAVELETNAME_FIELD_NUMBER = 1;
+    // required string wavelet_name = 1;
+    public static final int WAVELET_NAME_FIELD_NUMBER = 1;
     private boolean hasWaveletName;
     private java.lang.String waveletName_ = "";
     public boolean hasWaveletName() { return hasWaveletName; }
     public java.lang.String getWaveletName() { return waveletName_; }
     
-    // repeated .protocol.ProtocolWaveletDelta appliedDelta = 2;
-    public static final int APPLIEDDELTA_FIELD_NUMBER = 2;
+    // repeated .protocol.ProtocolWaveletDelta applied_delta = 2;
+    public static final int APPLIED_DELTA_FIELD_NUMBER = 2;
     private java.util.List<org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta> appliedDelta_ =
       java.util.Collections.emptyList();
     public java.util.List<org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta> getAppliedDeltaList() {
@@ -483,15 +483,15 @@ public final class WaveClientRpc {
       return appliedDelta_.get(index);
     }
     
-    // optional .protocol.ProtocolHashedVersion commitNotice = 3;
-    public static final int COMMITNOTICE_FIELD_NUMBER = 3;
+    // optional .protocol.ProtocolHashedVersion commit_notice = 3;
+    public static final int COMMIT_NOTICE_FIELD_NUMBER = 3;
     private boolean hasCommitNotice;
     private org.waveprotocol.wave.protocol.common.ProtocolHashedVersion commitNotice_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
     public boolean hasCommitNotice() { return hasCommitNotice; }
     public org.waveprotocol.wave.protocol.common.ProtocolHashedVersion getCommitNotice() { return commitNotice_; }
     
-    // optional .protocol.ProtocolHashedVersion resultingVersion = 4;
-    public static final int RESULTINGVERSION_FIELD_NUMBER = 4;
+    // optional .protocol.ProtocolHashedVersion resulting_version = 4;
+    public static final int RESULTING_VERSION_FIELD_NUMBER = 4;
     private boolean hasResultingVersion;
     private org.waveprotocol.wave.protocol.common.ProtocolHashedVersion resultingVersion_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
     public boolean hasResultingVersion() { return hasResultingVersion; }
@@ -780,7 +780,7 @@ public final class WaveClientRpc {
       }
       
       
-      // required string waveletName = 1;
+      // required string wavelet_name = 1;
       public boolean hasWaveletName() {
         return result.hasWaveletName();
       }
@@ -801,7 +801,7 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // repeated .protocol.ProtocolWaveletDelta appliedDelta = 2;
+      // repeated .protocol.ProtocolWaveletDelta applied_delta = 2;
       public java.util.List<org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta> getAppliedDeltaList() {
         return java.util.Collections.unmodifiableList(result.appliedDelta_);
       }
@@ -852,7 +852,7 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // optional .protocol.ProtocolHashedVersion commitNotice = 3;
+      // optional .protocol.ProtocolHashedVersion commit_notice = 3;
       public boolean hasCommitNotice() {
         return result.hasCommitNotice();
       }
@@ -889,7 +889,7 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // optional .protocol.ProtocolHashedVersion resultingVersion = 4;
+      // optional .protocol.ProtocolHashedVersion resulting_version = 4;
       public boolean hasResultingVersion() {
         return result.hasResultingVersion();
       }
@@ -957,8 +957,8 @@ public final class WaveClientRpc {
       return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_ProtocolSubmitRequest_fieldAccessorTable;
     }
     
-    // required string waveletName = 1;
-    public static final int WAVELETNAME_FIELD_NUMBER = 1;
+    // required string wavelet_name = 1;
+    public static final int WAVELET_NAME_FIELD_NUMBER = 1;
     private boolean hasWaveletName;
     private java.lang.String waveletName_ = "";
     public boolean hasWaveletName() { return hasWaveletName; }
@@ -1205,7 +1205,7 @@ public final class WaveClientRpc {
       }
       
       
-      // required string waveletName = 1;
+      // required string wavelet_name = 1;
       public boolean hasWaveletName() {
         return result.hasWaveletName();
       }
@@ -1294,15 +1294,15 @@ public final class WaveClientRpc {
       return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_ProtocolSubmitResponse_fieldAccessorTable;
     }
     
-    // required int32 operationsApplied = 1;
-    public static final int OPERATIONSAPPLIED_FIELD_NUMBER = 1;
+    // required int32 operations_applied = 1;
+    public static final int OPERATIONS_APPLIED_FIELD_NUMBER = 1;
     private boolean hasOperationsApplied;
     private int operationsApplied_ = 0;
     public boolean hasOperationsApplied() { return hasOperationsApplied; }
     public int getOperationsApplied() { return operationsApplied_; }
     
-    // optional string errorMessage = 2;
-    public static final int ERRORMESSAGE_FIELD_NUMBER = 2;
+    // optional string error_message = 2;
+    public static final int ERROR_MESSAGE_FIELD_NUMBER = 2;
     private boolean hasErrorMessage;
     private java.lang.String errorMessage_ = "";
     public boolean hasErrorMessage() { return hasErrorMessage; }
@@ -1535,7 +1535,7 @@ public final class WaveClientRpc {
       }
       
       
-      // required int32 operationsApplied = 1;
+      // required int32 operations_applied = 1;
       public boolean hasOperationsApplied() {
         return result.hasOperationsApplied();
       }
@@ -1553,7 +1553,7 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // optional string errorMessage = 2;
+      // optional string error_message = 2;
       public boolean hasErrorMessage() {
         return result.hasErrorMessage();
       }
@@ -1899,26 +1899,26 @@ public final class WaveClientRpc {
       "waveserver/waveclient-rpc.proto\022\nwaveser" +
       "ver\032+org/waveprotocol/wave/protocol/comm" +
       "on.proto\0323org/waveprotocol/wave/examples" +
-      "/fedone/rpc/rpc.proto\"n\n\023ProtocolOpenReq" +
-      "uest\022\025\n\rparticipantId\030\001 \002(\t\022\016\n\006waveId\030\002 " +
-      "\002(\t\022\027\n\017waveletIdPrefix\030\003 \003(\t\022\027\n\017maximumW" +
-      "avelets\030\004 \001(\005\"\324\001\n\025ProtocolWaveletUpdate\022" +
-      "\023\n\013waveletName\030\001 \002(\t\0224\n\014appliedDelta\030\002 \003" +
-      "(\0132\036.protocol.ProtocolWaveletDelta\0225\n\014co" +
-      "mmitNotice\030\003 \001(\0132\037.protocol.ProtocolHash" +
-      "edVersion\0229\n\020resultingVersion\030\004 \001(\0132\037.pr" +
-      "otocol.ProtocolHashedVersion\"[\n\025Protocol" +
-      "SubmitRequest\022\023\n\013waveletName\030\001 \002(\t\022-\n\005de" +
-      "lta\030\002 \002(\0132\036.protocol.ProtocolWaveletDelt" +
-      "a\"I\n\026ProtocolSubmitResponse\022\031\n\021operation" +
-      "sApplied\030\001 \002(\005\022\024\n\014errorMessage\030\002 \001(\t2\272\001\n" +
-      "\025ProtocolWaveClientRpc\022P\n\004Open\022\037.waveser" +
-      "ver.ProtocolOpenRequest\032!.waveserver.Pro" +
-      "tocolWaveletUpdate\"\004\200\3520\001\022O\n\006Submit\022!.wav" +
-      "eserver.ProtocolSubmitRequest\032\".waveserv" +
-      "er.ProtocolSubmitResponseBA\n0org.wavepro" +
-      "tocol.wave.examples.fedone.waveserverB\rW" +
-      "aveClientRpc";
+      "/fedone/rpc/rpc.proto\"s\n\023ProtocolOpenReq" +
+      "uest\022\026\n\016participant_id\030\001 \002(\t\022\017\n\007wave_id\030" +
+      "\002 \002(\t\022\031\n\021wavelet_id_prefix\030\003 \003(\t\022\030\n\020maxi" +
+      "mum_wavelets\030\004 \001(\005\"\330\001\n\025ProtocolWaveletUp" +
+      "date\022\024\n\014wavelet_name\030\001 \002(\t\0225\n\rapplied_de" +
+      "lta\030\002 \003(\0132\036.protocol.ProtocolWaveletDelt" +
+      "a\0226\n\rcommit_notice\030\003 \001(\0132\037.protocol.Prot" +
+      "ocolHashedVersion\022:\n\021resulting_version\030\004" +
+      " \001(\0132\037.protocol.ProtocolHashedVersion\"\\\n" +
+      "\025ProtocolSubmitRequest\022\024\n\014wavelet_name\030\001" +
+      " \002(\t\022-\n\005delta\030\002 \002(\0132\036.protocol.ProtocolW" +
+      "aveletDelta\"K\n\026ProtocolSubmitResponse\022\032\n" +
+      "\022operations_applied\030\001 \002(\005\022\025\n\rerror_messa" +
+      "ge\030\002 \001(\t2\271\001\n\025ProtocolWaveClientRpc\022O\n\004Op" +
+      "en\022\037.waveserver.ProtocolOpenRequest\032!.wa" +
+      "veserver.ProtocolWaveletUpdate\"\003\330>\001\022O\n\006S" +
+      "ubmit\022!.waveserver.ProtocolSubmitRequest" +
+      "\032\".waveserver.ProtocolSubmitResponseBA\n0" +
+      "org.waveprotocol.wave.examples.fedone.wa" +
+      "veserverB\rWaveClientRpc";
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(

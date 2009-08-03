@@ -40,7 +40,7 @@ option java_outer_classname = "common";
  */
 message ProtocolWaveletDelta {
   // Wavelet version that the delta is intended to be applied to.
-  required ProtocolHashedVersion hashedVersion = 1;
+  required ProtocolHashedVersion hashed_version = 1;
 
   // Wave address of the contributor. Must be an explicit wavelet participant,
   // and may be different from the originator of this delta.
@@ -64,7 +64,7 @@ message ProtocolWaveletDelta {
    *  delta.author = "wave-discuss@acmewave.com"
    *  delta.addressPath = ["peter@initech-corp.com", "wave-authors@acmewave.com"]
    */
-  repeated string addressPath = 4;
+  repeated string address_path = 4;
 }
 
 /**
@@ -72,7 +72,7 @@ message ProtocolWaveletDelta {
  */
 message ProtocolHashedVersion {
   required int64 version = 1;
-  required bytes historyHash = 2;
+  required bytes history_hash = 2;
 }
 
 /**
@@ -83,21 +83,21 @@ message ProtocolWaveletOperation {
 
   // A document operation. Mutates the contents of the specified document.
   message MutateDocument {
-    required string documentId = 1;
-    required ProtocolDocumentOperation documentOperation = 2;
+    required string document_id = 1;
+    required ProtocolDocumentOperation document_operation = 2;
   }
 
   // Adds a new participant (canonicalized wave address) to the wavelet.
-  optional string addParticipant = 1;
+  optional string add_participant = 1;
 
   // Removes an existing participant (canonicalized wave address) from the wavelet.
-  optional string removeParticipant = 2;
+  optional string remove_participant = 2;
 
   // Mutates a document.
-  optional MutateDocument mutateDocument = 3;
+  optional MutateDocument mutate_document = 3;
 
   // Does nothing. True if set.
-  optional bool noOp = 4;
+  optional bool no_op = 4;
 }
 
 /**
@@ -120,10 +120,10 @@ message ProtocolDocumentOperation {
       required string key = 1;
       // Absent field means that the attribute was absent/the annotation
       // was null.
-      optional string oldValue = 2;
+      optional string old_value = 2;
       // Absent field means that the attribute should be removed/the annotation
       // should be set to null.
-      optional string newValue = 3;
+      optional string new_value = 3;
     }
 
     message ElementStart {
@@ -138,9 +138,9 @@ message ProtocolDocumentOperation {
       // replaceAttributes component field is not dropped during serialization.
       optional bool empty = 1;
       // MUST NOT have two pairs with the same key.
-      repeated KeyValuePair oldAttribute = 2;
+      repeated KeyValuePair old_attribute = 2;
       // MUST NOT have two pairs with the same key.
-      repeated KeyValuePair newAttribute = 3;
+      repeated KeyValuePair new_attribute = 3;
     }
 
     message UpdateAttributes {
@@ -149,7 +149,7 @@ message ProtocolDocumentOperation {
       // component field is not dropped during serialization.
       optional bool empty = 1;
       // MUST NOT have two updates with the same key.
-      repeated KeyValueUpdate attributeUpdate = 2;
+      repeated KeyValueUpdate attribute_update = 2;
     }
 
     message AnnotationBoundary {
@@ -164,16 +164,16 @@ message ProtocolDocumentOperation {
       repeated KeyValueUpdate change = 3;
     }
 
-    optional AnnotationBoundary annotationBoundary = 1;
+    optional AnnotationBoundary annotation_boundary = 1;
     optional string characters = 2;
-    optional ElementStart elementStart = 3;
-    optional bool elementEnd = 4;
-    optional int32 retainItemCount = 5;
-    optional string deleteCharacters = 6;
-    optional ElementStart deleteElementStart = 7;
-    optional bool deleteElementEnd = 8;
-    optional ReplaceAttributes replaceAttributes = 9;
-    optional UpdateAttributes updateAttributes = 10;
+    optional ElementStart element_start = 3;
+    optional bool element_end = 4;
+    optional int32 retain_item_count = 5;
+    optional string delete_characters = 6;
+    optional ElementStart delete_element_start = 7;
+    optional bool delete_element_end = 8;
+    optional ReplaceAttributes replace_attributes = 9;
+    optional UpdateAttributes update_attributes = 10;
   }
 
   repeated Component component = 1;
@@ -184,10 +184,10 @@ message ProtocolDocumentOperation {
  * ProtocolUpdate and ProtocolHistoryResponse.
  */
 message ProtocolAppliedWaveletDelta {
-  required ProtocolSignedDelta signedOriginalDelta = 1;
-  optional ProtocolHashedVersion hashedVersionAppliedAt = 2;
-  required int32 operationsApplied = 3;
-  required int64 applicationTimestamp = 4;
+  required ProtocolSignedDelta signed_original_delta = 1;
+  optional ProtocolHashedVersion hashed_version_applied_at = 2;
+  required int32 operations_applied = 3;
+  required int64 application_timestamp = 4;
 }
 
 /**
@@ -209,9 +209,9 @@ message ProtocolSignature {
     SHA1_RSA = 1;
   }
 
-  required bytes signatureBytes = 1;
-  required bytes signerId = 2;
-  required SignatureAlgorithm signatureAlgorithm = 3;
+  required bytes signature_bytes = 1;
+  required bytes signer_id = 2;
+  required SignatureAlgorithm signature_algorithm = 3;
 }
 
 /**
@@ -231,7 +231,7 @@ message ProtocolSignerInfo {
 
   // The hash algorithm senders will use to generate an id that will refer to
   // this certificate chain in the future
-  required HashAlgorithm hashAlgorithm = 1;
+  required HashAlgorithm hash_algorithm = 1;
 
   // The domain that this certificate chain was issued to. Receivers of this
   // ProtocolSignerInfo SHOULD reject the ProtocolSignerInfo if the target

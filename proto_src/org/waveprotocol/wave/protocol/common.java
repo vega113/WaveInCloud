@@ -32,8 +32,8 @@ public final class common {
       return org.waveprotocol.wave.protocol.common.internal_static_protocol_ProtocolWaveletDelta_fieldAccessorTable;
     }
     
-    // required .protocol.ProtocolHashedVersion hashedVersion = 1;
-    public static final int HASHEDVERSION_FIELD_NUMBER = 1;
+    // required .protocol.ProtocolHashedVersion hashed_version = 1;
+    public static final int HASHED_VERSION_FIELD_NUMBER = 1;
     private boolean hasHashedVersion;
     private org.waveprotocol.wave.protocol.common.ProtocolHashedVersion hashedVersion_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
     public boolean hasHashedVersion() { return hasHashedVersion; }
@@ -58,8 +58,8 @@ public final class common {
       return operation_.get(index);
     }
     
-    // repeated string addressPath = 4;
-    public static final int ADDRESSPATH_FIELD_NUMBER = 4;
+    // repeated string address_path = 4;
+    public static final int ADDRESS_PATH_FIELD_NUMBER = 4;
     private java.util.List<java.lang.String> addressPath_ =
       java.util.Collections.emptyList();
     public java.util.List<java.lang.String> getAddressPathList() {
@@ -356,7 +356,7 @@ public final class common {
       }
       
       
-      // required .protocol.ProtocolHashedVersion hashedVersion = 1;
+      // required .protocol.ProtocolHashedVersion hashed_version = 1;
       public boolean hasHashedVersion() {
         return result.hasHashedVersion();
       }
@@ -465,7 +465,7 @@ public final class common {
         return this;
       }
       
-      // repeated string addressPath = 4;
+      // repeated string address_path = 4;
       public java.util.List<java.lang.String> getAddressPathList() {
         return java.util.Collections.unmodifiableList(result.addressPath_);
       }
@@ -543,8 +543,8 @@ public final class common {
     public boolean hasVersion() { return hasVersion; }
     public long getVersion() { return version_; }
     
-    // required bytes historyHash = 2;
-    public static final int HISTORYHASH_FIELD_NUMBER = 2;
+    // required bytes history_hash = 2;
+    public static final int HISTORY_HASH_FIELD_NUMBER = 2;
     private boolean hasHistoryHash;
     private com.google.protobuf.ByteString historyHash_ = com.google.protobuf.ByteString.EMPTY;
     public boolean hasHistoryHash() { return hasHistoryHash; }
@@ -796,7 +796,7 @@ public final class common {
         return this;
       }
       
-      // required bytes historyHash = 2;
+      // required bytes history_hash = 2;
       public boolean hasHistoryHash() {
         return result.hasHistoryHash();
       }
@@ -873,15 +873,15 @@ public final class common {
         return org.waveprotocol.wave.protocol.common.internal_static_protocol_ProtocolWaveletOperation_MutateDocument_fieldAccessorTable;
       }
       
-      // required string documentId = 1;
-      public static final int DOCUMENTID_FIELD_NUMBER = 1;
+      // required string document_id = 1;
+      public static final int DOCUMENT_ID_FIELD_NUMBER = 1;
       private boolean hasDocumentId;
       private java.lang.String documentId_ = "";
       public boolean hasDocumentId() { return hasDocumentId; }
       public java.lang.String getDocumentId() { return documentId_; }
       
-      // required .protocol.ProtocolDocumentOperation documentOperation = 2;
-      public static final int DOCUMENTOPERATION_FIELD_NUMBER = 2;
+      // required .protocol.ProtocolDocumentOperation document_operation = 2;
+      public static final int DOCUMENT_OPERATION_FIELD_NUMBER = 2;
       private boolean hasDocumentOperation;
       private org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation documentOperation_ = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.getDefaultInstance();
       public boolean hasDocumentOperation() { return hasDocumentOperation; }
@@ -1121,7 +1121,7 @@ public final class common {
         }
         
         
-        // required string documentId = 1;
+        // required string document_id = 1;
         public boolean hasDocumentId() {
           return result.hasDocumentId();
         }
@@ -1142,7 +1142,7 @@ public final class common {
           return this;
         }
         
-        // required .protocol.ProtocolDocumentOperation documentOperation = 2;
+        // required .protocol.ProtocolDocumentOperation document_operation = 2;
         public boolean hasDocumentOperation() {
           return result.hasDocumentOperation();
         }
@@ -1185,29 +1185,29 @@ public final class common {
       }
     }
     
-    // optional string addParticipant = 1;
-    public static final int ADDPARTICIPANT_FIELD_NUMBER = 1;
+    // optional string add_participant = 1;
+    public static final int ADD_PARTICIPANT_FIELD_NUMBER = 1;
     private boolean hasAddParticipant;
     private java.lang.String addParticipant_ = "";
     public boolean hasAddParticipant() { return hasAddParticipant; }
     public java.lang.String getAddParticipant() { return addParticipant_; }
     
-    // optional string removeParticipant = 2;
-    public static final int REMOVEPARTICIPANT_FIELD_NUMBER = 2;
+    // optional string remove_participant = 2;
+    public static final int REMOVE_PARTICIPANT_FIELD_NUMBER = 2;
     private boolean hasRemoveParticipant;
     private java.lang.String removeParticipant_ = "";
     public boolean hasRemoveParticipant() { return hasRemoveParticipant; }
     public java.lang.String getRemoveParticipant() { return removeParticipant_; }
     
-    // optional .protocol.ProtocolWaveletOperation.MutateDocument mutateDocument = 3;
-    public static final int MUTATEDOCUMENT_FIELD_NUMBER = 3;
+    // optional .protocol.ProtocolWaveletOperation.MutateDocument mutate_document = 3;
+    public static final int MUTATE_DOCUMENT_FIELD_NUMBER = 3;
     private boolean hasMutateDocument;
     private org.waveprotocol.wave.protocol.common.ProtocolWaveletOperation.MutateDocument mutateDocument_ = org.waveprotocol.wave.protocol.common.ProtocolWaveletOperation.MutateDocument.getDefaultInstance();
     public boolean hasMutateDocument() { return hasMutateDocument; }
     public org.waveprotocol.wave.protocol.common.ProtocolWaveletOperation.MutateDocument getMutateDocument() { return mutateDocument_; }
     
-    // optional bool noOp = 4;
-    public static final int NOOP_FIELD_NUMBER = 4;
+    // optional bool no_op = 4;
+    public static final int NO_OP_FIELD_NUMBER = 4;
     private boolean hasNoOp;
     private boolean noOp_ = false;
     public boolean hasNoOp() { return hasNoOp; }
@@ -1475,7 +1475,7 @@ public final class common {
       }
       
       
-      // optional string addParticipant = 1;
+      // optional string add_participant = 1;
       public boolean hasAddParticipant() {
         return result.hasAddParticipant();
       }
@@ -1496,7 +1496,7 @@ public final class common {
         return this;
       }
       
-      // optional string removeParticipant = 2;
+      // optional string remove_participant = 2;
       public boolean hasRemoveParticipant() {
         return result.hasRemoveParticipant();
       }
@@ -1517,7 +1517,7 @@ public final class common {
         return this;
       }
       
-      // optional .protocol.ProtocolWaveletOperation.MutateDocument mutateDocument = 3;
+      // optional .protocol.ProtocolWaveletOperation.MutateDocument mutate_document = 3;
       public boolean hasMutateDocument() {
         return result.hasMutateDocument();
       }
@@ -1554,7 +1554,7 @@ public final class common {
         return this;
       }
       
-      // optional bool noOp = 4;
+      // optional bool no_op = 4;
       public boolean hasNoOp() {
         return result.hasNoOp();
       }
@@ -1975,15 +1975,15 @@ public final class common {
         public boolean hasKey() { return hasKey; }
         public java.lang.String getKey() { return key_; }
         
-        // optional string oldValue = 2;
-        public static final int OLDVALUE_FIELD_NUMBER = 2;
+        // optional string old_value = 2;
+        public static final int OLD_VALUE_FIELD_NUMBER = 2;
         private boolean hasOldValue;
         private java.lang.String oldValue_ = "";
         public boolean hasOldValue() { return hasOldValue; }
         public java.lang.String getOldValue() { return oldValue_; }
         
-        // optional string newValue = 3;
-        public static final int NEWVALUE_FIELD_NUMBER = 3;
+        // optional string new_value = 3;
+        public static final int NEW_VALUE_FIELD_NUMBER = 3;
         private boolean hasNewValue;
         private java.lang.String newValue_ = "";
         public boolean hasNewValue() { return hasNewValue; }
@@ -2251,7 +2251,7 @@ public final class common {
             return this;
           }
           
-          // optional string oldValue = 2;
+          // optional string old_value = 2;
           public boolean hasOldValue() {
             return result.hasOldValue();
           }
@@ -2272,7 +2272,7 @@ public final class common {
             return this;
           }
           
-          // optional string newValue = 3;
+          // optional string new_value = 3;
           public boolean hasNewValue() {
             return result.hasNewValue();
           }
@@ -2692,8 +2692,8 @@ public final class common {
         public boolean hasEmpty() { return hasEmpty; }
         public boolean getEmpty() { return empty_; }
         
-        // repeated .protocol.ProtocolDocumentOperation.Component.KeyValuePair oldAttribute = 2;
-        public static final int OLDATTRIBUTE_FIELD_NUMBER = 2;
+        // repeated .protocol.ProtocolDocumentOperation.Component.KeyValuePair old_attribute = 2;
+        public static final int OLD_ATTRIBUTE_FIELD_NUMBER = 2;
         private java.util.List<org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.KeyValuePair> oldAttribute_ =
           java.util.Collections.emptyList();
         public java.util.List<org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.KeyValuePair> getOldAttributeList() {
@@ -2704,8 +2704,8 @@ public final class common {
           return oldAttribute_.get(index);
         }
         
-        // repeated .protocol.ProtocolDocumentOperation.Component.KeyValuePair newAttribute = 3;
-        public static final int NEWATTRIBUTE_FIELD_NUMBER = 3;
+        // repeated .protocol.ProtocolDocumentOperation.Component.KeyValuePair new_attribute = 3;
+        public static final int NEW_ATTRIBUTE_FIELD_NUMBER = 3;
         private java.util.List<org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.KeyValuePair> newAttribute_ =
           java.util.Collections.emptyList();
         public java.util.List<org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.KeyValuePair> getNewAttributeList() {
@@ -2998,7 +2998,7 @@ public final class common {
             return this;
           }
           
-          // repeated .protocol.ProtocolDocumentOperation.Component.KeyValuePair oldAttribute = 2;
+          // repeated .protocol.ProtocolDocumentOperation.Component.KeyValuePair old_attribute = 2;
           public java.util.List<org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.KeyValuePair> getOldAttributeList() {
             return java.util.Collections.unmodifiableList(result.oldAttribute_);
           }
@@ -3049,7 +3049,7 @@ public final class common {
             return this;
           }
           
-          // repeated .protocol.ProtocolDocumentOperation.Component.KeyValuePair newAttribute = 3;
+          // repeated .protocol.ProtocolDocumentOperation.Component.KeyValuePair new_attribute = 3;
           public java.util.List<org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.KeyValuePair> getNewAttributeList() {
             return java.util.Collections.unmodifiableList(result.newAttribute_);
           }
@@ -3138,8 +3138,8 @@ public final class common {
         public boolean hasEmpty() { return hasEmpty; }
         public boolean getEmpty() { return empty_; }
         
-        // repeated .protocol.ProtocolDocumentOperation.Component.KeyValueUpdate attributeUpdate = 2;
-        public static final int ATTRIBUTEUPDATE_FIELD_NUMBER = 2;
+        // repeated .protocol.ProtocolDocumentOperation.Component.KeyValueUpdate attribute_update = 2;
+        public static final int ATTRIBUTE_UPDATE_FIELD_NUMBER = 2;
         private java.util.List<org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.KeyValueUpdate> attributeUpdate_ =
           java.util.Collections.emptyList();
         public java.util.List<org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.KeyValueUpdate> getAttributeUpdateList() {
@@ -3406,7 +3406,7 @@ public final class common {
             return this;
           }
           
-          // repeated .protocol.ProtocolDocumentOperation.Component.KeyValueUpdate attributeUpdate = 2;
+          // repeated .protocol.ProtocolDocumentOperation.Component.KeyValueUpdate attribute_update = 2;
           public java.util.List<org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.KeyValueUpdate> getAttributeUpdateList() {
             return java.util.Collections.unmodifiableList(result.attributeUpdate_);
           }
@@ -3463,29 +3463,29 @@ public final class common {
         }
       }
       
-      public static final class AnnotationBoundaryMap extends
+      public static final class AnnotationBoundary extends
           com.google.protobuf.GeneratedMessage {
-        // Use AnnotationBoundaryMap.newBuilder() to construct.
-        private AnnotationBoundaryMap() {}
+        // Use AnnotationBoundary.newBuilder() to construct.
+        private AnnotationBoundary() {}
         
-        private static final AnnotationBoundaryMap defaultInstance = new AnnotationBoundaryMap();
-        public static AnnotationBoundaryMap getDefaultInstance() {
+        private static final AnnotationBoundary defaultInstance = new AnnotationBoundary();
+        public static AnnotationBoundary getDefaultInstance() {
           return defaultInstance;
         }
         
-        public AnnotationBoundaryMap getDefaultInstanceForType() {
+        public AnnotationBoundary getDefaultInstanceForType() {
           return defaultInstance;
         }
         
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
-          return org.waveprotocol.wave.protocol.common.internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundaryMap_descriptor;
+          return org.waveprotocol.wave.protocol.common.internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundary_descriptor;
         }
         
         @Override
         protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.waveprotocol.wave.protocol.common.internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundaryMap_fieldAccessorTable;
+          return org.waveprotocol.wave.protocol.common.internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundary_fieldAccessorTable;
         }
         
         // optional bool empty = 1;
@@ -3571,57 +3571,57 @@ public final class common {
           return size;
         }
         
-        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap parseFrom(
+        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary parseFrom(
             com.google.protobuf.ByteString data)
             throws com.google.protobuf.InvalidProtocolBufferException {
           return newBuilder().mergeFrom(data).buildParsed();
         }
-        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap parseFrom(
+        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary parseFrom(
             com.google.protobuf.ByteString data,
             com.google.protobuf.ExtensionRegistry extensionRegistry)
             throws com.google.protobuf.InvalidProtocolBufferException {
           return newBuilder().mergeFrom(data, extensionRegistry)
                    .buildParsed();
         }
-        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap parseFrom(byte[] data)
+        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary parseFrom(byte[] data)
             throws com.google.protobuf.InvalidProtocolBufferException {
           return newBuilder().mergeFrom(data).buildParsed();
         }
-        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap parseFrom(
+        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary parseFrom(
             byte[] data,
             com.google.protobuf.ExtensionRegistry extensionRegistry)
             throws com.google.protobuf.InvalidProtocolBufferException {
           return newBuilder().mergeFrom(data, extensionRegistry)
                    .buildParsed();
         }
-        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap parseFrom(java.io.InputStream input)
+        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary parseFrom(java.io.InputStream input)
             throws java.io.IOException {
           return newBuilder().mergeFrom(input).buildParsed();
         }
-        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap parseFrom(
+        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary parseFrom(
             java.io.InputStream input,
             com.google.protobuf.ExtensionRegistry extensionRegistry)
             throws java.io.IOException {
           return newBuilder().mergeFrom(input, extensionRegistry)
                    .buildParsed();
         }
-        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap parseDelimitedFrom(java.io.InputStream input)
+        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary parseDelimitedFrom(java.io.InputStream input)
             throws java.io.IOException {
           return newBuilder().mergeDelimitedFrom(input).buildParsed();
         }
-        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap parseDelimitedFrom(
+        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary parseDelimitedFrom(
             java.io.InputStream input,
             com.google.protobuf.ExtensionRegistry extensionRegistry)
             throws java.io.IOException {
           return newBuilder().mergeDelimitedFrom(input, extensionRegistry)
                    .buildParsed();
         }
-        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap parseFrom(
+        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary parseFrom(
             com.google.protobuf.CodedInputStream input)
             throws java.io.IOException {
           return newBuilder().mergeFrom(input).buildParsed();
         }
-        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap parseFrom(
+        public static org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary parseFrom(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistry extensionRegistry)
             throws java.io.IOException {
@@ -3631,26 +3631,26 @@ public final class common {
         
         public static Builder newBuilder() { return new Builder(); }
         public Builder newBuilderForType() { return new Builder(); }
-        public static Builder newBuilder(org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap prototype) {
+        public static Builder newBuilder(org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary prototype) {
           return new Builder().mergeFrom(prototype);
         }
         public Builder toBuilder() { return newBuilder(this); }
         
         public static final class Builder extends
             com.google.protobuf.GeneratedMessage.Builder<Builder> {
-          // Construct using org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.newBuilder()
+          // Construct using org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.newBuilder()
           private Builder() {}
           
-          org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap result = new org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap();
+          org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary result = new org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary();
           
           @Override
-          protected org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap internalGetResult() {
+          protected org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary internalGetResult() {
             return result;
           }
           
           @Override
           public Builder clear() {
-            result = new org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap();
+            result = new org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary();
             return this;
           }
           
@@ -3662,14 +3662,14 @@ public final class common {
           @Override
           public com.google.protobuf.Descriptors.Descriptor
               getDescriptorForType() {
-            return org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.getDescriptor();
+            return org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.getDescriptor();
           }
           
-          public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap getDefaultInstanceForType() {
-            return org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.getDefaultInstance();
+          public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary getDefaultInstanceForType() {
+            return org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.getDefaultInstance();
           }
           
-          public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap build() {
+          public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary build() {
             if (result != null && !isInitialized()) {
               throw new com.google.protobuf.UninitializedMessageException(
                 result);
@@ -3677,7 +3677,7 @@ public final class common {
             return buildPartial();
           }
           
-          private org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap buildParsed()
+          private org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary buildParsed()
               throws com.google.protobuf.InvalidProtocolBufferException {
             if (!isInitialized()) {
               throw new com.google.protobuf.UninitializedMessageException(
@@ -3686,7 +3686,7 @@ public final class common {
             return buildPartial();
           }
           
-          public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap buildPartial() {
+          public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary buildPartial() {
             if (result == null) {
               throw new IllegalStateException(
                 "build() has already been called on this Builder.");  }
@@ -3698,23 +3698,23 @@ public final class common {
               result.change_ =
                 java.util.Collections.unmodifiableList(result.change_);
             }
-            org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap returnMe = result;
+            org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary returnMe = result;
             result = null;
             return returnMe;
           }
           
           @Override
           public Builder mergeFrom(com.google.protobuf.Message other) {
-            if (other instanceof org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap) {
-              return mergeFrom((org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap)other);
+            if (other instanceof org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary) {
+              return mergeFrom((org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary)other);
             } else {
               super.mergeFrom(other);
               return this;
             }
           }
           
-          public Builder mergeFrom(org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap other) {
-            if (other == org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.getDefaultInstance()) return this;
+          public Builder mergeFrom(org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary other) {
+            if (other == org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.getDefaultInstance()) return this;
             if (other.hasEmpty()) {
               setEmpty(other.getEmpty());
             }
@@ -3898,12 +3898,12 @@ public final class common {
         }
       }
       
-      // optional .protocol.ProtocolDocumentOperation.Component.AnnotationBoundaryMap annotationBoundary = 1;
-      public static final int ANNOTATIONBOUNDARY_FIELD_NUMBER = 1;
+      // optional .protocol.ProtocolDocumentOperation.Component.AnnotationBoundary annotation_boundary = 1;
+      public static final int ANNOTATION_BOUNDARY_FIELD_NUMBER = 1;
       private boolean hasAnnotationBoundary;
-      private org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap annotationBoundary_ = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.getDefaultInstance();
+      private org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary annotationBoundary_ = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.getDefaultInstance();
       public boolean hasAnnotationBoundary() { return hasAnnotationBoundary; }
-      public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap getAnnotationBoundary() { return annotationBoundary_; }
+      public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary getAnnotationBoundary() { return annotationBoundary_; }
       
       // optional string characters = 2;
       public static final int CHARACTERS_FIELD_NUMBER = 2;
@@ -3912,57 +3912,57 @@ public final class common {
       public boolean hasCharacters() { return hasCharacters; }
       public java.lang.String getCharacters() { return characters_; }
       
-      // optional .protocol.ProtocolDocumentOperation.Component.ElementStart elementStart = 3;
-      public static final int ELEMENTSTART_FIELD_NUMBER = 3;
+      // optional .protocol.ProtocolDocumentOperation.Component.ElementStart element_start = 3;
+      public static final int ELEMENT_START_FIELD_NUMBER = 3;
       private boolean hasElementStart;
       private org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.ElementStart elementStart_ = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.ElementStart.getDefaultInstance();
       public boolean hasElementStart() { return hasElementStart; }
       public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.ElementStart getElementStart() { return elementStart_; }
       
-      // optional bool elementEnd = 4;
-      public static final int ELEMENTEND_FIELD_NUMBER = 4;
+      // optional bool element_end = 4;
+      public static final int ELEMENT_END_FIELD_NUMBER = 4;
       private boolean hasElementEnd;
       private boolean elementEnd_ = false;
       public boolean hasElementEnd() { return hasElementEnd; }
       public boolean getElementEnd() { return elementEnd_; }
       
-      // optional int32 retainItemCount = 5;
-      public static final int RETAINITEMCOUNT_FIELD_NUMBER = 5;
+      // optional int32 retain_item_count = 5;
+      public static final int RETAIN_ITEM_COUNT_FIELD_NUMBER = 5;
       private boolean hasRetainItemCount;
       private int retainItemCount_ = 0;
       public boolean hasRetainItemCount() { return hasRetainItemCount; }
       public int getRetainItemCount() { return retainItemCount_; }
       
-      // optional string deleteCharacters = 6;
-      public static final int DELETECHARACTERS_FIELD_NUMBER = 6;
+      // optional string delete_characters = 6;
+      public static final int DELETE_CHARACTERS_FIELD_NUMBER = 6;
       private boolean hasDeleteCharacters;
       private java.lang.String deleteCharacters_ = "";
       public boolean hasDeleteCharacters() { return hasDeleteCharacters; }
       public java.lang.String getDeleteCharacters() { return deleteCharacters_; }
       
-      // optional .protocol.ProtocolDocumentOperation.Component.ElementStart deleteElementStart = 7;
-      public static final int DELETEELEMENTSTART_FIELD_NUMBER = 7;
+      // optional .protocol.ProtocolDocumentOperation.Component.ElementStart delete_element_start = 7;
+      public static final int DELETE_ELEMENT_START_FIELD_NUMBER = 7;
       private boolean hasDeleteElementStart;
       private org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.ElementStart deleteElementStart_ = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.ElementStart.getDefaultInstance();
       public boolean hasDeleteElementStart() { return hasDeleteElementStart; }
       public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.ElementStart getDeleteElementStart() { return deleteElementStart_; }
       
-      // optional bool deleteElementEnd = 8;
-      public static final int DELETEELEMENTEND_FIELD_NUMBER = 8;
+      // optional bool delete_element_end = 8;
+      public static final int DELETE_ELEMENT_END_FIELD_NUMBER = 8;
       private boolean hasDeleteElementEnd;
       private boolean deleteElementEnd_ = false;
       public boolean hasDeleteElementEnd() { return hasDeleteElementEnd; }
       public boolean getDeleteElementEnd() { return deleteElementEnd_; }
       
-      // optional .protocol.ProtocolDocumentOperation.Component.ReplaceAttributes replaceAttributes = 9;
-      public static final int REPLACEATTRIBUTES_FIELD_NUMBER = 9;
+      // optional .protocol.ProtocolDocumentOperation.Component.ReplaceAttributes replace_attributes = 9;
+      public static final int REPLACE_ATTRIBUTES_FIELD_NUMBER = 9;
       private boolean hasReplaceAttributes;
       private org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.ReplaceAttributes replaceAttributes_ = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.ReplaceAttributes.getDefaultInstance();
       public boolean hasReplaceAttributes() { return hasReplaceAttributes; }
       public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.ReplaceAttributes getReplaceAttributes() { return replaceAttributes_; }
       
-      // optional .protocol.ProtocolDocumentOperation.Component.UpdateAttributes updateAttributes = 10;
-      public static final int UPDATEATTRIBUTES_FIELD_NUMBER = 10;
+      // optional .protocol.ProtocolDocumentOperation.Component.UpdateAttributes update_attributes = 10;
+      public static final int UPDATE_ATTRIBUTES_FIELD_NUMBER = 10;
       private boolean hasUpdateAttributes;
       private org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.UpdateAttributes updateAttributes_ = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.UpdateAttributes.getDefaultInstance();
       public boolean hasUpdateAttributes() { return hasUpdateAttributes; }
@@ -4277,7 +4277,7 @@ public final class common {
                 break;
               }
               case 10: {
-                org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.Builder subBuilder = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.newBuilder();
+                org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.Builder subBuilder = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.newBuilder();
                 if (hasAnnotationBoundary()) {
                   subBuilder.mergeFrom(getAnnotationBoundary());
                 }
@@ -4346,14 +4346,14 @@ public final class common {
         }
         
         
-        // optional .protocol.ProtocolDocumentOperation.Component.AnnotationBoundaryMap annotationBoundary = 1;
+        // optional .protocol.ProtocolDocumentOperation.Component.AnnotationBoundary annotation_boundary = 1;
         public boolean hasAnnotationBoundary() {
           return result.hasAnnotationBoundary();
         }
-        public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap getAnnotationBoundary() {
+        public org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary getAnnotationBoundary() {
           return result.getAnnotationBoundary();
         }
-        public Builder setAnnotationBoundary(org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap value) {
+        public Builder setAnnotationBoundary(org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary value) {
           if (value == null) {
             throw new NullPointerException();
           }
@@ -4361,16 +4361,16 @@ public final class common {
           result.annotationBoundary_ = value;
           return this;
         }
-        public Builder setAnnotationBoundary(org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.Builder builderForValue) {
+        public Builder setAnnotationBoundary(org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.Builder builderForValue) {
           result.hasAnnotationBoundary = true;
           result.annotationBoundary_ = builderForValue.build();
           return this;
         }
-        public Builder mergeAnnotationBoundary(org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap value) {
+        public Builder mergeAnnotationBoundary(org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary value) {
           if (result.hasAnnotationBoundary() &&
-              result.annotationBoundary_ != org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.getDefaultInstance()) {
+              result.annotationBoundary_ != org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.getDefaultInstance()) {
             result.annotationBoundary_ =
-              org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.newBuilder(result.annotationBoundary_).mergeFrom(value).buildPartial();
+              org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.newBuilder(result.annotationBoundary_).mergeFrom(value).buildPartial();
           } else {
             result.annotationBoundary_ = value;
           }
@@ -4379,7 +4379,7 @@ public final class common {
         }
         public Builder clearAnnotationBoundary() {
           result.hasAnnotationBoundary = false;
-          result.annotationBoundary_ = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.getDefaultInstance();
+          result.annotationBoundary_ = org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.getDefaultInstance();
           return this;
         }
         
@@ -4404,7 +4404,7 @@ public final class common {
           return this;
         }
         
-        // optional .protocol.ProtocolDocumentOperation.Component.ElementStart elementStart = 3;
+        // optional .protocol.ProtocolDocumentOperation.Component.ElementStart element_start = 3;
         public boolean hasElementStart() {
           return result.hasElementStart();
         }
@@ -4441,7 +4441,7 @@ public final class common {
           return this;
         }
         
-        // optional bool elementEnd = 4;
+        // optional bool element_end = 4;
         public boolean hasElementEnd() {
           return result.hasElementEnd();
         }
@@ -4459,7 +4459,7 @@ public final class common {
           return this;
         }
         
-        // optional int32 retainItemCount = 5;
+        // optional int32 retain_item_count = 5;
         public boolean hasRetainItemCount() {
           return result.hasRetainItemCount();
         }
@@ -4477,7 +4477,7 @@ public final class common {
           return this;
         }
         
-        // optional string deleteCharacters = 6;
+        // optional string delete_characters = 6;
         public boolean hasDeleteCharacters() {
           return result.hasDeleteCharacters();
         }
@@ -4498,7 +4498,7 @@ public final class common {
           return this;
         }
         
-        // optional .protocol.ProtocolDocumentOperation.Component.ElementStart deleteElementStart = 7;
+        // optional .protocol.ProtocolDocumentOperation.Component.ElementStart delete_element_start = 7;
         public boolean hasDeleteElementStart() {
           return result.hasDeleteElementStart();
         }
@@ -4535,7 +4535,7 @@ public final class common {
           return this;
         }
         
-        // optional bool deleteElementEnd = 8;
+        // optional bool delete_element_end = 8;
         public boolean hasDeleteElementEnd() {
           return result.hasDeleteElementEnd();
         }
@@ -4553,7 +4553,7 @@ public final class common {
           return this;
         }
         
-        // optional .protocol.ProtocolDocumentOperation.Component.ReplaceAttributes replaceAttributes = 9;
+        // optional .protocol.ProtocolDocumentOperation.Component.ReplaceAttributes replace_attributes = 9;
         public boolean hasReplaceAttributes() {
           return result.hasReplaceAttributes();
         }
@@ -4590,7 +4590,7 @@ public final class common {
           return this;
         }
         
-        // optional .protocol.ProtocolDocumentOperation.Component.UpdateAttributes updateAttributes = 10;
+        // optional .protocol.ProtocolDocumentOperation.Component.UpdateAttributes update_attributes = 10;
         public boolean hasUpdateAttributes() {
           return result.hasUpdateAttributes();
         }
@@ -4951,29 +4951,29 @@ public final class common {
       return org.waveprotocol.wave.protocol.common.internal_static_protocol_ProtocolAppliedWaveletDelta_fieldAccessorTable;
     }
     
-    // required .protocol.ProtocolSignedDelta signedOriginalDelta = 1;
-    public static final int SIGNEDORIGINALDELTA_FIELD_NUMBER = 1;
+    // required .protocol.ProtocolSignedDelta signed_original_delta = 1;
+    public static final int SIGNED_ORIGINAL_DELTA_FIELD_NUMBER = 1;
     private boolean hasSignedOriginalDelta;
     private org.waveprotocol.wave.protocol.common.ProtocolSignedDelta signedOriginalDelta_ = org.waveprotocol.wave.protocol.common.ProtocolSignedDelta.getDefaultInstance();
     public boolean hasSignedOriginalDelta() { return hasSignedOriginalDelta; }
     public org.waveprotocol.wave.protocol.common.ProtocolSignedDelta getSignedOriginalDelta() { return signedOriginalDelta_; }
     
-    // optional .protocol.ProtocolHashedVersion hashedVersionAppliedAt = 2;
-    public static final int HASHEDVERSIONAPPLIEDAT_FIELD_NUMBER = 2;
+    // optional .protocol.ProtocolHashedVersion hashed_version_applied_at = 2;
+    public static final int HASHED_VERSION_APPLIED_AT_FIELD_NUMBER = 2;
     private boolean hasHashedVersionAppliedAt;
     private org.waveprotocol.wave.protocol.common.ProtocolHashedVersion hashedVersionAppliedAt_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
     public boolean hasHashedVersionAppliedAt() { return hasHashedVersionAppliedAt; }
     public org.waveprotocol.wave.protocol.common.ProtocolHashedVersion getHashedVersionAppliedAt() { return hashedVersionAppliedAt_; }
     
-    // required int32 operationsApplied = 3;
-    public static final int OPERATIONSAPPLIED_FIELD_NUMBER = 3;
+    // required int32 operations_applied = 3;
+    public static final int OPERATIONS_APPLIED_FIELD_NUMBER = 3;
     private boolean hasOperationsApplied;
     private int operationsApplied_ = 0;
     public boolean hasOperationsApplied() { return hasOperationsApplied; }
     public int getOperationsApplied() { return operationsApplied_; }
     
-    // required int64 applicationTimestamp = 4;
-    public static final int APPLICATIONTIMESTAMP_FIELD_NUMBER = 4;
+    // required int64 application_timestamp = 4;
+    public static final int APPLICATION_TIMESTAMP_FIELD_NUMBER = 4;
     private boolean hasApplicationTimestamp;
     private long applicationTimestamp_ = 0L;
     public boolean hasApplicationTimestamp() { return hasApplicationTimestamp; }
@@ -5250,7 +5250,7 @@ public final class common {
       }
       
       
-      // required .protocol.ProtocolSignedDelta signedOriginalDelta = 1;
+      // required .protocol.ProtocolSignedDelta signed_original_delta = 1;
       public boolean hasSignedOriginalDelta() {
         return result.hasSignedOriginalDelta();
       }
@@ -5287,7 +5287,7 @@ public final class common {
         return this;
       }
       
-      // optional .protocol.ProtocolHashedVersion hashedVersionAppliedAt = 2;
+      // optional .protocol.ProtocolHashedVersion hashed_version_applied_at = 2;
       public boolean hasHashedVersionAppliedAt() {
         return result.hasHashedVersionAppliedAt();
       }
@@ -5324,7 +5324,7 @@ public final class common {
         return this;
       }
       
-      // required int32 operationsApplied = 3;
+      // required int32 operations_applied = 3;
       public boolean hasOperationsApplied() {
         return result.hasOperationsApplied();
       }
@@ -5342,7 +5342,7 @@ public final class common {
         return this;
       }
       
-      // required int64 applicationTimestamp = 4;
+      // required int64 application_timestamp = 4;
       public boolean hasApplicationTimestamp() {
         return result.hasApplicationTimestamp();
       }
@@ -5825,22 +5825,22 @@ public final class common {
       }
     }
     
-    // required bytes signatureBytes = 1;
-    public static final int SIGNATUREBYTES_FIELD_NUMBER = 1;
+    // required bytes signature_bytes = 1;
+    public static final int SIGNATURE_BYTES_FIELD_NUMBER = 1;
     private boolean hasSignatureBytes;
     private com.google.protobuf.ByteString signatureBytes_ = com.google.protobuf.ByteString.EMPTY;
     public boolean hasSignatureBytes() { return hasSignatureBytes; }
     public com.google.protobuf.ByteString getSignatureBytes() { return signatureBytes_; }
     
-    // required bytes signerId = 2;
-    public static final int SIGNERID_FIELD_NUMBER = 2;
+    // required bytes signer_id = 2;
+    public static final int SIGNER_ID_FIELD_NUMBER = 2;
     private boolean hasSignerId;
     private com.google.protobuf.ByteString signerId_ = com.google.protobuf.ByteString.EMPTY;
     public boolean hasSignerId() { return hasSignerId; }
     public com.google.protobuf.ByteString getSignerId() { return signerId_; }
     
-    // required .protocol.ProtocolSignature.SignatureAlgorithm signatureAlgorithm = 3;
-    public static final int SIGNATUREALGORITHM_FIELD_NUMBER = 3;
+    // required .protocol.ProtocolSignature.SignatureAlgorithm signature_algorithm = 3;
+    public static final int SIGNATURE_ALGORITHM_FIELD_NUMBER = 3;
     private boolean hasSignatureAlgorithm;
     private org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm signatureAlgorithm_ = org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm.SHA1_RSA;
     public boolean hasSignatureAlgorithm() { return hasSignatureAlgorithm; }
@@ -6095,7 +6095,7 @@ public final class common {
       }
       
       
-      // required bytes signatureBytes = 1;
+      // required bytes signature_bytes = 1;
       public boolean hasSignatureBytes() {
         return result.hasSignatureBytes();
       }
@@ -6116,7 +6116,7 @@ public final class common {
         return this;
       }
       
-      // required bytes signerId = 2;
+      // required bytes signer_id = 2;
       public boolean hasSignerId() {
         return result.hasSignerId();
       }
@@ -6137,7 +6137,7 @@ public final class common {
         return this;
       }
       
-      // required .protocol.ProtocolSignature.SignatureAlgorithm signatureAlgorithm = 3;
+      // required .protocol.ProtocolSignature.SignatureAlgorithm signature_algorithm = 3;
       public boolean hasSignatureAlgorithm() {
         return result.hasSignatureAlgorithm();
       }
@@ -6242,8 +6242,8 @@ public final class common {
       }
     }
     
-    // required .protocol.ProtocolSignerInfo.HashAlgorithm hashAlgorithm = 1;
-    public static final int HASHALGORITHM_FIELD_NUMBER = 1;
+    // required .protocol.ProtocolSignerInfo.HashAlgorithm hash_algorithm = 1;
+    public static final int HASH_ALGORITHM_FIELD_NUMBER = 1;
     private boolean hasHashAlgorithm;
     private org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm hashAlgorithm_ = org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm.SHA256;
     public boolean hasHashAlgorithm() { return hasHashAlgorithm; }
@@ -6528,7 +6528,7 @@ public final class common {
       }
       
       
-      // required .protocol.ProtocolSignerInfo.HashAlgorithm hashAlgorithm = 1;
+      // required .protocol.ProtocolSignerInfo.HashAlgorithm hash_algorithm = 1;
       public boolean hasHashAlgorithm() {
         return result.hasHashAlgorithm();
       }
@@ -6672,10 +6672,10 @@ public final class common {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_protocol_ProtocolDocumentOperation_Component_UpdateAttributes_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundaryMap_descriptor;
+    internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundary_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundaryMap_fieldAccessorTable;
+      internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundary_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_protocol_ProtocolAppliedWaveletDelta_descriptor;
   private static
@@ -6706,71 +6706,72 @@ public final class common {
   static {
     java.lang.String descriptorData =
       "\n+org/waveprotocol/wave/protocol/common." +
-      "proto\022\010protocol\"\252\001\n\024ProtocolWaveletDelta" +
-      "\0226\n\rhashedVersion\030\001 \002(\0132\037.protocol.Proto" +
-      "colHashedVersion\022\016\n\006author\030\002 \002(\t\0225\n\toper" +
-      "ation\030\003 \003(\0132\".protocol.ProtocolWaveletOp" +
-      "eration\022\023\n\013addressPath\030\004 \003(\t\"=\n\025Protocol" +
-      "HashedVersion\022\017\n\007version\030\001 \002(\003\022\023\n\013histor" +
-      "yHash\030\002 \002(\014\"\214\002\n\030ProtocolWaveletOperation" +
-      "\022\026\n\016addParticipant\030\001 \001(\t\022\031\n\021removePartic" +
-      "ipant\030\002 \001(\t\022I\n\016mutateDocument\030\003 \001(\01321.pr" +
-      "otocol.ProtocolWaveletOperation.MutateDo" +
-      "cument\022\014\n\004noOp\030\004 \001(\010\032d\n\016MutateDocument\022\022" +
-      "\n\ndocumentId\030\001 \002(\t\022>\n\021documentOperation\030" +
-      "\002 \002(\0132#.protocol.ProtocolDocumentOperati" +
-      "on\"\304\n\n\031ProtocolDocumentOperation\022@\n\tcomp" +
-      "onent\030\001 \003(\0132-.protocol.ProtocolDocumentO" +
-      "peration.Component\032\344\t\n\tComponent\022_\n\022anno" +
-      "tationBoundary\030\001 \001(\0132C.protocol.Protocol" +
-      "DocumentOperation.Component.AnnotationBo" +
-      "undaryMap\022\022\n\ncharacters\030\002 \001(\t\022P\n\014element" +
-      "Start\030\003 \001(\0132:.protocol.ProtocolDocumentO" +
-      "peration.Component.ElementStart\022\022\n\neleme" +
-      "ntEnd\030\004 \001(\010\022\027\n\017retainItemCount\030\005 \001(\005\022\030\n\020" +
-      "deleteCharacters\030\006 \001(\t\022V\n\022deleteElementS" +
-      "tart\030\007 \001(\0132:.protocol.ProtocolDocumentOp" +
-      "eration.Component.ElementStart\022\030\n\020delete" +
-      "ElementEnd\030\010 \001(\010\022Z\n\021replaceAttributes\030\t " +
-      "\001(\0132?.protocol.ProtocolDocumentOperation" +
-      ".Component.ReplaceAttributes\022X\n\020updateAt" +
-      "tributes\030\n \001(\0132>.protocol.ProtocolDocume" +
-      "ntOperation.Component.UpdateAttributes\032*" +
-      "\n\014KeyValuePair\022\013\n\003key\030\001 \002(\t\022\r\n\005value\030\002 \002" +
-      "(\t\032A\n\016KeyValueUpdate\022\013\n\003key\030\001 \002(\t\022\020\n\010old" +
-      "Value\030\002 \001(\t\022\020\n\010newValue\030\003 \001(\t\032k\n\014Element" +
-      "Start\022\014\n\004type\030\001 \002(\t\022M\n\tattribute\030\002 \003(\0132:" +
-      ".protocol.ProtocolDocumentOperation.Comp" +
-      "onent.KeyValuePair\032\306\001\n\021ReplaceAttributes" +
-      "\022\r\n\005empty\030\001 \001(\010\022P\n\014oldAttribute\030\002 \003(\0132:." +
-      "protocol.ProtocolDocumentOperation.Compo" +
-      "nent.KeyValuePair\022P\n\014newAttribute\030\003 \003(\0132" +
-      ":.protocol.ProtocolDocumentOperation.Com" +
-      "ponent.KeyValuePair\032x\n\020UpdateAttributes\022" +
-      "\r\n\005empty\030\001 \001(\010\022U\n\017attributeUpdate\030\002 \003(\0132" +
-      "<.protocol.ProtocolDocumentOperation.Com" +
-      "ponent.KeyValueUpdate\032\201\001\n\025AnnotationBoun" +
-      "daryMap\022\r\n\005empty\030\001 \001(\010\022\013\n\003end\030\002 \003(\t\022L\n\006c" +
-      "hange\030\003 \003(\0132<.protocol.ProtocolDocumentO" +
-      "peration.Component.KeyValueUpdate\"\323\001\n\033Pr" +
-      "otocolAppliedWaveletDelta\022:\n\023signedOrigi" +
-      "nalDelta\030\001 \002(\0132\035.protocol.ProtocolSigned" +
-      "Delta\022?\n\026hashedVersionAppliedAt\030\002 \001(\0132\037." +
-      "protocol.ProtocolHashedVersion\022\031\n\021operat" +
-      "ionsApplied\030\003 \002(\005\022\034\n\024applicationTimestam" +
-      "p\030\004 \002(\003\"t\n\023ProtocolSignedDelta\022-\n\005delta\030" +
-      "\001 \002(\0132\036.protocol.ProtocolWaveletDelta\022.\n" +
-      "\tsignature\030\002 \003(\0132\033.protocol.ProtocolSign" +
-      "ature\"\255\001\n\021ProtocolSignature\022\026\n\016signature" +
-      "Bytes\030\001 \002(\014\022\020\n\010signerId\030\002 \002(\014\022J\n\022signatu" +
-      "reAlgorithm\030\003 \002(\0162..protocol.ProtocolSig" +
-      "nature.SignatureAlgorithm\"\"\n\022SignatureAl" +
-      "gorithm\022\014\n\010SHA1_RSA\020\001\"\245\001\n\022ProtocolSigner" +
-      "Info\022A\n\rhashAlgorithm\030\001 \002(\0162*.protocol.P" +
-      "rotocolSignerInfo.HashAlgorithm\022\016\n\006domai" +
-      "n\030\002 \002(\t\022\023\n\013certificate\030\003 \003(\014\"\'\n\rHashAlgo" +
-      "rithm\022\n\n\006SHA256\020\001\022\n\n\006SHA512\020\002B(\n\036org.wav" +
-      "eprotocol.wave.protocolB\006common";
+      "proto\022\010protocol\"\254\001\n\024ProtocolWaveletDelta" +
+      "\0227\n\016hashed_version\030\001 \002(\0132\037.protocol.Prot" +
+      "ocolHashedVersion\022\016\n\006author\030\002 \002(\t\0225\n\tope" +
+      "ration\030\003 \003(\0132\".protocol.ProtocolWaveletO" +
+      "peration\022\024\n\014address_path\030\004 \003(\t\">\n\025Protoc" +
+      "olHashedVersion\022\017\n\007version\030\001 \002(\003\022\024\n\014hist" +
+      "ory_hash\030\002 \002(\014\"\222\002\n\030ProtocolWaveletOperat" +
+      "ion\022\027\n\017add_participant\030\001 \001(\t\022\032\n\022remove_p" +
+      "articipant\030\002 \001(\t\022J\n\017mutate_document\030\003 \001(" +
+      "\01321.protocol.ProtocolWaveletOperation.Mu" +
+      "tateDocument\022\r\n\005no_op\030\004 \001(\010\032f\n\016MutateDoc" +
+      "ument\022\023\n\013document_id\030\001 \002(\t\022?\n\022document_o" +
+      "peration\030\002 \002(\0132#.protocol.ProtocolDocume" +
+      "ntOperation\"\316\n\n\031ProtocolDocumentOperatio" +
+      "n\022@\n\tcomponent\030\001 \003(\0132-.protocol.Protocol" +
+      "DocumentOperation.Component\032\356\t\n\tComponen" +
+      "t\022]\n\023annotation_boundary\030\001 \001(\0132@.protoco" +
+      "l.ProtocolDocumentOperation.Component.An" +
+      "notationBoundary\022\022\n\ncharacters\030\002 \001(\t\022Q\n\r" +
+      "element_start\030\003 \001(\0132:.protocol.ProtocolD" +
+      "ocumentOperation.Component.ElementStart\022" +
+      "\023\n\013element_end\030\004 \001(\010\022\031\n\021retain_item_coun" +
+      "t\030\005 \001(\005\022\031\n\021delete_characters\030\006 \001(\t\022X\n\024de" +
+      "lete_element_start\030\007 \001(\0132:.protocol.Prot" +
+      "ocolDocumentOperation.Component.ElementS" +
+      "tart\022\032\n\022delete_element_end\030\010 \001(\010\022[\n\022repl" +
+      "ace_attributes\030\t \001(\0132?.protocol.Protocol" +
+      "DocumentOperation.Component.ReplaceAttri" +
+      "butes\022Y\n\021update_attributes\030\n \001(\0132>.proto" +
+      "col.ProtocolDocumentOperation.Component." +
+      "UpdateAttributes\032*\n\014KeyValuePair\022\013\n\003key\030" +
+      "\001 \002(\t\022\r\n\005value\030\002 \002(\t\032C\n\016KeyValueUpdate\022\013" +
+      "\n\003key\030\001 \002(\t\022\021\n\told_value\030\002 \001(\t\022\021\n\tnew_va" +
+      "lue\030\003 \001(\t\032k\n\014ElementStart\022\014\n\004type\030\001 \002(\t\022" +
+      "M\n\tattribute\030\002 \003(\0132:.protocol.ProtocolDo" +
+      "cumentOperation.Component.KeyValuePair\032\310" +
+      "\001\n\021ReplaceAttributes\022\r\n\005empty\030\001 \001(\010\022Q\n\ro" +
+      "ld_attribute\030\002 \003(\0132:.protocol.ProtocolDo" +
+      "cumentOperation.Component.KeyValuePair\022Q" +
+      "\n\rnew_attribute\030\003 \003(\0132:.protocol.Protoco" +
+      "lDocumentOperation.Component.KeyValuePai" +
+      "r\032y\n\020UpdateAttributes\022\r\n\005empty\030\001 \001(\010\022V\n\020" +
+      "attribute_update\030\002 \003(\0132<.protocol.Protoc" +
+      "olDocumentOperation.Component.KeyValueUp" +
+      "date\032~\n\022AnnotationBoundary\022\r\n\005empty\030\001 \001(" +
+      "\010\022\013\n\003end\030\002 \003(\t\022L\n\006change\030\003 \003(\0132<.protoco" +
+      "l.ProtocolDocumentOperation.Component.Ke" +
+      "yValueUpdate\"\332\001\n\033ProtocolAppliedWaveletD" +
+      "elta\022<\n\025signed_original_delta\030\001 \002(\0132\035.pr" +
+      "otocol.ProtocolSignedDelta\022B\n\031hashed_ver" +
+      "sion_applied_at\030\002 \001(\0132\037.protocol.Protoco" +
+      "lHashedVersion\022\032\n\022operations_applied\030\003 \002" +
+      "(\005\022\035\n\025application_timestamp\030\004 \002(\003\"t\n\023Pro" +
+      "tocolSignedDelta\022-\n\005delta\030\001 \002(\0132\036.protoc" +
+      "ol.ProtocolWaveletDelta\022.\n\tsignature\030\002 \003" +
+      "(\0132\033.protocol.ProtocolSignature\"\260\001\n\021Prot" +
+      "ocolSignature\022\027\n\017signature_bytes\030\001 \002(\014\022\021" +
+      "\n\tsigner_id\030\002 \002(\014\022K\n\023signature_algorithm" +
+      "\030\003 \002(\0162..protocol.ProtocolSignature.Sign" +
+      "atureAlgorithm\"\"\n\022SignatureAlgorithm\022\014\n\010" +
+      "SHA1_RSA\020\001\"\246\001\n\022ProtocolSignerInfo\022B\n\016has" +
+      "h_algorithm\030\001 \002(\0162*.protocol.ProtocolSig" +
+      "nerInfo.HashAlgorithm\022\016\n\006domain\030\002 \002(\t\022\023\n" +
+      "\013certificate\030\003 \003(\014\"\'\n\rHashAlgorithm\022\n\n\006S" +
+      "HA256\020\001\022\n\n\006SHA512\020\002B(\n\036org.waveprotocol." +
+      "wave.protocolB\006common";
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -6864,14 +6865,14 @@ public final class common {
               new java.lang.String[] { "Empty", "AttributeUpdate", },
               org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.UpdateAttributes.class,
               org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.UpdateAttributes.Builder.class);
-          internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundaryMap_descriptor =
+          internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundary_descriptor =
             internal_static_protocol_ProtocolDocumentOperation_Component_descriptor.getNestedTypes().get(5);
-          internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundaryMap_fieldAccessorTable = new
+          internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundary_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundaryMap_descriptor,
+              internal_static_protocol_ProtocolDocumentOperation_Component_AnnotationBoundary_descriptor,
               new java.lang.String[] { "Empty", "End", "Change", },
-              org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.class,
-              org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundaryMap.Builder.class);
+              org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.class,
+              org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation.Component.AnnotationBoundary.Builder.class);
           internal_static_protocol_ProtocolAppliedWaveletDelta_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_protocol_ProtocolAppliedWaveletDelta_fieldAccessorTable = new
