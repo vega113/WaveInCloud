@@ -276,16 +276,20 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * This assumes the caller has validated that the delta is at the correct
    * version and can be applied to the wavelet. Must be called with writelock
    * held.
-   *
+   * 
    * @param signedDelta the delta that is to be applied to wavelet.
+   * @param applicationTimestamp either the current time (for local wavelets) or
+   *        the time included with the applied delta (for remote wavelets)
    * @return transformed operations are applied to this delta.
-   * @throws OperationException if an error occurs during transformation or application
-   * @throws AccessControlException if the supplied Delta's historyHash does not match the canonical
-   *                                history.
-   *
+   * @throws OperationException if an error occurs during transformation or
+   *         application
+   * @throws AccessControlException if the supplied Delta's historyHash does not
+   *         match the canonical history.
+   * 
    * @throws OperationException
    */
-  protected DeltaApplicationResult transformAndApplyDelta(ProtocolSignedDelta signedDelta)
+  protected DeltaApplicationResult transformAndApplyDelta(ProtocolSignedDelta signedDelta,
+      long applicationTimestamp)
     throws OperationException, AccessControlException {
 
     ProtocolWaveletDelta submittedDelta = signedDelta.getDelta();
@@ -338,7 +342,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
         .setSignedOriginalDelta(signedDelta)
         .setHashedVersionAppliedAt(protocolDelta.getHashedVersion())
         .setOperationsApplied(applied)
-        .setApplicationTimestamp(System.currentTimeMillis()).build();
+        .setApplicationTimestamp(applicationTimestamp).build();
 
     byte[] binaryDelta = getCanonicalEncoding(appliedDelta);
 

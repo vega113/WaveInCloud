@@ -44,8 +44,9 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
     acquireWriteLock();
     try {
-      // May throw Exceptions.
-      return transformAndApplyDelta(signedDelta);
+      // Pass through the current system time, as this is a locally hosted
+      // wavelet (we decide when it is applied).
+      return transformAndApplyDelta(signedDelta, System.currentTimeMillis());
     } finally {
       releaseWriteLock();
     }

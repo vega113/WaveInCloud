@@ -150,13 +150,14 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           break;
         }
 
+        // TODO(thorogood): check whole structure, not just version number
         if (appliedAt.getVersion() == expectedVersion.getVersion()) {
           LOG.info("RemoteWaveletContainer found delta exactly where we need: " + appliedAt);
           try {
             DeltaApplicationResult applicationResult =
-                transformAndApplyDelta(appliedDelta.getSignedOriginalDelta());
-            long opsApplied =
-                applicationResult.getHashedVersionAfterApplication().getVersion()
+                transformAndApplyDelta(appliedDelta.getSignedOriginalDelta(),
+                    appliedDelta.getApplicationTimestamp());
+            long opsApplied = applicationResult.getHashedVersionAfterApplication().getVersion()
                     - expectedVersion.getVersion();
             if (opsApplied != appliedDelta.getOperationsApplied()) {
               throw new OperationException("Operations applied here do not match the authoritative"
