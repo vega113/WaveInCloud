@@ -4,6 +4,7 @@ package org.waveprotocol.wave.examples.fedone.common;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.apache.commons.codec.binary.Hex;
 import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -89,6 +90,6 @@ public final class HashedVersion {
 
   @Override
   public String toString() {
-    return Long.toString(version) + "@" + historyHash;
+    return Long.toString(version) + ":" + new String(Hex.encodeHex(historyHash));
   }
 }
