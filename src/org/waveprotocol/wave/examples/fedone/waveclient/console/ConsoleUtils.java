@@ -38,6 +38,9 @@ public class ConsoleUtils {
   /** ANSI code for text with no attributes. */
   public static final int ANSI_NO_ATTRS = 0;
 
+  /** ANSI code for bold text. */
+  public static final int ANSI_BOLD = 1;
+
   /** ANSI code for underlined text. */
   public static final int ANSI_UNDERLINE = 4;
 
@@ -53,6 +56,9 @@ public class ConsoleUtils {
   /** ANSI code for blue foreground text. */
   public static final int ANSI_BLUE_FG = 34;
 
+  /** ANSI code for cyan foreground text. */
+  public static final int ANSI_CYAN_FG = 36;
+
   /** ANSI code for white foreground text. */
   public static final int ANSI_WHITE_FG = 37;
 
@@ -64,6 +70,9 @@ public class ConsoleUtils {
 
   /** ANSI code for cyan background text. */
   public static final int ANSI_CYAN_BG = 46;
+
+  /** ANSI code for white background text. */
+  public static final int ANSI_WHITE_BG = 47;
 
   private ConsoleUtils() {
   }

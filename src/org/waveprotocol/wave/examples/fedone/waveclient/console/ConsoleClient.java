@@ -25,8 +25,10 @@ import jline.ConsoleReader;
 
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexEntry;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
+import org.waveprotocol.wave.examples.fedone.waveclient.console.ScrollableWaveView.RenderMode;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
@@ -34,7 +36,6 @@ import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.awt.event.ActionEvent;
@@ -62,6 +63,9 @@ public class ConsoleClient implements WaveletOperationListener {
 
   /** Currently open wave.  */
   private ScrollableWaveView openWave;
+
+  /** Inbox we are rendering. */
+  private ScrollableInbox inbox;
 
   /** PrintStream to use for output.  We don't use ConsoleReader's functionality because it's too
    * verbose and doesn't really give us anything in return. */
@@ -214,6 +218,14 @@ public class ConsoleClient implements WaveletOperationListener {
       } else {
         badArgs(cmd);
       }
+    } else if (cmd.equals("view")) {
+      if (args.size() == 1) {
+        setView(args.get(0));
+      } else {
+        badArgs(cmd);
+      }
+    } else if (cmd.equals("read")) {
+      readAllWaves();
     } else if (cmd.equals("quit")) {
       System.exit(0);
     } else {
@@ -223,6 +235,10 @@ public class ConsoleClient implements WaveletOperationListener {
       out.println("  /new                               create and open a new wave");
       out.println("  /add      participantId            add a participant to a wave");
       out.println("  /remove   participantId            remove a participant from a wave");
+      out.println("  /view     mode                     change view mode for the open wavelet:");
+      out.println("                                       normal  normal rendering");
+      out.println("                                       xml     show raw XML");
+      out.println("  /read                              set all waves as read");
       out.println("  /quit                              quit the client");
       out.println("Interactive commands:");
       out.println("  {  scroll up open wave");
@@ -251,6 +267,7 @@ public class ConsoleClient implements WaveletOperationListener {
       backend.shutdown();
       backend = null;
       openWave = null;
+      inbox = null;
     }
 
     int port;
@@ -270,6 +287,7 @@ public class ConsoleClient implements WaveletOperationListener {
 
     backend.addWaveletOperationListener(this);
     reader.setDefaultPrompt(ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_RED_FG, userAtDomain + "> "));
+    inbox = new ScrollableInbox(backend, backend.getIndexWave());
 
     render();
   }
@@ -343,7 +361,7 @@ public class ConsoleClient implements WaveletOperationListener {
    *
    * @param wave to set as open
    */
-  private void setOpenWave(WaveViewData wave) {
+  private void setOpenWave(ClientWaveView wave) {
     if (ClientUtils.getConversationRoot(wave) == null) {
       wave.createWavelet(ClientUtils.getConversationRootId(wave));
     }
@@ -403,6 +421,39 @@ public class ConsoleClient implements WaveletOperationListener {
   }
 
   /**
+   * Set the view type for the open wavelet.
+   *
+   * @param mode for rendering
+   */
+  private void setView(String mode) {
+    if (isWaveOpen()) {
+      if (mode.equals("normal")) {
+        openWave.setRenderingMode(RenderMode.NORMAL);
+        render();
+      } else if (mode.equals("xml")) {
+        openWave.setRenderingMode(RenderMode.XML);
+        render();
+      } else {
+        out.println("Unsupported rendering, run \"?\"");
+      }
+    } else {
+      errorNoWaveOpen();
+    }
+  }
+
+  /**
+   * Set all waves as read.
+   */
+  private void readAllWaves() {
+    if (isConnected()) {
+      inbox.updateHashedVersions();
+      render();
+    } else {
+      errorNotConnected();
+    }
+  }
+
+  /**
    * Print error message if user is not connected to a server.
    */
   private void errorNotConnected() {
@@ -446,7 +497,6 @@ public class ConsoleClient implements WaveletOperationListener {
     List<String> waveRender;
 
     if (isConnected() && backend.getIndexWave() != null) {
-      ScrollableInbox inbox = new ScrollableInbox(backend, backend.getIndexWave());
       inbox.setOpenWave(openWave == null ? null : openWave.getWave());
       inboxRender = inbox.render(getCanvassWidth(), getCanvassHeight());
     } else {
@@ -514,7 +564,7 @@ public class ConsoleClient implements WaveletOperationListener {
   }
 
   @Override
-  public void waveletDocumentUpdated(WaveletData wavelet, String documentId) {
+  public void waveletDocumentUpdated(WaveletData wavelet, WaveletDocumentOperation docOp) {
   }
 
   @Override

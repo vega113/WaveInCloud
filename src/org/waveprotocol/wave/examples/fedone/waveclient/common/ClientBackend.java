@@ -25,7 +25,6 @@ import com.google.protobuf.RpcController;
 
 import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.rpc.ClientRpcChannel;
@@ -39,7 +38,6 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWa
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -51,9 +49,7 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
-import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 import java.io.IOException;
@@ -67,50 +63,6 @@ import java.util.Map;
  *
  */
 public class ClientBackend {
-  /**
-   * A client's view of a wave, with the current wavelet versions.
-   */
-  private final class ClientWaveView {
-    private final WaveViewData data;
-    private final Map<WaveletId, HashedVersion> currentVersions;
-
-    ClientWaveView(WaveViewData data) {
-      this.data = data;
-      this.currentVersions = Maps.newHashMap();
-    }
-
-    WaveViewData getData() {
-      return data;
-    }
-
-    /**
-     * Gets the last known version for a wavelet, which is zero if
-     * the wavelet is unknown.
-     */
-    HashedVersion getWaveletVersion(WaveletName name) {
-      HashedVersion version = currentVersions.get(name.waveletId);
-      if (version == null) {
-        version = hashedVersionFactory.createVersionZero(name);
-        currentVersions.put(name.waveletId, version);
-      }
-      return version;
-    }
-
-    /**
-     * Sets the last known version for a wavelet.
-     */
-    void setWaveletVersion(WaveletId waveletId, HashedVersion version) {
-      currentVersions.put(waveletId, version);
-    }
-
-    /**
-     * Removes a wavelet and its current hashed version from the wave view.
-     */
-    void removeWavelet(WaveletId waveletId) {
-      data.removeWavelet(waveletId);
-      currentVersions.remove(waveletId);
-    }
-  }
 
   private static final Log LOG = Log.get(ClientBackend.class);
 
@@ -138,9 +90,6 @@ public class ClientBackend {
   /** RPC channel for communicating with server. */
   private final ClientRpcChannel rpcChannel;
 
-  /** Factory for hashed wavelet versions. */
-  private final HashedVersionFactory hashedVersionFactory;
-
   /**
    * Create new client backend tied permanently to a given server and user, open that client's
    * index, and begin managing waves it has access to.
@@ -159,9 +108,6 @@ public class ClientBackend {
     this.uriCodec = new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
     this.rpcChannel = new ClientRpcChannel(new InetSocketAddress(server, port));
     this.rpcServer = ProtocolWaveClientRpc.newStub(rpcChannel);
-
-    // TODO: guicify ?
-    this.hashedVersionFactory = new HashedVersionZeroFactoryImpl();
 
     // Opening the index wave will kickstart the process of receiving waves
     List<String> waveletIdPrefixes = ImmutableList.of("");
@@ -227,9 +173,9 @@ public class ClientBackend {
   /**
    * Create a new wave and tell the server about it.
    *
-   * @return the {@link WaveViewData} created
+   * @return the {@link ClientWaveView} created
    */
-  public WaveViewData createNewWave() {
+  public ClientWaveView createNewWave() {
     return createNewWave(getIdGenerator().newWaveId());
   }
 
@@ -238,10 +184,10 @@ public class ClientBackend {
    * participant to the conversation root).
    *
    * @param newWaveId the id to give the new wave
-   * @return the {@link WaveViewData} created
+   * @return the {@link ClientWaveView} created
    */
-  private WaveViewData createNewWave(WaveId newWaveId) {
-    WaveViewData newWaveView = createWave(newWaveId);
+  private ClientWaveView createNewWave(WaveId newWaveId) {
+    ClientWaveView newWaveView = createWave(newWaveId);
     WaveletData newWavelet = newWaveView.createWavelet(
         getIdGenerator().newConversationRootWaveletId());
 
@@ -253,17 +199,14 @@ public class ClientBackend {
    * @param id of wave to get
    * @return wave with the given id, or null if not found
    */
-  public WaveViewData getWave(WaveId id) {
-    // TODO: the data should not be exposed directly lest it get out
-    // of sync with the operations, wavelet versions etc.
-    ClientWaveView view = waves.get(id);
-    return (view != null) ? view.getData() : null;
+  public ClientWaveView getWave(WaveId id) {
+    return waves.get(id);
   }
 
   /**
    * @return the special wave containing the index data
    */
-  public WaveViewData getIndexWave() {
+  public ClientWaveView getIndexWave() {
     return getWave(CommonConstants.INDEX_WAVE_ID);
   }
 
@@ -296,9 +239,9 @@ public class ClientBackend {
       throw new IllegalArgumentException(e);
     }
 
-    ClientWaveView clientView = waves.get(wavelet.getWaveletName().waveId);
+    ClientWaveView wave = waves.get(wavelet.getWaveletName().waveId);
     submitRequest.setDelta(WaveletOperationSerializer.serialize(delta,
-        clientView.getWaveletVersion(wavelet.getWaveletName())));
+        wave.getWaveletVersion(wavelet.getWaveletName().waveletId)));
     final RpcController rpcController = rpcChannel.newRpcController();
 
     rpcServer.submit(
@@ -331,14 +274,12 @@ public class ClientBackend {
       throw new IllegalArgumentException(e);
     }
 
-    ClientWaveView clientView = waves.get(waveletName.waveId);
-
-    if (clientView == null) {
+    ClientWaveView wave = waves.get(waveletName.waveId);
+    if (wave == null) {
       // The wave view should always be present, since openWave adds them immediately
       throw new AssertionError("Received update on absent waveId " + waveletName.waveId);
     }
 
-    WaveViewData wave = clientView.getData();
     WaveletData wavelet = wave.getWavelet(waveletName.waveletId);
     if (wavelet == null) {
       wavelet = wave.createWavelet(waveletName.waveletId);
@@ -362,7 +303,7 @@ public class ClientBackend {
         }
       }
 
-      clientView.setWaveletVersion(waveletName.waveletId,
+      wave.setWaveletVersion(waveletName.waveletId,
           WaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()));
     }
 
@@ -385,11 +326,10 @@ public class ClientBackend {
   /**
    * Creates a new, empty wave view and stores it in {@code waves}.
    */
-  private WaveViewData createWave(WaveId waveId) {
-    WaveViewData newWave = new WaveViewDataImpl(waveId);
-    ClientWaveView clientView = new ClientWaveView(newWave);
-    waves.put(waveId, clientView);
-    return clientView.getData();
+  private ClientWaveView createWave(WaveId waveId) {
+    ClientWaveView wave = new ClientWaveView(new HashedVersionZeroFactoryImpl(), waveId);
+    waves.put(waveId, wave);
+    return wave;
   }
 
   /**
@@ -398,7 +338,7 @@ public class ClientBackend {
    *
    * @param indexWave to synchronise with
    */
-  private void syncWithIndexWave(WaveViewData indexWave) {
+  private void syncWithIndexWave(ClientWaveView indexWave) {
     List<IndexEntry> indexEntries = ClientUtils.getIndexEntries(indexWave);
 
     for (IndexEntry indexEntry : indexEntries) {
@@ -418,7 +358,7 @@ public class ClientBackend {
   private void notifyWaveletOperationListeners(WaveletData wavelet, WaveletOperation op) {
     for (WaveletOperationListener listener : waveletOperationListeners) {
       if (op instanceof WaveletDocumentOperation) {
-        listener.waveletDocumentUpdated(wavelet, ((WaveletDocumentOperation) op).getDocumentId());
+        listener.waveletDocumentUpdated(wavelet, (WaveletDocumentOperation) op);
       } else if (op instanceof AddParticipant) {
         listener.participantAdded(wavelet, ((AddParticipant) op).getParticipantId());
       } else if (op instanceof RemoveParticipant) {

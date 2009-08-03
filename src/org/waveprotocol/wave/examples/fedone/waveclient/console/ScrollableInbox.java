@@ -18,14 +18,17 @@
 package org.waveprotocol.wave.examples.fedone.waveclient.console;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexEntry;
-import org.waveprotocol.wave.model.wave.data.WaveViewData;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Wraps and renders the index wave.
@@ -34,13 +37,16 @@ import java.util.List;
  */
 public class ScrollableInbox extends ConsoleScrollable {
   /** Index wave we are rendering. */
-  private final WaveViewData indexWave;
+  private final ClientWaveView indexWave;
 
   /** Backend the index wave belongs to. */
   private final ClientBackend backend;
 
   /** Open wave, to potentially render differently. */
-  private WaveViewData openWave = null;
+  private ClientWaveView openWave = null;
+
+  /** Last known versions of each wave. */
+  private final Map<ClientWaveView, HashedVersion> lastSeenVersions = Maps.newHashMap();
 
   /**
    * Create new scrollable inbox given an index wave.
@@ -48,7 +54,7 @@ public class ScrollableInbox extends ConsoleScrollable {
    * @param backend the index wave belongs to
    * @param indexWave to render
    */
-  public ScrollableInbox(ClientBackend backend, WaveViewData indexWave) {
+  public ScrollableInbox(ClientBackend backend, ClientWaveView indexWave) {
     if (!indexWave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
       throw new IllegalArgumentException(indexWave + " is not an index wave");
     }
@@ -63,35 +69,26 @@ public class ScrollableInbox extends ConsoleScrollable {
     List<String> lines = Lists.newArrayList();
 
     for (int i = 0; i < indexEntries.size(); i++) {
-      WaveViewData wave = backend.getWave(indexEntries.get(i).getWaveId());
-      StringBuilder line = new StringBuilder(String.format("%4d) ", i));
-
-      boolean isOpen = false;
-      boolean isUnread = false;
-
-      if (wave == null) {
-        line.append("..");
-      } else if (ClientUtils.getConversationRoot(wave) == null) {
-        line.append("...");
-      } else {
-        if (openWave != null && wave.equals(openWave)) {
-          isOpen = true;
-        }
-
-        line.append(String.format("(%s) ", wave.getWaveId().getId()));
-        line.append(ConsoleUtils.renderNice(indexEntries.get(i).getDigest()));
-      }
-
+      ClientWaveView wave = backend.getWave(indexEntries.get(i).getWaveId());
+      StringBuilder line = new StringBuilder();
       List<Integer> ansiCodes = Lists.newArrayList();
 
-      // TODO support this
-      if (isUnread) {
-        ansiCodes.add(ConsoleUtils.ANSI_BLUE_FG);
-      }
+      if ((wave == null) || (ClientUtils.getConversationRoot(wave) == null)) {
+        line.append("...");
+      } else {
+        HashedVersion version = wave.getWaveletVersion(ClientUtils.getConversationRootId(wave));
 
-      if (isOpen) {
-        ansiCodes.add(ConsoleUtils.ANSI_BLUE_BG);
-        ansiCodes.add(ConsoleUtils.ANSI_WHITE_FG);
+        line.append(String.format("%4d) ", i));
+        line.append(String.format("(%s) ", wave.getWaveId().getId()));
+        line.append(ConsoleUtils.renderNice(indexEntries.get(i).getDigest()));
+
+        if (wave == openWave) {
+          ansiCodes.add(ConsoleUtils.ANSI_BLUE_BG);
+          ansiCodes.add(ConsoleUtils.ANSI_WHITE_FG);
+          lastSeenVersions.put(wave, version);
+        } else if (!version.equals(lastSeenVersions.get(wave))) {
+          ansiCodes.add(ConsoleUtils.ANSI_BOLD);
+        }
       }
 
       ConsoleUtils.ensureWidth(width, line);
@@ -108,7 +105,19 @@ public class ScrollableInbox extends ConsoleScrollable {
    *
    * @param openWave the new open wave
    */
-  public void setOpenWave(WaveViewData openWave) {
+  public void setOpenWave(ClientWaveView openWave) {
     this.openWave = openWave;
+  }
+
+  /**
+   * Update the hashed versions for all waves.
+   */
+  public void updateHashedVersions() {
+    for (IndexEntry indexEntry : ClientUtils.getIndexEntries(indexWave)) {
+      ClientWaveView wave = backend.getWave(indexEntry.getWaveId());
+      if ((wave != null) && (ClientUtils.getConversationRoot(wave) != null)) {
+        lastSeenVersions.put(wave, wave.getWaveletVersion(ClientUtils.getConversationRootId(wave)));
+      }
+    }
   }
 }

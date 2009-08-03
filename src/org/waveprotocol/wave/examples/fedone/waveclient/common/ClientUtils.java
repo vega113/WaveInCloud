@@ -30,7 +30,6 @@ import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.Doc
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.List;
@@ -85,7 +84,7 @@ public class ClientUtils {
    * @param wave wave to render
    * @return rendered wave
    */
-  public static String renderDocuments(WaveViewData wave) {
+  public static String renderDocuments(ClientWaveView wave) {
     final StringBuilder doc = new StringBuilder();
     for (WaveletData wavelet : wave.getWavelets()) {
       doc.append(render(wavelet.getDocuments().values()));
@@ -160,7 +159,7 @@ public class ClientUtils {
    * @param indexWave the wave to retrieve the index from
    * @return list of index entries
    */
-  public static List<IndexEntry> getIndexEntries(WaveViewData indexWave) {
+  public static List<IndexEntry> getIndexEntries(ClientWaveView indexWave) {
     if (!indexWave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
       throw new IllegalArgumentException(indexWave + " is not the index wave");
     }
@@ -183,14 +182,14 @@ public class ClientUtils {
    * @param wave to get conversation root of
    * @return conversation root wavelet of the wave
    */
-  public static WaveletData getConversationRoot(WaveViewData wave) {
+  public static WaveletData getConversationRoot(ClientWaveView wave) {
     return wave.getWavelet(getConversationRootId(wave));
   }
 
   /**
    * @return the conversation root wavelet id of a wave.
    */
-  public static WaveletId getConversationRootId(WaveViewData wave) {
+  public static WaveletId getConversationRootId(ClientWaveView wave) {
     return getConversationRootId(wave.getWaveId());
   }
 

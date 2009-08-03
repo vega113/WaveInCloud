@@ -17,12 +17,14 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.common;
 
+import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 /**
  * Notification interface for wavelet operations, with an additional two methods defined with
- * efficient rendering in mind.
+ * efficient rendering in mind.  {@code waveletDocumentUpdated}, {@code participantAdded}, and
+ * {@code participantRemoved} are each called <em>after</em> the operation has been applied.
  *
  *
  */
@@ -31,9 +33,9 @@ public interface WaveletOperationListener {
    * Invoked when an operation is applied to a document of a wavelet.
    *
    * @param wavelet the wavelet operated on
-   * @param documentId the document id of the document
+   * @param docOp performed on the wavelet
    */
-  public void waveletDocumentUpdated(WaveletData wavelet, String documentId);
+  public void waveletDocumentUpdated(WaveletData wavelet, WaveletDocumentOperation docOp);
 
   /**
    * Invoked when a participant has been added to a wavelet.
