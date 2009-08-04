@@ -150,9 +150,16 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           break;
         }
 
-        // TODO(thorogood): check whole structure, not just version number
+        // This delta is at the correct (current) version - apply it.
         if (appliedAt.getVersion() == expectedVersion.getVersion()) {
-          LOG.info("RemoteWaveletContainer found delta exactly where we need: " + appliedAt);
+          // Confirm that the applied at hash matches the expected hash.
+          if (!appliedAt.equals(expectedVersion)) {
+            state = State.CORRUPTED;
+            throw new WaveServerException("Incoming delta applied at version "
+                + appliedAt.getVersion() + " is not applied to the correct hash");
+          }
+
+          LOG.info("Applying delta for version " + appliedAt.getVersion());
           try {
             DeltaApplicationResult applicationResult =
                 transformAndApplyDelta(appliedDelta.getSignedOriginalDelta(),
@@ -166,7 +173,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
             }
             // Add transformed result to return list.
             result.add(applicationResult.getDelta());
-            LOG.info("Applied delta: " + appliedDelta);
+            LOG.fine("Applied delta: " + appliedDelta);
           } catch (OperationException e) {
             state = State.CORRUPTED;
             throw new WaveServerException("Couldn't apply authoritative delta", e);
@@ -188,7 +195,9 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
 
       if (!haveRequestedHistory) {
         DeltaSequence deltaSequence = new DeltaSequence(result, expectedVersion);
-        LOG.info("Returning contiguous block: " + deltaSequence);
+        if (LOG.isFineLoggable()) {
+          LOG.fine("Returning contiguous block: " + deltaSequence);
+        }
         deltaCallback.ready(deltaSequence);
       } else if (!result.isEmpty()) {
         LOG.severe("History requested but non-empty result, non-contiguous deltas?");

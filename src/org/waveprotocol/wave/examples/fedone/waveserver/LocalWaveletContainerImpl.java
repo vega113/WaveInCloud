@@ -25,11 +25,7 @@ import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
  * A local wavelet may be updated by submits. The local wavelet will perform
  * operational transformation on the submitted delta and assign it the latest
  * version of the wavelet.
- *
- *
- *
  */
-
 class LocalWaveletContainerImpl extends WaveletContainerImpl
     implements LocalWaveletContainer {
 

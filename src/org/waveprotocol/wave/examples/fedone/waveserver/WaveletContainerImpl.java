@@ -54,9 +54,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Contains the history of a wavelet - applied and transformed deltas plus the content
  * of the wavelet.
- *
- *
- *
  */
 abstract class WaveletContainerImpl implements WaveletContainer {
 
@@ -89,7 +86,6 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   protected HashedVersion currentVersion;
   protected ProtocolHashedVersion lastCommittedVersion;
   protected State state;
-
 
   /** Constructor. */
   public WaveletContainerImpl(WaveletName waveletName) {
@@ -300,13 +296,16 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       Pair<WaveletDelta, HashedVersion> clientDeltaAndVersion =
         WaveletOperationSerializer.deserialize(submittedDelta);
 
-// TODO(jochen): fix this with byte array.
-//      if (!currentVersion.equals(clientDeltaAndVersion.second)) {
-//        LOG.warning("Mismatched hashes: expected " + currentVersion +
-//            " got: " + clientDeltaAndVersion.second);
-//        throw new AccessControlException("Mismatched hashes at version number: " +
-//            clientDeltaAndVersion.second.getVersion());
-//      }
+      // TODO(jochen): convert this to use a byte array.
+      // We don't need to transform, so confirm that the hash submitted at is
+      // the hash we expect.
+      if (!currentVersion.equals(clientDeltaAndVersion.second)) {
+        LOG.warning("Mismatched hashes: expected " + currentVersion +
+            " got: " + clientDeltaAndVersion.second);
+        // TODO(thorogood): Mark wave as corrupted if it is a remote wavelet?
+        throw new AccessControlException("Mismatched hashes at version number: " +
+            clientDeltaAndVersion.second.getVersion());
+      }
 
       // No need to transform if submitting against head.
       transformedClientOps = clientDeltaAndVersion.first.getOperations();
@@ -384,9 +383,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       throw new AccessControlException("Invalid delta, couldn't submit.");
     }
 
+    // Confirm that the target version/hash of this delta is valid.
     if (!serverDeltas.first().version.equals(clientVersion)) {
       LOG.warning("Mismatched hashes: expected: " + serverDeltas.first().version +
           " got: " + clientVersion);
+      // TODO(thorogood): Mark wave as corrupted if it is a remote wavelet?
       // Don't leak the hash to the client in the error message.
       throw new AccessControlException("Mismatched hashes at version number: " +
           clientVersion.getVersion());
