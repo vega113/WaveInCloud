@@ -41,23 +41,11 @@ import java.util.List;
  */
 public class ServerModule extends AbstractModule {
 
-  /**
-   * This instance is a bootstrap in lieu of passing an instance of WaveServer
-   * to XmppFederationnRemote.
-   */
-  static private class BootstrapListener implements WaveletFederationListener.Factory {
-    @Override
-    public WaveletFederationListener listenerForDomain(String domain) {
-      throw new IllegalStateException(
-          "The BootstrapListener instance must never be called (domain=" + domain + ")");
-    }
-  }
-  
   @Override
   protected void configure() {
     // Receive updates from the outside world, and push them into our local Wave Server.
     bind(WaveletFederationListener.Factory.class).annotatedWith(FederationRemoteBridge.class)
-        .to(BootstrapListener.class);
+        .to(WaveServer.class);
 
     // Request history and submit deltas to the outside world *from* our local
     // Wave Server.
@@ -70,7 +58,7 @@ public class ServerModule extends AbstractModule {
 
     // Provide history and respond to submits about our own local waves.
     bind(WaveletFederationProvider.class).annotatedWith(FederationHostBridge.class)
-        .to(WaveServer.class).in(Singleton.class);
+        .to(WaveServer.class);
 
     install(new WaveServerModule());
     bind(String.class).annotatedWith(Names.named("privateKey")).toInstance("");

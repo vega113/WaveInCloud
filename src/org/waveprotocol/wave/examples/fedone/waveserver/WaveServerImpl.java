@@ -345,13 +345,6 @@ public class WaveServerImpl implements WaveServer {
     this.federationHostFactory = federationHostFactory;
     this.federationRemote = federationRemote;
 
-    // This is a hack to not have to deal with Guice and circular dependencies for now.
-    // TODO: XXX resolve this hack XXX
-    if (federationRemote instanceof XmppFederationRemote) {
-      XmppFederationRemote xmppFederationRemote = (XmppFederationRemote) federationRemote;
-      xmppFederationRemote.setWaveServer(this);
-    }
-
     this.localWaveletContainerFactory = localWaveletContainerFactory;
     this.remoteWaveletContainerFactory = remoteWaveletContainerFactory;
 

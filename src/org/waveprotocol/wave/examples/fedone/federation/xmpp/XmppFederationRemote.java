@@ -56,7 +56,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
 
   private static final Logger logger =
       Logger.getLogger(XmppFederationRemote.class.getCanonicalName());
-  private WaveletFederationListener.Factory updatesListenerFactory;
+  private final WaveletFederationListener.Factory updatesListenerFactory;
   private WaveXmppComponent component = null;
 
   /**
@@ -69,20 +69,6 @@ public class XmppFederationRemote implements WaveletFederationProvider {
   public XmppFederationRemote(
       @FederationRemoteBridge WaveletFederationListener.Factory updatesListenerFactory
   ) {
-    this.updatesListenerFactory = updatesListenerFactory;
-  }
-
-  /**
-   * Set the wave server (i.e. its WaveletFederationListener.Factory) after
-   * construction.
-   *
-   * TODO: used to current resolve problems with Guice, should be removed.
-   *
-   * @param updatesListenerFactory used to communicate back to the local wave
-   *                               server when an update arrives.
-   */
-  public void setWaveServer(
-      WaveletFederationListener.Factory updatesListenerFactory) {
     this.updatesListenerFactory = updatesListenerFactory;
   }
 
