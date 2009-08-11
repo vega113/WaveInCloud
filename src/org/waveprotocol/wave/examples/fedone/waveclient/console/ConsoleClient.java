@@ -234,8 +234,10 @@ public class ConsoleClient implements WaveletOperationListener {
     } else if (cmd.equals("undo")) {
       if (args.size() == 1) {
         undo(args.get(0));
-      } else {
+      } else if (backend != null) {
         undo(backend.getUserId().getAddress());
+      } else {
+        errorNotConnected();
       }
     } else if (cmd.equals("quit")) {
       System.exit(0);
@@ -250,7 +252,8 @@ public class ConsoleClient implements WaveletOperationListener {
       out.println("                                       normal  normal rendering");
       out.println("                                       xml     show raw XML");
       out.println("  /read                              set all waves as read");
-      out.println("  /undo     [participantId]          undo last line by a participant");
+      out.println("  /undo     [participantId]          undo last line by a user, defaulting to "
+          + (backend == null ? "(nobody)" : backend.getUserId()));
       out.println("  /quit                              quit the client");
       out.println("Interactive commands:");
       out.println("  {  scroll up open wave");
