@@ -22,9 +22,10 @@ import com.google.common.collect.Lists;
 import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
+import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
 import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdConstants;
@@ -61,7 +62,7 @@ public class ClientUtils {
     final StringBuilder resultBuilder = new StringBuilder();
     for (BufferedDocOp documentState : documentStates) {
       documentState.apply(new InitializationCursorAdapter(
-          new DocInitializationCursor() {
+          new DocOpCursor() {
             @Override
             public void characters(String s) {
               resultBuilder.append(s);
@@ -69,6 +70,12 @@ public class ClientUtils {
             @Override public void annotationBoundary(AnnotationBoundaryMap map) {}
             @Override public void elementStart(String type, Attributes attrs) {}
             @Override public void elementEnd() {}
+            @Override public void retain(int itemCount) {}
+            @Override public void deleteCharacters(String chars) {}
+            @Override public void deleteElementStart(String type, Attributes attrs) {}
+            @Override public void deleteElementEnd() {}
+            @Override public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {}
+            @Override public void updateAttributes(AttributesUpdate attrUpdate) {}
           }
       ));
     }
@@ -127,7 +134,7 @@ public class ClientUtils {
   public static int findDocumentSize(DocOp doc) {
     final AtomicInteger size = new AtomicInteger(0);
 
-    doc.apply(new InitializationCursorAdapter(new DocInitializationCursor() {
+    doc.apply(new InitializationCursorAdapter(new DocOpCursor() {
       @Override public void characters(String s) {
         size.getAndAdd(s.length());
       }
@@ -141,6 +148,12 @@ public class ClientUtils {
       }
 
       @Override public void annotationBoundary(AnnotationBoundaryMap map) {}
+      @Override public void retain(int itemCount) {}
+      @Override public void deleteCharacters(String chars) {}
+      @Override public void deleteElementStart(String type, Attributes attrs) {}
+      @Override public void deleteElementEnd() {}
+      @Override public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {}
+      @Override public void updateAttributes(AttributesUpdate attrUpdate) {}
     }));
 
     return size.get();

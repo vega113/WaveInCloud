@@ -21,7 +21,15 @@ import com.google.common.collect.ImmutableList;
 
 import jline.ANSIBuffer;
 
+import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
+import org.waveprotocol.wave.model.document.operation.Attributes;
+import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
+import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
+import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
+
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Utility methods and constants for use with the console client.
@@ -168,5 +176,55 @@ public class ConsoleUtils {
     string = string.replaceAll("\n", " ");
     string = string.replaceAll("\t", "        ");
     return string;
+  }
+
+  /**
+   * Delete a line from a document.
+   *
+   * Each line is indicated by an start/end XML line tag, followed by text content until the next
+   * start/end XML line tag or the end of the document.  The start/end tags as well as line contents
+   * will be deleted by the generated operation.
+   *
+   * @param doc to delete line from
+   * @param lineNumber of line (as an index) to delete
+   * @return operation to delete a line from a document
+   */
+  public static BufferedDocOp createLineDeletion(final BufferedDocOp doc, final int lineNumber) {
+    final DocOpBuilder lineDeletion = new DocOpBuilder();
+    final AtomicInteger currentLine = new AtomicInteger(-1);
+
+    doc.apply(new InitializationCursorAdapter(new DocInitializationCursor() {
+      @Override public void characters(String s) {
+        if (currentLine.get() == lineNumber) {
+          lineDeletion.deleteCharacters(s);
+        } else {
+          lineDeletion.retain(s.length());
+        }
+      }
+
+      @Override public void elementStart(String key, Attributes attrs) {
+        if (key.equals(LINE)) {
+          currentLine.incrementAndGet();
+        }
+
+        if (currentLine.get() == lineNumber) {
+          lineDeletion.deleteElementStart(key, attrs);
+        } else {
+          lineDeletion.retain(1);
+        }
+      }
+
+      @Override public void elementEnd() {
+        if (currentLine.get() == lineNumber) {
+          lineDeletion.deleteElementEnd();
+        } else {
+          lineDeletion.retain(1);
+        }
+      }
+
+      @Override public void annotationBoundary(AnnotationBoundaryMap map) {}
+    }));
+
+    return lineDeletion.finish();
   }
 }

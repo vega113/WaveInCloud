@@ -207,4 +207,41 @@ public class WaveletOperationSerializerTest extends TestCase {
 
     assertReversible(new WaveletDocumentOperation("charactersAndElements", m.finish()));
   }
+
+  public void testDeleteElements() {
+    DocOpBuilder m = new DocOpBuilder();
+
+    Attributes a = new AttributesImpl(ImmutableMap.of("a1", "1", "a2", "2"));
+    Attributes b = new AttributesImpl();
+    Attributes c = new AttributesImpl(ImmutableMap.of("c1", "1", "c2", "2", "c3", "3"));
+
+    m.deleteElementStart("a", a);
+    m.deleteElementStart("b", b);
+    m.deleteElementStart("c", c);
+    m.deleteElementEnd();
+    m.deleteElementEnd();
+    m.deleteElementEnd();
+
+    assertReversible(new WaveletDocumentOperation("deleteElements", m.finish()));
+  }
+
+  public void testDeleteCharactersAndElements() {
+    DocOpBuilder m = new DocOpBuilder();
+
+    Attributes a = new AttributesImpl(ImmutableMap.of("a1", "1", "a2", "2"));
+    Attributes b = new AttributesImpl();
+    Attributes c = new AttributesImpl(ImmutableMap.of("c1", "1", "c2", "2", "c3", "3"));
+
+    m.deleteElementStart("a", a);
+    m.deleteCharacters("hello");
+    m.deleteElementStart("b", b);
+    m.deleteCharacters("world");
+    m.deleteElementStart("c", c);
+    m.deleteElementEnd();
+    m.deleteCharacters("blah");
+    m.deleteElementEnd();
+    m.deleteElementEnd();
+
+    assertReversible(new WaveletDocumentOperation("deleteCharactersAndElements", m.finish()));
+  }
 }

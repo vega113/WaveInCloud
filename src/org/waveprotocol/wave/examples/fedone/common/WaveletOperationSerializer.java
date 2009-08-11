@@ -128,7 +128,22 @@ public class WaveletOperationSerializer {
         output.addComponent(newComponentBuilder().setCharacters(characters).build());
       }
 
+      @Override public void deleteCharacters(String characters) {
+        output.addComponent(newComponentBuilder().setDeleteCharacters(characters).build());
+      }
+
       @Override public void elementStart(String type, Attributes attributes) {
+        ProtocolDocumentOperation.Component.ElementStart e = makeElementStart(type, attributes);
+        output.addComponent(newComponentBuilder().setElementStart(e).build());
+      }
+
+      @Override public void deleteElementStart(String type, Attributes attributes) {
+        ProtocolDocumentOperation.Component.ElementStart e = makeElementStart(type, attributes);
+        output.addComponent(newComponentBuilder().setDeleteElementStart(e).build());
+      }
+
+      private ProtocolDocumentOperation.Component.ElementStart makeElementStart(
+          String type, Attributes attributes) {
         ProtocolDocumentOperation.Component.ElementStart.Builder e =
           ProtocolDocumentOperation.Component.ElementStart.newBuilder();
 
@@ -139,23 +154,15 @@ public class WaveletOperationSerializer {
               .setKey(name).setValue(attributes.get(name)).build());
         }
 
-        output.addComponent(newComponentBuilder().setElementStart(e.build()).build());
+        return e.build();
       }
 
       @Override public void elementEnd() {
         output.addComponent(newComponentBuilder().setElementEnd(true).build());
       }
 
-      @Override public void deleteCharacters(String characters) {
-        output.addComponent(newComponentBuilder().setDeleteCharacters(characters).build());
-      }
-
-      @Override public void deleteElementStart(String type, Attributes attributes) {
-        throw new IllegalArgumentException();
-      }
-
       @Override public void deleteElementEnd() {
-        throw new IllegalArgumentException();
+        output.addComponent(newComponentBuilder().setDeleteElementEnd(true).build());
       }
 
       @Override public void replaceAttributes(Attributes oldAttributes, Attributes newAttributes) {
@@ -251,6 +258,16 @@ public class WaveletOperationSerializer {
         output.retain(c.getRetainItemCount());
       } else if (c.hasDeleteCharacters()) {
         output.deleteCharacters(c.getDeleteCharacters());
+      } else if (c.hasDeleteElementStart()) {
+        Map<String, String> attributesMap = Maps.newHashMap();
+        for (ProtocolDocumentOperation.Component.KeyValuePair pair :
+            c.getDeleteElementStart().getAttributeList()) {
+          attributesMap.put(pair.getKey(), pair.getValue());
+        }
+        output.deleteElementStart(c.getDeleteElementStart().getType(),
+            new AttributesImpl(attributesMap));
+      } else if (c.hasDeleteElementEnd()) {
+        output.deleteElementEnd();
       } else {
         throw new IllegalArgumentException("Unsupported operation component: " + c);
       }
