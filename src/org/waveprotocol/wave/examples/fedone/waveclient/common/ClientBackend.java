@@ -293,18 +293,27 @@ public class ClientBackend {
     for (ProtocolWaveletDelta protobufDelta : protobufDeltas) {
       Pair<WaveletDelta, HashedVersion> deltaAndVersion =
         WaveletOperationSerializer.deserialize(protobufDelta);
+      List<WaveletOperation> ops = deltaAndVersion.first.getOperations();
+      List<WaveletOperation> successfulOps = Lists.newArrayList();
 
-      for (WaveletOperation op : deltaAndVersion.first.getOperations()) {
+      for (WaveletOperation op : ops) {
         try {
           op.apply(wavelet);
-          notifyWaveletOperationListeners(wavelet, op);
+          successfulOps.add(op);
         } catch (OperationException e) {
-          LOG.warning("OperationException when applying " + op + " to " + wavelet);
+          // It should be okay (if cheeky) for the client to just ignore failed ops.  In any case,
+          // this should never happen if our server is behaving correctly.
+          LOG.severe("OperationException when applying " + op + " to " + wavelet);
         }
       }
 
       wave.setWaveletVersion(waveletName.waveletId,
           WaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()));
+
+      // Notify listeners separately to avoid them operating on invalid wavelet state
+      for (WaveletOperation op : successfulOps) {
+        notifyWaveletOperationListeners(wavelet, op);
+      }
     }
 
     // If we have been removed from this wavelet then remove the data too, since if we're re-added
