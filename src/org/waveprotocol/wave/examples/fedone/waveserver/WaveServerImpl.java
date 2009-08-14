@@ -30,7 +30,6 @@ import com.google.protobuf.ByteString;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
-import org.waveprotocol.wave.examples.fedone.federation.xmpp.XmppFederationRemote;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationListener.Factory;
