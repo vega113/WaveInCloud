@@ -183,23 +183,6 @@ public class AnnotationBoundaryMapImpl implements AnnotationBoundaryMap {
 
   @Override
   public String toString() {
-    StringBuilder b = new StringBuilder();
-    for (int i = 0; i < endSize(); i++) {
-      b.append(getEndKey(i) + " ends, ");
-    }
-    if (b.length() > 0) {
-      assert b.charAt(b.length() - 2) == ',';
-      assert b.charAt(b.length() - 1) == ' ';
-      b.replace(b.length() - 2, b.length(), "; ");
-    }
-    for (int i = 0; i < changeSize(); i++) {
-      b.append(getChangeKey(i) + ": " + getOldValue(i) + " -> " + getNewValue(i) + ", ");
-    }
-    if (b.length() > 0) {
-      assert b.charAt(b.length() - 2) == ',' || b.charAt(b.length() - 2) == ';';
-      assert b.charAt(b.length() - 1) == ' ';
-      b.delete(b.length() - 2, b.length());
-    }
-    return "AnnotationBoundaryMap(" + b.toString() + ")";
+    return DocOpUtil.toConciseString(this);
   }
 }

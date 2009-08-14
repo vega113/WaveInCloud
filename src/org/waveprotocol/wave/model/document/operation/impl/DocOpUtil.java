@@ -70,7 +70,7 @@ public class DocOpUtil {
     op.apply(new DocOpCursor() {
       @Override
       public void deleteCharacters(String chars) {
-        b.append("--" + chars + "; ");
+        b.append("--" + literalString(chars) + "; ");
       }
 
       @Override
@@ -80,12 +80,12 @@ public class DocOpUtil {
 
       @Override
       public void deleteElementStart(String type, Attributes attrs) {
-        b.append("x< " + type + " " + attrs + "; ");
+        b.append("x< " + type + " " + toConciseString(attrs) + "; ");
       }
 
       @Override
       public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-        b.append("r@ " + oldAttrs + " " + newAttrs + "; ");
+        b.append("r@ " + toConciseString(oldAttrs) + " " + toConciseString(newAttrs) + "; ");
       }
 
       @Override
@@ -95,17 +95,17 @@ public class DocOpUtil {
 
       @Override
       public void updateAttributes(AttributesUpdate attrUpdate) {
-        b.append("u@ " + attrUpdate + "; ");
+        b.append("u@ " + toConciseString(attrUpdate) + "; ");
       }
 
       @Override
       public void annotationBoundary(AnnotationBoundaryMap map) {
-        b.append("|| " + map + "; ");
+        b.append("|| " + toConciseString(map) + "; ");
       }
 
       @Override
       public void characters(String chars) {
-        b.append("++" + chars + "; ");
+        b.append("++" + literalString(chars) + "; ");
       }
 
       @Override
@@ -115,7 +115,7 @@ public class DocOpUtil {
 
       @Override
       public void elementStart(String type, Attributes attrs) {
-        b.append("<< " + type + " " + attrs + "; ");
+        b.append("<< " + type + " " + toConciseString(attrs) + "; ");
       }
     });
     if (b.length() > 0) {
@@ -124,6 +124,83 @@ public class DocOpUtil {
       b.delete(b.length() - 2, b.length());
     }
     return b.toString();
+  }
+
+  public static String toConciseString(Attributes attributes) {
+    if (attributes.isEmpty()) {
+      return "{}";
+    }
+    StringBuilder b = new StringBuilder();
+    b.append("{ ");
+    boolean first = true;
+    for (Map.Entry<String, String> entry : attributes.entrySet()) {
+      if (first) {
+        first = false;
+      } else {
+        b.append(", ");
+      }
+      b.append(entry.getKey());
+      b.append("=");
+      b.append(literalString(entry.getKey()));
+    }
+    b.append(" }");
+    return b.toString();
+  }
+
+  public static String toConciseString(AttributesUpdate update) {
+    if (update.changeSize() == 0) {
+      return "{}";
+    }
+    StringBuilder b = new StringBuilder();
+    b.append("{ ");
+    for (int i = 0; i < update.changeSize(); ++i) {
+      if (i > 0) {
+        b.append(", ");
+      }
+      b.append(update.getChangeKey(i));
+      b.append(": ");
+      b.append(literalString(update.getOldValue(i)));
+      b.append(" -> ");
+      b.append(literalString(update.getNewValue(i)));
+    }
+    b.append(" }");
+    return b.toString();
+  }
+
+  public static String toConciseString(AnnotationBoundaryMap map) {
+    StringBuilder b = new StringBuilder();
+    b.append("{ ");
+    boolean notEmpty = false;
+    for (int i = 0; i < map.endSize(); ++i) {
+      if (notEmpty) {
+        b.append(", ");
+      } else {
+        notEmpty = true;
+      }
+      b.append(literalString(map.getEndKey(i)));
+    }
+    for (int i = 0; i < map.changeSize(); ++i) {
+      if (notEmpty) {
+        b.append(", ");
+      } else {
+        notEmpty = true;
+      }
+      b.append(literalString(map.getChangeKey(i)));
+      b.append(": ");
+      b.append(literalString(map.getOldValue(i)));
+      b.append(" -> ");
+      b.append(literalString(map.getNewValue(i)));
+    }
+    b.append(" }");
+    return notEmpty ? b.toString() : "{}";
+  }
+
+  private static String escapeLiteral(String string) {
+    return string.replace("\\", "\\\\").replace("\"", "\\\"");
+  }
+
+  private static String literalString(String string) {
+    return (string == null) ? "null" : "\"" + escapeLiteral(string) + "\"";
   }
 
   /**

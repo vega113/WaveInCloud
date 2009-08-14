@@ -27,7 +27,6 @@ import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMap
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
 import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.util.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,10 +37,39 @@ import java.util.Map;
  * A utility class for composing document operations.
  *
  * TODO: Make detection of illegal compositions more thorough.
- *
- *
  */
 public final class Composer {
+
+  private abstract class AnnotationQueue {
+
+    private final List<AnnotationBoundaryMap> events = new ArrayList<AnnotationBoundaryMap>();
+
+    /**
+     * Do not use this directly.  This is only here for subclasses to override.
+     */
+    abstract void unqueue(AnnotationBoundaryMap map);
+
+    /**
+     * Register a change in annotations at the current location in the mutations
+     * being processed as part of a transformation.
+     *
+     * @param map The annotation transition information.
+     */
+    final void queue(AnnotationBoundaryMap map) {
+      events.add(map);
+    }
+
+    /**
+     * Flushes any queued annotation events.
+     */
+    final void flush() {
+      for (AnnotationBoundaryMap map : events) {
+        unqueue(map);
+      }
+      events.clear();
+    }
+
+  }
 
   private static class ComposeException extends RuntimeException {
 
@@ -53,7 +81,7 @@ public final class Composer {
 
   private static abstract class Target implements DocOpCursor {
 
-    abstract boolean isPreTarget();
+    abstract boolean isPostTarget();
 
   }
 
@@ -83,8 +111,8 @@ public final class Composer {
     }
 
     @Override
-    final boolean isPreTarget() {
-      return true;
+    final boolean isPostTarget() {
+      return false;
     }
 
   }
@@ -115,8 +143,8 @@ public final class Composer {
     }
 
     @Override
-    final boolean isPreTarget() {
-      return false;
+    final boolean isPostTarget() {
+      return true;
     }
 
   }
@@ -281,240 +309,6 @@ public final class Composer {
       } else {
         target = defaultTarget;
       }
-    }
-
-  }
-
-  private final class DeleteElementStartPreTarget extends PreTarget {
-
-    private String type;
-    private Attributes attrs;
-
-    DeleteElementStartPreTarget(String type, Attributes attrs) {
-      this.type = type;
-      this.attrs = attrs;
-    }
-
-    @Override
-    public void retain(int itemCount) {
-      flushAnnotations();
-      normalizer.deleteElementStart(type, attrs);
-      if (itemCount > 1) {
-        target = new RetainPostTarget(itemCount - 1);
-      } else {
-        target = defaultTarget;
-      }
-    }
-
-    @Override
-    public void characters(String chars) {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void elementStart(String type, Attributes attrs) {
-      flushAnnotations();
-      target = defaultTarget;
-    }
-
-    @Override
-    public void elementEnd() {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-      flushAnnotations();
-      normalizer.deleteElementStart(type, oldAttrs);
-      target = defaultTarget;
-    }
-
-    @Override
-    public void updateAttributes(AttributesUpdate attrUpdate) {
-      flushAnnotations();
-      normalizer.deleteElementStart(type, attrs.updateWith(invertUpdate(attrUpdate)));
-      target = defaultTarget;
-    }
-
-  }
-
-  private final class DeleteElementEndPreTarget extends PreTarget {
-
-    @Override
-    public void retain(int itemCount) {
-      flushAnnotations();
-      normalizer.deleteElementEnd();
-      if (itemCount > 1) {
-        target = new RetainPostTarget(itemCount - 1);
-      } else {
-        target = defaultTarget;
-      }
-    }
-
-    @Override
-    public void characters(String chars) {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void elementStart(String type, Attributes attrs) {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void elementEnd() {
-      flushAnnotations();
-      target = defaultTarget;
-    }
-
-    @Override
-    public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void updateAttributes(AttributesUpdate attrUpdate) {
-      throw new ComposeException("Illegal composition");
-    }
-
-  }
-
-  private final class ReplaceAttributesPreTarget extends PreTarget {
-
-    Attributes oldAttrs;
-    Attributes newAttrs;
-
-    ReplaceAttributesPreTarget(Attributes oldAttrs, Attributes newAttrs) {
-      this.oldAttrs = oldAttrs;
-      this.newAttrs = newAttrs;
-    }
-
-    @Override
-    public void retain(int itemCount) {
-      flushAnnotations();
-      normalizer.replaceAttributes(oldAttrs, newAttrs);
-      if (itemCount > 1) {
-        target = new RetainPostTarget(itemCount - 1);
-      } else {
-        target = defaultTarget;
-      }
-    }
-
-    @Override
-    public void characters(String chars) {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void elementStart(String type, Attributes attrs) {
-      flushAnnotations();
-      normalizer.elementStart(type, newAttrs);
-      target = defaultTarget;
-    }
-
-    @Override
-    public void elementEnd() {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-      flushAnnotations();
-      normalizer.replaceAttributes(oldAttrs, this.newAttrs);
-      target = defaultTarget;
-    }
-
-    @Override
-    public void updateAttributes(AttributesUpdate attrUpdate) {
-      flushAnnotations();
-      normalizer.replaceAttributes(oldAttrs.updateWith(invertUpdate(attrUpdate)), newAttrs);
-      target = defaultTarget;
-    }
-
-  }
-
-  private final class UpdateAttributesPreTarget extends PreTarget {
-
-    AttributesUpdate attrUpdate;
-
-    UpdateAttributesPreTarget(AttributesUpdate attrUpdate) {
-      this.attrUpdate = attrUpdate;
-    }
-
-    @Override
-    public void retain(int itemCount) {
-      flushAnnotations();
-      normalizer.updateAttributes(attrUpdate);
-      if (itemCount > 1) {
-        target = new RetainPostTarget(itemCount - 1);
-      } else {
-        target = defaultTarget;
-      }
-    }
-
-    @Override
-    public void characters(String chars) {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void elementStart(String type, Attributes attrs) {
-      flushAnnotations();
-      normalizer.elementStart(type, attrs.updateWith(attrUpdate));
-      target = defaultTarget;
-    }
-
-    @Override
-    public void elementEnd() {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-      flushAnnotations();
-      normalizer.replaceAttributes(oldAttrs, newAttrs.updateWith(attrUpdate));
-      target = defaultTarget;
-    }
-
-    @Override
-    public void updateAttributes(AttributesUpdate attrUpdate) {
-      flushAnnotations();
-      normalizer.updateAttributes(attrUpdate.composeWith(this.attrUpdate));
-      target = defaultTarget;
-    }
-
-  }
-
-  private final class DefaultPostTarget extends PostTarget {
-
-    @Override
-    public void retain(int itemCount) {
-      target = new RetainPreTarget(itemCount);
-    }
-
-    @Override
-    public void deleteCharacters(String chars) {
-      target = new DeleteCharactersPreTarget(chars);
-    }
-
-    @Override
-    public void deleteElementStart(String type, Attributes attrs) {
-      target = new DeleteElementStartPreTarget(type, attrs);
-    }
-
-    @Override
-    public void deleteElementEnd() {
-      target = new DeleteElementEndPreTarget();
-    }
-
-    @Override
-    public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-      target = new ReplaceAttributesPreTarget(oldAttrs, newAttrs);
-    }
-
-    @Override
-    public void updateAttributes(AttributesUpdate attrUpdate) {
-      target = new UpdateAttributesPreTarget(attrUpdate);
     }
 
   }
@@ -849,40 +643,6 @@ public final class Composer {
 
   }
 
-  private final class FinisherPreTarget extends PreTarget {
-
-    @Override
-    public void retain(int itemCount) {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void characters(String chars) {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void elementStart(String type, Attributes attrs) {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void elementEnd() {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-      throw new ComposeException("Illegal composition");
-    }
-
-    @Override
-    public void updateAttributes(AttributesUpdate attrUpdate) {
-      throw new ComposeException("Illegal composition");
-    }
-
-  }
-
   private final class FinisherPostTarget extends PostTarget {
 
     @Override
@@ -921,15 +681,15 @@ public final class Composer {
    * The currently active annotations in the first operation. This maps keys to
    * pairs representing the old annotation value and the new annotation value.
    */
-  private final Map<String, Pair<String, String>> preAnnotations =
-      new HashMap<String, Pair<String, String>>();
+  private final Map<String, ValueUpdate> preAnnotations =
+      new HashMap<String, ValueUpdate>();
 
   /**
    * The currently active annotations in the second operation. This maps keys to
    * pairs representing the old annotation value and the new annotation value.
    */
-  private final Map<String, Pair<String, String>> postAnnotations =
-      new HashMap<String, Pair<String, String>>();
+  private final Map<String, ValueUpdate> postAnnotations =
+      new HashMap<String, ValueUpdate>();
 
   private final AnnotationQueue preAnnotationQueue = new AnnotationQueue() {
 
@@ -937,35 +697,35 @@ public final class Composer {
     void unqueue(AnnotationBoundaryMap map) {
       // TODO: This seems pretty awkward. Perhaps we should give
       // AnnotationBoundaryMapImpl an easier builder to use.
+      List<String> endKeys = new ArrayList<String>();
       List<String> changeKeys = new ArrayList<String>();
       List<String> changeOldValues = new ArrayList<String>();
       List<String> changeNewValues = new ArrayList<String>();
-      List<String> endKeys = new ArrayList<String>();
-      for (int i = 0; i < map.changeSize(); ++i) {
-        String key = map.getChangeKey(i);
-        String oldValue = map.getOldValue(i);
-        String newValue = map.getNewValue(i);
-        Pair<String, String> postValues = postAnnotations.get(key);
-        changeKeys.add(key);
-        changeOldValues.add(oldValue);
-        if (postValues != null) {
-          changeNewValues.add(postValues.second);
-        } else {
-          changeNewValues.add(newValue);
-        }
-        preAnnotations.put(key, new Pair<String, String>(oldValue, newValue));
-      }
       for (int i = 0; i < map.endSize(); ++i) {
         String key = map.getEndKey(i);
-        Pair<String, String> postValues = postAnnotations.get(key);
+        ValueUpdate postValues = postAnnotations.get(key);
         if (postValues != null) {
           changeKeys.add(key);
-          changeOldValues.add(postValues.first);
-          changeNewValues.add(postValues.second);
+          changeOldValues.add(postValues.oldValue);
+          changeNewValues.add(postValues.newValue);
         } else {
           endKeys.add(key);
         }
         preAnnotations.remove(key);
+      }
+      for (int i = 0; i < map.changeSize(); ++i) {
+        String key = map.getChangeKey(i);
+        String oldValue = map.getOldValue(i);
+        String newValue = map.getNewValue(i);
+        ValueUpdate postValues = postAnnotations.get(key);
+        changeKeys.add(key);
+        changeOldValues.add(oldValue);
+        if (postValues != null) {
+          changeNewValues.add(postValues.newValue);
+        } else {
+          changeNewValues.add(newValue);
+        }
+        preAnnotations.put(key, new ValueUpdate(oldValue, newValue));
       }
       normalizer.annotationBoundary(new AnnotationBoundaryMapImpl(
           endKeys.toArray(new String[0]),
@@ -982,35 +742,35 @@ public final class Composer {
     void unqueue(AnnotationBoundaryMap map) {
       // TODO: This seems pretty awkward. Perhaps we should give
       // AnnotationBoundaryMapImpl an easier builder to use.
+      List<String> endKeys = new ArrayList<String>();
       List<String> changeKeys = new ArrayList<String>();
       List<String> changeOldValues = new ArrayList<String>();
       List<String> changeNewValues = new ArrayList<String>();
-      List<String> endKeys = new ArrayList<String>();
-      for (int i = 0; i < map.changeSize(); ++i) {
-        String key = map.getChangeKey(i);
-        String oldValue = map.getOldValue(i);
-        String newValue = map.getNewValue(i);
-        Pair<String, String> preValues = preAnnotations.get(key);
-        changeKeys.add(key);
-        changeNewValues.add(newValue);
-        if (preValues != null) {
-          changeOldValues.add(preValues.first);
-        } else {
-          changeOldValues.add(oldValue);
-        }
-        postAnnotations.put(key, new Pair<String, String>(oldValue, newValue));
-      }
       for (int i = 0; i < map.endSize(); ++i) {
         String key = map.getEndKey(i);
-        Pair<String, String> preValues = preAnnotations.get(key);
+        ValueUpdate preValues = preAnnotations.get(key);
         if (preValues != null) {
           changeKeys.add(key);
-          changeOldValues.add(preValues.first);
-          changeNewValues.add(preValues.second);
+          changeOldValues.add(preValues.oldValue);
+          changeNewValues.add(preValues.newValue);
         } else {
           endKeys.add(key);
         }
         postAnnotations.remove(key);
+      }
+      for (int i = 0; i < map.changeSize(); ++i) {
+        String key = map.getChangeKey(i);
+        String oldValue = map.getOldValue(i);
+        String newValue = map.getNewValue(i);
+        ValueUpdate preValues = preAnnotations.get(key);
+        changeKeys.add(key);
+        changeNewValues.add(newValue);
+        if (preValues != null) {
+          changeOldValues.add(preValues.oldValue);
+        } else {
+          changeOldValues.add(oldValue);
+        }
+        postAnnotations.put(key, new ValueUpdate(oldValue, newValue));
       }
       normalizer.annotationBoundary(new AnnotationBoundaryMapImpl(
           endKeys.toArray(new String[0]),
@@ -1024,37 +784,26 @@ public final class Composer {
   private final EvaluatingDocOpCursor<BufferedDocOp> normalizer =
       OperationNormalizer.createNormalizer(new BufferedDocOpImpl.DocOpBuilder());
 
-  private final Target defaultTarget;
+  private final Target defaultTarget = new DefaultPreTarget();
 
   private Target target;
 
-  private Composer(boolean isClientOperation) {
-    defaultTarget = isClientOperation ? new DefaultPostTarget() : new DefaultPreTarget();
-  }
+  private Composer() {}
 
-  private BufferedDocOp compose(BufferedDocOp op1, BufferedDocOp op2) {
+  private BufferedDocOp composeOperations(BufferedDocOp op1, BufferedDocOp op2) {
     target = defaultTarget;
     int op1Index = 0;
     int op2Index = 0;
-    process: {
-      while (op2Index < op2.size()) {
-        while (target.isPreTarget()) {
-          if (op1Index >= op1.size()) {
-            target = new FinisherPostTarget();
-            while (op2Index < op2.size()) {
-              op2.applyComponent(op2Index++, target);
-            }
-            break process;
-          }
-          op1.applyComponent(op1Index++, target);
-        }
+    while (op1Index < op1.size()) {
+      op1.applyComponent(op1Index++, target);
+      while (target.isPostTarget()) {
         op2.applyComponent(op2Index++, target);
       }
-      while (op1Index < op1.size()) {
-        if (!target.isPreTarget()) {
-          target = new FinisherPreTarget();
-        }
-        op1.applyComponent(op1Index++, target);
+    }
+    if (op2Index < op2.size()) {
+      target = new FinisherPostTarget();
+      while (op2Index < op2.size()) {
+        op2.applyComponent(op2Index++, target);
       }
     }
     flushAnnotations();
@@ -1062,61 +811,32 @@ public final class Composer {
   }
 
   /**
-   * Perform a composition of two client operations.
+   * Perform a composition of two operations.
    *
-   * @param op1 the first client operation
-   * @param op2 the second client operation
+   * @param op1 the first operation
+   * @param op2 the second operation
    * @return the result of the composition
    * @throws OperationException if there was a problem composing
    */
-  public static BufferedDocOp clientCompose(BufferedDocOp op1, BufferedDocOp op2)
+  public static BufferedDocOp compose(BufferedDocOp op1, BufferedDocOp op2)
       throws OperationException {
     try {
-      return new Composer(true).compose(op1, op2);
+      return new Composer().composeOperations(op1, op2);
     } catch (ComposeException e) {
       throw new OperationException(e.getMessage());
     }
   }
 
   /**
-   * Perform a composition of two server operations.
+   * Compose operations.
    *
-   * @param op1 the first server operation
-   * @param op2 the second server operation
-   * @return the result of the composition
-   * @throws OperationException if there was a problem composing
-   */
-  public static BufferedDocOp serverCompose(BufferedDocOp op1, BufferedDocOp op2)
-      throws OperationException {
-    try {
-      return new Composer(false).compose(op1, op2);
-    } catch (ComposeException e) {
-      throw new OperationException(e.getMessage());
-    }
-  }
-
-  /**
-   * Compose client operations.
+   * TODO: Rewrite to have proper exceptions-throwing.
    *
-   * @param operations an iterator through the client operations to compose
+   * @param operations an iterator through the operations to compose
    * @return the result of the composition
    */
-  public static BufferedDocOp clientCompose(Iterable<BufferedDocOp> operations) {
-    return composeUsing(new DocOpCollector.ClientOpCollector(), operations);
-  }
-
-  /**
-   * Compose server operations.
-   *
-   * @param operations an iterator through the server operations to compose
-   * @return the result of the composition
-   */
-  public static BufferedDocOp serverCompose(Iterable<BufferedDocOp> operations) {
-    return composeUsing(new DocOpCollector.ServerOpCollector(), operations);
-  }
-
-  private static BufferedDocOp composeUsing(DocOpCollector collector,
-      Iterable<BufferedDocOp> operations) {
+  public static BufferedDocOp compose(Iterable<BufferedDocOp> operations) {
+    DocOpCollector collector = new DocOpCollector();
     for (BufferedDocOp operation : operations) {
       collector.add(operation);
     }
