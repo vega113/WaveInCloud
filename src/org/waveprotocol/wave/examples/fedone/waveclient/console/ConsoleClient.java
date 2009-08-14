@@ -17,10 +17,12 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.console;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import jline.ANSIBuffer;
+import jline.Completor;
 import jline.ConsoleReader;
 
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
@@ -72,15 +74,80 @@ public class ConsoleClient implements WaveletOperationListener {
   /** Inbox we are rendering. */
   private ScrollableInbox inbox;
 
+  /** Number of lines to scroll by with { and }. */
+  private static AtomicInteger scrollLines = new AtomicInteger(1);
+
   /** PrintStream to use for output.  We don't use ConsoleReader's functionality because it's too
    * verbose and doesn't really give us anything in return. */
   private final PrintStream out = System.out;
+
+  private class Command {
+    public final String name;
+    public final String args;
+    public final String description;
+
+    private Command(String name, String args, String description) {
+      this.name = name;
+      this.args = args;
+      this.description = description;
+    }
+  }
+
+  /** Commands available to the user. */
+  private final List<Command> commands = ImmutableList.of(
+      new Command("connect", "user@domain server port", "connect to server:port as user@domain"),
+      new Command("open", "entry", "open a wave given an inbox entry"),
+      new Command("new", "", "create a new wave"),
+      new Command("add", "user@domain", "add a user to a wave"),
+      new Command("remove", "user@domain", "remove a user from a wave"),
+      new Command("read", "", "set all waves as read"),
+      new Command("undo", "[user@domain]", "undo last line by a user, defaulting to current user"),
+      new Command("scroll", "lines", "set the number of lines to scroll by with { and }"),
+      new Command("view", "mode", "change view mode for the open wavelet (normal, xml)"),
+      new Command("quit", "", "quit the client"));
 
   /**
    * Create new console client.
    */
   public ConsoleClient() throws IOException {
     reader = new ConsoleReader();
+
+    // Set up scrolling -- these are the opposite to how you would expect because of the way that
+    // the waves are scrolled (where the bottom is treated as the top)
+    reader.addTriggeredAction('}', new ActionListener() {
+      @Override public void actionPerformed(ActionEvent e) {
+        if (isWaveOpen()) {
+          openWave.scrollUp(scrollLines.get());
+          render();
+        }
+      }
+    });
+
+    reader.addTriggeredAction('{', new ActionListener() {
+      @Override public void actionPerformed(ActionEvent e) {
+        if (isWaveOpen()) {
+          openWave.scrollDown(scrollLines.get());
+          render();
+        }
+      }
+    });
+
+    // And tab completion
+    reader.addCompletor(new Completor() {
+      @SuppressWarnings("unchecked")
+      @Override public int complete(String buffer, int cursor, List candidates) {
+        if (buffer.trim().startsWith("/")) {
+          buffer = buffer.trim().substring(1);
+        }
+
+        for (Command cmd : commands) {
+          if (cmd.name.startsWith(buffer)) {
+            candidates.add('/' + cmd.name + ' ');
+          }
+        }
+
+        return 0;
+      }});
   }
 
   /**
@@ -93,35 +160,6 @@ public class ConsoleClient implements WaveletOperationListener {
     reader.clearScreen();
     reader.setDefaultPrompt("(not connected) ");
     out.println(ANSIBuffer.ANSICodes.gotoxy(reader.getTermheight(), 1));
-
-    // Set up scrolling -- these are the opposite to how you would expect because of the way that
-    // the waves are scrolled (where the bottom is treated as the top)
-    reader.addTriggeredAction('}', new ActionListener() {
-      @Override public void actionPerformed(ActionEvent e) {
-        if (isWaveOpen()) {
-          openWave.scrollUp(1);
-          render();
-        }
-      }
-    });
-
-    reader.addTriggeredAction('{', new ActionListener() {
-      @Override public void actionPerformed(ActionEvent e) {
-        if (isWaveOpen()) {
-          openWave.scrollDown(1);
-          render();
-        }
-      }
-    });
-
-    reader.addTriggeredAction('_', new ActionListener() {
-      @Override public void actionPerformed(ActionEvent e) {
-        if (isWaveOpen()) {
-          openWave.scrollToTop();
-          render();
-        }
-      }
-    });
 
     // Immediately establish connection if desired, otherwise the user will need to use "/connect"
     if (args.length == 3) {
@@ -137,6 +175,9 @@ public class ConsoleClient implements WaveletOperationListener {
       } else if (line.length() > 0) {
         sendAppendMutation(line);
       } else {
+        if (isWaveOpen()) {
+          openWave.scrollToTop();
+        }
         render();
       }
     }
@@ -239,28 +280,42 @@ public class ConsoleClient implements WaveletOperationListener {
       } else {
         errorNotConnected();
       }
+    } else if (cmd.equals("scroll")) {
+      if (args.size() == 1) {
+        setScrollLines(args.get(0));
+      } else {
+        badArgs(cmd);
+      }
     } else if (cmd.equals("quit")) {
       System.exit(0);
     } else {
-      out.println("Recognised commands:");
-      out.println("  /connect  user@domain server port  connect to server:port as user@domain");
-      out.println("  /open     entry                    open a wave given an inbox entry");
-      out.println("  /new                               create and open a new wave");
-      out.println("  /add      participantId            add a participant to a wave");
-      out.println("  /remove   participantId            remove a participant from a wave");
-      out.println("  /view     mode                     change view mode for the open wavelet:");
-      out.println("                                       normal  normal rendering");
-      out.println("                                       xml     show raw XML");
-      out.println("  /read                              set all waves as read");
-      out.println("  /undo     [participantId]          undo last line by a user, defaulting to "
-          + (backend == null ? "(nobody)" : backend.getUserId()));
-      out.println("  /quit                              quit the client");
-      out.println("Interactive commands:");
-      out.println("  {  scroll up open wave");
-      out.println("  }  scroll down open wave");
-      out.println("  _  scroll open wave to the bottom");
-      out.println();
+      printHelp();
     }
+  }
+
+  /**
+   * Print help.
+   */
+  private void printHelp() {
+    int maxNameLength = 0;
+    int maxArgsLength = 0;
+
+    for (Command cmd : commands) {
+      maxNameLength = Math.max(maxNameLength, cmd.name.length());
+      maxArgsLength = Math.max(maxArgsLength, cmd.args.length());
+    }
+
+    out.println("Commands:");
+    for (Command cmd : commands) {
+      out.printf(String.format("  %%-%ds  %%-%ds  %%s\n", maxNameLength, maxArgsLength),
+          cmd.name, cmd.args, cmd.description);
+    }
+
+    out.println();
+    out.println("Scrolling:");
+    out.println("  {  scroll up open wave");
+    out.println("  }  scroll down open wave");
+    out.println();
   }
 
   /**
@@ -269,7 +324,22 @@ public class ConsoleClient implements WaveletOperationListener {
    * @param cmd the bad command
    */
   private void badArgs(String cmd) {
-    out.println("Error: bad args to " + cmd + ", run \"/?\"");
+    out.println("Error: incorrect number of arguments to " + cmd + ", expecting: /" + cmd + " "
+        + findCommand(cmd).args);
+  }
+
+  /**
+   * @param command name
+   * @return the {@code Command} object from commands for command, or null if not found
+   */
+  private Command findCommand(String command) {
+    for (Command cmd : commands) {
+      if (command.equals(cmd.name)) {
+        return cmd;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -533,6 +603,19 @@ public class ConsoleClient implements WaveletOperationListener {
       backend.sendWaveletOperation(getOpenWavelet(), undoOp);
     } else {
       out.println("Error: " + userId + " hasn't written anything yet");
+    }
+  }
+
+  /**
+   * Set the number of lines to scroll by.
+   *
+   * @param lines to scroll by
+   */
+  public void setScrollLines(String lines) {
+    try {
+      scrollLines.set(Integer.parseInt(lines));
+    } catch (NumberFormatException e) {
+      out.println("Error: lines must be a valid integer");
     }
   }
 

@@ -128,10 +128,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
           }));
     }
 
-    if (currentLine.length() > 0) {
-      ConsoleUtils.ensureWidth(width, currentLine);
-      lines.add(currentLine.toString());
-    }
+    wrapAndClose(lines, width, currentLine);
 
     // Also render a header, not too big...
     List<String> header = renderHeader(width);
@@ -159,12 +156,17 @@ public class ScrollableWaveView extends ConsoleScrollable {
   private List<String> renderHeader(int width) {
     List<String> lines = Lists.newArrayList();
     List<ParticipantId> participants = ClientUtils.getConversationRoot(wave).getParticipants();
-    StringBuilder participantLineBuilder = new StringBuilder();
+
 
     // HashedVersion
-    lines.add("Version " + wave.getWaveletVersion(ClientUtils.getConversationRootId(wave)));
+    StringBuilder versionLineBuilder = new StringBuilder();
+    versionLineBuilder.append("Version "
+        + wave.getWaveletVersion(ClientUtils.getConversationRootId(wave)));
+    wrapAndClose(lines, width, versionLineBuilder);
 
     // Participants
+    StringBuilder participantLineBuilder = new StringBuilder();
+
     if (participants.isEmpty()) {
       participantLineBuilder.append("No participants!?");
     } else {
@@ -178,10 +180,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
     }
 
     // Render as lines
-    wrap(lines, width, participantLineBuilder);
-    if (participantLineBuilder.length() > 0) {
-      lines.add(participantLineBuilder.toString());
-    }
+    wrapAndClose(lines, width, participantLineBuilder);
 
     for (int i = 0; i < lines.size(); i++) {
       lines.set(i, ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_YELLOW_FG, lines.get(i)));
@@ -204,6 +203,23 @@ public class ScrollableWaveView extends ConsoleScrollable {
     while (line.length() >= width) {
       lines.add(line.substring(0, width));
       line.delete(0, width);
+    }
+  }
+
+  /**
+   * Wrap a line as in {@code wrap}, then "close" it by adding any remaining characters to the list
+   * of lines and clearing the line.
+   *
+   * @param lines to append line to
+   * @param width to wrap
+   * @param line to append
+   */
+  private void wrapAndClose(List<String> lines, int width, StringBuilder line) {
+    wrap(lines, width, line);
+
+    if (line.length() > 0) {
+      lines.add(ConsoleUtils.ensureWidth(width, line.toString()));
+      line.delete(0, line.length());
     }
   }
 
