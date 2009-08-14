@@ -468,14 +468,47 @@ public class WaveServerImpl implements WaveServer {
 
         wc = getOrCreateLocalWavelet(waveletName,
             new ParticipantId(delta.getDelta().getAuthor()));
-        submitResult = wc.submitRequest(waveletName, delta);
-        appliedDelta = submitResult.getAppliedDelta();
 
-        // return result to caller.
-        ProtocolHashedVersion resultingVersion = getVersionAfter(appliedDelta);
-        LOG.info("## WS: Submit result: " + waveletName + " appliedDelta: " + appliedDelta);
-        resultListener.onSuccess(appliedDelta.getOperationsApplied(),
+        /*
+         * Synchronise on the wavelet container so that updates passed to
+         * clientListener and Federation listeners are ordered correctly. The
+         * application of deltas can happen in any order (due to OT).
+         * 
+         * TODO(thorogood): This basically creates a second write lock (like the
+         * one held within wc.submitRequest) and extends it out around the
+         * broadcast code. Ideally what should happen is the update is pushed
+         * onto a queue which is handled in another thread.
+         */
+        synchronized (wc) {
+          submitResult = wc.submitRequest(waveletName, delta);
+          appliedDelta = submitResult.getAppliedDelta();
+
+          // return result to caller.
+          ProtocolHashedVersion resultingVersion = getVersionAfter(appliedDelta);
+          LOG.info("## WS: Submit result: " + waveletName + " appliedDelta: " + appliedDelta);
+          resultListener.onSuccess(appliedDelta.getOperationsApplied(),
             resultingVersion, appliedDelta.getApplicationTimestamp());
+
+          // broadcast the results.
+          if (clientListener != null) {
+            Map<String, BufferedDocOp> documentState =
+              getWavelet(waveletName).getWaveletData().getDocuments();
+            clientListener.waveletUpdate(waveletName, ImmutableList.of(submitResult.getDelta()),
+                submitResult.getHashedVersionAfterApplication(), documentState);
+          }
+
+          for (WaveletFederationListener host : getParticipantsFederationHosts(wc)) {
+            host.waveletUpdate(waveletName, ImmutableList.of(appliedDelta), null,
+                new WaveletFederationListener.WaveletUpdateCallback() {
+                  @Override public void onSuccess() { }
+                  @Override public void onFailure(String errorMessage) {
+                   LOG.warning("outgoing waveletUpdate failure: " + errorMessage);
+                    // TODO: add retransmit logic
+                  }
+                });
+          }
+
+        }
       } catch (AccessControlException e) {
         resultListener.onFailure(e.getMessage());
         return;
@@ -493,24 +526,6 @@ public class WaveServerImpl implements WaveServer {
         		"checking isLocalWavelet", e);
       }
 
-      // broadcast the results.
-      if (clientListener != null) {
-        Map<String, BufferedDocOp> documentState =
-          getWavelet(waveletName).getWaveletData().getDocuments();
-        clientListener.waveletUpdate(waveletName, ImmutableList.of(submitResult.getDelta()),
-            submitResult.getHashedVersionAfterApplication(), documentState);
-      }
-
-      for (WaveletFederationListener host : getParticipantsFederationHosts(wc)) {
-         host.waveletUpdate(waveletName, ImmutableList.of(appliedDelta), null,
-            new WaveletFederationListener.WaveletUpdateCallback() {
-              @Override public void onSuccess() { }
-              @Override public void onFailure(String errorMessage) {
-                LOG.warning("outgoing waveletUpdate failure: " + errorMessage);
-                // TODO: add retransmit logic
-              }
-            });
-      }
     } else {
       // For remote wavelets wait for the result to come back from the federation remote.
       federationRemote.submitRequest(waveletName, delta, resultListener);
