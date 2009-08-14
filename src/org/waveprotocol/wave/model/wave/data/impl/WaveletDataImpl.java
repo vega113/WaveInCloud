@@ -113,7 +113,7 @@ public class WaveletDataImpl implements WaveletData {
   public boolean modifyDocument(String documentId, BufferedDocOp operation)
       throws OperationException {
     BufferedDocOp doc = getOrCreateDocument(documentId);
-    documents.put(documentId, Composer.clientCompose(doc, operation));
+    documents.put(documentId, Composer.compose(doc, operation));
     return true;
   }
 

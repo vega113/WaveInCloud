@@ -200,4 +200,10 @@ public final class BufferedDocOpImpl implements BufferedDocOp {
         "Component " + i + " is not of type ' " + type + "', " +
         "it is '" + components[i].getType() + "'");
   }
+
+  @Override
+  public String toString() {
+    return DocOpUtil.toConciseString(this);
+  }
+
 }

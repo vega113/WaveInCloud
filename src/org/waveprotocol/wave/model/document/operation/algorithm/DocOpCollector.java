@@ -27,40 +27,10 @@ import java.util.ListIterator;
 /**
  * A class that collects document operations together and composes them in an
  * efficient manner.
- *
- *
  */
-public abstract class DocOpCollector {
-
-  public static final class ClientOpCollector extends DocOpCollector {
-
-    @Override
-    BufferedDocOp compose(BufferedDocOp op1, BufferedDocOp op2) {
-      try {
-        return Composer.clientCompose(op1, op2);
-      } catch (OperationException e) {
-        throw new IllegalArgumentException();
-      }
-    }
-
-  }
-
-  public static final class ServerOpCollector extends DocOpCollector {
-
-    @Override
-    BufferedDocOp compose(BufferedDocOp op1, BufferedDocOp op2) {
-      try {
-        return Composer.serverCompose(op1, op2);
-      } catch (OperationException e) {
-        throw new IllegalArgumentException();
-      }
-    }
-
-  }
+public final class DocOpCollector {
 
   private final List<BufferedDocOp> operations = new ArrayList<BufferedDocOp>();
-
-  private DocOpCollector() {}
 
   public void add(BufferedDocOp operation) {
     ListIterator<BufferedDocOp> iterator = operations.listIterator();
@@ -87,6 +57,12 @@ public abstract class DocOpCollector {
     return result;
   }
 
-  abstract BufferedDocOp compose(BufferedDocOp op1, BufferedDocOp op2);
+  private BufferedDocOp compose(BufferedDocOp op1, BufferedDocOp op2) {
+    try {
+      return Composer.compose(op1, op2);
+    } catch (OperationException e) {
+      throw new IllegalArgumentException();
+    }
+  }
 
 }

@@ -17,6 +17,18 @@
 
 package org.waveprotocol.wave.model.document.operation.algorithm;
 
+import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
+import org.waveprotocol.wave.model.document.operation.Attributes;
+import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
+import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOpCursor;
+import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
+import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
+import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
+import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl;
+import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.operation.OperationPair;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,24 +36,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
-import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
-import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
-import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl;
-import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.OperationPair;
-import org.waveprotocol.wave.model.util.Pair;
-
 /**
  * A utility class for transforming document operations.
  *
  * TODO: Make detection of illegal transformations more thorough.
- *
- *
+ * TODO: Reorganise this class to be a little less klunky.
  */
 public final class Transformer {
 
@@ -49,6 +48,158 @@ public final class Transformer {
 
     TransformException(String message) {
       super(message);
+    }
+
+  }
+
+  private static abstract class AnnotationTracker {
+
+    final Map<String, ValueUpdate> active = new HashMap<String, ValueUpdate>();
+    private final List<AnnotationBoundaryMap> maps = new ArrayList<AnnotationBoundaryMap>();
+    private final AnnotationProcessor processor;
+
+    AnnotationTracker(AnnotationProcessor processor) {
+      this.processor = processor;
+    }
+
+    final void buffer(AnnotationBoundaryMap map) {
+      maps.add(map);
+    }
+
+    final void flush() {
+      processAll();
+    }
+
+    final void sync() {
+      processor.sync();
+    }
+
+    final void startDeletion() {
+      opposingTracker().processAll();
+      processor.cursor.annotationBoundary(opposingTracker().processor.toSynced(processor.active));
+    }
+
+    final void endDeletion() {
+      processor.cursor.annotationBoundary(opposingTracker().processor.fromSynced(processor.active));
+    }
+
+    final void processAll() {
+      for (AnnotationBoundaryMap map : maps) {
+        process(map);
+      }
+      maps.clear();
+    }
+
+    private final void process(AnnotationBoundaryMap map) {
+      for (int i = 0; i < map.endSize(); ++i) {
+        active.remove(map.getEndKey(i));
+      }
+      for (int i = 0; i < map.changeSize(); ++i) {
+        active.put(map.getChangeKey(i), new ValueUpdate(map.getOldValue(i), map.getNewValue(i)));
+      }
+      processUpdate(map);
+    }
+
+    abstract void processUpdate(AnnotationBoundaryMap map);
+
+    abstract AnnotationTracker opposingTracker();
+
+  }
+
+  private static final class AnnotationProcessor {
+
+    final DocOpCursor cursor;
+    private final Map<String, ValueUpdate> active = new HashMap<String, ValueUpdate>();
+    private final Map<String, ValueUpdate> unsynced = new HashMap<String, ValueUpdate>();
+
+    AnnotationProcessor(DocOpCursor cursor) {
+      this.cursor = cursor;
+    }
+
+    void process(AnnotationBoundaryMap map) {
+      for (int i = 0; i < map.endSize(); ++i) {
+        String key = map.getEndKey(i);
+        if (!unsynced.containsKey(key)) {
+          unsynced.put(key, active.get(key));
+        }
+        active.remove(key);
+      }
+      for (int i = 0; i < map.changeSize(); ++i) {
+        String key = map.getChangeKey(i);
+        if (!unsynced.containsKey(key)) {
+          unsynced.put(key, active.get(key));
+        }
+        active.put(key, new ValueUpdate(map.getOldValue(i), map.getNewValue(i)));
+      }
+      cursor.annotationBoundary(map);
+    }
+
+    void sync() {
+      unsynced.clear();
+    }
+
+    AnnotationBoundaryMap toSynced(Map<String, ValueUpdate> toCombine) {
+      // TODO: This seems pretty awkward. Perhaps we should give
+      // AnnotationBoundaryMapImpl an easier builder to use.
+      List<String> changeKeys = new ArrayList<String>();
+      List<String> changeOldValues = new ArrayList<String>();
+      List<String> changeNewValues = new ArrayList<String>();
+      for (Map.Entry<String, ValueUpdate> entry : unsynced.entrySet()) {
+        String key = entry.getKey();
+        ValueUpdate values = entry.getValue();
+        if (values == null) {
+          ValueUpdate update = active.get(key);
+          if (update != null) {
+            ValueUpdate forCombining = toCombine.get(key);
+            changeKeys.add(key);
+            changeOldValues.add((forCombining != null) ? forCombining.oldValue : update.newValue);
+            changeNewValues.add(update.oldValue);
+          }
+        } else {
+          ValueUpdate forCombining = toCombine.get(key);
+          changeKeys.add(key);
+          if (forCombining != null) {
+            changeOldValues.add(forCombining.oldValue);
+          } else {
+            ValueUpdate update = active.get(key);
+            changeOldValues.add((update != null) ? update.newValue : values.oldValue);
+          }
+          changeNewValues.add(values.newValue);
+        }
+      }
+      return new AnnotationBoundaryMapImpl(
+          new String[0],
+          changeKeys.toArray(new String[0]),
+          changeOldValues.toArray(new String[0]),
+          changeNewValues.toArray(new String[0]));
+    }
+
+    AnnotationBoundaryMap fromSynced(Map<String, ValueUpdate> toCombine) {
+      // TODO: This seems pretty awkward. Perhaps we should give
+      // AnnotationBoundaryMapImpl an easier builder to use.
+      List<String> endKeys = new ArrayList<String>();
+      List<String> changeKeys = new ArrayList<String>();
+      List<String> changeOldValues = new ArrayList<String>();
+      List<String> changeNewValues = new ArrayList<String>();
+      for (Map.Entry<String, ValueUpdate> entry : unsynced.entrySet()) {
+        String key = entry.getKey();
+        ValueUpdate values = entry.getValue();
+        if (values != null || active.containsKey(key)) {
+          ValueUpdate update = toCombine.get(key);
+          if (update != null) {
+            changeKeys.add(key);
+            changeOldValues.add(update.oldValue);
+            changeNewValues.add(update.newValue);
+          } else {
+            endKeys.add(key);
+          }
+        }
+      }
+      return new AnnotationBoundaryMapImpl(
+          endKeys.toArray(new String[0]),
+          changeKeys.toArray(new String[0]),
+          changeOldValues.toArray(new String[0]),
+          changeNewValues.toArray(new String[0]));
     }
 
   }
@@ -169,7 +320,7 @@ public final class Transformer {
    */
   private static final class DeleteCharactersResolver implements RangeResolver {
 
-    private String characters;
+    private final String characters;
 
     DeleteCharactersResolver(String characters) {
       this.characters = characters;
@@ -178,7 +329,6 @@ public final class Transformer {
     @Override
     public void resolve(int size, RangeCache range) {
       range.resolveDeleteCharacters(characters.substring(0, size));
-      characters = characters.substring(size);
     }
 
   }
@@ -283,13 +433,13 @@ public final class Transformer {
 
       @Override
       void resolveRetain(int itemCount) {
-        // TODO: We should fix annotations so that they work here.
-        targetDocument.deleteCharacters(characters.substring(0, itemCount));
+        doDeleteCharacters(characters.substring(0, itemCount));
         characters = characters.substring(itemCount);
       }
 
       @Override
       void resolveDeleteCharacters(String characters) {
+        dualDeletion();
         this.characters = this.characters.substring(characters.length());
       }
 
@@ -307,28 +457,26 @@ public final class Transformer {
 
       @Override
       void resolveRetain(int itemCount) {
-        // TODO: We should fix annotations so that they work here.
-        targetDocument.deleteElementStart(type, attributes);
+        doDeleteElementStart(type, attributes);
         ++depth;
       }
 
       @Override
       void resolveDeleteElementStart(String type, Attributes attributes) {
+        dualDeletion();
         ++depth;
         ++otherTarget.depth;
       }
 
       @Override
       void resolveReplaceAttributes(Attributes oldAttributes, Attributes newAttributes) {
-        // TODO: We should fix annotations so that they work here.
-        targetDocument.deleteElementStart(type, newAttributes);
+        doDeleteElementStart(type, newAttributes);
         ++depth;
       }
 
       @Override
       void resolveUpdateAttributes(AttributesUpdate update) {
-        // TODO: We should fix annotations so that they work here.
-        targetDocument.deleteElementStart(type, attributes.updateWith(update));
+        doDeleteElementStart(type, attributes.updateWith(update));
         ++depth;
       }
 
@@ -338,13 +486,13 @@ public final class Transformer {
 
       @Override
       void resolveRetain(int itemCount) {
-        // TODO: We should fix annotations so that they work here.
-        targetDocument.deleteElementEnd();
+        doDeleteElementEnd();
         --depth;
       }
 
       @Override
       void resolveDeleteElementEnd() {
+        dualDeletion();
         --depth;
         --otherTarget.depth;
       }
@@ -370,8 +518,7 @@ public final class Transformer {
 
       @Override
       void resolveDeleteElementStart(String type, Attributes attributes) {
-        // TODO: We should fix annotations so that they work here.
-        otherTarget.targetDocument.deleteElementStart(type, newAttributes);
+        otherTarget.doDeleteElementStart(type, newAttributes);
         ++otherTarget.depth;
       }
 
@@ -408,8 +555,7 @@ public final class Transformer {
 
       @Override
       void resolveDeleteElementStart(String type, Attributes attributes) {
-        // TODO: We should fix annotations so that they work here.
-        otherTarget.targetDocument.deleteElementStart(type, attributes.updateWith(update));
+        otherTarget.doDeleteElementStart(type, attributes.updateWith(update));
         ++otherTarget.depth;
       }
 
@@ -459,21 +605,18 @@ public final class Transformer {
 
       @Override
       void resolveDeleteCharacters(String characters) {
-        // TODO: We should fix annotations so that they work here.
-        otherTarget.targetDocument.deleteCharacters(characters);
+        otherTarget.doDeleteCharacters(characters);
       }
 
       @Override
       void resolveDeleteElementStart(String type, Attributes attributes) {
-        // TODO: We should fix annotations so that they work here.
-        otherTarget.targetDocument.deleteElementStart(type, attributes);
+        otherTarget.doDeleteElementStart(type, attributes);
         ++otherTarget.depth;
       }
 
       @Override
       void resolveDeleteElementEnd() {
-        // TODO: We should fix annotations so that they work here.
-        otherTarget.targetDocument.deleteElementEnd();
+        otherTarget.doDeleteElementEnd();
         --otherTarget.depth;
       }
 
@@ -509,10 +652,10 @@ public final class Transformer {
     private final RelativePosition relativePosition;
 
     /**
-     * An annotation queue that tracks annotation modifications at the current
+     * An annotation tracker that tracks annotation modifications at the current
      * cursor position.
      */
-    private final AnnotationQueue annotationQueue;
+    private final AnnotationTracker annotationTracker;
 
     /**
      * The target that is used opposite this target in the transformation.
@@ -530,10 +673,10 @@ public final class Transformer {
     private int depth = 0;
 
     Target(EvaluatingDocOpCursor<BufferedDocOp> targetDocument, RelativePosition relativePosition,
-        AnnotationQueue annotationQueue) {
+        AnnotationTracker annotationTracker) {
       this.targetDocument = targetDocument;
       this.relativePosition = relativePosition;
-      this.annotationQueue = annotationQueue;
+      this.annotationTracker = annotationTracker;
     }
 
     // TODO: See if we can remove this explicit method and find a
@@ -543,7 +686,7 @@ public final class Transformer {
     }
 
     public BufferedDocOp finish() {
-      annotationQueue.flush();
+      annotationTracker.flush();
       return targetDocument.finish();
     }
 
@@ -555,10 +698,12 @@ public final class Transformer {
 
     @Override
     public void characters(String chars) {
-      annotationQueue.flush();
       if (otherTarget.depth > 0) {
+        otherTarget.annotationTracker.startDeletion();
         otherTarget.targetDocument.deleteCharacters(chars);
+        otherTarget.annotationTracker.endDeletion();
       } else {
+        prepareForInsertion();
         targetDocument.characters(chars);
         otherTarget.targetDocument.retain(chars.length());
       }
@@ -566,10 +711,12 @@ public final class Transformer {
 
     @Override
     public void elementStart(String tag, Attributes attrs) {
-      annotationQueue.flush();
       if (otherTarget.depth > 0) {
+        otherTarget.annotationTracker.startDeletion();
         otherTarget.targetDocument.deleteElementStart(tag, attrs);
+        otherTarget.annotationTracker.endDeletion();
       } else {
+        prepareForInsertion();
         targetDocument.elementStart(tag, attrs);
         otherTarget.targetDocument.retain(1);
       }
@@ -577,10 +724,12 @@ public final class Transformer {
 
     @Override
     public void elementEnd() {
-      annotationQueue.flush();
       if (otherTarget.depth > 0) {
+        otherTarget.annotationTracker.startDeletion();
         otherTarget.targetDocument.deleteElementEnd();
+        otherTarget.annotationTracker.endDeletion();
       } else {
+        prepareForInsertion();
         targetDocument.elementEnd();
         otherTarget.targetDocument.retain(1);
       }
@@ -624,7 +773,7 @@ public final class Transformer {
 
     @Override
     public void annotationBoundary(AnnotationBoundaryMap map) {
-      annotationQueue.queue(map);
+      annotationTracker.buffer(map);
     }
 
     /**
@@ -650,8 +799,45 @@ public final class Transformer {
     }
 
     private void flushAnnotations() {
-      annotationQueue.flush();
-      otherTarget.annotationQueue.flush();
+      annotationTracker.flush();
+      otherTarget.annotationTracker.flush();
+      annotationTracker.sync();
+      otherTarget.annotationTracker.sync();
+    }
+
+    private void doDeleteCharacters(String chars) {
+      annotationTracker.flush();
+      annotationTracker.sync();
+      annotationTracker.startDeletion();
+      targetDocument.deleteCharacters(chars);
+      annotationTracker.endDeletion();
+    }
+
+    private void doDeleteElementStart(String type, Attributes attrs) {
+      annotationTracker.flush();
+      annotationTracker.sync();
+      annotationTracker.startDeletion();
+      targetDocument.deleteElementStart(type, attrs);
+      annotationTracker.endDeletion();
+    }
+
+    private void doDeleteElementEnd() {
+      annotationTracker.flush();
+      annotationTracker.sync();
+      annotationTracker.startDeletion();
+      targetDocument.deleteElementEnd();
+      annotationTracker.endDeletion();
+    }
+
+    private void prepareForInsertion() {
+      annotationTracker.flush();
+      annotationTracker.sync();
+      otherTarget.annotationTracker.sync();
+    }
+
+    private void dualDeletion() {
+      annotationTracker.processAll();
+      otherTarget.annotationTracker.processAll();
     }
 
   }
@@ -661,126 +847,126 @@ public final class Transformer {
   private final EvaluatingDocOpCursor<BufferedDocOp> serverOperation =
       OperationNormalizer.createNormalizer(new BufferedDocOpImpl.DocOpBuilder());
 
-  /**
-   * The currently active client annotations. This maps keys to pairs
-   * representing the old annotation value and the new annotation value.
-   */
-  private final Map<String, Pair<String, String>> clientAnnotations =
-      new HashMap<String, Pair<String, String>>();
+  private final AnnotationProcessor clientAnnotationProcessor =
+      new AnnotationProcessor(clientOperation);
 
-  /**
-   * The currently active server annotations. This maps keys to pairs
-   * representing the old annotation value and the new annotation value.
-   */
-  private final Map<String, Pair<String, String>> serverAnnotations =
-      new HashMap<String, Pair<String, String>>();
+  private final AnnotationProcessor serverAnnotationProcessor =
+      new AnnotationProcessor(serverOperation);
 
-  private final AnnotationQueue clientAnnotationQueue = new AnnotationQueue() {
+  private final AnnotationTracker clientAnnotationTracker =
+      new AnnotationTracker(clientAnnotationProcessor) {
 
     @Override
-    void unqueue(AnnotationBoundaryMap map) {
+    void processUpdate(AnnotationBoundaryMap map) {
       // TODO: This seems pretty awkward. Perhaps we should give
       // AnnotationBoundaryMapImpl an easier builder to use.
+      List<String> clientEndKeys = new ArrayList<String>();
       List<String> clientChangeKeys = new ArrayList<String>();
       List<String> clientChangeOldValues = new ArrayList<String>();
       List<String> clientChangeNewValues = new ArrayList<String>();
-      List<String> clientEndKeys = new ArrayList<String>();
+      List<String> serverEndKeys = new ArrayList<String>();
       List<String> serverChangeKeys = new ArrayList<String>();
       List<String> serverChangeOldValues = new ArrayList<String>();
       List<String> serverChangeNewValues = new ArrayList<String>();
-      List<String> serverEndKeys = new ArrayList<String>();
+      for (int i = 0; i < map.endSize(); ++i) {
+        String key = map.getEndKey(i);
+        ValueUpdate serverValues = serverAnnotationTracker.active.get(key);
+        clientEndKeys.add(key);
+        if (serverValues != null) {
+          serverChangeKeys.add(key);
+          serverChangeOldValues.add(serverValues.oldValue);
+          serverChangeNewValues.add(serverValues.newValue);
+        }
+      }
       for (int i = 0; i < map.changeSize(); ++i) {
         String key = map.getChangeKey(i);
         String oldValue = map.getOldValue(i);
         String newValue = map.getNewValue(i);
-        Pair<String, String> serverValues = serverAnnotations.get(key);
+        ValueUpdate serverValues = serverAnnotationTracker.active.get(key);
         clientChangeKeys.add(key);
         clientChangeNewValues.add(newValue);
         if (serverValues != null) {
-          clientChangeOldValues.add(serverValues.second);
+          clientChangeOldValues.add(serverValues.newValue);
           serverEndKeys.add(key);
         } else {
           clientChangeOldValues.add(oldValue);
         }
-        clientAnnotations.put(key, new Pair<String, String>(oldValue, newValue));
       }
-      for (int i = 0; i < map.endSize(); ++i) {
-        String key = map.getEndKey(i);
-        Pair<String, String> serverValues = serverAnnotations.get(key);
-        clientEndKeys.add(key);
-        if (serverValues != null) {
-          serverChangeKeys.add(key);
-          serverChangeOldValues.add(serverValues.first);
-          serverChangeNewValues.add(serverValues.second);
-        }
-        clientAnnotations.remove(key);
-      }
-      clientOperation.annotationBoundary(new AnnotationBoundaryMapImpl(
+      clientAnnotationProcessor.process(new AnnotationBoundaryMapImpl(
           clientEndKeys.toArray(new String[0]),
           clientChangeKeys.toArray(new String[0]),
           clientChangeOldValues.toArray(new String[0]),
           clientChangeNewValues.toArray(new String[0])));
-      serverOperation.annotationBoundary(new AnnotationBoundaryMapImpl(
+      serverAnnotationProcessor.process(new AnnotationBoundaryMapImpl(
           serverEndKeys.toArray(new String[0]),
           serverChangeKeys.toArray(new String[0]),
           serverChangeOldValues.toArray(new String[0]),
           serverChangeNewValues.toArray(new String[0])));
     }
 
+    @Override
+    AnnotationTracker opposingTracker() {
+      return serverAnnotationTracker;
+    }
+
   };
 
-  private final AnnotationQueue serverAnnotationQueue = new AnnotationQueue() {
+  private final AnnotationTracker serverAnnotationTracker =
+      new AnnotationTracker(serverAnnotationProcessor) {
 
     @Override
-    void unqueue(AnnotationBoundaryMap map) {
+    void processUpdate(AnnotationBoundaryMap map) {
       // TODO: This seems pretty awkward. Perhaps we should give
       // AnnotationBoundaryMapImpl an easier builder to use.
+      List<String> serverEndKeys = new ArrayList<String>();
       List<String> serverChangeKeys = new ArrayList<String>();
       List<String> serverChangeOldValues = new ArrayList<String>();
       List<String> serverChangeNewValues = new ArrayList<String>();
-      List<String> serverEndKeys = new ArrayList<String>();
+      List<String> clientEndKeys = new ArrayList<String>();
       List<String> clientChangeKeys = new ArrayList<String>();
       List<String> clientChangeOldValues = new ArrayList<String>();
       List<String> clientChangeNewValues = new ArrayList<String>();
-      List<String> clientEndKeys = new ArrayList<String>();
+      for (int i = 0; i < map.endSize(); ++i) {
+        String key = map.getEndKey(i);
+        ValueUpdate clientValues = clientAnnotationTracker.active.get(key);
+        if (clientValues != null) {
+          clientChangeKeys.add(key);
+          clientChangeOldValues.add(clientValues.oldValue);
+          clientChangeNewValues.add(clientValues.newValue);
+        } else {
+          serverEndKeys.add(key);
+        }
+      }
       for (int i = 0; i < map.changeSize(); ++i) {
         String key = map.getChangeKey(i);
         String oldValue = map.getOldValue(i);
         String newValue = map.getNewValue(i);
-        Pair<String, String> clientValues = clientAnnotations.get(key);
+        ValueUpdate clientValues = clientAnnotationTracker.active.get(key);
         if (clientValues != null) {
           clientChangeKeys.add(key);
           clientChangeOldValues.add(newValue);
-          clientChangeNewValues.add(clientValues.second);
+          clientChangeNewValues.add(clientValues.newValue);
         } else {
           serverChangeKeys.add(key);
           serverChangeOldValues.add(oldValue);
           serverChangeNewValues.add(newValue);
         }
-        serverAnnotations.put(key, new Pair<String, String>(oldValue, newValue));
       }
-      for (int i = 0; i < map.endSize(); ++i) {
-        String key = map.getEndKey(i);
-        Pair<String, String> clientValues = clientAnnotations.get(key);
-        if (clientValues != null) {
-          clientChangeKeys.add(key);
-          clientChangeOldValues.add(clientValues.first);
-          clientChangeNewValues.add(clientValues.second);
-        } else {
-          serverEndKeys.add(key);
-        }
-        serverAnnotations.remove(key);
-      }
-      serverOperation.annotationBoundary(new AnnotationBoundaryMapImpl(
+      serverAnnotationProcessor.process(new AnnotationBoundaryMapImpl(
           serverEndKeys.toArray(new String[0]),
           serverChangeKeys.toArray(new String[0]),
           serverChangeOldValues.toArray(new String[0]),
           serverChangeNewValues.toArray(new String[0])));
-      clientOperation.annotationBoundary(new AnnotationBoundaryMapImpl(
+      clientAnnotationProcessor.process(new AnnotationBoundaryMapImpl(
           clientEndKeys.toArray(new String[0]),
           clientChangeKeys.toArray(new String[0]),
           clientChangeOldValues.toArray(new String[0]),
           clientChangeNewValues.toArray(new String[0])));
+    }
+
+    @Override
+    AnnotationTracker opposingTracker() {
+      return clientAnnotationTracker;
     }
 
   };
@@ -803,14 +989,13 @@ public final class Transformer {
       RelativePosition serverPosition = positionTracker.getServerPosition();
 
       // The target responsible for processing components of the client operation.
-      Target clientTarget = new Target(clientOperation, clientPosition, clientAnnotationQueue);
+      Target clientTarget = new Target(clientOperation, clientPosition, clientAnnotationTracker);
 
       // The target responsible for processing components of the server operation.
-      Target serverTarget = new Target(serverOperation, serverPosition, serverAnnotationQueue);
+      Target serverTarget = new Target(serverOperation, serverPosition, serverAnnotationTracker);
 
       clientTarget.setOtherTarget(serverTarget);
       serverTarget.setOtherTarget(clientTarget);
-
 
       // Incrementally apply the two operations in a linearly-ordered interleaving
       // fashion.
