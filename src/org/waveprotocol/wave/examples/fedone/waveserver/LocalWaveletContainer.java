@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
@@ -43,9 +45,10 @@ interface LocalWaveletContainer extends WaveletContainer {
    * @return result of application to the wavelet, both the applied result and the transformed
    *         result.
    * @throws OperationException
-   * @throws AccessControlException
+   * @throws InvalidProtocolBufferException
+   * @throws InvalidHashException
    */
   public DeltaApplicationResult submitRequest(
       WaveletName waveletName, ProtocolSignedDelta delta) throws OperationException,
-      AccessControlException, WaveletStateException;
+      WaveletStateException, InvalidProtocolBufferException, InvalidHashException;
 }

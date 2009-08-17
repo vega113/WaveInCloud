@@ -22,6 +22,8 @@ import com.google.protobuf.ByteString;
 
 import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
 import org.waveprotocol.wave.examples.fedone.crypto.SignerInfo;
+import org.waveprotocol.wave.examples.fedone.crypto.UnknownSignerException;
+import org.waveprotocol.wave.examples.fedone.crypto.WaveSigner;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
@@ -39,20 +41,29 @@ public interface CertificateManager {
   Set<String> getLocalDomains();
 
   /**
+   * @return the signer info for the local wave signer.
+   */
+  WaveSigner getLocalSigner();
+
+  /**
    * Verify the signature in the Signed Delta. Use the local WSP's certificate
    * to sign the delta.
+   *
+   * @param delta as a byte string (the canonical representation of a ProtocolWaveletDelta)
+   * @return signed delta
    */
-  ProtocolSignedDelta signDelta(ProtocolWaveletDelta delta);
+  ProtocolSignedDelta signDelta(ByteStringMessage<ProtocolWaveletDelta> delta);
 
   /**
    * Verify the signature in the Signed Delta. Use the delta's author's WSP
    * address to identify the certificate.
    *
+   * @param signedDelta to verify
+   * @return verified canonical ProtocolWaveletDelta, if signatures can be verified
    * @throws SignatureException if the signatures cannot be verified.
    */
-  ProtocolWaveletDelta verifyDelta(ProtocolSignedDelta signedDelta)
-      throws SignatureException;
-
+  ByteStringMessage<ProtocolWaveletDelta> verifyDelta(ProtocolSignedDelta signedDelta)
+      throws SignatureException, UnknownSignerException;
 
   /**
    * Stores information about a signer (i.e., its certificate chain) in a

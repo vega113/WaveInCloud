@@ -194,7 +194,7 @@ message ProtocolAppliedWaveletDelta {
  * A delta signed with a number of domain signatures.
  */
 message ProtocolSignedDelta {
-  required ProtocolWaveletDelta delta = 1;
+  required bytes delta = 1;
   repeated ProtocolSignature signature = 2;
 }
 

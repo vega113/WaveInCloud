@@ -19,8 +19,7 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.UnknownFieldSet;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
@@ -34,7 +33,6 @@ import org.waveprotocol.wave.model.operation.Transform;
 import org.waveprotocol.wave.model.operation.TransformException;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
@@ -60,7 +58,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   /**
    * A wavelet delta with a target hashed version.
    */
-  private static final class VersionedWaveletDelta {
+  protected static final class VersionedWaveletDelta {
     public final WaveletDelta delta;
     public final HashedVersion version;
 
@@ -72,11 +70,10 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   private static final Log LOG = Log.get(WaveletContainerImpl.class);
 
-  private static final HashedVersionFactory HASHED_HISTORY_VERSION_FACTORY =
+  protected static final HashedVersionFactory HASHED_HISTORY_VERSION_FACTORY =
       new HashedVersionFactoryImpl();
 
-  // TODDO(jochen,soren): replace the appliedDeltas NavigableSet with byte[] list.
-  protected final NavigableSet<ProtocolAppliedWaveletDelta> appliedDeltas;
+  protected final NavigableSet<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas;
   protected final NavigableSet<ProtocolWaveletDelta> transformedDeltas;
   protected final NavigableSet<VersionedWaveletDelta> deserializedTransformedDeltas;
   private final Lock readLock;
@@ -122,15 +119,20 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   /** A comparator to be used in a TreeSet for applied deltas. */
-  protected static final Comparator<ProtocolAppliedWaveletDelta> appliedDeltaComparator =
-      new Comparator<ProtocolAppliedWaveletDelta>() {
+  protected static final Comparator<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltaComparator =
+      new Comparator<ByteStringMessage<ProtocolAppliedWaveletDelta>>() {
         @Override
-        public int compare(ProtocolAppliedWaveletDelta first, ProtocolAppliedWaveletDelta second) {
+        public int compare(ByteStringMessage<ProtocolAppliedWaveletDelta> first,
+            ByteStringMessage<ProtocolAppliedWaveletDelta> second) {
           if (first == null && second != null) { return -1; }
           if (first != null && second == null) { return 1; }
           if (first == null && second == null) { return 0; }
-          return Long.valueOf(getVersionAppliedAt(first).getVersion()).compareTo(
-              getVersionAppliedAt(second).getVersion());
+          try {
+            return Long.valueOf(getVersionAppliedAt(first.getMessage()).getVersion()).compareTo(
+                getVersionAppliedAt(second.getMessage()).getVersion());
+          } catch (InvalidProtocolBufferException e) {
+            throw new IllegalStateException("Invalid applied delta added to history", e);
+          }
         }
       };
 
@@ -152,13 +154,15 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * Return a dummy ProtocolAppliedWaveleetDelta instance used as a range
    * boundary.
    */
-  private static ProtocolAppliedWaveletDelta emptyAppliedDeltaAtVersion(final long version) {
-    return ProtocolAppliedWaveletDelta.newBuilder()
+  private static ByteStringMessage<ProtocolAppliedWaveletDelta> emptyAppliedDeltaAtVersion(
+      final long version) {
+    ProtocolAppliedWaveletDelta delta = ProtocolAppliedWaveletDelta.newBuilder()
         .setApplicationTimestamp(0)
         .setOperationsApplied(0)
         .setSignedOriginalDelta(ProtocolSignedDelta.newBuilder()
-             .setDelta(emptyDeltaAtVersion(version))
+             .setDelta(emptyDeltaAtVersion(version).toByteString())
         ).build();
+    return ByteStringMessage.fromMessage(delta);
   }
 
   /**
@@ -169,10 +173,15 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * @param appliedDelta the delta to examine
    * @return the hashed version applied at
    */
-  private static ProtocolHashedVersion getVersionAppliedAt(
-      final ProtocolAppliedWaveletDelta appliedDelta) {
-    return appliedDelta.hasHashedVersionAppliedAt() ? appliedDelta.getHashedVersionAppliedAt()
-        : appliedDelta.getSignedOriginalDelta().getDelta().getHashedVersion();
+  protected static ProtocolHashedVersion getVersionAppliedAt(
+      final ProtocolAppliedWaveletDelta appliedDelta) throws InvalidProtocolBufferException {
+    if (appliedDelta.hasHashedVersionAppliedAt()) {
+      return appliedDelta.getHashedVersionAppliedAt();
+    } else {
+      ProtocolSignedDelta signedDelta = appliedDelta.getSignedOriginalDelta();
+      ProtocolWaveletDelta delta = ProtocolWaveletDelta.parseFrom(signedDelta.getDelta());
+      return delta.getHashedVersion();
+    }
   }
 
   /**
@@ -261,136 +270,85 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     }
   }
 
-
-
   @Override
   public WaveletData getWaveletData() {
     return waveletData;
   }
 
   /**
-   * This assumes the caller has validated that the delta is at the correct
-   * version and can be applied to the wavelet. Must be called with writelock
-   * held.
-   * 
-   * @param signedDelta the delta that is to be applied to wavelet.
-   * @param applicationTimestamp either the current time (for local wavelets) or
-   *        the time included with the applied delta (for remote wavelets)
-   * @return transformed operations are applied to this delta.
-   * @throws OperationException if an error occurs during transformation or
-   *         application
-   * @throws AccessControlException if the supplied Delta's historyHash does not
-   *         match the canonical history.
-   * 
-   * @throws OperationException
+   * Transform a wavelet delta if it has been submitted against a different head (currentVersion).
+   * Must be called with write lock held.
+   *
+   * @param delta to possibly transform
+   * @param appliedVersion that the delta is applied to
+   * @return transformed ops if OT was performed, null otherwise
+   * @throws InvalidHashException if submitting against same version but different hash
+   * @throws OperationException if transformation fails
    */
-  protected DeltaApplicationResult transformAndApplyDelta(ProtocolSignedDelta signedDelta,
-      long applicationTimestamp)
-    throws OperationException, AccessControlException {
-
-    ProtocolWaveletDelta submittedDelta = signedDelta.getDelta();
-    List<WaveletOperation> transformedClientOps;
-
-    if (submittedDelta.getHashedVersion().getVersion() == currentVersion.getVersion()) {
-
-      Pair<WaveletDelta, HashedVersion> clientDeltaAndVersion =
-        WaveletOperationSerializer.deserialize(submittedDelta);
-
-      // TODO(jochen): convert this to use a byte array.
-      // We don't need to transform, so confirm that the hash submitted at is
-      // the hash we expect.
-      if (!currentVersion.equals(clientDeltaAndVersion.second)) {
-        LOG.warning("Mismatched hashes: expected " + currentVersion +
-            " got: " + clientDeltaAndVersion.second);
-        // TODO(thorogood): Mark wave as corrupted if it is a remote wavelet?
-        throw new AccessControlException("Mismatched hashes at version number: " +
-            clientDeltaAndVersion.second.getVersion());
-      }
-
-      // No need to transform if submitting against head.
-      transformedClientOps = clientDeltaAndVersion.first.getOperations();
+  protected List<WaveletOperation> maybeTransformSubmittedDelta(WaveletDelta delta,
+      HashedVersion appliedVersion) throws InvalidHashException, OperationException {
+    if (appliedVersion.equals(currentVersion)) {
+      // Applied version is the same, we're submitting against head, don't need to do OT
+      return null;
     } else {
-      transformedClientOps = transformSubmittedDelta(signedDelta);
+      // Not submitting against head, we need to do OT, but check the versions really are different
+      if (appliedVersion.getVersion() != currentVersion.getVersion()) {
+        LOG.warning("Same version (" + currentVersion.getVersion() + ") but different hashes (" +
+            appliedVersion + "/" + currentVersion + ")");
+        throw new InvalidHashException("Different hash, same version: "
+            + currentVersion.getVersion());
+      } else {
+        return transformSubmittedDelta(delta, appliedVersion);
+      }
     }
+  }
 
-    // If we get here with no exceptions, the entire delta was transformed successfully.
-    int applied = 0;
-    String error = null;
+  /**
+   * Apply a list of operations to the wavelet container.
+   *
+   * @param ops to apply
+   * @return the number of ops that were successfully applied
+   */
+  protected int applyWaveletOperations(List<WaveletOperation> ops) {
+    // If we get here with no exceptions, the entire delta was transformed successfully
+    int opsApplied = 0;
     try {
-      for (WaveletOperation op : transformedClientOps) {
+      for (WaveletOperation op : ops) {
         op.apply(waveletData);
-        applied += 1; // Single ops are only of length one.
+        opsApplied++;
       }
     } catch (OperationException e) {
-      error = e.getMessage();
+      // Remove any ops that weren't successfully applied before creating transformed delta
+      LOG.warning(opsApplied + "/" + ops.size() + " ops were applied", e);
     }
-
-    // Remove any ops that weren't successfully applied before creating transformed delta
-    if (applied != transformedClientOps.size()) {
-      LOG.warning(String.format("%d/%d ops were applied", applied, transformedClientOps.size()));
-      transformedClientOps = transformedClientOps.subList(0, applied);
-    }
-
-    WaveletDelta transformedDelta = new WaveletDelta(new ParticipantId(submittedDelta.getAuthor()),
-        transformedClientOps);
-
-    // Serialize applied delta with the old "current" version.
-    ProtocolWaveletDelta protocolDelta = WaveletOperationSerializer.serialize(transformedDelta,
-        currentVersion);
-    ProtocolAppliedWaveletDelta appliedDelta = ProtocolAppliedWaveletDelta.newBuilder()
-        .setSignedOriginalDelta(signedDelta)
-        .setHashedVersionAppliedAt(protocolDelta.getHashedVersion())
-        .setOperationsApplied(applied)
-        .setApplicationTimestamp(applicationTimestamp).build();
-
-    byte[] binaryDelta = getCanonicalEncoding(appliedDelta);
-
-    // Update current version.
-    HashedVersion oldVersion = currentVersion;
-    currentVersion = HASHED_HISTORY_VERSION_FACTORY.create(binaryDelta, currentVersion,
-        appliedDelta.getOperationsApplied());
-
-    appliedDeltas.add(appliedDelta);
-    transformedDeltas.add(protocolDelta);
-    deserializedTransformedDeltas.add(new VersionedWaveletDelta(transformedDelta, oldVersion));
-
-    return new DeltaApplicationResult(appliedDelta,
-                                      ByteString.copyFrom(binaryDelta),
-                                      protocolDelta,
-                                      WaveletOperationSerializer.serialize(currentVersion),
-                                      error);
+    return opsApplied;
   }
 
   /**
    * Finds range of server deltas needed to transform against, then transforms all client
    * ops against the server ops.
    */
-  private List<WaveletOperation> transformSubmittedDelta(ProtocolSignedDelta signedDelta)
-      throws AccessControlException, OperationException {
-    ProtocolWaveletDelta submittedDelta = signedDelta.getDelta();
-    Pair<WaveletDelta, HashedVersion> clientDeltaAndVersion =
-        WaveletOperationSerializer.deserialize(submittedDelta);
-    HashedVersion clientVersion = clientDeltaAndVersion.second;
+  private List<WaveletOperation> transformSubmittedDelta(WaveletDelta submittedDelta,
+      HashedVersion appliedVersion) throws OperationException, InvalidHashException {
 
-    List<WaveletOperation> clientOps = clientDeltaAndVersion.first.getOperations();
+    List<WaveletOperation> clientOps = submittedDelta.getOperations();
 
     NavigableSet<VersionedWaveletDelta> serverDeltas = deserializedTransformedDeltas.tailSet(
         deserializedTransformedDeltas.floor(emptyDeserializedDeltaAtVersion(
-            clientVersion.getVersion())),true);
+            appliedVersion.getVersion())),true);
 
     if (serverDeltas.size() == 0) {
-      LOG.warning("Got empty server set, but not sumbitting to head! " + signedDelta);
-      throw new AccessControlException("Invalid delta, couldn't submit.");
+      LOG.warning("Got empty server set, but not sumbitting to head! " + submittedDelta);
+      // Not strictly an invalid hash, but it's a related issue
+      throw new InvalidHashException("Cannot submit to head");
     }
 
     // Confirm that the target version/hash of this delta is valid.
-    if (!serverDeltas.first().version.equals(clientVersion)) {
+    if (!serverDeltas.first().version.equals(appliedVersion)) {
       LOG.warning("Mismatched hashes: expected: " + serverDeltas.first().version +
-          " got: " + clientVersion);
-      // TODO(thorogood): Mark wave as corrupted if it is a remote wavelet?
+          " got: " + appliedVersion);
       // Don't leak the hash to the client in the error message.
-      throw new AccessControlException("Mismatched hashes at version number: " +
-          clientVersion.getVersion());
+      throw new InvalidHashException("Mismatched hashes at version " + appliedVersion.getVersion());
     }
 
     List<WaveletOperation> serverOps = new ArrayList<WaveletOperation>();
@@ -432,17 +390,33 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     return transformedClientOps;
   }
 
-  /** Returns the canonical encoding of an applied delta. */
-  private byte[] getCanonicalEncoding(ProtocolAppliedWaveletDelta delta) {
-    ProtocolAppliedWaveletDelta.Builder builder =
-        ProtocolAppliedWaveletDelta.newBuilder(delta);
-    builder.setUnknownFields(UnknownFieldSet.getDefaultInstance());
-    return builder.build().toByteArray();
+  /**
+   * Commit an applied delta to this wavelet container.
+   *
+   * @param appliedDelta to commit
+   * @param transformedDelta of the applied delta
+   * @return result of the application
+   */
+  protected DeltaApplicationResult commitAppliedDelta(
+      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
+      WaveletDelta transformedDelta) {
+
+    ProtocolWaveletDelta transformedProtocolDelta =
+      WaveletOperationSerializer.serialize(transformedDelta, currentVersion);
+    transformedDeltas.add(transformedProtocolDelta);
+    deserializedTransformedDeltas.add(new VersionedWaveletDelta(transformedDelta, currentVersion));
+    appliedDeltas.add(appliedDelta);
+
+    HashedVersion newVersion = HASHED_HISTORY_VERSION_FACTORY.create(
+        appliedDelta.getByteArray(), currentVersion, transformedDelta.getOperations().size());
+    currentVersion = newVersion;
+
+    return new DeltaApplicationResult(appliedDelta, transformedProtocolDelta,
+        WaveletOperationSerializer.serialize(newVersion));
   }
 
-
   @Override
-  public NavigableSet<ProtocolAppliedWaveletDelta> requestHistory(
+  public NavigableSet<ByteStringMessage<ProtocolAppliedWaveletDelta>> requestHistory(
       ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd)
       throws WaveletStateException {
     acquireReadLock();
@@ -451,9 +425,12 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       // TODO: ### validate requested range.
       // TODO: #### make immutable.
 
-      NavigableSet<ProtocolAppliedWaveletDelta> set = appliedDeltas.subSet(appliedDeltas.floor(emptyAppliedDeltaAtVersion(
-          versionStart.getVersion())),true, emptyAppliedDeltaAtVersion(versionEnd.getVersion()),
-          false);
+      NavigableSet<ByteStringMessage<ProtocolAppliedWaveletDelta>> set =
+          appliedDeltas.subSet(appliedDeltas.floor(
+              emptyAppliedDeltaAtVersion(versionStart.getVersion())),
+              true,
+              emptyAppliedDeltaAtVersion(versionEnd.getVersion()),
+              false);
       LOG.info("### HR " + versionStart.getVersion() + " - " + versionEnd.getVersion() + " set - " +
           set.size() + " = " + set);
       return set;

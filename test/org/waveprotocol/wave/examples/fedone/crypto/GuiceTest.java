@@ -16,7 +16,6 @@
  */
 package org.waveprotocol.wave.examples.fedone.crypto;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -25,8 +24,6 @@ import com.google.inject.name.Named;
 
 import junit.framework.TestCase;
 
-import java.util.List;
-
 public class GuiceTest extends TestCase {
 
   private static final String PATH =
@@ -34,9 +31,8 @@ public class GuiceTest extends TestCase {
 
   public void testProvisioning() throws Exception {
 
-    // make sure we can make a WaveSigner and a WaveSignatureVerifier
+    // make sure we can make a WaveSigner
     Injector injector = Guice.createInjector(new TestModule());
-    injector.getInstance(WaveSignatureVerifier.class);
     injector.getInstance(WaveSigner.class);
   }
 

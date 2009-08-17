@@ -16,20 +16,23 @@
 
 package org.waveprotocol.wave.examples.fedone.federation.xmpp;
 
+import static org.easymock.EasyMock.isA;
+import static org.easymock.classextension.EasyMock.createMock;
+import static org.easymock.classextension.EasyMock.replay;
+
+import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
+
 import junit.framework.TestCase;
 
 import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Element;
-import static org.easymock.EasyMock.isA;
-import static org.easymock.classextension.EasyMock.createMock;
-import static org.easymock.classextension.EasyMock.replay;
 import org.waveprotocol.wave.examples.fedone.federation.xmpp.XmppTestUtil.MockDisco;
 import org.waveprotocol.wave.examples.fedone.federation.xmpp.XmppTestUtil.MockWaveXmppComponent;
 import org.waveprotocol.wave.protocol.common;
 import org.xmpp.packet.IQ;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 
 /**
@@ -118,13 +121,10 @@ public class XmppFederationHostTest extends TestCase {
         instanceof XmppFederationHost.HistoryResponsePacketListener);
 
     // Now trigger the response.
-    Set<common.ProtocolAppliedWaveletDelta> deltaSet =
-        new HashSet<common.ProtocolAppliedWaveletDelta>();
-    deltaSet.add(XmppTestUtil.createTestAppliedWaveletDelta());
+    List<ByteString> deltaSet = ImmutableList.of(XmppTestUtil.createTestAppliedWaveletDelta());
 
     mockProvider.savedHistoryListener
-        .onSuccess(deltaSet, XmppTestUtil.TEST_COMMITTED,
-                   XmppTestUtil.TEST_TRUNCATED);
+        .onSuccess(deltaSet, XmppTestUtil.TEST_COMMITTED, XmppTestUtil.TEST_TRUNCATED);
 
     assertEquals(1, mockComponent.packetsSent);
 

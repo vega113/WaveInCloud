@@ -5391,12 +5391,12 @@ public final class common {
       return org.waveprotocol.wave.protocol.common.internal_static_protocol_ProtocolSignedDelta_fieldAccessorTable;
     }
     
-    // required .protocol.ProtocolWaveletDelta delta = 1;
+    // required bytes delta = 1;
     public static final int DELTA_FIELD_NUMBER = 1;
     private boolean hasDelta;
-    private org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta delta_ = org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.getDefaultInstance();
+    private com.google.protobuf.ByteString delta_ = com.google.protobuf.ByteString.EMPTY;
     public boolean hasDelta() { return hasDelta; }
-    public org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta getDelta() { return delta_; }
+    public com.google.protobuf.ByteString getDelta() { return delta_; }
     
     // repeated .protocol.ProtocolSignature signature = 2;
     public static final int SIGNATURE_FIELD_NUMBER = 2;
@@ -5413,7 +5413,6 @@ public final class common {
     @Override
     public final boolean isInitialized() {
       if (!hasDelta) return false;
-      if (!getDelta().isInitialized()) return false;
       for (org.waveprotocol.wave.protocol.common.ProtocolSignature element : getSignatureList()) {
         if (!element.isInitialized()) return false;
       }
@@ -5424,7 +5423,7 @@ public final class common {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (hasDelta()) {
-        output.writeMessage(1, getDelta());
+        output.writeBytes(1, getDelta());
       }
       for (org.waveprotocol.wave.protocol.common.ProtocolSignature element : getSignatureList()) {
         output.writeMessage(2, element);
@@ -5441,7 +5440,7 @@ public final class common {
       size = 0;
       if (hasDelta()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getDelta());
+          .computeBytesSize(1, getDelta());
       }
       for (org.waveprotocol.wave.protocol.common.ProtocolSignature element : getSignatureList()) {
         size += com.google.protobuf.CodedOutputStream
@@ -5593,7 +5592,7 @@ public final class common {
       public Builder mergeFrom(org.waveprotocol.wave.protocol.common.ProtocolSignedDelta other) {
         if (other == org.waveprotocol.wave.protocol.common.ProtocolSignedDelta.getDefaultInstance()) return this;
         if (other.hasDelta()) {
-          mergeDelta(other.getDelta());
+          setDelta(other.getDelta());
         }
         if (!other.signature_.isEmpty()) {
           if (result.signature_.isEmpty()) {
@@ -5636,12 +5635,7 @@ public final class common {
               break;
             }
             case 10: {
-              org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.Builder subBuilder = org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.newBuilder();
-              if (hasDelta()) {
-                subBuilder.mergeFrom(getDelta());
-              }
-              input.readMessage(subBuilder, extensionRegistry);
-              setDelta(subBuilder.buildPartial());
+              setDelta(input.readBytes());
               break;
             }
             case 18: {
@@ -5655,40 +5649,24 @@ public final class common {
       }
       
       
-      // required .protocol.ProtocolWaveletDelta delta = 1;
+      // required bytes delta = 1;
       public boolean hasDelta() {
         return result.hasDelta();
       }
-      public org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta getDelta() {
+      public com.google.protobuf.ByteString getDelta() {
         return result.getDelta();
       }
-      public Builder setDelta(org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta value) {
+      public Builder setDelta(com.google.protobuf.ByteString value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        result.hasDelta = true;
+    throw new NullPointerException();
+  }
+  result.hasDelta = true;
         result.delta_ = value;
-        return this;
-      }
-      public Builder setDelta(org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.Builder builderForValue) {
-        result.hasDelta = true;
-        result.delta_ = builderForValue.build();
-        return this;
-      }
-      public Builder mergeDelta(org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta value) {
-        if (result.hasDelta() &&
-            result.delta_ != org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.getDefaultInstance()) {
-          result.delta_ =
-            org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.newBuilder(result.delta_).mergeFrom(value).buildPartial();
-        } else {
-          result.delta_ = value;
-        }
-        result.hasDelta = true;
         return this;
       }
       public Builder clearDelta() {
         result.hasDelta = false;
-        result.delta_ = org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.getDefaultInstance();
+        result.delta_ = com.google.protobuf.ByteString.EMPTY;
         return this;
       }
       
@@ -6758,20 +6736,19 @@ public final class common {
       "otocol.ProtocolSignedDelta\022B\n\031hashed_ver" +
       "sion_applied_at\030\002 \001(\0132\037.protocol.Protoco" +
       "lHashedVersion\022\032\n\022operations_applied\030\003 \002" +
-      "(\005\022\035\n\025application_timestamp\030\004 \002(\003\"t\n\023Pro" +
-      "tocolSignedDelta\022-\n\005delta\030\001 \002(\0132\036.protoc" +
-      "ol.ProtocolWaveletDelta\022.\n\tsignature\030\002 \003" +
-      "(\0132\033.protocol.ProtocolSignature\"\260\001\n\021Prot" +
-      "ocolSignature\022\027\n\017signature_bytes\030\001 \002(\014\022\021" +
-      "\n\tsigner_id\030\002 \002(\014\022K\n\023signature_algorithm" +
-      "\030\003 \002(\0162..protocol.ProtocolSignature.Sign" +
-      "atureAlgorithm\"\"\n\022SignatureAlgorithm\022\014\n\010" +
-      "SHA1_RSA\020\001\"\246\001\n\022ProtocolSignerInfo\022B\n\016has" +
-      "h_algorithm\030\001 \002(\0162*.protocol.ProtocolSig" +
-      "nerInfo.HashAlgorithm\022\016\n\006domain\030\002 \002(\t\022\023\n" +
-      "\013certificate\030\003 \003(\014\"\'\n\rHashAlgorithm\022\n\n\006S" +
-      "HA256\020\001\022\n\n\006SHA512\020\002B(\n\036org.waveprotocol." +
-      "wave.protocolB\006common";
+      "(\005\022\035\n\025application_timestamp\030\004 \002(\003\"T\n\023Pro" +
+      "tocolSignedDelta\022\r\n\005delta\030\001 \002(\014\022.\n\tsigna" +
+      "ture\030\002 \003(\0132\033.protocol.ProtocolSignature\"" +
+      "\260\001\n\021ProtocolSignature\022\027\n\017signature_bytes" +
+      "\030\001 \002(\014\022\021\n\tsigner_id\030\002 \002(\014\022K\n\023signature_a" +
+      "lgorithm\030\003 \002(\0162..protocol.ProtocolSignat" +
+      "ure.SignatureAlgorithm\"\"\n\022SignatureAlgor" +
+      "ithm\022\014\n\010SHA1_RSA\020\001\"\246\001\n\022ProtocolSignerInf" +
+      "o\022B\n\016hash_algorithm\030\001 \002(\0162*.protocol.Pro" +
+      "tocolSignerInfo.HashAlgorithm\022\016\n\006domain\030" +
+      "\002 \002(\t\022\023\n\013certificate\030\003 \003(\014\"\'\n\rHashAlgori" +
+      "thm\022\n\n\006SHA256\020\001\022\n\n\006SHA512\020\002B(\n\036org.wavep" +
+      "rotocol.wave.protocolB\006common";
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(

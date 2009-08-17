@@ -16,50 +16,47 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import com.google.protobuf.ByteString;
-
 import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 /**
- * Composes a ProtocolWaveletDelta and the result of its application, a
- * ProtocolAppliedWaveletDelta.
+ * Composes a ProtocolWaveletDelta and the result of its application, the canonical representation
+ * of a {@code ProtocolAppliedWaveletDelta} as a {@code ByteStringMessage}.
  *
  *
  */
 public class DeltaApplicationResult {
 
-  private final ProtocolAppliedWaveletDelta appliedDelta;
-  private final ProtocolWaveletDelta delta;
+  private final ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta;
+  private final ProtocolWaveletDelta transformedDelta;
   private final ProtocolHashedVersion hashedVersionAfterApplication;
-  private final String error;
-  private final ByteString appliedDeltaAsBytes;
 
+  /**
+   * @param appliedDelta result of application, untransformed
+   * @param transformedDelta result of application, transformed
+   * @param hashedVersionAfterApplication
+   */
   public DeltaApplicationResult(
-      ProtocolAppliedWaveletDelta appliedDelta,
-      ByteString appliedDeltaAsBytes,
-      ProtocolWaveletDelta delta,
-      ProtocolHashedVersion hashedVersionAfterApplication,
-      String error) {
+      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
+      ProtocolWaveletDelta transformedDelta,
+      ProtocolHashedVersion hashedVersionAfterApplication) {
     this.appliedDelta = appliedDelta;
-    this.appliedDeltaAsBytes = appliedDeltaAsBytes;
-    this.delta = delta;
+    this.transformedDelta = transformedDelta;
     this.hashedVersionAfterApplication = hashedVersionAfterApplication;
-    this.error = error;
   }
 
-  public ProtocolAppliedWaveletDelta getAppliedDelta() {
+  public ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDelta() {
     return appliedDelta;
   }
 
   public ProtocolWaveletDelta getDelta() {
-    return delta;
+    return transformedDelta;
   }
 
   @Override
   public int hashCode() {
-    return 31 * appliedDelta.hashCode() + delta.hashCode();
+    return 31 * appliedDelta.hashCode() + transformedDelta.hashCode();
   }
 
   @Override
@@ -68,19 +65,12 @@ public class DeltaApplicationResult {
       return false;
     } else {
       DeltaApplicationResult that = (DeltaApplicationResult) obj;
-      return appliedDelta.equals(that.appliedDelta) && delta.equals(that.delta);
+      return appliedDelta.equals(that.appliedDelta)
+          && transformedDelta.equals(that.transformedDelta);
     }
   }
 
   public ProtocolHashedVersion getHashedVersionAfterApplication() {
     return hashedVersionAfterApplication;
-  }
-
-  public String getError() {
-    return error;
-  }
-
-  public ByteString getAppliedDeltaAsBytes() {
-    return appliedDeltaAsBytes;
   }
 }

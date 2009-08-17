@@ -18,6 +18,7 @@ package org.waveprotocol.wave.examples.fedone.federation.xmpp;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.commons.codec.binary.Base64;
@@ -30,7 +31,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.protocol.common;
 import org.xmpp.packet.IQ;
 
-import java.util.Set;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -283,7 +284,7 @@ public class XmppFederationHost {
     }
 
     public void onSuccess(
-        Set<common.ProtocolAppliedWaveletDelta> deltaSet,
+        List<ByteString> deltaSet,
         long lastCommittedVersion,
         long versionTruncatedAt) {
       IQ response = new IQ(IQ.Type.result);
@@ -292,7 +293,7 @@ public class XmppFederationHost {
           response
               .setChildElement("pubsub", WaveXmppComponent.NAMESPACE_PUBSUB);
       Element items = pubsub.addElement("items");
-      for (common.ProtocolAppliedWaveletDelta appliedDelta : deltaSet) {
+      for (ByteString appliedDelta : deltaSet) {
         // add each delta
         items.addElement("item").addElement("applied-delta",
                                             WaveXmppComponent.NAMESPACE_WAVE_SERVER)
@@ -369,7 +370,7 @@ public class XmppFederationHost {
       implements WaveletFederationProvider.DeltaSignerInfoResponseListener {
 
     private final WaveXmppComponent component;
-    private IQ request;
+    private final IQ request;
 
     public DeltaSignerInfoPacketListener(
         WaveXmppComponent component, IQ request) {
@@ -398,8 +399,8 @@ public class XmppFederationHost {
   private class PostSignerInfoResponsePacketListener
       implements WaveletFederationProvider.PostSignerInfoResponseListener {
 
-    private IQ request;
-    private WaveXmppComponent component;
+    private final IQ request;
+    private final WaveXmppComponent component;
 
     public PostSignerInfoResponsePacketListener(WaveXmppComponent component,
                                                 IQ signerPacket) {

@@ -23,6 +23,7 @@ import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.reset;
 import static org.easymock.classextension.EasyMock.verify;
 import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
+import static org.waveprotocol.wave.examples.fedone.common.HashedVersion.unsigned;
 import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_AUTHOR;
 import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_DOCUMENT_ID;
@@ -40,6 +41,7 @@ import junit.framework.TestCase;
 
 import org.easymock.classextension.EasyMock;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl;
@@ -254,13 +256,13 @@ public class ClientFrontendImplTest extends TestCase {
     }
   }
 
-  private ProtocolWaveletDelta makeDelta(ParticipantId author, long startVersion,
+  private ProtocolWaveletDelta makeDelta(ParticipantId author, HashedVersion startVersion,
       WaveletOperation...operations) {
     WaveletDelta delta = new WaveletDelta(author, ImmutableList.of(operations));
-    return serialize(delta, HashedVersion.unsigned(startVersion));
+    return serialize(delta, startVersion);
   }
 
-  private void waveletUpdate(long startVersion, Map<String, BufferedDocOp> documentState,
+  private void waveletUpdate(HashedVersion startVersion, Map<String, BufferedDocOp> documentState,
       WaveletOperation... operations) {
     ProtocolWaveletDelta delta = makeDelta(USER, startVersion, operations);
     DeltaSequence deltas = createUnsignedDeltas(ImmutableList.of(delta));
@@ -291,7 +293,7 @@ public class ClientFrontendImplTest extends TestCase {
     UpdateListener listener = new UpdateListener();
     clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, listener);
 
-    waveletUpdate(0L,
+    waveletUpdate(VERSION_0,
         ImmutableMap.of("default", makeAppend(0, "Hello, world\nignored text")),
         new AddParticipant(USER),
         new NoOp()
@@ -303,8 +305,8 @@ public class ClientFrontendImplTest extends TestCase {
       makeAppendOp(DIGEST_DOCUMENT_ID, 0, "Hello, world");
 
     DeltaSequence expectedDeltas = createUnsignedDeltas(ImmutableList.of(
-        makeDelta(DIGEST_AUTHOR, 0L, helloWorldOp),
-        makeDelta(USER, 1L, new AddParticipant(USER))));
+        makeDelta(DIGEST_AUTHOR, unsigned(0), helloWorldOp),
+        makeDelta(USER, unsigned(1L), new AddParticipant(USER))));
     assertEquals(expectedDeltas, listener.deltas);
   }
 
@@ -319,7 +321,7 @@ public class ClientFrontendImplTest extends TestCase {
     Map<String, BufferedDocOp> documentState = Maps.newHashMap();
 
     BufferedDocOp addTextOp = makeAppend(0, "Hello, world");
-    waveletUpdate(0L, documentState, new AddParticipant(USER),
+    waveletUpdate(VERSION_0, documentState, new AddParticipant(USER),
         new WaveletDocumentOperation("docId", addTextOp));
     documentState.put("docId", addTextOp);
 
@@ -347,7 +349,7 @@ public class ClientFrontendImplTest extends TestCase {
         expectedDeltas
         );
     replay(waveletProvider);
-    long version = oldListener.endVersion.getVersion();
+    HashedVersion version = WaveletOperationSerializer.deserialize(oldListener.endVersion);
     oldListener.clear();
     newListener.clear();
     waveletUpdate(version, documentState,

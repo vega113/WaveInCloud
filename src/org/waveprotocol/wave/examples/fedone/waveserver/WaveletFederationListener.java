@@ -17,8 +17,9 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import com.google.protobuf.ByteString;
+
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 
 import java.util.List;
@@ -39,20 +40,21 @@ public interface WaveletFederationListener {
   }
 
   /**
-   * This message is passed when one or more new deltas are applied to a specific wavelet
-   * or if the wavelet is committed to persistent storage.
+   * This message is passed when one or more new deltas are applied to a specific wavelet or if the
+   * wavelet is committed to persistent storage.
    *
    * @param waveletName name of wavelet.
-   * @param deltas UNTRANSFORMED, consecutive deltas that were applied to the given wavelet.
-   *     Note that the deltas are NOT TRANSFORMED to the current version of the wavelet.
-   *     May be empty if committedVersion is not null, namely when the caller only wants
-   *     to communicate that the wavelet was committed.
-   * @param committedVersion if not null, notifies the listener that hosting provider has
-   *     reliably committed the wavelet to persistent storage up to the specified version.
-   * @param callback is eventually invoked when the callee has processed the information
-   *     or failed to do so.
+   * @param deltas UNTRANSFORMED, {@code ByteString} canonical representation of {@code
+   *        ProtocolAppliedWaveletDelta}s that were applied to the given wavelet. Note that the
+   *        deltas are NOT TRANSFORMED to the current version of the wavelet. May be empty if
+   *        committedVersion is not null, namely when the caller only wants to communicate that the
+   *        wavelet was committed.
+   * @param committedVersion if not null, notifies the listener that hosting provider has reliably
+   *        committed the wavelet to persistent storage up to the specified version.
+   * @param callback is eventually invoked when the callee has processed the information or failed
+   *        to do so.
    */
-  void waveletUpdate(WaveletName waveletName, List<ProtocolAppliedWaveletDelta> deltas,
+  void waveletUpdate(WaveletName waveletName, List<ByteString> deltas,
       ProtocolHashedVersion committedVersion, WaveletUpdateCallback callback);
 
   /**

@@ -40,7 +40,6 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -206,11 +205,11 @@ class XmppTestUtil extends TestCase {
    */
 
   /**
-   * Creates a ProtocolAppliedWaveletDelta for use in tests.
+   * Creates a ByteString representation of a ProtocolAppliedWaveletDelta for use in tests.
    *
    * @return the new PB
    */
-  static common.ProtocolAppliedWaveletDelta createTestAppliedWaveletDelta() {
+  static ByteString createTestAppliedWaveletDelta() {
     common.ProtocolHashedVersion hashedVersion = createTestHistoryHashVersion();
     common.ProtocolAppliedWaveletDelta.Builder appliedDelta =
         common.ProtocolAppliedWaveletDelta.newBuilder();
@@ -219,7 +218,7 @@ class XmppTestUtil extends TestCase {
     appliedDelta.setOperationsApplied(TEST_OPERATIONS);
     common.ProtocolSignedDelta delta = createTestSignedDelta();
     appliedDelta.setSignedOriginalDelta(delta);
-    return appliedDelta.build();
+    return appliedDelta.build().toByteString();
   }
 
   /**
@@ -261,7 +260,7 @@ class XmppTestUtil extends TestCase {
         common.ProtocolWaveletDelta.newBuilder();
     waveletDelta.setAuthor(TEST_AUTHOR);
     waveletDelta.setHashedVersion(hashedVersion);
-    delta.setDelta(waveletDelta);
+    delta.setDelta(waveletDelta.build().toByteString());
     return delta.build();
   }
 
@@ -370,15 +369,15 @@ class XmppTestUtil extends TestCase {
   static class MockHistoryResponseListener
       implements WaveletFederationProvider.HistoryResponseListener {
 
-    public Set<common.ProtocolAppliedWaveletDelta> savedDeltaSet = null;
+    public List<ByteString> savedDeltaList = null;
     public Long savedCommittedVersion = null;
     public Long savedVersionTruncated = null;
     public String savedErrorMessage = null;
 
     @Override
-    public void onSuccess(Set<common.ProtocolAppliedWaveletDelta> deltaSet,
+    public void onSuccess(List<ByteString> deltaList,
                           long lastCommittedVersion, long versionTruncatedAt) {
-      savedDeltaSet = deltaSet;
+      savedDeltaList = deltaList;
       savedCommittedVersion = lastCommittedVersion;
       savedVersionTruncated = versionTruncatedAt;
     }
@@ -516,13 +515,13 @@ class XmppTestUtil extends TestCase {
 
     WaveletName savedUpdateWaveletName = null;
     WaveletName savedCommitWaveletName = null;
-    List<common.ProtocolAppliedWaveletDelta> savedDeltas = null;
+    List<ByteString> savedDeltas = null;
     common.ProtocolHashedVersion savedVersion = null;
     public WaveletUpdateCallback savedCallback = null;
 
     @Override
     public void waveletUpdate(WaveletName waveletName,
-                              List<common.ProtocolAppliedWaveletDelta> deltas,
+                              List<ByteString> deltas,
                               common.ProtocolHashedVersion version,
                               WaveletUpdateCallback callback) {
       savedUpdateWaveletName = waveletName;

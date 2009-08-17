@@ -58,4 +58,7 @@ public class FlagSettings {
 
   @Flag(name="waveserver_disable_verification")
   private static boolean waveserverDisableVerification;
+
+  @Flag(name="waveserver_disable_signer_verification")
+  private static boolean waveserverDisableSignerVerification;
 }

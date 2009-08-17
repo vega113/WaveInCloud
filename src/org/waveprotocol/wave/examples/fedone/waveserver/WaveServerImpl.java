@@ -20,16 +20,19 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
+import org.waveprotocol.wave.examples.fedone.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationListener.Factory;
@@ -41,15 +44,16 @@ import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
+import org.waveprotocol.wave.protocol.common.ProtocolSignature;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The main class that services the FederationHost, FederationRemote and ClientFrontend.
@@ -111,25 +115,49 @@ public class WaveServerImpl implements WaveServer {
     return new WaveletFederationListener() {
 
       @Override
-      public void waveletUpdate(final WaveletName waveletName,
-          List<ProtocolAppliedWaveletDelta> appliedDeltas,
-          ProtocolHashedVersion committedHashedVersion,
-          WaveletUpdateCallback callback) {
-        for (ProtocolAppliedWaveletDelta d : appliedDeltas) {
+      public void waveletUpdate(final WaveletName waveletName, List<ByteString> rawAppliedDeltas,
+          ProtocolHashedVersion committedHashedVersion, WaveletUpdateCallback callback) {
+        WaveletContainer wavelet = getWavelet(waveletName);
+
+        if (wavelet != null && wavelet.getState() == State.CORRUPTED) {
+          // TODO: throw away whole wavelet and start again
+          LOG.info("Received update for corrupt wavelet");
+          callback.onFailure("Corrupt wavelet");
+          return;
+        }
+
+        // Turn raw canonical ByteStrings in to a more useful representation
+        List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas = Lists.newArrayList();
+        for (ByteString canonicalDelta : rawAppliedDeltas) {
           try {
-            certificateManager.verifyDelta(d.getSignedOriginalDelta());
-          } catch (SignatureException e) {
-            String error = "verification failure, wavelet: " + waveletName + " delta: " + d;
-            LOG.warning("incoming waveletUpdate: " + error, e);
-            WaveletContainer wavelet = getWavelet(waveletName);
-            if (wavelet != null) {
-              wavelet.setState(State.CORRUPTED);
-            }
-            callback.onFailure(error);
+            appliedDeltas.add(ByteStringMessage.from(
+                ProtocolAppliedWaveletDelta.getDefaultInstance(), canonicalDelta));
+          } catch (InvalidProtocolBufferException e) {
+            LOG.info("Invalid applied delta protobuf for incoming " + waveletName, e);
+            safeMarkWaveletCorrupted(wavelet);
+            callback.onFailure("Invalid applied delta protocol buffer");
             return;
           }
         }
+
+        // Verify signatures of the applied deltas
+        for (ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta : appliedDeltas) {
+          try {
+            certificateManager.verifyDelta(appliedDelta.getMessage().getSignedOriginalDelta());
+          } catch (SignatureException e) {
+            LOG.warning("Verification failure for " + domain + " incoming " + waveletName, e);
+            safeMarkWaveletCorrupted(wavelet);
+            callback.onFailure("Verification failure");
+            return;
+          } catch (UnknownSignerException e) {
+            LOG.info("Unknown signer for " + domain + " incoming " + waveletName, e);
+            callback.onFailure("Unknown signer");
+          }
+        }
+
+        // Update wavelet container with the applied deltas
         String error = null;
+
         try {
           final RemoteWaveletContainer remoteWavelet = getOrCreateRemoteWavelet(waveletName);
 
@@ -179,6 +207,17 @@ public class WaveServerImpl implements WaveServer {
     };
   }
 
+  /**
+   * Set wavelet as corrupted, if not null.
+   *
+   * @param wavelet to set as corrupted, if not null
+   */
+  private void safeMarkWaveletCorrupted(WaveletContainer wavelet) {
+    if (wavelet != null) {
+      wavelet.setState(State.CORRUPTED);
+    }
+  }
+
   // -------------------------------------------------------------------------------------------
   // METHODS IMPLEMENTING THE WAVELET-FEDERATION-PROVIDER INTERFACE USED BY THE FED REMOTE.
   // -------------------------------------------------------------------------------------------
@@ -192,21 +231,31 @@ public class WaveServerImpl implements WaveServer {
   public void submitRequest(WaveletName waveletName, ProtocolSignedDelta signedDelta,
       SubmitResultListener listener) {
     // Disallow creation of wavelets by remote users.
-    if (signedDelta.getDelta().getHashedVersion().getVersion() == 0) {
-      LOG.warning("Remote user tried to submit delta at version 0 - disallowed. " + signedDelta);
-      listener.onFailure("Remote users may not create wavelets.");
+    try {
+      ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.from(
+          ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
+      if (canonicalDelta.getMessage().getHashedVersion().getVersion() == 0) {
+        LOG.warning("Remote user tried to submit delta at version 0 - disallowed. " + signedDelta);
+        listener.onFailure("Remote users may not create wavelets.");
+        return;
+      }
+    } catch (InvalidProtocolBufferException e) {
+      listener.onFailure("Signed delta contains invalid delta");
       return;
     }
+
     try {
       certificateManager.verifyDelta(signedDelta);
       submitDelta(waveletName, signedDelta, listener);
-    } catch(SignatureException e) {
+    } catch (SignatureException e) {
       LOG.warning("Submit request: Delta failed verification. WaveletName: " + waveletName +
           " delta: " + signedDelta, e);
-      WaveletContainer wavelet = getWavelet(waveletName);
-      if (wavelet != null) {
-        wavelet.setState(State.CORRUPTED);
-      }
+      safeMarkWaveletCorrupted(getWavelet(waveletName));
+      listener.onFailure("Remote verification failed");
+    } catch (UnknownSignerException e) {
+      LOG.warning("Submit request: unknown signer.  WaveletName: " + waveletName +
+          "delta: " + signedDelta, e);
+      listener.onFailure("Unknown signer");
     }
   }
 
@@ -227,13 +276,18 @@ public class WaveServerImpl implements WaveServer {
         LOG.info("Federation remote for domain: " + domain + " requested a remote wavelet: " +
             waveletName);
       } else {
-        NavigableSet<ProtocolAppliedWaveletDelta> deltaHistory;
         try {
-          deltaHistory = wc.requestHistory(startVersion, endVersion);
+          NavigableSet<ByteStringMessage<ProtocolAppliedWaveletDelta>> deltaHistory =
+              wc.requestHistory(startVersion, endVersion);
+          List<ByteString> deltaHistoryBytes = Lists.newArrayList();
+          for (ByteStringMessage<ProtocolAppliedWaveletDelta> d : deltaHistory) {
+            deltaHistoryBytes.add(d.getByteString());
+          }
+
           // Now determine whether we received the entire requested wavelet history.
           LOG.info("Found deltaHistory between " + startVersion + " - " + endVersion
               + ", returning to requester domain " + domain + " -- " + deltaHistory);
-          listener.onSuccess(deltaHistory, endVersion.getVersion(), endVersion.getVersion());
+          listener.onSuccess(deltaHistoryBytes, endVersion.getVersion(), endVersion.getVersion());
           // TODO: ### check length limit ??
 //           else {
 //            ProtocolAppliedWaveletDelta lastDelta = deltaHistory.last();
@@ -318,7 +372,9 @@ public class WaveServerImpl implements WaveServer {
   @Override
   public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
       SubmitResultListener listner) {
-    ProtocolSignedDelta signedDelta = certificateManager.signDelta(delta);
+    // The canonical version of this delta happens now.  This should be the only place, ever!
+    ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.fromMessage(delta);
+    ProtocolSignedDelta signedDelta = certificateManager.signDelta(canonicalDelta);
     submitDelta(waveletName, signedDelta, listner);
   }
 
@@ -349,6 +405,14 @@ public class WaveServerImpl implements WaveServer {
 
     LOG.info("Wave Server configured to host local domains: "
         + certificateManager.getLocalDomains().toString());
+
+    // Preemptively add our own signer info to the certificate manager
+    try {
+      certificateManager.storeSignerInfo(
+          certificateManager.getLocalSigner().getSignerInfo().toProtoBuf());
+    } catch (SignatureException e) {
+      LOG.severe("Failed to add our own signer info to the certificate store", e);
+    }
   }
 
   private boolean isLocalWavelet(WaveletName waveletName) {
@@ -441,10 +505,65 @@ public class WaveServerImpl implements WaveServer {
     }
   }
 
-  private ProtocolHashedVersion getVersionAfter(ProtocolAppliedWaveletDelta delta) {
-    // ### TODO: This is a unsigned version. Need to create a signed one!
-    long version = delta.getHashedVersionAppliedAt().getVersion() + delta.getOperationsApplied();
-    return WaveletOperationSerializer.serialize(HashedVersion.unsigned(version));
+  /**
+   * Callback interface for sending a list of certificates to a domain.
+   */
+  private interface PostSignerInfoCallback {
+    public void done(int successCount);
+  }
+
+  /**
+   * Post a list of certificates to a domain and run a callback when all are finished.  The
+   * callback will run whether or not all posts succeed.
+   *
+   * @param sigs list of signatures
+   * @param domain to post signature to
+   * @param callback to run when all signatures have been posted, successfully or unsuccessfully
+   */
+  private void postSignerInfoAsync(final List<ProtocolSignature> sigs, final String domain,
+      final PostSignerInfoCallback callback) {
+    callback.done(sigs.size());
+
+    // In the current implementation there should only be a single signer
+    LOG.info("Broadcasting " + sigs.size() + " signatures");
+    if (sigs.size() != 1) {
+      LOG.warning("Number of signatures != 1");
+    }
+
+    final AtomicInteger resultCount = new AtomicInteger(sigs.size());
+    final AtomicInteger successCount = new AtomicInteger(0);
+
+    for (final ProtocolSignature sig : sigs) {
+      final ProtocolSignerInfo psi = certificateManager.retrieveSignerInfo(sig.getSignerId());
+
+      if (psi == null) {
+        LOG.warning("Couldn't find signer info for " + sig);
+        if (resultCount.decrementAndGet() == 0) {
+          callback.done(successCount.get());
+        }
+      } else {
+        federationRemote.postSignerInfo(domain, psi, new PostSignerInfoResponseListener() {
+          @Override
+          public void onFailure(String errorMessage) {
+            LOG.warning("Failed to post " + sig + " to " + domain + ": " + errorMessage);
+            anotherPostDone();
+          }
+
+          @Override
+          public void onSuccess() {
+            LOG.info("Successfully broadcasted " + sig + " to " + domain);
+            successCount.incrementAndGet();
+            anotherPostDone();
+          }
+
+          private void anotherPostDone() {
+            if (resultCount.decrementAndGet() == 0) {
+              callback.done(successCount.get());
+            }
+          }
+        });
+      }
+    }
   }
 
   /**
@@ -455,58 +574,80 @@ public class WaveServerImpl implements WaveServer {
    *               made sure this is a local wavelet. Once we support
    *               federated groups, that test should be removed.
    */
-  private void submitDelta(WaveletName waveletName, ProtocolSignedDelta delta,
-      SubmitResultListener resultListener) {
+  private void submitDelta(final WaveletName waveletName, final ProtocolSignedDelta delta,
+      final SubmitResultListener resultListener) {
+    ByteStringMessage<ProtocolWaveletDelta> canonicalWaveletDelta;
+    try {
+      canonicalWaveletDelta = ByteStringMessage.from(
+          ProtocolWaveletDelta.getDefaultInstance(), delta.getDelta());
+    } catch (InvalidProtocolBufferException e) {
+      throw new IllegalArgumentException("Signed delta does not contain valid wavelet delta", e);
+    }
+
     if (isLocalWavelet(waveletName)) {
       DeltaApplicationResult submitResult;
-      ProtocolAppliedWaveletDelta appliedDelta;
+      final ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta;
       LocalWaveletContainer wc;
-      try {
 
+      try {
         LOG.info("## WS: Got submit: " + waveletName + " delta: " + delta.toString());
 
         wc = getOrCreateLocalWavelet(waveletName,
-            new ParticipantId(delta.getDelta().getAuthor()));
+            new ParticipantId(canonicalWaveletDelta.getMessage().getAuthor()));
 
         /*
-         * Synchronise on the wavelet container so that updates passed to
-         * clientListener and Federation listeners are ordered correctly. The
-         * application of deltas can happen in any order (due to OT).
-         * 
-         * TODO(thorogood): This basically creates a second write lock (like the
-         * one held within wc.submitRequest) and extends it out around the
-         * broadcast code. Ideally what should happen is the update is pushed
-         * onto a queue which is handled in another thread.
+         * Synchronise on the wavelet container so that updates passed to clientListener and
+         * Federation listeners are ordered correctly. The application of deltas can happen in any
+         * order (due to OT).
+         *
+         * TODO(thorogood): This basically creates a second write lock (like the one held within
+         * wc.submitRequest) and extends it out around the broadcast code. Ideally what should
+         * happen is the update is pushed onto a queue which is handled in another thread.
          */
         synchronized (wc) {
           submitResult = wc.submitRequest(waveletName, delta);
           appliedDelta = submitResult.getAppliedDelta();
 
           // return result to caller.
-          ProtocolHashedVersion resultingVersion = getVersionAfter(appliedDelta);
+          HashedVersion resultingVersion = HashedVersion.getHashedVersionAfter(appliedDelta);
           LOG.info("## WS: Submit result: " + waveletName + " appliedDelta: " + appliedDelta);
-          resultListener.onSuccess(appliedDelta.getOperationsApplied(),
-            resultingVersion, appliedDelta.getApplicationTimestamp());
+          resultListener.onSuccess(appliedDelta.getMessage().getOperationsApplied(),
+              WaveletOperationSerializer.serialize(resultingVersion), appliedDelta.getMessage()
+                  .getApplicationTimestamp());
 
-          // broadcast the results.
+          // Send the results to the client frontend
           if (clientListener != null) {
             Map<String, BufferedDocOp> documentState =
-              getWavelet(waveletName).getWaveletData().getDocuments();
+                getWavelet(waveletName).getWaveletData().getDocuments();
             clientListener.waveletUpdate(waveletName, ImmutableList.of(submitResult.getDelta()),
                 submitResult.getHashedVersionAfterApplication(), documentState);
           }
 
-          for (WaveletFederationListener host : getParticipantsFederationHosts(wc)) {
-            host.waveletUpdate(waveletName, ImmutableList.of(appliedDelta), null,
-                new WaveletFederationListener.WaveletUpdateCallback() {
-                  @Override public void onSuccess() { }
-                  @Override public void onFailure(String errorMessage) {
-                   LOG.warning("outgoing waveletUpdate failure: " + errorMessage);
-                    // TODO: add retransmit logic
-                  }
-                });
-          }
+          // Broadcast results to the remote servers, but make sure they all have our signatures
+          // TODO: this is obviously flawed, since either we are being very inefficient (and send
+          // the signatures every time), or we store who we've sent certs to and neglect (forever)
+          // any servers which have lost our certificate (which in FedOne would be any time they
+          // restarted -- and we can't expect servers to all restart at the same time :-), or we
+          // try and be intelligent (which is the plan -- but we need XMPP error propogation!)
+          for (final String hostDomain : getParticipantDomains(wc)) {
+            final WaveletFederationListener host = federationHosts.get(hostDomain);
+            postSignerInfoAsync(delta.getSignatureList(), hostDomain, new PostSignerInfoCallback() {
+              @Override
+              public void done(int successCount) {
+                LOG.info("Local: successfully sent " + successCount + " of "
+                    + delta.getSignatureCount() + " certs to " + waveletName.waveletId.getDomain());
+                host.waveletUpdate(waveletName, ImmutableList.of(appliedDelta.getByteString()),
+                    null, new WaveletFederationListener.WaveletUpdateCallback() {
+                      @Override public void onSuccess() {}
 
+                      @Override public void onFailure(String errorMessage) {
+                        LOG.warning("outgoing waveletUpdate failure: " + errorMessage);
+                        // TODO: add retransmit logic
+                      }
+                    });
+              }
+            });
+          }
         }
       } catch (AccessControlException e) {
         resultListener.onFailure(e.getMessage());
@@ -523,23 +664,35 @@ public class WaveServerImpl implements WaveServer {
       } catch (HostingException e) {
         throw new IllegalStateException("Should not get HostingException after " +
         		"checking isLocalWavelet", e);
+      } catch (InvalidProtocolBufferException e) {
+        resultListener.onFailure(e.getMessage());
+        return;
+      } catch (InvalidHashException e) {
+        resultListener.onFailure(e.getMessage());
+        return;
       }
-
     } else {
-      // For remote wavelets wait for the result to come back from the federation remote.
-      federationRemote.submitRequest(waveletName, delta, resultListener);
+      // For remote wavelets post required signatures to the authorative server then send delta
+      postSignerInfoAsync(delta.getSignatureList(), waveletName.waveletId.getDomain(),
+          new PostSignerInfoCallback() {
+            @Override public void done(int successCount) {
+              LOG.info("Remote: successfully sent " + successCount + " of "
+                  + delta.getSignatureCount() + " certs to " + waveletName.waveletId.getDomain());
+              federationRemote.submitRequest(waveletName, delta, resultListener);
+            }
+          });
     }
   }
 
-  private Set<WaveletFederationListener> getParticipantsFederationHosts(LocalWaveletContainer lwc) {
-    HashSet<WaveletFederationListener> hosts = Sets.newHashSet();
+  private Set<String> getParticipantDomains(LocalWaveletContainer lwc) {
+    Set<String> hosts = Sets.newHashSet();
     Set<String> localDomains = certificateManager.getLocalDomains();
     for (ParticipantId p : lwc.getParticipants()) {
       String domain = p.getDomain();
       if (localDomains.contains(domain)) {
         // Ignore, don't re-federate to a local domain.
       } else {
-        hosts.add(federationHosts.get(p.getDomain()));
+        hosts.add(p.getDomain());
       }
     }
     return ImmutableSet.copyOf(hosts);

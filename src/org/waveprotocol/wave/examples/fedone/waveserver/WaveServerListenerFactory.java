@@ -17,8 +17,9 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import com.google.protobuf.ByteString;
+
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 
 import java.util.List;
@@ -38,11 +39,9 @@ public class WaveServerListenerFactory implements WaveletFederationListener.Fact
   public WaveletFederationListener listenerForDomain(final String domain) {
     return new WaveletFederationListener() {
       @Override
-      public void waveletUpdate(WaveletName waveletName, List<ProtocolAppliedWaveletDelta> deltas,
-          ProtocolHashedVersion version, WaveletUpdateCallback callback) {
-        // TODO: ### Auto-generated method stub
-      }
-    };
+      public void waveletUpdate(WaveletName waveletName, List<ByteString> deltas,
+          ProtocolHashedVersion committedVersion, WaveletUpdateCallback callback) {
+        // TODO Auto-generated method stub
+      }};
   }
-
 }

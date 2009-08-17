@@ -20,7 +20,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.RpcCallback;
 
 import org.apache.commons.codec.binary.Base64;
@@ -37,9 +36,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
@@ -94,9 +91,8 @@ public class XmppFederationRemote implements WaveletFederationProvider {
   public void submitRequest(final WaveletName waveletName,
                             final common.ProtocolSignedDelta delta,
                             final SubmitResultListener listener) {
-    // TODO: LOG.debug
-    logger.info("Submitting delta to remote server, wavelet " + waveletName + " target version "
-        + delta.getDelta().getHashedVersion());
+    // TODO: LOG.debug, with target version?
+    logger.info("Submitting delta to remote server, wavelet " + waveletName);
     final IQ submitIq = new IQ(IQ.Type.set);
     submitIq.setFrom(component.componentJID);
     submitIq.setID(component.generateId());
@@ -372,7 +368,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
           updatesListenerFactory
               .listenerForDomain(waveletName.waveletId.getDomain());
 
-      List<common.ProtocolAppliedWaveletDelta> deltas = Lists.newArrayList();
+      List<ByteString> deltas = Lists.newArrayList();
       common.ProtocolHashedVersion commitNotice = null;
 
       // Submit all applied deltas to the domain-focused listener.
@@ -380,14 +376,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
       for (Element appliedDeltaElement :
           (List<Element>) waveletUpdate.elements("applied-delta")) {
         String deltaBody = appliedDeltaElement.getText();
-
-        try {
-          deltas.add(common.ProtocolAppliedWaveletDelta.parseFrom(
-              Base64.decodeBase64(deltaBody.getBytes())));
-        } catch (InvalidProtocolBufferException e) {
-          logger.warning("couldn't decode delta: " + appliedDeltaElement);
-          continue;
-        }
+        deltas.add(ByteString.copyFrom(Base64.decodeBase64(deltaBody.getBytes())));
       }
 
       // Optionally submit any received last committed notice.
@@ -503,8 +492,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
       Element items = pubsubResponse.element("items");
       long versionTruncatedAt = 0;
       long lastCommittedVersion = 0;
-      Set<common.ProtocolAppliedWaveletDelta> deltaSet =
-          new HashSet<common.ProtocolAppliedWaveletDelta>();
+      List<ByteString> deltaList = Lists.newArrayList();
 
       if (items != null) {
         //noinspection unchecked
@@ -514,12 +502,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
             String elementName = element.getQName().getName();
             if (elementName.equals("applied-delta")) {
               String deltaBody = element.getText();
-              try {
-                deltaSet.add(common.ProtocolAppliedWaveletDelta.parseFrom(
-                    Base64.decodeBase64(deltaBody.getBytes())));
-              } catch (InvalidProtocolBufferException e) {
-                listener.onFailure("couldn't decode delta: " + element);
-              }
+              deltaList.add(ByteString.copyFrom(Base64.decodeBase64(deltaBody.getBytes())));
             } else if (elementName.equals("commit-notice")) {
               Attribute commitVersion = element.attribute("version");
               if (commitVersion != null) {
@@ -541,7 +524,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
         listener.onFailure("bad response packet: " + historyResponse);
       }
 
-      listener.onSuccess(deltaSet, lastCommittedVersion, versionTruncatedAt);
+      listener.onSuccess(deltaList, lastCommittedVersion, versionTruncatedAt);
     }
   }
 
@@ -550,7 +533,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
    */
   private class GetSignerResponseListener implements RpcCallback<Packet> {
 
-    private DeltaSignerInfoResponseListener listener;
+    private final DeltaSignerInfoResponseListener listener;
 
     public GetSignerResponseListener(DeltaSignerInfoResponseListener listener) {
       this.listener = listener;
@@ -582,7 +565,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
 
   static class PostSignerInfoResponseListener implements RpcCallback<Packet> {
 
-    private WaveletFederationProvider.PostSignerInfoResponseListener listener;
+    private final WaveletFederationProvider.PostSignerInfoResponseListener listener;
 
     public PostSignerInfoResponseListener(
         WaveletFederationProvider.PostSignerInfoResponseListener listener) {

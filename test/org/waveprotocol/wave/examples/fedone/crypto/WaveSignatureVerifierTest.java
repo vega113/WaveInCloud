@@ -23,12 +23,11 @@ import com.google.protobuf.ByteString;
 import junit.framework.TestCase;
 
 import org.apache.commons.codec.binary.Base64;
-
-import java.security.cert.X509Certificate;
-
 import org.waveprotocol.wave.protocol.common.ProtocolSignature;
 import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm;
+
+import java.security.cert.X509Certificate;
 
 public class WaveSignatureVerifierTest extends TestCase {
 
@@ -59,8 +58,7 @@ public class WaveSignatureVerifierTest extends TestCase {
     CachedCertPathValidator validator = new CachedCertPathValidator(cache,
         timeSource, new FakeTrustRootsProvider(CertConstantUtil.CA_PUB_CERT));
     store = new DefaultCertPathStore();
-
-    verifier = new WaveSignatureVerifier(validator, store);
+    verifier = new WaveSignatureVerifier(validator, store, false);
   }
 
   public void testVerify() throws Exception {

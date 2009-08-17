@@ -52,7 +52,7 @@ interface RemoteWaveletContainer extends WaveletContainer {
    *        delta and the hashed version after application
    * @throws WaveServerException
    */
-  void update(List<ProtocolAppliedWaveletDelta> appliedDeltas, String domain,
+  void update(List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas, String domain,
       WaveletFederationProvider federationProvider, RemoteWaveletDeltaCallback updateCallback)
       throws WaveServerException;
 

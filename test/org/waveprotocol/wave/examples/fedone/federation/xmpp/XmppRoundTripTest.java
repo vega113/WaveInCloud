@@ -18,6 +18,7 @@ package org.waveprotocol.wave.examples.fedone.federation.xmpp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
@@ -26,8 +27,7 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationProvide
 import org.waveprotocol.wave.protocol.common;
 import org.xmpp.packet.Packet;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Tests roundtripping packets from Federation Host to Remote and viceversa.
@@ -60,7 +60,7 @@ public class XmppRoundTripTest extends TestCase {
   // canned protobuffers.
   private common.ProtocolSignedDelta signedDelta;
   private common.ProtocolHashedVersion hashedVersion;
-  private common.ProtocolAppliedWaveletDelta appliedDelta;
+  private ByteString appliedDelta;
 
   @Override
   protected void setUp() throws Exception {
@@ -175,10 +175,8 @@ public class XmppRoundTripTest extends TestCase {
         mockProvider.savedHistoryListener;
 
     // trigger the response
-    Set<common.ProtocolAppliedWaveletDelta> deltaSet =
-        new HashSet<common.ProtocolAppliedWaveletDelta>();
-    deltaSet.add(appliedDelta);
-    hostListener.onSuccess(deltaSet, XmppTestUtil.TEST_COMMITTED,
+    List<ByteString> deltaList = ImmutableList.of(appliedDelta);
+    hostListener.onSuccess(deltaList, XmppTestUtil.TEST_COMMITTED,
                            XmppTestUtil.TEST_TRUNCATED);
     assertEquals(2, mockComponent.packetsSent);
     final Packet response = mockComponent.lastPacketSent;
@@ -186,7 +184,7 @@ public class XmppRoundTripTest extends TestCase {
     // inject the request into the federation host, via the component
     mockComponent.processPacket(response);
 
-    assertEquals(deltaSet, mockHistoryResultLister.savedDeltaSet);
+    assertEquals(deltaList, mockHistoryResultLister.savedDeltaList);
     assertEquals((Long) XmppTestUtil.TEST_COMMITTED,
                  mockHistoryResultLister.savedCommittedVersion);
     assertEquals((Long) XmppTestUtil.TEST_TRUNCATED,

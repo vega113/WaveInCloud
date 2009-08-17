@@ -20,12 +20,11 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 import com.google.protobuf.ByteString;
 
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * These are the methods supported by a Wavelet Federation Provider:
@@ -61,8 +60,16 @@ public interface WaveletFederationProvider {
       long lengthLimit, HistoryResponseListener listener);
 
   interface HistoryResponseListener {
-    void onSuccess(Set<ProtocolAppliedWaveletDelta> deltaSet, long lastCommittedVersion,
-        long versionTruncatedAt);
+    /**
+     * @param deltaList of canonical {@code ProtocolAppliedWaveletDelta}s, represented as
+     *        {@code ByteString}s.  Note that these are not guaranteed to parse correctly as
+     *        applied deltas, so it is up to the implementation of onSuccess to deal with this.
+     * @param lastCommittedVersion of the wavelet that is committed to persistent
+     *        storage, if smaller than the end version of deltas, null otherwise
+     * @param versionTruncatedAt the end version of the deltas if less than the
+     *        requested endVersion in the call to {@code requestHistory}
+     */
+    void onSuccess(List<ByteString> deltaList, long lastCommittedVersion, long versionTruncatedAt);
     void onFailure(String errorMessage);
   }
 

@@ -17,7 +17,9 @@
 package org.waveprotocol.wave.examples.fedone.crypto;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
+import org.waveprotocol.wave.examples.fedone.federation.xmpp.Base64Util;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.protocol.common.ProtocolSignature;
 
@@ -53,11 +55,20 @@ public class WaveSignatureVerifier {
   // cert chains.
   private final CertPathStore pathStore;
 
+  // Disable signer verification, a rough way to allow self-signed cerficiates
+  private final boolean disableSignerVerification;
+
   @Inject
-  public WaveSignatureVerifier(CachedCertPathValidator validator,
-      CertPathStore store) {
-    pathValidator = validator;
-    pathStore = store;
+  public WaveSignatureVerifier(CachedCertPathValidator validator, CertPathStore store,
+      @Named("waveserver_disable_signer_verification") boolean disableSignerVerification) {
+    this.pathValidator = validator;
+    this.pathStore = store;
+    this.disableSignerVerification = disableSignerVerification;
+
+    if (disableSignerVerification) {
+      LOG.warning("** SIGNER VERIFICATION DISABLED ** " +
+          "see flag \"waveserver_disable_signer_verification\"");
+    }
   }
 
   /**
@@ -80,8 +91,8 @@ public class WaveSignatureVerifier {
         signatureInfo.getSignerId().toByteArray());
 
     if (signer == null) {
-      throw new UnknownSignerException("could not find information about " +
-          "signer " + signatureInfo.getSignerId());
+      throw new UnknownSignerException("could not find information about signer "
+          + Base64Util.encode(signatureInfo.getSignerId()));
     }
 
     verifySignerInfo(signer);
@@ -132,7 +143,9 @@ public class WaveSignatureVerifier {
    *   {@link SignerInfo} does't verify.
    */
   public void verifySignerInfo(SignerInfo signer) throws SignatureException {
-    pathValidator.validate(signer.getCertificates());
+    if (!disableSignerVerification) {
+      pathValidator.validate(signer.getCertificates());
+    }
   }
 
   /**

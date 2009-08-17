@@ -26,7 +26,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.UnknownFieldSet;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.examples.fedone.crypto.CertPathStore;
 import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
@@ -55,21 +55,20 @@ public class CertificateManagerImpl implements CertificateManager {
   private final WaveSigner waveSigner;
   private final WaveSignatureVerifier verifier;
   private final CertPathStore certPathStore;
-  private final Boolean disableVerfication;
+  private final boolean disableVerfication;
 
   @Inject
   public CertificateManagerImpl(
       @Named("waveserver_disable_verification") boolean disableVerfication,
-      WaveSigner signer,
-      WaveSignatureVerifier verifier, CertPathStore certPathStore) {
+      WaveSigner signer, WaveSignatureVerifier verifier, CertPathStore certPathStore) {
     this.disableVerfication = disableVerfication;
     this.waveSigner = signer;
     this.verifier = verifier;
     this.certPathStore = certPathStore;
 
     if (disableVerfication) {
-      LOG.warning("** SIGNATURE VERIFICATION DISABLED ** " +
-      		"see flag \"waveserver_disable_verification\"");
+      LOG.warning("** SIGNATURE VERIFICATION DISABLED ** "
+          + "see flag \"waveserver_disable_verification\"");
     }
   }
 
@@ -81,32 +80,42 @@ public class CertificateManagerImpl implements CertificateManager {
   }
 
   @Override
-  public ProtocolSignedDelta signDelta(ProtocolWaveletDelta delta) {
+  public WaveSigner getLocalSigner() {
+    return waveSigner;
+  }
+
+  @Override
+  public ProtocolSignedDelta signDelta(ByteStringMessage<ProtocolWaveletDelta> delta) {
 
     // TODO: support extended address paths. For now, there will be exactly
     // one signature, and we don't support federated groups.
-    Preconditions.checkState(delta.getAddressPathCount() == 0);
+    Preconditions.checkState(delta.getMessage().getAddressPathCount() == 0);
 
     ProtocolSignedDelta.Builder signedDelta = ProtocolSignedDelta.newBuilder();
 
-    byte[] deltaBytes = getCanonicalEncoding(delta);
-
-    // TODO: in the future, setDelta will just take a ByteString, so we would
-    // set deltaBytes here.
-    signedDelta.setDelta(delta);
-    signedDelta.addAllSignature(ImmutableList.of(waveSigner.sign(deltaBytes)));
+    signedDelta.setDelta(delta.getByteString());
+    signedDelta.addAllSignature(ImmutableList.of(waveSigner.sign(
+        delta.getByteString().toByteArray())));
     return signedDelta.build();
   }
 
   @Override
-  public ProtocolWaveletDelta verifyDelta(ProtocolSignedDelta signedDelta)
-      throws SignatureException {
+  public ByteStringMessage<ProtocolWaveletDelta> verifyDelta(ProtocolSignedDelta signedDelta)
+      throws SignatureException, UnknownSignerException {
 
-    if (disableVerfication) {
-      return signedDelta.getDelta();
+    ByteStringMessage<ProtocolWaveletDelta> canonicalDelta;
+    try {
+      canonicalDelta = ByteStringMessage.from(
+          ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
+    } catch (InvalidProtocolBufferException e) {
+      throw new IllegalArgumentException("signed delta does not contain valid delta", e);
     }
 
-    List<String> domains = getParticipantDomains(signedDelta.getDelta());
+    if (disableVerfication) {
+      return canonicalDelta;
+    }
+
+    List<String> domains = getParticipantDomains(canonicalDelta.getMessage());
 
     if (domains.size() != signedDelta.getSignatureCount()) {
       throw new SignatureException("found " + domains.size() + " domains in " +
@@ -117,14 +126,10 @@ public class CertificateManagerImpl implements CertificateManager {
     for (int i = 0; i < domains.size(); i++) {
       String domain = domains.get(i);
       ProtocolSignature signature = signedDelta.getSignature(i);
-
-      // TODO: in the future, getDelta() will return a ByteString
-      verifySingleSignature(signedDelta.getDelta(), signature, domain);
+      verifySingleSignature(canonicalDelta, signature, domain);
     }
 
-    // TODO: signedDelta will have just a ByteString in it, so we need to
-    // actually deserialize here...
-    return signedDelta.getDelta();
+    return canonicalDelta;
   }
 
   /**
@@ -135,14 +140,9 @@ public class CertificateManagerImpl implements CertificateManager {
    *   payload.
    * @throws SignatureException if the signature doesn't verify.
    */
-  private void verifySingleSignature(ProtocolWaveletDelta delta,
-      ProtocolSignature signature, String domain) throws SignatureException {
-    try {
-      verifier.verify(getCanonicalEncoding(delta), signature, domain);
-    } catch (UnknownSignerException e) {
-      throw new SignatureException("could not find signer for delta: " + delta
-          + " and signature: " + signature, e);
-    }
+  private void verifySingleSignature(ByteStringMessage<ProtocolWaveletDelta> delta,
+      ProtocolSignature signature, String domain) throws SignatureException, UnknownSignerException {
+    verifier.verify(delta.getByteString().toByteArray(), signature, domain);
   }
 
   /**
@@ -176,16 +176,6 @@ public class CertificateManagerImpl implements CertificateManager {
         ImmutableList.of(delta.getAuthor()));
   }
 
-  /**
-   * Returns the canonical encoding of a delta.
-   */
-  private byte[] getCanonicalEncoding(ProtocolWaveletDelta delta) {
-    ProtocolWaveletDelta.Builder builder =
-        ProtocolWaveletDelta.newBuilder(delta);
-    builder.setUnknownFields(UnknownFieldSet.getDefaultInstance());
-    return builder.build().toByteArray();
-  }
-
   @Override
   public void storeSignerInfo(ProtocolSignerInfo signerInfo)
       throws SignatureException {
@@ -195,6 +185,7 @@ public class CertificateManagerImpl implements CertificateManager {
 
   @Override
   public ProtocolSignerInfo retrieveSignerInfo(ByteString signerId) {
-    return certPathStore.get(signerId.toByteArray()).toProtoBuf();
+    SignerInfo signerInfo = certPathStore.get(signerId.toByteArray());
+    return signerInfo == null ? null : signerInfo.toProtoBuf();
   }
 }

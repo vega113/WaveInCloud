@@ -334,20 +334,19 @@ public class ClientFrontendImpl implements ClientFrontend {
     }
 
     final PerWavelet waveletInfo = perWavelet.get(waveletName);
-    final long expectedVersion;
+    final ProtocolHashedVersion expectedVersion;
     final String oldDigest;
     final Set<ParticipantId> remainingParticipants;
 
     synchronized(waveletInfo) {
-      expectedVersion = waveletInfo.getCurrentVersion().getVersion();
+      expectedVersion = waveletInfo.getCurrentVersion();
       oldDigest = waveletInfo.digest;
       remainingParticipants = Sets.newHashSet(waveletInfo.participants);
     }
 
     DeltaSequence deltaSequence = new DeltaSequence(newDeltas, endVersion);
 
-    // TODO(tobiast): compare HashedVersion rather than just the version
-    if (expectedVersion != deltaSequence.getStartVersion().getVersion()) {
+    if (!expectedVersion.equals(deltaSequence.getStartVersion())) {
       throw new IllegalStateException("Expected deltas starting at version " +
           expectedVersion + ", got " +
           deltaSequence.getStartVersion().getVersion());

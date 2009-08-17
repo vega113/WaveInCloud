@@ -16,14 +16,15 @@
 
 package org.waveprotocol.wave.examples.fedone.federation.xmpp;
 
-import com.google.common.collect.Lists;
-
-import junit.framework.TestCase;
-
 import static org.easymock.EasyMock.expect;
 import static org.easymock.classextension.EasyMock.createMock;
 import static org.easymock.classextension.EasyMock.replay;
 import static org.easymock.classextension.EasyMock.verify;
+
+import com.google.common.collect.Lists;
+import com.google.protobuf.ByteString;
+
+import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.federation.xmpp.XmppTestUtil.MockWaveXmppComponent;
@@ -80,13 +81,11 @@ public class XmppFederationHostForDomainTest extends TestCase {
       + "  </event>\n"
       + "</message>";
 
-  private static final List<common.ProtocolAppliedWaveletDelta> NO_DELTAS =
-      Collections.emptyList();
+  private static final List<ByteString> NO_DELTAS = Collections.emptyList();
 
-  private common.ProtocolHashedVersion hashedVersion =
+  private final common.ProtocolHashedVersion hashedVersion =
       XmppTestUtil.createTestHistoryHashVersion();
-  private common.ProtocolAppliedWaveletDelta appliedDelta =
-      XmppTestUtil.createTestAppliedWaveletDelta();
+  private final ByteString appliedDelta = XmppTestUtil.createTestAppliedWaveletDelta();
 
   @Override
   public void setUp() {

@@ -29,7 +29,7 @@ public interface CertPathStore {
 
   /**
    * Given the of a signer (essentially the hash of a cert chain), returns the
-   * full signer info.
+   * full signer info, or null if the signerId is not found in the path store.
    * @param signerId the id of the cert chain. This is Base64-encoded PkiPath-
    *   encoding of the cert chain.
    */

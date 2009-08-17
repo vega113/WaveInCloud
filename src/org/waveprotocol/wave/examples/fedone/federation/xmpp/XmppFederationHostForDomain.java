@@ -17,6 +17,7 @@
 package org.waveprotocol.wave.examples.fedone.federation.xmpp;
 
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.RpcCallback;
 
 import org.apache.commons.codec.binary.Base64;
@@ -41,8 +42,8 @@ import java.util.logging.Logger;
 @Singleton
 class XmppFederationHostForDomain implements WaveletFederationListener {
 
-  private String remoteDomain;
-  private WaveXmppComponent component;
+  private final String remoteDomain;
+  private final WaveXmppComponent component;
   private boolean discoCompleted = false;
   // not private so tests can check it.
   String remoteJID;
@@ -107,7 +108,7 @@ class XmppFederationHostForDomain implements WaveletFederationListener {
    *                         delivery or failure
    */
   public void waveletUpdate(final WaveletName waveletName,
-                            final List<common.ProtocolAppliedWaveletDelta> deltaList,
+                            final List<ByteString> deltaList,
                             final common.ProtocolHashedVersion committedVersion,
                             final WaveletUpdateCallback callback) {
     if (!discoCompleted) {
@@ -141,7 +142,7 @@ class XmppFederationHostForDomain implements WaveletFederationListener {
             .addChildElement("event", WaveXmppComponent.NAMESPACE_PUBSUB_EVENT)
             .addElement("items")
             .addElement("item");
-    for (common.ProtocolAppliedWaveletDelta delta : deltaList) {
+    for (ByteString delta : deltaList) {
       Element waveletUpdate =
           itemElement
               .addElement("wavelet-update",
