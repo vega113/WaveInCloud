@@ -139,7 +139,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                     LOG.info("Got response callback: " + waveletName + ", lcv "
                         + lastCommittedVersion + " sizeof(deltaSet) = " + deltaList.size());
 
-                    // Need to turn the ByteStrings in to a nice representation... sticky
+                    // Turn the ByteStrings in to a useful representation
                     List<ByteStringMessage<ProtocolAppliedWaveletDelta>> canonicalDeltaList =
                         Lists.newArrayList();
                     for (ByteString newAppliedDelta : deltaList) {
@@ -151,6 +151,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                         canonicalDeltaList.add(canonicalDelta);
                       } catch (InvalidProtocolBufferException e) {
                         LOG.warning("Invalid protocol buffer when requesting history!");
+                        state = State.CORRUPTED;
                         break;
                       }
                     }
