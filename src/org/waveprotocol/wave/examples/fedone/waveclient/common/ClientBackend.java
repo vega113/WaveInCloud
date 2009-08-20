@@ -312,7 +312,7 @@ public class ClientBackend {
 
       // Notify listeners separately to avoid them operating on invalid wavelet state
       for (WaveletOperation op : successfulOps) {
-        notifyWaveletOperationListeners(wavelet, op);
+        notifyWaveletOperationListeners(protobufDelta.getAuthor(), wavelet, op);
       }
     }
 
@@ -361,19 +361,20 @@ public class ClientBackend {
   /**
    * Notify all wavelet operation listeners of a wavelet operation.
    *
+   * @param author the author who caused the operation
    * @param wavelet operated on
    * @param op the operation
    */
-  private void notifyWaveletOperationListeners(WaveletData wavelet, WaveletOperation op) {
+  private void notifyWaveletOperationListeners(String author, WaveletData wavelet, WaveletOperation op) {
     for (WaveletOperationListener listener : waveletOperationListeners) {
       if (op instanceof WaveletDocumentOperation) {
-        listener.waveletDocumentUpdated(wavelet, (WaveletDocumentOperation) op);
+        listener.waveletDocumentUpdated(author, wavelet, (WaveletDocumentOperation) op);
       } else if (op instanceof AddParticipant) {
-        listener.participantAdded(wavelet, ((AddParticipant) op).getParticipantId());
+        listener.participantAdded(author, wavelet, ((AddParticipant) op).getParticipantId());
       } else if (op instanceof RemoveParticipant) {
-        listener.participantRemoved(wavelet, ((RemoveParticipant) op).getParticipantId());
+        listener.participantRemoved(author, wavelet, ((RemoveParticipant) op).getParticipantId());
       } else if (op instanceof NoOp) {
-        listener.noOp(wavelet);
+        listener.noOp(author, wavelet);
       }
     }
   }
