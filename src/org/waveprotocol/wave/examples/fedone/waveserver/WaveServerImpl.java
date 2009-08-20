@@ -522,7 +522,6 @@ public class WaveServerImpl implements WaveServer {
    */
   private void postSignerInfoAsync(final List<ProtocolSignature> sigs, final String domain,
       final PostSignerInfoCallback callback) {
-    callback.done(sigs.size());
 
     // In the current implementation there should only be a single signer
     LOG.info("Broadcasting " + sigs.size() + " signatures");
