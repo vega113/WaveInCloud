@@ -170,7 +170,36 @@
 
   </target>
 
-  <target name="dist" depends="test, dist-client" description="Compiles, tests and assembles runnable artifacts">
+  <target name="agents" depends="dist-client" description="Compiles agents">
+    <!-- we unzip and copy all the runtime deps into a staging dir first -->
+    <unzip dest="${staging}">
+      <fileset dir="${lib}">
+        <include name="*.jar"/>
+      </fileset>
+      <fileset dir="${lib.runtime}">
+	<include name="*/*.jar"/>
+      </fileset>
+    </unzip>
+    <copy todir="${staging}" preservelastmodified="true">
+      <fileset dir="${core.classes}">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <jar destfile="${jar.outfile-echoey}" basedir="${staging}">
+      <manifest>
+        <!-- Application entry point -->
+        <attribute name="Main-Class"
+            value="org.waveprotocol.wave.examples.fedone.agents.echoey.Echoey"/>
+
+        <attribute name="Implementation-Vendor" value="Google, Inc."/>
+        <attribute name="Implementation-Title" value="Google Wave Agent"/>
+        <attribute name="Implementation-Version" value="${fedone.version}"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="dist" depends="test, dist-client, agents" description="Compiles, tests and assembles runnable artifacts">
     <!-- we unzip and copy all the runtime deps into a staging dir first -->
     <unzip dest="${staging}">
       <fileset dir="${lib}">

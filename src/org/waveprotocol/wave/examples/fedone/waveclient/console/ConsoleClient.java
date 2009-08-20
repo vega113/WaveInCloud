@@ -730,15 +730,15 @@ public class ConsoleClient implements WaveletOperationListener {
   }
 
   @Override
-  public void waveletDocumentUpdated(WaveletData wavelet, WaveletDocumentOperation docOp) {
+  public void waveletDocumentUpdated(String author, WaveletData wavelet, WaveletDocumentOperation docOp) {
   }
 
   @Override
-  public void participantAdded(WaveletData wavelet, ParticipantId participantId) {
+  public void participantAdded(String author, WaveletData wavelet, ParticipantId participantId) {
   }
 
   @Override
-  public void participantRemoved(WaveletData wavelet, ParticipantId participantId) {
+  public void participantRemoved(String author, WaveletData wavelet, ParticipantId participantId) {
     if (isWaveOpen() && participantId.equals(backend.getUserId())) {
       // We might have been removed from our open wave (an impressively verbose check...)
       if (wavelet.getWaveletName().waveId.equals(openWave.getWave().getWaveId())) {
@@ -748,7 +748,7 @@ public class ConsoleClient implements WaveletOperationListener {
   }
 
   @Override
-  public void noOp(WaveletData wavelet) {
+  public void noOp(String author, WaveletData wavelet) {
   }
 
   @Override

@@ -10,11 +10,11 @@
 # Comment out the next line by putting a # at the front, once you have
 # changed the flags.
 
-echo "You need to edit the run-client.sh script" ; exit 0
+#echo "You need to edit the run-client.sh script" ; exit 0
 
 # Use the same flag for the domain name as CERTIFICATE_DOMAIN_NAME in
 # run-server.sh.
-WAVE_SERVER_DOMAIN_NAME=yourdomainnamehere
+WAVE_SERVER_DOMAIN_NAME=localhost
 WAVE_SERVER_HOSTNAME=127.0.0.1
 WAVE_SERVER_PORT=9876
 

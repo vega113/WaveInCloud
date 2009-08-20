@@ -32,33 +32,37 @@ public interface WaveletOperationListener {
   /**
    * Invoked when an operation is applied to a document of a wavelet.
    *
+   * @param author the author of the event
    * @param wavelet the wavelet operated on
    * @param docOp performed on the wavelet
    */
-  public void waveletDocumentUpdated(WaveletData wavelet, WaveletDocumentOperation docOp);
+  public void waveletDocumentUpdated(String author, WaveletData wavelet, WaveletDocumentOperation docOp);
 
   /**
    * Invoked when a participant has been added to a wavelet.
    *
+   * @param author the author of the event
    * @param wavelet the wavelet operated on
    * @param participantId the id of the participant added
    */
-  public void participantAdded(WaveletData wavelet, ParticipantId participantId);
+  public void participantAdded(String author, WaveletData wavelet, ParticipantId participantId);
 
   /**
    * Invoked when a participant has been removed from a wavelet.
    *
+   * @param author the author of the event
    * @param wavelet the wavelet operated on
    * @param participantId the id of the participant removed
    */
-  public void participantRemoved(WaveletData wavelet, ParticipantId participantId);
+  public void participantRemoved(String author, WaveletData wavelet, ParticipantId participantId);
 
   /**
    * Invoked on a wavelet NoOp.
    *
+   * @param author the author of the event
    * @param wavelet the wavelet (not) operated on
    */
-  public void noOp(WaveletData wavelet);
+  public void noOp(String author, WaveletData wavelet);
 
   /**
    * Invoked before a sequence of deltas is applied.

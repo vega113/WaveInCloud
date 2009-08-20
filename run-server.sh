@@ -7,14 +7,9 @@
 # The following is an example configuration, please take care to configure
 # your instance correctly.
 
-# Comment out the next line by putting a # at the front, once you have
-# changed the flags.
-
-echo "You need to edit the run-server.sh script" ; exit 0
-
-PRIVATE_KEY_FILENAME=your_private_keyfile.key
-CERTIFICATE_FILENAME_LIST=certificate_file.cert
-CERTIFICATE_DOMAIN_NAME=yourdomainnamehere
+PRIVATE_KEY_FILENAME=../certs/local.key
+CERTIFICATE_FILENAME_LIST=../certs/local.cert
+CERTIFICATE_DOMAIN_NAME=localhost
 
 XMPP_SERVER_HOSTNAME=$CERTIFICATE_DOMAIN_NAME
 XMPP_SERVER_IP=$XMPP_SERVER_HOSTNAME
