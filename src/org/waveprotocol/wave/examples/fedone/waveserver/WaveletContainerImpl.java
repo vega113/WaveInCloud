@@ -292,7 +292,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       return null;
     } else {
       // Not submitting against head, we need to do OT, but check the versions really are different
-      if (appliedVersion.getVersion() != currentVersion.getVersion()) {
+      if (appliedVersion.getVersion() == currentVersion.getVersion()) {
         LOG.warning("Same version (" + currentVersion.getVersion() + ") but different hashes (" +
             appliedVersion + "/" + currentVersion + ")");
         throw new InvalidHashException("Different hash, same version: "
