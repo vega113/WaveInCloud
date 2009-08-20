@@ -38,112 +38,123 @@ public final class DocOpValidator {
   private DocOpValidator() {}
 
   /**
-   * Returns whether m is a well-formed document initialization and satisfies
+   * Returns whether op is a well-formed document initialization and satisfies
    * the given schema constraints.
    */
-  public static ViolationCollector validate(DocInitialization m) {
-    return validate(DocOpAutomaton.EMPTY_DOCUMENT, m);
+  public static ValidationResult validate(ViolationCollector v, DocInitialization op) {
+    return validate(v, DocOpAutomaton.EMPTY_DOCUMENT, op);
   }
 
-  private static final class IllFormed extends RuntimeException {}
+  /**
+   * Returns whether op is well-formed.
+   *
+   * Any violations recorded in the output v that are not well-formedness
+   * violations are meaningless.
+   */
+  public static boolean isWellFormed(ViolationCollector v, DocOp op) {
+    return !validate(v, DocOpAutomaton.EMPTY_DOCUMENT, op).isIllFormed();
+  }
+
+  private static final class IllFormed extends RuntimeException {
+    IllFormed(String message) {
+      super(message);
+    }
+  }
+
+  private static final IllFormed ILL_FORMED = new IllFormed(
+      "Preallocated exception with a meaningless stack trace");
 
   /**
-   * Returns whether m is well-formed, applies to doc, and preserves the given
+   * Returns whether op is well-formed, applies to doc, and preserves the given
    * schema constraints.  Will not modify doc.
    */
-  public static <N, E extends N, T extends N> ViolationCollector validate(
-      AutomatonDocument doc, DocOp m) {
+  public static <N, E extends N, T extends N> ValidationResult validate(
+      final ViolationCollector v, AutomatonDocument doc, DocOp op) {
     final DocOpAutomaton a = new DocOpAutomaton(doc);
-    final ViolationCollector v = new ViolationCollector();
+    final ValidationResult[] accu = new ValidationResult[] { ValidationResult.VALID };
     try {
-      m.apply(new DocOpCursor() {
+      op.apply(new DocOpCursor() {
+        void abortIfIllFormed() {
+          if (accu[0].isIllFormed()) {
+            throw ILL_FORMED;
+          }
+        }
+
         @Override
         public void characters(String s) {
-          if (a.checkCharacters(s, v).isIllFormed()) {
-            throw new IllFormed();
-          }
+          accu[0] = accu[0].mergeWith(a.checkCharacters(s, v));
+          abortIfIllFormed();
           a.doCharacters(s);
         }
 
         @Override
         public void deleteCharacters(String chars) {
-          if (a.checkDeleteCharacters(chars, v).isIllFormed()) {
-            throw new IllFormed();
-          }
+          accu[0] = accu[0].mergeWith(a.checkDeleteCharacters(chars, v));
+          abortIfIllFormed();
           a.doDeleteCharacters(chars);
         }
 
         @Override
         public void deleteElementEnd() {
-          if (a.checkDeleteElementEnd(v).isIllFormed()) {
-            throw new IllFormed();
-          }
+          accu[0] = accu[0].mergeWith(a.checkDeleteElementEnd(v));
+          abortIfIllFormed();
           a.doDeleteElementEnd();
         }
 
         @Override
         public void deleteElementStart(String type, Attributes attrs) {
-          if (a.checkDeleteElementStart(type, attrs, v).isIllFormed()) {
-            throw new IllFormed();
-          }
+          accu[0] = accu[0].mergeWith(a.checkDeleteElementStart(type, attrs, v));
+          abortIfIllFormed();
           a.doDeleteElementStart(type, attrs);
         }
 
         @Override
         public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-          if (a.checkReplaceAttributes(oldAttrs, newAttrs, v).isIllFormed()) {
-            throw new IllFormed();
-          }
+          accu[0] = accu[0].mergeWith(a.checkReplaceAttributes(oldAttrs, newAttrs, v));
+          abortIfIllFormed();
           a.doReplaceAttributes(oldAttrs, newAttrs);
         }
 
         @Override
         public void retain(int itemCount) {
-          if (a.checkRetain(itemCount, v).isIllFormed()) {
-            throw new IllFormed();
-          }
+          accu[0] = accu[0].mergeWith(a.checkRetain(itemCount, v));
+          abortIfIllFormed();
           a.doRetain(itemCount);
         }
 
         @Override
         public void updateAttributes(AttributesUpdate u) {
-          if (a.checkUpdateAttributes(u, v).isIllFormed()) {
-            throw new IllFormed();
-          }
+          accu[0] = accu[0].mergeWith(a.checkUpdateAttributes(u, v));
+          abortIfIllFormed();
           a.doUpdateAttributes(u);
         }
 
         @Override
         public void annotationBoundary(AnnotationBoundaryMap map) {
-          if (a.checkAnnotationBoundary(map, v).isIllFormed()) {
-            throw new IllFormed();
-          }
+          accu[0] = accu[0].mergeWith(a.checkAnnotationBoundary(map, v));
+          abortIfIllFormed();
           a.doAnnotationBoundary(map);
         }
 
         @Override
         public void elementEnd() {
-          if (a.checkElementEnd(v).isIllFormed()) {
-            throw new IllFormed();
-          }
+          accu[0] = accu[0].mergeWith(a.checkElementEnd(v));
+          abortIfIllFormed();
           a.doElementEnd();
         }
 
         @Override
         public void elementStart(String type, Attributes attrs) {
-          if (a.checkElementStart(type, attrs, v).isIllFormed()) {
-            throw new IllFormed();
-          }
+          accu[0] = accu[0].mergeWith(a.checkElementStart(type, attrs, v));
+          abortIfIllFormed();
           a.doElementStart(type, attrs);
         }
       });
     } catch (IllFormed e) {
-      return v;
+      return ValidationResult.ILL_FORMED;
     }
-    if (a.checkFinish(v) == ValidationResult.ILL_FORMED) {
-      return v;
-    }
-    return v;
+    accu[0] = accu[0].mergeWith(a.checkFinish(v));
+    return accu[0];
   }
 
 }

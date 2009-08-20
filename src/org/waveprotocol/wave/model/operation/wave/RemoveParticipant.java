@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.waveprotocol.wave.model.operation.wave;
@@ -23,8 +22,6 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 /**
  * Operation class for the remove-participant operation.
- *
- *
  */
 public final class RemoveParticipant extends WaveletOperation {
   /** Participant to remove. */
@@ -61,26 +58,15 @@ public final class RemoveParticipant extends WaveletOperation {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
+  public WaveletOperation getInverse() {
+    return new AddParticipant(participant);
+  }
+
+
   @Override
   public String toString() {
     return "remove participant " + participant + super.toString();
-  }
-
-  @Override
-  public int hashCode() {
-    return participant.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof RemoveParticipant)) {
-      return false;
-    }
-    RemoveParticipant other = (RemoveParticipant) obj;
-    return participant.equals(other.participant);
   }
 
 }

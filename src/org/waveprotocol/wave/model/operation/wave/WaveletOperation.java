@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.waveprotocol.wave.model.operation.wave;
@@ -23,7 +22,8 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 public abstract class WaveletOperation implements Operation<WaveletData> {
 
-  public WaveletOperation() {}
+  // Package visibility so that the set of subtypes is fixed.
+  WaveletOperation() {}
 
   /**
    * This method delegates the operation logic to {@link #doApply(WaveletData)}.
@@ -46,10 +46,11 @@ public abstract class WaveletOperation implements Operation<WaveletData> {
   protected abstract void doApply(WaveletData wavelet) throws OperationException;
 
   /**
-   *  The number of operations to use when advancing the wavelet's version. The default is one,
-   *  document ops are larger.
+
+   * Get the inverse of the operation, such that any {@WaveletData} object applying this
+   * operation followed by its inverse will remain unchanged.
+   *
+   * @return the inverse of this operation
    */
-  public int size() {
-    return 1;
-  }
+  public abstract WaveletOperation getInverse();
 }

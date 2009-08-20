@@ -17,20 +17,22 @@
 
 package org.waveprotocol.wave.model.document.operation.impl;
 
-import java.util.List;
-
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.util.ImmutableUpdateMap;
+
+import java.util.List;
 
 public class AttributesUpdateImpl
     extends ImmutableUpdateMap<AttributesUpdateImpl, AttributesUpdate>
     implements AttributesUpdate {
 
+  public static final AttributesUpdateImpl EMPTY_MAP = new AttributesUpdateImpl();
+
   public AttributesUpdateImpl() {
   }
 
-  public AttributesUpdateImpl(String name, String oldValue, String newValue) {
-    super(name, oldValue, newValue);
+  public AttributesUpdateImpl(String ... triples) {
+    super(triples);
   }
 
   private AttributesUpdateImpl(List<AttributeUpdate> updates) {
@@ -40,6 +42,16 @@ public class AttributesUpdateImpl
   @Override
   protected AttributesUpdateImpl createFromList(List<AttributeUpdate> updates) {
     return new AttributesUpdateImpl(updates);
+  }
+
+  public static AttributesUpdateImpl fromSortedUpdates(List<AttributeUpdate> sortedUpdates) {
+    checkUpdatesSorted(sortedUpdates);
+    return fromSortedUpdatesUnchecked(sortedUpdates);
+  }
+
+  public static AttributesUpdateImpl fromSortedUpdatesUnchecked(
+      List<AttributeUpdate> sortedUpdates) {
+    return new AttributesUpdateImpl(sortedUpdates);
   }
 
 }

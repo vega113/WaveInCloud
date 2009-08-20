@@ -26,8 +26,6 @@ import org.waveprotocol.wave.model.document.operation.util.StateMap;
  * attributes in sorted order.
  *
  * Implementations must be immutable.
- *
- *
  */
 public interface Attributes extends StateMap {
   public Attributes updateWith(AttributesUpdate mutation);

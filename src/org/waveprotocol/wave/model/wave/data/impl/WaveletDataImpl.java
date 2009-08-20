@@ -23,6 +23,7 @@ import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.Doc
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.OpComparators;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -41,6 +42,9 @@ import java.util.Map;
  *
 */
 public class WaveletDataImpl implements WaveletData {
+
+  /** A document (operation) with no contents. */
+  private static final BufferedDocOp EMPTY_DOC_OP = new DocOpBuilder().finish();
 
   /** Id of the wave to which this wavelet belongs. */
   private final WaveId waveId;
@@ -79,7 +83,7 @@ public class WaveletDataImpl implements WaveletData {
   private BufferedDocOp getOrCreateDocument(String documentId) {
     BufferedDocOp doc = documents.get(documentId);
     if (doc == null) {
-      doc = new DocOpBuilder().finish();
+      doc = EMPTY_DOC_OP;
       documents.put(documentId, doc);
     }
     return doc;
@@ -112,8 +116,12 @@ public class WaveletDataImpl implements WaveletData {
   @Override
   public boolean modifyDocument(String documentId, BufferedDocOp operation)
       throws OperationException {
-    BufferedDocOp doc = getOrCreateDocument(documentId);
-    documents.put(documentId, Composer.compose(doc, operation));
+    BufferedDocOp newDoc = Composer.compose(getOrCreateDocument(documentId), operation);
+    if (OpComparators.SYNTACTIC_IDENTITY.equal(newDoc, EMPTY_DOC_OP)) {
+      documents.remove(documentId);
+    } else {
+      documents.put(documentId, newDoc);
+    }
     return true;
   }
 

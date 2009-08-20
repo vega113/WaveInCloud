@@ -17,13 +17,6 @@
 
 package org.waveprotocol.wave.model.document.operation.automaton;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
@@ -31,6 +24,13 @@ import org.waveprotocol.wave.model.document.operation.impl.Annotations;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationsImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationsUpdateImpl;
 import org.waveprotocol.wave.model.util.Preconditions;
+
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A state machine that can be used to accept or generate valid or invalid document
@@ -76,6 +76,8 @@ public final class DocOpAutomaton implements Cloneable {
    * The overall result of validating an operation.
    */
   public enum ValidationResult {
+    // These need to be ordered most severe to least severe due to the way
+    // we implement mergeWith().
     ILL_FORMED,
     INVALID_OP,
     INVALID_XML,
@@ -86,6 +88,11 @@ public final class DocOpAutomaton implements Cloneable {
     }
     public boolean isIllFormed() {
       return this == ILL_FORMED;
+    }
+
+    public ValidationResult mergeWith(ValidationResult other) {
+      Preconditions.checkNotNull(other, "Null ValidationResult");
+      return ValidationResult.values()[Math.min(this.ordinal(), other.ordinal())];
     }
   }
 
@@ -353,13 +360,16 @@ public final class DocOpAutomaton implements Cloneable {
     return addViolation(v, illFormedOperation("attributes update is null"));
   }
 
-  private ValidationResult duplicateAttributeKey(ViolationCollector v, String key) {
-    return addViolation(v, illFormedOperation("attribute update contains duplicate key "
-        + key));
+  private ValidationResult attributeKeysNotStrictlyMonotonic(ViolationCollector v, String key) {
+    return addViolation(v, illFormedOperation("attribute keys not strictly monotonic: " + key));
   }
 
   private ValidationResult nullAnnotationKey(ViolationCollector v) {
     return addViolation(v, illFormedOperation("annotation key is null"));
+  }
+
+  private ValidationResult invalidCharacterInAnnotationKey(ViolationCollector v, String key) {
+    return addViolation(v, illFormedOperation("invalid character in annotation key: " + key));
   }
 
   private ValidationResult duplicateAnnotationKey(ViolationCollector v, String key) {
@@ -788,6 +798,7 @@ public final class DocOpAutomaton implements Cloneable {
 
   private ValidationResult validateAnnotationKey(String key, ViolationCollector v) {
     if (key == null) { return nullAnnotationKey(v); }
+    if (key.contains("?") || key.contains("@")) { return invalidCharacterInAnnotationKey(v, key); }
     return ValidationResult.VALID;
   }
 
@@ -935,9 +946,14 @@ public final class DocOpAutomaton implements Cloneable {
 
   private ValidationResult checkAttributesWellFormed(Attributes attr, ViolationCollector v) {
     if (attr == null) { return nullAttributes(v); }
+    String previousKey = null;
     for (Map.Entry<String, String> e : attr.entrySet()) {
       if (e.getKey() == null) { return nullAttributeKey(v); }
       if (e.getValue() == null) { return nullAttributeValue(v); }
+      if (previousKey != null && previousKey.compareTo(e.getKey()) >= 0) {
+        return attributeKeysNotStrictlyMonotonic(v, e.getKey());
+      }
+      previousKey = e.getKey();
     }
     return ValidationResult.VALID;
   }
@@ -945,12 +961,14 @@ public final class DocOpAutomaton implements Cloneable {
   private ValidationResult checkAttributesUpdateWellFormed(AttributesUpdate u,
       ViolationCollector v) {
     if (u == null) { return nullAttributesUpdate(v); }
-    HashSet<String> keys = new HashSet<String>();
+    String previousKey = null;
     for (int i = 0; i < u.changeSize(); i++) {
       String key = u.getChangeKey(i);
       if (key == null) { return nullAttributeKey(v); }
-      if (keys.contains(key)) { return duplicateAttributeKey(v, key); }
-      keys.add(key);
+      if (previousKey != null && previousKey.compareTo(key) >= 0) {
+        return attributeKeysNotStrictlyMonotonic(v, key);
+      }
+      previousKey = key;
     }
     return ValidationResult.VALID;
   }
@@ -1126,8 +1144,8 @@ public final class DocOpAutomaton implements Cloneable {
 
     // validity
     if (effectiveDocSymbol() != DocSymbol.OPEN) { return noElementStartToChangeAttributes(v); }
-    String tag = effectiveDocSymbolTag();
-    assert tag != null;
+    String type = effectiveDocSymbolTag();
+    assert type != null;
     Attributes oldAttrs = effectiveDocSymbolAttributes();
     for (int i = 0; i < u.changeSize(); i++) {
       String key = u.getChangeKey(i);
@@ -1144,8 +1162,8 @@ public final class DocOpAutomaton implements Cloneable {
       String key = u.getChangeKey(i);
       String value = u.getNewValue(i);
       if (value != null) {
-        if (!elementAllowsAttribute(tag, key, value)) {
-          return invalidAttribute(v, tag, key, value);
+        if (!elementAllowsAttribute(type, key, value)) {
+          return invalidAttribute(v, type, key, value);
         }
       }
     }
@@ -1177,8 +1195,8 @@ public final class DocOpAutomaton implements Cloneable {
 
     // validity
     if (effectiveDocSymbol() != DocSymbol.OPEN) { return noElementStartToChangeAttributes(v); }
-    String tag = effectiveDocSymbolTag();
-    assert tag != null;
+    String type = effectiveDocSymbolTag();
+    assert type != null;
     Attributes actualOldAttrs = effectiveDocSymbolAttributes();
     if (!attributesEqual(actualOldAttrs, oldAttrs)) { return oldAttributesDifferFromDocument(v); }
     {
@@ -1187,12 +1205,9 @@ public final class DocOpAutomaton implements Cloneable {
     }
 
     // schema
-    for (Map.Entry<String, String> e : newAttrs.entrySet()) {
-      String key = e.getKey();
-      String value = e.getValue();
-      if (!elementAllowsAttribute(tag, key, value)) {
-        return invalidAttribute(v, tag, key, value);
-      }
+    {
+      ValidationResult r = validateAttributes(type, newAttrs, v);
+      if (!r.isValid()) { return r; }
     }
     return valid();
   }
@@ -1211,9 +1226,7 @@ public final class DocOpAutomaton implements Cloneable {
    * operation would be valid if no further operation components follow.
    */
   public ValidationResult checkFinish(ViolationCollector v) {
-    if (effectivePos != doc.length()) {
-      return missingRetainToEnd(v);
-    }
+    // well-formedness
     if (!insertionStackIsEmpty()) {
       for (InsertStart e : insertionStack) {
         return e.notClosed(this, v);
@@ -1224,6 +1237,11 @@ public final class DocOpAutomaton implements Cloneable {
     }
     if (annotationsUpdate.changeSize() > 0) {
       return mismatchedStartAnnotation(v, annotationsUpdate.getChangeKey(0));
+    }
+
+    // validity
+    if (effectivePos != doc.length()) {
+      return missingRetainToEnd(v);
     }
     return ValidationResult.VALID;
   }

@@ -12,16 +12,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.waveprotocol.wave.model.document.operation.util;
 
 /**
- * Defines a reversible change on a map
- *
- *
- *
+ * Defines a reversible change on a map.
  */
 public interface UpdateMap {
   int changeSize();

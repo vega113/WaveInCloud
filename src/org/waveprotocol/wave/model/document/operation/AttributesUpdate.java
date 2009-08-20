@@ -17,15 +17,18 @@
 
 package org.waveprotocol.wave.model.document.operation;
 
-import java.util.Collection;
-
 import org.waveprotocol.wave.model.document.operation.util.UpdateMap;
+
+import java.util.Collection;
 
 /**
  * A mutation of an <code>Attributes</code> object. This is a map from attribute
  * names to attribute values, indicating the attributes whose values should be
  * changed and what values they should be assigned, where a null value indicates
- * that the corresponding attribute should be removed.
+ * that the corresponding attribute should be removed. The entries in the map
+ * are sorted by the attribute names, so that the set obtained from entrySet()
+ * will allow you to easily iterate through the entries in sorted order.
+ *
  * Implementations must be immutable.
  */
 public interface AttributesUpdate extends UpdateMap {

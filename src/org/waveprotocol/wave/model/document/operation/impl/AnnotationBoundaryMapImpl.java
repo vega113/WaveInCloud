@@ -17,12 +17,12 @@
 
 package org.waveprotocol.wave.model.document.operation.impl;
 
+import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
+import org.waveprotocol.wave.model.util.Preconditions;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
-import org.waveprotocol.wave.model.util.Preconditions;
 
 /**
  * A simple, immutable implementation of {@link AnnotationBoundaryMap} that
@@ -36,6 +36,8 @@ import org.waveprotocol.wave.model.util.Preconditions;
 public class AnnotationBoundaryMapImpl implements AnnotationBoundaryMap {
 
   private static final String[] EMPTY_ARRAY = new String[0];
+
+  public static final AnnotationBoundaryMapImpl EMPTY_MAP = builder().build();
 
   private final String[] changeKeys;
   private final String[] changeOldValues;
@@ -87,7 +89,7 @@ public class AnnotationBoundaryMapImpl implements AnnotationBoundaryMap {
 
     public Builder updateValues(String ... triplets) {
       if (triplets.length % 3 != 0) {
-        throw new IllegalArgumentException("triplets must be a multiple of 3 in size");
+        throw new IllegalArgumentException("Triplets must be a multiple of 3 in size");
       }
 
       String[] keys = new String[triplets.length / 3];
@@ -120,7 +122,7 @@ public class AnnotationBoundaryMapImpl implements AnnotationBoundaryMap {
     }
 
     if (changeKeySet.contains(null) || endKeySet.contains(null)) {
-      throw new IllegalArgumentException("Null keys are not permitted");
+      throw new NullPointerException("Null keys are not permitted");
     }
 
     if (changeKeySet.contains("") || endKeySet.contains("")) {

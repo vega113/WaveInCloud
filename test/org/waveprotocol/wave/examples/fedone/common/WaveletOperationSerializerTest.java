@@ -27,6 +27,7 @@ import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
+import org.waveprotocol.wave.model.operation.OpComparators;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
@@ -47,33 +48,8 @@ import java.util.List;
  */
 public class WaveletOperationSerializerTest extends TestCase {
 
-  private static void assertDeepEquals(BufferedDocOp a, BufferedDocOp b) {
-    assertEquals(a.size(), b.size());
-    // TODO: Comparing the stringified operations is a hack.
-    assertEquals(DocOpUtil.toConciseString(a), DocOpUtil.toConciseString(b));
-  }
-
-  private static void assertDeepEquals(WaveletDocumentOperation a, WaveletDocumentOperation b) {
-    assertEquals(a.getDocumentId(), b.getDocumentId());
-    assertDeepEquals(a.getOperation(), b.getOperation());
-  }
-
   private static void assertDeepEquals(WaveletOperation a, WaveletOperation b) {
-    if (a instanceof AddParticipant) {
-      assertEquals(a, b);
-    } else if (a instanceof RemoveParticipant) {
-      assertEquals(a, b);
-    } else if (a instanceof NoOp) {
-      assertEquals(a, b);
-    } else if (a instanceof WaveletDocumentOperation) {
-      if (b instanceof WaveletDocumentOperation) {
-        assertDeepEquals((WaveletDocumentOperation) a, (WaveletDocumentOperation) b);
-      } else {
-        assertEquals(a, b);
-      }
-    } else {
-      assertEquals(a, b);
-    }
+    assertTrue(OpComparators.SYNTACTIC_IDENTITY.equal(a, b));
   }
 
   private static void assertDeepEquals(WaveletDelta a, WaveletDelta b) {

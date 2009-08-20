@@ -17,14 +17,14 @@
 
 package org.waveprotocol.wave.model.document.operation.util;
 
+import org.waveprotocol.wave.model.util.Preconditions;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-
-import org.waveprotocol.wave.model.util.Preconditions;
 
 public abstract class ImmutableUpdateMap<T extends ImmutableUpdateMap<T, U>, U extends UpdateMap>
     implements UpdateMap {
@@ -73,8 +73,28 @@ public abstract class ImmutableUpdateMap<T extends ImmutableUpdateMap<T, U>, U e
     updates = Collections.emptyList();
   }
 
-  public ImmutableUpdateMap(String name, String oldValue, String newValue) {
-    updates = Collections.singletonList(new AttributeUpdate(name, oldValue, newValue));
+  public ImmutableUpdateMap(String ... triples) {
+    if (triples.length % 3 != 0) {
+      throw new IllegalArgumentException("Triples must come in groups of three");
+    }
+
+    ArrayList<AttributeUpdate> accu = new ArrayList<AttributeUpdate>(triples.length / 3);
+    for (int i = 0; i < triples.length; i += 3) {
+      Preconditions.checkNotNull(triples[i], "Null key");
+      accu.add(new AttributeUpdate(triples[i], triples[i + 1], triples[i + 2]));
+    }
+
+    Collections.sort(accu, comparator);
+
+    for (int i = 1; i < accu.size(); i++) {
+      int x = comparator.compare(accu.get(i - 1), accu.get(i));
+      if (x == 0) {
+        throw new IllegalArgumentException("Duplicate key: " + accu.get(i).name);
+      }
+      assert x < 0;
+    }
+
+    updates = accu;
   }
 
   protected ImmutableUpdateMap(List<AttributeUpdate> updates) {
@@ -145,4 +165,18 @@ public abstract class ImmutableUpdateMap<T extends ImmutableUpdateMap<T, U>, U e
   public String toString() {
     return "Updates: " + updates;
   }
+
+  public static void checkUpdatesSorted(List<AttributeUpdate> updates) {
+    AttributeUpdate previous = null;
+    for (AttributeUpdate u : updates) {
+      Preconditions.checkNotNull(u, "Null attribute update");
+      assert u.name != null;
+      if (previous != null) {
+        Preconditions.checkArgument(previous.name.compareTo(u.name) < 0,
+            "Attribute keys not strictly monotonic: " + previous.name + ", " + u.name);
+      }
+      previous = u;
+    }
+  }
+
 }

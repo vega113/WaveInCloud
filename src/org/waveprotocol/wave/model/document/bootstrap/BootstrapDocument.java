@@ -12,17 +12,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.waveprotocol.wave.model.document.bootstrap;
-
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
-import java.util.TreeSet;
 
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
@@ -47,10 +39,15 @@ import org.waveprotocol.wave.model.operation.OpCursorException;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.util.Preconditions;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+import java.util.TreeSet;
+
 /**
  * A document implementation that is easy to understand but not efficient.
- *
- *
  */
 public class BootstrapDocument implements ModifiableDocument, AutomatonDocument, IsDocOp {
 
@@ -313,7 +310,8 @@ public class BootstrapDocument implements ModifiableDocument, AutomatonDocument,
   public void consume(DocOp m) throws OperationException {
     checkConsistent();
 
-    ViolationCollector v = DocOpValidator.validate(this, m);
+    ViolationCollector v = new ViolationCollector();
+    DocOpValidator.validate(v, this, m);
     if (!v.isValid()) {
       throw new OperationException("Validation failed: " + v);
     }

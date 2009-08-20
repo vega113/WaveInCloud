@@ -24,9 +24,6 @@ package org.waveprotocol.wave.model.util;
  * This class mostly mimics com.google.common.base.Preconditions but only
  * implement the parts we need.
  * (we avoid external dependencies from model/)
- *
- *
- *
  */
 public final class Preconditions {
   private Preconditions() {}

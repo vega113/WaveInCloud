@@ -17,12 +17,12 @@
 
 package org.waveprotocol.wave.model.document.operation.impl;
 
-import java.util.List;
-import java.util.Map;
-
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.util.ImmutableStateMap;
+
+import java.util.List;
+import java.util.Map;
 
 public class AttributesImpl
     extends ImmutableStateMap<AttributesImpl, AttributesUpdate>
@@ -33,6 +33,7 @@ public class AttributesImpl
   public AttributesImpl() {
     super();
   }
+
   public AttributesImpl(Map<String, String> map) {
     super(map);
   }
@@ -41,12 +42,22 @@ public class AttributesImpl
     super(attributes);
   }
 
+  public AttributesImpl(String... pairs) {
+    super(pairs);
+  }
+
   @Override
   protected AttributesImpl createFromList(List<Attribute> attributes) {
     return new AttributesImpl(attributes);
   }
-  public AttributesImpl(String... pairs) {
-    super(pairs);
+
+  public static AttributesImpl fromSortedAttributes(List<Attribute> sortedAttributes) {
+    checkAttributesSorted(sortedAttributes);
+    return fromSortedAttributesUnchecked(sortedAttributes);
+  }
+
+  public static AttributesImpl fromSortedAttributesUnchecked(List<Attribute> sortedAttributes) {
+    return new AttributesImpl(sortedAttributes);
   }
 
 }
