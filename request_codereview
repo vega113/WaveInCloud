@@ -443,7 +443,7 @@ group.add_option("-r", "--reviewers", action="store", dest="reviewers",
                  metavar="REVIEWERS", default=None,
                  help="Add reviewers (comma separated email addresses).")
 group.add_option("--cc", action="store", dest="cc",
-                 metavar="CC", default=None,
+                 metavar="CC", default="wave-protocol-code-discuss@googlegroups.com",
                  help="Add CC (comma separated email addresses).")
 # Upload options
 group = parser.add_option_group("Patch options")
