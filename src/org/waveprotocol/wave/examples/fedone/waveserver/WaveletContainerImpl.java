@@ -304,24 +304,56 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   /**
-   * Apply a list of operations to the wavelet container.
+   * Apply a list of operations from a single delta to the wavelet container.
    *
    * @param ops to apply
-   * @return the number of ops that were successfully applied
    */
-  protected int applyWaveletOperations(List<WaveletOperation> ops) {
-    // If we get here with no exceptions, the entire delta was transformed successfully
+  protected void applyWaveletOperations(List<WaveletOperation> ops) throws OperationException,
+      EmptyDeltaException {
+    if (ops.isEmpty()) {
+      LOG.warning("No operations to apply at version " + currentVersion);
+      throw new EmptyDeltaException();
+    }
+
+    WaveletOperation lastOp = null;
     int opsApplied = 0;
+
     try {
       for (WaveletOperation op : ops) {
-        op.apply(waveletData);
+        lastOp = op;
+        try {
+          op.apply(waveletData);
+        } catch (ArrayIndexOutOfBoundsException e) {
+          // This happens when two document operations of different sizes are composed
+          // TODO: OT should should throw a nicer error, update this code if/when it does
+          throw new OperationException(e);
+        }
         opsApplied++;
       }
     } catch (OperationException e) {
-      // Remove any ops that weren't successfully applied before creating transformed delta
-      LOG.warning(opsApplied + "/" + ops.size() + " ops were applied", e);
+      LOG.warning("Only applied " + opsApplied + " of " + ops.size() + " operations at version "
+          + currentVersion + ", rolling back, failed op was " + lastOp, e);
+      // Deltas are atomic, so roll back all operations that were successful
+      rollbackWaveletOperations(ops.subList(0, opsApplied));
+      throw new OperationException("Failed to apply all operations, none were applied", e);
     }
-    return opsApplied;
+  }
+
+  /**
+   * Like applyWaveletOperations, but applies the inverse of the given operations (in reverse), and
+   * no operations are permitted to fail.
+   *
+   * @param ops to roll back
+   */
+  private void rollbackWaveletOperations(List<WaveletOperation> ops) {
+    for (int i = ops.size() - 1; i >= 0; i--) {
+      try {
+        ops.get(i).getInverse().apply(waveletData);
+      } catch (OperationException e) {
+        throw new IllegalArgumentException("Failed to roll back " + ops.get(i) + " with inverse "
+            + ops.get(i).getInverse(), e);
+      }
+    }
   }
 
   /**
@@ -463,5 +495,10 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     } finally {
       releaseReadLock();
     }
+  }
+
+  @Override
+  public HashedVersion getCurrentVersion() {
+    return currentVersion;
   }
 }

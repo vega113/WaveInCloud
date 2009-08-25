@@ -47,7 +47,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
   @Override
   public DeltaApplicationResult submitRequest(WaveletName waveletName,
       ProtocolSignedDelta signedDelta) throws OperationException,
-      InvalidProtocolBufferException, InvalidHashException {
+      InvalidProtocolBufferException, InvalidHashException, EmptyDeltaException {
 
     acquireWriteLock();
     try {
@@ -72,7 +72,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
    * @throws OperationException
    */
   private DeltaApplicationResult transformAndApplyLocalDelta(ProtocolSignedDelta signedDelta)
-      throws OperationException, InvalidProtocolBufferException,
+      throws OperationException, InvalidProtocolBufferException, EmptyDeltaException,
       InvalidHashException {
 
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
@@ -89,11 +89,9 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       transformedOps = deltaAndVersion.first.getOperations();
     }
 
-    // Operations are allowed to fail, just ignore any ops after the one which did
-    int opsApplied = applyWaveletOperations(transformedOps);
-    if (opsApplied != transformedOps.size()) {
-      transformedOps = transformedOps.subList(0, opsApplied);
-    }
+    // If any of the operations fail to apply, the wavelet data will be returned to its original
+    // state and an OperationException thrown
+    applyWaveletOperations(transformedOps);
 
     // Serialize applied delta with the old "current" version, giving the canonical version of
     // of the applied delta as a ByteString (so that the hash applies to the bytes)

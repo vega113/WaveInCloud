@@ -30,6 +30,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
@@ -204,6 +205,10 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           } catch (InvalidHashException e) {
             state = State.CORRUPTED;
             throw new WaveServerException("Couldn't apply authoritative delta", e);
+          } catch (EmptyDeltaException e) {
+            // The host shouldn't be forwarding empty deltas!
+            state = State.CORRUPTED;
+            throw new WaveServerException("Couldn't apply authoritative delta", e);
           }
 
           // This is the version 0 case - now we have a valid wavelet!
@@ -248,7 +253,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
    */
   private DeltaApplicationResult transformAndApplyRemoteDelta(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta) throws OperationException,
-      AccessControlException, InvalidHashException, InvalidProtocolBufferException {
+      AccessControlException, InvalidHashException, InvalidProtocolBufferException,
+      EmptyDeltaException {
 
     // The canonical hashed version should actually match the currentVersion at this point, since
     // the caller of transformAndApply delta will have made sure the applied deltas are ordered
@@ -262,10 +268,12 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
         ProtocolWaveletDelta.getDefaultInstance(),
         appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
-    WaveletDelta delta = WaveletOperationSerializer.deserialize(protocolDelta.getMessage()).first;
+    Pair<WaveletDelta, HashedVersion> deltaAndVersion =
+      WaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
     // Transform operations against the current version
-    List<WaveletOperation> transformedOps = maybeTransformSubmittedDelta(delta, currentVersion);
+    List<WaveletOperation> transformedOps =
+        maybeTransformSubmittedDelta(deltaAndVersion.first, deltaAndVersion.second);
     if (transformedOps == null) {
       // As a sanity check, the hash from the applied delta should NOT be set (an optimisation, but
       // part of the protocol).
@@ -274,16 +282,14 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         // TODO: re-enable this exception for version 0.3 of the spec
 //        throw new InvalidHashException("Applied delta and its contained delta have same hash");
       }
-      transformedOps = delta.getOperations();
+      transformedOps = deltaAndVersion.first.getOperations();
     }
 
     // Apply operations.  These shouldn't fail since they're the authoritative versions, so if they
     // do then the wavelet is corrupted (and the caller of this method will sort it out).
-    int opsApplied = applyWaveletOperations(transformedOps);
-    if (opsApplied != transformedOps.size()) {
-      throw new OperationException(opsApplied + "/" + transformedOps.size() + " ops were applied");
-    }
+    applyWaveletOperations(transformedOps);
 
-    return commitAppliedDelta(appliedDelta, new WaveletDelta(delta.getAuthor(), transformedOps));
+    return commitAppliedDelta(appliedDelta,
+        new WaveletDelta(deltaAndVersion.first.getAuthor(), transformedOps));
   }
 }

@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
+
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -30,7 +32,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
 import org.waveprotocol.wave.examples.fedone.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
@@ -245,8 +246,12 @@ public class WaveServerImpl implements WaveServer {
     }
 
     try {
+      checkWaveletHosting(true, waveletName);
       certificateManager.verifyDelta(signedDelta);
       submitDelta(waveletName, signedDelta, listener);
+    } catch (HostingException e) {
+      LOG.warning("Remote tried to submit to local wavelet", e);
+      listener.onFailure("Local wavelet update");
     } catch (SignatureException e) {
       LOG.warning("Submit request: Delta failed verification. WaveletName: " + waveletName +
           " delta: " + signedDelta, e);
@@ -538,6 +543,8 @@ public class WaveServerImpl implements WaveServer {
       if (psi == null) {
         LOG.warning("Couldn't find signer info for " + sig);
         if (resultCount.decrementAndGet() == 0) {
+          LOG.info("Finished signature broadcast with " + successCount.get()
+              + " successful, running callback");
           callback.done(successCount.get());
         }
       } else {
@@ -557,6 +564,8 @@ public class WaveServerImpl implements WaveServer {
 
           private void anotherPostDone() {
             if (resultCount.decrementAndGet() == 0) {
+              LOG.info("Finished signature broadcast with " + successCount.get()
+                  + " successful, running callback");
               callback.done(successCount.get());
             }
           }
@@ -586,10 +595,10 @@ public class WaveServerImpl implements WaveServer {
     if (isLocalWavelet(waveletName)) {
       DeltaApplicationResult submitResult;
       final ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta;
-      LocalWaveletContainer wc;
+      LocalWaveletContainer wc = null;
 
       try {
-        LOG.info("## WS: Got submit: " + waveletName + " delta: " + delta.toString());
+        LOG.info("## WS: Got submit: " + waveletName + " delta: " + canonicalWaveletDelta);
 
         wc = getOrCreateLocalWavelet(waveletName,
             new ParticipantId(canonicalWaveletDelta.getMessage().getAuthor()));
@@ -611,8 +620,7 @@ public class WaveServerImpl implements WaveServer {
           HashedVersion resultingVersion = HashedVersion.getHashedVersionAfter(appliedDelta);
           LOG.info("## WS: Submit result: " + waveletName + " appliedDelta: " + appliedDelta);
           resultListener.onSuccess(appliedDelta.getMessage().getOperationsApplied(),
-              WaveletOperationSerializer.serialize(resultingVersion), appliedDelta.getMessage()
-                  .getApplicationTimestamp());
+              serialize(resultingVersion), appliedDelta.getMessage().getApplicationTimestamp());
 
           // Send the results to the client frontend
           if (clientListener != null) {
@@ -623,11 +631,7 @@ public class WaveServerImpl implements WaveServer {
           }
 
           // Broadcast results to the remote servers, but make sure they all have our signatures
-          // TODO: this is obviously flawed, since either we are being very inefficient (and send
-          // the signatures every time), or we store who we've sent certs to and neglect (forever)
-          // any servers which have lost our certificate (which in FedOne would be any time they
-          // restarted -- and we can't expect servers to all restart at the same time :-), or we
-          // try and be intelligent (which is the plan -- but we need XMPP error propogation!)
+          // TODO: don't send signatures, add queuing and let the remote request signer info
           for (final String hostDomain : getParticipantDomains(wc)) {
             final WaveletFederationListener host = federationHosts.get(hostDomain);
             postSignerInfoAsync(delta.getSignatureList(), hostDomain, new PostSignerInfoCallback() {
@@ -669,6 +673,9 @@ public class WaveServerImpl implements WaveServer {
       } catch (InvalidHashException e) {
         resultListener.onFailure(e.getMessage());
         return;
+      } catch (EmptyDeltaException e) {
+        // This is okay, just succeed silently.  Use an empty timestamp since nothing was applied.
+        resultListener.onSuccess(0, serialize(wc.getCurrentVersion()), 0);
       }
     } else {
       // For remote wavelets post required signatures to the authorative server then send delta

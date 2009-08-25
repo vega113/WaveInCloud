@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
@@ -93,4 +94,7 @@ abstract interface WaveletContainer {
 
   /** A list of participants currently on the wave */
   List<ParticipantId> getParticipants();
+
+  /** @return the current version of the wavelet. */
+  HashedVersion getCurrentVersion();
 }
