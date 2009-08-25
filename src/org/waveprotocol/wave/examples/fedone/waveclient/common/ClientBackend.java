@@ -290,30 +290,32 @@ public class ClientBackend {
     }
 
     // Apply operations to the wavelet
+    List<Pair<String, WaveletOperation>> successfulOps = Lists.newArrayList();
+
     for (ProtocolWaveletDelta protobufDelta : protobufDeltas) {
       Pair<WaveletDelta, HashedVersion> deltaAndVersion =
         WaveletOperationSerializer.deserialize(protobufDelta);
       List<WaveletOperation> ops = deltaAndVersion.first.getOperations();
-      List<WaveletOperation> successfulOps = Lists.newArrayList();
 
       for (WaveletOperation op : ops) {
         try {
           op.apply(wavelet);
-          successfulOps.add(op);
+          successfulOps.add(Pair.of(protobufDelta.getAuthor(), op));
         } catch (OperationException e) {
           // It should be okay (if cheeky) for the client to just ignore failed ops.  In any case,
           // this should never happen if our server is behaving correctly.
           LOG.severe("OperationException when applying " + op + " to " + wavelet);
         }
       }
+    }
 
-      wave.setWaveletVersion(waveletName.waveletId,
-          WaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()));
+    wave.setWaveletVersion(waveletName.waveletId, WaveletOperationSerializer
+        .deserialize(waveletUpdate.getResultingVersion()));
 
-      // Notify listeners separately to avoid them operating on invalid wavelet state
-      for (WaveletOperation op : successfulOps) {
-        notifyWaveletOperationListeners(protobufDelta.getAuthor(), wavelet, op);
-      }
+    // Notify listeners separately to avoid them operating on invalid wavelet state
+    // TODO: take this out of the network thread
+    for (Pair<String, WaveletOperation> authorAndOp : successfulOps) {
+      notifyWaveletOperationListeners(authorAndOp.first, wavelet, authorAndOp.second);
     }
 
     // If we have been removed from this wavelet then remove the data too, since if we're re-added
@@ -367,14 +369,18 @@ public class ClientBackend {
    */
   private void notifyWaveletOperationListeners(String author, WaveletData wavelet, WaveletOperation op) {
     for (WaveletOperationListener listener : waveletOperationListeners) {
-      if (op instanceof WaveletDocumentOperation) {
-        listener.waveletDocumentUpdated(author, wavelet, (WaveletDocumentOperation) op);
-      } else if (op instanceof AddParticipant) {
-        listener.participantAdded(author, wavelet, ((AddParticipant) op).getParticipantId());
-      } else if (op instanceof RemoveParticipant) {
-        listener.participantRemoved(author, wavelet, ((RemoveParticipant) op).getParticipantId());
-      } else if (op instanceof NoOp) {
-        listener.noOp(author, wavelet);
+      try {
+        if (op instanceof WaveletDocumentOperation) {
+          listener.waveletDocumentUpdated(author, wavelet, (WaveletDocumentOperation) op);
+        } else if (op instanceof AddParticipant) {
+          listener.participantAdded(author, wavelet, ((AddParticipant) op).getParticipantId());
+        } else if (op instanceof RemoveParticipant) {
+          listener.participantRemoved(author, wavelet, ((RemoveParticipant) op).getParticipantId());
+        } else if (op instanceof NoOp) {
+          listener.noOp(author, wavelet);
+        }
+      } catch (RuntimeException e) {
+        LOG.severe("RuntimeException for listener " + listener, e);
       }
     }
   }
