@@ -26,10 +26,12 @@ FEDONE_VERSION=`grep ^fedone.version= build.properties | cut -f2 -d=`
 ### Server-specific variables
 ###
 
+# These will probably need to be changed
 XMPP_SERVER_SECRET="opensesame"
 PRIVATE_KEY_FILENAME=${WAVE_SERVER_DOMAIN_NAME}.key
 CERTIFICATE_FILENAME_LIST=${WAVE_SERVER_DOMAIN_NAME}.cert
 
+# These should be okay to leave alone
 CERTIFICATE_DOMAIN_NAME=$WAVE_SERVER_DOMAIN_NAME
 XMPP_SERVER_HOSTNAME=$WAVE_SERVER_DOMAIN_NAME
 XMPP_SERVER_IP=$XMPP_SERVER_HOSTNAME
