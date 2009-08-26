@@ -66,7 +66,7 @@ public final class RemoveParticipant extends WaveletOperation {
 
   @Override
   public String toString() {
-    return "remove participant " + participant + super.toString();
+    return "RemoveParticipant(" + participant + ")";
   }
 
 }

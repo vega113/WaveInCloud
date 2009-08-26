@@ -65,4 +65,9 @@ public final class WaveletDocumentOperation extends WaveletOperation {
     operation.apply(inverse);
     return new WaveletDocumentOperation(documentId, inverse.finish());
   }
+
+  @Override
+  public String toString() {
+    return "WaveletDocumentOperation(" + documentId + "," + operation + ")";
+  }
 }

@@ -78,4 +78,21 @@ public class WaveletDelta {
       return false;
     }
   }
+
+  @Override
+  public String toString() {
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append("WaveletDelta(" + author + ",");
+    if (ops.isEmpty()) {
+      stringBuilder.append("[]");
+    } else {
+      stringBuilder.append(" " + ops.size() + " ops: [" + ops.get(0));
+      for (int i = 1; i < ops.size(); i++) {
+        stringBuilder.append("," + ops.get(i));
+      }
+      stringBuilder.append("]");
+    }
+    stringBuilder.append(")");
+    return stringBuilder.toString();
+  }
 }

@@ -43,7 +43,7 @@ public final class NoOp extends WaveletOperation {
 
   @Override
   public String toString() {
-    return "no-op " + super.toString();
+    return "NoOp()";
   }
 
 }

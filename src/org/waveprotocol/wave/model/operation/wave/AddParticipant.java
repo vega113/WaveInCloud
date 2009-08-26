@@ -65,7 +65,7 @@ public final class AddParticipant extends WaveletOperation {
 
   @Override
   public String toString() {
-    return "add participant " + participant + super.toString();
+    return "AddParticipant(" + participant + ")";
   }
 
 }
