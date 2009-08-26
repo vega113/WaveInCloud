@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Configuration for the FedOne run scripts.
+#
+# Copy this file to run-config.sh and configure the variables there.
+# Please see http://code.google.com/p/wave-protocol/wiki/Installation for
+# instructions on how to configure the flags.
+#
+
+# Remove this line after configuring
+echo "You must configure the run-config.sh script" ; exit 1
+
+### Variables common to the server, clients, and agents
+###
+
+# Domain name of the wave server 
+WAVE_SERVER_DOMAIN_NAME=example.com
+
+# Host name and port the wave server's client frontend listens on
+WAVE_SERVER_HOSTNAME=localhost
+WAVE_SERVER_PORT=9876
+
+# The version of FedOne, extracted from the build.properties file
+FEDONE_VERSION=`grep ^fedone.version= build.properties | cut -f2 -d=`
+
+### Server-specific variables
+###
+
+XMPP_SERVER_SECRET="opensesame"
+PRIVATE_KEY_FILENAME=${WAVE_SERVER_DOMAIN_NAME}.key
+CERTIFICATE_FILENAME_LIST=${WAVE_SERVER_DOMAIN_NAME}.cert
+
+CERTIFICATE_DOMAIN_NAME=$WAVE_SERVER_DOMAIN_NAME
+XMPP_SERVER_HOSTNAME=$WAVE_SERVER_DOMAIN_NAME
+XMPP_SERVER_IP=$XMPP_SERVER_HOSTNAME
+XMPP_SERVER_PORT=5275

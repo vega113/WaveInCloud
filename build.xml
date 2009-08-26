@@ -142,7 +142,7 @@
       <classpath refid="fedone.test.classpath"/>
     </taskdef>
 
-    <junit fork="yes" showoutput="yes">
+    <junit fork="yes" showoutput="no" haltonerror="yes">
       <classpath>
         <path refid="fedone.classpath"/>
         <path refid="fedone.test.classpath"/>
@@ -170,7 +170,7 @@
 
   </target>
 
-  <target name="agents" depends="dist-client" description="Compiles agents">
+  <target name="stage" depends="compile" description="Copy classes and runtime depenencies to the staging directory">
     <!-- we unzip and copy all the runtime deps into a staging dir first -->
     <unzip dest="${staging}">
       <fileset dir="${lib}">
@@ -185,76 +185,118 @@
         <include name="**/*"/>
       </fileset>
     </copy>
+  </target>
 
-    <jar destfile="${jar.outfile-echoey}" basedir="${staging}">
+  <target name="dist" depends="test, dist-api, dist-server, dist-client-console, dist-agent-echoey" description="Compiles, tests and assembles artifacts">
+  </target>
+
+  <target name="dist-api" depends="stage" description="Assembles the FedOne API">
+    <jar destfile="${jar.outfile-api}">
+      <fileset dir="${staging}">
+        <include name="org/waveprotocol/**/*" />
+        <!-- Only exclude runnable targets -->
+        <exclude name="org/waveprotocol/wave/examples/fedone/waveclient/agents/echoey/**/*" />
+        <exclude name="org/waveprotocol/wave/examples/fedone/waveclient/console/**/*" />
+        <exclude name="org/waveprotocol/wave/examples/fedone/waveserver/**/*" />
+      </fileset>
       <manifest>
-        <!-- Application entry point -->
-        <attribute name="Main-Class"
-            value="org.waveprotocol.wave.examples.fedone.agents.echoey.Echoey"/>
-
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
-        <attribute name="Implementation-Title" value="Google Wave Agent"/>
+        <attribute name="Implementation-Title" value="Google Wave Reference Impl API"/>
         <attribute name="Implementation-Version" value="${fedone.version}"/>
       </manifest>
     </jar>
   </target>
 
-  <target name="dist" depends="test, dist-client, agents" description="Compiles, tests and assembles runnable artifacts">
-    <!-- we unzip and copy all the runtime deps into a staging dir first -->
-    <unzip dest="${staging}">
-      <fileset dir="${lib}">
-        <include name="*.jar"/>
+  <target name="dist-server" depends="stage" description="Assembles the FedOne server">
+    <jar destfile="${jar.outfile-server}">
+      <fileset dir="${staging}">
+        <include name="com/google/common/**/*" />
+        <include name="com/google/inject/**/*" />
+        <include name="com/google/protobuf/**/*" />
+        <include name="gnu/inet/**/*" />
+        <include name="javax/xml/**/*" />
+        <include name="org/aopalliance/**/*" />
+        <include name="org/apache/commons/cli/**/*" />
+        <include name="org/apache/commons/codec/**/*" />
+        <include name="org/dom4j/**/*" />
+        <include name="org/jivesoftware/**/*" />
+        <include name="org/waveprotocol/**/*" />
+        <include name="org/xmlpull/**/*" />
+        <include name="org/xmpp/**/*" />
       </fileset>
-      <fileset dir="${lib.runtime}">
-	<include name="*/*.jar"/>
-      </fileset>
-    </unzip>
-    <copy todir="${staging}" preservelastmodified="true">
-      <fileset dir="${core.classes}">
-        <include name="**/*"/>
-      </fileset>
-    </copy>
-
-    <jar destfile="${jar.outfile}" basedir="${staging}">
       <manifest>
         <!-- Application entry point -->
         <attribute name="Main-Class"
-            value="org.waveprotocol.wave.examples.fedone.ServerMain"/>
-
+          value="org.waveprotocol.wave.examples.fedone.ServerMain"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
-        <attribute name="Implementation-Title" value="Google Wave Reference Impl"/>
+        <attribute name="Implementation-Title" value="Google Wave FedOne Server"/>
         <attribute name="Implementation-Version" value="${fedone.version}"/>
       </manifest>
     </jar>
   </target>
-	
-  <target name="dist-client" depends="compile" description="Compiles, tests and assembles runnable client">
-    <!-- we unzip and copy all the runtime deps into a staging dir first -->
-    <unzip dest="${staging}">
-      <fileset dir="${lib}">
-        <include name="*.jar"/>
-      </fileset>
-      <fileset dir="${lib.runtime}">
-	<include name="*/*.jar"/>
-      </fileset>
-    </unzip>
-    <copy todir="${staging}" preservelastmodified="true">
-      <fileset dir="${core.classes}">
-        <include name="**/*"/>
-      </fileset>
-    </copy>
 
-    <jar destfile="${jar.outfile-client}" basedir="${staging}">
+  <target name="dist-client-console" depends="stage" description="Assembles the FedOne console client">
+    <jar destfile="${jar.outfile-client-console}">
+      <fileset dir="${staging}">
+        <include name="com/google/common/**/*" />
+        <include name="com/google/inject/**/*" />
+        <include name="com/google/protobuf/**/*" />
+        <include name="jline/**/*" />
+        <include name="org/apache/commons/codec/**/*" />
+        <include name="org/waveprotocol/**/*" />
+      </fileset>
       <manifest>
         <!-- Application entry point -->
         <attribute name="Main-Class"
-            value="org.waveprotocol.wave.examples.fedone.waveclient.console.ConsoleClient"/>
-
+          value="org.waveprotocol.wave.examples.fedone.waveclient.console.ConsoleClient"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
-        <attribute name="Implementation-Title" value="Google Wave Reference Impl Client"/>
+        <attribute name="Implementation-Title" value="Google Wave FedOne Console Client"/>
         <attribute name="Implementation-Version" value="${fedone.version}"/>
       </manifest>
     </jar>
-   </target>
+  </target>
+
+  <target name="dist-agent-echoey" depends="stage" description="Assembles the FedOne echoey agent">
+    <jar destfile="${jar.outfile-agent-echoey}">
+      <fileset dir="${staging}">
+        <include name="com/google/common/**/*" />
+        <include name="com/google/inject/**/*" />
+        <include name="com/google/protobuf/**/*" />
+        <include name="org/apache/commons/codec/**/*" />
+        <include name="org/waveprotocol/**/*" />
+      </fileset>
+      <manifest>
+        <!-- Application entry point -->
+        <attribute name="Main-Class"
+          value="org.waveprotocol.wave.examples.fedone.agents.echoey.Echoey"/>
+        <attribute name="Implementation-Vendor" value="Google, Inc."/>
+        <attribute name="Implementation-Title" value="Google Wave FedOne Echoey Agent"/>
+        <attribute name="Implementation-Version" value="${fedone.version}"/>
+      </manifest>
+    </jar>
+  </target>
+
+	<!-- This rule should be run whenever the build configuration (i.e. build files, libraries) is changed -->
+  <target name="dist-test" depends="dist, test" description="Runs all the unit tests in the project against the jar files">
+    <taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
+      <classpath refid="fedone.test.classpath"/>
+    </taskdef>
+
+    <junit fork="yes" showoutput="no" haltonerror="yes">
+      <classpath>
+        <path refid="fedone.classpath"/>
+        <path refid="fedone.test.classpath"/>
+        <pathelement location="${jar.outfile-server}"/>
+        <pathelement location="${test.classes}"/>
+      </classpath>
+      <batchtest>
+        <fileset dir="${test}">
+          <include name="**/*Test.java"/>
+        </fileset>
+      </batchtest>
+      <formatter type="xml"/>
+    </junit>
+  </target>
+
 </project>
 
