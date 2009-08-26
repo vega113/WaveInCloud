@@ -18,8 +18,8 @@
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.io.IOException;
 
@@ -78,10 +78,10 @@ public abstract class AbstractAgent implements AgentEventListener {
   /**
    * Sends an operation to server.
    *
-   * @param wavelet the wavelet to apply the operation to.
+   * @param waveletName of the wavelet to apply the operation to.
    * @param operation the operation to apply.
    */
-  public void sendWaveletOperation(WaveletData wavelet, WaveletOperation operation) {
-    connection.sendWaveletOperation(wavelet, operation);
+  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
+    connection.sendWaveletOperation(waveletName, operation);
   }
 }

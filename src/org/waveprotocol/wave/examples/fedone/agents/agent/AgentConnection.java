@@ -20,8 +20,8 @@ package org.waveprotocol.wave.examples.fedone.agents.agent;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
+import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.io.IOException;
 
@@ -106,13 +106,13 @@ public class AgentConnection {
   /**
    * Submits a wavelet operation to the backend.
    *
-   * @param wavelet the wavelet to operate on.
+   * @param waveletName of the wavelet to operate on.
    * @param operation the operation to apply to the wavelet.
    */
-  public void sendWaveletOperation(WaveletData wavelet, WaveletOperation operation) {
+  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
     }
-    backend.sendWaveletOperation(wavelet, operation);
+    backend.sendWaveletOperation(waveletName, operation);
   }
 }

@@ -104,6 +104,9 @@ public class ConsoleClient implements WaveletOperationListener {
       new Command("undo", "[user@domain]", "undo last line by a user, defaulting to current user"),
       new Command("scroll", "lines", "set the number of lines to scroll by with { and }"),
       new Command("view", "mode", "change view mode for the open wavelet (normal, xml)"),
+      new Command("log", "", "dump the log to the screen"),
+      new Command("dumplog", "file", "dump the log to a file"),
+      new Command("clearlog", "", "clear the log"),
       new Command("quit", "", "quit the client"));
 
   /**
@@ -286,6 +289,20 @@ public class ConsoleClient implements WaveletOperationListener {
       } else {
         badArgs(cmd);
       }
+    } else if (cmd.equals("log")) {
+      out.print(ClientBackend.getLog());
+    } else if (cmd.equals("dumplog")) {
+      if (args.size() == 1) {
+        try {
+          new PrintStream(args.get(0)).print(ClientBackend.getLog());
+        } catch (IOException e) {
+          out.println("Couldn't write log to " + args.get(0) + ": " + e);
+        }
+      } else {
+        badArgs(cmd);
+      }
+    } else if (cmd.equals("clearlog")) {
+      ClientBackend.clearLog();
     } else if (cmd.equals("quit")) {
       System.exit(0);
     } else {
@@ -403,7 +420,7 @@ public class ConsoleClient implements WaveletOperationListener {
       docOp.characters(text);
 
       backend.sendWaveletOperation(
-          getOpenWavelet(),
+          getOpenWavelet().getWaveletName(),
           new WaveletDocumentOperation(MAIN_DOCUMENT_ID, docOp.finish()));
     } else {
       out.println("Error: no open wave, run \"/open\"");
@@ -467,7 +484,7 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void newWave() {
     if (isConnected()) {
-      backend.createNewWave();
+      backend.createConversationWave();
     } else {
       errorNotConnected();
     }
@@ -484,7 +501,7 @@ public class ConsoleClient implements WaveletOperationListener {
 
       // Don't send an invalid op, although the server should be robust enough to deal with it
       if (!getOpenWavelet().getParticipants().contains(addId)) {
-        backend.sendWaveletOperation(getOpenWavelet(), new AddParticipant(addId));
+        backend.sendWaveletOperation(getOpenWavelet().getWaveletName(), new AddParticipant(addId));
       } else {
         out.println("Error: " + name + " is already a participant on this wave");
       }
@@ -503,7 +520,8 @@ public class ConsoleClient implements WaveletOperationListener {
       ParticipantId removeId = new ParticipantId(name);
 
       if (getOpenWavelet().getParticipants().contains(removeId)) {
-        backend.sendWaveletOperation(getOpenWavelet(), new RemoveParticipant(removeId));
+        backend.sendWaveletOperation(getOpenWavelet().getWaveletName(),
+            new RemoveParticipant(removeId));
       } else {
         out.println("Error: " + name + " is not a participant on this wave");
       }
@@ -600,7 +618,7 @@ public class ConsoleClient implements WaveletOperationListener {
     if (lastLine.get() >= 0) {
       WaveletDocumentOperation undoOp = new WaveletDocumentOperation(MAIN_DOCUMENT_ID,
           ConsoleUtils.createLineDeletion(getOpenDocument(), lastLine.get()));
-      backend.sendWaveletOperation(getOpenWavelet(), undoOp);
+      backend.sendWaveletOperation(getOpenWavelet().getWaveletName(), undoOp);
     } else {
       out.println("Error: " + userId + " hasn't written anything yet");
     }

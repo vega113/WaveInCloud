@@ -52,10 +52,14 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Handler;
+import java.util.logging.SimpleFormatter;
+import java.util.logging.StreamHandler;
 
 /**
  * The "backend" of a basic wave client, designed for user interfaces to interact with.
@@ -65,6 +69,11 @@ import java.util.Map;
 public class ClientBackend {
 
   private static final Log LOG = Log.get(ClientBackend.class);
+  private static final ByteArrayOutputStream logOutput = new ByteArrayOutputStream();
+  static {
+    LOG.getLogger().addHandler(new StreamHandler(logOutput, new SimpleFormatter()));
+    LOG.getLogger().setUseParentHandlers(false);
+  }
 
   /** User id of the user of the backend (encapsulating both user and server). */
   private final ParticipantId userId;
@@ -110,8 +119,24 @@ public class ClientBackend {
     this.rpcServer = ProtocolWaveClientRpc.newStub(rpcChannel);
 
     // Opening the index wave will kickstart the process of receiving waves
-    List<String> waveletIdPrefixes = ImmutableList.of("");
-    openWave(CommonConstants.INDEX_WAVE_ID, waveletIdPrefixes);
+    openWave(CommonConstants.INDEX_WAVE_ID, "");
+  }
+
+  /**
+   * @return the client backend log.
+   */
+  public static String getLog() {
+    for (Handler handler : LOG.getLogger().getHandlers()) {
+      handler.flush();
+    }
+    return logOutput.toString();
+  }
+
+  /**
+   * Clear the log.
+   */
+  public static void clearLog() {
+    logOutput.reset();
   }
 
   /**
@@ -121,6 +146,7 @@ public class ClientBackend {
    */
   public void shutdown() {
     for (RpcController rpcController : waveControllers.values()) {
+      LOG.info("Cancelling RpcController " + rpcController);
       rpcController.startCancel();
     }
 
@@ -134,9 +160,9 @@ public class ClientBackend {
    *
    * @param waveId of wave to open
    * @param waveletIdPrefix filter such that the server will send wavelet updates for ids that
-   * match any of these prefixes
+   * match any of this prefix
    */
-  private void openWave(WaveId waveId, List<String> waveletIdPrefix) {
+  private void openWave(WaveId waveId, String waveletIdPrefix) {
     if (waveControllers.containsKey(waveId)) {
       throw new IllegalArgumentException(waveId + " is already open");
     } else {
@@ -150,11 +176,12 @@ public class ClientBackend {
 
     openRequest.setParticipantId(getUserId().getAddress());
     openRequest.setWaveId(waveId.serialise());
-    openRequest.addAllWaveletIdPrefix(waveletIdPrefix);
+    openRequest.addWaveletIdPrefix(waveletIdPrefix);
 
     final RpcController rpcController = rpcChannel.newRpcController();
     waveControllers.put(waveId, rpcController);
 
+    LOG.info("Opening wave " + waveId + " for prefix \"" + waveletIdPrefix + '"');
     rpcServer.open(
         rpcController,
         openRequest.build(),
@@ -171,28 +198,27 @@ public class ClientBackend {
   }
 
   /**
-   * Create a new wave and tell the server about it.
+   * Create a new conversation wave and tell the server about it, by adding ourselves as a
+   * participant on the conversation root.
    *
    * @return the {@link ClientWaveView} created
    */
-  public ClientWaveView createNewWave() {
-    return createNewWave(getIdGenerator().newWaveId());
+  public ClientWaveView createConversationWave() {
+    return createConversationWave(getIdGenerator().newWaveId());
   }
 
   /**
-   * Create a new wave with a given id and tell the server about it (by adding ourselves as a
-   * participant to the conversation root).
+   * Create a new conversation wave with a given wave id and tell the server about it, by adding
+   * ourselves as a participant on the conversation root.
    *
    * @param newWaveId the id to give the new wave
    * @return the {@link ClientWaveView} created
    */
-  private ClientWaveView createNewWave(WaveId newWaveId) {
-    ClientWaveView newWaveView = createWave(newWaveId);
-    WaveletData newWavelet = newWaveView.createWavelet(
-        getIdGenerator().newConversationRootWaveletId());
-
-    sendWaveletOperation(newWavelet, new AddParticipant(getUserId()));
-    return newWaveView;
+  private ClientWaveView createConversationWave(WaveId newWaveId) {
+    ClientWaveView waveView = createWave(newWaveId);
+    WaveletData convRoot = waveView.createWavelet(getIdGenerator().newConversationRootWaveletId());
+    sendWaveletOperation(convRoot.getWaveletName(), new AddParticipant(getUserId()));
+    return waveView;
   }
 
   /**
@@ -213,37 +239,35 @@ public class ClientBackend {
   /**
    * Send a single wavelet operation over the wire.
    *
-   * This is a convenience wrapper for sendWaveletDelta which creates a delta from the
-   * single operation.
-   *
-   * @param wavelet to apply the operation to
+   * @param waveletName of the wavelet to apply the operation to
    * @param op to send
    */
-  public void sendWaveletOperation(WaveletData wavelet, WaveletOperation op) {
-    sendWaveletDelta(wavelet, new WaveletDelta(getUserId(), ImmutableList.of(op)));
+  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation op) {
+    sendWaveletDelta(waveletName, new WaveletDelta(getUserId(), ImmutableList.of(op)));
   }
 
   /**
    * Send a wavelet delta over the wire.
    *
-   * @param wavelet that the delta applies to
+   * @param waveletName of the wavelet that the delta applies to
    * @param delta to send
    */
-  public void sendWaveletDelta(WaveletData wavelet, WaveletDelta delta) {
+  private void sendWaveletDelta(WaveletName waveletName, WaveletDelta delta) {
     // Build the submit request
     ProtocolSubmitRequest.Builder submitRequest = ProtocolSubmitRequest.newBuilder();
 
     try {
-      submitRequest.setWaveletName(uriCodec.waveletNameToURI(wavelet.getWaveletName()));
+      submitRequest.setWaveletName(uriCodec.waveletNameToURI(waveletName));
     } catch (EncodingException e) {
       throw new IllegalArgumentException(e);
     }
 
-    ClientWaveView wave = waves.get(wavelet.getWaveletName().waveId);
+    ClientWaveView wave = waves.get(waveletName.waveId);
     submitRequest.setDelta(WaveletOperationSerializer.serialize(delta,
-        wave.getWaveletVersion(wavelet.getWaveletName().waveletId)));
+        wave.getWaveletVersion(waveletName.waveletId)));
     final RpcController rpcController = rpcChannel.newRpcController();
 
+    LOG.info("Sending delta " + delta + " for " + waveletName);
     rpcServer.submit(
         rpcController,
         submitRequest.build(),
@@ -265,6 +289,7 @@ public class ClientBackend {
    * @param waveletUpdate the wavelet update
    */
   public void receiveWaveletUpdate(ProtocolWaveletUpdate waveletUpdate) {
+    LOG.info("Received update " + waveletUpdate);
     List<ProtocolWaveletDelta> protobufDeltas = waveletUpdate.getAppliedDeltaList();
 
     WaveletName waveletName;
@@ -355,7 +380,7 @@ public class ClientBackend {
     for (IndexEntry indexEntry : indexEntries) {
       if (!waveControllers.containsKey(indexEntry.getWaveId())) {
         WaveId waveId = indexEntry.getWaveId();
-        openWave(waveId, ImmutableList.of(ClientUtils.getConversationRootId(waveId).serialise()));
+        openWave(waveId, ClientUtils.getConversationRootId(waveId).serialise());
       }
     }
   }

@@ -96,7 +96,7 @@ public class Echoey extends AbstractAgent {
     }
     WaveletDocumentOperation op =
         new WaveletDocumentOperation(MAIN_DOCUMENT_ID, builder.finish());
-    sendWaveletOperation(wavelet, op);
+    sendWaveletOperation(wavelet.getWaveletName(), op);
   }
 
   private void appendText(WaveletData wavelet, String text) {
