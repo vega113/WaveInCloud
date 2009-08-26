@@ -177,7 +177,7 @@
         <include name="*.jar"/>
       </fileset>
       <fileset dir="${lib.runtime}">
-	<include name="*/*.jar"/>
+        <include name="*/*.jar"/>
       </fileset>
     </unzip>
     <copy todir="${staging}" preservelastmodified="true">
@@ -276,7 +276,7 @@
     </jar>
   </target>
 
-	<!-- This rule should be run whenever the build configuration (i.e. build files, libraries) is changed -->
+  <!-- This rule should be run whenever the build configuration (i.e. build files, libraries) is changed -->
   <target name="dist-test" depends="dist, test" description="Runs all the unit tests in the project against the jar files">
     <taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
       <classpath refid="fedone.test.classpath"/>
