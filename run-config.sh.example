@@ -27,12 +27,15 @@ FEDONE_VERSION=`grep ^fedone.version= build.properties | cut -f2 -d=`
 ###
 
 # These will probably need to be changed
-XMPP_SERVER_SECRET="opensesame"
+XMPP_SERVER_SECRET=opensesame
 PRIVATE_KEY_FILENAME=${WAVE_SERVER_DOMAIN_NAME}.key
 CERTIFICATE_FILENAME_LIST=${WAVE_SERVER_DOMAIN_NAME}.cert
+
+# Set XMPP_SERVER_IP to localhost if the XMPP and FedOne servers are
+# running on the same host
+XMPP_SERVER_IP=$XMPP_SERVER_HOSTNAME
 
 # These should be okay to leave alone
 CERTIFICATE_DOMAIN_NAME=$WAVE_SERVER_DOMAIN_NAME
 XMPP_SERVER_HOSTNAME=$WAVE_SERVER_DOMAIN_NAME
-XMPP_SERVER_IP=$XMPP_SERVER_HOSTNAME
 XMPP_SERVER_PORT=5275
