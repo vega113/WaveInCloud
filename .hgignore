@@ -1,7 +1,9 @@
 syntax: glob
+*.cert
+*.key
+*.orig
+TEST-*.xml
+bin
 build
 dist/fedone*.jar
-
-syntax: regexp
-^bin/
-^TEST-
+run-config.sh
