@@ -5,5 +5,5 @@ syntax: glob
 TEST-*.xml
 bin
 build
-dist/fedone*.jar
+dist
 run-config.sh
