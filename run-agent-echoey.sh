@@ -11,4 +11,4 @@ fi
 
 USER_NAME=echoey@$WAVE_SERVER_DOMAIN_NAME
 echo "running agent.echoey as user: ${USER_NAME}"
-java -jar dist/fedone-agent-echoey-$FEDONE_VERSION.jar $USER_NAME $WAVE_SERVER_DOMAIN_NAME $WAVE_SERVER_PORT
+java -jar dist/fedone-agent-echoey-$FEDONE_VERSION.jar $USER_NAME $WAVE_SERVER_HOSTNAME $WAVE_SERVER_PORT

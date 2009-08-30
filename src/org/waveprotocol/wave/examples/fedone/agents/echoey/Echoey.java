@@ -66,7 +66,7 @@ public class Echoey extends AbstractAgent {
         System.out.println("usage: java Echoey <username> <hostname> <port>");
       }
     } catch (Exception e) {
-      System.err.println("Catastrophic failure: " + e);
+      LOG.severe("Catastrophic failure", e);
       System.exit(1);
     }
 
