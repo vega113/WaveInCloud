@@ -93,8 +93,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     // state and an OperationException thrown
     applyWaveletOperations(transformedOps);
 
-    // Serialize applied delta with the old "current" version, giving the canonical version of
-    // of the applied delta as a ByteString (so that the hash applies to the bytes)
+    // Build the applied delta to commit
     ProtocolAppliedWaveletDelta.Builder appliedDeltaBuilder =
         ProtocolAppliedWaveletDelta.newBuilder()
             .setSignedOriginalDelta(signedDelta)
@@ -109,9 +108,8 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
           WaveletOperationSerializer.serialize(currentVersion));
     }
 
-    ProtocolAppliedWaveletDelta protocolAppliedDelta = appliedDeltaBuilder.build();
-    ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = ByteStringMessage.from(
-        ProtocolAppliedWaveletDelta.getDefaultInstance(), protocolAppliedDelta.toByteString());
+    ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = ByteStringMessage.fromMessage(
+        appliedDeltaBuilder.build());
 
     return commitAppliedDelta(appliedDelta,
         new WaveletDelta(deltaAndVersion.first.getAuthor(), transformedOps));

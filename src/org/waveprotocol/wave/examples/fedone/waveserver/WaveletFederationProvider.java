@@ -61,7 +61,7 @@ public interface WaveletFederationProvider {
 
   interface HistoryResponseListener {
     /**
-     * @param deltaList of canonical {@code ProtocolAppliedWaveletDelta}s, represented as
+     * @param deltaList of serialised {@code ProtocolAppliedWaveletDelta}s, represented as
      *        {@code ByteString}s.  Note that these are not guaranteed to parse correctly as
      *        applied deltas, so it is up to the implementation of onSuccess to deal with this.
      * @param lastCommittedVersion of the wavelet that is committed to persistent

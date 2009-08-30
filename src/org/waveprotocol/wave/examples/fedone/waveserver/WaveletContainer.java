@@ -58,7 +58,7 @@ abstract interface WaveletContainer {
    * @param versionStart start version (inclusive), minimum 0.
    * @param versionEnd end version (exclusive).
    * @throws WaveletStateException if the wavelet is in a state unsuitable for retrieving history.
-   * @return canonical {@code ProtocolAppliedWaveletDelta}s in the range as requested. Note that
+   * @return serialised {@code ProtocolAppliedWaveletDelta}s in the range as requested. Note that
    *         if a delta straddles one of the requested version boundaries, it will be included.
    */
   NavigableSet<ByteStringMessage<ProtocolAppliedWaveletDelta>> requestHistory(

@@ -103,19 +103,19 @@ public class CertificateManagerImpl implements CertificateManager {
   public ByteStringMessage<ProtocolWaveletDelta> verifyDelta(ProtocolSignedDelta signedDelta)
       throws SignatureException, UnknownSignerException {
 
-    ByteStringMessage<ProtocolWaveletDelta> canonicalDelta;
+    ByteStringMessage<ProtocolWaveletDelta> delta;
     try {
-      canonicalDelta = ByteStringMessage.from(
+      delta = ByteStringMessage.from(
           ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
     } catch (InvalidProtocolBufferException e) {
       throw new IllegalArgumentException("signed delta does not contain valid delta", e);
     }
 
     if (disableVerfication) {
-      return canonicalDelta;
+      return delta;
     }
 
-    List<String> domains = getParticipantDomains(canonicalDelta.getMessage());
+    List<String> domains = getParticipantDomains(delta.getMessage());
 
     if (domains.size() != signedDelta.getSignatureCount()) {
       throw new SignatureException("found " + domains.size() + " domains in " +
@@ -126,10 +126,10 @@ public class CertificateManagerImpl implements CertificateManager {
     for (int i = 0; i < domains.size(); i++) {
       String domain = domains.get(i);
       ProtocolSignature signature = signedDelta.getSignature(i);
-      verifySingleSignature(canonicalDelta, signature, domain);
+      verifySingleSignature(delta, signature, domain);
     }
 
-    return canonicalDelta;
+    return delta;
   }
 
   /**

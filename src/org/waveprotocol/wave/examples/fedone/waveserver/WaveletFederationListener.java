@@ -44,7 +44,7 @@ public interface WaveletFederationListener {
    * wavelet is committed to persistent storage.
    *
    * @param waveletName name of wavelet.
-   * @param deltas UNTRANSFORMED, {@code ByteString} canonical representation of {@code
+   * @param deltas UNTRANSFORMED, {@code ByteString} serialised representation of {@code
    *        ProtocolAppliedWaveletDelta}s that were applied to the given wavelet. Note that the
    *        deltas are NOT TRANSFORMED to the current version of the wavelet. May be empty if
    *        committedVersion is not null, namely when the caller only wants to communicate that the

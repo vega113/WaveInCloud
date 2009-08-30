@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.deserialize;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
@@ -141,15 +143,13 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                         + lastCommittedVersion + " sizeof(deltaSet) = " + deltaList.size());
 
                     // Turn the ByteStrings in to a useful representation
-                    List<ByteStringMessage<ProtocolAppliedWaveletDelta>> canonicalDeltaList =
+                    List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltaList =
                         Lists.newArrayList();
-                    for (ByteString newAppliedDelta : deltaList) {
+                    for (ByteString appliedDelta : deltaList) {
                       try {
-                        ByteStringMessage<ProtocolAppliedWaveletDelta> canonicalDelta =
-                            ByteStringMessage.from(
-                                ProtocolAppliedWaveletDelta.getDefaultInstance(), newAppliedDelta);
-                        LOG.info("Delta incoming from history: " + canonicalDelta);
-                        canonicalDeltaList.add(canonicalDelta);
+                        LOG.info("Delta incoming from history: " + appliedDelta);
+                        appliedDeltaList.add(ByteStringMessage.from(
+                            ProtocolAppliedWaveletDelta.getDefaultInstance(), appliedDelta));
                       } catch (InvalidProtocolBufferException e) {
                         LOG.warning("Invalid protocol buffer when requesting history!");
                         state = State.CORRUPTED;
@@ -160,7 +160,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                     // Try updating again with the new set of deltas, with a null federation
                     // provider since we shouldn't need to reach here again
                     try {
-                      update(canonicalDeltaList, domain, null, deltaCallback);
+                      update(appliedDeltaList, domain, null, deltaCallback);
                     } catch (WaveServerException e) {
                       // TODO: deal with this
                       LOG.severe("Exception when updating from history", e);
@@ -242,11 +242,11 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
   }
 
   /**
-   * Apply a canonical applied delta to a remote wavelet. This assumes the
+   * Apply a serialised applied delta to a remote wavelet. This assumes the
    * caller has validated that the delta is at the correct version and can be
    * applied to the wavelet. Must be called with writelock held.
    *
-   * @param appliedDelta that is to be applied to the wavelet in its canonical form
+   * @param appliedDelta that is to be applied to the wavelet in its serialised form
    * @return transformed operations are applied to this delta
    * @throws AccessControlException if the supplied Delta's historyHash does not
    *         match the canonical history.
@@ -256,15 +256,14 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       AccessControlException, InvalidHashException, InvalidProtocolBufferException,
       EmptyDeltaException {
 
-    // The canonical hashed version should actually match the currentVersion at this point, since
+    // The serialised hashed version should actually match the currentVersion at this point, since
     // the caller of transformAndApply delta will have made sure the applied deltas are ordered
-    HashedVersion canonicalHashedVersion =
-      WaveletOperationSerializer.deserialize(getVersionAppliedAt(appliedDelta.getMessage()));
-    if (!canonicalHashedVersion.equals(currentVersion)) {
+    HashedVersion hashedVersion = deserialize(getVersionAppliedAt(appliedDelta.getMessage()));
+    if (!hashedVersion.equals(currentVersion)) {
       throw new IllegalStateException("Applied delta does not apply at current version");
     }
 
-    // Extract the canonical wavelet delta
+    // Extract the serialised wavelet delta
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
         ProtocolWaveletDelta.getDefaultInstance(),
         appliedDelta.getMessage().getSignedOriginalDelta().getDelta());

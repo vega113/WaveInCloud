@@ -49,7 +49,7 @@ public interface CertificateManager {
    * Verify the signature in the Signed Delta. Use the local WSP's certificate
    * to sign the delta.
    *
-   * @param delta as a byte string (the canonical representation of a ProtocolWaveletDelta)
+   * @param delta as a byte string (the serialised representation of a ProtocolWaveletDelta)
    * @return signed delta
    */
   ProtocolSignedDelta signDelta(ByteStringMessage<ProtocolWaveletDelta> delta);
@@ -59,7 +59,7 @@ public interface CertificateManager {
    * address to identify the certificate.
    *
    * @param signedDelta to verify
-   * @return verified canonical ProtocolWaveletDelta, if signatures can be verified
+   * @return verified serialised ProtocolWaveletDelta, if signatures can be verified
    * @throws SignatureException if the signatures cannot be verified.
    */
   ByteStringMessage<ProtocolWaveletDelta> verifyDelta(ProtocolSignedDelta signedDelta)

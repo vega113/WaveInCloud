@@ -22,8 +22,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
 /**
- * Enforces consistency between canonical representations of protocol buffers
- * (stored as {@code ByteString}s) and their types.
+ * Enforces consistency between serialised representations of protocol buffers (stored as
+ * {@code ByteString}s) and their types.
  *
  *
  */
@@ -45,10 +45,10 @@ public final class ByteStringMessage<T extends Message> {
   }
 
   /**
-   * Create a {@code ByteStringMessage} from the message itself.  This only ever be used when
-   * creating the canonical version of a message, otherwise it defeats the purpose of this class.
+   * Create a {@code ByteStringMessage} from the message itself.  This should only ever be used when
+   * committing the serialised version of a message, otherwise it defeats the purpose of this class.
    *
-   * @param message to form the canonical version of
+   * @param message to form the serialised version of
    */
   @SuppressWarnings("unchecked")
   public static <K extends Message> ByteStringMessage<K> fromMessage(K message) {
@@ -76,14 +76,14 @@ public final class ByteStringMessage<T extends Message> {
   }
 
   /**
-   * @return the canonical representation of this message
+   * @return the serialised representation of this message
    */
   public ByteString getByteString() {
     return this.byteString;
   }
 
   /**
-   * @return the canonical byte array representation of this message
+   * @return the serialised byte array representation of this message
    */
   public byte[] getByteArray() {
     return this.byteString.toByteArray();

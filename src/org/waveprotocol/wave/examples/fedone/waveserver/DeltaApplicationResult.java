@@ -21,7 +21,7 @@ import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 /**
- * Composes a ProtocolWaveletDelta and the result of its application, the canonical representation
+ * Composes a ProtocolWaveletDelta and the result of its application, the serialised representation
  * of a {@code ProtocolAppliedWaveletDelta} as a {@code ByteStringMessage}.
  *
  *

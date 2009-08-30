@@ -127,12 +127,12 @@ public class WaveServerImpl implements WaveServer {
           return;
         }
 
-        // Turn raw canonical ByteStrings in to a more useful representation
+        // Turn raw serialised ByteStrings in to a more useful representation
         List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas = Lists.newArrayList();
-        for (ByteString canonicalDelta : rawAppliedDeltas) {
+        for (ByteString delta : rawAppliedDeltas) {
           try {
             appliedDeltas.add(ByteStringMessage.from(
-                ProtocolAppliedWaveletDelta.getDefaultInstance(), canonicalDelta));
+                ProtocolAppliedWaveletDelta.getDefaultInstance(), delta));
           } catch (InvalidProtocolBufferException e) {
             LOG.info("Invalid applied delta protobuf for incoming " + waveletName, e);
             safeMarkWaveletCorrupted(wavelet);
@@ -233,9 +233,9 @@ public class WaveServerImpl implements WaveServer {
       SubmitResultListener listener) {
     // Disallow creation of wavelets by remote users.
     try {
-      ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.from(
+      ByteStringMessage<ProtocolWaveletDelta> delta = ByteStringMessage.from(
           ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
-      if (canonicalDelta.getMessage().getHashedVersion().getVersion() == 0) {
+      if (delta.getMessage().getHashedVersion().getVersion() == 0) {
         LOG.warning("Remote user tried to submit delta at version 0 - disallowed. " + signedDelta);
         listener.onFailure("Remote users may not create wavelets.");
         return;
@@ -377,9 +377,9 @@ public class WaveServerImpl implements WaveServer {
   @Override
   public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
       SubmitResultListener listner) {
-    // The canonical version of this delta happens now.  This should be the only place, ever!
-    ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.fromMessage(delta);
-    ProtocolSignedDelta signedDelta = certificateManager.signDelta(canonicalDelta);
+    // The serilalised version of this delta happens now.  This should be the only place, ever!
+    ProtocolSignedDelta signedDelta = certificateManager.signDelta(
+        ByteStringMessage.fromMessage(delta));
     submitDelta(waveletName, signedDelta, listner);
   }
 
@@ -584,9 +584,9 @@ public class WaveServerImpl implements WaveServer {
    */
   private void submitDelta(final WaveletName waveletName, final ProtocolSignedDelta delta,
       final SubmitResultListener resultListener) {
-    ByteStringMessage<ProtocolWaveletDelta> canonicalWaveletDelta;
+    ByteStringMessage<ProtocolWaveletDelta> waveletDelta;
     try {
-      canonicalWaveletDelta = ByteStringMessage.from(
+      waveletDelta = ByteStringMessage.from(
           ProtocolWaveletDelta.getDefaultInstance(), delta.getDelta());
     } catch (InvalidProtocolBufferException e) {
       throw new IllegalArgumentException("Signed delta does not contain valid wavelet delta", e);
@@ -598,10 +598,10 @@ public class WaveServerImpl implements WaveServer {
       LocalWaveletContainer wc = null;
 
       try {
-        LOG.info("## WS: Got submit: " + waveletName + " delta: " + canonicalWaveletDelta);
+        LOG.info("## WS: Got submit: " + waveletName + " delta: " + waveletDelta);
 
         wc = getOrCreateLocalWavelet(waveletName,
-            new ParticipantId(canonicalWaveletDelta.getMessage().getAuthor()));
+            new ParticipantId(waveletDelta.getMessage().getAuthor()));
 
         /*
          * Synchronise on the wavelet container so that updates passed to clientListener and
