@@ -40,3 +40,8 @@ XMPP_SERVER_PORT=5275
 # running on the same host
 XMPP_SERVER_IP=$XMPP_SERVER_HOSTNAME
 
+# Set true to disable the verification of signed deltas
+WAVESERVER_DISABLE_VERIFICATION=false
+
+# Set true to disable the verification of signers (certificates)
+WAVESERVER_DISABLE_SIGNER_VERIFICATION=true
