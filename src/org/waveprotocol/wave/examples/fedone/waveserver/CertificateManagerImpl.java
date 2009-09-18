@@ -18,10 +18,13 @@
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -35,13 +38,17 @@ import org.waveprotocol.wave.examples.fedone.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.crypto.WaveSignatureVerifier;
 import org.waveprotocol.wave.examples.fedone.crypto.WaveSigner;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationProvider.DeltaSignerInfoResponseListener;
+import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolSignature;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -57,6 +64,14 @@ public class CertificateManagerImpl implements CertificateManager {
   private final CertPathStore certPathStore;
   private final boolean disableVerfication;
 
+  /**
+   * Map of signer ids to requests for the signer info for those ids.  Each signer id is mapped to
+   * a multimap: a domain mapped to a list of callbacks for that domain, called when the signer info
+   * is available for the signer id.  It is arranged by domain to facilitate the optimisation where
+   * exactly 1 signer request is sent per domain.
+   */
+  private final Map<ByteString, Multimap<String, SignerInfoPrefetchResultListener>> signerInfoRequests;
+
   @Inject
   public CertificateManagerImpl(
       @Named("waveserver_disable_verification") boolean disableVerfication,
@@ -65,6 +80,7 @@ public class CertificateManagerImpl implements CertificateManager {
     this.waveSigner = signer;
     this.verifier = verifier;
     this.certPathStore = certPathStore;
+    this.signerInfoRequests = Maps.newHashMap();
 
     if (disableVerfication) {
       LOG.warning("** SIGNATURE VERIFICATION DISABLED ** "
@@ -177,15 +193,116 @@ public class CertificateManagerImpl implements CertificateManager {
   }
 
   @Override
-  public void storeSignerInfo(ProtocolSignerInfo signerInfo)
+  public synchronized void storeSignerInfo(ProtocolSignerInfo signerInfo)
       throws SignatureException {
     verifier.verifySignerInfo(new SignerInfo(signerInfo));
     certPathStore.put(signerInfo);
   }
 
   @Override
-  public ProtocolSignerInfo retrieveSignerInfo(ByteString signerId) {
+  public synchronized ProtocolSignerInfo retrieveSignerInfo(ByteString signerId) {
     SignerInfo signerInfo = certPathStore.get(signerId.toByteArray());
+    // null is acceptable for retrieveSignerInfo.  The user of the certificate manager should call
+    // prefetchDeltaSignerInfo for the mechanism to actually populate the certificate manager.
     return signerInfo == null ? null : signerInfo.toProtoBuf();
+  }
+
+  @Override
+  public synchronized void prefetchDeltaSignerInfo(WaveletFederationProvider provider,
+      ByteString signerId, WaveletName waveletName, ProtocolHashedVersion deltaEndVersion,
+      SignerInfoPrefetchResultListener callback) {
+    ProtocolSignerInfo signerInfo = retrieveSignerInfo(signerId);
+
+    if (signerInfo != null) {
+      callback.onSuccess(signerInfo);
+    } else {
+      enqueueSignerInfoRequest(provider, signerId, waveletName, deltaEndVersion, callback);
+    }
+  }
+
+  /**
+   * Enqueue a signer info request for a signed delta on a given domain.
+   */
+  private synchronized void enqueueSignerInfoRequest(final WaveletFederationProvider provider,
+      final ByteString signerId, final WaveletName waveletName,
+      ProtocolHashedVersion deltaEndVersion, SignerInfoPrefetchResultListener callback) {
+    final String domain = waveletName.waveletId.getDomain();
+    Multimap<String, SignerInfoPrefetchResultListener> domainCallbacks =
+        signerInfoRequests.get(signerId);
+
+    if (domainCallbacks == null) {
+      domainCallbacks = ArrayListMultimap.create();
+      signerInfoRequests.put(signerId, domainCallbacks);
+    }
+
+    // The thing is, we need to add multiple callbacks for the same domain, but we only want to
+    // have one outstanding request per domain
+    domainCallbacks.put(domain, callback);
+
+    if (domainCallbacks.get(domain).size() == 1) {
+        provider.getDeltaSignerInfo(signerId, waveletName, deltaEndVersion,
+            new DeltaSignerInfoResponseListener() {
+              @Override public void onFailure(String errorMessage) {
+                LOG.warning("getDeltaSignerInfo failed: " + errorMessage);
+                // Fail all requests on this domain
+                dequeueSignerInfoRequestForDomain(signerId, errorMessage, domain);
+              }
+
+              @Override public void onSuccess(ProtocolSignerInfo signerInfo) {
+                try {
+                  storeSignerInfo(signerInfo);
+                  dequeueSignerInfoRequest(signerId, null);
+                } catch (SignatureException e) {
+                  LOG.warning("Failed to verify signer info", e);
+                  dequeueSignerInfoRequest(signerId, e.toString());
+                }
+              }});
+    }
+  }
+
+  /**
+   * Dequeue all signer info requests for a given signer id.
+   *
+   * @param signerId to dequeue requests for
+   * @param errorMessage if there was an error, null for success
+   */
+  private synchronized void dequeueSignerInfoRequest(ByteString signerId, String errorMessage) {
+    List<String> domains = ImmutableList.copyOf(signerInfoRequests.get(signerId).keySet());
+    for (String domain : domains) {
+      dequeueSignerInfoRequestForDomain(signerId, errorMessage, domain);
+    }
+  }
+
+  /**
+   * Dequeue all signer info requests for a given signer id and a specific domain.
+   *
+   * @param signerId to dequeue requests for
+   * @param errorMessage if there was an error, null for success
+   * @param domain to dequeue the signer requests for
+   */
+  private synchronized void dequeueSignerInfoRequestForDomain(ByteString signerId,
+      String errorMessage, String domain) {
+    Multimap<String, SignerInfoPrefetchResultListener> domainListeners =
+        signerInfoRequests.get(signerId);
+    if (domainListeners == null) {
+      LOG.info("There are no domain listeners for signer " + signerId + " domain "+ domain);
+      return;
+    } else {
+      LOG.info("Dequeuing " + domainListeners.size() + " listeners for domain " + domain);
+    }
+
+    for (SignerInfoPrefetchResultListener listener : domainListeners.get(domain)) {
+      if (errorMessage == null) {
+        listener.onSuccess(retrieveSignerInfo(signerId));
+      } else {
+        listener.onFailure(errorMessage);
+      }
+    }
+
+    domainListeners.removeAll(domain);
+    if (domainListeners.isEmpty()) {
+      // No listeners for any domains, delete the signer id for the overall map
+      signerInfoRequests.remove(signerId);
+    }
   }
 }

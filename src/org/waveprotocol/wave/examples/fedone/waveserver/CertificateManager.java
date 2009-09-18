@@ -24,6 +24,8 @@ import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
 import org.waveprotocol.wave.examples.fedone.crypto.SignerInfo;
 import org.waveprotocol.wave.examples.fedone.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.crypto.WaveSigner;
+import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
@@ -83,4 +85,27 @@ public interface CertificateManager {
    * @return the signer information, if found, null otherwise
    */
   ProtocolSignerInfo retrieveSignerInfo(ByteString signerId);
+
+  /**
+   * Callback interface for {@code prefetchSignerInfo}.
+   */
+  interface SignerInfoPrefetchResultListener {
+    void onSuccess(ProtocolSignerInfo signerInfo);
+    void onFailure(String errorMessage);
+  }
+
+  /**
+   * Prefetch the signer info for a signed delta, calling back when the signer info is available.
+   * Note that the signer info may be immediately available, in which case the callback is
+   * immediately called in the same thread.
+   *
+   * @param provider of signer information
+   * @param signerId to prefetch the signer info for
+   * @param deltaEndVersion of delta to use for validating a getDeltaSignerInfo call, if necessary
+   * @param waveletName of the wavelet to prefetch the signer info for
+   * @param callback when the signer info is available, or on failure
+   */
+  void prefetchDeltaSignerInfo(WaveletFederationProvider provider, ByteString signerId,
+      WaveletName waveletName, ProtocolHashedVersion deltaEndVersion,
+      SignerInfoPrefetchResultListener callback);
 }
