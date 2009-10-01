@@ -22,29 +22,29 @@ import java.util.Map;
 
 import org.waveprotocol.wave.model.document.operation.util.ImmutableStateMap;
 
-public class AnnotationsImpl
-    extends ImmutableStateMap<AnnotationsImpl, AnnotationsUpdate>
-    implements Annotations {
+public class AnnotationMapImpl
+    extends ImmutableStateMap<AnnotationMapImpl, AnnotationsUpdate>
+    implements AnnotationMap {
 
   /**
    * An empty T map.
    */
-  public static final AnnotationsImpl EMPTY_MAP = new AnnotationsImpl();
+  public static final AnnotationMapImpl EMPTY_MAP = new AnnotationMapImpl();
 
-  public AnnotationsImpl() {
+  public AnnotationMapImpl() {
     super();
   }
-  public AnnotationsImpl(Map<String, String> map) {
+  public AnnotationMapImpl(Map<String, String> map) {
     super(map);
   }
 
-  AnnotationsImpl(List<Attribute> attributes) {
+  AnnotationMapImpl(List<Attribute> attributes) {
     super(attributes);
   }
 
   @Override
-  protected AnnotationsImpl createFromList(List<Attribute> attributes) {
-    return new AnnotationsImpl(attributes);
+  protected AnnotationMapImpl createFromList(List<Attribute> attributes) {
+    return new AnnotationMapImpl(attributes);
   }
 
 }

@@ -26,8 +26,8 @@ import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -122,7 +122,7 @@ public class ClientUtils {
       builder.retain(previousTotalLength - index);
     }
 
-    return builder.finish();
+    return builder.build();
   }
 
   /**
@@ -163,7 +163,7 @@ public class ClientUtils {
    * @return a empty document
    */
   public static BufferedDocOp createEmptyDocument() {
-    return new DocOpBuilder().finish();
+    return new DocOpBuilder().build();
   }
 
   /**

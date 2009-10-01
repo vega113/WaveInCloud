@@ -17,88 +17,73 @@
 
 package org.waveprotocol.wave.model.document.operation.impl;
 
-import java.util.ArrayList;
-
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpComponentType;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
-import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
+import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton.ViolationCollector;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.AnnotationBoundary;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.Characters;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.DeleteCharacters;
-import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.DeleteElementEnd;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.DeleteElementStart;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.DocOpComponent;
-import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.ElementEnd;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.ElementStart;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.ReplaceAttributes;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.Retain;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.UpdateAttributes;
 import org.waveprotocol.wave.model.util.Preconditions;
 
-/*
- * TODO: We should get rid of BufferedDocOpImpl. All we need is the
- * builder. The BufferedDocOpImpl type has a private constructor, and the
- * Builder does not return the concrete type, so it can never really be used
- * directly by anything so there seems to be no real purpose for having this type.
+
+/**
+ * Package-private. Use one of the following to construct a buffered doc op:
+ * <ul>
+ * <li>{@link DocOpBuilder}</li>
+ * <li>{@link DocInitializationBuilder}</li>
+ * <li>{@link DocOpBuffer}</li>
+ * <li>{@link DocInitializationBuffer}</li>
+ * </ul>
  */
-public final class BufferedDocOpImpl implements BufferedDocOp {
+final class BufferedDocOpImpl implements BufferedDocOp {
 
-  public static class DocOpBuilder implements EvaluatingDocOpCursor<BufferedDocOp> {
+  private boolean knownToBeWellFormed = false;
 
-    private static final DocOpComponent[] EMPTY_ARRAY = new DocOpComponent[0];
+  /**
+   * Creates a new buffered doc op, checking that it is well-formed.
+   *
+   * @param components op components
+   */
+  static BufferedDocOpImpl create(DocOpComponent[] components) {
+    BufferedDocOpImpl op = createUnchecked(components);
+    checkWellformedness(op);
+    assert op.knownToBeWellFormed;
+    return op;
+  }
 
-    private final ArrayList<DocOpComponent> accu = new ArrayList<DocOpComponent>();
+  /**
+   * Creates a new buffered doc op without checking for well-formedness.
+   *
+   * @param components op components
+   */
+  static BufferedDocOpImpl createUnchecked(DocOpComponent[] components) {
+    return new BufferedDocOpImpl(components);
+  }
 
-    @Override
-    public final BufferedDocOp finish() {
-      return new BufferedDocOpImpl(accu.toArray(EMPTY_ARRAY));
+  /**
+   * Checks that a buffered doc op is well-formed.
+   *
+   * @param value op to check
+   * @throws IllegalStateException if the op is ill-formed
+   */
+  private static void checkWellformedness(BufferedDocOp value) {
+    if (!DocOpValidator.isWellFormed(null, value)) {
+      // Check again, collecting violations this time.
+      ViolationCollector v = new ViolationCollector();
+      DocOpValidator.isWellFormed(v, value);
+      throw new IllegalStateException("Attempt to build ill-formed operation ("
+          + v + "): " + value);
     }
-
-    @Override
-    public final void annotationBoundary(AnnotationBoundaryMap map) {
-      accu.add(new AnnotationBoundary(map));
-    }
-    @Override
-    public final void characters(String s) {
-      accu.add(new Characters(s));
-    }
-    @Override
-    public final void elementEnd() {
-      accu.add(ElementEnd.INSTANCE);
-    }
-    @Override
-    public final void elementStart(String type, Attributes attrs) {
-      accu.add(new ElementStart(type, attrs));
-    }
-    @Override
-    public final void deleteCharacters(String s) {
-      accu.add(new DeleteCharacters(s));
-    }
-    @Override
-    public final void retain(int itemCount) {
-      accu.add(new Retain(itemCount));
-    }
-    @Override
-    public final void deleteElementEnd() {
-      accu.add(DeleteElementEnd.INSTANCE);
-    }
-    @Override
-    public final void deleteElementStart(String type, Attributes attrs) {
-      accu.add(new DeleteElementStart(type, attrs));
-    }
-    @Override
-    public final void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-      accu.add(new ReplaceAttributes(oldAttrs, newAttrs));
-    }
-    @Override
-    public final void updateAttributes(AttributesUpdate update) {
-      accu.add(new UpdateAttributes(update));
-    }
-
   }
 
   private final DocOpComponent[] components;
@@ -195,6 +180,22 @@ public final class BufferedDocOpImpl implements BufferedDocOp {
     return ((UpdateAttributes) components[i]).update;
   }
 
+  /**
+   * @return true if the op is known to be well-formed.
+   *   false implies nothing in particular.
+   */
+  public boolean isKnownToBeWellFormed() {
+    return knownToBeWellFormed;
+  }
+
+  /**
+   * Should only be called by the validator.
+   * Caches the knowledge of well-formedness.
+   */
+  void markWellFormed() {
+    knownToBeWellFormed = true;
+  }
+
   private void check(int i, DocOpComponentType type) {
     Preconditions.checkArgument(components[i].getType() == type,
         "Component " + i + " is not of type ' " + type + "', " +
@@ -205,5 +206,4 @@ public final class BufferedDocOpImpl implements BufferedDocOp {
   public String toString() {
     return DocOpUtil.toConciseString(this);
   }
-
 }

@@ -16,6 +16,7 @@
 
 package org.waveprotocol.wave.model.operation;
 
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
@@ -98,4 +99,7 @@ public class OpComparators {
     }
   };
 
+  public static boolean equalDocuments(DocInitialization a, DocInitialization b) {
+    return DocOpUtil.toXmlString(a).equals(DocOpUtil.toXmlString(b));
+  }
 }

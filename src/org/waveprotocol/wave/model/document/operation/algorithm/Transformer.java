@@ -25,7 +25,7 @@ import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.OperationPair;
 
@@ -843,9 +843,9 @@ public final class Transformer {
   }
 
   private final EvaluatingDocOpCursor<BufferedDocOp> clientOperation =
-      OperationNormalizer.createNormalizer(new BufferedDocOpImpl.DocOpBuilder());
+      OperationNormalizer.createNormalizer(new DocOpBuffer());
   private final EvaluatingDocOpCursor<BufferedDocOp> serverOperation =
-      OperationNormalizer.createNormalizer(new BufferedDocOpImpl.DocOpBuilder());
+      OperationNormalizer.createNormalizer(new DocOpBuffer());
 
   private final AnnotationProcessor clientAnnotationProcessor =
       new AnnotationProcessor(clientOperation);

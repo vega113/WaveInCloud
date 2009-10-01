@@ -15,35 +15,35 @@
  *
  */
 
-package org.waveprotocol.wave.model.document.operation;
+package org.waveprotocol.wave.model.document.operation.impl;
 
-import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.util.StateMap;
 
+// TODO: Should this be in a different package? It's not related to
+// operations.
 /**
- * A set of attributes, implemented as a map from attribute names to attribute
- * values. The attributes in the map are sorted by their names, so that the set
- * obtained from entrySet() will allow you to easily iterate through the
- * attributes in sorted order.
- *
  * Implementations must be immutable.
  */
-public interface Attributes extends StateMap {
-  public static final AttributesImpl EMPTY_MAP = new AttributesImpl();
-
-  public Attributes updateWith(AttributesUpdate mutation);
+public interface AnnotationMap extends StateMap {
 
   /**
-   * Same as {@link #updateWith(AttributesUpdate)}, but the mutation does
+   * Returns a new map, updated with the differences
+   * @param mutation the mutation must be compatible with the current map
+   * @return a new immutable map
+   */
+  public AnnotationMap updateWith(AnnotationsUpdate mutation);
+
+  /**
+   * Same as {@link #updateWith(AnnotationsUpdate)}, but the mutation does
    * not have to be compatible. This is useful when the mutation may
    * already be known to be incompatible, but we wish still to perform it.
    *
    * This is useful for validity checking code, for example. In general,
-   * {@link #updateWith(AttributesUpdate)} should be used instead.
+   * {@link #updateWith(AnnotationsUpdate)} should be used instead.
    *
    * @param mutation does not have to be compatible
    * @return a new updated map, based on the key to new-value pairs, ignoring
    *   the old values.
    */
-  public Attributes updateWithNoCompatibilityCheck(AttributesUpdate mutation);
+  public AnnotationMap updateWithNoCompatibilityCheck(AnnotationsUpdate mutation);
 }

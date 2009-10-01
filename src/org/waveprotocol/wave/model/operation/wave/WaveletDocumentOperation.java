@@ -18,7 +18,7 @@ package org.waveprotocol.wave.model.operation.wave;
 
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpInverter;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.util.Preconditions;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -61,7 +61,7 @@ public final class WaveletDocumentOperation extends WaveletOperation {
 
   @Override
   public WaveletOperation getInverse() {
-    DocOpInverter<BufferedDocOp> inverse = new DocOpInverter<BufferedDocOp>(new DocOpBuilder());
+    DocOpInverter<BufferedDocOp> inverse = new DocOpInverter<BufferedDocOp>(new DocOpBuffer());
     operation.apply(inverse);
     return new WaveletDocumentOperation(documentId, inverse.finish());
   }

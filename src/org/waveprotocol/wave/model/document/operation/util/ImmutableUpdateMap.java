@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.model.document.operation.util;
 
+import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.util.Preconditions;
 
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public abstract class ImmutableUpdateMap<T extends ImmutableUpdateMap<T, U>, U extends UpdateMap>
     implements UpdateMap {
@@ -95,6 +97,21 @@ public abstract class ImmutableUpdateMap<T extends ImmutableUpdateMap<T, U>, U e
     }
 
     updates = accu;
+  }
+  
+  public ImmutableUpdateMap(Map<String, Pair<String, String>> updates) {
+    this(tripletsFromMap(updates));
+  }
+  
+  private static String[] tripletsFromMap(Map<String, Pair<String, String>> updates) {
+    String[] triplets = new String[updates.size() * 3];
+    int i = 0;
+    for (Map.Entry<String, Pair<String, String>> e : updates.entrySet()) {
+      triplets[i++] = e.getKey();
+      triplets[i++] = e.getValue().getFirst();
+      triplets[i++] = e.getValue().getSecond();
+    }
+    return triplets;
   }
 
   protected ImmutableUpdateMap(List<AttributeUpdate> updates) {

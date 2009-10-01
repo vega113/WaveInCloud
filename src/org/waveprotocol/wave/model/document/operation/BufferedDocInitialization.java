@@ -17,16 +17,15 @@
 
 package org.waveprotocol.wave.model.document.operation;
 
-import org.waveprotocol.wave.model.operation.OperationException;
-
 /**
  * A DocInitialization whose components are in a random-access buffer.
  *
- *
+ * Implementations MUST be immutable.
  */
 public interface BufferedDocInitialization
     extends DocInitialization, BufferedDocOp {
 
-  void applyComponent(int i, DocInitializationCursor c) throws OperationException;
+  void applyComponent(int i, DocInitializationCursor c);
+  DocInitializationComponentType getType(int i);
 
 }

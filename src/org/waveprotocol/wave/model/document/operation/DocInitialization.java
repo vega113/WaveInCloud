@@ -25,8 +25,6 @@ package org.waveprotocol.wave.model.document.operation;
  *
  * This interface only offers a visitor pattern ('apply') to enumerate the
  * components; the data structure behind the operation remains opaque.
- *
- *
  */
 public interface DocInitialization extends DocOp {
 

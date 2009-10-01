@@ -18,12 +18,10 @@
 package org.waveprotocol.wave.model.document.operation.automaton;
 
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.impl.Annotations;
+import org.waveprotocol.wave.model.document.operation.impl.AnnotationMap;
 
 /**
  * The query methods that DocOpAutomaton needs.
- *
- *
  */
 public interface AutomatonDocument {
 
@@ -56,8 +54,21 @@ public interface AutomatonDocument {
   // start or end or document end.
   int remainingCharactersInElement(int insertionPoint);
 
-  Annotations annotationsAt(int pos);
+  AnnotationMap annotationsAt(int pos);
+  String getAnnotation(int pos, String key);
 
   int length();
+
+  /**
+   * Finds the first item within a range with the specified key having a value
+   * other than fromValue.
+   *
+   * @param start start of the range to search
+   * @param end end of the range to search
+   * @param key key to search for
+   * @param fromValue value to check for change from
+   * @return the location of the first change, or -1 if there is no change
+   */
+  int firstAnnotationChange(int start, int end, String key, String fromValue);
 
 }

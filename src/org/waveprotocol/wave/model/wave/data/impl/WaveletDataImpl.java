@@ -19,7 +19,7 @@ package org.waveprotocol.wave.model.wave.data.impl;
 
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.Composer;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -44,7 +44,7 @@ import java.util.Map;
 public class WaveletDataImpl implements WaveletData {
 
   /** A document (operation) with no contents. */
-  private static final BufferedDocOp EMPTY_DOC_OP = new DocOpBuilder().finish();
+  private static final BufferedDocOp EMPTY_DOC_OP = new DocOpBuffer().finish();
 
   /** Id of the wave to which this wavelet belongs. */
   private final WaveId waveId;

@@ -35,7 +35,7 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -452,7 +452,7 @@ public class ClientFrontendImpl implements ClientFrontend {
   /** Constructs a BufferedDocOp that transforms source into target. */
   private static BufferedDocOp createEditOp(String source, String target) {
     int commonPrefixLength = lengthOfCommonPrefix(source, target);
-    BufferedDocOpImpl.DocOpBuilder builder = new BufferedDocOpImpl.DocOpBuilder();
+    DocOpBuilder builder = new DocOpBuilder();
     if (commonPrefixLength > 0) {
       builder.retain(commonPrefixLength);
     }
@@ -462,7 +462,7 @@ public class ClientFrontendImpl implements ClientFrontend {
     if (target.length() > commonPrefixLength) {
       builder.characters(target.substring(commonPrefixLength));
     }
-    return builder.finish();
+    return builder.build();
   }
 
   @VisibleForTesting

@@ -23,10 +23,8 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
-import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.OpComparators;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
@@ -105,7 +103,7 @@ public class WaveletOperationSerializerTest extends TestCase {
 
     m.characters("hello");
 
-    assertReversible(new WaveletDocumentOperation("single", m.finish()));
+    assertReversible(new WaveletDocumentOperation("single", m.build()));
   }
 
   public void testManyCharacters() {
@@ -116,7 +114,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.characters("foo");
     m.characters("bar");
 
-    assertReversible(new WaveletDocumentOperation("many", m.finish()));
+    assertReversible(new WaveletDocumentOperation("many", m.build()));
   }
 
   public void testRetain() {
@@ -131,7 +129,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.characters("bar");
     m.retain(16);
 
-    assertReversible(new WaveletDocumentOperation("retain", m.finish()));
+    assertReversible(new WaveletDocumentOperation("retain", m.build()));
   }
 
   public void testDeleteCharacters() {
@@ -144,7 +142,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.retain(2);
     m.deleteCharacters("cd");
 
-    assertReversible(new WaveletDocumentOperation("deleteCharacters", m.finish()));
+    assertReversible(new WaveletDocumentOperation("deleteCharacters", m.build()));
   }
 
   public void testElements() {
@@ -161,7 +159,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.elementEnd();
     m.elementEnd();
 
-    assertReversible(new WaveletDocumentOperation("elements", m.finish()));
+    assertReversible(new WaveletDocumentOperation("elements", m.build()));
   }
 
   public void testCharactersAndElements() {
@@ -181,7 +179,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.elementEnd();
     m.elementEnd();
 
-    assertReversible(new WaveletDocumentOperation("charactersAndElements", m.finish()));
+    assertReversible(new WaveletDocumentOperation("charactersAndElements", m.build()));
   }
 
   public void testDeleteElements() {
@@ -198,7 +196,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.deleteElementEnd();
     m.deleteElementEnd();
 
-    assertReversible(new WaveletDocumentOperation("deleteElements", m.finish()));
+    assertReversible(new WaveletDocumentOperation("deleteElements", m.build()));
   }
 
   public void testDeleteCharactersAndElements() {
@@ -218,6 +216,6 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.deleteElementEnd();
     m.deleteElementEnd();
 
-    assertReversible(new WaveletDocumentOperation("deleteCharactersAndElements", m.finish()));
+    assertReversible(new WaveletDocumentOperation("deleteCharactersAndElements", m.build()));
   }
 }

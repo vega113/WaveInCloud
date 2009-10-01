@@ -25,8 +25,8 @@ import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -225,6 +225,6 @@ public class ConsoleUtils {
       @Override public void annotationBoundary(AnnotationBoundaryMap map) {}
     }));
 
-    return lineDeletion.finish();
+    return lineDeletion.build();
   }
 }

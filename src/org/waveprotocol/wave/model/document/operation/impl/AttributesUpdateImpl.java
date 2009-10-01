@@ -19,8 +19,10 @@ package org.waveprotocol.wave.model.document.operation.impl;
 
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.util.ImmutableUpdateMap;
+import org.waveprotocol.wave.model.util.Pair;
 
 import java.util.List;
+import java.util.Map;
 
 public class AttributesUpdateImpl
     extends ImmutableUpdateMap<AttributesUpdateImpl, AttributesUpdate>
@@ -33,6 +35,10 @@ public class AttributesUpdateImpl
 
   public AttributesUpdateImpl(String ... triples) {
     super(triples);
+  }
+  
+  public AttributesUpdateImpl(Map<String, Pair<String, String>> updates) {
+    super(updates);
   }
 
   private AttributesUpdateImpl(List<AttributeUpdate> updates) {

@@ -208,6 +208,14 @@ public abstract class ImmutableStateMap<T extends ImmutableStateMap<T, U>, U ext
    *         update onto this object.
    */
   public T updateWith(U attributeUpdate) {
+    return updateWith(attributeUpdate, true);
+  }
+
+  public T updateWithNoCompatibilityCheck(U attributeUpdate) {
+    return updateWith(attributeUpdate, false);
+  }
+
+  private T updateWith(U attributeUpdate, boolean checkCompatibility) {
     List<Attribute> newImmutableStateMap = new ArrayList<Attribute>();
     Iterator<Attribute> iterator = attributes.iterator();
     Attribute nextAttribute = iterator.hasNext() ? iterator.next() : null;
@@ -220,13 +228,13 @@ public abstract class ImmutableStateMap<T extends ImmutableStateMap<T, U>, U ext
           newImmutableStateMap.add(nextAttribute);
           nextAttribute = iterator.hasNext() ? iterator.next() : null;
         } else if (comparison < 0) {
-          if (update.oldValue != null) {
+          if (checkCompatibility && update.oldValue != null) {
             throw new IllegalArgumentException(
                 "Mismatched old value: attempt to update unset attribute with " + update);
           }
           break;
         } else if (comparison == 0) {
-          if (!nextAttribute.value.equals(update.oldValue)) {
+          if (checkCompatibility && !nextAttribute.value.equals(update.oldValue)) {
             throw new IllegalArgumentException("Mismatched old value: attempt to update " +
                 nextAttribute + " with " + update);
           }
@@ -263,4 +271,9 @@ public abstract class ImmutableStateMap<T extends ImmutableStateMap<T, U>, U ext
     }
   }
 
+  public static <T extends ImmutableStateMap<T, U>, U extends ImmutableUpdateMap<U, ?>> T
+      updateWithoutCompatibilityCheck(T state, U update) {
+    // the cast below is required to work with javac from OpenJDK 7
+    return ((ImmutableStateMap<T, U>) state).updateWith(update, false);
+  }
 }

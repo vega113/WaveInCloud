@@ -30,7 +30,7 @@ import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -95,7 +95,7 @@ public class Echoey extends AbstractAgent {
       }
     }
     WaveletDocumentOperation op =
-        new WaveletDocumentOperation(MAIN_DOCUMENT_ID, builder.finish());
+        new WaveletDocumentOperation(MAIN_DOCUMENT_ID, builder.build());
     sendWaveletOperation(wavelet.getWaveletName(), op);
   }
 

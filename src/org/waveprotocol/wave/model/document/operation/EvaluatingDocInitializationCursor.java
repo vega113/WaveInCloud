@@ -12,19 +12,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-package org.waveprotocol.wave.model.document.operation.impl;
+package org.waveprotocol.wave.model.document.operation;
 
-import org.waveprotocol.wave.model.document.operation.util.StateMap;
-
-// TODO: Should this be in a different package? It's not related to
-// operations.
 /**
- * Implementations must be immutable.
+ * A <code>DocOpCursor</code> that can return a value at the end of a sequence
+ * of operation components.
+ *
+ * @param <T> the type of the value returned by an instance of this interface
  */
-public interface Annotations extends StateMap {
+public interface EvaluatingDocInitializationCursor<T> extends DocInitializationCursor {
 
-  public Annotations updateWith(AnnotationsUpdate mutation);
+  /**
+   * Signals the completion of the sequence of mutation events and returns a
+   * value.
+   *
+   * @return a value returned after all the mutation events have been applied.
+   */
+  T finish();
+
 }
+

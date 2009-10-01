@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.model.operation;
 
+import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton.ViolationCollector;
+
 /**
  * An exception thrown to indicate an operation was invalid or ill-formed.
  *
@@ -32,11 +34,10 @@ package org.waveprotocol.wave.model.operation;
  * Code that deals with operations may assume that they are well-formed;
  * ill-formed operations should be rejected at construction or deserialization
  * time.  It cannot always assume they are valid for a given context.
- *
- *
  */
 @SuppressWarnings("serial")
 public class OperationException extends Exception {
+  private ViolationCollector violations = null;
 
   /**
    * Constructs a new exception with null as its detail message.
@@ -72,4 +73,28 @@ public class OperationException extends Exception {
     super(message, cause);
   }
 
+  /**
+   * @param violations Violations recorded during validation checking. The
+   *        thrower should not hold onto the violations object.
+   */
+  public OperationException(ViolationCollector violations) {
+    super("Validation failure: " + violations);
+    this.violations = violations;
+  }
+
+  /**
+   * @return true if there is validation violation information associated with
+   *         this exception
+   */
+  public boolean hasViolationsInformation() {
+    return violations != null;
+  }
+
+  /**
+   * @return validation violation exception, if any is available. The caller
+   *         should not modify or reuse this object.
+   */
+  public ViolationCollector getViolations() {
+    return violations;
+  }
 }

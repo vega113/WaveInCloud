@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.document.operation;
 /**
  * A DocOp whose components are in a random-access buffer.
  *
- *
+ * Implementations MUST be immutable.
  */
 public interface BufferedDocOp extends DocOp {
 

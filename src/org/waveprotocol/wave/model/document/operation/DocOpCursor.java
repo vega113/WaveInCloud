@@ -20,8 +20,6 @@ package org.waveprotocol.wave.model.document.operation;
 
 /**
  * The callback interface used by DocOp's apply method.
- *
- *
  */
 public interface DocOpCursor extends DocInitializationCursor {
   void retain(int itemCount);

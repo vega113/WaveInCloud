@@ -20,8 +20,6 @@ package org.waveprotocol.wave.model.id;
 
 /**
  * This class holds useful utilities for ids.
- *
- *
  */
 public final class IdUtil implements IdConstants {
 

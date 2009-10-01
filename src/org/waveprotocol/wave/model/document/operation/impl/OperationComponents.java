@@ -39,7 +39,7 @@ public class OperationComponents {
     abstract void apply(DocOpCursor c);
   }
 
-  public static abstract class InitializationComponent extends DocOpComponent {
+  public static abstract class DocInitializationComponent extends DocOpComponent {
     @Override
     abstract DocInitializationComponentType getType();
     abstract void apply(DocInitializationCursor c);
@@ -49,7 +49,7 @@ public class OperationComponents {
     }
   }
 
-  public static class AnnotationBoundary extends InitializationComponent {
+  public static class AnnotationBoundary extends DocInitializationComponent {
     final AnnotationBoundaryMap boundary;
     AnnotationBoundary(AnnotationBoundaryMap boundary) {
       this.boundary = boundary;
@@ -64,7 +64,7 @@ public class OperationComponents {
     }
   }
 
-  public static class Characters extends InitializationComponent {
+  public static class Characters extends DocInitializationComponent {
     final String string;
     Characters(String string) {
       this.string = string;
@@ -79,7 +79,7 @@ public class OperationComponents {
     }
   }
 
-  public static class ElementStart extends InitializationComponent {
+  public static class ElementStart extends DocInitializationComponent {
     final String type;
     final Attributes attrs;
     ElementStart(String type, Attributes attrs) {
@@ -96,7 +96,7 @@ public class OperationComponents {
     }
   }
 
-  public static class ElementEnd extends InitializationComponent {
+  public static class ElementEnd extends DocInitializationComponent {
     static final ElementEnd INSTANCE = new ElementEnd();
     ElementEnd() {}
     @Override

@@ -20,6 +20,8 @@ package org.waveprotocol.wave.model.document.operation.impl;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
+import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 
 /**
  * An abstract base class for BufferedDocInitialization with default
@@ -29,6 +31,11 @@ import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
  */
 public abstract class AbstractBufferedDocInitialization
     extends AbstractDocInitialization implements BufferedDocInitialization {
+
+  @Override
+  public void apply(DocOpCursor c) {
+    apply((DocInitializationCursor) c);
+  }
 
   @Override
   public String toString() {

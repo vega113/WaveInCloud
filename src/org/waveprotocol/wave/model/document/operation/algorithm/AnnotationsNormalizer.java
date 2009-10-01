@@ -17,20 +17,18 @@
 
 package org.waveprotocol.wave.model.document.operation.algorithm;
 
-import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
-import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
+import org.waveprotocol.wave.model.document.operation.Attributes;
+import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
+import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
+
 /**
  * A normalizer for annotations.
- *
- *
  *
  * @param <T> the type of the value returned by this normalizer
  */
@@ -62,14 +60,20 @@ public final class AnnotationsNormalizer<T> implements EvaluatingDocOpCursor<T> 
 
   }
 
-  private final EvaluatingDocOpCursor<T> target;
+  private final EvaluatingDocOpCursor<? extends T> target;
+
+  // TODO(danilatos/alexmah): Use efficient StringMap/StringSet,
+  // and sort on output.
+  // Even better, optionally don't sort (indexed document doesn't need sorting for its use).
 
   private final Map<String, AnnotationChangeValues> annotationTracker =
       new TreeMap<String, AnnotationChangeValues>();
   private final Map<String, AnnotationChangeValues> annotationChanges =
       new TreeMap<String, AnnotationChangeValues>();
 
-  public AnnotationsNormalizer(EvaluatingDocOpCursor<T> target) {
+//  private final Set<String> ignores = new HashSet<String>();
+
+  public AnnotationsNormalizer(EvaluatingDocOpCursor<? extends T> target) {
     this.target = target;
   }
 
@@ -137,14 +141,43 @@ public final class AnnotationsNormalizer<T> implements EvaluatingDocOpCursor<T> 
   public void annotationBoundary(AnnotationBoundaryMap map) {
     int changeSize = map.changeSize();
     for (int i = 0; i < changeSize; ++i)  {
-      annotationChanges.put(map.getChangeKey(i),
-          new AnnotationChangeValues(map.getOldValue(i), map.getNewValue(i)));
+      startAnnotation(map.getChangeKey(i), map.getOldValue(i), map.getNewValue(i));
     }
     int endSize = map.endSize();
     for (int i = 0; i < endSize; ++i)  {
-      annotationChanges.put(map.getEndKey(i), null);
+      endAnnotation(map.getEndKey(i));
     }
   }
+
+  public void startAnnotation(String key, String oldValue, String newValue) {
+    annotationChanges.put(key, new AnnotationChangeValues(oldValue, newValue));
+  }
+
+  public void endAnnotation(String key) {
+    annotationChanges.put(key, null);
+  }
+//
+//
+//  public void startAnnotation(String key, String oldValue, String newValue) {
+//    if (ValueUtils.equal(oldValue, newValue)) {
+//      if (!annotationChanges.containsKey(key)) {
+//        ignores.add(key);
+//      }
+//    } else {
+//      if (ignores.contains(key)) {
+//        ignores.remove(key);
+//      }
+//      annotationChanges.put(key, new AnnotationChangeValues(oldValue, newValue));
+//    }
+//  }
+//
+//  public void endAnnotation(String key) {
+//    if (ignores.contains(key)) {
+//      ignores.remove(key);
+//    } else {
+//      annotationChanges.put(key, null);
+//    }
+//  }
 
   private void flushAnnotations() {
     final List<AnnotationChange> changes = new ArrayList<AnnotationChange>();

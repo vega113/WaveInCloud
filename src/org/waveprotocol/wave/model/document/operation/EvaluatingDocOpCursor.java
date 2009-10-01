@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.waveprotocol.wave.model.document.operation;
@@ -20,7 +19,6 @@ package org.waveprotocol.wave.model.document.operation;
 /**
  * A <code>DocOpCursor</code> that can return a value at the end of a sequence
  * of operation components.
- *
  *
  * @param <T> the type of the value returned by an instance of this interface
  */

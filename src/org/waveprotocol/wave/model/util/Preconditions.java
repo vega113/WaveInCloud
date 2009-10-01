@@ -72,10 +72,23 @@ public final class Preconditions {
     checkPositionIndexesInRange(0, start, end, size);
   }
 
-  public static void checkNotNull(Object x, Object errorMessage) {
+  public static <T> T checkNotNull(T x, Object errorMessage) {
     if (x == null) {
       throw new NullPointerException("" + errorMessage);
     }
+    return x;
+  }
+
+  /**
+   * Note an illegal argument
+   *
+   * Useful when an explicit check was done separately, to avoid building up the
+   * error message object or string unecessarily (if profiling reveals a hotspot).
+   *
+   * @param errorMessage
+   */
+  public static void illegalArgument(Object errorMessage) {
+    throw new IllegalArgumentException("" + errorMessage);
   }
 
   public static void checkArgument(boolean condition, Object errorMessage) {
@@ -83,4 +96,19 @@ public final class Preconditions {
       throw new IllegalArgumentException("" + errorMessage);
     }
   }
+
+  /**
+   * Ensures the truth of an expression involving the state of the calling
+   * instance, but not involving any parameters to the calling method.
+   *
+   * @param expression a boolean expression
+   * @param errorMessage error message
+   * @throws IllegalStateException if {@code expression} is false
+   */
+  public static void checkState(boolean expression, Object errorMessage) {
+    if (!expression) {
+      throw new IllegalStateException("" + errorMessage);
+    }
+  }
+
 }

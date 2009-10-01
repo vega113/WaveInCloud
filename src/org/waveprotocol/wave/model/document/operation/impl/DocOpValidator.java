@@ -25,8 +25,10 @@ import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.automaton.AutomatonDocument;
 import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton;
+import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton.ValidationResult;
 import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton.ViolationCollector;
+import org.waveprotocol.wave.model.util.Preconditions;
 
 /**
  * Validates an operation against a document.
@@ -41,8 +43,11 @@ public final class DocOpValidator {
    * Returns whether op is a well-formed document initialization and satisfies
    * the given schema constraints.
    */
-  public static ValidationResult validate(ViolationCollector v, DocInitialization op) {
-    return validate(v, DocOpAutomaton.EMPTY_DOCUMENT, op);
+  public static ValidationResult validate(ViolationCollector v,
+      DocumentSchema schema, DocInitialization op) {
+    Preconditions.checkNotNull(schema, "Schema constraints required, if not, " +
+        "use DocumentSchema.NO_SCHEMA_CONSTRAINTS");
+    return validate(v, schema, DocOpAutomaton.EMPTY_DOCUMENT, op);
   }
 
   /**
@@ -52,7 +57,42 @@ public final class DocOpValidator {
    * violations are meaningless.
    */
   public static boolean isWellFormed(ViolationCollector v, DocOp op) {
-    return !validate(v, DocOpAutomaton.EMPTY_DOCUMENT, op).isIllFormed();
+    if (op instanceof BufferedDocOpImpl) {
+      return isWellFormed(v, (BufferedDocOpImpl) op);
+    } else {
+      return isWellFormedRaw(v, op);
+    }
+  }
+
+  /**
+   * Same as {@link #isWellFormed(ViolationCollector, DocOp)}, but with
+   * a fast path for already-validated instances of BufferedDocOpImpl
+   */
+  public static boolean isWellFormed(ViolationCollector v, BufferedDocOpImpl buffered) {
+    if (buffered.isKnownToBeWellFormed()) {
+      // fast path
+      return true;
+    } else {
+      if (isWellFormedRaw(v, buffered)) {
+        buffered.markWellFormed();
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  /**
+   * Same as {@link #isWellFormed(ViolationCollector, DocOp)}, but without
+   * the fast path for BufferedDocOpImpl
+   */
+  public static boolean isWellFormedRaw(ViolationCollector v, DocOp op) {
+    // We validate the operation against the empty document.  It will likely
+    // be invalid; however, we ignore the validity aspect anyway since we
+    // only care about well-formedness.
+    return !validate(v, DocumentSchema.NO_SCHEMA_CONSTRAINTS,
+        DocOpAutomaton.EMPTY_DOCUMENT, op)
+        .isIllFormed();
   }
 
   private static final class IllFormed extends RuntimeException {
@@ -69,8 +109,13 @@ public final class DocOpValidator {
    * schema constraints.  Will not modify doc.
    */
   public static <N, E extends N, T extends N> ValidationResult validate(
-      final ViolationCollector v, AutomatonDocument doc, DocOp op) {
-    final DocOpAutomaton a = new DocOpAutomaton(doc);
+      final ViolationCollector v, DocumentSchema schema,
+      AutomatonDocument doc, DocOp op) {
+
+    if (schema == null) {
+      schema = DocumentSchema.NO_SCHEMA_CONSTRAINTS;
+    }
+    final DocOpAutomaton a = new DocOpAutomaton(doc, schema);
     final ValidationResult[] accu = new ValidationResult[] { ValidationResult.VALID };
     try {
       op.apply(new DocOpCursor() {

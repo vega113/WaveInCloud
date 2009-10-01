@@ -36,8 +36,8 @@ import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
@@ -421,7 +421,7 @@ public class ConsoleClient implements WaveletOperationListener {
 
       backend.sendWaveletOperation(
           getOpenWavelet().getWaveletName(),
-          new WaveletDocumentOperation(MAIN_DOCUMENT_ID, docOp.finish()));
+          new WaveletDocumentOperation(MAIN_DOCUMENT_ID, docOp.build()));
     } else {
       out.println("Error: no open wave, run \"/open\"");
     }

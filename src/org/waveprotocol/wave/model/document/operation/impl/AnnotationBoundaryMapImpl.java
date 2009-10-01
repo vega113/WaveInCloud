@@ -27,8 +27,6 @@ import java.util.Set;
 /**
  * A simple, immutable implementation of {@link AnnotationBoundaryMap} that
  * does almost all necessary validation checks.
- *
- *
  */
 // TODO: Validate key characters better.
 // Should probably only allow whatever is allowed in an xml attribute, + "/"
@@ -140,10 +138,21 @@ public class AnnotationBoundaryMapImpl implements AnnotationBoundaryMap {
       }
     }
 
-    this.changeKeys = Arrays.copyOf(changeKeys, changeKeys.length);
-    this.changeOldValues = Arrays.copyOf(changeOldValues, changeOldValues.length);
-    this.changeNewValues = Arrays.copyOf(changeNewValues, changeNewValues.length);
-    this.endKeys = Arrays.copyOf(endKeys, endKeys.length);
+    this.changeKeys = copy(changeKeys);
+    this.changeOldValues = copy(changeOldValues);
+    this.changeNewValues = copy(changeNewValues);
+    this.endKeys = copy(endKeys);
+  }
+
+  /**
+   * Copies an array. GWT does not seem to support Arrays.copyOf()
+   */
+  private String[] copy(String[] input) {
+    String[] ret = new String[input.length];
+    for (int i = 0; i < input.length; i++) {
+      ret[i] = input[i];
+    }
+    return ret;
   }
 
   public static void validateAnnotationKey(String key) throws IllegalArgumentException {

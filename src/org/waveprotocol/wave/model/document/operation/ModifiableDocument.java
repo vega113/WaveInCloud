@@ -21,8 +21,6 @@ import org.waveprotocol.wave.model.operation.OperationException;
 
 /**
  * A document that can accept operations to mutate its state.
- *
- *
  */
 public interface ModifiableDocument {
   void consume(DocOp m) throws OperationException;

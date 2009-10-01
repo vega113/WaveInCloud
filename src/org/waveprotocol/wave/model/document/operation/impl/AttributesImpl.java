@@ -28,8 +28,6 @@ public class AttributesImpl
     extends ImmutableStateMap<AttributesImpl, AttributesUpdate>
     implements Attributes {
 
-  public static final AttributesImpl EMPTY_MAP = new AttributesImpl();
-
   public AttributesImpl() {
     super();
   }

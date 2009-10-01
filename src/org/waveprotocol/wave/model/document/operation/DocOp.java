@@ -17,15 +17,16 @@
 
 package org.waveprotocol.wave.model.document.operation;
 
+import org.waveprotocol.wave.model.operation.Operation;
+
 /**
  * A document operation.
  *
  * This interface only offers a visitor pattern ('apply') to enumerate the
  * components; the data structure behind the operation remains opaque.
- *
- *
  */
-public interface DocOp {
+// TODO: this isn't really an operation on DocOpCursors.
+public interface DocOp extends Operation<DocOpCursor> {
   void apply(DocOpCursor c);
 
   // TODO: better name

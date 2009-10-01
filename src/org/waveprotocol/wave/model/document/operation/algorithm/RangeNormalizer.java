@@ -25,9 +25,7 @@ import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 /**
  * A normalizer for mutation events that affect ranges.
  *
- *
- *
- * @param <T> the type of the value returned by thes normalizer
+ * @param <T> the type of the value returned by the normalizer
  */
 public final class RangeNormalizer<T> implements EvaluatingDocOpCursor<T> {
 
@@ -116,10 +114,10 @@ public final class RangeNormalizer<T> implements EvaluatingDocOpCursor<T> {
 
   };
 
-  private final EvaluatingDocOpCursor<T> target;
+  private final EvaluatingDocOpCursor<? extends T> target;
   private Cache cache = emptyCache;
 
-  public RangeNormalizer(EvaluatingDocOpCursor<T> target) {
+  public RangeNormalizer(EvaluatingDocOpCursor<? extends T> target) {
     this.target = target;
   }
 

@@ -44,7 +44,7 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -271,12 +271,12 @@ public class ClientFrontendImplTest extends TestCase {
   }
 
   private BufferedDocOp makeAppend(int retain, String text) {
-    BufferedDocOpImpl.DocOpBuilder builder = new BufferedDocOpImpl.DocOpBuilder();
+    DocOpBuilder builder = new DocOpBuilder();
     if (retain > 0) {
       builder.retain(retain);
     }
     builder.characters(text);
-    return builder.finish();
+    return builder.build();
   }
 
   private WaveletDocumentOperation makeAppendOp(String documentId, int retain, String text) {

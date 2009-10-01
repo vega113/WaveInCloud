@@ -20,13 +20,14 @@ package org.waveprotocol.wave.model.document.operation.algorithm;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
+import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 
 /**
  * A reverser of document operations.
- *
- *
  *
  * @param <T> the type that the <code>finish()</code> method returns
  */
@@ -131,6 +132,12 @@ public final class DocOpInverter<T> implements EvaluatingDocOpCursor<T> {
       }
 
     });
+  }
+
+  public static BufferedDocOp invert(DocOp input) {
+    DocOpInverter<BufferedDocOp> inverter = new DocOpInverter<BufferedDocOp>(new DocOpBuffer());
+    input.apply(inverter);
+    return inverter.finish();
   }
 
 }

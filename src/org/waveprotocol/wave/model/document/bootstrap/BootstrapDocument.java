@@ -26,11 +26,12 @@ import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.ModifiableDocument;
 import org.waveprotocol.wave.model.document.operation.DocOp.IsDocOp;
 import org.waveprotocol.wave.model.document.operation.automaton.AutomatonDocument;
+import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton.ViolationCollector;
 import org.waveprotocol.wave.model.document.operation.impl.AbstractDocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
-import org.waveprotocol.wave.model.document.operation.impl.Annotations;
-import org.waveprotocol.wave.model.document.operation.impl.AnnotationsImpl;
+import org.waveprotocol.wave.model.document.operation.impl.AnnotationMap;
+import org.waveprotocol.wave.model.document.operation.impl.AnnotationMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationsUpdate;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationsUpdateImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
@@ -52,8 +53,8 @@ import java.util.TreeSet;
 public class BootstrapDocument implements ModifiableDocument, AutomatonDocument, IsDocOp {
 
   private abstract class Item {
-    Annotations annotations;
-    Item(Annotations annotations) {
+    AnnotationMap annotations;
+    Item(AnnotationMap annotations) {
       this.annotations = annotations;
     }
 
@@ -76,7 +77,7 @@ public class BootstrapDocument implements ModifiableDocument, AutomatonDocument,
 
     abstract void applyData(DocInitializationCursor c);
 
-    Annotations getAnnotations() {
+    AnnotationMap getAnnotations() {
       return annotations;
     }
 
@@ -88,7 +89,7 @@ public class BootstrapDocument implements ModifiableDocument, AutomatonDocument,
   private class CharacterItem extends Item {
     final char character;
 
-    CharacterItem(char character, Annotations annotations) {
+    CharacterItem(char character, AnnotationMap annotations) {
       super(annotations);
       this.character = character;
     }
@@ -108,7 +109,7 @@ public class BootstrapDocument implements ModifiableDocument, AutomatonDocument,
     final String tag;
     Attributes attrs;
 
-    ElementStartItem(String tag, Attributes attrs, Annotations annotations) {
+    ElementStartItem(String tag, Attributes attrs, AnnotationMap annotations) {
       super(annotations);
       this.tag = tag;
       this.attrs = attrs;
@@ -139,7 +140,7 @@ public class BootstrapDocument implements ModifiableDocument, AutomatonDocument,
 
   private class ElementEndItem extends Item {
 
-    ElementEndItem(Annotations annotations) {
+    ElementEndItem(AnnotationMap annotations) {
       super(annotations);
     }
 
@@ -154,10 +155,19 @@ public class BootstrapDocument implements ModifiableDocument, AutomatonDocument,
     }
   }
 
+  private final DocumentSchema schemaConstraints;
   private final List<Item> items = new LinkedList<Item>();
   // All annotation keys that we've ever encountered.
   private final TreeSet<String> knownAnnotationKeys = new TreeSet<String>();
   private boolean inconsistent = false;
+
+  public BootstrapDocument(DocumentSchema schemaConstraints) {
+    this.schemaConstraints = schemaConstraints;
+  }
+
+  public BootstrapDocument() {
+    this(DocumentSchema.NO_SCHEMA_CONSTRAINTS);
+  }
 
   @Override
   public DocInitialization asOperation() {
@@ -266,10 +276,32 @@ public class BootstrapDocument implements ModifiableDocument, AutomatonDocument,
   }
 
   @Override
-  public Annotations annotationsAt(int pos) {
+  public AnnotationMap annotationsAt(int pos) {
     checkConsistent();
     Preconditions.checkElementIndex(pos, items.size());
     return advance(pos).getAnnotations();
+  }
+
+  @Override
+  public String getAnnotation(int pos, String key) {
+    checkConsistent();
+    Preconditions.checkElementIndex(pos, items.size());
+    return advance(pos).getAnnotations().get(key);
+  }
+
+  private static boolean equal(Object a, Object b) {
+    return a == null ? b == null : a.equals(b);
+  }
+
+  @Override
+  public int firstAnnotationChange(int start, int end, String key, String fromValue) {
+    Preconditions.checkPositionIndexes(start, end, items.size());
+    for (int pos = start; pos < end; pos++) {
+      if (!equal(getAnnotation(pos, key), fromValue)) {
+        return pos;
+      }
+    }
+    return -1;
   }
 
   private Item currentItem() {
@@ -311,7 +343,7 @@ public class BootstrapDocument implements ModifiableDocument, AutomatonDocument,
     checkConsistent();
 
     ViolationCollector v = new ViolationCollector();
-    DocOpValidator.validate(v, this, m);
+    DocOpValidator.validate(v, schemaConstraints, this, m);
     if (!v.isValid()) {
       throw new OperationException("Validation failed: " + v);
     }
@@ -328,9 +360,9 @@ public class BootstrapDocument implements ModifiableDocument, AutomatonDocument,
 
         Item current = null;
 
-        Annotations inherited = AnnotationsImpl.EMPTY_MAP;
+        AnnotationMap inherited = AnnotationMapImpl.EMPTY_MAP;
 
-        private Annotations insertionAnnotations() {
+        private AnnotationMap insertionAnnotations() {
           return inherited.updateWith(annotationUpdates);
         }
 
@@ -476,4 +508,5 @@ public class BootstrapDocument implements ModifiableDocument, AutomatonDocument,
   public String toString() {
     return "BootstrapDocument: " + DocOpUtil.debugToXmlString(asOperation());
   }
+
 }

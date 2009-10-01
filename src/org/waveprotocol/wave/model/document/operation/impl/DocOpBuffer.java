@@ -12,24 +12,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.waveprotocol.wave.model.document.operation.impl;
 
-import org.waveprotocol.wave.model.document.operation.DocInitialization;
-import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
-import org.waveprotocol.wave.model.document.operation.DocOpCursor;
+import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 
 /**
- * An abstract base class for DocInitializations that implements apply(DocOpCursor)
- * in terms of apply(DocInitializationCursor).
+ * An implementation of {@link EvaluatingDocOpCursor} that buffers the operation
+ * and returns it as a {@link BufferedDocOp}.
+ *
+ * This differs from {@link UncheckedDocOpBuffer} in that the default finish() behaviour
+ * is to throw an exception if the operation would be ill-formed.
+ *
+ * @see UncheckedDocOpBuffer
  */
-public abstract class AbstractDocInitialization implements DocInitialization {
+public class DocOpBuffer extends UncheckedDocOpBuffer {
 
   @Override
-  public void apply(DocOpCursor c) {
-    apply((DocInitializationCursor) c);
+  public final BufferedDocOp finish() {
+    return super.finishChecked();
   }
-
 }

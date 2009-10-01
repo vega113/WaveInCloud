@@ -18,18 +18,16 @@
 package org.waveprotocol.wave.model.document.operation;
 
 /**
- * Information required by an annotation boundary operation component
+ * Information required by an annotation boundary operation component.
  *
  * Implementations must be immutable.
- *
- *
  */
 public interface AnnotationBoundaryMap {
+  int endSize();
+  String getEndKey(int endIndex);
+
   int changeSize();
   String getChangeKey(int changeIndex);
   String getOldValue(int changeIndex);
   String getNewValue(int changeIndex);
-
-  int endSize();
-  String getEndKey(int endIndex);
 }

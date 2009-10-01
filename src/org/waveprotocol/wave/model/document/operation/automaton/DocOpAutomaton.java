@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.waveprotocol.wave.model.document.operation.automaton;
@@ -20,10 +19,12 @@ package org.waveprotocol.wave.model.document.operation.automaton;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.impl.Annotations;
-import org.waveprotocol.wave.model.document.operation.impl.AnnotationsImpl;
+import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema.PermittedCharacters;
+import org.waveprotocol.wave.model.document.operation.impl.AnnotationMap;
+import org.waveprotocol.wave.model.document.operation.impl.AnnotationMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationsUpdateImpl;
 import org.waveprotocol.wave.model.util.Preconditions;
+import org.waveprotocol.wave.model.util.Utf16Util;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -66,11 +67,9 @@ import java.util.Set;
  * To generate a random operation, the automaton needs to be driven based on
  * a random document operation component generator.  RandomDocOpGenerator does
  * this.
- *
- *
  */
-// TODO: size limits, Unicode, schema
-public final class DocOpAutomaton implements Cloneable {
+// TODO: size limits
+public final class DocOpAutomaton {
 
   /**
    * The overall result of validating an operation.
@@ -78,16 +77,51 @@ public final class DocOpAutomaton implements Cloneable {
   public enum ValidationResult {
     // These need to be ordered most severe to least severe due to the way
     // we implement mergeWith().
+
+    /**
+     * The operation is meaningless. One ore more components of this operation
+     * have fields with illegal values and/or the sequence of components does
+     * not have proper nesting, or is in some way illegal. The result of
+     * applying such an operation to any document is undefined.
+     */
     ILL_FORMED,
-    INVALID_OP,
-    INVALID_XML,
+
+    /**
+     * The operation is well-formed, but it does not match the document state it
+     * was being checked against. It would be meaningless to attempt to apply
+     * the operation to the state being checked against.
+     */
+    INVALID_DOCUMENT,
+
+    /**
+     * The operation is well formed, and if applied to the document being
+     * checked against, would have a well defined and well formed result.
+     * However, applying it would mean the resulting document would not conform
+     * to the document schema being checked against.
+     */
+    INVALID_SCHEMA,
+
+    /**
+     * The operation is valid in every way with respect to the document and
+     * schema being checked against.
+     */
     VALID;
 
-    public boolean isValid() {
-      return this == VALID;
-    }
+    /** @see #ILL_FORMED */
     public boolean isIllFormed() {
       return this == ILL_FORMED;
+    }
+    /** @see #INVALID_DOCUMENT */
+    public boolean isInvalidDocument() {
+      return this == INVALID_DOCUMENT;
+    }
+    /** @see #INVALID_SCHEMA */
+    public boolean isInvalidSchema() {
+      return this == INVALID_DOCUMENT;
+    }
+    /** @see #VALID */
+    public boolean isValid() {
+      return this == VALID;
     }
 
     public ValidationResult mergeWith(ValidationResult other) {
@@ -109,7 +143,7 @@ public final class DocOpAutomaton implements Cloneable {
       this.originalDocumentPos = originalPos;
       this.resultingDocumentPos = resultingPos;
     }
-    protected abstract ValidationResult validationResult();
+    public abstract ValidationResult validationResult();
     /**
      * @return a developer-readable description of the violation
      */
@@ -128,7 +162,7 @@ public final class DocOpAutomaton implements Cloneable {
       super(description, originalPos, resultingPos);
     }
     @Override
-    protected ValidationResult validationResult() { return ValidationResult.ILL_FORMED; }
+    public ValidationResult validationResult() { return ValidationResult.ILL_FORMED; }
   }
 
   /**
@@ -140,7 +174,7 @@ public final class DocOpAutomaton implements Cloneable {
       super(description, originalPos, resultingPos);
     }
     @Override
-    protected ValidationResult validationResult() { return ValidationResult.INVALID_OP; }
+    public ValidationResult validationResult() { return ValidationResult.INVALID_DOCUMENT; }
   }
 
   /**
@@ -152,7 +186,7 @@ public final class DocOpAutomaton implements Cloneable {
       super(description, originalPos, resultingPos);
     }
     @Override
-    protected ValidationResult validationResult() { return ValidationResult.INVALID_XML; }
+    public ValidationResult validationResult() { return ValidationResult.INVALID_SCHEMA; }
   }
 
   /**
@@ -173,14 +207,39 @@ public final class DocOpAutomaton implements Cloneable {
     public void add(SchemaViolation v) {
       schemaViolations.add(v);
     }
-    /** True iff there were no violations. */
-    public boolean isValid() {
-      return operationIllFormed.isEmpty() && operationInvalid.isEmpty()
-      && schemaViolations.isEmpty();
-    }
     /** True iff at least one violation of the well-formedness constraints was detected. */
     public boolean isIllFormed() {
-      return !operationIllFormed.isEmpty();
+      return getValidationResult().isIllFormed();
+    }
+    /**
+     * True iff the most severe validation constraint detected was
+     * {@link ValidationResult#INVALID_DOCUMENT}
+     */
+    public boolean isInvalidDocument() {
+      return getValidationResult().isInvalidDocument();
+    }
+    /**
+     * True iff the most severe validation constraint detected was
+     * {@link ValidationResult#INVALID_SCHEMA}
+     */
+    public boolean isInvalidSchema() {
+      return getValidationResult().isInvalidSchema();
+    }
+    /** True iff there were no violations. */
+    public boolean isValid() {
+      return getValidationResult().isValid();
+    }
+    /** The merged (most severe) validation result */
+    public ValidationResult getValidationResult() {
+      if (!operationIllFormed.isEmpty()) {
+        return ValidationResult.ILL_FORMED;
+      } else if (!operationInvalid.isEmpty()) {
+        return ValidationResult.INVALID_DOCUMENT;
+      } else if (!schemaViolations.isEmpty()) {
+        return ValidationResult.INVALID_SCHEMA;
+      } else {
+        return ValidationResult.VALID;
+      }
     }
 
     /** Returns a description of a single violation, or null if there are none. */
@@ -360,8 +419,16 @@ public final class DocOpAutomaton implements Cloneable {
     return addViolation(v, illFormedOperation("attributes update is null"));
   }
 
-  private ValidationResult attributeKeysNotStrictlyMonotonic(ViolationCollector v, String key) {
-    return addViolation(v, illFormedOperation("attribute keys not strictly monotonic: " + key));
+  private ValidationResult attributeKeysNotStrictlyMonotonic(ViolationCollector v,
+      String key1, String key2) {
+    return addViolation(v, illFormedOperation("attribute keys not strictly monotonic: "
+        + key1 + " >= " + key2));
+  }
+
+  private ValidationResult annotationKeysNotStrictlyMonotonic(ViolationCollector v,
+      String key1, String key2) {
+    return addViolation(v, illFormedOperation("annotation keys not strictly monotonic: "
+        + key1 + " >= " + key2));
   }
 
   private ValidationResult nullAnnotationKey(ViolationCollector v) {
@@ -370,6 +437,44 @@ public final class DocOpAutomaton implements Cloneable {
 
   private ValidationResult invalidCharacterInAnnotationKey(ViolationCollector v, String key) {
     return addViolation(v, illFormedOperation("invalid character in annotation key: " + key));
+  }
+
+  private ValidationResult annotationKeyNotValidUtf16(ViolationCollector v) {
+    return addViolation(v, illFormedOperation("annotation key is not valid UTF-16"));
+  }
+
+  private ValidationResult annotationValueNotValidUtf16(ViolationCollector v) {
+    return addViolation(v, illFormedOperation("annotation value is not valid UTF-16"));
+  }
+
+  private ValidationResult charactersContainsSurrogate(ViolationCollector v) {
+    return addViolation(v, illFormedOperation("characters component contains surrogate"));
+  }
+
+  private ValidationResult deleteCharactersContainsSurrogate(ViolationCollector v) {
+    return addViolation(v, illFormedOperation("delete characters component contains surrogate"));
+  }
+
+  private ValidationResult charactersInvalidUnicode(ViolationCollector v) {
+    return addViolation(v, illFormedOperation("characters component contains invalid unicode"));
+  }
+
+  private ValidationResult deleteCharactersInvalidUnicode(ViolationCollector v) {
+    return addViolation(v, illFormedOperation("delete characters component contains invalid unicode"));
+  }
+
+  private ValidationResult attributeNameNotXmlName(ViolationCollector v, String name) {
+    return addViolation(v, illFormedOperation("attribute name is not an XML Name: \""
+        + name + "\""));
+  }
+
+  private ValidationResult attributeValueNotValidUtf16(ViolationCollector v) {
+    return addViolation(v, illFormedOperation("attribute value is not valid UTF-16"));
+  }
+
+  private ValidationResult elementTypeNotXmlName(ViolationCollector v, String name) {
+    return addViolation(v, illFormedOperation("element type is not an XML Name: \""
+        + name + "\""));
   }
 
   private ValidationResult duplicateAnnotationKey(ViolationCollector v, String key) {
@@ -384,6 +489,11 @@ public final class DocOpAutomaton implements Cloneable {
   private ValidationResult textNotAllowedInElement(ViolationCollector v, String tag) {
     return addViolation(v, schemaViolation("element type " + tag
         + " does not allow text content"));
+  }
+
+  private ValidationResult onlyBlipTextAllowedInElement(ViolationCollector v, String tag) {
+    return addViolation(v, schemaViolation("element type " + tag
+        + " only allows blip text content, not arbitrary characters"));
   }
 
   private ValidationResult cannotDeleteSoManyCharacters(ViolationCollector v,
@@ -407,6 +517,25 @@ public final class DocOpAutomaton implements Cloneable {
       return addViolation(v, schemaViolation("element type " + parentTag
           + " does not permit subelement type " + childTag));
     }
+  }
+
+  private ValidationResult differentElementTypeRequired(ViolationCollector v, String expectedType,
+      String actualType) {
+    return addViolation(v, schemaViolation("element of type " + expectedType
+        + " required, not " + actualType));
+  }
+
+  private ValidationResult childElementRequired(ViolationCollector v, String expectedType) {
+    return addViolation(v, schemaViolation("child element required, expected type "
+        + expectedType));
+  }
+
+  private ValidationResult attemptToDeleteRequiredChild(ViolationCollector v) {
+    return addViolation(v, schemaViolation("attempt to delete required child"));
+  }
+
+  private ValidationResult attemptToInsertBeforeRequiredChild(ViolationCollector v) {
+    return addViolation(v, schemaViolation("attempt to insert before required child"));
   }
 
   private ValidationResult noElementStartToDelete(ViolationCollector v) {
@@ -481,33 +610,48 @@ public final class DocOpAutomaton implements Cloneable {
   }
 
   // tag==null means text allowed at top level
-  private boolean elementAllowsText(String tag) {
-    return true; // no schema constraints yet
+  private PermittedCharacters permittedCharacters(String type) {
+    return constraints.permittedCharacters(type);
   }
 
-  private boolean elementAllowsAttribute(String tag, String attributeName, String attributeValue) {
-    return true; // no schema constraints yet
+  private boolean elementAllowsAttribute(String type, String attributeName, String attributeValue) {
+    return constraints.permitsAttribute(type, attributeName, attributeValue);
   }
 
   // parentType==null means childType allowed at top level
   private boolean elementAllowsChild(String parentType, String childType) {
-    return true; // no schema constraints yet
+    return constraints.permitsChild(parentType, childType);
+  }
+
+  // returns either null or the type of the first required child
+  private String requiredFirstChild(String parentType) {
+    List<String> list = constraints.getRequiredInitialChildren(parentType);
+    if (list.isEmpty()) {
+      return null;
+    } else if (list.size() > 1) {
+      throw new UnsupportedOperationException("Schema requires multiple initial children");
+    } else {
+      return list.get(0);
+    }
   }
 
 
   private final AutomatonDocument doc;
+  private final DocumentSchema constraints;
 
 
   // current state
 
   private int effectivePos = 0;
   // first item is bottom of stack, last is top
-  private ArrayList<InsertStart> insertionStack = new ArrayList<InsertStart>();
-  int deletionStackDepth = 0;
+
+  private final ArrayList<InsertStart> insertionStack;
+  private String nextRequiredElement = null;
+  private int deletionStackDepth = 0;
   private AnnotationsUpdateImpl annotationsUpdate = new AnnotationsUpdateImpl();
   private boolean afterAnnotationBoundary = false;
   // This can become null if the operation is invalid.
-  private Annotations targetAnnotationsForDeletion = EMPTY_ANNOTATIONS;
+  private AnnotationMap targetAnnotationsForDeletion = EMPTY_ANNOTATIONS;
 
 
   // more state to track just to be able to produce better diagnostic messages
@@ -517,8 +661,8 @@ public final class DocOpAutomaton implements Cloneable {
 
   public static final AutomatonDocument EMPTY_DOCUMENT = new AutomatonDocument() {
     @Override
-    public Annotations annotationsAt(int pos) {
-      return AnnotationsImpl.EMPTY_MAP;
+    public AnnotationMap annotationsAt(int pos) {
+      return AnnotationMapImpl.EMPTY_MAP;
     }
 
     @Override
@@ -555,30 +699,54 @@ public final class DocOpAutomaton implements Cloneable {
     public int remainingCharactersInElement(int insertionPoint) {
       return 0;
     }
-  };
 
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public DocOpAutomaton clone() {
-    DocOpAutomaton clone;
-    try {
-      clone = (DocOpAutomaton) super.clone();
-    } catch (CloneNotSupportedException e) {
-      throw new RuntimeException("Error cloning automaton", e);
+    @Override
+    public String getAnnotation(int pos, String key) {
+      return null;
     }
-    clone.insertionStack = (ArrayList) clone.insertionStack.clone();
-    return clone;
-  }
+
+    @Override
+    public int firstAnnotationChange(int start, int end, String key, String fromValue) {
+      Preconditions.checkPositionIndexes(start, end, 0);
+      // if (fromValue != null && end > start): can't happen since end == start == 0
+      return -1;
+    }
+  };
 
   /**
    * Creates an automaton that corresponds to the set of all possible operations
-   * on the given document.
+   * on the given document under the given schema constraints.
    */
-  public DocOpAutomaton(AutomatonDocument doc) {
+  public DocOpAutomaton(AutomatonDocument doc, DocumentSchema constraints) {
     this.doc = doc;
+    this.constraints = constraints;
+    this.nextRequiredElement = requiredFirstChild(null);
+    this.insertionStack = new ArrayList<InsertStart>();
   }
 
+
+  /**
+   * Copy Constructor
+   */
+  public DocOpAutomaton(DocOpAutomaton other) {
+    this(other, other.constraints);
+  }
+
+  /**
+   * Copy Constructor 2
+   */
+  public DocOpAutomaton(DocOpAutomaton other, DocumentSchema constraints) {
+    this.afterAnnotationBoundary = other.afterAnnotationBoundary;
+    this.annotationsUpdate = other.annotationsUpdate;
+    this.constraints = constraints;
+    this.deletionStackDepth = other.deletionStackDepth;
+    this.doc = other.doc;
+    this.effectivePos = other.effectivePos;
+    this.insertionStack = new ArrayList<InsertStart>(other.insertionStack);
+    this.nextRequiredElement = other.nextRequiredElement;
+    this.resultingPos = other.resultingPos;
+    this.targetAnnotationsForDeletion = other.targetAnnotationsForDeletion;
+  }
 
   // current state primitive readers
 
@@ -640,7 +808,7 @@ public final class DocOpAutomaton implements Cloneable {
     return deletionStackDepth == 0;
   }
 
-  // null if outside root
+  // null if at top level
   private String effectiveEnclosingElementTag() {
     // This procedure will find the element at depth == 0.
     int depth = 0;
@@ -673,7 +841,7 @@ public final class DocOpAutomaton implements Cloneable {
     return doc.attributesAt(effectivePos);
   }
 
-  public Annotations currentAnnotations() {
+  public AnnotationMap currentAnnotations() {
     if (effectivePos >= doc.length()) {
       return EMPTY_ANNOTATIONS;
     } else {
@@ -763,15 +931,13 @@ public final class DocOpAutomaton implements Cloneable {
   // check/do methods
 
   private ValidationResult checkAnnotationsForRetain(ViolationCollector v, int itemCount) {
-    for (int offset = 0; offset < itemCount; offset++) {
-      Map<String, String> annotationsHere = doc.annotationsAt(effectivePos + offset);
-      for (int i = 0; i < annotationsUpdate.changeSize(); i++) {
-        String key = annotationsUpdate.getChangeKey(i);
-        String oldValue = annotationsUpdate.getOldValue(i);
-        String valueInDoc = annotationsHere.get(key);
-        if (!equal(oldValue, valueInDoc)) {
-          return oldAnnotationsDifferFromDocument(v, oldValue, valueInDoc);
-        }
+    for (int i = 0; i < annotationsUpdate.changeSize(); i++) {
+      String key = annotationsUpdate.getChangeKey(i);
+      String oldValue = annotationsUpdate.getOldValue(i);
+      int firstChange = doc.firstAnnotationChange(effectivePos, effectivePos + itemCount,
+          key, oldValue);
+      if (firstChange != -1) {
+        return oldAnnotationsDifferFromDocument(v, oldValue, doc.getAnnotation(firstChange, key));
       }
     }
     return valid();
@@ -799,6 +965,13 @@ public final class DocOpAutomaton implements Cloneable {
   private ValidationResult validateAnnotationKey(String key, ViolationCollector v) {
     if (key == null) { return nullAnnotationKey(v); }
     if (key.contains("?") || key.contains("@")) { return invalidCharacterInAnnotationKey(v, key); }
+    if (!Utf16Util.isValidUtf16(key)) { return annotationKeyNotValidUtf16(v); }
+    return ValidationResult.VALID;
+  }
+
+  private ValidationResult validateAnnotationValue(String value, ViolationCollector v) {
+    if (value == null) { return ValidationResult.VALID; }
+    if (!Utf16Util.isValidUtf16(value)) { return annotationValueNotValidUtf16(v); }
     return ValidationResult.VALID;
   }
 
@@ -807,16 +980,6 @@ public final class DocOpAutomaton implements Cloneable {
       ViolationCollector v) {
     // well-formedness
     if (afterAnnotationBoundary) { return adjacentAnnotationBoundaries(v); }
-    HashSet<String> changeKeys = new HashSet<String>();
-    for (int i = 0; i < map.changeSize(); i++) {
-      String key = map.getChangeKey(i);
-      {
-        ValidationResult r = validateAnnotationKey(key, v);
-        if (!r.isValid()) { return r; }
-      }
-      if (changeKeys.contains(key)) { return duplicateAnnotationKey(v, key); }
-      changeKeys.add(key);
-    }
     HashSet<String> endKeys = new HashSet<String>();
     for (int i = 0; i < map.endSize(); i++) {
       String key = map.getEndKey(i);
@@ -824,10 +987,30 @@ public final class DocOpAutomaton implements Cloneable {
         ValidationResult r = validateAnnotationKey(key, v);
         if (!r.isValid()) { return r; }
       }
-      if (endKeys.contains(key)) { return duplicateAnnotationKey(v, key); }
-      if (changeKeys.contains(key)) { return duplicateAnnotationKey(v, key); }
+      if (i > 0 && map.getEndKey(i - 1).compareTo(key) >= 0) {
+        return annotationKeysNotStrictlyMonotonic(v, map.getEndKey(i - 1), key);
+      }
       if (!annotationsUpdate.containsKey(key)) { return mismatchedEndAnnotation(v, key); }
       endKeys.add(key);
+    }
+    for (int i = 0; i < map.changeSize(); i++) {
+      String key = map.getChangeKey(i);
+      {
+        ValidationResult r = validateAnnotationKey(key, v);
+        if (!r.isValid()) { return r; }
+      }
+      {
+        ValidationResult r = validateAnnotationValue(map.getOldValue(i), v);
+        if (!r.isValid()) { return r; }
+      }
+      {
+        ValidationResult r = validateAnnotationValue(map.getNewValue(i), v);
+        if (!r.isValid()) { return r; }
+      }
+      if (i > 0 && map.getChangeKey(i - 1).compareTo(key) >= 0) {
+        return annotationKeysNotStrictlyMonotonic(v, map.getChangeKey(i - 1), key);
+      }
+      if (endKeys.contains(key)) { return duplicateAnnotationKey(v, key); }
     }
     return valid();
   }
@@ -839,9 +1022,9 @@ public final class DocOpAutomaton implements Cloneable {
   }
 
 
-  private static final Annotations EMPTY_ANNOTATIONS = AnnotationsImpl.EMPTY_MAP;
+  private static final AnnotationMap EMPTY_ANNOTATIONS = AnnotationMapImpl.EMPTY_MAP;
 
-  public Annotations inheritedAnnotations() {
+  public AnnotationMap inheritedAnnotations() {
     if (effectivePos == 0 || effectivePos > doc.length()) {
       return EMPTY_ANNOTATIONS;
     } else {
@@ -854,7 +1037,8 @@ public final class DocOpAutomaton implements Cloneable {
     if (effectivePos > doc.length()) {
       targetAnnotationsForDeletion = null;
     } else {
-      targetAnnotationsForDeletion = inheritedAnnotations().updateWith(annotationsUpdate);
+      targetAnnotationsForDeletion =
+          inheritedAnnotations().updateWithNoCompatibilityCheck(annotationsUpdate);
     }
   }
 
@@ -863,11 +1047,12 @@ public final class DocOpAutomaton implements Cloneable {
       // Invalid operation, nothing to check.
       return valid();
     }
-    Annotations defaultAnnotations = inheritedAnnotations();
+    int posToInheritFrom = effectivePos - 1;
     for (int i = 0; i < annotationsUpdate.changeSize(); i++) {
       String key = annotationsUpdate.getChangeKey(i);
       String oldValue = annotationsUpdate.getOldValue(i);
-      String defaultFromDocument = defaultAnnotations.get(key);
+      String defaultFromDocument = posToInheritFrom == -1 ? null :
+        doc.getAnnotation(posToInheritFrom, key);
       if (!equal(oldValue, defaultFromDocument)) {
         return oldAnnotationsDifferFromDocument(v, oldValue, defaultFromDocument);
       }
@@ -875,10 +1060,24 @@ public final class DocOpAutomaton implements Cloneable {
     return valid();
   }
 
+  private ValidationResult checkForInsertionBeforeRequiredChild(ViolationCollector v) {
+    if (effectivePos < doc.length() && insertionStackIsEmpty()) {
+      String parentType = doc.nthEnclosingElementTag(effectivePos, 0);
+      String requiredFirstChild = requiredFirstChild(parentType);
+      boolean isFirstChild = effectivePos == 0 || doc.elementStartingAt(effectivePos - 1) != null;
+      if (isFirstChild && requiredFirstChild != null) {
+        return attemptToInsertBeforeRequiredChild(v);
+      }
+    }
+    return ValidationResult.VALID;
+  }
+
   public ValidationResult checkCharacters(String chars, ViolationCollector v) {
     // well-formedness
     if (chars == null) { return nullCharacters(v); }
     if (chars.isEmpty()) { return emptyCharacters(v); }
+    if (Utf16Util.firstSurrogate(chars) != -1) { return charactersContainsSurrogate(v); }
+    if (!Utf16Util.isValidUtf16(chars)) { return charactersInvalidUnicode(v); }
     if (!deletionStackIsEmpty()) { return insertInsideDelete(v); }
     // validity
     {
@@ -886,8 +1085,27 @@ public final class DocOpAutomaton implements Cloneable {
       if (!r.isValid()) { return r; }
     }
     // schema
+    if (nextRequiredElement != null) {
+      childElementRequired(v, nextRequiredElement);
+    }
+    {
+      ValidationResult r = checkForInsertionBeforeRequiredChild(v);
+      if (!r.isValid()) { return r; }
+    }
     String enclosingTag = effectiveEnclosingElementTag();
-    if (!elementAllowsText(enclosingTag)) { return textNotAllowedInElement(v, enclosingTag); }
+    switch (permittedCharacters(enclosingTag)) {
+      case NONE:
+        return textNotAllowedInElement(v, enclosingTag);
+      case BLIP_TEXT:
+        if (!Utf16Util.isGoodUtf16ForBlip(chars)) {
+          return onlyBlipTextAllowedInElement(v, enclosingTag);
+        }
+        break;
+      case ANY:
+        break;
+      default:
+        throw new AssertionError("unexpected return value from permittedCharacters()");
+    }
     return valid();
   }
 
@@ -899,44 +1117,50 @@ public final class DocOpAutomaton implements Cloneable {
   }
 
 
-  private ValidationResult checkAnnotationsForDeletion(ViolationCollector v, int pos) {
+  private ValidationResult checkAnnotationsForDeletion(ViolationCollector v, int itemCount) {
     if (targetAnnotationsForDeletion == null) {
       // Invalid operation, nothing to check.
       return valid();
     }
+
     // Check that all annotations contained in the update have correct old and
     // new values.
-    Map<String, String> annotationsHere = doc.annotationsAt(pos);
     for (int i = 0; i < annotationsUpdate.changeSize(); i++) {
       String key = annotationsUpdate.getChangeKey(i);
       String oldValue = annotationsUpdate.getOldValue(i);
-      String valueInDoc = annotationsHere.get(key);
-      if (!equal(oldValue, valueInDoc)) {
-        return oldAnnotationsDifferFromDocument(v, oldValue, valueInDoc);
+      int firstChange = doc.firstAnnotationChange(effectivePos, effectivePos + itemCount,
+          key, oldValue);
+      if (firstChange != -1) {
+        return oldAnnotationsDifferFromDocument(v, oldValue, doc.getAnnotation(firstChange, key));
       }
       String newValue = annotationsUpdate.getNewValue(i);
       if (!equal(newValue, targetAnnotationsForDeletion.get(key))) {
         return newAnnotationsIncorrectForDeletion(v);
       }
     }
-    // Check that the update contains all values that need to be set; the set of
-    // keys to check is the union of keys at the current position and at the
-    // position that it would inherit from.
-    for (String key : annotationsHere.keySet()) {
-      String valueInDoc = annotationsHere.get(key);
-      String requiredValue = targetAnnotationsForDeletion.get(key);
-      if (!equal(valueInDoc, requiredValue)) {
-        if (!annotationsUpdate.containsKey(key)) {
-          return missingAnnotationForDeletion(v, key, valueInDoc, requiredValue);
+    // TODO: Find a way to speed this up.
+    for (int offset = 0; offset < itemCount; offset++) {
+      int pos = effectivePos + offset;
+      Map<String, String> annotationsHere = doc.annotationsAt(pos);
+      // Check that the update contains all values that need to be set; the set of
+      // keys to check is the union of keys at the current position and at the
+      // position that it would inherit from.
+      for (String key : annotationsHere.keySet()) {
+        String valueInDoc = annotationsHere.get(key);
+        String requiredValue = targetAnnotationsForDeletion.get(key);
+        if (!equal(valueInDoc, requiredValue)) {
+          if (!annotationsUpdate.containsKey(key)) {
+            return missingAnnotationForDeletion(v, key, valueInDoc, requiredValue);
+          }
         }
       }
-    }
-    for (String key : targetAnnotationsForDeletion.keySet()) {
-      String valueInDoc = annotationsHere.get(key);
-      String requiredValue = targetAnnotationsForDeletion.get(key);
-      if (!equal(valueInDoc, requiredValue)) {
-        if (!annotationsUpdate.containsKey(key)) {
-          return missingAnnotationForDeletion(v, key, valueInDoc, requiredValue);
+      for (String key : targetAnnotationsForDeletion.keySet()) {
+        String valueInDoc = annotationsHere.get(key);
+        String requiredValue = targetAnnotationsForDeletion.get(key);
+        if (!equal(valueInDoc, requiredValue)) {
+          if (!annotationsUpdate.containsKey(key)) {
+            return missingAnnotationForDeletion(v, key, valueInDoc, requiredValue);
+          }
         }
       }
     }
@@ -949,9 +1173,11 @@ public final class DocOpAutomaton implements Cloneable {
     String previousKey = null;
     for (Map.Entry<String, String> e : attr.entrySet()) {
       if (e.getKey() == null) { return nullAttributeKey(v); }
+      if (!Utf16Util.isXmlName(e.getKey())) { return attributeNameNotXmlName(v, e.getKey()); }
       if (e.getValue() == null) { return nullAttributeValue(v); }
+      if (!Utf16Util.isValidUtf16(e.getValue())) { return attributeValueNotValidUtf16(v); }
       if (previousKey != null && previousKey.compareTo(e.getKey()) >= 0) {
-        return attributeKeysNotStrictlyMonotonic(v, e.getKey());
+        return attributeKeysNotStrictlyMonotonic(v, previousKey, e.getKey());
       }
       previousKey = e.getKey();
     }
@@ -965,8 +1191,15 @@ public final class DocOpAutomaton implements Cloneable {
     for (int i = 0; i < u.changeSize(); i++) {
       String key = u.getChangeKey(i);
       if (key == null) { return nullAttributeKey(v); }
+      if (!Utf16Util.isXmlName(key)) { return attributeNameNotXmlName(v, key); }
       if (previousKey != null && previousKey.compareTo(key) >= 0) {
-        return attributeKeysNotStrictlyMonotonic(v, key);
+        return attributeKeysNotStrictlyMonotonic(v, previousKey, key);
+      }
+      if (u.getOldValue(i) != null && !Utf16Util.isValidUtf16(u.getOldValue(i))) {
+        return attributeValueNotValidUtf16(v);
+      }
+      if (u.getNewValue(i) != null && !Utf16Util.isValidUtf16(u.getNewValue(i))) {
+        return attributeValueNotValidUtf16(v);
       }
       previousKey = key;
     }
@@ -985,9 +1218,10 @@ public final class DocOpAutomaton implements Cloneable {
   }
 
 
-  public ValidationResult checkElementStart(String tag, Attributes attr, ViolationCollector v) {
+  public ValidationResult checkElementStart(String type, Attributes attr, ViolationCollector v) {
     // well-formedness
-    if (tag == null) { return nullTag(v); }
+    if (type == null) { return nullTag(v); }
+    if (!Utf16Util.isXmlName(type)) { return elementTypeNotXmlName(v, type); }
     {
       ValidationResult r = checkAttributesWellFormed(attr, v);
       if (r != ValidationResult.VALID) { return r; }
@@ -1002,18 +1236,26 @@ public final class DocOpAutomaton implements Cloneable {
 
     // schema
     {
-      ValidationResult r = validateAttributes(tag, attr, v);
+      ValidationResult r = validateAttributes(type, attr, v);
       if (r != ValidationResult.VALID) { return r; }
     }
     String parentTag = effectiveEnclosingElementTag();
-    if (!elementAllowsChild(parentTag, tag)) { return invalidChild(v, parentTag, tag); }
+    if (!elementAllowsChild(parentTag, type)) { return invalidChild(v, parentTag, type); }
+    {
+      ValidationResult r = checkForInsertionBeforeRequiredChild(v);
+      if (!r.isValid()) { return r; }
+    }
+    if (nextRequiredElement != null && !nextRequiredElement.equals(type)) {
+      differentElementTypeRequired(v, nextRequiredElement, type);
+    }
     return valid();
   }
 
-  public void doElementStart(String tag, Attributes attr) {
-    assert !checkElementStart(tag, attr, null).isIllFormed();
+  public void doElementStart(String type, Attributes attr) {
+    assert !checkElementStart(type, attr, null).isIllFormed();
     updateDeletionTargetAnnotations();
-    insertionStackPush(InsertStart.getInstance(tag));
+    insertionStackPush(InsertStart.getInstance(type));
+    nextRequiredElement = requiredFirstChild(type);
     resultingPos += 1;
     afterAnnotationBoundary = false;
    }
@@ -1029,6 +1271,9 @@ public final class DocOpAutomaton implements Cloneable {
       if (!r.isValid()) { return r; }
     }
     // schema
+    if (nextRequiredElement != null) {
+      childElementRequired(v, nextRequiredElement);
+    }
     return valid();
   }
 
@@ -1054,6 +1299,8 @@ public final class DocOpAutomaton implements Cloneable {
     // well-formedness
     if (chars == null) { return nullCharacters(v); }
     if (chars.isEmpty()) { return emptyCharacters(v); }
+    if (Utf16Util.firstSurrogate(chars) != -1) { return deleteCharactersContainsSurrogate(v); }
+    if (!Utf16Util.isValidUtf16(chars)) { return deleteCharactersInvalidUnicode(v); }
     if (!insertionStackIsEmpty()) { return deleteInsideInsert(v); }
     // validity
     for (int offset = 0; offset < chars.length(); offset++) {
@@ -1065,12 +1312,8 @@ public final class DocOpAutomaton implements Cloneable {
       if (charHere != chars.charAt(offset)) {
         return oldCharacterDiffersFromDocument(v, charHere, chars.charAt(offset));
       }
-      {
-        ValidationResult r = checkAnnotationsForDeletion(v, effectivePos + offset);
-        if (!r.isValid()) { return r; }
-      }
     }
-    return valid();
+    return checkAnnotationsForDeletion(v, chars.length());
   }
 
   public void doDeleteCharacters(String chars) {
@@ -1080,10 +1323,11 @@ public final class DocOpAutomaton implements Cloneable {
   }
 
 
-  public ValidationResult checkDeleteElementStart(String tag, Attributes attr,
+  public ValidationResult checkDeleteElementStart(String type, Attributes attr,
       ViolationCollector v) {
     // well-formedness
-    if (tag == null) { return nullTag(v); }
+    if (type == null) { return nullTag(v); }
+    if (!Utf16Util.isXmlName(type)) { return elementTypeNotXmlName(v, type); }
     {
       ValidationResult r = checkAttributesWellFormed(attr, v);
       if (r != ValidationResult.VALID) { return r; }
@@ -1091,13 +1335,24 @@ public final class DocOpAutomaton implements Cloneable {
     if (!insertionStackIsEmpty()) { return deleteInsideInsert(v); }
     // validity
     if (effectiveDocSymbol() != DocSymbol.OPEN) { return noElementStartToDelete(v); }
-    if (!effectiveDocSymbolTag().equals(tag)) { return oldTagDifferFromDocument(v); }
+    if (!effectiveDocSymbolTag().equals(type)) { return oldTagDifferFromDocument(v); }
     if (!attributesEqual(attr, effectiveDocSymbolAttributes())) {
       return oldAttributesDifferFromDocument(v);
     }
     {
-      ValidationResult r = checkAnnotationsForDeletion(v, effectivePos);
+      ValidationResult r = checkAnnotationsForDeletion(v, 1);
       if (!r.isValid()) { return r; }
+    }
+    // schema
+    if (deletionStackDepth == 0) {
+      if (effectivePos < doc.length()) {
+        String parentType = doc.nthEnclosingElementTag(effectivePos, 0);
+        String requiredFirstChild = requiredFirstChild(parentType);
+        boolean isFirstChild = effectivePos == 0 || doc.elementStartingAt(effectivePos - 1) != null;
+        if (isFirstChild && requiredFirstChild != null) {
+          return attemptToDeleteRequiredChild(v);
+        }
+      }
     }
     return valid();
   }
@@ -1118,7 +1373,7 @@ public final class DocOpAutomaton implements Cloneable {
     // validity
     if (effectiveDocSymbol() != DocSymbol.CLOSE) { return noElementEndToDelete(v); }
     {
-      ValidationResult r = checkAnnotationsForDeletion(v, effectivePos);
+      ValidationResult r = checkAnnotationsForDeletion(v, 1);
       if (!r.isValid()) { return r; }
     }
     return valid();

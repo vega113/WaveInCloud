@@ -25,7 +25,7 @@ import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
-import org.waveprotocol.wave.model.document.operation.impl.BufferedDocOpImpl;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.operation.OperationException;
 
 import java.util.ArrayList;
@@ -782,7 +782,7 @@ public final class Composer {
   };
 
   private final EvaluatingDocOpCursor<BufferedDocOp> normalizer =
-      OperationNormalizer.createNormalizer(new BufferedDocOpImpl.DocOpBuilder());
+      OperationNormalizer.createNormalizer(new DocOpBuffer());
 
   private final Target defaultTarget = new DefaultPreTarget();
 
