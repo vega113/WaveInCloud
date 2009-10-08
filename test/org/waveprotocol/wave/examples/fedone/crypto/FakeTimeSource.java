@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.crypto;
 
+import org.waveprotocol.wave.crypto.TimeSource;
+
 import java.util.Date;
 
 class FakeTimeSource implements TimeSource {

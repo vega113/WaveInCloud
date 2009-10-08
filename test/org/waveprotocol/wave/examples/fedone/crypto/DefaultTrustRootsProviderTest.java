@@ -19,6 +19,9 @@ package org.waveprotocol.wave.examples.fedone.crypto;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.crypto.DefaultTrustRootsProvider;
+import org.waveprotocol.wave.crypto.TrustRootsProvider;
+
 public class DefaultTrustRootsProviderTest extends TestCase {
 
   public void testGetCertificates() throws Exception {

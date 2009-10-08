@@ -14,22 +14,22 @@
  * limitations under the License.
  *
  */
+package org.waveprotocol.wave.crypto;
 
-package org.waveprotocol.wave.examples.fedone.crypto;
 
-import java.security.cert.X509Certificate;
-import java.util.Collection;
+import java.util.Date;
 
 /**
- * Interface that defines trust roots providers. A trust roots provider
- * returns the list of certificates we should trust as Certification
- * Authorities.
+ * Simple class for returning the current time, which can be replaced by mocks
+ * during testing.
  */
-public interface TrustRootsProvider {
+public class DefaultTimeSource implements TimeSource {
 
-  /**
-   * Returns the list of certificates that we should trust as Certification
-   * Authorities.
-   */
-  public Collection<X509Certificate> getTrustRoots();
+  public Date now() {
+    return new Date(currentTimeMillis());
+  }
+
+  public long currentTimeMillis() {
+    return System.currentTimeMillis();
+  }
 }

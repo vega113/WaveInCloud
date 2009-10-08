@@ -15,19 +15,21 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.crypto;
+package org.waveprotocol.wave.crypto;
 
 import java.security.cert.X509Certificate;
-import java.util.List;
+import java.util.Collection;
 
 /**
- * A {@link WaveCertPathValidator} that doesn't do any validation.
+ * Interface that defines trust roots providers. A trust roots provider
+ * returns the list of certificates we should trust as Certification
+ * Authorities.
  */
-public class DisabledCertPathValidator implements WaveCertPathValidator {
+public interface TrustRootsProvider {
 
-  @Override
-  public void validate(List<? extends X509Certificate> certs) throws SignatureException {
-    // Pass
-  }
-
+  /**
+   * Returns the list of certificates that we should trust as Certification
+   * Authorities.
+   */
+  public Collection<X509Certificate> getTrustRoots();
 }

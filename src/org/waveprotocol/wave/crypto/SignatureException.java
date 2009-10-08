@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.examples.fedone.crypto;
+package org.waveprotocol.wave.crypto;
 
 /**
  * Thrown when something goes wrong during signature generation or verification.

@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.examples.fedone.crypto;
+package org.waveprotocol.wave.crypto;
 
 import org.waveprotocol.wave.examples.fedone.federation.xmpp.Base64Util;
 import org.waveprotocol.wave.examples.fedone.util.Log;

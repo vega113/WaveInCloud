@@ -19,6 +19,8 @@ package org.waveprotocol.wave.examples.fedone.crypto;
 
 import com.google.common.collect.ImmutableSet;
 
+import org.waveprotocol.wave.crypto.TrustRootsProvider;
+
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.Set;

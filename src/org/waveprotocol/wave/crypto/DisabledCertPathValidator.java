@@ -14,24 +14,20 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.examples.fedone.crypto;
 
-import java.util.Date;
+package org.waveprotocol.wave.crypto;
+
+import java.security.cert.X509Certificate;
+import java.util.List;
 
 /**
- * Interface for obtaining the current time. We extract this interface for
- * easier testing. There should be no need to replace the default implementation
- * of this interface, except for testing.
+ * A {@link WaveCertPathValidator} that doesn't do any validation.
  */
-public interface TimeSource {
+public class DisabledCertPathValidator implements WaveCertPathValidator {
 
-  /**
-   * Returns a {@link Date} representing the current time.
-   */
-  public Date now();
+  @Override
+  public void validate(List<? extends X509Certificate> certs) throws SignatureException {
+    // Pass
+  }
 
-  /**
-   * Returns the current time in milliseconds sice the epoch UTC
-   */
-  public long currentTimeMillis();
 }

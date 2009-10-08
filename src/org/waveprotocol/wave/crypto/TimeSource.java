@@ -14,22 +14,24 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.examples.fedone.crypto;
-
+package org.waveprotocol.wave.crypto;
 
 import java.util.Date;
 
 /**
- * Simple class for returning the current time, which can be replaced by mocks
- * during testing.
+ * Interface for obtaining the current time. We extract this interface for
+ * easier testing. There should be no need to replace the default implementation
+ * of this interface, except for testing.
  */
-public class DefaultTimeSource implements TimeSource {
+public interface TimeSource {
 
-  public Date now() {
-    return new Date(currentTimeMillis());
-  }
+  /**
+   * Returns a {@link Date} representing the current time.
+   */
+  public Date now();
 
-  public long currentTimeMillis() {
-    return System.currentTimeMillis();
-  }
+  /**
+   * Returns the current time in milliseconds sice the epoch UTC
+   */
+  public long currentTimeMillis();
 }

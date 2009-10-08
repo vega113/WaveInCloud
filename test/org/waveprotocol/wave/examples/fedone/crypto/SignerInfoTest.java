@@ -27,6 +27,7 @@ import java.security.cert.X509Certificate;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
+import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm;
 

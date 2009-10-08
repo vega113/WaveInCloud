@@ -30,12 +30,12 @@ import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.waveprotocol.wave.examples.fedone.crypto.CertPathStore;
-import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
-import org.waveprotocol.wave.examples.fedone.crypto.SignerInfo;
-import org.waveprotocol.wave.examples.fedone.crypto.UnknownSignerException;
-import org.waveprotocol.wave.examples.fedone.crypto.WaveSignatureVerifier;
-import org.waveprotocol.wave.examples.fedone.crypto.WaveSigner;
+import org.waveprotocol.wave.crypto.CertPathStore;
+import org.waveprotocol.wave.crypto.SignatureException;
+import org.waveprotocol.wave.crypto.SignerInfo;
+import org.waveprotocol.wave.crypto.UnknownSignerException;
+import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
+import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationProvider.DeltaSignerInfoResponseListener;
 import org.waveprotocol.wave.model.id.WaveletName;

@@ -19,10 +19,10 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.protobuf.ByteString;
 
-import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
-import org.waveprotocol.wave.examples.fedone.crypto.SignerInfo;
-import org.waveprotocol.wave.examples.fedone.crypto.UnknownSignerException;
-import org.waveprotocol.wave.examples.fedone.crypto.WaveSigner;
+import org.waveprotocol.wave.crypto.SignatureException;
+import org.waveprotocol.wave.crypto.SignerInfo;
+import org.waveprotocol.wave.crypto.UnknownSignerException;
+import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;

@@ -25,9 +25,9 @@ import com.google.inject.ProvisionException;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
-import org.waveprotocol.wave.examples.fedone.crypto.WaveSigner;
-import org.waveprotocol.wave.examples.fedone.crypto.WaveSignerFactory;
+import org.waveprotocol.wave.crypto.SignatureException;
+import org.waveprotocol.wave.crypto.WaveSigner;
+import org.waveprotocol.wave.crypto.WaveSignerFactory;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

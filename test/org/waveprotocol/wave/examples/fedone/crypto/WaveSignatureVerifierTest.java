@@ -23,6 +23,13 @@ import com.google.protobuf.ByteString;
 import junit.framework.TestCase;
 
 import org.apache.commons.codec.binary.Base64;
+import org.waveprotocol.wave.crypto.CachedCertPathValidator;
+import org.waveprotocol.wave.crypto.DefaultCacheImpl;
+import org.waveprotocol.wave.crypto.DefaultCertPathStore;
+import org.waveprotocol.wave.crypto.SignatureException;
+import org.waveprotocol.wave.crypto.SignerInfo;
+import org.waveprotocol.wave.crypto.UnknownSignerException;
+import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
 import org.waveprotocol.wave.protocol.common.ProtocolSignature;
 import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm;
