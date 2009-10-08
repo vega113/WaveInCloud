@@ -18,8 +18,23 @@
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
+import org.waveprotocol.wave.examples.fedone.crypto.CachedCertPathValidator;
+import org.waveprotocol.wave.examples.fedone.crypto.CertPathStore;
+import org.waveprotocol.wave.examples.fedone.crypto.DefaultCacheImpl;
+import org.waveprotocol.wave.examples.fedone.crypto.DefaultCertPathStore;
+import org.waveprotocol.wave.examples.fedone.crypto.DefaultTimeSource;
+import org.waveprotocol.wave.examples.fedone.crypto.DefaultTrustRootsProvider;
+import org.waveprotocol.wave.examples.fedone.crypto.DisabledCertPathValidator;
+import org.waveprotocol.wave.examples.fedone.crypto.TimeSource;
+import org.waveprotocol.wave.examples.fedone.crypto.TrustRootsProvider;
+import org.waveprotocol.wave.examples.fedone.crypto.VerifiedCertChainCache;
+import org.waveprotocol.wave.examples.fedone.crypto.WaveCertPathValidator;
+import org.waveprotocol.wave.examples.fedone.crypto.WaveSignatureVerifier;
+import org.waveprotocol.wave.examples.fedone.crypto.WaveSigner;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveletName;
 
@@ -46,6 +61,22 @@ public class WaveServerModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    bind(CertPathStore.class).to(DefaultCertPathStore.class).in(Singleton.class);
+    bind(TimeSource.class).to(DefaultTimeSource.class).in(Singleton.class);
+    bind(WaveSigner.class).toProvider(WaveSignerProvider.class);
+
+    try {
+      bind(WaveSignatureVerifier.class).toConstructor(WaveSignatureVerifier.class.getConstructor(
+          WaveCertPathValidator.class, CertPathStore.class));
+      bind(VerifiedCertChainCache.class).to(DefaultCacheImpl.class).in(Singleton.class);
+      bind(DefaultCacheImpl.class).toConstructor(
+          DefaultCacheImpl.class.getConstructor(TimeSource.class));
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException(e);
+    }
+
+    bind(TrustRootsProvider.class).to(DefaultTrustRootsProvider.class).in(Singleton.class);
+    bind(CertificateManager.class).to(CertificateManagerImpl.class).in(Singleton.class);
     bind(WaveletProvider.class).to(WaveServer.class);
     bind(WaveServer.class).to(WaveServerImpl.class).in(Singleton.class);
     bind(ClientFrontend.class).to(ClientFrontendImpl.class).in(Singleton.class);
@@ -54,5 +85,20 @@ public class WaveServerModule extends AbstractModule {
         .in(Singleton.class);
     bind(RemoteWaveletContainer.Factory.class).to(RemoteWaveletContainerFactory.class)
         .in(Singleton.class);
+  }
+
+  /**
+   * Guice provider of {@code WaveCertPathValidator}s.
+   */
+  @Provides
+  protected WaveCertPathValidator provideWaveCertPathValidator(
+      @Named("waveserver_disable_signer_verification") boolean disableSignerVerification,
+      TimeSource timeSource, VerifiedCertChainCache certCache,
+      TrustRootsProvider trustRootsProvider) {
+    if (disableSignerVerification) {
+      return new DisabledCertPathValidator();
+    } else {
+      return new CachedCertPathValidator(certCache, timeSource, trustRootsProvider);
+    }
   }
 }

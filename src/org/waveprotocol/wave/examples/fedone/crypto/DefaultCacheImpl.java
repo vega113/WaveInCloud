@@ -16,9 +16,6 @@
  */
 package org.waveprotocol.wave.examples.fedone.crypto;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import java.security.cert.X509Certificate;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,7 +35,6 @@ import java.util.Map;
  * 10 minutes is still a good time for the expirations). Simply inject a
  * different {@link VerifiedCertChainCache} using Guice.
  */
-@Singleton
 public class DefaultCacheImpl implements VerifiedCertChainCache {
 
   private static final int VALIDATION_CACHE_SIZE = 1024;
@@ -47,7 +43,6 @@ public class DefaultCacheImpl implements VerifiedCertChainCache {
   private final LruLinkedHashMap map;
   private final TimeSource timeSource;
 
-  @Inject
   public DefaultCacheImpl(TimeSource timeSource) {
     this.map = new LruLinkedHashMap(VALIDATION_CACHE_SIZE);
     this.timeSource = timeSource;

@@ -18,7 +18,6 @@
 package org.waveprotocol.wave.examples.fedone.crypto;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Singleton;
 
 import java.io.ByteArrayInputStream;
 import java.security.KeyStore;
@@ -27,7 +26,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -38,7 +36,6 @@ import javax.net.ssl.X509TrustManager;
 /**
  * By default, we use the same CA roots that Java's SSL implementation uses.
  */
-@Singleton
 public class DefaultTrustRootsProvider implements TrustRootsProvider {
 
   // startcom.org provides free certificates, but is not included in the

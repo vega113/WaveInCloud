@@ -35,13 +35,14 @@ import org.waveprotocol.wave.examples.fedone.crypto.CachedCertPathValidator;
 import org.waveprotocol.wave.examples.fedone.crypto.CertPathStore;
 import org.waveprotocol.wave.examples.fedone.crypto.DefaultCacheImpl;
 import org.waveprotocol.wave.examples.fedone.crypto.DefaultCertPathStore;
-import org.waveprotocol.wave.examples.fedone.crypto.DefaultTrustRootsProvider;
+import org.waveprotocol.wave.examples.fedone.crypto.DisabledCertPathValidator;
 import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
 import org.waveprotocol.wave.examples.fedone.crypto.SignerInfo;
 import org.waveprotocol.wave.examples.fedone.crypto.TimeSource;
 import org.waveprotocol.wave.examples.fedone.crypto.TrustRootsProvider;
 import org.waveprotocol.wave.examples.fedone.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.crypto.VerifiedCertChainCache;
+import org.waveprotocol.wave.examples.fedone.crypto.WaveCertPathValidator;
 import org.waveprotocol.wave.examples.fedone.crypto.WaveSignatureVerifier;
 import org.waveprotocol.wave.examples.fedone.crypto.WaveSigner;
 import org.waveprotocol.wave.examples.fedone.crypto.WaveSignerFactory;
@@ -523,9 +524,14 @@ public class CertificateManagerImplTest extends TestCase {
   private WaveSignatureVerifier getVerifier(CertPathStore store,
       boolean disableSignerVerification) {
     VerifiedCertChainCache cache = new DefaultCacheImpl(getFakeTimeSource());
-    CachedCertPathValidator validator = new CachedCertPathValidator(
-        cache, getFakeTimeSource(), getTrustRootsProvider());
-    return new WaveSignatureVerifier(validator, store, disableSignerVerification);
+    WaveCertPathValidator validator;
+    if (disableSignerVerification) {
+      validator = new DisabledCertPathValidator();
+    } else {
+      validator = new CachedCertPathValidator(
+          cache, getFakeTimeSource(), getTrustRootsProvider());
+    }
+    return new WaveSignatureVerifier(validator, store);
   }
 
   private TrustRootsProvider getTrustRootsProvider() {
@@ -561,15 +567,15 @@ public class CertificateManagerImplTest extends TestCase {
         ImmutableList.of(realCert, startCom), "puffypoodles.com");
   }
 
-  private WaveSignatureVerifier getRealVerifier(CertPathStore store) throws Exception {
-    TrustRootsProvider trustRoots = new DefaultTrustRootsProvider();
-
-    VerifiedCertChainCache cache = new DefaultCacheImpl(getFakeTimeSource());
-    CachedCertPathValidator validator = new CachedCertPathValidator(
-        cache, getFakeTimeSource(), trustRoots);
-    // TODO: enable signer verification.  Or write another test.
-    return new WaveSignatureVerifier(validator, store, true);
-  }
+  // TODO: enable signer verification.  Or write another test.
+//  private WaveSignatureVerifier getRealVerifier(CertPathStore store) throws Exception {
+//    TrustRootsProvider trustRoots = new DefaultTrustRootsProvider();
+//    VerifiedCertChainCache cache = new DefaultCacheImpl(getFakeTimeSource());
+//    WaveCertPathValidator validator = new CachedCertPathValidator(
+//        cache, getFakeTimeSource(), trustRoots);
+//
+//    return new WaveSignatureVerifier(validator, store);
+//  }
 
   private SignerInfo getSignerInfo() throws Exception {
     return getSigner().getSignerInfo();

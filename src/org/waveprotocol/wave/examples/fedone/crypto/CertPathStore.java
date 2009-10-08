@@ -17,14 +17,11 @@
 
 package org.waveprotocol.wave.examples.fedone.crypto;
 
-import com.google.inject.ImplementedBy;
-
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 
 /**
  * A simple store for signer infos (i.e., certificate chains).
  */
-@ImplementedBy(DefaultCertPathStore.class)
 public interface CertPathStore {
 
   /**

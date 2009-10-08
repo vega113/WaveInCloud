@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.crypto;
+package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -24,6 +24,10 @@ import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+
+import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
+import org.waveprotocol.wave.examples.fedone.crypto.WaveSigner;
+import org.waveprotocol.wave.examples.fedone.crypto.WaveSignerFactory;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -49,8 +53,10 @@ public class WaveSignerProvider implements Provider<WaveSigner> {
    * @param factory A {@link WaveSignerFactory}.
    */
   @Inject
-  public WaveSignerProvider(@Named("certificate_private_key") String privateKey,
-      @Named("certificate_files") String certs, @Named("certificate_domain") String domain,
+  public WaveSignerProvider(
+      @Named("certificate_private_key") String privateKey,
+      @Named("certificate_files") String certs,
+      @Named("certificate_domain") String domain,
       WaveSignerFactory factory) {
 
     FileInputStream privateKeyStream;

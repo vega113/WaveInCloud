@@ -17,7 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import com.google.inject.ImplementedBy;
 import com.google.protobuf.ByteString;
 
 import org.waveprotocol.wave.examples.fedone.crypto.SignatureException;
@@ -37,7 +36,6 @@ import java.util.Set;
  *
  *
  */
-@ImplementedBy(CertificateManagerImpl.class)
 public interface CertificateManager {
 
   Set<String> getLocalDomains();

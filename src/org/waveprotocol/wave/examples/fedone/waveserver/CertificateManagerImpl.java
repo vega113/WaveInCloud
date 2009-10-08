@@ -26,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -54,7 +53,6 @@ import java.util.Set;
 /**
  * Default implementation of {@link CertificateManager}.
  */
-@Singleton
 public class CertificateManagerImpl implements CertificateManager {
 
   private static final Log LOG = Log.get(CertificateManagerImpl.class);

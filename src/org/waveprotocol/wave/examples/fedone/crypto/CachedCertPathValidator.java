@@ -18,7 +18,6 @@ package org.waveprotocol.wave.examples.fedone.crypto;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import java.security.GeneralSecurityException;
 import java.security.cert.CertPath;
@@ -35,7 +34,7 @@ import java.util.Set;
  * a cache. It will also first attempt to look up validation results in the
  * cache, before performing a full-blown cert chain verification.
  */
-public class CachedCertPathValidator {
+public class CachedCertPathValidator implements WaveCertPathValidator {
 
   private static final String VALIDATOR_TYPE = "PKIX";
   private static final String CERTIFICATE_TYPE = "X.509";
@@ -50,7 +49,6 @@ public class CachedCertPathValidator {
   // set of trusted Certification Authorities
   private final Set<TrustAnchor> trustRoots;
 
-  @Inject
   public CachedCertPathValidator(VerifiedCertChainCache certPathCache,
       TimeSource timeSource, TrustRootsProvider trustRootsProvider) {
     this.certPathCache = certPathCache;
@@ -58,24 +56,14 @@ public class CachedCertPathValidator {
     this.trustRoots = getTrustRoots(trustRootsProvider);
   }
 
-  /**
-   * Validates a certificate chain. The first certificate in the chain is the
-   * certificate for the key used for signing. The last certificate in the
-   * chain is either a trusted CA certificate, or a certificate issued by a
-   * trusted CA. Certificate N in the chain must have been issued by certificate
-   * N+1 in the chain.
-   * @throws SignatureException if the certificate chain doesn't validate.
-   */
-  public void validate(List<? extends X509Certificate> certs)
-      throws SignatureException {
+  @Override
+  public void validate(List<? extends X509Certificate> certs) throws SignatureException {
+    if (!certPathCache.contains(certs)) {
+      validateNoCache(certs);
 
-    if (certPathCache.contains(certs)) {
-      return;
+      // we don't get here if certs didn't validate
+      certPathCache.add(certs);
     }
-    validateNoCache(certs);
-
-    // we don't get here if certs didn't validate
-    certPathCache.add(certs);
   }
 
   private Set<TrustAnchor> getTrustRoots(TrustRootsProvider provider) {

@@ -14,29 +14,25 @@
  * limitations under the License.
  *
  */
+
 package org.waveprotocol.wave.examples.fedone.crypto;
 
 import java.security.cert.X509Certificate;
 import java.util.List;
 
 /**
- * A cache for verified certificate chains. It speeds up verification of
- * signatures to cache certificate chain verification results for some amount
- * of time (a few minutes).
+ * A cert path (aka cert chain) validator interface.  Not specifically for wave, but the class name
+ * {@code CertPathValidator} was already taken.
  */
-public interface VerifiedCertChainCache {
-
+public interface WaveCertPathValidator {
   /**
-   * Adds a new verified certificate chain to the cache. This should cause
-   * {@link #contains(List)}, when passed the same argument, to return true
-   * for a few minutes.
+   * Validates a certificate chain. The first certificate in the chain is the certificate for the
+   * key used for signing. The last certificate in the chain is either a trusted CA certificate, or
+   * a certificate issued by a trusted CA. Certificate N in the chain must have been issued by
+   * certificate N+1 in the chain.
    *
-   * @param key the certificate chain.
+   * @param certs list of certificates
+   * @throws SignatureException if the certificate chain doesn't validate.
    */
-  public abstract void add(List<? extends X509Certificate> key);
-
-  /**
-   * Returns true if the object is present in the cache, false otherwise.
-   */
-  public abstract boolean contains(List<? extends X509Certificate> key);
+  void validate(List<? extends X509Certificate> certs) throws SignatureException;
 }
