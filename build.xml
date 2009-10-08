@@ -215,6 +215,7 @@
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
         <include name="gnu/inet/**/*" />
+        <include name="javax/inject/**/*" />
         <include name="javax/xml/**/*" />
         <include name="org/aopalliance/**/*" />
         <include name="org/apache/commons/cli/**/*" />
@@ -242,6 +243,7 @@
         <include name="com/google/common/**/*" />
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
+        <include name="javax/inject/**/*" />
         <include name="jline/**/*" />
         <include name="org/apache/commons/codec/**/*" />
         <include name="org/waveprotocol/**/*" />
@@ -263,6 +265,7 @@
         <include name="com/google/common/**/*" />
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
+        <include name="javax/inject/**/*" />
         <include name="org/apache/commons/codec/**/*" />
         <include name="org/waveprotocol/**/*" />
       </fileset>

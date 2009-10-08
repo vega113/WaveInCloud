@@ -16,9 +16,6 @@
  */
 package org.waveprotocol.wave.examples.fedone.crypto;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
 import org.waveprotocol.wave.examples.fedone.federation.xmpp.Base64Util;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.protocol.common.ProtocolSignature;
@@ -49,26 +46,15 @@ public class WaveSignatureVerifier {
 
   // The cert chain validator. This object can tell us whether a given cert
   // chain checks out ok.
-  private final CachedCertPathValidator pathValidator;
+  private final WaveCertPathValidator pathValidator;
 
   // The store that has the cert chains. This object maps from signer ids to
   // cert chains.
   private final CertPathStore pathStore;
 
-  // Disable signer verification, a rough way to allow self-signed cerficiates
-  private final boolean disableSignerVerification;
-
-  @Inject
-  public WaveSignatureVerifier(CachedCertPathValidator validator, CertPathStore store,
-      @Named("waveserver_disable_signer_verification") boolean disableSignerVerification) {
+  public WaveSignatureVerifier(WaveCertPathValidator validator, CertPathStore store) {
     this.pathValidator = validator;
     this.pathStore = store;
-    this.disableSignerVerification = disableSignerVerification;
-
-    if (disableSignerVerification) {
-      LOG.warning("** SIGNER VERIFICATION DISABLED ** " +
-          "see flag \"waveserver_disable_signer_verification\"");
-    }
   }
 
   /**
@@ -143,9 +129,7 @@ public class WaveSignatureVerifier {
    *   {@link SignerInfo} does't verify.
    */
   public void verifySignerInfo(SignerInfo signer) throws SignatureException {
-    if (!disableSignerVerification) {
-      pathValidator.validate(signer.getCertificates());
-    }
+    pathValidator.validate(signer.getCertificates());
   }
 
   /**

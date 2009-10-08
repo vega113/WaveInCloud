@@ -17,15 +17,12 @@
 package org.waveprotocol.wave.examples.fedone.crypto;
 
 
-import com.google.inject.Singleton;
-
 import java.util.Date;
 
 /**
  * Simple class for returning the current time, which can be replaced by mocks
  * during testing.
  */
-@Singleton
 public class DefaultTimeSource implements TimeSource {
 
   public Date now() {

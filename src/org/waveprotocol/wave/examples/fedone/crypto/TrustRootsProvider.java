@@ -17,18 +17,14 @@
 
 package org.waveprotocol.wave.examples.fedone.crypto;
 
-import com.google.inject.ImplementedBy;
-
 import java.security.cert.X509Certificate;
 import java.util.Collection;
-
 
 /**
  * Interface that defines trust roots providers. A trust roots provider
  * returns the list of certificates we should trust as Certification
  * Authorities.
  */
-@ImplementedBy(DefaultTrustRootsProvider.class)
 public interface TrustRootsProvider {
 
   /**

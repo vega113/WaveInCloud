@@ -17,21 +17,19 @@
 
 package org.waveprotocol.wave.examples.fedone.crypto;
 
-import com.google.inject.ProvidedBy;
 import com.google.protobuf.ByteString;
+
+import org.waveprotocol.wave.protocol.common.ProtocolSignature;
+import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
 
-import org.waveprotocol.wave.protocol.common.ProtocolSignature;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
-
 /**
  * Class that can sign payloads (i.e., byte arrays).
  */
-@ProvidedBy(WaveSignerProvider.class)
 public class WaveSigner {
 
   private final SignatureAlgorithm algorithm;

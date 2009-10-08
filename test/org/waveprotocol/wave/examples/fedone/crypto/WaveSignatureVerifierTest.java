@@ -58,7 +58,7 @@ public class WaveSignatureVerifierTest extends TestCase {
     CachedCertPathValidator validator = new CachedCertPathValidator(cache,
         timeSource, new FakeTrustRootsProvider(CertConstantUtil.CA_PUB_CERT));
     store = new DefaultCertPathStore();
-    verifier = new WaveSignatureVerifier(validator, store, false);
+    verifier = new WaveSignatureVerifier(validator, store);
   }
 
   public void testVerify() throws Exception {

@@ -18,12 +18,11 @@
 package org.waveprotocol.wave.examples.fedone.crypto;
 
 import com.google.common.collect.MapMaker;
-import com.google.inject.Singleton;
+
+import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentMap;
-
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 
 /**
  * Simple implementation of a cert-path store. This implementation is
@@ -34,7 +33,6 @@ import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
  * Replace this implementation by injecting a new {@link CertPathStore} using
  * Guice.
  */
-@Singleton
 public class DefaultCertPathStore implements CertPathStore {
 
   private final ConcurrentMap<ByteBuffer, SignerInfo> map = new MapMaker().makeMap();
