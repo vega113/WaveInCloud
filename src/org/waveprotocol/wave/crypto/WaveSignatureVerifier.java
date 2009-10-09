@@ -16,8 +16,7 @@
  */
 package org.waveprotocol.wave.crypto;
 
-import org.waveprotocol.wave.examples.fedone.federation.xmpp.Base64Util;
-import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.apache.commons.codec.binary.Base64;
 import org.waveprotocol.wave.protocol.common.ProtocolSignature;
 
 import java.security.InvalidKeyException;
@@ -35,8 +34,6 @@ import java.util.regex.Pattern;
  * a store, and using a caching cert chain validator.
  */
 public class WaveSignatureVerifier {
-
-  private static final Log LOG = Log.get(WaveSignatureVerifier.class);
 
   // regexp that picks out a Common Name out of a X.500 Distinguished Name
   private static final Pattern CN_PATTERN = Pattern.compile("CN=([^,]+)");
@@ -78,7 +75,7 @@ public class WaveSignatureVerifier {
 
     if (signer == null) {
       throw new UnknownSignerException("could not find information about signer "
-          + Base64Util.encode(signatureInfo.getSignerId()));
+          + Base64.encodeBase64(signatureInfo.getSignerId().toByteArray()));
     }
 
     verifySignerInfo(signer);
@@ -176,9 +173,7 @@ public class WaveSignatureVerifier {
     } catch (CertificateParsingException e) {
 
       // This is a bit strange - it means that the AubjectAlternativeNames
-      // extension wasn't properly encoded in this cert. We'll log and return
-      // leave subjAltNames null
-      LOG.warning("could not parse SubjAlternativeName extension in cert", e);
+      // extension wasn't properly encoded in this cert. We'll leave subjAltNames null.
     }
 
     if (subjAltNames == null) {
