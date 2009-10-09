@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.crypto;
+package org.waveprotocol.wave.crypto;
 
 public class CertConstants {
 

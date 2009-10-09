@@ -15,21 +15,26 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.crypto;
+package org.waveprotocol.wave.crypto;
 
-import junit.framework.TestCase;
+import com.google.common.collect.ImmutableSet;
 
-import org.waveprotocol.wave.crypto.DefaultTrustRootsProvider;
 import org.waveprotocol.wave.crypto.TrustRootsProvider;
 
-public class DefaultTrustRootsProviderTest extends TestCase {
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Set;
 
-  public void testGetCertificates() throws Exception {
+class FakeTrustRootsProvider implements TrustRootsProvider {
 
-    // It's hard to predict what CAs will be trusted on any given platform,
-    // but we'll test here that there are at least some CAs defined by default.
-    // Otherwise, the prototype server won't work out of the box.
-    TrustRootsProvider provider = new DefaultTrustRootsProvider();
-    assertTrue(provider.getTrustRoots().size() > 0);
+  private final Set<X509Certificate> certs;
+
+  public FakeTrustRootsProvider(X509Certificate cert) {
+    this.certs = ImmutableSet.of(cert);
+  }
+
+  @Override
+  public Collection<X509Certificate> getTrustRoots() {
+    return certs;
   }
 }

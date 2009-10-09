@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.examples.fedone.crypto;
+package org.waveprotocol.wave.crypto;
 
 import com.google.common.collect.Lists;
 

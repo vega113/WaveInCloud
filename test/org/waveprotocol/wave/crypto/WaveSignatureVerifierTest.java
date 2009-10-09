@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.crypto;
+package org.waveprotocol.wave.crypto;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
