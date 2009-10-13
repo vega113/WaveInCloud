@@ -33,6 +33,7 @@ import org.waveprotocol.wave.crypto.CachedCertPathValidator;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.DefaultCacheImpl;
 import org.waveprotocol.wave.crypto.DefaultCertPathStore;
+import org.waveprotocol.wave.crypto.DefaultTrustRootsProvider;
 import org.waveprotocol.wave.crypto.DisabledCertPathValidator;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
@@ -111,103 +112,97 @@ public class CertificateManagerImplTest extends TestCase {
   private static final String DOMAIN = "example.com";
   private static final String OTHER_DOMAIN = "other.org";
 
-  private static final byte[] REAL_SIGNATURE =
-      Base64.decodeBase64(("jbe3xbKd4Shl9QYa3J+Bh+g" +
-      "mc44OA538hqW1uyfbrsmA/Z9x1ud9gALkoAs/maZd6t6sh9X+bCleEz13vuljc1l" +
-      "WAcdXeVOB8FRDN8OEYJcq0p/2Cyj/sPdUHaCLGhP++Oyhpcs32P5eXYAozxKsALi" +
-      "Jm47Fle0QKFh3HyBFxKpoFYWXywomfr1s1AkJpM1K+vh41KVHQlVpqYQxCTMz9wY" +
-      "nmM3neUXRpoVhHNQkfhT+dFejGpReKLKsK9x8TPOTPR+mWpfAY0usKGmRHC4Tq0Z" +
-      "gAFhAKQ2V3nJK6mgvxLINN6y0ud8aULbYpWL5cY3TJegKd4mQPt5r/VZ7bAKKsQ==")
-      .getBytes());
+  private static final byte[] REAL_SIGNATURE = Base64.decodeBase64((
+    "aYfzuohSPaqbwn/Ro0bgklyoTwKAmsYl7efRlC684yGOXdbAm+bPm9KHVVYIeLjSHTR" +
+    "M4ZB5rTkHIzh1B+/QHM8eO61AOp9WIP6kF7Vqnjm4KhcDbuUYPdV8qLPkjEjoDl1vCd" +
+    "p4NMnfLyHS7MMsN4MGTaLNtFeLNK6AyAZrM8c=").getBytes());
+
+  private static final String REAL_DOMAIN = "initech-corp.com";
 
   private static final String REAL_CERTIFICATE =
     "-----BEGIN CERTIFICATE-----\n" +
-    "MIIHQzCCBiugAwIBAgIDAJYUMA0GCSqGSIb3DQEBBQUAMIGMMQswCQYDVQQGEwJJ\n" +
-    "TDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0\n" +
-    "YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20gQ2xhc3Mg\n" +
-    "MSBQcmltYXJ5IEludGVybWVkaWF0ZSBTZXJ2ZXIgQ0EwHhcNMDkwNzE5MjM0NTE5\n" +
-    "WhcNMTAwNzE5MjM0NTE5WjCBozELMAkGA1UEBhMCVVMxHjAcBgNVBAoTFVBlcnNv\n" +
-    "bmEgTm90IFZhbGlkYXRlZDEpMCcGA1UECxMgU3RhcnRDb20gRnJlZSBDZXJ0aWZp\n" +
-    "Y2F0ZSBNZW1iZXIxHjAcBgNVBAMTFXdhdmUucHVmZnlwb29kbGVzLmNvbTEpMCcG\n" +
-    "CSqGSIb3DQEJARYad2VibWFzdGVyQHB1ZmZ5cG9vZGxlcy5jb20wggEiMA0GCSqG\n" +
-    "SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC/ez3zoz6YW0yh1ODhR+pJ8Wox6YqLNAdT\n" +
-    "wd1SOJRk9eihIevQHE0VnlWOZBTk9aDiNL7cAkvYEaBZizd9c639uTK5vp2lmFch\n" +
-    "niU3htpp3X5Da5hc6Mq+sAN+5MTwLzdmdX3N1GQ/G5eLeY3lUll3sD/Rwb85BtVD\n" +
-    "myggEsPp+KIFSNBtYpuapR4Vn6ZLvIyO2Hz+QAargu08TzosQSEhWXQlZone0AUz\n" +
-    "RmHk8TXBPtyLVqaWhEYJ0j/CAtSa4FazpL/vxKeaLjlhPUFTN5CkfebCSG+Vq/+e\n" +
-    "mpEgykD3JbP+HrhnnLURtEakcBaSbmvXnaK9i2Nz4y37T7SifJxtAgMBAAGjggOT\n" +
-    "MIIDjzAJBgNVHRMEAjAAMAsGA1UdDwQEAwIDqDATBgNVHSUEDDAKBggrBgEFBQcD\n" +
-    "ATAdBgNVHQ4EFgQU9Oouh16SPexmDQ0vqCZUy9T92aswgagGA1UdIwSBoDCBnYAU\n" +
-    "60I00Jiwq5/0G2sI98xkLu8OLEWhgYGkfzB9MQswCQYDVQQGEwJJTDEWMBQGA1UE\n" +
-    "ChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlm\n" +
-    "aWNhdGUgU2lnbmluZzEpMCcGA1UEAxMgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBB\n" +
-    "dXRob3JpdHmCAQowMgYDVR0RBCswKYIVd2F2ZS5wdWZmeXBvb2RsZXMuY29tghBw\n" +
-    "dWZmeXBvb2RsZXMuY29tMIIBRwYDVR0gBIIBPjCCATowggE2BgsrBgEEAYG1NwEC\n" +
-    "ADCCASUwLgYIKwYBBQUHAgEWImh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGlj\n" +
-    "eS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL2ludGVy\n" +
-    "bWVkaWF0ZS5wZGYwgbwGCCsGAQUFBwICMIGvMBQWDVN0YXJ0Q29tIEx0ZC4wAwIB\n" +
-    "ARqBlkxpbWl0ZWQgTGlhYmlsaXR5LCByZWFkIHRoZSBzZWN0aW9uICpMZWdhbCBM\n" +
-    "aW1pdGF0aW9ucyogb2YgdGhlIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9y\n" +
-    "aXR5IFBvbGljeSBhdmFpbGFibGUgYXQgaHR0cDovL3d3dy5zdGFydHNzbC5jb20v\n" +
-    "cG9saWN5LnBkZjBhBgNVHR8EWjBYMCqgKKAmhiRodHRwOi8vd3d3LnN0YXJ0c3Ns\n" +
-    "LmNvbS9jcnQxLWNybC5jcmwwKqAooCaGJGh0dHA6Ly9jcmwuc3RhcnRzc2wuY29t\n" +
-    "L2NydDEtY3JsLmNybDCBjgYIKwYBBQUHAQEEgYEwfzA5BggrBgEFBQcwAYYtaHR0\n" +
-    "cDovL29jc3Auc3RhcnRzc2wuY29tL3N1Yi9jbGFzczEvc2VydmVyL2NhMEIGCCsG\n" +
-    "AQUFBzAChjZodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9jZXJ0cy9zdWIuY2xhc3Mx\n" +
-    "LnNlcnZlci5jYS5jcnQwIwYDVR0SBBwwGoYYaHR0cDovL3d3dy5zdGFydHNzbC5j\n" +
-    "b20vMA0GCSqGSIb3DQEBBQUAA4IBAQB/6f/L1v/rDdvrsdRA060CeeLOcghGQDNX\n" +
-    "MKpsvaoF5/bWBXAZqXhLPalT5bkoFcswFIL0hUVgvarJboKOci3FweSNdBqz8Ady\n" +
-    "S+QMA8pPI3epgifvoQkIdExm17WjkDg9UPvb78G7XDMLIyV6eN+elbTRAYUD4FTM\n" +
-    "j9UCWi5dfPkwgc2/VkBT3/TXbe6e4GS1hvAgwyS4eJmm8UxM4jpUEIlQtWRYSAPV\n" +
-    "+hxAaGpzHvKggkRMy9UcRXFVtPWSHGESIN+wHUf/t6NMlAyia8Tnjw2egHqND7In\n" +
-    "/cKNIkg2kySvbZfntnYMZDgAOMQn87qMVx3IJ52PY1mHArVsqwXe\n" +
+    "MIIHWzCCBkOgAwIBAgICCn0wDQYJKoZIhvcNAQEFBQAwgdgxCzAJBgNVBAYTAlVT\n" +
+    "MREwDwYDVQQIDAhDb2xvcmFkbzEjMCEGA1UECgwaSmFiYmVyIFNvZnR3YXJlIEZv\n" +
+    "dW5kYXRpb24xIzAhBgNVBAsMGlNlY3VyZSBDZXJ0aWZpY2F0ZSBTaWduaW5nMUYw\n" +
+    "RAYDVQQDDD1TdGFydENvbSBDbGFzcyAxIEludGVybWVkaWF0ZSBDQSAtIEphYmJl\n" +
+    "ciBTb2Z0d2FyZSBGb3VuZGF0aW9uMSQwIgYJKoZIhvcNAQkBFhVjZXJ0bWFzdGVy\n" +
+    "QGphYmJlci5vcmcwHhcNMDkwODI4MTM0MDUyWhcNMTAwODI4MTM0MDUyWjCBoDEL\n" +
+    "MAkGA1UEBhMCQVUxEzARBgNVBAgTClNvbWUtU3RhdGUxGTAXBgNVBAoTEGluaXRl\n" +
+    "Y2gtY29ycC5jb20xHjAcBgNVBAsTFURvbWFpbiB2YWxpZGF0ZWQgb25seTEeMBwG\n" +
+    "A1UEAxMVd2F2ZS5pbml0ZWNoLWNvcnAuY29tMSEwHwYJKoZIhvcNAQkBFhJiYWxm\n" +
+    "YW56QGdvb2dsZS5jb20wgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMsM6ZEW\n" +
+    "hPCMVM8ji3jp/+bbUEFp4/A+8X/Ow3FUSIbOymE3buhS4uP4RGgMkc19ORfG5kLI\n" +
+    "bX1O5AAXNFi9N3jTGJb7ahbacjpFqZUdmz/XvnlxA0u3gf0zEceQ8tpuYZ/8r0FS\n" +
+    "5/w0/ZglRNknuE2eyuupClaFLPYW2h7HYBwhAgMBAAGjggPnMIID4zAMBgNVHRME\n" +
+    "BTADAgEAMAsGA1UdDwQEAwIDqDATBgNVHSUEDDAKBggrBgEFBQcDATAdBgNVHQ4E\n" +
+    "FgQUNzB8oOjW0uOI3VCOkHVXbwFNIU4wgd0GA1UdIwSB1TCB0oAUe47EZ9BGIRcR\n" +
+    "/6F6QnWf6sSrcuShgbakgbMwgbAxCzAJBgNVBAYTAklMMQ8wDQYDVQQIEwZJc3Jh\n" +
+    "ZWwxDjAMBgNVBAcTBUVpbGF0MRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMRowGAYD\n" +
+    "VQQLExFDQSBBdXRob3JpdHkgRGVwLjEpMCcGA1UEAxMgRnJlZSBTU0wgQ2VydGlm\n" +
+    "aWNhdGlvbiBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEmFkbWluQHN0YXJ0Y29t\n" +
+    "Lm9yZ4IBFDBXBgNVHREEUDBOoCMGCCsGAQUFBwgFoBcMFXdhdmUuaW5pdGVjaC1j\n" +
+    "b3JwLmNvbYIQaW5pdGVjaC1jb3JwLmNvbYIVd2F2ZS5pbml0ZWNoLWNvcnAuY29t\n" +
+    "MCAGA1UdEgQZMBeBFWNlcnRtYXN0ZXJAamFiYmVyLm9yZzBiBgNVHR8EWzBZMCug\n" +
+    "KaAnhiVodHRwOi8vY2VydC5zdGFydGNvbS5vcmcveG1wcC1jcmwuY3JsMCqgKKAm\n" +
+    "hiRodHRwOi8vY3JsLnN0YXJ0Y29tLm9yZy94bXBwLWNybC5jcmwwgYQGCCsGAQUF\n" +
+    "BwEBBHgwdjA3BggrBgEFBQcwAYYraHR0cDovL29jc3Auc3RhcnRjb20ub3JnL3N1\n" +
+    "Yi9jbGFzczEveG1wcC9jYTA7BggrBgEFBQcwAoYvaHR0cDovL2NlcnQuc3RhcnRj\n" +
+    "b20ub3JnL3N1Yi5jbGFzczEueG1wcC5jYS5jcnQwggFKBgNVHSAEggFBMIIBPTCC\n" +
+    "ATkGCysGAQQBgbU3AQEFMIIBKDA1BggrBgEFBQcCARYpaHR0cDovL2NlcnQuc3Rh\n" +
+    "cnRjb20ub3JnL2ludGVybWVkaWF0ZS5wZGYwLwYIKwYBBQUHAgEWI2h0dHA6Ly9j\n" +
+    "ZXJ0LnN0YXJ0Y29tLm9yZy9wb2xpY3kucGRmMIG9BggrBgEFBQcCAjCBsDAUFg1T\n" +
+    "dGFydENvbSBMdGQuMAMCAQEagZdMaW1pdGVkIExpYWJpbGl0eSwgcmVhZCB0aGUg\n" +
+    "c2VjdGlvbiAqTGVnYWwgTGltaXRhdGlvbnMqIG9mIHRoZSBTdGFydENvbSBDZXJ0\n" +
+    "aWZpY2F0aW9uIEF1dGhvcml0eSBQb2xpY3kgYXZhaWxhYmxlIGF0IGh0dHA6Ly9j\n" +
+    "ZXJ0LnN0YXJ0Y29tLm9yZy9wb2xpY3kucGRmMA0GCSqGSIb3DQEBBQUAA4IBAQB/\n" +
+    "Xe2be9pVU1DMd407qiujql4b253kLOEEugkNjoV3epCZxT/44N2FJwwSrFhPpWdb\n" +
+    "AYYxJY53cbB1yLvA4u3xvc2y1jh8uZMbP7sVsJWSzDTTIxCirtNqYXnOAa+tb1m6\n" +
+    "wWveczrVWS3b8t/Tz2ozxd45n3T8yfUeI2PEPe4BcMUNNYvW7ROAxXTkxYnfE0Gf\n" +
+    "9nL76KJVwM+RzHJirlzefJNNNDHkzegy53/kzsq/IzhS6ovsSEQdR2ue7a1sYmvZ\n" +
+    "Hj8K5F7+S93u/P9iHsoGjU2j4IgAq6iCxEqDEsVBr1IMMZaLbbNZiSboq1ZYSLhV\n" +
+    "jU2YSURXFt+84p/k5juk\n" +
     "-----END CERTIFICATE-----\n";
 
   private static final String STARTCOM_CERT =
     "-----BEGIN CERTIFICATE-----\n" +
-    "MIIH3jCCBcagAwIBAgIBCjANBgkqhkiG9w0BAQUFADB9MQswCQYDVQQGEwJJTDEW\n" +
-    "MBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwg\n" +
-    "Q2VydGlmaWNhdGUgU2lnbmluZzEpMCcGA1UEAxMgU3RhcnRDb20gQ2VydGlmaWNh\n" +
-    "dGlvbiBBdXRob3JpdHkwHhcNMDcxMDI0MjA1NDE2WhcNMTIxMDIyMjA1NDE2WjCB\n" +
-    "jDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsT\n" +
-    "IlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0\n" +
-    "YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgU2VydmVyIENBMIIB\n" +
-    "IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtonGrO8JUngHrJJj0PREGBiE\n" +
-    "gFYfka7hh/oyULTTRwbw5gdfcA4Q9x3AzhA2NIVaD5Ksg8asWFI/ujjo/OenJOJA\n" +
-    "pgh2wJJuniptTT9uYSAK21ne0n1jsz5G/vohURjXzTCm7QduO3CHtPn66+6CPAVv\n" +
-    "kvek3AowHpNz/gfK11+AnSJYUq4G2ouHI2mw5CrY6oPSvfNx23BaKA+vWjhwRRI/\n" +
-    "ME3NO68X5Q/LoKldSKqxYVDLNM08XMML6BDAjJvwAwNi/rJsPnIO7hxDKslIDlc5\n" +
-    "xDEhyBDBLIf+VJVSH1I8MRKbf+fAoKVZ1eKPPvDVqOHXcDGpxLPPr21TLwb0pwID\n" +
-    "AQABo4IDVzCCA1MwDAYDVR0TBAUwAwEB/zALBgNVHQ8EBAMCAa4wHQYDVR0OBBYE\n" +
-    "FOtCNNCYsKuf9BtrCPfMZC7vDixFMIGoBgNVHSMEgaAwgZ2AFE4L7xqkQFulF2mH\n" +
-    "MMo0aEPQQa7yoYGBpH8wfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29t\n" +
-    "IEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25p\n" +
-    "bmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5ggEB\n" +
-    "MAkGA1UdEgQCMAAwPQYIKwYBBQUHAQEEMTAvMC0GCCsGAQUFBzAChiFodHRwOi8v\n" +
-    "d3d3LnN0YXJ0c3NsLmNvbS9zZnNjYS5jcnQwWwYDVR0fBFQwUjAnoCWgI4YhaHR0\n" +
-    "cDovL3d3dy5zdGFydHNzbC5jb20vc2ZzY2EuY3JsMCegJaAjhiFodHRwOi8vY3Js\n" +
-    "LnN0YXJ0c3NsLmNvbS9zZnNjYS5jcmwwggFdBgNVHSAEggFUMIIBUDCCAUwGCysG\n" +
-    "AQQBgbU3AQEEMIIBOzAvBggrBgEFBQcCARYjaHR0cDovL2NlcnQuc3RhcnRjb20u\n" +
-    "b3JnL3BvbGljeS5wZGYwNQYIKwYBBQUHAgEWKWh0dHA6Ly9jZXJ0LnN0YXJ0Y29t\n" +
-    "Lm9yZy9pbnRlcm1lZGlhdGUucGRmMIHQBggrBgEFBQcCAjCBwzAnFiBTdGFydCBD\n" +
-    "b21tZXJjaWFsIChTdGFydENvbSkgTHRkLjADAgEBGoGXTGltaXRlZCBMaWFiaWxp\n" +
-    "dHksIHJlYWQgdGhlIHNlY3Rpb24gKkxlZ2FsIExpbWl0YXRpb25zKiBvZiB0aGUg\n" +
-    "U3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgUG9saWN5IGF2YWlsYWJs\n" +
-    "ZSBhdCBodHRwOi8vY2VydC5zdGFydGNvbS5vcmcvcG9saWN5LnBkZjARBglghkgB\n" +
-    "hvhCAQEEBAMCAAcwUQYJYIZIAYb4QgENBEQWQlN0YXJ0Q29tIENsYXNzIDEgUHJp\n" +
-    "bWFyeSBJbnRlcm1lZGlhdGUgRnJlZSBTU0wgU2VydmVyIENlcnRpZmljYXRlczAN\n" +
-    "BgkqhkiG9w0BAQUFAAOCAgEAN9nwGVuwb7kFbGiREJ/EfPnRQ/JDsIIqbfPrglDY\n" +
-    "P/q+mgx3Umd6tVrzkdnbu4GPgSJpp4b5k7qgJ/bVPJE8wgNmM/7/eDnqYEPKAFDI\n" +
-    "duxVfPCEkF70nuwe6KK5UKvsiIYrH++cu6ENb8gtWNodtpuK+WUnSRFTwLEJuVk/\n" +
-    "WemF0Ake/JPvoDxGnV8qLo1yMQdolfcdlHikpWAGHaNLc3mPqK29qxGoLNL+PrFx\n" +
-    "mI0aNKHjuw7hl+yXFa6N25vXTtTzJDfaa8Iwf2D3YRSJC28/HH2HKdA9dNui9LFp\n" +
-    "IkYc9uAyPQB3qFwRapaBhDQOmCtFyN1iOC8dtbUKsdp7/ZW5ImcZsP+a220Fc2+W\n" +
-    "e0OQCeDenNpVorg9lKJovv5qQXnRfmBlac3HL1o6mWXI7gvlFoOlYPITAHgcvZHZ\n" +
-    "lHrs45w+X26XFVXBAHNup8C7QiAKPTtk2M6Ii/xI1yYNpht4JANykesH4Ln4fYHw\n" +
-    "1tH60t61XZ/Kbdg/pIzh1tE+QoUFlf+CR01qfskFjXcresRrgd00KOxgfJls6HnD\n" +
-    "xoiEoL+c2vOoATe7vmvhKHv8S5pv1IBLnjJeQQqQsKY8lBYxf+b4Tl2xNddnBO28\n" +
-    "G8P6HGtMDMHaPETF+esG9VpMNtJkq0eNiCzmEHc7MDlA6kpFIY0psK/W0aPh6hcO\n" +
-    "MAg=\n" +
+    "MIIHADCCBmmgAwIBAgIBFDANBgkqhkiG9w0BAQUFADCBsDELMAkGA1UEBhMCSUwx\n" +
+    "DzANBgNVBAgTBklzcmFlbDEOMAwGA1UEBxMFRWlsYXQxFjAUBgNVBAoTDVN0YXJ0\n" +
+    "Q29tIEx0ZC4xGjAYBgNVBAsTEUNBIEF1dGhvcml0eSBEZXAuMSkwJwYDVQQDEyBG\n" +
+    "cmVlIFNTTCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYS\n" +
+    "YWRtaW5Ac3RhcnRjb20ub3JnMB4XDTA2MTIwMjIzNTUyMVoXDTExMTIwMjIzNTUy\n" +
+    "MVowgdgxCzAJBgNVBAYTAlVTMREwDwYDVQQIDAhDb2xvcmFkbzEjMCEGA1UECgwa\n" +
+    "SmFiYmVyIFNvZnR3YXJlIEZvdW5kYXRpb24xIzAhBgNVBAsMGlNlY3VyZSBDZXJ0\n" +
+    "aWZpY2F0ZSBTaWduaW5nMUYwRAYDVQQDDD1TdGFydENvbSBDbGFzcyAxIEludGVy\n" +
+    "bWVkaWF0ZSBDQSAtIEphYmJlciBTb2Z0d2FyZSBGb3VuZGF0aW9uMSQwIgYJKoZI\n" +
+    "hvcNAQkBFhVjZXJ0bWFzdGVyQGphYmJlci5vcmcwggEiMA0GCSqGSIb3DQEBAQUA\n" +
+    "A4IBDwAwggEKAoIBAQCeju/E54r6cwRmEzkGwBIq5anE2IHM10iYIeqOjTnN2WMM\n" +
+    "XERxgmuSpwJays/BaMATh1/QFnMHjXiTICmeyXbJ2fKrxTHPCJ+DUeLbFvVX3bOO\n" +
+    "SxAffkCLwZuUw9RyZ9zDLBNpR1FsdiSD9mV9DEH4T3sNU79Mjy+o83jFojTg39R7\n" +
+    "nH8B6z7VLmlC+ENxsMqjdwRv7HtY595VBLwK/gejblT8kCVFFA/WjmiOVoZ4aMGd\n" +
+    "OOvsSgEZ9LaejB4xZdq+PP40DjxqhMQw89uzhWnCxxh0h+4PNfxhbPqJxZ9UMUWg\n" +
+    "uPLYPAoj9U5p3YgmRvEaKdrijOkhODeNVkV/a57jAgMBAAGjggN6MIIDdjAMBgNV\n" +
+    "HRMEBTADAQH/MAsGA1UdDwQEAwIBJjAdBgNVHQ4EFgQUe47EZ9BGIRcR/6F6QnWf\n" +
+    "6sSrcuQwgd0GA1UdIwSB1TCB0oAUHInDlsy9/jLVDYyBMbaYnY0oZI2hgbakgbMw\n" +
+    "gbAxCzAJBgNVBAYTAklMMQ8wDQYDVQQIEwZJc3JhZWwxDjAMBgNVBAcTBUVpbGF0\n" +
+    "MRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMRowGAYDVQQLExFDQSBBdXRob3JpdHkg\n" +
+    "RGVwLjEpMCcGA1UEAxMgRnJlZSBTU0wgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkx\n" +
+    "ITAfBgkqhkiG9w0BCQEWEmFkbWluQHN0YXJ0Y29tLm9yZ4IBADAgBgNVHREEGTAX\n" +
+    "gRVjZXJ0bWFzdGVyQGphYmJlci5vcmcwHQYDVR0SBBYwFIESYWRtaW5Ac3RhcnRj\n" +
+    "b20ub3JnMBEGCWCGSAGG+EIBAQQEAwIABzBUBglghkgBhvhCAQ0ERxZFU3RhcnRD\n" +
+    "b20gQ2xhc3MgMSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAtIEphYmJlciBTb2Z0\n" +
+    "d2FyZSBGb3VuZGF0aW9uMGIGA1UdHwRbMFkwKaAnoCWGI2h0dHA6Ly9jZXJ0LnN0\n" +
+    "YXJ0Y29tLm9yZy9jYS1jcmwuY3JsMCygKqAohiZodHRwOi8vY3JsLnN0YXJ0Y29t\n" +
+    "Lm9yZy9jcmwvY2EtY3JsLmNybDCCAUoGA1UdIASCAUEwggE9MIIBOQYLKwYBBAGB\n" +
+    "tTcBAQEwggEoMC8GCCsGAQUFBwIBFiNodHRwOi8vY2VydC5zdGFydGNvbS5vcmcv\n" +
+    "cG9saWN5LnBkZjA1BggrBgEFBQcCARYpaHR0cDovL2NlcnQuc3RhcnRjb20ub3Jn\n" +
+    "L2ludGVybWVkaWF0ZS5wZGYwgb0GCCsGAQUFBwICMIGwMBQWDVN0YXJ0Q29tIEx0\n" +
+    "ZC4wAwIBARqBl0xpbWl0ZWQgTGlhYmlsaXR5LCByZWFkIHRoZSBzZWN0aW9uICpM\n" +
+    "ZWdhbCBMaW1pdGF0aW9ucyogb2YgdGhlIFN0YXJ0Q29tIENlcnRpZmljYXRpb24g\n" +
+    "QXV0aG9yaXR5IFBvbGljeSBhdmFpbGFibGUgYXQgaHR0cDovL2NlcnQuc3RhcnRj\n" +
+    "b20ub3JnL3BvbGljeS5wZGYwDQYJKoZIhvcNAQEFBQADgYEAtOq85Q1lf8PjsJCg\n" +
+    "uQ6TL3TJ1rSadfOwEyHJqIjR5LYpxdcJ5WxSEM3DxdrFnTaPBC6RQ7v836i9DdW3\n" +
+    "FS5/y1Et5gKksLNPQqaYEVFuvB4AGTp2HkdUGo8Oz9Dd4zTcvTSTeo/9mVxqdxKa\n" +
+    "lhMZMHD/ivqg8faZSQNYMg6xq7I=\n" +
     "-----END CERTIFICATE-----\n";
 
   private static final String GENERIC_ERROR = "It's not my fault!";
@@ -220,16 +215,13 @@ public class CertificateManagerImplTest extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     store = new DefaultCertPathStore();
-    // TODO: don't disable signer verification by default -- why does this fail?
     manager = new CertificateManagerImpl(false, getSigner(), getVerifier(store, true), store);
     ticker = new Ticker();
   }
 
-
   /*
    * TESTS
    */
-
   public void testSignature() throws Exception {
     ProtocolWaveletDelta delta = ProtocolWaveletDelta.newBuilder()
         .setHashedVersion(getHashedVersion())
@@ -284,18 +276,10 @@ public class CertificateManagerImplTest extends TestCase {
   }
 
   public void testRealSignature() throws Exception {
-    ProtocolSignedDelta signedDelta = getFakeSignedDelta();
+    manager = new CertificateManagerImpl(false, getSigner(), getRealVerifier(store), store);
     manager.storeSignerInfo(getRealSignerInfo().toProtoBuf());
-
-    ByteStringMessage<ProtocolWaveletDelta> compare;
-    try {
-      compare = manager.verifyDelta(signedDelta);
-      manager.verifyDelta(signedDelta);
-      fail("Should fail with SignatureException");
-    } catch (SignatureException e) {
-      // TODO: fix this test, shouldn't be failing with signature exception
-      // Should reach here with the current (incorrect) configuration of this test
-    }
+    ByteStringMessage<ProtocolWaveletDelta> compare = manager.verifyDelta(getFakeSignedDelta());
+    assertEquals(compare, getFakeDelta());
   }
 
   /**
@@ -521,6 +505,15 @@ public class CertificateManagerImplTest extends TestCase {
     return WaveletOperationSerializer.serialize(HashedVersion.unsigned(3L));
   }
 
+  private WaveSignatureVerifier getRealVerifier(CertPathStore store) throws Exception {
+    TrustRootsProvider trustRoots = new DefaultTrustRootsProvider();
+    VerifiedCertChainCache cache = new DefaultCacheImpl(getFakeTimeSource());
+    WaveCertPathValidator validator = new CachedCertPathValidator(
+      cache, getFakeTimeSource(), trustRoots);
+
+    return new WaveSignatureVerifier(validator, store);
+  }
+
   private WaveSignatureVerifier getVerifier(CertPathStore store,
       boolean disableSignerVerification) {
     VerifiedCertChainCache cache = new DefaultCacheImpl(getFakeTimeSource());
@@ -564,18 +557,8 @@ public class CertificateManagerImplTest extends TestCase {
         new ByteArrayInputStream(STARTCOM_CERT.getBytes()));
 
     return new SignerInfo(HashAlgorithm.SHA256,
-        ImmutableList.of(realCert, startCom), "puffypoodles.com");
+        ImmutableList.of(realCert, startCom), REAL_DOMAIN);
   }
-
-  // TODO: enable signer verification.  Or write another test.
-//  private WaveSignatureVerifier getRealVerifier(CertPathStore store) throws Exception {
-//    TrustRootsProvider trustRoots = new DefaultTrustRootsProvider();
-//    VerifiedCertChainCache cache = new DefaultCacheImpl(getFakeTimeSource());
-//    WaveCertPathValidator validator = new CachedCertPathValidator(
-//        cache, getFakeTimeSource(), trustRoots);
-//
-//    return new WaveSignatureVerifier(validator, store);
-//  }
 
   private SignerInfo getSignerInfo() throws Exception {
     return getSigner().getSignerInfo();
@@ -607,7 +590,7 @@ public class CertificateManagerImplTest extends TestCase {
   private ByteStringMessage<ProtocolWaveletDelta> getFakeDelta() throws Exception {
     ProtocolWaveletDelta delta = ProtocolWaveletDelta.newBuilder()
         .setHashedVersion(getHashedVersion())
-        .setAuthor("bob@puffypoodles.com")
+        .setAuthor("bob@initech-corp.com")
         .build();
     return toCanonicalDelta(delta);
   }
