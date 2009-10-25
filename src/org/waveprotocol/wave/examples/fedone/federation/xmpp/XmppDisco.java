@@ -250,9 +250,9 @@ public class XmppDisco {
                       RpcCallback<String> callback) {
       this.waveComponent = component;
       this.callback = callback;
-      this.serverName = override;
+      this.serverName = forceCheck;
 
-      candidateJids.add("wave." + override);
+      candidateJids.add("wave." + forceCheck);
     }
 
     /**
