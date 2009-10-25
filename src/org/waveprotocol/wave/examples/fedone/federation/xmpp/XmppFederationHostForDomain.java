@@ -130,7 +130,7 @@ class XmppFederationHostForDomain implements WaveletFederationListener {
     final String encodedWaveletName;
     try {
       encodedWaveletName =
-          WaveXmppComponent.waveletNameEncoder.waveletNameToURIPath(
+          WaveXmppComponent.waveletNameEncoder.waveletNameToURI(
               waveletName);
     } catch (URIEncoderDecoder.EncodingException e) {
       logger.severe("couldn't encode wavelet name " + waveletName);

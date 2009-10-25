@@ -108,7 +108,7 @@ public class XmppFederationHostTest extends TestCase {
     deltaHistory.addAttribute("response-length-limit",
                               String.valueOf(XmppTestUtil.TEST_LENGTH_LIMIT));
     deltaHistory.addAttribute("wavelet-name",
-                              WaveXmppComponent.waveletNameEncoder.waveletNameToURIPath(
+                              WaveXmppComponent.waveletNameEncoder.waveletNameToURI(
                                   XmppTestUtil.waveletName));
 
     fedHost.processHistoryRequest(historyRequest);
@@ -165,7 +165,7 @@ public class XmppFederationHostTest extends TestCase {
     submit.addAttribute("xmlns", WaveXmppComponent.NAMESPACE_WAVE_SERVER);
     Element delta = submit.addElement("delta");
     delta.addAttribute("wavelet-name",
-                       WaveXmppComponent.waveletNameEncoder.waveletNameToURIPath(
+                       WaveXmppComponent.waveletNameEncoder.waveletNameToURI(
                            XmppTestUtil.waveletName));
     final common.ProtocolSignedDelta deltaPB =
         XmppTestUtil.createTestSignedDelta();

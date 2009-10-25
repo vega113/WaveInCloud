@@ -107,7 +107,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
     deltaElement.addCDATA(new String(Base64.encodeBase64(delta.toByteArray())));
     try {
       deltaElement.addAttribute("wavelet-name",
-                                WaveXmppComponent.waveletNameEncoder.waveletNameToURIPath(
+                                WaveXmppComponent.waveletNameEncoder.waveletNameToURI(
                                     waveletName));
     } catch (URIEncoderDecoder.EncodingException e) {
       listener.onFailure("couldn't encode wavelet name " + waveletName);
@@ -177,7 +177,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
     }
     try {
       historyDelta.addAttribute("wavelet-name",
-                                WaveXmppComponent.waveletNameEncoder.waveletNameToURIPath(
+                                WaveXmppComponent.waveletNameEncoder.waveletNameToURI(
                                     waveletName));
     } catch (URIEncoderDecoder.EncodingException e) {
       listener.onFailure("couldn't encode wavelet name " + waveletName);
@@ -228,7 +228,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
         deltaEndVersion.getVersion()));
     try {
       signerRequest.addAttribute("wavelet-name",
-                                 WaveXmppComponent.waveletNameEncoder.waveletNameToURIPath(
+                                 WaveXmppComponent.waveletNameEncoder.waveletNameToURI(
                                      waveletName));
     } catch (URIEncoderDecoder.EncodingException e) {
       listener.onFailure("couldn't encode wavelet name " + waveletName);
@@ -357,7 +357,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
       WaveletName waveletName;
       try {
         waveletName =
-            WaveXmppComponent.waveletNameEncoder.uriPathToWaveletName(
+            WaveXmppComponent.waveletNameEncoder.uriToWaveletName(
                 waveletUpdate.attributeValue("wavelet-name"));
       } catch (URIEncoderDecoder.EncodingException e) {
         callback.onFailure("couldn't decode wavelet name "

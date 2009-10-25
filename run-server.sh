@@ -17,7 +17,7 @@ java -jar dist/fedone-server-$FEDONE_VERSION.jar \
   --xmpp_server_ip=$XMPP_SERVER_IP \
   --xmpp_server_port=$XMPP_SERVER_PORT \
   --xmpp_server_secret $XMPP_SERVER_SECRET \
-  --xmpp_server_ping="" \
+  --xmpp_server_ping="initech-corp.com" \
   --certificate_private_key=$PRIVATE_KEY_FILENAME \
   --certificate_files=$CERTIFICATE_FILENAME_LIST \
   --certificate_domain=$CERTIFICATE_DOMAIN_NAME \

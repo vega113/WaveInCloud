@@ -54,7 +54,7 @@ public class XmppFederationHostForDomainTest extends TestCase {
       + "      <item>\n"
       + "        <wavelet-update"
       + " xmlns=\"http://waveprotocol.org/protocol/0.2/waveserver\""
-      + " wavelet-name=\"acmewave.com/initech-corp.com!a/b\">\n"
+      + " wavelet-name=\"wave://acmewave.com/initech-corp.com!a/b\">\n"
       + "          <commit-notice version=\"1234\" history-hash=\""
       + Base64Util.encode(HashedVersion.UNSIGNED_VERSION_0.getHistoryHash())
       + "\"/>\n"
@@ -73,7 +73,7 @@ public class XmppFederationHostForDomainTest extends TestCase {
       + "      <item>\n"
       + "        <wavelet-update"
       + " xmlns=\"http://waveprotocol.org/protocol/0.2/waveserver\""
-      + " wavelet-name=\"acmewave.com/initech-corp.com!a/b\">\n"
+      + " wavelet-name=\"wave://acmewave.com/initech-corp.com!a/b\">\n"
       + "          <applied-delta><![CDATA[ignored]]></applied-delta>\n"
       + "        </wavelet-update>\n"
       + "      </item>\n"

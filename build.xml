@@ -187,7 +187,7 @@
     </copy>
   </target>
 
-  <target name="dist" depends="test, dist-api, dist-server, dist-client-console, dist-agent-echoey" description="Compiles, tests and assembles artifacts">
+  <target name="dist" depends="dist-api, dist-server, dist-client-console, dist-agent-echoey" description="Compiles, tests and assembles artifacts">
   </target>
 
   <target name="dist-api" depends="stage" description="Assembles the FedOne API">

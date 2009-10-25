@@ -123,7 +123,7 @@ public class XmppFederationHost {
     }
     WaveletName waveletName;
     try {
-      waveletName = WaveXmppComponent.waveletNameEncoder.uriPathToWaveletName(
+      waveletName = WaveXmppComponent.waveletNameEncoder.uriToWaveletName(
           historyDelta.attributeValue("wavelet-name"));
     } catch (URIEncoderDecoder.EncodingException e) {
       logger.warning("couldn't decode wavelet name " + historyDelta
@@ -173,7 +173,7 @@ public class XmppFederationHost {
     final WaveletName waveletName;
     try {
       waveletName =
-          WaveXmppComponent.waveletNameEncoder.uriPathToWaveletName(
+          WaveXmppComponent.waveletNameEncoder.uriToWaveletName(
               (deltaElement.attributeValue("wavelet-name")));
     } catch (URIEncoderDecoder.EncodingException e) {
       logger.warning("couldn't decode wavelet name "
@@ -215,7 +215,7 @@ public class XmppFederationHost {
     try {
       waveletName =
           WaveXmppComponent.waveletNameEncoder
-              .uriPathToWaveletName(waveletNameUri);
+              .uriToWaveletName(waveletNameUri);
     } catch (URIEncoderDecoder.EncodingException e) {
       logger.info("bad get signer request wavelet-name:\n" + waveletNameUri);
       // TODO: return error response

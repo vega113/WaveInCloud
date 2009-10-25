@@ -153,7 +153,7 @@ public class XmppFederationRemoteTest extends TestCase {
     Message updateMessage = new Message();
     Element waveletUpdate = addWaveletUpdate(updateMessage);
     waveletUpdate.addAttribute("wavelet-name",
-                               WaveXmppComponent.waveletNameEncoder.waveletNameToURIPath(
+                               WaveXmppComponent.waveletNameEncoder.waveletNameToURI(
                                    XmppTestUtil.waveletName));
     addUpdateToWaveletDelta(waveletUpdate);
     createRemote();
@@ -184,7 +184,7 @@ public class XmppFederationRemoteTest extends TestCase {
         event.addElement("items").addElement("item")
             .addElement("wavelet-update");
     waveletUpdate.addAttribute("wavelet-name",
-                               WaveXmppComponent.waveletNameEncoder.waveletNameToURIPath(
+                               WaveXmppComponent.waveletNameEncoder.waveletNameToURI(
                                    XmppTestUtil.waveletName));
     return waveletUpdate;
   }
@@ -195,7 +195,7 @@ public class XmppFederationRemoteTest extends TestCase {
         .addAttribute("version", String.valueOf(XmppTestUtil.TEST_VERSION))
         .addAttribute("history-hash", XmppTestUtil.TEST_HISTORY_HASH)
         .addAttribute("wavelet-name",
-                      WaveXmppComponent.waveletNameEncoder.waveletNameToURIPath(
+                      WaveXmppComponent.waveletNameEncoder.waveletNameToURI(
                           XmppTestUtil.waveletName));
   }
 
