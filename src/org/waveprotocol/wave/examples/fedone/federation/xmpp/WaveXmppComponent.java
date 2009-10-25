@@ -406,6 +406,10 @@ public class WaveXmppComponent implements Component,
         // TODO: fix the error code
         sendErrorResponse("unknown iq packet", iq);
       }
+    } else if (iq.getType().equals(IQ.Type.error)) {
+      if (iqNamespace.equals(NAMESPACE_DISCO_ITEMS)) {
+        disco.processDiscoItemsError(iq);
+      }
     }
   }
 

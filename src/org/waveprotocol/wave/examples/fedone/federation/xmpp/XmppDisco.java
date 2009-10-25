@@ -102,7 +102,7 @@ public class XmppDisco {
   void processDiscoItemsGet(IQ iq) {
     IQ response = new IQ(IQ.Type.result);
     WaveXmppComponent.copyRequestPacketFields(iq, response);
-    response.setChildElement("query", WaveXmppComponent.NAMESPACE_DISCO_INFO);
+    response.setChildElement("query", WaveXmppComponent.NAMESPACE_DISCO_ITEMS);
     component
         .sendPacket(response, false, /* no retry */ null /* no callback */);
 
@@ -166,6 +166,22 @@ public class XmppDisco {
   }
 
   /**
+   * Handles a disco items error from a foreign XMPP agent. 
+   *
+   * @param iq the IQ packet.
+   */
+  void processDiscoItemsError(IQ iq) {
+    RpcCallback<String> callback = pendingDiscoMap.remove(iq.getID());
+    if (callback != null) {
+      DiscoItemIterator discoIter =
+          new DiscoItemIterator(iq.getFrom().toString(), this.component, callback);
+      discoIter.run(null);
+    } else {
+      logger.fine("got unexpected iq items result " + iq);
+    }
+  }
+
+  /**
    * Handles a disco info result for a remote JID, triggers the callback. When
    * we're walking through remote JIDs, we'll see these.
    *
@@ -218,6 +234,23 @@ public class XmppDisco {
           candidateJids.add(jid.getValue());
         }
       }
+    }
+
+    /**
+     * Constructor. Extracts the JIDs from the disco#items response.
+     *
+     * @param itemsIQ   the disco#items response
+     * @param component the parent wave component
+     * @param callback  the callback to invoke with the discovered JID or null
+     */
+    @SuppressWarnings("unchecked")
+    DiscoItemIterator(String override, WaveXmppComponent component,
+                      RpcCallback<String> callback) {
+      this.waveComponent = component;
+      this.callback = callback;
+      this.serverName = override;
+
+      candidateJids.add("wave." + override);
     }
 
     /**
