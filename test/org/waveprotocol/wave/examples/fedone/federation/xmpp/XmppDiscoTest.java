@@ -61,7 +61,7 @@ public class XmppDiscoTest extends TestCase {
   private static final String EXPECTED_DISCO_ITEMS_RESULT =
       "\n<iq type=\"result\" id=\"1-1\" from=\"wave.initech-corp.com\" "
       + "to=\"wave.acmewave.com\">\n"
-      + "  <query xmlns=\"http://jabber.org/protocol/disco#info\"/>\n"
+      + "  <query xmlns=\"http://jabber.org/protocol/disco#items\"/>\n"
       + "</iq>";
 
   private static final String EXPECTED_DISCO_INFO_RESULT =

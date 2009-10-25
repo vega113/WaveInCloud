@@ -166,7 +166,8 @@ public class XmppDisco {
   }
 
   /**
-   * Handles a disco items error from a foreign XMPP agent. 
+   * Handles a disco items error from a foreign XMPP agent. We switch to a
+   * fallback mode where we just try wave.servername instead.
    *
    * @param iq the IQ packet.
    */
@@ -237,14 +238,15 @@ public class XmppDisco {
     }
 
     /**
-     * Constructor. Extracts the JIDs from the disco#items response.
+     * Constructor. The server doesn't support disco. Try to check wave.server
+     * instead.
      *
-     * @param itemsIQ   the disco#items response
+     * @param forceCheck   the bare JID of the server.
      * @param component the parent wave component
      * @param callback  the callback to invoke with the discovered JID or null
      */
     @SuppressWarnings("unchecked")
-    DiscoItemIterator(String override, WaveXmppComponent component,
+    DiscoItemIterator(String forceCheck, WaveXmppComponent component,
                       RpcCallback<String> callback) {
       this.waveComponent = component;
       this.callback = callback;
