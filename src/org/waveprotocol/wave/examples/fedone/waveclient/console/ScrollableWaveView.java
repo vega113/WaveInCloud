@@ -32,23 +32,28 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
- * A {@link ClientWaveView} wrapper that can be rendered and scrolled for the console.
- *
- *
- *
+ * A {@link ClientWaveView} wrapper that can be rendered and scrolled for the
+ * console.
  */
 public class ScrollableWaveView extends ConsoleScrollable {
+
   public enum RenderMode {
+
     NORMAL,
     XML
   }
 
-  /** Wave we are wrapping. */
+  /**
+   * Wave we are wrapping.
+   */
   private final ClientWaveView wave;
 
-  /** Render mode. */
+  /**
+   * Render mode.
+   */
   private RenderMode renderMode = RenderMode.NORMAL;
 
   /**
@@ -71,64 +76,13 @@ public class ScrollableWaveView extends ConsoleScrollable {
   public synchronized List<String> render(final int width, final int height) {
     final List<String> lines = Lists.newArrayList();
     final StringBuilder currentLine = new StringBuilder();
-    final Deque<String> elemStack = new LinkedList<String>();
+    final Map<String, BufferedDocOp> documentMap = ClientUtils
+        .getConversationRoot(wave)
+        .getDocuments();
 
-    for (BufferedDocOp document : ClientUtils.getConversationRoot(wave).getDocuments().values()) {
-      document.apply(new InitializationCursorAdapter(
-          new DocInitializationCursor() {
-            @Override public void characters(String s) {
-              currentLine.append(ConsoleUtils.renderNice(s));
-              wrap(lines, width, currentLine);
-            }
+    BufferedDocOp manifest = documentMap.get("conversation");
 
-            @Override
-            public void elementStart(String type, Attributes attrs) {
-              elemStack.push(type);
-
-              if (renderMode.equals(RenderMode.NORMAL)) {
-                if (type.equals(ConsoleUtils.LINE)) {
-                  if (!attrs.containsKey(ConsoleUtils.LINE_AUTHOR)) {
-                    throw new IllegalArgumentException("Line element must have author");
-                  }
-
-                  ConsoleUtils.ensureWidth(width, currentLine);
-                  lines.add(currentLine.toString());
-                  currentLine.delete(0, currentLine.length() - 1);
-
-                  lines.add(ConsoleUtils.blankLine(width));
-                  lines.add(ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_GREEN_FG,
-                      ConsoleUtils.ensureWidth(width, attrs.get(ConsoleUtils.LINE_AUTHOR))));
-                } else {
-                  throw new IllegalArgumentException("Unsupported element type " + type);
-                }
-              } else if (renderMode.equals(RenderMode.XML)) {
-                if (attrs.isEmpty()) {
-                  currentLine.append("<" + type + ">");
-                } else {
-                  currentLine.append("<" + type + " ");
-                  for (String key : attrs.keySet()) {
-                    currentLine.append(key + "=\"" + attrs.get(key) + "\"");
-                  }
-                  currentLine.append(">");
-                }
-              }
-            }
-
-            @Override
-            public void elementEnd() {
-              String type = elemStack.pop();
-
-              if (renderMode.equals(RenderMode.XML)) {
-                currentLine.append("</" + type + ">");
-                wrap(lines, width, currentLine);
-              }
-            }
-
-            @Override public void annotationBoundary(AnnotationBoundaryMap map) {}
-          }));
-    }
-
-    wrapAndClose(lines, width, currentLine);
+    renderManifest(manifest, documentMap, width, lines, currentLine);
 
     // Also render a header, not too big...
     List<String> header = renderHeader(width);
@@ -147,6 +101,196 @@ public class ScrollableWaveView extends ConsoleScrollable {
     return header;
   }
 
+  private void renderDocument(BufferedDocOp document, final int width,
+                              final List<String> lines,
+                              final StringBuilder currentLine,
+                              final String padding) {
+    document.apply(new InitializationCursorAdapter(
+        new DocInitializationCursor() {
+          final Deque<String> elemStack = new LinkedList<String>();
+
+          private int stackDepth;
+
+          @Override
+          public void characters(String s) {
+            if (elemStack.getLast().equals("w:image")) {
+              currentLine.append(
+                  "(image, caption=" + ConsoleUtils.renderNice(s) + ")");
+            } else {
+              currentLine.append(padding + ConsoleUtils.renderNice(s));
+            }
+            wrap(lines, width, currentLine);
+          }
+
+          @Override
+          public void elementStart(String type, Attributes attrs) {
+            stackDepth++;
+            elemStack.push(type);
+
+            if (renderMode.equals(RenderMode.NORMAL)) {
+              if (type.equals(ConsoleUtils.LINE)) {
+                if (attrs.containsKey(ConsoleUtils.LINE_AUTHOR)) {
+                  displayAuthor(attrs.get(ConsoleUtils.LINE_AUTHOR));
+                }
+                outputCurrentLine(lines, width, currentLine);
+
+              } else if (type.equals(ConsoleUtils.CONTRIBUTOR)) {
+                if (attrs.containsKey(ConsoleUtils.CONTRIBUTOR_NAME)) {
+                  displayAuthor(attrs.get(ConsoleUtils.CONTRIBUTOR_NAME));
+                }
+              } else if (type.equals(ConsoleUtils.BODY)) {
+                // ignore
+              } else {
+//                  throw new IllegalArgumentException(
+//                      "Unsupported element type " + type);
+              }
+            } else if (renderMode.equals(RenderMode.XML)) {
+              for (int i = 0; i < stackDepth; i++) {
+                currentLine.append(" ");
+              }
+              if (attrs.isEmpty()) {
+                currentLine.append("<" + type + ">");
+              } else {
+                currentLine.append("<" + type + " ");
+                for (String key : attrs.keySet()) {
+                  currentLine.append(key + "=\"" + attrs.get(key) + "\"");
+                }
+                currentLine.append(">");
+              }
+              outputCurrentLine(lines, width, currentLine);
+            }
+          }
+
+          @Override
+          public void elementEnd() {
+            String type = elemStack.pop();
+
+            if (renderMode.equals(RenderMode.XML)) {
+              for (int i = 0; i < stackDepth; i++) {
+                currentLine.append(" ");
+              }
+              currentLine.append("</" + type + ">");
+              outputCurrentLine(lines, width, currentLine);
+
+            }
+            stackDepth--;
+          }
+
+          @Override
+          public void annotationBoundary(AnnotationBoundaryMap map) {
+          }
+
+          private void displayAuthor(String author) {
+            ConsoleUtils.ensureWidth(width, currentLine);
+            lines.add(currentLine.toString());
+            currentLine.delete(0, currentLine.length() - 1);
+
+            lines.add(ConsoleUtils.blankLine(width));
+            lines.add(ConsoleUtils.ansiWrap(
+                ConsoleUtils.ANSI_GREEN_FG,
+                ConsoleUtils.ensureWidth(width,
+                                         author)));
+          }
+        }));
+  }
+
+  private void renderManifest(BufferedDocOp document,
+                              final Map<String, BufferedDocOp> documentMap,
+                              final int width,
+                              final List<String> lines,
+                              final StringBuilder currentLine) {
+    if (renderMode.equals(RenderMode.XML)) {
+
+      renderDocument(document, width, lines, currentLine, "");
+    }
+    document.apply(new InitializationCursorAdapter(
+        new DocInitializationCursor() {
+          final Deque<String> elemStack = new LinkedList<String>();
+
+          private int threadDepth;
+
+          @Override
+          public void characters(String s) {
+            // ignore characters in a manifest.
+          }
+
+          @Override
+          public void elementStart(String type, Attributes attrs) {
+            elemStack.push(type);
+
+            if (renderMode.equals(RenderMode.NORMAL)) {
+              if (type.equals(ConsoleUtils.BLIP)) {
+                if (attrs.containsKey(ConsoleUtils.BLIP_ID)) {
+                  BufferedDocOp document =
+                      documentMap.get(attrs.get(ConsoleUtils.BLIP_ID));
+                  StringBuilder paddingBuilder = new StringBuilder();
+                  for (int i = 0; i < threadDepth; i++) {
+                    paddingBuilder.append("    ");
+                  }
+                  String padding = paddingBuilder.toString();
+                  displayAuthor(
+                      padding + "Blip: " + attrs.get(ConsoleUtils.BLIP_ID));
+                  renderDocument(document, width, lines, currentLine, padding);
+                  outputCurrentLine(lines, width, currentLine);
+                }
+              } else if (type.equals(ConsoleUtils.THREAD)) {
+                threadDepth++;
+              } else {
+//                  throw new IllegalArgumentException(
+//                      "Unsupported element type " + type);
+              }
+            } else if (renderMode.equals(RenderMode.XML)) {
+              if (type.equals(ConsoleUtils.BLIP)) {
+                if (attrs.containsKey(ConsoleUtils.BLIP_ID)) {
+                  lines.add(ConsoleUtils.ansiWrap(
+                      ConsoleUtils.ANSI_BLUE_FG,
+                      "<!-- document named: " + attrs.get(ConsoleUtils.BLIP_ID)
+                      + " -->"));
+                  BufferedDocOp
+                      document =
+                      documentMap.get(attrs.get(ConsoleUtils.BLIP_ID));
+                  renderDocument(document, width, lines, currentLine, "");
+                }
+              } else if (type.equals(ConsoleUtils.THREAD)) {
+                threadDepth++;
+              }
+
+            }
+          }
+
+          @Override
+          public void elementEnd() {
+            String type = elemStack.pop();
+            if (type.equals(ConsoleUtils.THREAD)) {
+              threadDepth--;
+            }
+          }
+
+          @Override
+          public void annotationBoundary(AnnotationBoundaryMap map) {
+          }
+
+          private void displayAuthor(String author) {
+            ConsoleUtils.ensureWidth(width, currentLine);
+            lines.add(currentLine.toString());
+            currentLine.delete(0, currentLine.length() - 1);
+
+            lines.add(ConsoleUtils.blankLine(width));
+            lines.add(ConsoleUtils.ansiWrap(
+                ConsoleUtils.ANSI_GREEN_FG,
+                ConsoleUtils.ensureWidth(width,
+                                         author)));
+          }
+        }));
+  }
+
+  private void outputCurrentLine(List<String> lines, int width,
+                                 StringBuilder currentLine) {
+    wrap(lines, width, currentLine);
+    lines.add(currentLine.toString());
+    currentLine.delete(0, currentLine.length());
+  }
+
   /**
    * Render a header, containing extra information about the participants.
    *
@@ -155,13 +299,15 @@ public class ScrollableWaveView extends ConsoleScrollable {
    */
   private List<String> renderHeader(int width) {
     List<String> lines = Lists.newArrayList();
-    List<ParticipantId> participants = ClientUtils.getConversationRoot(wave).getParticipants();
-
+    List<ParticipantId>
+        participants =
+        ClientUtils.getConversationRoot(wave).getParticipants();
 
     // HashedVersion
     StringBuilder versionLineBuilder = new StringBuilder();
     versionLineBuilder.append("Version "
-        + wave.getWaveletVersion(ClientUtils.getConversationRootId(wave)));
+                              + wave
+        .getWaveletVersion(ClientUtils.getConversationRootId(wave)));
     wrapAndClose(lines, width, versionLineBuilder);
 
     // Participants
@@ -183,7 +329,8 @@ public class ScrollableWaveView extends ConsoleScrollable {
     wrapAndClose(lines, width, participantLineBuilder);
 
     for (int i = 0; i < lines.size(); i++) {
-      lines.set(i, ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_YELLOW_FG, lines.get(i)));
+      lines.set(i, ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_YELLOW_FG,
+                                         lines.get(i)));
     }
 
     lines.add(ConsoleUtils.ensureWidth(width, "----"));
@@ -192,12 +339,12 @@ public class ScrollableWaveView extends ConsoleScrollable {
   }
 
   /**
-   * Wrap a line by continually removing characters from a string and adding to a list of lines,
-   * until the line is shorter than width.
+   * Wrap a line by continually removing characters from a string and adding to
+   * a list of lines, until the line is shorter than width.
    *
    * @param lines to append the wrapped string to
    * @param width to wrap
-   * @param line to wrap
+   * @param line  to wrap
    */
   private void wrap(List<String> lines, int width, StringBuilder line) {
     while (line.length() >= width) {
@@ -207,12 +354,12 @@ public class ScrollableWaveView extends ConsoleScrollable {
   }
 
   /**
-   * Wrap a line as in {@code wrap}, then "close" it by adding any remaining characters to the list
-   * of lines and clearing the line.
+   * Wrap a line as in {@code wrap}, then "close" it by adding any remaining
+   * characters to the list of lines and clearing the line.
    *
    * @param lines to append line to
    * @param width to wrap
-   * @param line to append
+   * @param line  to append
    */
   private void wrapAndClose(List<String> lines, int width, StringBuilder line) {
     wrap(lines, width, line);

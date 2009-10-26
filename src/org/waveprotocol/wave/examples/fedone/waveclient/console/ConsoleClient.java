@@ -25,6 +25,7 @@ import jline.ANSIBuffer;
 import jline.Completor;
 import jline.ConsoleReader;
 
+import org.waveprotocol.wave.examples.fedone.util.RandomBase64Generator;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
@@ -35,11 +36,13 @@ import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
+import org.waveprotocol.wave.model.document.operation.DocOpComponentType;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -48,40 +51,71 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * User interface for the console client using the JLine library.
- *
- *
  */
 public class ConsoleClient implements WaveletOperationListener {
 
-  /** All document rendering and operations are done to a single document. */
-  private static final String MAIN_DOCUMENT_ID = "main";
+  /**
+   * All document rendering and operations are done to a single document.
+   */
+  private static final String MAIN_DOCUMENT_ID = "b+main";
 
-  /** Single active client-server interface, or null when not connected to a server. */
+  /**
+   * Manifest document
+   */
+  private static final String MANIFEST_DOCUMENT_ID = "conversation";
+
+  /**
+   * Single active client-server interface, or null when not connected to a
+   * server.
+   */
   private ClientBackend backend = null;
 
-  /** Single active console reader. */
+  /**
+   * Single active console reader.
+   */
   private final ConsoleReader reader;
 
-  /** Currently open wave.  */
+  /**
+   * Currently open wave.
+   */
   private ScrollableWaveView openWave;
 
-  /** Inbox we are rendering. */
+  /**
+   * Inbox we are rendering.
+   */
   private ScrollableInbox inbox;
 
-  /** Number of lines to scroll by with { and }. */
+  /**
+   * Number of lines to scroll by with { and }.
+   */
   private static AtomicInteger scrollLines = new AtomicInteger(1);
 
-  /** PrintStream to use for output.  We don't use ConsoleReader's functionality because it's too
-   * verbose and doesn't really give us anything in return. */
+  /**
+   * Empty attributes map.
+   */
+  Map<String, String> emptyMap = ImmutableMap.of();
+
+  private final
+  RandomBase64Generator base64Generator = new RandomBase64Generator();
+  /**
+   * PrintStream to use for output.  We don't use ConsoleReader's functionality
+   * because it's too verbose and doesn't really give us anything in return.
+   */
   private final PrintStream out = System.out;
+  private AttributesImpl EMPTY_ATTRS = new AttributesImpl(emptyMap);
+
 
   private class Command {
+
     public final String name;
     public final String args;
     public final String description;
@@ -93,17 +127,23 @@ public class ConsoleClient implements WaveletOperationListener {
     }
   }
 
-  /** Commands available to the user. */
+  /**
+   * Commands available to the user.
+   */
   private final List<Command> commands = ImmutableList.of(
-      new Command("connect", "user@domain server port", "connect to server:port as user@domain"),
+      new Command("connect", "user@domain server port",
+                  "connect to server:port as user@domain"),
       new Command("open", "entry", "open a wave given an inbox entry"),
       new Command("new", "", "create a new wave"),
       new Command("add", "user@domain", "add a user to a wave"),
       new Command("remove", "user@domain", "remove a user from a wave"),
       new Command("read", "", "set all waves as read"),
-      new Command("undo", "[user@domain]", "undo last line by a user, defaulting to current user"),
-      new Command("scroll", "lines", "set the number of lines to scroll by with { and }"),
-      new Command("view", "mode", "change view mode for the open wavelet (normal, xml)"),
+      new Command("undo", "[user@domain]",
+                  "undo last line by a user, defaulting to current user"),
+      new Command("scroll", "lines",
+                  "set the number of lines to scroll by with { and }"),
+      new Command("view", "mode",
+                  "change view mode for the open wavelet (normal, xml)"),
       new Command("log", "", "dump the log to the screen"),
       new Command("dumplog", "file", "dump the log to a file"),
       new Command("clearlog", "", "clear the log"),
@@ -118,7 +158,8 @@ public class ConsoleClient implements WaveletOperationListener {
     // Set up scrolling -- these are the opposite to how you would expect because of the way that
     // the waves are scrolled (where the bottom is treated as the top)
     reader.addTriggeredAction('}', new ActionListener() {
-      @Override public void actionPerformed(ActionEvent e) {
+      @Override
+      public void actionPerformed(ActionEvent e) {
         if (isWaveOpen()) {
           openWave.scrollUp(scrollLines.get());
           render();
@@ -127,7 +168,8 @@ public class ConsoleClient implements WaveletOperationListener {
     });
 
     reader.addTriggeredAction('{', new ActionListener() {
-      @Override public void actionPerformed(ActionEvent e) {
+      @Override
+      public void actionPerformed(ActionEvent e) {
         if (isWaveOpen()) {
           openWave.scrollDown(scrollLines.get());
           render();
@@ -138,7 +180,8 @@ public class ConsoleClient implements WaveletOperationListener {
     // And tab completion
     reader.addCompletor(new Completor() {
       @SuppressWarnings("unchecked")
-      @Override public int complete(String buffer, int cursor, List candidates) {
+      @Override
+      public int complete(String buffer, int cursor, List candidates) {
         if (buffer.trim().startsWith("/")) {
           buffer = buffer.trim().substring(1);
         }
@@ -150,11 +193,13 @@ public class ConsoleClient implements WaveletOperationListener {
         }
 
         return 0;
-      }});
+      }
+    });
   }
 
   /**
-   * Entry point for the user interface, receives user input, terminates on EOF.
+   * Entry point for the user interface, receives user input, terminates on
+   * EOF.
    *
    * @param args command line arguments
    */
@@ -172,7 +217,8 @@ public class ConsoleClient implements WaveletOperationListener {
       System.exit(1);
     }
 
-    for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+    for (String line = reader.readLine(); line != null;
+         line = reader.readLine()) {
       if (line.startsWith("/")) {
         doCommand(extractCmd(line), extractArgs(line));
       } else if (line.length() > 0) {
@@ -221,7 +267,8 @@ public class ConsoleClient implements WaveletOperationListener {
   /**
    * Extract a list of command line components from a command line String.
    *
-   * For example, extractCmdBits("/connect hello") return ["/connect", "hello"].
+   * For example, extractCmdBits("/connect hello") return ["/connect",
+   * "hello"].
    *
    * @param commandLine the command line input
    * @return list of command line components
@@ -233,7 +280,7 @@ public class ConsoleClient implements WaveletOperationListener {
   /**
    * Perform command with given arguments.
    *
-   * @param cmd command string to perform
+   * @param cmd  command string to perform
    * @param args list of arguments to the command
    */
   private void doCommand(String cmd, List<String> args) {
@@ -324,8 +371,9 @@ public class ConsoleClient implements WaveletOperationListener {
 
     out.println("Commands:");
     for (Command cmd : commands) {
-      out.printf(String.format("  %%-%ds  %%-%ds  %%s\n", maxNameLength, maxArgsLength),
-          cmd.name, cmd.args, cmd.description);
+      out.printf(String.format("  %%-%ds  %%-%ds  %%s\n", maxNameLength,
+                               maxArgsLength),
+                 cmd.name, cmd.args, cmd.description);
     }
 
     out.println();
@@ -336,18 +384,22 @@ public class ConsoleClient implements WaveletOperationListener {
   }
 
   /**
-   * Print some error message when there are bad arguments to a user interface command.
+   * Print some error message when there are bad arguments to a user interface
+   * command.
    *
    * @param cmd the bad command
    */
   private void badArgs(String cmd) {
-    out.println("Error: incorrect number of arguments to " + cmd + ", expecting: /" + cmd + " "
+    out.println(
+        "Error: incorrect number of arguments to " + cmd + ", expecting: /"
+        + cmd + " "
         + findCommand(cmd).args);
   }
 
   /**
    * @param command name
-   * @return the {@code Command} object from commands for command, or null if not found
+   * @return the {@code Command} object from commands for command, or null if
+   *         not found
    */
   private Command findCommand(String command) {
     for (Command cmd : commands) {
@@ -388,15 +440,16 @@ public class ConsoleClient implements WaveletOperationListener {
     }
 
     backend.addWaveletOperationListener(this);
-    reader.setDefaultPrompt(ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_RED_FG, userAtDomain + "> "));
+    reader.setDefaultPrompt(
+        ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_RED_FG, userAtDomain + "> "));
     inbox = new ScrollableInbox(backend, backend.getIndexWave());
 
     render();
   }
 
   /**
-   * Send a mutation across the wire that appends text to the currently open document, and inserting
-   * a new line element with us as the author.
+   * Send a mutation across the wire that appends text to the currently open
+   * document, and inserting a new line element with us as the author.
    *
    * @param text text to append and send
    */
@@ -404,24 +457,45 @@ public class ConsoleClient implements WaveletOperationListener {
     if (text.length() == 0) {
       throw new IllegalArgumentException("Cannot append a empty String");
     } else if (isWaveOpen()) {
-      BufferedDocOp openDoc = getOpenDocument();
-      int docSize = (openDoc == null) ? 0 : ClientUtils.findDocumentSize(openDoc);
+      String docId = "b+" + base64Generator.next(6); // TODO: constant
+      BufferedDocOp openDoc = getNewDocument(docId);
       DocOpBuilder docOp = new DocOpBuilder();
 
-      if (docSize > 0) {
-        docOp.retain(docSize);
-      }
 
-      docOp.elementStart(
-          ConsoleUtils.LINE,
-          new AttributesImpl(
-              ImmutableMap.of(ConsoleUtils.LINE_AUTHOR, backend.getUserId().getAddress())));
-      docOp.elementEnd();
+
+//      docOp.elementStart(
+//          ConsoleUtils.CONTRIBUTOR,
+//          new AttributesImpl(
+//              ImmutableMap.of(ConsoleUtils.CONTRIBUTOR_NAME,
+//                              backend.getUserId().getAddress())));
+      docOp.elementStart(ConsoleUtils.BODY, EMPTY_ATTRS);
+      docOp.elementStart(ConsoleUtils.LINE, EMPTY_ATTRS);
+      docOp.elementEnd(); // line
       docOp.characters(text);
+      docOp.elementEnd(); // body
+//      docOp.elementEnd(); // contributor
 
-      backend.sendWaveletOperation(
-          getOpenWavelet().getWaveletName(),
-          new WaveletDocumentOperation(MAIN_DOCUMENT_ID, docOp.build()));
+      // Get the conversation.
+      BufferedDocOp manifestDocument = getManifestDocument();
+      DocOpBuilder manifestDocOp = new DocOpBuilder();
+      int docSize = ClientUtils.findDocumentSize(manifestDocument);
+      manifestDocOp.retain(docSize - 1);
+      manifestDocOp.elementStart("blip", new AttributesImpl(
+          ImmutableMap.of(ConsoleUtils.BLIP_ID, docId)));
+      manifestDocOp.elementEnd();
+      manifestDocOp.retain(1); // </conversation>
+
+      ImmutableList<WaveletDocumentOperation>
+          operations =
+          ImmutableList.of(new WaveletDocumentOperation(docId, new DocOpBuilder().build()),
+              new WaveletDocumentOperation(docId, docOp.build()),
+                           new WaveletDocumentOperation(
+                               ClientUtils.MANIFEST_DOCUMENT_ID,
+                               manifestDocOp.build()));
+
+      backend.sendWaveletDelta(getOpenWavelet().getWaveletName(),
+                               new WaveletDelta(backend.getUserId(),
+                                                operations));
     } else {
       out.println("Error: no open wave, run \"/open\"");
     }
@@ -431,14 +505,34 @@ public class ConsoleClient implements WaveletOperationListener {
    * @return the open wavelet of the open wave, or null if no wave is open
    */
   private WaveletData getOpenWavelet() {
-    return (openWave == null) ? null : ClientUtils.getConversationRoot(openWave.getWave());
+    return (openWave == null) ? null : ClientUtils
+        .getConversationRoot(openWave.getWave());
   }
 
   /**
-   * @return open document, or null if no wave is open or main document doesn't exist
+   * @return open document, or null if no wave is open or main document doesn't
+   *         exist
    */
   private BufferedDocOp getOpenDocument() {
-    return getOpenWavelet() == null ? null : getOpenWavelet().getDocuments().get(MAIN_DOCUMENT_ID);
+    return getOpenWavelet() == null ? null : getOpenWavelet().getDocuments()
+        .get(MAIN_DOCUMENT_ID);
+  }
+
+  /**
+   * @return new document, or null if no wave is open
+   */
+  private BufferedDocOp getNewDocument(String docId) {
+    return getOpenWavelet() == null ? null : getOpenWavelet().getDocuments()
+        .get(docId);
+  }
+
+  /**
+   * @return open document, or null if no wave is open or main document doesn't
+   *         exist
+   */
+  private BufferedDocOp getManifestDocument() {
+    return getOpenWavelet() == null ? null : getOpenWavelet().getDocuments()
+        .get(ClientUtils.MANIFEST_DOCUMENT_ID);
   }
 
   /**
@@ -448,14 +542,17 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void doOpenWave(int entry) {
     if (isConnected()) {
-      List<IndexEntry> index = ClientUtils.getIndexEntries(backend.getIndexWave());
+      List<IndexEntry>
+          index =
+          ClientUtils.getIndexEntries(backend.getIndexWave());
 
       if (entry >= index.size()) {
         out.print("Error: entry is out of range, ");
         if (index.isEmpty()) {
           out.println("there are no available waves (try \"/new\")");
         } else {
-          out.println("expecting [0.." + (index.size() - 1) + "] (for example, \"/open 0\")");
+          out.println("expecting [0.." + (index.size() - 1)
+                      + "] (for example, \"/open 0\")");
         }
       } else {
         setOpenWave(backend.getWave(index.get(entry).getWaveId()));
@@ -472,9 +569,9 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void setOpenWave(ClientWaveView wave) {
     if (ClientUtils.getConversationRoot(wave) == null) {
-      wave.createWavelet(ClientUtils.getConversationRootId(wave));
+      WaveletData wavelet =
+          wave.createWavelet(ClientUtils.getConversationRootId(wave));
     }
-
     openWave = new ScrollableWaveView(wave);
     render();
   }
@@ -501,9 +598,11 @@ public class ConsoleClient implements WaveletOperationListener {
 
       // Don't send an invalid op, although the server should be robust enough to deal with it
       if (!getOpenWavelet().getParticipants().contains(addId)) {
-        backend.sendWaveletOperation(getOpenWavelet().getWaveletName(), new AddParticipant(addId));
+        backend.sendWaveletOperation(getOpenWavelet().getWaveletName(),
+                                     new AddParticipant(addId));
       } else {
-        out.println("Error: " + name + " is already a participant on this wave");
+        out.println(
+            "Error: " + name + " is already a participant on this wave");
       }
     } else {
       errorNoWaveOpen();
@@ -521,7 +620,7 @@ public class ConsoleClient implements WaveletOperationListener {
 
       if (getOpenWavelet().getParticipants().contains(removeId)) {
         backend.sendWaveletOperation(getOpenWavelet().getWaveletName(),
-            new RemoveParticipant(removeId));
+                                     new RemoveParticipant(removeId));
       } else {
         out.println("Error: " + name + " is not a participant on this wave");
       }
@@ -570,7 +669,8 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void undo(String userId) {
     if (isWaveOpen()) {
-      if (getOpenWavelet().getParticipants().contains(new ParticipantId(userId))) {
+      if (getOpenWavelet().getParticipants()
+          .contains(new ParticipantId(userId))) {
         undoLastLineBy(userId);
       } else {
         out.println("Error: " + userId + " is not a participant of this wave");
@@ -609,15 +709,26 @@ public class ConsoleClient implements WaveletOperationListener {
             }
           }
 
-          @Override public void characters(String s) {}
-          @Override public void annotationBoundary(AnnotationBoundaryMap map) {}
-          @Override public void elementEnd() {}
+          @Override
+          public void characters(String s) {
+          }
+
+          @Override
+          public void annotationBoundary(AnnotationBoundaryMap map) {
+          }
+
+          @Override
+          public void elementEnd() {
+          }
         }));
 
     // Delete the line
     if (lastLine.get() >= 0) {
-      WaveletDocumentOperation undoOp = new WaveletDocumentOperation(MAIN_DOCUMENT_ID,
-          ConsoleUtils.createLineDeletion(getOpenDocument(), lastLine.get()));
+      WaveletDocumentOperation
+          undoOp =
+          new WaveletDocumentOperation(MAIN_DOCUMENT_ID,
+                                       ConsoleUtils.createLineDeletion(
+                                           getOpenDocument(), lastLine.get()));
       backend.sendWaveletOperation(getOpenWavelet().getWaveletName(), undoOp);
     } else {
       out.println("Error: " + userId + " hasn't written anything yet");
@@ -641,7 +752,8 @@ public class ConsoleClient implements WaveletOperationListener {
    * Print error message if user is not connected to a server.
    */
   private void errorNotConnected() {
-    out.println("Error: not connected, run \"/connect user@domain server port\"");
+    out.println(
+        "Error: not connected, run \"/connect user@domain server port\"");
   }
 
   /**
@@ -685,14 +797,16 @@ public class ConsoleClient implements WaveletOperationListener {
       inboxRender = inbox.render(getCanvassWidth(), getCanvassHeight());
     } else {
       inboxRender = Lists.newArrayList();
-      ConsoleUtils.ensureHeight(getCanvassWidth(), getCanvassHeight(), inboxRender);
+      ConsoleUtils
+          .ensureHeight(getCanvassWidth(), getCanvassHeight(), inboxRender);
     }
 
     if (isWaveOpen()) {
       waveRender = openWave.render(getCanvassWidth(), getCanvassHeight());
     } else {
       waveRender = Lists.newArrayList();
-      ConsoleUtils.ensureHeight(getCanvassWidth(), getCanvassHeight(), waveRender);
+      ConsoleUtils
+          .ensureHeight(getCanvassWidth(), getCanvassHeight(), waveRender);
     }
 
     buf.append(renderSideBySide(inboxRender, waveRender));
@@ -713,7 +827,8 @@ public class ConsoleClient implements WaveletOperationListener {
    * @return the width of the "canvass", how wide a single rendering panel is
    */
   private int getCanvassWidth() {
-    return (reader.getTermwidth() / 2) - 2; // there are 2 panels, then leave some space
+    return (reader.getTermwidth() / 2)
+           - 2; // there are 2 panels, then leave some space
   }
 
   /**
@@ -726,7 +841,7 @@ public class ConsoleClient implements WaveletOperationListener {
   /**
    * Render two list of Strings (lines) side by side.
    *
-   * @param left column
+   * @param left  column
    * @param right column
    * @return rendered columns
    */
@@ -734,7 +849,8 @@ public class ConsoleClient implements WaveletOperationListener {
     StringBuilder rendered = new StringBuilder();
 
     if (left.size() != right.size()) {
-      throw new IllegalArgumentException("Left and right are different heights");
+      throw new IllegalArgumentException(
+          "Left and right are different heights");
     }
 
     for (int i = 0; i < left.size(); i++) {
@@ -748,18 +864,23 @@ public class ConsoleClient implements WaveletOperationListener {
   }
 
   @Override
-  public void waveletDocumentUpdated(String author, WaveletData wavelet, WaveletDocumentOperation docOp) {
+  public void waveletDocumentUpdated(String author, WaveletData wavelet,
+                                     WaveletDocumentOperation docOp) {
+    // TODO(arb): record the author??
   }
 
   @Override
-  public void participantAdded(String author, WaveletData wavelet, ParticipantId participantId) {
+  public void participantAdded(String author, WaveletData wavelet,
+                               ParticipantId participantId) {
   }
 
   @Override
-  public void participantRemoved(String author, WaveletData wavelet, ParticipantId participantId) {
+  public void participantRemoved(String author, WaveletData wavelet,
+                                 ParticipantId participantId) {
     if (isWaveOpen() && participantId.equals(backend.getUserId())) {
       // We might have been removed from our open wave (an impressively verbose check...)
-      if (wavelet.getWaveletName().waveId.equals(openWave.getWave().getWaveId())) {
+      if (wavelet.getWaveletName().waveId
+          .equals(openWave.getWave().getWaveId())) {
         openWave = null;
       }
     }
