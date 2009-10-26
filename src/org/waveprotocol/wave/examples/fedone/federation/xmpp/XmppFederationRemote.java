@@ -357,7 +357,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
       WaveletName waveletName;
       try {
         waveletName =
-            WaveXmppComponent.waveletNameEncoder.uriToWaveletName(
+            component.convertWaveletName(
                 waveletUpdate.attributeValue("wavelet-name"));
       } catch (URIEncoderDecoder.EncodingException e) {
         callback.onFailure("couldn't decode wavelet name "

@@ -104,6 +104,13 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       // Insert all available deltas into pendingDeltas.
       for (ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta : appliedDeltas) {
         LOG.info("Delta incoming: " + appliedDelta);
+        ProtocolWaveletDelta actualDelta;
+        try {
+          actualDelta = ProtocolWaveletDelta.parseFrom(appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
+          LOG.info("actual delta: " + actualDelta);
+        } catch (InvalidProtocolBufferException e) {
+          e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         pendingDeltas.add(appliedDelta);
       }
 

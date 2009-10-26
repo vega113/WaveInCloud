@@ -26,6 +26,8 @@ import org.jivesoftware.whack.ExternalComponentManager;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationListener;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder;
+import org.waveprotocol.wave.model.id.WaveletName;
 import org.xmpp.component.Component;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;
@@ -582,6 +584,22 @@ public class WaveXmppComponent implements Component,
    */
   String generateId() {
     return String.valueOf(idRandom.nextInt(10000) + "-" + idSequence++);
+  }
+
+  /**
+   * Parses wavelet names, with or without a wave:// prefix.
+   *
+   * @param waveletNameUri input string
+   * @return the wavelet name
+   * @throws org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException if the string is invalid.
+   */
+  WaveletName convertWaveletName(String waveletNameUri)
+      throws URIEncoderDecoder.EncodingException {
+    if (waveletNameUri.startsWith("wave://")) {
+      waveletNameUri = waveletNameUri.substring(7);
+    }
+    return waveletNameEncoder
+        .uriPathToWaveletName(waveletNameUri);
   }
 
   /**
