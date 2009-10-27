@@ -42,7 +42,12 @@ public class XmppDisco {
 
   static final String DISCO_INFO_CATEGORY = "collaboration";
   static final String DISCO_INFO_TYPE = "google-wave";
+  RpcCallback<Packet> errorCallback = new RpcCallback<Packet>() {
 
+    @Override
+    public void run(Packet result) {
+      processDiscoInfoResult((IQ)result);
+    } };
   /**
    * Constructor.
    */
@@ -172,15 +177,6 @@ public class XmppDisco {
     }
   }
 
-  /**
-   * Handles a disco items error from a foreign XMPP agent. We switch to a
-   * fallback mode where we just try wave.servername instead.
-   * 
-   * @param iq the IQ packet.
-   */
-  void processDiscoItemsError(IQ iq) {
-
-  }
 
   /**
    * Handles a disco info result for a remote JID, triggers the callback. When
@@ -262,24 +258,25 @@ public class XmppDisco {
     @SuppressWarnings("unchecked")
     public void run(IQ infoResult) {
       if (infoResult != null) { // first time, no result.
-        // check the result to see if it matches wave.
-        // noinspection unchecked
-        List<Element> features =
-                infoResult.getChildElement().elements("feature");
-        for (Element feature : features) {
-          Attribute var = feature.attribute("var");
-          if (var != null
-                  && var.getValue().equals(
-                          WaveXmppComponent.NAMESPACE_WAVE_SERVER)) {
-            String targetJID = infoResult.getFrom().toString();
-            domainToJidMap.put(serverName, targetJID);
-            logger.info("Discovered remote JID: " + targetJID + " for "
-                    + serverName);
-            this.callback.run(targetJID);
-            return;
+        if (infoResult.getType() != IQ.Type.error) {
+          // check the result to see if it matches wave.
+          // noinspection unchecked
+          List<Element> features =
+                  infoResult.getChildElement().elements("feature");
+          for (Element feature : features) {
+            Attribute var = feature.attribute("var");
+            if (var != null
+                    && var.getValue().equals(
+                            WaveXmppComponent.NAMESPACE_WAVE_SERVER)) {
+              String targetJID = infoResult.getFrom().toString();
+              domainToJidMap.put(serverName, targetJID);
+              logger.info("Discovered remote JID: " + targetJID + " for "
+                      + serverName);
+              this.callback.run(targetJID);
+              return;
+            }
           }
         }
-
       }
       // take the next candidateJID, run a disco info against it.
       if (candidateJids.isEmpty()) {
@@ -296,7 +293,8 @@ public class XmppDisco {
       request.setTo(candidate);
       request.setFrom(waveComponent.componentJID);
       inProgressDiscoMap.put(request.getID(), this);
-      waveComponent.sendPacket(request, true, /* retry */null, null);
+
+      waveComponent.sendPacket(request, true, /* retry */null, errorCallback);
     }
   }
 }

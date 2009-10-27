@@ -114,9 +114,9 @@ public class WaveXmppComponentTest extends TestCase {
         new XmppTestUtil.MockExternalComponentManager("");
     xmppComponent.componentManager = mockComponentManager2;
     xmppComponent.shutdown();
-    xmppComponent.sendPacket(new IQ(), true, null);
-    xmppComponent.sendPacket(new IQ(), true, null);
-    xmppComponent.sendPacket(new IQ(), true, null);
+    xmppComponent.sendPacket(new IQ(), true, null, null);
+    xmppComponent.sendPacket(new IQ(), true, null, null);
+    xmppComponent.sendPacket(new IQ(), true, null, null);
     assertEquals(0, mockComponentManager2.packetsSent);
     xmppComponent.start();
     assertEquals(3, mockComponentManager2.packetsSent);
@@ -244,7 +244,7 @@ public class WaveXmppComponentTest extends TestCase {
     replayMocks();
     createComponent();
     testRequest.setID(xmppComponent.generateId());
-    xmppComponent.sendPacket(testRequest, true /* retry */, testCallback);
+    xmppComponent.sendPacket(testRequest, true /* retry */, testCallback, null);
     WaveXmppComponent.copyRequestPacketFields(testRequest, testResponse);
     xmppComponent.processPacket(testResponse);
     verifyMocks();
