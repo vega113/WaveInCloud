@@ -214,7 +214,7 @@ public class WaveXmppMain {
       message.setBody("hello");
       message.addChildElement("request", NAMESPACE_XMPP_RECEIPTS);
       logger.fine("sending message:\n" + message);
-      sendPacket(message, true, null);
+      sendPacket(message, true, null, null);
     }
 
   }

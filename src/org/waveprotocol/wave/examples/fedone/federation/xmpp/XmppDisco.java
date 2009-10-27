@@ -1,17 +1,12 @@
 /*
- * Copyright (C) 2009 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2009 Google Inc. Licensed under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law
+ * or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
  */
 
 package org.waveprotocol.wave.examples.fedone.federation.xmpp;
@@ -23,6 +18,7 @@ import com.google.protobuf.RpcCallback;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.Packet;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,14 +28,12 @@ import java.util.logging.Logger;
 
 /**
  * Implementation of XMPP Discovery.
- *
- *
  */
 @Singleton
 public class XmppDisco {
 
   private static final Logger logger =
-      Logger.getLogger(XmppDisco.class.getCanonicalName());
+          Logger.getLogger(XmppDisco.class.getCanonicalName());
   private WaveXmppComponent component;
 
   Map<String, RpcCallback<String>> pendingDiscoMap;
@@ -62,7 +56,7 @@ public class XmppDisco {
   /**
    * Sets the parent component for this instance. Must be called before any
    * other methods will work.
-   *
+   * 
    * @param component the component
    */
   public void setComponent(WaveXmppComponent component) {
@@ -73,7 +67,7 @@ public class XmppDisco {
    * Handles a disco info get from a foreign source. A remote server is trying
    * to ask us what we support. Send back a message identifying as a wave
    * component.
-   *
+   * 
    * @param iqGet the IQ packet.
    */
   void processDiscoInfoGet(IQ iqGet) {
@@ -81,43 +75,41 @@ public class XmppDisco {
     WaveXmppComponent.copyRequestPacketFields(iqGet, response);
     response.setType(IQ.Type.result);
     Element query =
-        response
-            .setChildElement("query", WaveXmppComponent.NAMESPACE_DISCO_INFO);
-    query.addElement("identity")
-        .addAttribute("category", DISCO_INFO_CATEGORY)
-        .addAttribute("type", DISCO_INFO_TYPE)
-        .addAttribute("name", component.getDescription());
-    query.addElement("feature")
-        .addAttribute("var", WaveXmppComponent.NAMESPACE_WAVE_SERVER);
-    component
-        .sendPacket(response, /* no retry */ false, /* no callback */ null);
+            response.setChildElement("query",
+                    WaveXmppComponent.NAMESPACE_DISCO_INFO);
+    query.addElement("identity").addAttribute("category", DISCO_INFO_CATEGORY)
+            .addAttribute("type", DISCO_INFO_TYPE).addAttribute("name",
+                    component.getDescription());
+    query.addElement("feature").addAttribute("var",
+            WaveXmppComponent.NAMESPACE_WAVE_SERVER);
+    component.sendPacket(response, /* no retry */false, /* no callback */null,
+            null);
   }
 
 
   /**
    * Handles a disco items get from a foreign xmpp agent. no useful responses.
-   *
+   * 
    * @param iq the IQ packet.
    */
   void processDiscoItemsGet(IQ iq) {
     IQ response = new IQ(IQ.Type.result);
     WaveXmppComponent.copyRequestPacketFields(iq, response);
     response.setChildElement("query", WaveXmppComponent.NAMESPACE_DISCO_ITEMS);
-    component
-        .sendPacket(response, false, /* no retry */ null /* no callback */);
+    component.sendPacket(response, false, /* no retry */null /* no callback */,
+            null);
 
   }
 
   /**
    * Look up the Wave Server JID of the remote host. If it's not one we know
    * already, start the disco discovery process.
-   *
+   * 
    * @param remoteServer the FQDN of the remote server
-   * @param callback     a callback that will be invoked with either the target
-   *                     JID or null if remote server doesn't support wave.
+   * @param callback a callback that will be invoked with either the target JID
+   *          or null if remote server doesn't support wave.
    */
-  void discoverRemoteJid(String remoteServer,
-                         RpcCallback<String> callback) {
+  void discoverRemoteJid(String remoteServer, RpcCallback<String> callback) {
     if (domainToJidMap.containsKey(remoteServer)) {
       callback.run(domainToJidMap.get(remoteServer));
     } else {
@@ -129,13 +121,13 @@ public class XmppDisco {
   /**
    * Sends a disco info get to a remote server. Starts the discovery process for
    * a wave server.
-   *
+   * 
    * @param remoteServer the name of the remote server.
-   * @param callback     the callback to trigger with the Wave JID on the remote
-   *                     server
+   * @param callback the callback to trigger with the Wave JID on the remote
+   *          server
    */
   private void sendDiscoItemsGet(String remoteServer,
-                                 RpcCallback<String> callback) {
+          RpcCallback<String> callback) {
     logger.info("Trying to discover remote server: " + remoteServer);
     IQ request = new IQ();
     request.setType(IQ.Type.get);
@@ -144,21 +136,36 @@ public class XmppDisco {
     request.setTo(remoteServer);
     request.setFrom(component.componentJID);
     pendingDiscoMap.put(request.getID(), callback);
+    RpcCallback<Packet> errorCallback = new RpcCallback<Packet>() {
 
-    component.sendPacket(request, /* retry */  true, null);
+      @Override
+      public void run(Packet iq) {
+        RpcCallback<String> callback = pendingDiscoMap.remove(iq.getID());
+        if (callback != null) {
+          DiscoItemIterator discoIter =
+                  new DiscoItemIterator(iq.getFrom().toString(), component,
+                          callback);
+          discoIter.run(null);
+        } else {
+          logger.fine("got unexpected iq items error " + iq);
+        }
+      }
+    };
+
+    component.sendPacket(request, /* retry */true, null, errorCallback);
   }
 
   /**
    * Handles a disco items response from a foreign XMPP agent. Then calls info
    * on each item, looking for a wave server.
-   *
+   * 
    * @param iq the IQ packet.
    */
   void processDiscoItemsResult(IQ iq) {
     RpcCallback<String> callback = pendingDiscoMap.remove(iq.getID());
     if (callback != null) {
       DiscoItemIterator discoIter =
-          new DiscoItemIterator(iq, this.component, callback);
+              new DiscoItemIterator(iq, this.component, callback);
       discoIter.run(null);
     } else {
       logger.fine("got unexpected iq items result " + iq);
@@ -168,24 +175,17 @@ public class XmppDisco {
   /**
    * Handles a disco items error from a foreign XMPP agent. We switch to a
    * fallback mode where we just try wave.servername instead.
-   *
+   * 
    * @param iq the IQ packet.
    */
   void processDiscoItemsError(IQ iq) {
-    RpcCallback<String> callback = pendingDiscoMap.remove(iq.getID());
-    if (callback != null) {
-      DiscoItemIterator discoIter =
-          new DiscoItemIterator(iq.getFrom().toString(), this.component, callback);
-      discoIter.run(null);
-    } else {
-      logger.fine("got unexpected iq items result " + iq);
-    }
+
   }
 
   /**
    * Handles a disco info result for a remote JID, triggers the callback. When
    * we're walking through remote JIDs, we'll see these.
-   *
+   * 
    * @param iq the IQ packet.
    */
   void processDiscoInfoResult(IQ iq) {
@@ -202,8 +202,7 @@ public class XmppDisco {
 
   /**
    * This class takes a IQ disco#items result, and calls disco#info on each JID
-   * in the result. When it finds one supporting wave, it triggers the
-   * callback.
+   * in the result. When it finds one supporting wave, it triggers the callback.
    */
   private class DiscoItemIterator implements RpcCallback<IQ> {
 
@@ -215,19 +214,19 @@ public class XmppDisco {
 
     /**
      * Constructor. Extracts the JIDs from the disco#items response.
-     *
-     * @param itemsIQ   the disco#items response
+     * 
+     * @param itemsIQ the disco#items response
      * @param component the parent wave component
-     * @param callback  the callback to invoke with the discovered JID or null
+     * @param callback the callback to invoke with the discovered JID or null
      */
     @SuppressWarnings("unchecked")
     DiscoItemIterator(IQ itemsIQ, WaveXmppComponent component,
-                      RpcCallback<String> callback) {
+            RpcCallback<String> callback) {
       this.waveComponent = component;
       this.callback = callback;
       this.serverName = itemsIQ.getFrom().toString();
       // dom4j documentation says this should return List<Element>
-      //noinspection unchecked
+      // noinspection unchecked
       List<Element> items = itemsIQ.getChildElement().elements("item");
       for (Element item : items) {
         Attribute jid = item.attribute("jid");
@@ -240,14 +239,14 @@ public class XmppDisco {
     /**
      * Constructor. The server doesn't support disco. Try to check wave.server
      * instead.
-     *
-     * @param forceCheck   the bare JID of the server.
+     * 
+     * @param forceCheck the bare JID of the server.
      * @param component the parent wave component
-     * @param callback  the callback to invoke with the discovered JID or null
+     * @param callback the callback to invoke with the discovered JID or null
      */
     @SuppressWarnings("unchecked")
     DiscoItemIterator(String forceCheck, WaveXmppComponent component,
-                      RpcCallback<String> callback) {
+            RpcCallback<String> callback) {
       this.waveComponent = component;
       this.callback = callback;
       this.serverName = forceCheck;
@@ -264,16 +263,18 @@ public class XmppDisco {
     public void run(IQ infoResult) {
       if (infoResult != null) { // first time, no result.
         // check the result to see if it matches wave.
-        //noinspection unchecked
+        // noinspection unchecked
         List<Element> features =
-            infoResult.getChildElement().elements("feature");
+                infoResult.getChildElement().elements("feature");
         for (Element feature : features) {
           Attribute var = feature.attribute("var");
-          if (var != null && var.getValue()
-              .equals(WaveXmppComponent.NAMESPACE_WAVE_SERVER)) {
+          if (var != null
+                  && var.getValue().equals(
+                          WaveXmppComponent.NAMESPACE_WAVE_SERVER)) {
             String targetJID = infoResult.getFrom().toString();
             domainToJidMap.put(serverName, targetJID);
-            logger.info("Discovered remote JID: " + targetJID + " for " + serverName);
+            logger.info("Discovered remote JID: " + targetJID + " for "
+                    + serverName);
             this.callback.run(targetJID);
             return;
           }
@@ -295,7 +296,7 @@ public class XmppDisco {
       request.setTo(candidate);
       request.setFrom(waveComponent.componentJID);
       inProgressDiscoMap.put(request.getID(), this);
-      waveComponent.sendPacket(request, true, /* retry */null);
+      waveComponent.sendPacket(request, true, /* retry */null, null);
     }
   }
 }
