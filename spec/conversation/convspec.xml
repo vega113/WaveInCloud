@@ -1,0 +1,956 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE rfc SYSTEM "http://xml.resource.org/authoring/rfc2629.dtd" [
+]>
+<?rfc toc="yes"?>
+<?rfc symrefs="yes"?>
+<?rfc sortrefs="yes"?>
+<?rfc compact="yes"?>
+<!--- This processing instruction ensures the formatters don't output text
+implying this is a real RFC, since we are just using this as a nice formatting
+for now --> <?rfc private=" "?>
+<rfc>
+	<front>
+		<title>Google Wave Conversation Model</title>
+		<author initials="A." surname="North" fullname="Alex North">
+			<organization>Google, Inc. </organization>
+			<address>
+				<email>anorth@google.com</email>
+			</address>
+		</author>
+		<author initials="J." surname="Gregorio" fullname="Joe Gregorio">
+			<organization>Google, Inc. </organization>
+			<address>
+				<email>jcgregorio@google.com</email>
+			</address>
+		</author>
+		<date year="2009" month="Oct"/>
+
+        <abstract>
+            <t> Google Wave is a communication and collaboration platform based on hosted
+                conversations, called waves. A wave comprises a set of concurrently editable
+                structured documents and supports real-time sharing between multiple
+                participants. This document is one in a larger set of specifications for Google
+                Wave. This specification describes Google Wave conversation manifest document
+                schema and blip document schema, which together define the Google Wave
+                conversation model. This application model is layered upon the documents,
+                operations and operational transformation defined in the Wave Federation
+                Protocol; see <eref target="http://waveprotocol.org">http://waveprotocol.org</eref>. </t></abstract>
+
+		<note title="Document Status">
+            <t> This document is a draft and subject to change, possibly rapid and
+                non-backwards compatible, based on implementation experience.  </t> </note>
+	</front>
+	<middle>
+        <section title="Introduction" anchor="intro">
+            <t>
+            A wave can be used to represent a conversation. This specification describes
+            the Google Wave conversation model, which implements the conversation structure
+            within structured documents in a wave.</t> </section>
+
+		<section title="Applicability" anchor="applicability">
+            <t> The wave documents described in this specification may, in whole or in part, be
+                interchanged between servers via the Google Wave Federation Protocol. The
+                structure within a wave document is reminiscent of XML. A document contains an
+                XML-like tree structure of elements, with attributes, and text. In addition, a
+                document includes stand-off key/value annotations over arbitrary ranges.
+                Documents are subject to constraints expressed in schemas similar to XML
+                schemas.  </t>
+
+            <t> The use of XML in this specification in no way forces the server implementation
+                to be XML-based. That is, XML is used as a convenient model and implementations
+                are free to implement that model in the manner that is most convenient and
+                performant. </t> </section>
+
+        <section title="Terminology" anchor="intro-terms">
+            <t> The capitalized key words "MUST", "MUST NOT",
+                "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+                "SHOULD NOT", "RECOMMENDED", "MAY", and
+                "OPTIONAL" in this document are to be
+                interpreted as described in <xref target="TERMS">BCP 14, RFC
+                    2119</xref>.</t> </section>
+
+        <section title="Editorial Notes" anchor="editorial-notes">
+            <t> To provide feedback on this draft join the wave-protocol 
+                mailing list at
+                <eref target="http://groups.google.com/group/wave-protocol">                  
+                    http://groups.google.com/group/wave-protocol</eref>.  </t> </section>
+
+        <section title="Roadmap" anchor="roadmap">
+            <t> Wave is being actively developed and some features of the
+                conversation model have not been documented, or may change in
+                the short term. Currently undocumented are annotations, RTL
+                text, images, and form elements.  </t>
+
+            <t> Here is a short roadmap of upcoming changes: </t>
+            <t>
+                <list style="symbols"> 
+                    <t> A mechanism for signalling blip submission </t> 
+                    <t> A mechanism for signalling relevance of changes </t> 
+                    <t> Modification timestamps </t>
+                    <t> Cursors and selections </t>
+                    <t> Attachments </t>
+                    <t> Rich text </t> </list> </t> </section>
+
+        <section title="Relationship between specifications" anchor="spec-relationships">
+            <t> The Federation Protocol specifies the form and function of
+                operations that mutate wave documents. While this specification
+                deals only with conversation manifest documents and blip
+                documents, a wavelet may contain documents of other types.
+                Wavelets have metadata that is not stored in document form,
+                including the wave id, wavelet id, and list of named
+                participants for the wavelet. See the Federation Protocol for
+                more details on wavelets and participants. </t> </section>
+
+        <section title="Terminology" anchor="terminology">
+            <t>The following terminology is used by this specification: 
+                <list style="symbols">
+                    <t> wave - a collection of wavelets </t>
+                    <t> wavelet - a collection of named documents and participants, and the domain of operational transformation </t>
+                    <t> conversation - an interpretation of a wavelet as a structured collection of messages </t>
+                    <t> document - a structured wave document </t>
+                    <t> blip - a document containing a conversational message </t>
+                    <t> thread - a sequence of blips, each a "continuation" to that before it </t>
+                    <t> conversation manifest - a document that defines the structure of a conversation </t>
+                    <t> reply - a thread that represents a reply to conversation material appearing above it </t>
+                    <t> inline reply - a reply anchored to a particular point in the replied-to blip </t>
+                    <t> private reply - a conversation wavelet with a restricted set of participants </t> </list> </t> </section>
+
+
+        <section title="Model" anchor="model">
+
+
+            <t> A conversation wave is a forest of conversations. Each
+                conversation has a set of participants collaborating on a
+                structured collection of blips. The structure of the
+                conversation is maintained in the conversation manifest
+                document, while the content of the conversational messages is
+                stored in blip documents. Clients participate in the
+                conversation by sending operations which mutate the
+                conversation manifest and blips. </t>
+
+            <t> The following assumptions about the wave model and operational
+                transforms should be kept in mind when reading this
+                specification. 
+                <list style="symbols">
+                    <t> A wavelet may contain many documents which may or may
+                        not be part of the conversation. This specification
+                        addresses only the two document types needed for the
+                        conversation model: blip documents and conversation
+                        manifest documents.  </t>
+                    <t> Documents not referenced by the conversation manifest
+                        are data documents and are not part of the conversation
+                        content. </t> </list> </t>
+
+        <section title="Document namespace and validation" anchor="namespaces">
+            <t> Every document in a wavelet has an identifier unique within the wavelet. Ids of
+                documents are structured as a sequence of '+'-separated tokens. The first token
+                of the id is conventionally the document namespace. That wavelet and document
+                namespace determine the type of document (its schema). Different types of
+                documents may have different validity constraints. Operations which violate the
+                schema for a document must be rejected by the server. </t>
+
+            <t> The namespaces for the documents described in this specification are:  
+                <list style="hanging">
+                    <t hangText="b"> Blip document </t>
+                    <t hangText="conversation"> Conversation Manifest document </t> </list> </t>
+
+
+            <t> An example blip document id:</t>
+            <figure>
+                <artwork>b+a8w3SD_k</artwork> </figure> </section>
+
+
+        <section title="Documents" anchor="documents">
+            <t> This section describes the two document types that make up the conversation
+                model.As a general principle of data modeling in waves, metadata is embedded in
+                documents where it can be manipulated by operations. The conversation metadata
+                includes the message structure and contributors. Below are examples of a blip
+                document and a conversation manifest document.</t>
+                
+            <figure>
+                <preamble>Blip document example</preamble>
+                <artwork><![CDATA[
+<contributor name="dadams@acmewave.com"> 
+<body> 
+	<link></line>There is a theory which states that if ever anybody
+	<link></line>discovers exactly what the Universe is for and why it
+	<link></line>is here, it will instantly disappear and be replaced by
+	<link></line>something even more bizarre and inexplicable. There is another
+	<link></line>theory which states that this has already happened. 
+</body>]]> </artwork> </figure>
+            
+            <figure>
+                <preamble>Conversation manifest document example</preamble> 
+                <artwork><![CDATA[
+<conversation sort="m"> 
+	<blip id="b+a"> <!-- first message --> 
+		<thread id="3Fsd"> 
+			<blip id="b+aaa"></blip> <!-- indented reply to "b+a" --> 
+			<blip id="b+aab"></blip> <!-- continuation to "b+aaa" --> 
+		</thread> 
+		<thread id="jjKs"> 
+			<blip id="b+aba"></blip> <!-- another reply to "b+a" --> 
+		</thread> 
+	</blip> 
+	<blip id="b+b"> <!-- continuation after "b+a" --> 
+		<peer id="chess+4342"></peer> <!-- consistency peer identifier --> 
+		<thread inline="true" id="J362"> 
+			<blip id="b+baa"></blip> <!-- inline reply to "b+b" --> 
+			<blip id="b+bab"></blip> <!-- continuation to "b+aaa" --> 
+		</thread> 
+		<thread inline="true" ... > <!-- another inline reply group, 
+			possibly at the same location --> 
+			... 
+		</thread> 
+		<thread id="9dKx"> <!-- non-inline reply to "b+b" --> 
+			... 
+		</thread> 
+	</blip> 
+</conversation>
+]]> </artwork> </figure> </section>
+
+        <section title="Conversation Manifest Document" anchor="conversation-manifest">
+            <t> A conversation manifest document has the distinguished document
+                id 'conversation', and is the only document in the
+                'conversation' namespace. There is one conversation manifest
+                document per conversation.</t>
+
+            <t> The conversation manifest defines the logical structure of the
+                conversation by describing the relationships between the blips.
+                See the Display section for how the logical structure of
+                conversations is reflected in the user-interface of a wave
+                client.</t>
+
+            <t> Blip elements are wrapped in a grouping element 'thread',
+                except for top-level blips which belong to an implicit root
+                thread. A blip may have multiple child 'thread' elements
+                representing replies. Each 'thread' element has an id, unique
+                within the conversation. Thread ids have no semantic meaning.</t>
+
+            <t> A manifest document containing duplicate blip or thread ids is currently undefined. </t>
+
+            <figure>
+                <preamble>
+                    Here is a very simple conversation manifest that references only a single blip. 
+                </preamble> 
+                <artwork><![CDATA[
+ <conversation>
+     <blip id="b+a"> <!-- first and only message -->
+     </blip>
+ </conversation>
+]]> </artwork> </figure> 
+
+            <figure>
+                <preamble>
+                    Here is a more complex conversation manifest that references multiple blips. 
+                </preamble> 
+                <artwork><![CDATA[
+ <conversation>
+     <blip id="b+a"> <!-- first message -->
+         <thread id="x123">
+             <blip id="b+aaa"></blip> <!-- indented reply to "b+a" -->
+         </thread>
+         <thread inline="true" id="x983">
+             <blip id="b+aba"></blip> <!-- another reply to "b+a" -->
+             <blip id="b+abb"></blip> <!-- another reply to "b+a" -->
+         </thread>
+     </blip>
+ </conversation> 
+ ]]> </artwork> </figure> 
+
+
+        <section title="Elements" anchor="conv-manifest-elements">
+            <t>These are the allowed elements in a conversation manifest.
+            <list style="hanging">
+                <t hangText="conversation"> 
+                    The top-level element in a conversation manifest document.
+                    It may have anchor attributes ("anchorWavelet",
+                    "anchorManifestOffset", "anchorVersion", "anchorBlip",
+                    "anchorOffset"), which determine where this conversation is
+                    displayed. See the section below on private replies. 
+                    It also has a "sort" attribute. The value of the sort attribute is used to
+                    determine the order of peer conversation elements by sorting on sort values
+                    lexicographically.  A conversation element has zero or more 'blip' elements as
+                    children.  </t>
+
+
+                <t>
+                    <list style="hanging">
+                        <t hangText="anchorWavelet"> 
+                            The id of the wavelet that this conversation is a reply to.</t>
+
+                        <t hangText="anchorManifestOffset"> 
+                            An integer offset into the document sequence for the conversation manifest. </t>
+
+                        <t hangText="anchorVersion"> 
+                            The version of the document when the private reply was created.</t>
+
+                        <t hangText="anchorBlip"> 
+                            The id of the blip document that anchors the reply.</t>
+
+                        <t hangText="anchorOffset"> 
+                            An integer offset into the blip document that anchors the private reply. </t> </list>
+                </t>
+
+                <t hangText="blip"> 
+                    Represents a message. Every blip element has an 'id'
+                    attribute that references a blip document in the
+                    conversation. It may also have a 'deleted' attribute whose
+                    boolean value determines if that blip has been logically
+                    deleted. See the section below on deleting blips.
+                    A blip may have zero or more 'thread' and 'peer' elements
+                    as children.  </t>
+
+                <t hangText="thread"> 
+                    Represents a sequence of messages. All sibling blips in a thread element are
+                    considered a reply to the parent blip element.  A thread element has an
+                    "id" and optional boolean "inline" attribute. The "inline" attribute determines
+                    whether the thread is anchored inline in the parent blip. 
+                    A thread may have zero or more 'blip' elements as children.  </t>
+
+                <t hangText="peer"> 
+                    A peer element has an "id" attribute. The "id" attribute value is the id of a
+                    data document. The identified data document is not a blip or conversation
+                    manifest document.  </t> </list> </t> </section>
+
+
+        <section title="Private Replies" anchor="private-replies">
+            <t> Private replies are represented as distinct wavelets with their
+                own conversation manifest containing a reference to the parent
+                conversation wavelet. Sub-conversations reference the parent
+                conversation's manifest document with a (wavelet-id, blip-id,
+                location, version) tuple referred to as an anchor. This tuple
+                refers to a parent blip by naming the replied-to wavelet and
+                blip. The location and version attributes refer
+                to the corresponding blip element in the replied-to
+                conversation's manifest document at some previous version. This
+                ensures the information is still present if the parent blip is
+                deleted. </t>
+
+            <t> An inline private reply also references an anchor point in the
+                replied-to blip at a selected version. A forthcoming mechanism
+                will allow clients to request a server to transform a location
+                to the current version for rendering. </t>
+
+            <t> This representation prevents leakage of the existence of the
+                private reply to participants who cannot access it. Note that
+                this structure still leaks the existence of the parent
+                conversation to the private reply. </t>
+
+            <t> The anchoring tuple is represented as a set of optional attributes on the
+                conversation tag of the conversation manifest document. </t> </section>
+
+        <section title="Examples" anchor="conversation-element-examples">
+
+            <figure>
+                <preamble>
+                    A root wavelet has no anchoring information. 
+                </preamble> 
+                <artwork><![CDATA[
+<conversation></conversation> 
+]]> </artwork> </figure> 
+
+
+            <figure>
+                <preamble>
+                    A non-inline private reply wavelet, referencing a blip in the
+                    conversation manifest document. The sort attribute determines
+                    sibling wavelet sort order by lexicographic value order. 
+                </preamble> 
+                <artwork><![CDATA[
+<conversation
+     sort="p"
+     anchorWavelet="conv+root"
+     anchorBlip="b+123"
+     anchorManifestOffset="45"
+     anchorVersion="7436" >                        
+</conversation> 
+]]> </artwork> </figure> 
+
+            <figure>
+                <preamble>
+                    An inline private reply, also has an anchor offset
+                    referring to the replied-to blip.  
+                </preamble> 
+                <artwork><![CDATA[
+<conversation
+     sort="p"
+     anchorWavelet="conv+root"
+     anchorBlip="b+123"
+     anchorManifestOffset="45"
+     anchorVersion="7436"
+     anchorOffset="784"> 
+</conversation> 
+]]> </artwork> </figure> </section> </section>
+
+            <section title="Blip Document" anchor="blip-document">
+
+
+                    <t> A blip document is distinguished by having a document id
+                        that begins with the namespace 'b'.</t>
+                    <figure>
+                        <preamble> A simple blip document.  </preamble> 
+                        <artwork><![CDATA[
+<contributor name="me@gwave.com"></contributor>
+<contributor name="you@gwave.com"></contributor>
+<body>
+    <line></line>The quick brown fox...
+</body>
+]]> </artwork> </figure> 
+
+
+                    <figure>
+                        <preamble>
+                            A more complex blip document.
+                        </preamble> 
+                        <artwork><![CDATA[
+<contributor name="me@gwave.com"></contributor>
+<contributor name="you@gwave.com"></contributor>
+<contributor name="fred@acmewave.com"></contributor>
+<body>
+    <line></line>The quick brown fox
+    <line></line>Jumped over
+    <line></line>the lazy dog.
+    <image attachment="a+sadkfd">
+        <caption>A lazy dog.</caption>
+    </image>
+</body> 
+]]> </artwork> </figure>
+
+
+                    <section title="Schema Design" anchor="schema-design">
+                        <t> The documents representing messages (blips) conform to a very simple schema.  </t>
+
+                        <t> The blip document schema expresses a structured representation of the message
+                            with little presentation logic, and is mostly not web-specific. For example,
+                            most rich-text styling is represented in annotations. This representation
+                            behaves in a much more natural way when two clients concurrently edit
+                            overlapping regions of text. The document representation may not correspond to
+                            the most natural semantic interpretation, but is designed to behave most
+                            naturally under operational transformation. </t> </section>
+
+                    <section title="Elements" anchor="blip-elements">
+                        <t>The allowed elements of a blip are:
+                        <list style="hanging">
+                        <t hangText="contributor"> 
+                            Each contributor element has a single
+                            required attribute 'name' with the id of a participant who
+                            has contributed to the blip content. All contributor elements
+                            must appear before the body element. If there are duplicates
+                            (which may occur with concurrent editing) then the first is
+                            the canonical contributor and the others should be ignored or
+                            removed. 
+                            Individual contributors are responsible for adding themselves
+                            to this list. This allows for "trivial" contributors such as
+                            annotators to voluntarily omit themselves. Absolute
+                            contributor information may be recovered from the operation
+                            history if required.  </t>
+
+
+                        <t hangText="body">
+                            The displayed content of the blip. The body element may
+                            contain text and 'line' elements. The first child of the body
+                            element must be a line element. If a document contains two
+                            body elements then the first is the canonical body and others
+                            should be ignored or removed. </t>
+
+
+                        <t hangText="line">
+                            The displayed textual content of a blip
+                            is broken up into lines. Each line is preceded with a "line"
+                            element. The line element must be an empty element, that is,
+                            having no other items between the begin element and the end
+                            element. The line element may have the following attributes:
+
+                        <list style="hanging">
+                            <t hangText="t">
+                                The type of the line. Allowed values
+                                are 'h1', 'h2', 'h3', 'h4', 'h5', and 'li', where h[1-5] is a
+                                heading and 'li' an item in a list. </t>
+
+                            <t hangText="i"> 
+                                The indentation level (0,1,2,...). This attribute is only
+                                meaningful when applied to lines of type t="li". </t>
+
+                            <t hangText="a"> 
+                                The alignment of the text in the line. (a, m, r, j)
+                                a = align
+                                left = centered = alighted right = justified </t>
+
+                            <t hangText="d"> 
+                                The display direction of the line
+                                l = left to right, r = right to left </t>
+
+                            <t hangText="image"> 
+                                The image element represents an attached image embedded in
+                                the blip. The image element has an 'attachment' attribute
+                                that is the id of that attachment's data document.
+                                Attachments and attachment documents are described in the
+                                Google Wave Attachments whitepaper. </t>
+
+                            <t hangText="reply"> 
+                                The reply element denotes the location of an inline reply
+                                thread. It has an attribute 'id' that contains the id of the
+                                thread whose location it marks. Thus an inline reply's inline
+                                location is marked with a reply element. </t> </list> </t> </list> </t> </section>
+
+                    <section title="Annotations" anchor="blip-annotations">
+                        <t>
+                            The following are the allowed annotations allowed in blip
+                            documents. </t>
+
+                        <section title="Style" anchor="blip-annotations-style">
+                            <t>
+                                Style annotations control the display of the content in the
+                                blip. All style annotations have names that begin with
+                                "style/". The allowed values for the style annotations are
+                                the same as those of the CSS properties of the same name. 
+
+                            <list style="symbols">
+                                <t> style/backgroundColor</t>
+                                <t> style/color</t>
+                                <t> style/fontFamily</t>
+                                <t> style/fontSize</t>
+                                <t> style/fontStyle</t>
+                                <t> style/fontWeight</t>
+                                <t> style/textDecoration</t>
+                                <t> style/verticalAlign </t> </list> </t> </section>
+
+
+                        <section title="User" anchor="blip-annotations-user">
+                            <t> The following annotations refer to a user id
+                                and a session id. Each client gets its session
+                                id from the server. Session ids, their
+                                assignment, and how they are transmitted to a
+                                client are out of scope for this document. It
+                                should be noted that to avoid name clashes when
+                                federating waves the session id should include
+                                the domain of the server generating them.
+                                Style annotations control the display of the
+                                content in the
+                                blip.  </t>
+
+                            <t> User annotations contain information that is
+                                specific to each user session. All user
+                                annotations begin with 'user/'.  
+                                
+                                <list style="hanging">
+                                    <t hangText="user/d/&lt;session id>">
+                                            This annotation covers the entire
+                                            document. The value of the
+                                            annotation is a comma separated
+                                            list of (userid, timestamp [,ime
+                                            composition state]) The timestamp
+                                            is the last time the cursor was
+                                            updated. The timestamp may be used
+                                            by clients to stop dislpaying the
+                                            users carat after a period of
+                                            inactivity.  </t>
+
+                                    <t hangText="user/r/&lt;session id>">
+                                            This annotation represents the
+                                            users selection. That is, the range
+                                            of text with this annotation is
+                                            text that the user has selected. If
+                                            the user does not have any text
+                                            selected then this annotation is
+                                            not present. Note that the
+                                            currently implementation only
+                                            supports a single selection region
+                                            per user. The value of this
+                                            annotation is the user id. </t>
+
+                                    <t hangText="user/e/&lt;session id>">
+                                            This annotation represents the
+                                            user's selection focus (the "blinky
+                                            bit"). The first point in the range
+                                            of the annotation is the cursor
+                                            location for the users session.
+                                            That is, the cursor is placed
+                                            before the first item in the
+                                            annotation range. This annotation
+                                            always extends from the cursor
+                                            position to the end of the
+                                            document. If this annotation is
+                                            missing then the cursor is placed
+                                            after the last item in the
+                                            document. The value of this
+                                            annotation is the user id.  </t> </list> </t> </section>
+
+                         <section title="Links" anchor="blip-annotations-link">
+                             <t>
+                                 Link annotations define links to
+                                 other resources. All link annotations have names that begin
+                                 with "link/". 
+
+                                 <list style="hanging">
+                                     <t hangText="link/manual">
+                                         A manually created link. A URI or IRI? is the only valid
+                                         value for this annotation. 
+                                     </t>
+
+                                     <t hangText="link/auto">
+                                         A link created by the linky agent. Such annotations have a
+                                         lower precedence than manual links. A URI is the only valid
+                                         value for this annotation. Do we really need to mention
+                                         linky? What does precedence mean? 
+                                     </t>
+
+
+                                     <t hangText="link/wave">
+                                         A link to another wave. Wave ids are the only valid values
+                                         for this annotation. This implies we document wave ids also.
+                                         Or, we could drop this annotation if we come up with a URI
+                                         for Waves, then this should collapse into link/manual.  </t> </list> </t> </section> </section> </section> </section>
+
+             <section title="Example Conversations" anchor="example-conversation">
+                 <section title="Simple Replies" anchor="simple-replies">
+                     <t>
+                         This is an example conversation showing how a conversation is
+                         represented by this model. This conversation consists of two
+                         blips and a conversation manifest document in one wavelet. </t>
+
+                <figure>
+                    <preamble>
+                        The conversation manifest has an id of "conversation" and is: 
+                    </preamble> 
+                    <artwork><![CDATA[
+<conversation>
+    <blip id="b+a">
+        <thread inline="false" id="r1">
+            <blip id="b+b"></blip>
+            <blip id="b+c"></blip> 
+        </thread> 
+    </blip>
+</conversation>
+]]> </artwork> </figure>
+
+
+
+                <figure>
+                    <preamble>
+                        There is a blip with an id of "b+a": 
+                    </preamble> 
+                    <artwork><![CDATA[
+<contributor name="fred@acmewave.com"> 
+<body> 
+    <line></line>There is a theory which states that if ever anybody
+    <line></line>discovers exactly what the Universe is for and why it
+    <line></line>is here, it will instantly disappear and be replaced by 
+    <line></line>something even more bizarre and inexplicable. There is another
+    <line></line>theory which states that this has already happened. 
+</body>
+]]> </artwork> </figure>
+
+                <figure>
+                    <preamble>
+                        A reply blip with an id of "b+b": 
+                    </preamble> 
+                    <artwork><![CDATA[
+<contributor name="barney@acmewave.com"> 
+<body> 
+    <line></line>Isn't that a quote from Douglas Adams? 
+</body> 
+]]> </artwork> </figure>
+
+                <figure>
+                    <preamble>
+                        And a reply blip with an id of "b+c": 
+                    </preamble> 
+                    <artwork><![CDATA[
+<contributor name="fred@acmewave.com"> 
+<body> 
+    <line></line>Yes it is. 
+</body> 
+]]> </artwork> </figure>
+
+</section>
+
+             <section title="In-line Replies" anchor="example-inline-replies">
+                 <t>
+                     The above shows the conversation with non-inline replies.
+                     Here is the same conversation, but the replies are in-line.
+                     This conversation will display differently from the above
+                     conversation.  </t>
+
+                <figure>
+                    <preamble>
+                        The conversation manifest has an id of "conversation" and is: 
+                    </preamble> 
+                    <artwork><![CDATA[
+<conversation>
+    <blip id="b+a">
+        <thread inline="true" id="r1">
+            <blip id="b+b"></blip>
+            <blip id="b+c"></blip> 
+        </thread> 
+    </blip>
+</conversation>
+]]> </artwork> </figure>
+
+
+
+                <figure>
+                    <preamble>
+                        There is a blip with an id of "b+a": 
+                    </preamble> 
+                    <artwork><![CDATA[
+<contributor name="fred@acmewave.com"> 
+<body> 
+    <line></line>There is a theory which states that if ever anybody
+    <line></line>discovers exactly what the Universe is for and why it
+    <reply id='b+b'></reply>
+    <line></line>is here, it will instantly disappear and be replaced by 
+    <line></line>something even more bizarre and inexplicable. There is another
+    <line></line>theory which states that this has already happened. 
+</body>
+]]> </artwork> </figure>
+
+                <t>Note the addition of the reply element which
+                    anchors the in-line reply. </t>
+
+                <figure>
+                    <preamble>
+                        A reply blip with an id of "b+b": 
+                    </preamble> 
+                    <artwork><![CDATA[
+<contributor name="barney@acmewave.com"> 
+<body> 
+    <line></line>Isn't that a quote from Douglas Adams? 
+</body> 
+]]> </artwork> </figure>
+
+                <figure>
+                    <preamble>
+                        And a reply blip with an id of "b+c": 
+                    </preamble> 
+                    <artwork><![CDATA[
+<contributor name="fred@acmewave.com"> 
+<body> 
+    <line></line>Yes it is. 
+</body> 
+]]> </artwork> </figure>
+
+</section>
+
+
+
+                <section title="Private In-line Replies" anchor="private-inline-replies">
+                     <t>
+                         The above shows the conversation with inline replies. Here is the same
+                         conversation, but the replies are private in-line. This conversation will
+                         display differently from the above two conversations.  </t>
+
+                    <figure>
+                        <preamble>
+                             The conversation manifest has an id of "conversation" and
+                             is an contained in the wavelet with an id of 'wave+a'. 
+                        </preamble> 
+                        <artwork><![CDATA[
+<conversation>
+    <blip id="b+a"></blip>
+</conversation>
+]]> </artwork> </figure>
+
+
+
+                    <figure>
+                        <preamble>
+                            There is a blip with an id of "b+a": 
+                        </preamble> 
+                        <artwork><![CDATA[
+<contributor name="fred@acmewave.com"> 
+<body> 
+    <line></line>There is a theory which states that if ever anybody
+    <line></line>discovers exactly what the Universe is for and why it
+    <line></line>is here, it will instantly disappear and be replaced by 
+    <line></line>something even more bizarre and inexplicable. There is another
+    <line></line>theory which states that this has already happened. 
+</body>
+]]> </artwork> </figure>
+
+                    <t>The replies are contained in another wavelet with an id of 'wave+b'.</t>
+                    <figure>
+                        <preamble>
+                            Being a wavelet it has its own conversation manifest: 
+                        </preamble> 
+                        <artwork><![CDATA[
+<conversation
+    sort="r"
+    anchorWavelet="wave+a"
+    anchorBlip="b+a"
+    anchorManifestOffset="1"
+    anchorVersion="12"
+    anchorOffset="10">
+   <blip id="b+b"></blip>
+   <blip id="b+c"></blip> 
+</conversation> 
+]]> </artwork> </figure>
+
+                <figure>
+                    <preamble>
+                        The reply blips are in the 'wave+b' wavelet. There is the reply blip with an id of "b+b": 
+                    </preamble> 
+                    <artwork><![CDATA[
+<contributor name="barney@acmewave.com"> 
+<body> 
+    <line></line>Isn't that a quote from Douglas Adams? 
+</body> 
+]]> </artwork> </figure>
+
+                <figure>
+                    <preamble>
+                        And a reply blip with an id of "b+c":
+                    </preamble> 
+                    <artwork><![CDATA[
+<contributor name="fred@acmewave.com"> 
+<body> 
+    <line></line>Yes it is. 
+</body> 
+]]> </artwork> </figure>
+
+                </section> 
+            </section>
+
+            <section title="Display" anchor="display">
+                <t> The structure and relationships between wavelets, conversation manifests
+                    and blips defines a logical structure for conversations. What follows is a
+                    description of how the content and structure defined is presented in a
+                    user-interface, fully realizing that implementing wave on different clients
+                    will impose different constraints. The below isn't meant to constrain client
+                    implementations, but to give guidance on providing a consistent user
+                    experience.  </t> 
+
+                <t> A conversation should be displayed as a single unit and
+                    may reference more than one wavelet. A wavelet is considered to be in a
+                    conversation view if it references another wavelet in the conversation via an
+                    anchorWavelet property, and if the user has permission to access that wavelet.
+                    Note that this means different users may have different conversation views of
+                    the same set of wavelets.  </t> 
+
+                <t> Blips are displayed in the order that they
+                    appear in the conversation manifest, going from top to bottom. Blip documents
+                    in a wavelet that are not referenced in the conversation manifest should not be
+                    displayed. Threads are indented from the content of their parent blip unless
+                    they have a property value of inline=true. The location of private replies is
+                    determined by the "anchorWavelet", "anchorManifestOffset", "anchorVersion",
+                    "anchorBlip", and "anchorOffset" properties of the conversation element. Note
+                    that the anchor position is given for version at which the private reply was
+                    created, and is recorded in the "anchorVersion" attribute. The proper display
+                    location for the private reply will depend upon keeping track of how that
+                    historical position moves as documents are mutated.  </t> 
+
+                <t> The location of
+                    non-private inline replies is denoted with a reply element in the thread and
+                    should be displayed indented at that location.  </t> 
+
+                <t> The display of private
+                    inline replies should include an indication that it is private, such as
+                    displaying the participants for that wavelet, along with the content of the
+                    sub-conversation.  </t>
+            </section>
+
+
+            <section title="Mechanisms" anchor="mechanisms">
+                <t> This section describes some mechanisms for changing the conversation
+                    structure. Additional mechanisms remain to be defined. In addition, the
+                    interactions of concurrent modifications have yet to be detailed. </t>
+
+                <section title="Creating a new blip" anchor="create-blip">
+                    <t> To add a new blip to a thread an operation is sent to
+                        insert a blip element (with a unique id) to the thread in the conversation
+                        manifest. The added blip document may or may not be empty. </t>  </section>
+
+                <section title="Creating a reply thread" anchor="create-reply">
+                    <t> To add a new thread an operation is sent to insert a thread
+                        element (with a unique id) to the replied-to blip element in the conversation
+                        manifest. If the thread is an inline reply an anchor element must first be
+                        inserted in the replied to blip. </t> </section>
+
+                <section title="Deleting a blip" anchor="delete-blip">
+                    <t> Deleting a blip involves deleting the blip, any inline replies to the blip, and
+                        (optionally) any non-inline replies to the blip. This mechanism deletes only
+                        inline replies.  </t>
+
+                    <t> A blip is deleted by sending mutations that: 
+                        <list style="symbols"> 
+                            <t> Delete all subordinate inline threads by: 
+                                <list style="symbols"> 
+                                    <t> Deleting all blips in the thread </t>
+                                    <t> Removing the thread element from the conversation manifest </t> 
+                            </list> </t>
+
+                            <t> Transform the blip's document to an empty document </t>
+                            <t> Set the "deleted" attribute value to 'true' on the blip's conversation
+                                manifest element if the blip has non-inline replies, else deletes the element
+                                entirely. </t>
+                    </list> </t>
+
+                    <t> After a blip is deleted, non-inline replies to that blip are still nested
+                        within their parent in the conversation manifest. They may be rendered as
+                        children of a deleted blip. Future restructure operations may allow the
+                        children to be re-parented. If a deleted blip has no remaining replies then the
+                        blip entry should be deleted from the conversation manifest document. If the
+                        deleted blip was the last in a thread then the thread entry should be removed
+                        from the manifest document.  </t>
+
+                    <t> Edits that occur concurrently with a blip
+                        deletion are nullified in transform. Concurrently created replies to a deleted
+                        blip are deleted if the blip has no replies, but survive if the blip element
+                        remains (with "deleted" set to "true").  </t>
+                </section>
+            </section>
+
+	</middle>
+	<back>
+		<references title="References">
+			<reference anchor="TERMS">
+				<front>
+					<title abbrev="RFC Key Words">Key words for use in RFCs to Indicate Requirement Levels</title>
+					<author initials="S." surname="Bradner" fullname="Scott Bradner">
+						<organization>Harvard University</organization>
+						<address>
+							<postal>
+								<street>1350 Mass.  Ave.</street>
+								<street>Cambridge</street>
+								<street>MA 02138</street>
+							</postal>
+							<phone>- +1 617 495 3864</phone>
+							<email>sob@harvard.edu</email>
+						</address>
+					</author>
+					<date month="March" year="1997"/>
+					<area>General</area>
+					<keyword>keyword</keyword>
+					<abstract>
+						<t>
+					   In many standards track documents several words are used to signify
+					   the requirements in the specification.  These words are often
+					   capitalized.  This document defines these words as they should be
+					   interpreted in IETF documents.  Authors who follow these guidelines
+					   should incorporate this phrase near the beginning of their document:
+
+							<list>
+								<t>
+								  The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+								  NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+								  "OPTIONAL" in this document are to be interpreted as described in
+								  RFC 2119.
+								</t>
+							</list>
+						</t>
+						<t>
+						   Note that the force of these words is modified by the requirement
+						   level of the document in which they are used.
+						</t>
+					</abstract>
+				</front>
+				<seriesInfo name="BCP" value="14"/>
+				<seriesInfo name="RFC" value="2119"/>
+				<format type="TXT" octets="4723" target="ftp://ftp.isi.edu/in-notes/rfc2119.txt"/>
+				<format type="HTML" octets="14486" target="http://xml.resource.org/public/rfc/html/rfc2119.html"/>
+				<format type="XML" octets="5661" target="http://xml.resource.org/public/rfc/xml/rfc2119.xml"/>
+			</reference>
+		</references>
+	</back>
+</rfc>
