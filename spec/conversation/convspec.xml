@@ -37,6 +37,7 @@ for now --> <?rfc private=" "?>
                 Protocol; see <eref target="http://waveprotocol.org">http://waveprotocol.org</eref>. </t></abstract>
 
 		<note title="Document Status">
+            <t> Version 0.2 </t>
             <t> This document is a draft and subject to change, possibly rapid and
                 non-backwards compatible, based on implementation experience.  </t> </note>
 	</front>
@@ -172,11 +173,11 @@ for now --> <?rfc private=" "?>
                 <artwork><![CDATA[
 <contributor name="dadams@acmewave.com"> 
 <body> 
-	<link></line>There is a theory which states that if ever anybody
-	<link></line>discovers exactly what the Universe is for and why it
-	<link></line>is here, it will instantly disappear and be replaced by
-	<link></line>something even more bizarre and inexplicable. There is another
-	<link></line>theory which states that this has already happened. 
+	<line></line>There is a theory which states that if ever anybody
+	<line></line>discovers exactly what the Universe is for and why it
+	<line></line>is here, it will instantly disappear and be replaced by
+	<line></line>something even more bizarre and inexplicable. There is another
+	<line></line>theory which states that this has already happened. 
 </body>]]> </artwork> </figure>
             
             <figure>
@@ -280,16 +281,16 @@ for now --> <?rfc private=" "?>
                             The id of the wavelet that this conversation is a reply to.</t>
 
                         <t hangText="anchorManifestOffset"> 
-                            An integer offset into the document sequence for the conversation manifest. </t>
+                            An integer offset into the document sequence for the parent's conversation manifest. </t>
 
                         <t hangText="anchorVersion"> 
-                            The version of the document when the private reply was created.</t>
+                            The version of the parent wavelet when the private reply was created.</t>
 
                         <t hangText="anchorBlip"> 
-                            The id of the blip document that anchors the reply.</t>
+                            The id of the blip document in the parent wavelet that anchors the reply.</t>
 
                         <t hangText="anchorOffset"> 
-                            An integer offset into the blip document that anchors the private reply. </t> </list>
+                            An integer offset into the replied-to blip document that anchors the private reply. </t> </list>
                 </t>
 
                 <t hangText="blip"> 
@@ -305,8 +306,9 @@ for now --> <?rfc private=" "?>
                     Represents a sequence of messages. All sibling blips in a thread element are
                     considered a reply to the parent blip element.  A thread element has an
                     "id" and optional boolean "inline" attribute. The "inline" attribute determines
-                    whether the thread is anchored inline in the parent blip. 
-                    A thread may have zero or more 'blip' elements as children.  </t>
+                    whether the thread is anchored inline in the parent blip. The default value
+                    for "inline" if false, that is, the inline attribute not being present is
+                    the same thing as inline=false. A thread may have zero or more 'blip' elements as children.  </t>
 
                 <t hangText="peer"> 
                     A peer element has an "id" attribute. The "id" attribute value is the id of a
@@ -435,8 +437,7 @@ for now --> <?rfc private=" "?>
                         <t hangText="contributor"> 
                             Each contributor element has a single
                             required attribute 'name' with the id of a participant who
-                            has contributed to the blip content. All contributor elements
-                            must appear before the body element. If there are duplicates
+                            has contributed to the blip content. If there are duplicates
                             (which may occur with concurrent editing) then the first is
                             the canonical contributor and the others should be ignored or
                             removed. 
@@ -590,18 +591,15 @@ for now --> <?rfc private=" "?>
                                      </t>
 
                                      <t hangText="link/auto">
-                                         A link created by the linky agent. Such annotations have a
+                                         A link created automatically by some linkifying process. Such annotations have a
                                          lower precedence than manual links. A URI is the only valid
-                                         value for this annotation. Do we really need to mention
-                                         linky? What does precedence mean? 
+                                         value for this annotation. 
                                      </t>
 
 
                                      <t hangText="link/wave">
                                          A link to another wave. Wave ids are the only valid values
-                                         for this annotation. This implies we document wave ids also.
-                                         Or, we could drop this annotation if we come up with a URI
-                                         for Waves, then this should collapse into link/manual.  </t> </list> </t> </section> </section> </section> </section>
+                                         for this annotation.  </t> </list> </t> </section> </section> </section> </section>
 
              <section title="Example Conversations" anchor="example-conversation">
                  <section title="Simple Replies" anchor="simple-replies">
@@ -617,7 +615,7 @@ for now --> <?rfc private=" "?>
                     <artwork><![CDATA[
 <conversation>
     <blip id="b+a">
-        <thread inline="false" id="r1">
+        <thread id="r1">
             <blip id="b+b"></blip>
             <blip id="b+c"></blip> 
         </thread> 
@@ -698,8 +696,7 @@ for now --> <?rfc private=" "?>
 <contributor name="fred@acmewave.com"> 
 <body> 
     <line></line>There is a theory which states that if ever anybody
-    <line></line>discovers exactly what the Universe is for and why it
-    <reply id='b+b'></reply>
+    <line></line>discovers exactly what<reply id='aF8j_s'></reply> the Universe is for and why it
     <line></line>is here, it will instantly disappear and be replaced by 
     <line></line>something even more bizarre and inexplicable. There is another
     <line></line>theory which states that this has already happened. 
@@ -822,11 +819,12 @@ for now --> <?rfc private=" "?>
                     experience.  </t> 
 
                 <t> A conversation should be displayed as a single unit and
-                    may reference more than one wavelet. A wavelet is considered to be in a
-                    conversation view if it references another wavelet in the conversation via an
-                    anchorWavelet property, and if the user has permission to access that wavelet.
-                    Note that this means different users may have different conversation views of
-                    the same set of wavelets.  </t> 
+                    may reference more than one wavelet. A wavelet is
+                    considered to be in a conversation view if it has a wavelet
+                    id in the "conv" namespace and the user has permission to
+                    access the wavelet. Wavelets other than the root in a
+                    conversation view should reference another via an
+                    anchorWavelet attribute.  </t> 
 
                 <t> Blips are displayed in the order that they
                     appear in the conversation manifest, going from top to bottom. Blip documents

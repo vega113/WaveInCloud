@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="en"><head><title>Google Wave Conversation Model</title>
-<meta http-equiv="Expires" content="Wed, 28 Oct 2009 13:45:28 +0000">
+<meta http-equiv="Expires" content="Thu, 29 Oct 2009 21:38:05 +0000">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="description" content="Google Wave Conversation Model">
 <meta name="generator" content="xml2rfc v1.33 (http://xml.resource.org/)">
@@ -163,6 +163,8 @@
 </p>
 <h3>Document Status</h3>
 
+<p> Version 0.2 
+</p>
 <p> This document is a draft and subject to change, possibly rapid and
                 non-backwards compatible, based on implementation experience.  
 </p><a name="toc"></a><br /><hr />
@@ -422,11 +424,11 @@ Documents</h3>
 </p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
 &lt;contributor name="dadams@acmewave.com"&gt;
 &lt;body&gt;
-	&lt;link&gt;&lt;/line&gt;There is a theory which states that if ever anybody
-	&lt;link&gt;&lt;/line&gt;discovers exactly what the Universe is for and why it
-	&lt;link&gt;&lt;/line&gt;is here, it will instantly disappear and be replaced by
-	&lt;link&gt;&lt;/line&gt;something even more bizarre and inexplicable. There is another
-	&lt;link&gt;&lt;/line&gt;theory which states that this has already happened.
+	&lt;line&gt;&lt;/line&gt;There is a theory which states that if ever anybody
+	&lt;line&gt;&lt;/line&gt;discovers exactly what the Universe is for and why it
+	&lt;line&gt;&lt;/line&gt;is here, it will instantly disappear and be replaced by
+	&lt;line&gt;&lt;/line&gt;something even more bizarre and inexplicable. There is another
+	&lt;line&gt;&lt;/line&gt;theory which states that this has already happened.
 &lt;/body&gt;</pre></div>
 <p>Conversation manifest document example
 </p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
@@ -535,19 +537,19 @@ Elements</h3>
 </dd>
 <dt>anchorManifestOffset</dt>
 <dd> 
-                            An integer offset into the document sequence for the conversation manifest. 
+                            An integer offset into the document sequence for the parent's conversation manifest. 
 </dd>
 <dt>anchorVersion</dt>
 <dd> 
-                            The version of the document when the private reply was created.
+                            The version of the parent wavelet when the private reply was created.
 </dd>
 <dt>anchorBlip</dt>
 <dd> 
-                            The id of the blip document that anchors the reply.
+                            The id of the blip document in the parent wavelet that anchors the reply.
 </dd>
 <dt>anchorOffset</dt>
 <dd> 
-                            An integer offset into the blip document that anchors the private reply. 
+                            An integer offset into the replied-to blip document that anchors the private reply. 
 </dd>
 </dl></blockquote>
                 
@@ -567,8 +569,9 @@ Elements</h3>
                     Represents a sequence of messages. All sibling blips in a thread element are
                     considered a reply to the parent blip element.  A thread element has an
                     "id" and optional boolean "inline" attribute. The "inline" attribute determines
-                    whether the thread is anchored inline in the parent blip. 
-                    A thread may have zero or more 'blip' elements as children.  
+                    whether the thread is anchored inline in the parent blip. The default value
+                    for "inline" if false, that is, the inline attribute not being present is
+                    the same thing as inline=false. A thread may have zero or more 'blip' elements as children.  
 </dd>
 <dt>peer</dt>
 <dd> 
@@ -706,8 +709,7 @@ Elements</h3>
 <dd> 
                             Each contributor element has a single
                             required attribute 'name' with the id of a participant who
-                            has contributed to the blip content. All contributor elements
-                            must appear before the body element. If there are duplicates
+                            has contributed to the blip content. If there are duplicates
                             (which may occur with concurrent editing) then the first is
                             the canonical contributor and the others should be ignored or
                             removed. 
@@ -906,18 +908,15 @@ Links</h3>
 </dd>
 <dt>link/auto</dt>
 <dd>
-                                         A link created by the linky agent. Such annotations have a
+                                         A link created automatically by some linkifying process. Such annotations have a
                                          lower precedence than manual links. A URI is the only valid
-                                         value for this annotation. Do we really need to mention
-                                         linky? What does precedence mean? 
+                                         value for this annotation. 
                                      
 </dd>
 <dt>link/wave</dt>
 <dd>
                                          A link to another wave. Wave ids are the only valid values
-                                         for this annotation. This implies we document wave ids also.
-                                         Or, we could drop this annotation if we come up with a URI
-                                         for Waves, then this should collapse into link/manual.  
+                                         for this annotation.  
 </dd>
 </dl></blockquote><p> 
 </p>
@@ -942,7 +941,7 @@ Simple Replies</h3>
 </p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
 &lt;conversation&gt;
     &lt;blip id="b+a"&gt;
-        &lt;thread inline="false" id="r1"&gt;
+        &lt;thread id="r1"&gt;
             &lt;blip id="b+b"&gt;&lt;/blip&gt;
             &lt;blip id="b+c"&gt;&lt;/blip&gt;
         &lt;/thread&gt;
@@ -1011,8 +1010,7 @@ In-line Replies</h3>
 &lt;contributor name="fred@acmewave.com"&gt;
 &lt;body&gt;
     &lt;line&gt;&lt;/line&gt;There is a theory which states that if ever anybody
-    &lt;line&gt;&lt;/line&gt;discovers exactly what the Universe is for and why it
-    &lt;reply id='b+b'&gt;&lt;/reply&gt;
+    &lt;line&gt;&lt;/line&gt;discovers exactly what&lt;reply id='aF8j_s'&gt;&lt;/reply&gt; the Universe is for and why it
     &lt;line&gt;&lt;/line&gt;is here, it will instantly disappear and be replaced by
     &lt;line&gt;&lt;/line&gt;something even more bizarre and inexplicable. There is another
     &lt;line&gt;&lt;/line&gt;theory which states that this has already happened.
@@ -1120,11 +1118,12 @@ Display</h3>
                     experience.  
 </p>
 <p> A conversation should be displayed as a single unit and
-                    may reference more than one wavelet. A wavelet is considered to be in a
-                    conversation view if it references another wavelet in the conversation via an
-                    anchorWavelet property, and if the user has permission to access that wavelet.
-                    Note that this means different users may have different conversation views of
-                    the same set of wavelets.  
+                    may reference more than one wavelet. A wavelet is
+                    considered to be in a conversation view if it has a wavelet
+                    id in the "conv" namespace and the user has permission to
+                    access the wavelet. Wavelets other than the root in a
+                    conversation view should reference another via an
+                    anchorWavelet attribute.  
 </p>
 <p> Blips are displayed in the order that they
                     appear in the conversation manifest, going from top to bottom. Blip documents
