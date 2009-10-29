@@ -47,14 +47,15 @@ interface RemoteWaveletContainer extends WaveletContainer {
    * @param appliedDeltas the list of deltas for the update.
    * @param domain the listener domain where these deltas were receievd
    * @param federationProvider the provider where missing data may be sourced
+   * @param certificateManager for verifying signatures and requesting signer info
    * @param updateCallback for asynchronous notification when deltas are ready
    *        to be processed, providing a transformed version of the applied
    *        delta and the hashed version after application
    * @throws WaveServerException
    */
   void update(List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas, String domain,
-      WaveletFederationProvider federationProvider, RemoteWaveletDeltaCallback updateCallback)
-      throws WaveServerException;
+      WaveletFederationProvider federationProvider, CertificateManager certificateManager,
+      RemoteWaveletDeltaCallback updateCallback) throws WaveServerException;
 
   /**
    * Indicate that the remote wave server has committed the wavelet to disk.
