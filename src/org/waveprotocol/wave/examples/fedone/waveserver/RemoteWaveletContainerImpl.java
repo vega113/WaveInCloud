@@ -24,9 +24,13 @@ import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.jivesoftware.util.Base64;
+import org.waveprotocol.wave.crypto.SignatureException;
+import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationProvider.HistoryResponseListener;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -35,11 +39,15 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
+import org.waveprotocol.wave.protocol.common.ProtocolSignature;
+import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
+import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NavigableSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Remote wavelets differ from local ones in that deltas are not submitted for OT,
@@ -90,9 +98,74 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
   }
 
   @Override
-  public void update(List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas,
-      final String domain, WaveletFederationProvider federationProvider,
-      final RemoteWaveletDeltaCallback deltaCallback) throws WaveServerException {
+  public void update(final List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas,
+      final String domain, final WaveletFederationProvider federationProvider,
+      final CertificateManager certificateManager, final RemoteWaveletDeltaCallback deltaCallback)
+      throws WaveServerException {
+    LOG.info("Got update: " + appliedDeltas);
+
+    // Fetch any signer info that we don't already have
+    final AtomicInteger numSignerInfoPrefetched = new AtomicInteger(1); // extra 1 for sentinel
+    SignerInfoPrefetchResultListener prefetchListener = new SignerInfoPrefetchResultListener() {
+      @Override
+      public void onFailure(String errorMessage) {
+        LOG.warning("Signer info prefetch failed: " + errorMessage);
+        countDown();
+      }
+
+      @Override
+      public void onSuccess(ProtocolSignerInfo signerInfo) {
+        LOG.info("Signer info prefetch success for " + signerInfo.getDomain());
+        countDown();
+      }
+
+      private void countDown() {
+        if (numSignerInfoPrefetched.decrementAndGet() == 0) {
+          try {
+            internalUpdate(appliedDeltas, domain, federationProvider, certificateManager,
+                deltaCallback);
+          } catch (WaveServerException e) {
+            LOG.warning("Wave server exception when running update", e);
+            deltaCallback.onFailure(e.getMessage());
+          }
+        }
+      }
+    };
+
+    for (ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta : appliedDeltas) {
+      ProtocolSignedDelta toVerify = appliedDelta.getMessage().getSignedOriginalDelta();
+      for (ProtocolSignature sig : toVerify.getSignatureList()) {
+        if (certificateManager.retrieveSignerInfo(sig.getSignerId()) == null) {
+          LOG.info("Fetching signer info " + Base64.encodeBytes(sig.getSignerId().toByteArray()));
+          numSignerInfoPrefetched.incrementAndGet();
+          certificateManager.prefetchDeltaSignerInfo(federationProvider, sig.getSignerId(),
+              waveletName, AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta.getMessage()),
+              prefetchListener);
+        }
+      }
+    }
+
+    // If we didn't fetch any signer info, run internalUpdate immediately
+    if (numSignerInfoPrefetched.decrementAndGet() == 0) {
+      internalUpdate(appliedDeltas, domain, federationProvider, certificateManager, deltaCallback);
+    }
+  }
+
+  /**
+   * Called by {@link #update} when all signer info is guaranteed to be available.
+   *
+   * @param appliedDeltas
+   * @param domain
+   * @param federationProvider
+   * @param certificateManager
+   * @param deltaCallback
+   * @throws WaveServerException
+   */
+  private void internalUpdate(List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas,
+      final String domain, final WaveletFederationProvider federationProvider,
+      final CertificateManager certificateManager, final RemoteWaveletDeltaCallback deltaCallback)
+      throws WaveServerException {
+    LOG.info("Passed signer info check, now applying all " + appliedDeltas.size() + " deltas");
     acquireWriteLock();
     try {
       assertStateOkOrLoading();
@@ -100,6 +173,20 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       ProtocolHashedVersion expectedVersion =
           WaveletOperationSerializer.serialize(currentVersion);
       boolean haveRequestedHistory = false;
+
+      // Verify signatures of all deltas
+      for (ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta : appliedDeltas) {
+        try {
+          certificateManager.verifyDelta(appliedDelta.getMessage().getSignedOriginalDelta());
+        } catch (SignatureException e) {
+          LOG.warning("Verification failure for " + domain + " incoming " + waveletName, e);
+          throw new WaveServerException("Verification failure", e);
+        } catch (UnknownSignerException e) {
+          LOG.severe("Unknown signer for " + domain + " incoming " + waveletName +
+              ", this is BAD! We were supposed to have prefetched it!", e);
+          throw new WaveServerException("Unknown signer", e);
+        }
+      }
 
       // Insert all available deltas into pendingDeltas.
       for (ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta : appliedDeltas) {
@@ -164,10 +251,10 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                       }
                     }
 
-                    // Try updating again with the new set of deltas, with a null federation
-                    // provider since we shouldn't need to reach here again
+                    // Try updating again with the new history
                     try {
-                      update(appliedDeltaList, domain, null, deltaCallback);
+                      update(appliedDeltaList, domain, federationProvider, certificateManager,
+                          deltaCallback);
                     } catch (WaveServerException e) {
                       // TODO: deal with this
                       LOG.severe("Exception when updating from history", e);
@@ -237,7 +324,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         if (LOG.isFineLoggable()) {
           LOG.fine("Returning contiguous block: " + deltaSequence);
         }
-        deltaCallback.ready(deltaSequence);
+        deltaCallback.onSuccess(deltaSequence);
       } else if (!result.isEmpty()) {
         LOG.severe("History requested but non-empty result, non-contiguous deltas?");
       } else {

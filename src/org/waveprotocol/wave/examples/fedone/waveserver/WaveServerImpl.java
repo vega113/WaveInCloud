@@ -117,7 +117,7 @@ public class WaveServerImpl implements WaveServer {
 
       @Override
       public void waveletUpdate(final WaveletName waveletName, List<ByteString> rawAppliedDeltas,
-          ProtocolHashedVersion committedHashedVersion, WaveletUpdateCallback callback) {
+          ProtocolHashedVersion committedHashedVersion, final WaveletUpdateCallback callback) {
         WaveletContainer wavelet = getWavelet(waveletName);
 
         if (wavelet != null && wavelet.getState() == State.CORRUPTED) {
@@ -141,21 +141,6 @@ public class WaveServerImpl implements WaveServer {
           }
         }
 
-        // Verify signatures of the applied deltas
-        for (ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta : appliedDeltas) {
-          try {
-            certificateManager.verifyDelta(appliedDelta.getMessage().getSignedOriginalDelta());
-          } catch (SignatureException e) {
-            LOG.warning("Verification failure for " + domain + " incoming " + waveletName, e);
-            safeMarkWaveletCorrupted(wavelet);
-            callback.onFailure("Verification failure");
-            return;
-          } catch (UnknownSignerException e) {
-            LOG.info("Unknown signer for " + domain + " incoming " + waveletName, e);
-            callback.onFailure("Unknown signer");
-          }
-        }
-
         // Update wavelet container with the applied deltas
         String error = null;
 
@@ -165,9 +150,10 @@ public class WaveServerImpl implements WaveServer {
           // Update this remote wavelet with the immediately incoming delta, providing a callback
           // so that incoming historic deltas (as well as this delta) can be given to the
           // clientListener at a later point
-          remoteWavelet.update(appliedDeltas, domain, federationRemote,
+          remoteWavelet.update(appliedDeltas, domain, federationRemote, certificateManager,
               new RemoteWaveletDeltaCallback() {
-                public void ready(DeltaSequence result) {
+                @Override
+                public void onSuccess(DeltaSequence result) {
                   if (clientListener != null) {
                     Map<String, BufferedDocOp> documentState =
                         getWavelet(waveletName).getWaveletData().getDocuments();
@@ -177,6 +163,12 @@ public class WaveServerImpl implements WaveServer {
                     LOG.warning("Got valid deltaSequence for " + waveletName
                         + ", clientListener is null");
                   }
+                }
+                
+                @Override
+                public void onFailure(String errorMessage) {
+                  LOG.warning("Update failed: e" + errorMessage);
+                  callback.onFailure(errorMessage);
                 }
               });
           if (committedHashedVersion != null && remoteWavelet.committed(committedHashedVersion)) {
@@ -377,7 +369,7 @@ public class WaveServerImpl implements WaveServer {
   @Override
   public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
       SubmitResultListener listner) {
-    // The serilalised version of this delta happens now.  This should be the only place, ever!
+    // The serialised version of this delta happens now.  This should be the only place, ever!
     ProtocolSignedDelta signedDelta = certificateManager.signDelta(
         ByteStringMessage.fromMessage(delta));
     submitDelta(waveletName, signedDelta, listner);
@@ -518,63 +510,6 @@ public class WaveServerImpl implements WaveServer {
   }
 
   /**
-   * Post a list of certificates to a domain and run a callback when all are finished.  The
-   * callback will run whether or not all posts succeed.
-   *
-   * @param sigs list of signatures
-   * @param domain to post signature to
-   * @param callback to run when all signatures have been posted, successfully or unsuccessfully
-   */
-  private void postSignerInfoAsync(final List<ProtocolSignature> sigs, final String domain,
-      final PostSignerInfoCallback callback) {
-
-    // In the current implementation there should only be a single signer
-    LOG.info("Broadcasting " + sigs.size() + " signatures");
-    if (sigs.size() != 1) {
-      LOG.warning("Number of signatures != 1");
-    }
-
-    final AtomicInteger resultCount = new AtomicInteger(sigs.size());
-    final AtomicInteger successCount = new AtomicInteger(0);
-
-    for (final ProtocolSignature sig : sigs) {
-      final ProtocolSignerInfo psi = certificateManager.retrieveSignerInfo(sig.getSignerId());
-
-      if (psi == null) {
-        LOG.warning("Couldn't find signer info for " + sig);
-        if (resultCount.decrementAndGet() == 0) {
-          LOG.info("Finished signature broadcast with " + successCount.get()
-              + " successful, running callback");
-          callback.done(successCount.get());
-        }
-      } else {
-        federationRemote.postSignerInfo(domain, psi, new PostSignerInfoResponseListener() {
-          @Override
-          public void onFailure(String errorMessage) {
-            LOG.warning("Failed to post " + sig + " to " + domain + ": " + errorMessage);
-            anotherPostDone();
-          }
-
-          @Override
-          public void onSuccess() {
-            LOG.info("Successfully broadcasted " + sig + " to " + domain);
-            successCount.incrementAndGet();
-            anotherPostDone();
-          }
-
-          private void anotherPostDone() {
-            if (resultCount.decrementAndGet() == 0) {
-              LOG.info("Finished signature broadcast with " + successCount.get()
-                  + " successful, running callback");
-              callback.done(successCount.get());
-            }
-          }
-        });
-      }
-    }
-  }
-
-  /**
    * Submit the delta to local or remote wavelets, return results via listener.
    * Also broadcast updates to federationHosts and clientFrontend.
    *
@@ -631,25 +566,17 @@ public class WaveServerImpl implements WaveServer {
           }
 
           // Broadcast results to the remote servers, but make sure they all have our signatures
-          // TODO: don't send signatures, add queuing and let the remote request signer info
           for (final String hostDomain : getParticipantDomains(wc)) {
             final WaveletFederationListener host = federationHosts.get(hostDomain);
-            postSignerInfoAsync(delta.getSignatureList(), hostDomain, new PostSignerInfoCallback() {
-              @Override
-              public void done(int successCount) {
-                LOG.info("Local: successfully sent " + successCount + " of "
-                    + delta.getSignatureCount() + " certs to " + waveletName.waveletId.getDomain());
-                host.waveletUpdate(waveletName, ImmutableList.of(appliedDelta.getByteString()),
-                    null, new WaveletFederationListener.WaveletUpdateCallback() {
-                      @Override public void onSuccess() {}
+            host.waveletUpdate(waveletName, ImmutableList.of(appliedDelta.getByteString()),
+                null, new WaveletFederationListener.WaveletUpdateCallback() {
+                  @Override public void onSuccess() {
+                  }
 
-                      @Override public void onFailure(String errorMessage) {
-                        LOG.warning("outgoing waveletUpdate failure: " + errorMessage);
-                        // TODO: add retransmit logic
-                      }
-                    });
-              }
-            });
+                  @Override public void onFailure(String errorMessage) {
+                    LOG.warning("outgoing waveletUpdate failure: " + errorMessage);
+                  }
+                });
           }
         }
       } catch (AccessControlException e) {
@@ -679,7 +606,7 @@ public class WaveServerImpl implements WaveServer {
       }
     } else {
       // For remote wavelets post required signatures to the authorative server then send delta
-      postSignerInfoAsync(delta.getSignatureList(), waveletName.waveletId.getDomain(),
+      postAllSignerInfo(delta.getSignatureList(), waveletName.waveletId.getDomain(),
           new PostSignerInfoCallback() {
             @Override public void done(int successCount) {
               LOG.info("Remote: successfully sent " + successCount + " of "
@@ -687,6 +614,62 @@ public class WaveServerImpl implements WaveServer {
               federationRemote.submitRequest(waveletName, delta, resultListener);
             }
           });
+    }
+  }
+  
+  /**
+   * Post a list of certificates to a domain and run a callback when all are finished.  The
+   * callback will run whether or not all posts succeed.
+   *
+   * @param sigs list of signatures to post signer info for
+   * @param domain to post signature to
+   * @param callback to run when all signatures have been posted, successfully or unsuccessfully
+   */
+  private void postAllSignerInfo(final List<ProtocolSignature> sigs, final String domain,
+      final PostSignerInfoCallback callback) {
+
+    // In the current implementation there should only be a single signer
+    if (sigs.size() != 1) {
+      LOG.warning(sigs.size() + " signatures to broadcast, expecting exactly 1");
+    }
+
+    final AtomicInteger resultCount = new AtomicInteger(sigs.size());
+    final AtomicInteger successCount = new AtomicInteger(0);
+
+    for (final ProtocolSignature sig : sigs) {
+      final ProtocolSignerInfo psi = certificateManager.retrieveSignerInfo(sig.getSignerId());
+
+      if (psi == null) {
+        LOG.warning("Couldn't find signer info for " + sig);
+        if (resultCount.decrementAndGet() == 0) {
+          LOG.info("Finished signature broadcast with " + successCount.get()
+              + " successful, running callback");
+          callback.done(successCount.get());
+        }
+      } else {
+        federationRemote.postSignerInfo(domain, psi, new PostSignerInfoResponseListener() {
+          @Override
+          public void onFailure(String errorMessage) {
+            LOG.warning("Failed to post " + sig + " to " + domain + ": " + errorMessage);
+            countDown();
+          }
+
+          @Override
+          public void onSuccess() {
+            LOG.info("Successfully broadcasted " + sig + " to " + domain);
+            successCount.incrementAndGet();
+            countDown();
+          }
+
+          private void countDown() {
+            if (resultCount.decrementAndGet() == 0) {
+              LOG.info("Finished signature broadcast with " + successCount.get()
+                  + " successful, running callback");
+              callback.done(successCount.get());
+            }
+          }
+        });
+      }
     }
   }
 

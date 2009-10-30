@@ -23,10 +23,16 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
  *
  */
 public interface RemoteWaveletDeltaCallback {
+  
   /**
    * Called when remote wavelet deltas are ready to be processed.
    *
    * @param deltaSequence ready to be processed
    */
-  void ready(DeltaSequence deltaSequence);
+  void onSuccess(DeltaSequence deltaSequence);
+  
+  /**
+   * Called when the remove wavelets failed to process.
+   */
+  void onFailure(String errorMessage);
 }
