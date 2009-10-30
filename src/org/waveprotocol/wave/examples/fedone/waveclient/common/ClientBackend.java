@@ -30,11 +30,15 @@ import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionZeroFactory
 import org.waveprotocol.wave.examples.fedone.rpc.ClientRpcChannel;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.examples.fedone.waveclient.console.ConsoleUtils;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
+import org.waveprotocol.wave.model.document.operation.Attributes;
+import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -217,7 +221,13 @@ public class ClientBackend {
   private ClientWaveView createConversationWave(WaveId newWaveId) {
     ClientWaveView waveView = createWave(newWaveId);
     WaveletData convRoot = waveView.createWavelet(getIdGenerator().newConversationRootWaveletId());
-    sendWaveletOperation(convRoot.getWaveletName(), new AddParticipant(getUserId()));
+    AddParticipant addOp = new AddParticipant(getUserId());
+    WaveletDocumentOperation manifestOp = new WaveletDocumentOperation(
+        ConsoleUtils.CONVERSATION, new DocOpBuilder().elementStart("conversation", Attributes.EMPTY_MAP).elementEnd().build());
+    
+
+    sendWaveletDelta(convRoot.getWaveletName(),  new WaveletDelta(getUserId(), ImmutableList.of(addOp, manifestOp)));
+
     return waveView;
   }
 
@@ -252,7 +262,7 @@ public class ClientBackend {
    * @param waveletName of the wavelet that the delta applies to
    * @param delta to send
    */
-  private void sendWaveletDelta(WaveletName waveletName, WaveletDelta delta) {
+  public void sendWaveletDelta(WaveletName waveletName, WaveletDelta delta) {
     // Build the submit request
     ProtocolSubmitRequest.Builder submitRequest = ProtocolSubmitRequest.newBuilder();
 

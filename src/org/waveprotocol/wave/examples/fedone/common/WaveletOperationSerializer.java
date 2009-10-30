@@ -106,6 +106,7 @@ public class WaveletOperationSerializer {
     return protobufOp.build();
   }
 
+
   /**
    * Serialize a {@link DocOp} as a {@link ProtocolDocumentOperation}.
    *
@@ -269,7 +270,7 @@ public class WaveletOperationSerializer {
       } else if (c.hasDeleteElementEnd()) {
         output.deleteElementEnd();
       } else {
-        throw new IllegalArgumentException("Unsupported operation component: " + c);
+        //throw new IllegalArgumentException("Unsupported operation component: " + c);
       }
     }
 

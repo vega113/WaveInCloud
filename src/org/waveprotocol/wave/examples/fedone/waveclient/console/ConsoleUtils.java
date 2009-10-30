@@ -43,6 +43,24 @@ public class ConsoleUtils {
   /** Tag for identifying the author of a line. */
   public static final String LINE_AUTHOR = "by";
 
+  /** */
+  public static final String CONTRIBUTOR = "contributor";
+
+  /** */
+  public static final String CONTRIBUTOR_NAME = "name";
+
+  /** */
+  public static final String BODY = "body";
+
+  /** */
+  public static final String CONVERSATION = "conversation";
+
+  public static final String BLIP = "blip";
+
+  public static final String BLIP_ID = "id";
+
+  public static final String THREAD = "thread";
+
   /** ANSI code for text with no attributes. */
   public static final int ANSI_NO_ATTRS = 0;
 

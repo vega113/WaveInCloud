@@ -559,7 +559,7 @@ class XmppTestUtil extends TestCase {
 
     @Override
     public void sendPacket(Packet packet, boolean retry,
-                           RpcCallback<Packet> callback) {
+                           RpcCallback<Packet> callback, RpcCallback<Packet> errorCallback) {
       if (callback != null) {
         String key = genCallbackKey(packet, true /* request */);
         requestCallbacks.put(key, callback);

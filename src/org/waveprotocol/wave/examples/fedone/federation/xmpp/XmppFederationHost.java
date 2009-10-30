@@ -183,6 +183,7 @@ public class XmppFederationHost {
     try {
       delta = common.ProtocolSignedDelta.parseFrom(
           Base64.decodeBase64(deltaElement.getText().getBytes()));
+      logger.info("PSD in submitRequest is " + delta);
     } catch (InvalidProtocolBufferException e) {
       // TODO: report a failure to the foreign remote.
       logger.warning("couldn't decode base64 delta: " + deltaElement.getText());
@@ -306,7 +307,7 @@ public class XmppFederationHost {
             .addAttribute("version", String.valueOf(versionTruncatedAt));
       }
       component
-          .sendPacket(response, false /* no retry */, null /*no callback*/);
+          .sendPacket(response, false /* no retry */, null /*no callback*/, null);
     }
   }
 
@@ -347,7 +348,7 @@ public class XmppFederationHost {
           hashedVersionAfterApplication.getVersion()));
 
       component
-          .sendPacket(response, false /* no retry */, null /* no callback */);
+          .sendPacket(response, false /* no retry */, null /* no callback */, null);
     }
 
     @Override
@@ -382,7 +383,7 @@ public class XmppFederationHost {
       Element items = pubsub.addElement("items");
       XmppUtil.protocolSignerInfoToXml(signerInfo, items);
       /* no retry, no callback */
-      component.sendPacket(response, false, null);
+      component.sendPacket(response, false, null, null);
     }
 
 
@@ -412,7 +413,7 @@ public class XmppFederationHost {
       item.addAttribute("node", "signer");
       item.addElement("signature-response",
                       WaveXmppComponent.NAMESPACE_WAVE_SERVER);
-      component.sendPacket(response, false, null);
+      component.sendPacket(response, false, null, null);
     }
 
     public void onFailure(String errorMessage) {

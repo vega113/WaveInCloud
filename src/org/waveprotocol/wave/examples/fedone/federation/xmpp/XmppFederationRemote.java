@@ -127,7 +127,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
                                           }
                                           submitIq.setTo(jid);
                                           component.sendPacket(submitIq, true,
-                                                               onSuccess);
+                                                               onSuccess, null);
                                         }
                                       });
   }
@@ -196,7 +196,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
                                           }
                                           submitIq.setTo(jid);
                                           component.sendPacket(submitIq, true,
-                                                               onSuccess);
+                                                               onSuccess, null);
                                         }
                                       });
 
@@ -248,7 +248,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
                                           getSignerIq.setTo(jid);
                                           component
                                               .sendPacket(getSignerIq, true,
-                                                          onSuccess);
+                                                          onSuccess, null);
                                         }
                                       });
   }
@@ -276,7 +276,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
                                           }
                                           request.setTo(jid);
                                           component.sendPacket(request, true,
-                                                               onSuccess);
+                                                               onSuccess, null);
                                         }
                                       });
   }
@@ -340,7 +340,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
                                        WaveXmppComponent.NAMESPACE_XMPP_RECEIPTS);
               component
                   .sendPacket(response, false /* no retry */, null
-                              /* no callback */);
+                              /* no callback */, null);
             }
           }
         };

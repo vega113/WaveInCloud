@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClientUtils {
   /** The default ("root") document id.  */
   public static final String DEFAULT_DOCUMENT_ID = "default"; // TODO
+  public static final String MANIFEST_DOCUMENT_ID = "conversation";
 
   /**
    * Disallow construction.

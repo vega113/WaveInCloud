@@ -18,6 +18,7 @@ package org.waveprotocol.wave.examples.fedone.federation.xmpp;
 
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.RpcCallback;
 
 import org.apache.commons.codec.binary.Base64;
@@ -148,6 +149,11 @@ class XmppFederationHostForDomain implements WaveletFederationListener {
               .addElement("wavelet-update",
                           WaveXmppComponent.NAMESPACE_WAVE_SERVER)
               .addAttribute("wavelet-name", encodedWaveletName);
+      try {
+        logger.info("Broadcasting Delta: " + common.ProtocolAppliedWaveletDelta.parseFrom(delta));
+      } catch (InvalidProtocolBufferException e) {
+        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+      }
       String encodedDelta =
           new String(Base64.encodeBase64(delta.toByteArray()));
       waveletUpdate.addElement("applied-delta")
@@ -164,6 +170,6 @@ class XmppFederationHostForDomain implements WaveletFederationListener {
           .addAttribute("history-hash",
                         Base64Util.encode(committedVersion.getHistoryHash()));
     }
-    component.sendPacket(message, /* retry */true, /* no callback */null);
+    component.sendPacket(message, /* retry */true, /* no callback */null, null);
   }
 }

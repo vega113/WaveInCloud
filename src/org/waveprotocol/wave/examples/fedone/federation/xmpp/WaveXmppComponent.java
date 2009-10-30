@@ -89,6 +89,12 @@ public class WaveXmppComponent implements Component,
    * Request callbacks to be invoked
    */
   protected final Map<String, RpcCallback<Packet>> requestCallbacks;
+  
+  /*
+   * Error callbacks to be invoked  
+   */
+  private final Map<String, RpcCallback<Packet>> errorCallbacks;
+
   /**
    * Packets that might need a retry.
    */
@@ -159,6 +165,8 @@ public class WaveXmppComponent implements Component,
     this.managerFactory = managerFactory;
 
     requestCallbacks = new HashMap<String, RpcCallback<Packet>>();
+    errorCallbacks = new HashMap<String, RpcCallback<Packet>>();
+
     // TODO: set up some sort of retry thread.
     packetsForRetry = new HashMap<String, Packet>();
     offlineQueuedPackets = new ArrayList<Packet>();
@@ -233,7 +241,7 @@ public class WaveXmppComponent implements Component,
     message.addChildElement("ping", NAMESPACE_WAVE_SERVER);
     message.addChildElement("request", NAMESPACE_XMPP_RECEIPTS);
     logger.info("sending ping message:\n" + message);
-    sendPacket(message, false, null);
+    sendPacket(message, false, null, null);
     serverPingKey = genCallbackKey(message, true);
   }
 
@@ -275,9 +283,10 @@ public class WaveXmppComponent implements Component,
    * @param packet   the packet to send
    * @param retry    boolean flag to indicate retries are requested
    * @param callback a callback to invoke when a response comes in, or null
+   * @param errorCallback TODO
    */
   public void sendPacket(Packet packet, boolean retry,
-                         RpcCallback<Packet> callback) {
+                         RpcCallback<Packet> callback, RpcCallback<Packet> errorCallback) {
     logger.info("sent XMPP packet: " + packet);
     if (retry) {
       packetsForRetry.put(genCallbackKey(packet, true), packet);
@@ -285,6 +294,11 @@ public class WaveXmppComponent implements Component,
     if (callback != null) {
       String key = genCallbackKey(packet, true /* request */);
       requestCallbacks.put(key, callback);
+    }
+    if (errorCallback != null) {
+      String key = genCallbackKey(packet, true /* request */);
+      logger.info("key for this error is " + key);
+      errorCallbacks.put(key, errorCallback);
     }
     if (connected) {
       componentManager.sendPacket(this, packet);
@@ -352,6 +366,18 @@ public class WaveXmppComponent implements Component,
    * @param message the Message object
    */
   void processMessage(Message message) {
+    RpcCallback<Packet> errorCallback = 
+      errorCallbacks.remove(genCallbackKey(message, false));
+    if (message.getType() == Message.Type.error) {
+      if (errorCallback != null) {
+        errorCallback.run(message);
+        return;
+      } else {
+        logger.info("No error callback for this error packet.");
+        return;
+      }
+    }
+    
     if (message.getChildElement("received", NAMESPACE_XMPP_RECEIPTS) != null) {
       processMessageReceipt(message);
     } else if (message.getChildElement("event", NAMESPACE_PUBSUB_EVENT) != null) {
@@ -361,7 +387,7 @@ public class WaveXmppComponent implements Component,
       response.setType(Message.Type.normal);
       copyRequestPacketFields(message, response);
       response.addChildElement("received", NAMESPACE_XMPP_RECEIPTS);
-      sendPacket(response, false, null);
+      sendPacket(response, false, null, null);
     } else {
       logger.info("got unhandled message: " + message);
     }
@@ -373,7 +399,21 @@ public class WaveXmppComponent implements Component,
    * @param iq the IQ object
    */
   private void processIqPacket(IQ iq) {
+    RpcCallback<Packet> errorCallback = 
+      errorCallbacks.remove(genCallbackKey(iq, false));
+    logger.info("key for this error is " + genCallbackKey(iq, false));
+    if (iq.getType() == IQ.Type.error) {
+      if (errorCallback != null) {
+        errorCallback.run(iq);
+        return;
+      } else {
+        logger.info("No error callback for this error packet.");
+        return;
+      }
+    } 
+     
     Element body = iq.getChildElement();
+
     String iqNamespace = body.getQName().getNamespace().getURI();
     logger.fine("type " + iq.getType() + " namespace " + iqNamespace);
     if (iq.getType().equals(IQ.Type.get)) {
@@ -408,11 +448,7 @@ public class WaveXmppComponent implements Component,
         // TODO: fix the error code
         sendErrorResponse("unknown iq packet", iq);
       }
-    } else if (iq.getType().equals(IQ.Type.error)) {
-      if (iqNamespace.equals(NAMESPACE_DISCO_ITEMS)) {
-        disco.processDiscoItemsError(iq);
-      }
-    }
+    } 
   }
 
   /**
