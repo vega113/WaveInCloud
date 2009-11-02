@@ -22,10 +22,13 @@ import com.google.common.collect.Lists;
 import java.security.GeneralSecurityException;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
+import java.security.cert.PKIXCertPathChecker;
 import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -74,12 +77,15 @@ public class CachedCertPathValidator implements WaveCertPathValidator {
     return ImmutableSet.copyOf(anchors);
   }
 
+  private static WaveOidChecker WAVE_OID_CHECKER = new WaveOidChecker();
+
   private void validateNoCache(List<? extends X509Certificate> certs)
       throws SignatureException {
     try {
       CertPathValidator validator = CertPathValidator.getInstance(
           VALIDATOR_TYPE);
       PKIXParameters params = new PKIXParameters(trustRoots);
+      params.addCertPathChecker(WAVE_OID_CHECKER);
       params.setDate(timeSource.now());
 
       // turn off default revocation-checking mechanism
@@ -95,6 +101,37 @@ public class CachedCertPathValidator implements WaveCertPathValidator {
       validator.validate(certPath, params);
     } catch (GeneralSecurityException e) {
       throw new SignatureException("Certificate validation failure", e);
+    }
+  }
+
+  private static class WaveOidChecker extends PKIXCertPathChecker {
+
+    private static final String WAVE_OID = "1.3.6.1.4.1.11129.2.1.1";
+    private static final Set<String> SUPPORTED_EXTENSIONS =
+        ImmutableSet.of(WAVE_OID);
+
+    @Override
+    public void check(Certificate cert, Collection<String> unresolvedCritExts) {
+
+      // we know about the WAVE OID - if it's in the unresolved critical
+      // extensions, that should not cause an error. In fact, in the future
+      // we might _require_ this extension
+      unresolvedCritExts.remove(WAVE_OID);
+    }
+
+    @Override
+    public Set<String> getSupportedExtensions() {
+      return SUPPORTED_EXTENSIONS;
+    }
+
+    @Override
+    public void init(boolean forward) {
+      // nothing to do
+    }
+
+    @Override
+    public boolean isForwardCheckingSupported() {
+      return true;
     }
   }
 }
