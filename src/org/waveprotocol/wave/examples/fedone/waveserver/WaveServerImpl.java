@@ -164,7 +164,7 @@ public class WaveServerImpl implements WaveServer {
                         + ", clientListener is null");
                   }
                 }
-                
+
                 @Override
                 public void onFailure(String errorMessage) {
                   LOG.warning("Update failed: e" + errorMessage);
@@ -552,15 +552,17 @@ public class WaveServerImpl implements WaveServer {
           appliedDelta = submitResult.getAppliedDelta();
 
           // return result to caller.
-          HashedVersion resultingVersion = HashedVersion.getHashedVersionAfter(appliedDelta);
+          ProtocolHashedVersion resultingVersion =
+              serialize(HashedVersion.getHashedVersionAfter(appliedDelta));
           LOG.info("## WS: Submit result: " + waveletName + " appliedDelta: " + appliedDelta);
           resultListener.onSuccess(appliedDelta.getMessage().getOperationsApplied(),
-              serialize(resultingVersion), appliedDelta.getMessage().getApplicationTimestamp());
+              resultingVersion, appliedDelta.getMessage().getApplicationTimestamp());
 
           // Send the results to the client frontend
           if (clientListener != null) {
             Map<String, BufferedDocOp> documentState =
                 getWavelet(waveletName).getWaveletData().getDocuments();
+            LOG.info("Sending update to client listener: " + submitResult.getDelta());
             clientListener.waveletUpdate(waveletName, ImmutableList.of(submitResult.getDelta()),
                 submitResult.getHashedVersionAfterApplication(), documentState);
           }
@@ -569,7 +571,8 @@ public class WaveServerImpl implements WaveServer {
           for (final String hostDomain : getParticipantDomains(wc)) {
             final WaveletFederationListener host = federationHosts.get(hostDomain);
             host.waveletUpdate(waveletName, ImmutableList.of(appliedDelta.getByteString()),
-                null, new WaveletFederationListener.WaveletUpdateCallback() {
+                resultingVersion, // TODO: if persistence is added, don't send commit notice
+                new WaveletFederationListener.WaveletUpdateCallback() {
                   @Override public void onSuccess() {
                   }
 
@@ -616,7 +619,7 @@ public class WaveServerImpl implements WaveServer {
           });
     }
   }
-  
+
   /**
    * Post a list of certificates to a domain and run a callback when all are finished.  The
    * callback will run whether or not all posts succeed.
