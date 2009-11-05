@@ -40,8 +40,7 @@ public interface WaveletFederationListener {
   }
 
   /**
-   * This message is passed when one or more new deltas are applied to a specific wavelet or if the
-   * wavelet is committed to persistent storage.
+   * This message is passed when one or more new deltas are applied to a specific wavelet.
    *
    * @param waveletName name of wavelet.
    * @param deltas UNTRANSFORMED, {@code ByteString} serialised representation of {@code
@@ -49,13 +48,23 @@ public interface WaveletFederationListener {
    *        deltas are NOT TRANSFORMED to the current version of the wavelet. May be empty if
    *        committedVersion is not null, namely when the caller only wants to communicate that the
    *        wavelet was committed.
-   * @param committedVersion if not null, notifies the listener that hosting provider has reliably
+   * @param callback is eventually invoked when the callee has processed the information or failed
+   *        to do so.
+   */
+  void waveletDeltaUpdate(WaveletName waveletName, List<ByteString> deltas,
+      WaveletUpdateCallback callback);
+
+  /**
+   * This message is passed if the wavelet is committed to persistent storage.
+   *
+   * @param waveletName name of wavelet.
+   * @param committedVersion notifies the listener that hosting provider has reliably
    *        committed the wavelet to persistent storage up to the specified version.
    * @param callback is eventually invoked when the callee has processed the information or failed
    *        to do so.
    */
-  void waveletUpdate(WaveletName waveletName, List<ByteString> deltas,
-      ProtocolHashedVersion committedVersion, WaveletUpdateCallback callback);
+  void waveletCommitUpdate(WaveletName waveletName, ProtocolHashedVersion committedVersion,
+      WaveletUpdateCallback callback);
 
   /**
    * Is eventually called by the callee of waveletUpdate().

@@ -16,14 +16,14 @@
 
 package org.waveprotocol.wave.examples.fedone.federation.xmpp;
 
+import static org.easymock.EasyMock.expect;
+import static org.easymock.classextension.EasyMock.createMock;
+import static org.easymock.classextension.EasyMock.replay;
+import static org.easymock.classextension.EasyMock.verify;
 import junit.framework.TestCase;
 
 import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Element;
-import static org.easymock.classextension.EasyMock.createMock;
-import static org.easymock.classextension.EasyMock.expect;
-import static org.easymock.classextension.EasyMock.replay;
-import static org.easymock.classextension.EasyMock.verify;
 import org.waveprotocol.wave.examples.fedone.waveserver.SubmitResultListener;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationListener;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationProvider;
@@ -165,7 +165,6 @@ public class XmppFederationRemoteTest extends TestCase {
     verifyMocks();
     assertEquals(XmppTestUtil.waveletName,
                  mockUpdateListener.savedUpdateWaveletName);
-    mockUpdateListener.savedCallback.onSuccess();
     assertEquals(1, mockComponent.packetsSent);
     assertEquals(EXPECTED_RECEIPT_MESSAGE,
                  mockComponent.lastPacketSent.toString());

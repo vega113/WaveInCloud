@@ -16,6 +16,7 @@
 
 package org.waveprotocol.wave.examples.fedone.federation.xmpp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -281,6 +282,49 @@ public class XmppFederationRemote implements WaveletFederationProvider {
                                       });
   }
 
+  /**
+   * A {@code WaveletFederationListener.WaveletUpdateCallback} latched on callbacks.  The latch is
+   * initialised at 1 as a sentinel, with countUp/countDown incrementing/decrementing the latch
+   * respectively, and running the specified callback when it reaches zero.
+   *
+   * onFailure and onSuccess each call countDown internally, so ensure that countUp is invoked
+   * prior to dispatching the callback every time.
+   */
+  private class LatchedWaveletUpdateCallback implements
+      WaveletFederationListener.WaveletUpdateCallback {
+
+    private final Runnable runWhenFinished;
+    private final AtomicInteger pendingCallbackCount = new AtomicInteger(1);
+
+    private LatchedWaveletUpdateCallback(Runnable whenFinished) {
+      Preconditions.checkArgument(whenFinished != null);
+      this.runWhenFinished = whenFinished;
+    }
+
+    @Override
+    public void onFailure(String errorMessage) {
+      logger.warning("Wavelet update failed: " + errorMessage);
+      // TODO: propagate error over XMPP
+      countDown();
+    }
+
+    @Override
+    public void onSuccess() {
+      countDown();
+    }
+
+    public void countUp() {
+      Preconditions.checkState(pendingCallbackCount.get() > 0);
+      pendingCallbackCount.incrementAndGet();
+    }
+
+    public void countDown() {
+      Preconditions.checkState(pendingCallbackCount.get() > 0);
+      if (pendingCallbackCount.decrementAndGet() == 0) {
+        runWhenFinished.run();
+      }
+    }
+  }
 
   /**
    * Handles a wavelet update message from a foreign Federation Host.
@@ -289,110 +333,92 @@ public class XmppFederationRemote implements WaveletFederationProvider {
    */
   @SuppressWarnings("unchecked")
   public void update(final Message updateMessage) {
-    final Element receiptRequested =
-        updateMessage.getChildElement("request",
-                                      WaveXmppComponent.NAMESPACE_XMPP_RECEIPTS);
+    final Element receiptRequested = updateMessage.getChildElement("request",
+        WaveXmppComponent.NAMESPACE_XMPP_RECEIPTS);
 
     Element event =
-        updateMessage.getChildElement("event",
-                                      WaveXmppComponent.NAMESPACE_PUBSUB_EVENT);
+        updateMessage.getChildElement("event", WaveXmppComponent.NAMESPACE_PUBSUB_EVENT);
     if (event == null) {
       logger.warning("event element missing from message: " + updateMessage);
       // TODO: send back an error message
       return;
     }
+
     Element items = event.element("items");
     if (items == null) {
-      logger.warning(
-          "items element missing from update message: " + updateMessage);
+      logger.warning("items element missing from update message: " + updateMessage);
       // TODO: send back an error message
       return;
     }
-    //noinspection unchecked
+
     List<Element> elements = items.elements("item");
     if (elements.isEmpty()) {
       // TODO: send back error if receiptRequested
       return;
     }
-    final AtomicInteger callbackCount = new AtomicInteger(elements.size());
-    WaveletFederationListener.WaveletUpdateCallback callback =
-        new WaveletFederationListener.WaveletUpdateCallback() {
-          @Override
-          public void onSuccess() {
-            countDown();
-          }
 
+    // Dispatch this callback to both commit and delta updates, invoking countUp each time prior
+    // to doing so.  The XMPP response will be run once every callback (and sentinel) has completed.
+    LatchedWaveletUpdateCallback callback = new LatchedWaveletUpdateCallback(
+        new Runnable() {
           @Override
-          public void onFailure(String errorMessage) {
-            logger.warning(
-                "incoming XMPP waveletUpdate failure: " + errorMessage);
-            // TODO: propagate error to foreign remote in countDown()
-            countDown();
-          }
-
-          private void countDown() {
-            if (callbackCount.decrementAndGet() == 0
-                && receiptRequested != null) {
+          public void run() {
+            if (receiptRequested != null) {
               Message response = new Message();
-              WaveXmppComponent
-                  .copyRequestPacketFields(updateMessage, response);
-              response.addChildElement("received",
-                                       WaveXmppComponent.NAMESPACE_XMPP_RECEIPTS);
-              component
-                  .sendPacket(response, false /* no retry */, null
-                              /* no callback */, null);
+              WaveXmppComponent.copyRequestPacketFields(updateMessage, response);
+              response.addChildElement("received", WaveXmppComponent.NAMESPACE_XMPP_RECEIPTS);
+              component.sendPacket(response, false /* no retry */, null /* no callback */, null);
             }
           }
-        };
+        });
+
     // We must call callback once on every iteration to ensure that we send response
-    // if receiptRequested != null.
     for (Element item : elements) {
       Element waveletUpdate = item.element("wavelet-update");
 
       if (waveletUpdate == null) {
-        callback.onFailure(
-            "wavelet-update element missing from message: " + updateMessage);
+        callback.onFailure("wavelet-update element missing from message: " + updateMessage);
         continue;
       }
+
       WaveletName waveletName;
       try {
-        waveletName =
-            component.convertWaveletName(
-                waveletUpdate.attributeValue("wavelet-name"));
+        waveletName = component.convertWaveletName(waveletUpdate.attributeValue("wavelet-name"));
       } catch (URIEncoderDecoder.EncodingException e) {
         callback.onFailure("couldn't decode wavelet name "
-                           + waveletUpdate.attributeValue("wavelet-name"));
+            + waveletUpdate.attributeValue("wavelet-name"));
         continue;
       }
+
       WaveletFederationListener listener =
-          updatesListenerFactory
-              .listenerForDomain(waveletName.waveletId.getDomain());
+          updatesListenerFactory.listenerForDomain(waveletName.waveletId.getDomain());
 
       List<ByteString> deltas = Lists.newArrayList();
       common.ProtocolHashedVersion commitNotice = null;
 
-      // Submit all applied deltas to the domain-focused listener.
-      //noinspection unchecked
-      for (Element appliedDeltaElement :
-          (List<Element>) waveletUpdate.elements("applied-delta")) {
+      // Submit all applied deltas to the domain-focused listener
+      for (Element appliedDeltaElement : (List<Element>) waveletUpdate.elements("applied-delta")) {
         String deltaBody = appliedDeltaElement.getText();
         deltas.add(ByteString.copyFrom(Base64.decodeBase64(deltaBody.getBytes())));
       }
 
-      // Optionally submit any received last committed notice.
-      Element commitNoticeElement = waveletUpdate.element("commit-notice");
-      if (commitNoticeElement != null) {
-        commitNotice =
-            common.ProtocolHashedVersion.newBuilder()
-                .setHistoryHash(Base64Util.decode(
-                    commitNoticeElement.attributeValue("history-hash")))
-                .setVersion(Long.parseLong(
-                    commitNoticeElement.attributeValue("version")))
-                .build();
+      if (!deltas.isEmpty()) {
+        callback.countUp();
+        listener.waveletDeltaUpdate(waveletName, deltas, callback);
       }
 
-      listener.waveletUpdate(waveletName, deltas, commitNotice, callback);
+      // Optionally submit any received last committed notice
+      Element commitNoticeElement = waveletUpdate.element("commit-notice");
+      if (commitNoticeElement != null) {
+        commitNotice = common.ProtocolHashedVersion.newBuilder()
+            .setHistoryHash(Base64Util.decode(commitNoticeElement.attributeValue("history-hash")))
+            .setVersion(Long.parseLong(commitNoticeElement.attributeValue("version"))).build();
+        callback.countUp();
+        listener.waveletCommitUpdate(waveletName, commitNotice, callback);
+      }
     }
+
+    callback.countDown();
   }
 
   /**

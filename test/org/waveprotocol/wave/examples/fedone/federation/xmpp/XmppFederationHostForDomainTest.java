@@ -206,14 +206,12 @@ public class XmppFederationHostForDomainTest extends TestCase {
 
   private void commit() throws Exception {
     // TODO: null callback OK?
-    fedHost.waveletUpdate(XmppTestUtil.waveletName, NO_DELTAS, hashedVersion,
-                          null);
+    fedHost.waveletCommitUpdate(XmppTestUtil.waveletName, hashedVersion, null);
   }
 
   private void update() throws Exception {
     // TODO: null callback OK?
-    fedHost.waveletUpdate(
-        XmppTestUtil.waveletName, Lists.newArrayList(appliedDelta), null, null);
+    fedHost.waveletDeltaUpdate(XmppTestUtil.waveletName, Lists.newArrayList(appliedDelta), null);
   }
 
   /**

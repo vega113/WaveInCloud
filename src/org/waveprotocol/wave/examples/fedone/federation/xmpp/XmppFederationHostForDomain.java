@@ -16,6 +16,7 @@
 
 package org.waveprotocol.wave.examples.fedone.federation.xmpp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -27,6 +28,7 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationListene
 import org.waveprotocol.wave.model.id.URIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.protocol.common;
+import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.xmpp.packet.Message;
 
 import java.util.ArrayList;
@@ -99,6 +101,18 @@ class XmppFederationHostForDomain implements WaveletFederationListener {
     }
   }
 
+  @Override
+  public void waveletDeltaUpdate(WaveletName waveletName, List<ByteString> deltas,
+      WaveletUpdateCallback callback) {
+    waveletUpdate(waveletName, deltas, null, callback);
+  }
+
+  @Override
+  public void waveletCommitUpdate(WaveletName waveletName, ProtocolHashedVersion committedVersion,
+      WaveletUpdateCallback callback) {
+    waveletUpdate(waveletName, ImmutableList.<ByteString>of(), committedVersion, callback);
+  }
+
   /**
    * Sends a wavelet update message on behalf of the wave server.
    *
@@ -108,7 +122,7 @@ class XmppFederationHostForDomain implements WaveletFederationListener {
    * @param callback         the callback to invoke upon confirmed message
    *                         delivery or failure
    */
-  public void waveletUpdate(final WaveletName waveletName,
+  private void waveletUpdate(final WaveletName waveletName,
                             final List<ByteString> deltaList,
                             final common.ProtocolHashedVersion committedVersion,
                             final WaveletUpdateCallback callback) {

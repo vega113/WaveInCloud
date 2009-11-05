@@ -28,6 +28,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.internal.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -116,8 +117,9 @@ public class WaveServerImpl implements WaveServer {
     return new WaveletFederationListener() {
 
       @Override
-      public void waveletUpdate(final WaveletName waveletName, List<ByteString> rawAppliedDeltas,
-          ProtocolHashedVersion committedHashedVersion, final WaveletUpdateCallback callback) {
+      public void waveletDeltaUpdate(final WaveletName waveletName,
+          List<ByteString> rawAppliedDeltas, final WaveletUpdateCallback callback) {
+        Preconditions.checkArgument(!rawAppliedDeltas.isEmpty());
         WaveletContainer wavelet = getWavelet(waveletName);
 
         if (wavelet != null && wavelet.getState() == State.CORRUPTED) {
@@ -171,13 +173,6 @@ public class WaveServerImpl implements WaveServer {
                   callback.onFailure(errorMessage);
                 }
               });
-          if (committedHashedVersion != null && remoteWavelet.committed(committedHashedVersion)) {
-            if (clientListener != null) {
-              clientListener.waveletCommitted(waveletName, committedHashedVersion);
-            } else {
-              LOG.warning("Client listener is null");
-            }
-          }
           // TODO: when we support federated groups, forward to federationHosts too.
         } catch(WaveletStateException e) {
           // HACK(jochen): TODO: fix the case of the missing history! ###
@@ -196,6 +191,20 @@ public class WaveServerImpl implements WaveServer {
           LOG.warning("incoming waveletUpdate: bad update, " + error);
           callback.onFailure(error);
         }
+      }
+
+      @Override
+      public void waveletCommitUpdate(WaveletName waveletName,
+          ProtocolHashedVersion committedVersion, WaveletUpdateCallback callback) {
+        Preconditions.checkNotNull(committedVersion);
+        if (clientListener != null) {
+          clientListener.waveletCommitted(waveletName, committedVersion);
+        } else {
+          LOG.warning("Client listener is null");
+        }
+        // Pretend we've committed it, there is no persistence
+        LOG.fine("Responding with success to wavelet commit on " + waveletName);
+        callback.onSuccess();
       }
     };
   }
@@ -569,16 +578,30 @@ public class WaveServerImpl implements WaveServer {
           // Broadcast results to the remote servers, but make sure they all have our signatures
           for (final String hostDomain : getParticipantDomains(wc)) {
             final WaveletFederationListener host = federationHosts.get(hostDomain);
-            host.waveletUpdate(waveletName, ImmutableList.of(appliedDelta.getByteString()),
-                resultingVersion, // TODO: if persistence is added, don't send commit notice
+            host.waveletDeltaUpdate(waveletName, ImmutableList.of(appliedDelta.getByteString()),
                 new WaveletFederationListener.WaveletUpdateCallback() {
-                  @Override public void onSuccess() {
+                  @Override
+                  public void onSuccess() {
                   }
 
-                  @Override public void onFailure(String errorMessage) {
-                    LOG.warning("outgoing waveletUpdate failure: " + errorMessage);
+                  @Override
+                  public void onFailure(String errorMessage) {
+                    LOG.warning("outgoing waveletDeltaUpdate failure: " + errorMessage);
                   }
                 });
+
+            // TODO: if persistence is added, don't send commit notice
+            host.waveletCommitUpdate(waveletName, resultingVersion,
+                new WaveletFederationListener.WaveletUpdateCallback() {
+                  @Override
+                  public void onSuccess() {
+                  }
+
+                  @Override
+                  public void onFailure(String errorMessage) {
+                    LOG.warning("outgoing waveletCommitUpdate failure: " + errorMessage);
+                  }
+            });
           }
         }
       } catch (AccessControlException e) {

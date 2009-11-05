@@ -197,9 +197,8 @@ public class XmppRoundTripTest extends TestCase {
    * the federation remote and back.
    */
   public void testWaveletUpdate() {
-    fedHostForDomain.waveletUpdate(XmppTestUtil.waveletName,
+    fedHostForDomain.waveletDeltaUpdate(XmppTestUtil.waveletName,
                                    Lists.newArrayList(appliedDelta),
-                                   null,
                                    null);  // TODO: OK to not null callback?
     mockDisco.discoComplete();
     assertEquals(1, mockComponent.packetsSent);

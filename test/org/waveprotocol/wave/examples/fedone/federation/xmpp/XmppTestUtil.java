@@ -16,6 +16,7 @@
 
 package org.waveprotocol.wave.examples.fedone.federation.xmpp;
 
+import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.RpcCallback;
@@ -520,17 +521,26 @@ class XmppTestUtil extends TestCase {
     public WaveletUpdateCallback savedCallback = null;
 
     @Override
-    public void waveletUpdate(WaveletName waveletName,
-                              List<ByteString> deltas,
-                              common.ProtocolHashedVersion version,
-                              WaveletUpdateCallback callback) {
+    public void waveletDeltaUpdate(WaveletName waveletName, List<ByteString> deltas,
+        WaveletUpdateCallback callback) {
+      Preconditions.checkState(savedUpdateWaveletName == null);
+      Preconditions.checkState(savedCallback == null);
       savedUpdateWaveletName = waveletName;
-      savedDeltas = deltas;
-      savedVersion = version;
       savedCallback = callback;
+      savedDeltas = deltas;
       callback.onSuccess();
     }
 
+    @Override
+    public void waveletCommitUpdate(WaveletName waveletName, common.ProtocolHashedVersion version,
+        WaveletUpdateCallback callback) {
+      Preconditions.checkState(savedUpdateWaveletName == null);
+      Preconditions.checkState(savedCallback == null);
+      savedUpdateWaveletName = waveletName;
+      savedCallback = callback;
+      savedVersion = version;
+      callback.onSuccess();
+    }
   }
 
   /**
