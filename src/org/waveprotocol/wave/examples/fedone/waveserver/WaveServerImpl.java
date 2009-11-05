@@ -247,7 +247,6 @@ public class WaveServerImpl implements WaveServer {
     } catch (SignatureException e) {
       LOG.warning("Submit request: Delta failed verification. WaveletName: " + waveletName +
           " delta: " + signedDelta, e);
-      safeMarkWaveletCorrupted(getWavelet(waveletName));
       listener.onFailure("Remote verification failed");
     } catch (UnknownSignerException e) {
       LOG.warning("Submit request: unknown signer.  WaveletName: " + waveletName +
