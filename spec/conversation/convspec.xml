@@ -171,7 +171,7 @@ for now --> <?rfc private=" "?>
             <figure>
                 <preamble>Blip document example</preamble>
                 <artwork><![CDATA[
-<contributor name="dadams@acmewave.com"> 
+<contributor name="dadams@acmewave.com"></contributor>
 <body> 
 	<line></line>There is a theory which states that if ever anybody
 	<line></line>discovers exactly what the Universe is for and why it
@@ -630,7 +630,7 @@ for now --> <?rfc private=" "?>
                         There is a blip with an id of "b+a": 
                     </preamble> 
                     <artwork><![CDATA[
-<contributor name="fred@acmewave.com"> 
+<contributor name="fred@acmewave.com"></contributor>
 <body> 
     <line></line>There is a theory which states that if ever anybody
     <line></line>discovers exactly what the Universe is for and why it
@@ -645,7 +645,7 @@ for now --> <?rfc private=" "?>
                         A reply blip with an id of "b+b": 
                     </preamble> 
                     <artwork><![CDATA[
-<contributor name="barney@acmewave.com"> 
+<contributor name="barney@acmewave.com"></contributor>  
 <body> 
     <line></line>Isn't that a quote from Douglas Adams? 
 </body> 
@@ -656,7 +656,7 @@ for now --> <?rfc private=" "?>
                         And a reply blip with an id of "b+c": 
                     </preamble> 
                     <artwork><![CDATA[
-<contributor name="fred@acmewave.com"> 
+<contributor name="fred@acmewave.com"></contributor>   
 <body> 
     <line></line>Yes it is. 
 </body> 
@@ -693,7 +693,7 @@ for now --> <?rfc private=" "?>
                         There is a blip with an id of "b+a": 
                     </preamble> 
                     <artwork><![CDATA[
-<contributor name="fred@acmewave.com"> 
+<contributor name="fred@acmewave.com"></contributor>   
 <body> 
     <line></line>There is a theory which states that if ever anybody
     <line></line>discovers exactly what<reply id='aF8j_s'></reply> the Universe is for and why it
@@ -711,7 +711,7 @@ for now --> <?rfc private=" "?>
                         A reply blip with an id of "b+b": 
                     </preamble> 
                     <artwork><![CDATA[
-<contributor name="barney@acmewave.com"> 
+<contributor name="barney@acmewave.com"></contributor>   
 <body> 
     <line></line>Isn't that a quote from Douglas Adams? 
 </body> 
@@ -722,7 +722,7 @@ for now --> <?rfc private=" "?>
                         And a reply blip with an id of "b+c": 
                     </preamble> 
                     <artwork><![CDATA[
-<contributor name="fred@acmewave.com"> 
+<contributor name="fred@acmewave.com"></contributor>   
 <body> 
     <line></line>Yes it is. 
 </body> 
@@ -756,7 +756,7 @@ for now --> <?rfc private=" "?>
                             There is a blip with an id of "b+a": 
                         </preamble> 
                         <artwork><![CDATA[
-<contributor name="fred@acmewave.com"> 
+<contributor name="fred@acmewave.com"></contributor>   
 <body> 
     <line></line>There is a theory which states that if ever anybody
     <line></line>discovers exactly what the Universe is for and why it
@@ -789,7 +789,7 @@ for now --> <?rfc private=" "?>
                         The reply blips are in the 'wave+b' wavelet. There is the reply blip with an id of "b+b": 
                     </preamble> 
                     <artwork><![CDATA[
-<contributor name="barney@acmewave.com"> 
+<contributor name="barney@acmewave.com"></contributor>   
 <body> 
     <line></line>Isn't that a quote from Douglas Adams? 
 </body> 
@@ -800,7 +800,7 @@ for now --> <?rfc private=" "?>
                         And a reply blip with an id of "b+c":
                     </preamble> 
                     <artwork><![CDATA[
-<contributor name="fred@acmewave.com"> 
+<contributor name="fred@acmewave.com"></contributor>   
 <body> 
     <line></line>Yes it is. 
 </body> 
