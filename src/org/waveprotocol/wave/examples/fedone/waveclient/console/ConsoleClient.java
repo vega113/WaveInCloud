@@ -25,6 +25,7 @@ import jline.ANSIBuffer;
 import jline.Completor;
 import jline.ConsoleReader;
 
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.util.RandomBase64Generator;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
@@ -897,6 +898,10 @@ public class ConsoleClient implements WaveletOperationListener {
   @Override
   public void onDeltaSequenceEnd(WaveletData wavelet) {
     render();
+  }
+  
+  @Override
+  public void onCommitNotice(WaveletData wavelet, HashedVersion version) {
   }
 
   public static void main(String[] args) {

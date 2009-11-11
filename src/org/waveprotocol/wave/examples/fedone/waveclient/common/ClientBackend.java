@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.common;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -300,7 +301,6 @@ public class ClientBackend {
    */
   public void receiveWaveletUpdate(ProtocolWaveletUpdate waveletUpdate) {
     LOG.info("Received update " + waveletUpdate);
-    List<ProtocolWaveletDelta> protobufDeltas = waveletUpdate.getAppliedDeltaList();
 
     WaveletName waveletName;
     try {
@@ -320,52 +320,65 @@ public class ClientBackend {
       wavelet = wave.createWavelet(waveletName.waveletId);
     }
 
-    for (WaveletOperationListener listener : waveletOperationListeners) {
-      listener.onDeltaSequenceStart(wavelet);
-    }
+    if (waveletUpdate.hasCommitNotice()) {
+      Preconditions.checkArgument(waveletUpdate.getAppliedDeltaList().isEmpty());
+      Preconditions.checkArgument(!waveletUpdate.hasResultingVersion());
+      
+      for (WaveletOperationListener listener : waveletOperationListeners) {
+        listener.onCommitNotice(wavelet, WaveletOperationSerializer
+                .deserialize(waveletUpdate.getCommitNotice()));
+      }
+    } else {
+      Preconditions.checkArgument(waveletUpdate.hasResultingVersion());
+      Preconditions.checkArgument(!waveletUpdate.getAppliedDeltaList().isEmpty());
 
-    // Apply operations to the wavelet
-    List<Pair<String, WaveletOperation>> successfulOps = Lists.newArrayList();
-
-    for (ProtocolWaveletDelta protobufDelta : protobufDeltas) {
-      Pair<WaveletDelta, HashedVersion> deltaAndVersion =
-        WaveletOperationSerializer.deserialize(protobufDelta);
-      List<WaveletOperation> ops = deltaAndVersion.first.getOperations();
-
-      for (WaveletOperation op : ops) {
-        try {
-          op.apply(wavelet);
-          successfulOps.add(Pair.of(protobufDelta.getAuthor(), op));
-        } catch (OperationException e) {
-          // It should be okay (if cheeky) for the client to just ignore failed ops.  In any case,
-          // this should never happen if our server is behaving correctly.
-          LOG.severe("OperationException when applying " + op + " to " + wavelet);
+      for (WaveletOperationListener listener : waveletOperationListeners) {
+        listener.onDeltaSequenceStart(wavelet);
+      }
+  
+      // Apply operations to the wavelet
+      List<Pair<String, WaveletOperation>> successfulOps = Lists.newArrayList();
+  
+      for (ProtocolWaveletDelta protobufDelta : waveletUpdate.getAppliedDeltaList()) {
+        Pair<WaveletDelta, HashedVersion> deltaAndVersion =
+          WaveletOperationSerializer.deserialize(protobufDelta);
+        List<WaveletOperation> ops = deltaAndVersion.first.getOperations();
+  
+        for (WaveletOperation op : ops) {
+          try {
+            op.apply(wavelet);
+            successfulOps.add(Pair.of(protobufDelta.getAuthor(), op));
+          } catch (OperationException e) {
+            // It should be okay (if cheeky) for the client to just ignore failed ops.  In any case,
+            // this should never happen if our server is behaving correctly.
+            LOG.severe("OperationException when applying " + op + " to " + wavelet);
+          }
         }
       }
-    }
-
-    wave.setWaveletVersion(waveletName.waveletId, WaveletOperationSerializer
-        .deserialize(waveletUpdate.getResultingVersion()));
-
-    // Notify listeners separately to avoid them operating on invalid wavelet state
-    // TODO: take this out of the network thread
-    for (Pair<String, WaveletOperation> authorAndOp : successfulOps) {
-      notifyWaveletOperationListeners(authorAndOp.first, wavelet, authorAndOp.second);
-    }
-
-    // If we have been removed from this wavelet then remove the data too, since if we're re-added
-    // then the deltas will come from version 0, not the latest version we've seen
-    if (!wavelet.getParticipants().contains(getUserId())) {
-      wave.removeWavelet(waveletName.waveletId);
-    }
-
-    // If it was an update to the index wave, might need to open/close some more waves
-    if (wave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
-      syncWithIndexWave(wave);
-    }
-
-    for (WaveletOperationListener listener : waveletOperationListeners) {
-      listener.onDeltaSequenceEnd(wavelet);
+  
+  	  wave.setWaveletVersion(waveletName.waveletId, WaveletOperationSerializer
+  	      .deserialize(waveletUpdate.getResultingVersion()));
+  
+      // Notify listeners separately to avoid them operating on invalid wavelet state
+      // TODO: take this out of the network thread
+      for (Pair<String, WaveletOperation> authorAndOp : successfulOps) {
+        notifyWaveletOperationListeners(authorAndOp.first, wavelet, authorAndOp.second);
+      }
+  
+      // If we have been removed from this wavelet then remove the data too, since if we're re-added
+      // then the deltas will come from version 0, not the latest version we've seen
+      if (!wavelet.getParticipants().contains(getUserId())) {
+        wave.removeWavelet(waveletName.waveletId);
+      }
+  
+      // If it was an update to the index wave, might need to open/close some more waves
+      if (wave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
+        syncWithIndexWave(wave);
+      }
+  
+      for (WaveletOperationListener listener : waveletOperationListeners) {
+        listener.onDeltaSequenceEnd(wavelet);
+      }
     }
   }
 

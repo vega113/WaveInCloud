@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.common;
 
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -74,4 +75,12 @@ public interface WaveletOperationListener {
    * do any rendering for wavelet changes in this method.
    */
   public void onDeltaSequenceEnd(WaveletData wavelet);
+  
+  /**
+   * Invoked when a commit notice is received.
+   * 
+   * @param wavelet the wavelet that was committed
+   * @param version the latest version the server has committed to disk.
+   */
+  public void onCommitNotice(WaveletData wavelet, HashedVersion version);
 }

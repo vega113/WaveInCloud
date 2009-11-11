@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
@@ -78,6 +79,9 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
 
   @Override
   public void onDeltaSequenceStart(WaveletData wavelet) {}
+
+  @Override
+  public void onCommitNotice(WaveletData wavelet, HashedVersion version) {}
 
   @Override
   public void onDocumentChanged(WaveletData wavelet, WaveletDocumentOperation documentOperation) {
