@@ -9,7 +9,7 @@ else
   echo "You need to copy run-config.sh.example to run-config.sh and configure" ; exit 1
 fi
 
-java -jar dist/fedone-server-$FEDONE_VERSION.jar \
+exec java -jar dist/fedone-server-$FEDONE_VERSION.jar \
   --client_frontend_hostname=$WAVE_SERVER_HOSTNAME \
   --client_frontend_port=$WAVE_SERVER_PORT \
   --xmpp_component_name=wave \
