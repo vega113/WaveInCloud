@@ -1,9 +1,11 @@
 syntax: glob
-*.cert
-*.key
-*.orig
-TEST-*.xml
+*\.cert
+*\.key
+*\.orig
+TEST-*\.xml
 bin
 build
 dist
-run-config.sh
+run-config\.sh
+\.classpath
+\.project
