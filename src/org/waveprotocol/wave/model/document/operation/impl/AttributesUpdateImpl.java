@@ -21,6 +21,8 @@ import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.util.ImmutableUpdateMap;
 import org.waveprotocol.wave.model.util.Pair;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -58,6 +60,14 @@ public class AttributesUpdateImpl
   public static AttributesUpdateImpl fromSortedUpdatesUnchecked(
       List<AttributeUpdate> sortedUpdates) {
     return new AttributesUpdateImpl(sortedUpdates);
+  }
+
+  public static AttributesUpdateImpl fromUnsortedUpdates(
+      List<AttributeUpdate> unsortedAttributes) {
+    List<AttributeUpdate> sorted = new ArrayList<AttributeUpdate>(unsortedAttributes);
+    Collections.sort(sorted, comparator);
+    // Use the checked variant here to check for duplicates.
+    return fromSortedUpdates(sorted);
   }
 
 }

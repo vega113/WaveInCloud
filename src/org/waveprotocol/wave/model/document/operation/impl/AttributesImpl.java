@@ -21,6 +21,8 @@ import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.util.ImmutableStateMap;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +58,13 @@ public class AttributesImpl
 
   public static AttributesImpl fromSortedAttributesUnchecked(List<Attribute> sortedAttributes) {
     return new AttributesImpl(sortedAttributes);
+  }
+
+  public static AttributesImpl fromUnsortedAttributes(List<Attribute> unsortedAttributes) {
+    List<Attribute> sorted = new ArrayList<Attribute>(unsortedAttributes);
+    Collections.sort(sorted, comparator);
+    // Use the checked variant here to check for duplicates.
+    return fromSortedAttributes(sorted);
   }
 
 }

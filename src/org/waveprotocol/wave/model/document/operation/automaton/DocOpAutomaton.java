@@ -72,6 +72,17 @@ import java.util.Set;
 public final class DocOpAutomaton {
 
   /**
+   * Set this to true when debugging the random generator.
+   */
+  // Perhaps we should merge each checkXXX() and doXXX() method pair
+  // into one XXX method that does the check but then unconditionally
+  // performs the transition (or destroys the automaton if the step
+  // was ill-formed) and returns the check result.  This would make
+  // the random generator less efficient (because it would have to
+  // clone all the time), but simplify all other uses.
+  private static final boolean EXPENSIVE_ASSERTIONS = false;
+
+  /**
    * The overall result of validating an operation.
    */
   public enum ValidationResult {
@@ -117,7 +128,7 @@ public final class DocOpAutomaton {
     }
     /** @see #INVALID_SCHEMA */
     public boolean isInvalidSchema() {
-      return this == INVALID_DOCUMENT;
+      return this == INVALID_SCHEMA;
     }
     /** @see #VALID */
     public boolean isValid() {
@@ -954,7 +965,9 @@ public final class DocOpAutomaton {
   }
 
   public void doRetain(int itemCount) {
-    assert checkRetain(itemCount, null) != ValidationResult.ILL_FORMED;
+    if (EXPENSIVE_ASSERTIONS) {
+      assert checkRetain(itemCount, null) != ValidationResult.ILL_FORMED;
+    }
     advance(itemCount);
     updateDeletionTargetAnnotations();
     resultingPos += itemCount;
@@ -1016,7 +1029,9 @@ public final class DocOpAutomaton {
   }
 
   public void doAnnotationBoundary(AnnotationBoundaryMap map) {
-    assert !checkAnnotationBoundary(map, null).isIllFormed();
+    if (EXPENSIVE_ASSERTIONS) {
+      assert !checkAnnotationBoundary(map, null).isIllFormed();
+    }
     annotationsUpdate = annotationsUpdate.composeWith(map);
     afterAnnotationBoundary = true;
   }
@@ -1110,7 +1125,9 @@ public final class DocOpAutomaton {
   }
 
   public void doCharacters(String characters) {
-    assert checkCharacters(characters, null) != ValidationResult.ILL_FORMED;
+    if (EXPENSIVE_ASSERTIONS) {
+      assert checkCharacters(characters, null) != ValidationResult.ILL_FORMED;
+    }
     updateDeletionTargetAnnotations();
     resultingPos += characters.length();
     afterAnnotationBoundary = false;
@@ -1252,7 +1269,9 @@ public final class DocOpAutomaton {
   }
 
   public void doElementStart(String type, Attributes attr) {
-    assert !checkElementStart(type, attr, null).isIllFormed();
+    if (EXPENSIVE_ASSERTIONS) {
+      assert !checkElementStart(type, attr, null).isIllFormed();
+    }
     updateDeletionTargetAnnotations();
     insertionStackPush(InsertStart.getInstance(type));
     nextRequiredElement = requiredFirstChild(type);
@@ -1278,7 +1297,9 @@ public final class DocOpAutomaton {
   }
 
   public void doElementEnd() {
-    assert !checkElementEnd(null).isIllFormed();
+    if (EXPENSIVE_ASSERTIONS) {
+      assert !checkElementEnd(null).isIllFormed();
+    }
     updateDeletionTargetAnnotations();
     insertionStackPop();
     resultingPos += 1;
@@ -1317,7 +1338,9 @@ public final class DocOpAutomaton {
   }
 
   public void doDeleteCharacters(String chars) {
-    assert !checkDeleteCharacters(chars, null).isIllFormed();
+    if (EXPENSIVE_ASSERTIONS) {
+      assert !checkDeleteCharacters(chars, null).isIllFormed();
+    }
     advance(chars.length());
     afterAnnotationBoundary = false;
   }
@@ -1358,7 +1381,9 @@ public final class DocOpAutomaton {
   }
 
   public void doDeleteElementStart(String tag, Attributes attr) {
-    assert !checkDeleteElementStart(tag, attr, null).isIllFormed();
+    if (EXPENSIVE_ASSERTIONS) {
+      assert !checkDeleteElementStart(tag, attr, null).isIllFormed();
+    }
     deletionStackPush();
     advance(1);
     resultingPos += 1;
@@ -1380,7 +1405,9 @@ public final class DocOpAutomaton {
   }
 
   public void doDeleteElementEnd() {
-    assert checkDeleteElementEnd(null) != ValidationResult.ILL_FORMED;
+    if (EXPENSIVE_ASSERTIONS) {
+      assert checkDeleteElementEnd(null) != ValidationResult.ILL_FORMED;
+    }
     deletionStackPop();
     advance(1);
     resultingPos += 1;
@@ -1426,7 +1453,9 @@ public final class DocOpAutomaton {
   }
 
   public void doUpdateAttributes(AttributesUpdate u) {
-    assert !checkUpdateAttributes(u, null).isIllFormed();
+    if (EXPENSIVE_ASSERTIONS) {
+      assert !checkUpdateAttributes(u, null).isIllFormed();
+    }
     advance(1);
     updateDeletionTargetAnnotations();
     resultingPos += 1;
@@ -1468,7 +1497,9 @@ public final class DocOpAutomaton {
   }
 
   public void doReplaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-    assert !checkReplaceAttributes(oldAttrs, newAttrs, null).isIllFormed();
+    if (EXPENSIVE_ASSERTIONS) {
+      assert !checkReplaceAttributes(oldAttrs, newAttrs, null).isIllFormed();
+    }
     advance(1);
     updateDeletionTargetAnnotations();
     resultingPos += 1;

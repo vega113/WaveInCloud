@@ -26,6 +26,7 @@ import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.operation.OperationException;
 
 import java.util.ArrayList;
@@ -790,13 +791,19 @@ public final class Composer {
 
   private Composer() {}
 
-  private BufferedDocOp composeOperations(BufferedDocOp op1, BufferedDocOp op2) {
+  private BufferedDocOp composeOperations(BufferedDocOp op1, BufferedDocOp op2) 
+      throws OperationException {
     target = defaultTarget;
     int op1Index = 0;
     int op2Index = 0;
     while (op1Index < op1.size()) {
       op1.applyComponent(op1Index++, target);
       while (target.isPostTarget()) {
+        if (op2Index >= op2.size()) {
+          throw new OperationException("Document size mismatch: "
+              + "op1 resulting length=" + DocOpUtil.resultingDocumentLength(op1)
+              + ", op2 initial length=" + DocOpUtil.initialDocumentLength(op2));
+        }
         op2.applyComponent(op2Index++, target);
       }
     }

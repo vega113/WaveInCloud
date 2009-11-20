@@ -139,7 +139,7 @@ public abstract class ImmutableStateMap<T extends ImmutableStateMap<T, U>, U ext
     attributes = Collections.emptyList();
   }
 
-  private static final Comparator<Attribute> comparator = new Comparator<Attribute>() {
+  protected static final Comparator<Attribute> comparator = new Comparator<Attribute>() {
     @Override
     public int compare(Attribute a, Attribute b) {
       return a.name.compareTo(b.name);

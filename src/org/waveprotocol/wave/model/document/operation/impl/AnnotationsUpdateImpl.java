@@ -18,10 +18,7 @@
 package org.waveprotocol.wave.model.document.operation.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.util.ImmutableUpdateMap;
@@ -44,22 +41,78 @@ public class AnnotationsUpdateImpl
     return new AnnotationsUpdateImpl(updates);
   }
 
+  /**
+   * A string that is larger (according to compareTo) than any valid annotation key.
+   */
+  private static final String MAX_STRING = "\uFFFF";
+
   @Override
   public AnnotationsUpdateImpl composeWith(AnnotationBoundaryMap map) {
-    Map<String, AttributeUpdate> newUpdates = new HashMap<String, AttributeUpdate>(updates.size());
-    for (AttributeUpdate u : updates) {
-      newUpdates.put(u.name, u);
+    List<AttributeUpdate> newUpdates = new ArrayList<AttributeUpdate>();
+    int existingIndex = 0;
+    int changeIndex = 0;
+    int endIndex = 0;
+    while (existingIndex < updates.size()
+        || changeIndex < map.changeSize()
+        || endIndex < map.endSize()) {
+      String existingKey = existingIndex < updates.size() ? updates.get(existingIndex).name
+          : MAX_STRING;
+      String changeKey = changeIndex < map.changeSize() ? map.getChangeKey(changeIndex)
+          : MAX_STRING;
+      String endKey = endIndex < map.endSize() ? map.getEndKey(endIndex) : MAX_STRING;
+      // cases:
+      // existingKey < endKey && existingKey < changeKey: keep, advance existing
+      // existingKey < endKey && existingKey = changeKey: replace, advance existing & change
+      // existingKey < endKey && existingKey > changeKey: add change, advance change
+      // existingKey = endKey && existingKey < changeKey: remove, advance existing & end
+      // existingKey = endKey && existingKey = changeKey: error (key in both change and end)
+      // existingKey = endKey && existingKey > changeKey: remove, add change, advance all 3
+      // existingKey > endKey: error (attempt to end key that is not part of the update)
+      int existingVsEnd = existingKey.compareTo(endKey);
+      int existingVsChange = existingKey.compareTo(changeKey);
+      if (existingVsEnd < 0) {
+        if (existingVsChange < 0) {
+          newUpdates.add(updates.get(existingIndex));
+          existingIndex++;
+        } else if (existingVsChange == 0) {
+          newUpdates.add(new AttributeUpdate(changeKey,
+              map.getOldValue(changeIndex),
+              map.getNewValue(changeIndex)));
+          existingIndex++;
+          changeIndex++;
+        } else if (existingVsChange > 0) {
+          newUpdates.add(new AttributeUpdate(changeKey,
+              map.getOldValue(changeIndex),
+              map.getNewValue(changeIndex)));
+          changeIndex++;
+        } else {
+          assert false;
+        }
+      } else if (existingVsEnd == 0) {
+        if (existingVsChange < 0) {
+          existingIndex++;
+          endIndex++;
+        } else if (existingVsChange == 0) {
+          Preconditions.illegalArgument("AnnotationBoundaryMap with key both in change and end: "
+              + changeKey);
+        } else if (existingVsChange > 0) {
+          newUpdates.add(new AttributeUpdate(changeKey,
+              map.getOldValue(changeIndex),
+              map.getNewValue(changeIndex)));
+          existingIndex++;
+          endIndex++;
+          changeIndex++;
+        } else {
+          assert false;
+        }
+      } else if (existingVsEnd > 0) {
+        Preconditions.illegalArgument("Attempt to end key that is not part of the update: "
+            + endKey);
+      } else {
+        assert false;
+      }
     }
-    for (int i = 0; i < map.changeSize(); i++) {
-      String key = map.getChangeKey(i);
-      newUpdates.put(key, new AttributeUpdate(key, map.getOldValue(i), map.getNewValue(i)));
-    }
-    for (int i = 0; i < map.endSize(); i++) {
-      newUpdates.remove(map.getEndKey(i));
-    }
-    List<AttributeUpdate> l = new ArrayList<AttributeUpdate>(newUpdates.values());
-    Collections.sort(l, comparator);
-    return createFromList(l);
+    return createFromList(newUpdates);
   }
 
   public boolean containsKey(String key) {
