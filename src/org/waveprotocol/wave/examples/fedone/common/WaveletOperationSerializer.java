@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.common;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
@@ -27,7 +28,9 @@ import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
+import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
+import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
@@ -167,15 +170,74 @@ public class WaveletOperationSerializer {
       }
 
       @Override public void replaceAttributes(Attributes oldAttributes, Attributes newAttributes) {
-        throw new IllegalArgumentException();
+        ProtocolDocumentOperation.Component.ReplaceAttributes.Builder r =
+          ProtocolDocumentOperation.Component.ReplaceAttributes.newBuilder();
+        
+        if (oldAttributes.isEmpty() && newAttributes.isEmpty()) {
+          r.setEmpty(true);
+        } else {
+          for (String name : oldAttributes.keySet()) {
+            r.addOldAttribute(ProtocolDocumentOperation.Component.KeyValuePair.newBuilder()
+                .setKey(name).setValue(oldAttributes.get(name)).build());
+          }
+  
+          for (String name : newAttributes.keySet()) {
+            r.addNewAttribute(ProtocolDocumentOperation.Component.KeyValuePair.newBuilder()
+                .setKey(name).setValue(newAttributes.get(name)).build());
+          }
+        }
+        
+        output.addComponent(newComponentBuilder().setReplaceAttributes(r.build()).build());
       }
-
+      
       @Override public void updateAttributes(AttributesUpdate attributes) {
-        throw new IllegalArgumentException();
+        ProtocolDocumentOperation.Component.UpdateAttributes.Builder u =
+          ProtocolDocumentOperation.Component.UpdateAttributes.newBuilder();
+        
+        if (attributes.changeSize() == 0) {
+          u.setEmpty(true);
+        } else {
+          for (int i = 0; i < attributes.changeSize(); i++) {
+            u.addAttributeUpdate(makeKeyValueUpdate(
+                attributes.getChangeKey(i), attributes.getOldValue(i), attributes.getNewValue(i)));
+          }
+        }
+
+        output.addComponent(newComponentBuilder().setUpdateAttributes(u.build()).build());
       }
 
       @Override public void annotationBoundary(AnnotationBoundaryMap map) {
-        throw new IllegalArgumentException();
+        ProtocolDocumentOperation.Component.AnnotationBoundary.Builder a =
+          ProtocolDocumentOperation.Component.AnnotationBoundary.newBuilder();
+        
+        if (map.endSize() == 0 && map.changeSize() == 0) {
+          a.setEmpty(true);
+        } else {
+          for (int i = 0; i < map.endSize(); i++) {
+            a.addEnd(map.getEndKey(i));
+          }
+          for (int i = 0; i < map.changeSize(); i++) {
+            a.addChange(makeKeyValueUpdate(
+                map.getChangeKey(i), map.getOldValue(i), map.getNewValue(i)));
+          }
+        }
+
+        output.addComponent(newComponentBuilder().setAnnotationBoundary(a.build()).build());
+      }
+
+      private ProtocolDocumentOperation.Component.KeyValueUpdate makeKeyValueUpdate(
+          String key, String oldValue, String newValue) {
+        ProtocolDocumentOperation.Component.KeyValueUpdate.Builder kvu =
+          ProtocolDocumentOperation.Component.KeyValueUpdate.newBuilder();
+        kvu.setKey(key);
+        if (oldValue != null) {
+          kvu.setOldValue(oldValue);
+        }
+        if (newValue != null) {
+          kvu.setNewValue(newValue);
+        }
+        
+        return kvu.build();
       }
     });
 
@@ -244,7 +306,28 @@ public class WaveletOperationSerializer {
     DocOpBuilder output = new DocOpBuilder();
 
     for (ProtocolDocumentOperation.Component c : op.getComponentList()) {
-      if (c.hasCharacters()) {
+      if (c.hasAnnotationBoundary()) {
+        if (c.getAnnotationBoundary().getEmpty()) {
+          output.annotationBoundary(AnnotationBoundaryMapImpl.EMPTY_MAP);
+        } else {
+          String[] ends = new String[c.getAnnotationBoundary().getEndCount()];
+          String[] changeKeys = new String[c.getAnnotationBoundary().getChangeCount()];
+          String[] oldValues = new String[c.getAnnotationBoundary().getChangeCount()];
+          String[] newValues = new String[c.getAnnotationBoundary().getChangeCount()];
+          if (c.getAnnotationBoundary().getEndCount() > 0) {
+            c.getAnnotationBoundary().getEndList().toArray(ends);
+          }
+          for (int i = 0; i < changeKeys.length; i++) {
+            ProtocolDocumentOperation.Component.KeyValueUpdate kvu =
+              c.getAnnotationBoundary().getChange(i);
+            changeKeys[i] = kvu.getKey();
+            oldValues[i] = kvu.hasOldValue() ? kvu.getOldValue() : null;
+            newValues[i] = kvu.hasNewValue() ? kvu.getNewValue() : null;
+          }
+          output.annotationBoundary(
+              new AnnotationBoundaryMapImpl(ends, changeKeys, oldValues, newValues));
+        }
+      } else if (c.hasCharacters()) {
         output.characters(c.getCharacters());
       } else if (c.hasElementStart()) {
         Map<String, String> attributesMap = Maps.newHashMap();
@@ -269,6 +352,37 @@ public class WaveletOperationSerializer {
             new AttributesImpl(attributesMap));
       } else if (c.hasDeleteElementEnd()) {
         output.deleteElementEnd();
+      } else if (c.hasReplaceAttributes()) {
+        if (c.getReplaceAttributes().getEmpty()) {
+          output.replaceAttributes(AttributesImpl.EMPTY_MAP, AttributesImpl.EMPTY_MAP);
+        } else {
+          Map<String, String> oldAttributesMap = Maps.newHashMap();
+          Map<String, String> newAttributesMap = Maps.newHashMap();
+          for (ProtocolDocumentOperation.Component.KeyValuePair pair :
+              c.getReplaceAttributes().getOldAttributeList()) {
+            oldAttributesMap.put(pair.getKey(), pair.getValue());
+          }
+          for (ProtocolDocumentOperation.Component.KeyValuePair pair :
+              c.getReplaceAttributes().getNewAttributeList()) {
+            newAttributesMap.put(pair.getKey(), pair.getValue());
+          }
+          output.replaceAttributes(new AttributesImpl(oldAttributesMap),
+              new AttributesImpl(newAttributesMap));
+        }
+      } else if (c.hasUpdateAttributes()) {
+        if (c.getUpdateAttributes().getEmpty()) {
+          output.updateAttributes(AttributesUpdateImpl.EMPTY_MAP);
+        } else {
+          String[] triplets = new String[c.getUpdateAttributes().getAttributeUpdateCount()*3];
+          for (int i = 0, j = 0; i < c.getUpdateAttributes().getAttributeUpdateCount(); i++) {
+            ProtocolDocumentOperation.Component.KeyValueUpdate kvu =
+              c.getUpdateAttributes().getAttributeUpdate(i);
+            triplets[j++] = kvu.getKey();
+            triplets[j++] = kvu.hasOldValue() ? kvu.getOldValue() : null;
+            triplets[j++] = kvu.hasNewValue() ? kvu.getNewValue() : null;
+          }
+          output.updateAttributes(new AttributesUpdateImpl(triplets));
+        }
       } else {
         //throw new IllegalArgumentException("Unsupported operation component: " + c);
       }

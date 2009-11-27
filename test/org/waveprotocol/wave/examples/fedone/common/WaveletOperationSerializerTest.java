@@ -22,8 +22,12 @@ import com.google.common.collect.ImmutableMap;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
+import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
+import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
+import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
+import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.OpComparators;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
@@ -217,5 +221,84 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.deleteElementEnd();
 
     assertReversible(new WaveletDocumentOperation("deleteCharactersAndElements", m.build()));
+  }
+  
+  public void testAnnotationBoundary() {
+    DocOpBuilder m = new DocOpBuilder();
+
+    Attributes a = new AttributesImpl(ImmutableMap.of("a1", "1", "a2", "2"));
+    AnnotationBoundaryMap mapA = new AnnotationBoundaryMapImpl(
+        new String[]{},new String[]{"a"},new String[]{null},new String[]{"b"});
+    AnnotationBoundaryMap mapB = new AnnotationBoundaryMapImpl(
+        new String[]{},new String[]{"a"},new String[]{"b"},new String[]{null});
+    AnnotationBoundaryMap mapC = new AnnotationBoundaryMapImpl(
+        new String[]{"a"},new String[]{},new String[]{},new String[]{});
+    m.elementStart("a", a);
+    m.annotationBoundary(mapA);
+    m.characters("test");
+    m.annotationBoundary(mapB);
+    m.characters("text");
+    m.annotationBoundary(mapC);
+    m.elementEnd();
+
+    assertReversible(new WaveletDocumentOperation("annotationBoundary", m.build()));
+  }
+  
+  public void testEmptyAnnotationBoundary() {
+    DocOpBuilder m = new DocOpBuilder();
+
+    Attributes a = new AttributesImpl(ImmutableMap.of("a1", "1", "a2", "2"));
+    m.elementStart("a", a);
+    m.annotationBoundary(AnnotationBoundaryMapImpl.EMPTY_MAP);
+    m.characters("text");
+    m.annotationBoundary(AnnotationBoundaryMapImpl.EMPTY_MAP);
+    m.elementEnd();
+
+    assertReversible(new WaveletDocumentOperation("emptyAnnotationBoundary", m.build()));
+  }
+  
+  public void testReplaceAttributes() {
+    DocOpBuilder m = new DocOpBuilder();
+
+    Attributes oldA = new AttributesImpl(ImmutableMap.of("a1", "1", "a2", "2"));
+    Attributes newA = new AttributesImpl(ImmutableMap.of("a1", "3", "a2", "4"));
+
+    m.retain(4);
+    m.replaceAttributes(oldA, newA);
+    m.retain(4);
+
+    assertReversible(new WaveletDocumentOperation("replaceAttributes", m.build()));
+  }
+  
+  public void testEmptyReplaceAttributes() {
+    DocOpBuilder m = new DocOpBuilder();
+
+    m.retain(4);
+    m.replaceAttributes(AttributesImpl.EMPTY_MAP, AttributesImpl.EMPTY_MAP);
+    m.retain(4);
+
+    assertReversible(new WaveletDocumentOperation("emptyReplaceAttributes", m.build()));
+  }
+  
+  public void testUpdateAttributes() {
+    DocOpBuilder m = new DocOpBuilder();
+
+    AttributesUpdate u = new AttributesUpdateImpl(new String[]{"a", null, "2", "b", "1", null});
+    
+    m.retain(4);
+    m.updateAttributes(u);
+    m.retain(4);
+    
+    assertReversible(new WaveletDocumentOperation("updateAttributes", m.build()));
+  }
+  
+  public void testEmptyUpdateAttributes() {
+    DocOpBuilder m = new DocOpBuilder();
+
+    m.retain(4);
+    m.updateAttributes(AttributesUpdateImpl.EMPTY_MAP);
+    m.retain(4);
+    
+    assertReversible(new WaveletDocumentOperation("emptyUpdateAttributes", m.build()));
   }
 }
