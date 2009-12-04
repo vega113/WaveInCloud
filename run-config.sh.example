@@ -29,7 +29,12 @@ FEDONE_VERSION=`grep ^fedone.version= build.properties | cut -f2 -d=`
 # These will probably need to be changed
 XMPP_SERVER_SECRET=opensesame
 PRIVATE_KEY_FILENAME=${WAVE_SERVER_DOMAIN_NAME}.key
-CERTIFICATE_FILENAME_LIST=${WAVE_SERVER_DOMAIN_NAME}.cert
+
+# The order of certificates is important. Place intermediate certs
+# after "${WAVE_SERVER_DOMAIN_NAME}.crt". Please refer to 
+# http://code.google.com/p/wave-protocol/wiki/Certificates
+# for more details.
+CERTIFICATE_FILENAME_LIST=${WAVE_SERVER_DOMAIN_NAME}.crt
 
 # These should be okay to leave alone
 CERTIFICATE_DOMAIN_NAME=$WAVE_SERVER_DOMAIN_NAME
