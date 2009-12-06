@@ -17,10 +17,12 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 
 /**
@@ -51,4 +53,14 @@ interface LocalWaveletContainer extends WaveletContainer {
   public DeltaApplicationResult submitRequest(WaveletName waveletName, ProtocolSignedDelta delta)
       throws OperationException, WaveletStateException, InvalidProtocolBufferException,
       InvalidHashException, EmptyDeltaException;
+
+  /**
+   * Check whether a submitted delta (identified by its hashed version after application) was
+   * signed by a given signer. This (by design) should additionally validate that the history hash
+   * is valid for the delta.
+   *
+   * @param hashedVersion to check whether in the history of the delta
+   * @param signerId of the signer
+   */
+  boolean isDeltaSigner(ProtocolHashedVersion hashedVersion, ByteString signerId);
 }

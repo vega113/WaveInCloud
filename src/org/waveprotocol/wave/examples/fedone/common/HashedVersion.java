@@ -121,7 +121,7 @@ public final class HashedVersion {
   public int hashCode() {
     int result = 17;
     result = 31 * result + Long.valueOf(version).hashCode();
-    result = 31 * result + historyHash.hashCode();
+    result = 31 * result + Arrays.hashCode(historyHash);
     return result;
   }
 

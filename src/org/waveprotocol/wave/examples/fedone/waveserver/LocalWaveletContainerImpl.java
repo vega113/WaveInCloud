@@ -17,6 +17,11 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
@@ -27,6 +32,8 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
+import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
+import org.waveprotocol.wave.protocol.common.ProtocolSignature;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
@@ -39,6 +46,13 @@ import java.util.List;
  */
 class LocalWaveletContainerImpl extends WaveletContainerImpl
     implements LocalWaveletContainer {
+
+  /**
+   * Associates a delta (represented by the hashed version of the wavelet state after its
+   * application) with its signers (represented by their signer id)
+   */
+  private final Multimap<ProtocolHashedVersion, ByteString> deltaSigners =
+      ArrayListMultimap.create();
 
   public LocalWaveletContainerImpl(WaveletName waveletName) {
     super(waveletName);
@@ -111,7 +125,20 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = ByteStringMessage.fromMessage(
         appliedDeltaBuilder.build());
 
-    return commitAppliedDelta(appliedDelta,
+    DeltaApplicationResult applicationResult = commitAppliedDelta(appliedDelta,
         new WaveletDelta(deltaAndVersion.first.getAuthor(), transformedOps));
+
+    // Associate this hashed version with its signers.
+    for (ProtocolSignature signature : signedDelta.getSignatureList()) {
+      deltaSigners.put(serialize(HashedVersion.getHashedVersionAfter(appliedDelta)),
+          signature.getSignerId());
+    }
+
+    return applicationResult;
+  }
+
+  @Override
+  public boolean isDeltaSigner(ProtocolHashedVersion version, ByteString signerId) {
+    return deltaSigners.get(version).contains(signerId);
   }
 }

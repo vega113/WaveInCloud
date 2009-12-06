@@ -58,9 +58,16 @@ public class WaveletContainerTest extends TestCase {
       new ParticipantId("foo@" + domain), new ParticipantId("bar@example.com"));
   private static final HashedVersion version0 =
       new HashedVersionZeroFactoryImpl().createVersionZero(waveletName);
-  private static final ProtocolSignature fakeSignature = ProtocolSignature.newBuilder()
+  private static final ByteString fakeSigner1 = ByteString.EMPTY;
+  private static final ByteString fakeSigner2 = ByteString.copyFrom(new byte[] {1});
+  private static final ProtocolSignature fakeSignature1 = ProtocolSignature.newBuilder()
       .setSignatureBytes(ByteString.EMPTY)
-      .setSignerId(ByteString.EMPTY)
+      .setSignerId(fakeSigner1)
+      .setSignatureAlgorithm(ProtocolSignature.SignatureAlgorithm.SHA1_RSA)
+      .build();
+  private static final ProtocolSignature fakeSignature2 = ProtocolSignature.newBuilder()
+      .setSignatureBytes(ByteString.copyFrom(new byte[] {1}))
+      .setSignerId(fakeSigner2)
       .setSignatureAlgorithm(ProtocolSignature.SignatureAlgorithm.SHA1_RSA)
       .build();
 
@@ -122,24 +129,35 @@ public class WaveletContainerTest extends TestCase {
 
   public void testSuccessfulLocalRequest() throws Exception {
     ProtocolSignedDelta addDelta = ProtocolSignedDelta.newBuilder()
-        .addSignature(fakeSignature)
+        .addSignature(fakeSignature1)
         .setDelta(addParticipantDelta.toByteString())
         .build();
     localWavelet.submitRequest(waveletName, addDelta);
     assertEquals(localWavelet.getCurrentVersion().getVersion(), 2);
+    assertTrue(localWavelet.isDeltaSigner(
+        serialize(localWavelet.getCurrentVersion()),fakeSigner1));
+    assertFalse(localWavelet.isDeltaSigner(
+        serialize(localWavelet.getCurrentVersion()), fakeSigner2));
 
+    HashedVersion oldVersion = localWavelet.getCurrentVersion();
     ProtocolSignedDelta removeDelta = ProtocolSignedDelta.newBuilder()
-        .addSignature(fakeSignature)
+        .addSignature(fakeSignature2)
         .setDelta(ProtocolWaveletDelta.newBuilder(removeParticipantDelta).setHashedVersion(
             serialize(localWavelet.getCurrentVersion())).build().toByteString())
         .build();
     localWavelet.submitRequest(waveletName, removeDelta);
     assertEquals(localWavelet.getCurrentVersion().getVersion(), 4);
+    assertTrue(localWavelet.isDeltaSigner(serialize(oldVersion), fakeSigner1));
+    assertFalse(localWavelet.isDeltaSigner(serialize(oldVersion), fakeSigner2));
+    assertTrue(localWavelet.isDeltaSigner(
+        serialize(localWavelet.getCurrentVersion()), fakeSigner2));
+    assertFalse(localWavelet.isDeltaSigner(
+        serialize(localWavelet.getCurrentVersion()), fakeSigner1));
   }
 
   public void testFailedLocalWaveletRequest() throws Exception {
     ProtocolSignedDelta removeDelta = ProtocolSignedDelta.newBuilder()
-        .addSignature(fakeSignature)
+        .addSignature(fakeSignature1)
         .setDelta(removeParticipantDelta.toByteString())
         .build();
     try {
@@ -151,14 +169,14 @@ public class WaveletContainerTest extends TestCase {
     assertEquals(localWavelet.getCurrentVersion(), version0);
 
     ProtocolSignedDelta addDelta = ProtocolSignedDelta.newBuilder()
-        .addSignature(fakeSignature)
+        .addSignature(fakeSignature1)
         .setDelta(addParticipantDelta.toByteString())
         .build();
 
     localWavelet.submitRequest(waveletName, addDelta);
     try {
       ProtocolSignedDelta addAgainDelta = ProtocolSignedDelta.newBuilder()
-          .addSignature(fakeSignature)
+          .addSignature(fakeSignature2)
           .setDelta(ProtocolWaveletDelta.newBuilder(addParticipantDelta)
               .setHashedVersion(serialize(localWavelet.getCurrentVersion()))
               .build().toByteString())
@@ -169,10 +187,14 @@ public class WaveletContainerTest extends TestCase {
       // Correct
     }
     assertEquals(localWavelet.getCurrentVersion().getVersion(), 2);
+    assertTrue(localWavelet.isDeltaSigner(
+        serialize(localWavelet.getCurrentVersion()), fakeSigner1));
+    assertFalse(localWavelet.isDeltaSigner(
+        serialize(localWavelet.getCurrentVersion()), fakeSigner2));
 
     HashedVersion oldVersion = localWavelet.getCurrentVersion();
     ProtocolSignedDelta rollbackDelta = ProtocolSignedDelta.newBuilder()
-        .addSignature(fakeSignature)
+        .addSignature(fakeSignature1)
         .setDelta(ProtocolWaveletDelta.newBuilder(doubleRemoveParticipantDelta)
             .setHashedVersion(serialize(localWavelet.getCurrentVersion()))
             .build().toByteString())
@@ -188,7 +210,7 @@ public class WaveletContainerTest extends TestCase {
 
   public void testLocalEmptyDelta() throws Exception {
     ProtocolSignedDelta emptyDelta = ProtocolSignedDelta.newBuilder()
-        .addSignature(fakeSignature)
+        .addSignature(fakeSignature1)
         .setDelta(ProtocolWaveletDelta.newBuilder()
             .setAuthor(author.toString())
             .setHashedVersion(serialize(version0))

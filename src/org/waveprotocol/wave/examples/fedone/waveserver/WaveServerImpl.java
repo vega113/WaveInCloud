@@ -315,18 +315,31 @@ public class WaveServerImpl implements WaveServer {
   public void getDeltaSignerInfo(ByteString signerId,
       WaveletName waveletName, ProtocolHashedVersion deltaEndVersion,
       DeltaSignerInfoResponseListener listener) {
-    // TODO: retrieve the delta and check that the signer id is in one of its signature,
-    //       otherwise call onFailure() to complain
-    ProtocolSignerInfo info = certificateManager.retrieveSignerInfo(signerId);
-    if (info == null) {
-      // This is bad: we breach our obligation to store the signer
-      // info (certificate chain) of all signed deltas that we host.
-      String error = "cannot find signer info for signed delta (breach of contract!)";
-      LOG.severe("incoming getDeltaSignerInfo: " + error);
-      listener.onFailure(error);
-      return;
+    WaveletContainer wavelet = getWavelet(waveletName);
+
+    if (wavelet == null) {
+      LOG.info("getDeltaSignerInfo for nonexistent wavelet " + waveletName);
+      listener.onFailure("Wavelet does not exist");
+    } else if (!(wavelet instanceof LocalWaveletContainer)) {
+      LOG.info("getDeltaSignerInfo for remote wavelet " + waveletName);
+      listener.onFailure("Wavelet is not locally hosted");
+    } else {
+      LocalWaveletContainer localWavelet = (LocalWaveletContainer) wavelet;
+      if (localWavelet.isDeltaSigner(deltaEndVersion, signerId)) {
+        ProtocolSignerInfo signerInfo = certificateManager.retrieveSignerInfo(signerId);
+        if (signerInfo == null) {
+          // Oh no!  We are supposed to store it, and we already know they did sign this delta.
+          LOG.severe("No stored signer info for valid getDeltaSignerInfo on " + waveletName);
+          listener.onFailure("Unknown signer info");
+        } else {
+          listener.onSuccess(signerInfo);
+        }
+      } else {
+        LOG.info("getDeltaSignerInfo was not authrorised for wavelet " + waveletName
+            + ", end version " + deltaEndVersion);
+        listener.onFailure("Not authorised to get signer info");
+      }
     }
-    listener.onSuccess(info);
   }
 
   @Override
