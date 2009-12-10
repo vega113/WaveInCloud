@@ -12,3 +12,6 @@ convspec.html: convspec.xml
 # dialog window if DISPLAY is set.  We just want the message on
 # stderr, so we run it without DISPLAY.
 	DISPLAY= xml2rfc $< $@
+
+convspec.xml: convspec.rst
+	python ../rst2rfc.py convspec.rst > convspec.xml
