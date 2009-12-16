@@ -33,14 +33,9 @@ import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexEntry;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.fedone.waveclient.console.ScrollableWaveView.RenderMode;
-import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
-import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
-import org.waveprotocol.wave.model.document.operation.DocOpComponentType;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
-import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -52,11 +47,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -139,8 +132,8 @@ public class ConsoleClient implements WaveletOperationListener {
       new Command("add", "user@domain", "add a user to a wave"),
       new Command("remove", "user@domain", "remove a user from a wave"),
       new Command("read", "", "set all waves as read"),
-      new Command("undo", "[user@domain]",
-                  "undo last line by a user, defaulting to current user"),
+//      new Command("undo", "[user@domain]",
+//                  "undo last line by a user, defaulting to current user"),
       new Command("scroll", "lines",
                   "set the number of lines to scroll by with { and }"),
       new Command("view", "mode",
@@ -323,14 +316,14 @@ public class ConsoleClient implements WaveletOperationListener {
       }
     } else if (cmd.equals("read")) {
       readAllWaves();
-    } else if (cmd.equals("undo")) {
-      if (args.size() == 1) {
-        undo(args.get(0));
-      } else if (backend != null) {
-        undo(backend.getUserId().getAddress());
-      } else {
-        errorNotConnected();
-      }
+//    } else if (cmd.equals("undo")) {
+//      if (args.size() == 1) {
+//        undo(args.get(0));
+//      } else if (backend != null) {
+//        undo(backend.getUserId().getAddress());
+//      } else {
+//        errorNotConnected();
+//      }
     } else if (cmd.equals("scroll")) {
       if (args.size() == 1) {
         setScrollLines(args.get(0));
@@ -663,78 +656,78 @@ public class ConsoleClient implements WaveletOperationListener {
     }
   }
 
-  /**
-   * Undo last line (line elements and text) sent by a user.
-   *
-   * @param userId of user
-   */
-  private void undo(String userId) {
-    if (isWaveOpen()) {
-      if (getOpenWavelet().getParticipants()
-          .contains(new ParticipantId(userId))) {
-        undoLastLineBy(userId);
-      } else {
-        out.println("Error: " + userId + " is not a participant of this wave");
-      }
-    } else {
-      errorNoWaveOpen();
-    }
-  }
+//  /**
+//   * Undo last line (line elements and text) sent by a user.
+//   *
+//   * @param userId of user
+//   */
+//  private void undo(String userId) {
+//    if (isWaveOpen()) {
+//      if (getOpenWavelet().getParticipants()
+//          .contains(new ParticipantId(userId))) {
+//        undoLastLineBy(userId);
+//      } else {
+//        out.println("Error: " + userId + " is not a participant of this wave");
+//      }
+//    } else {
+//      errorNoWaveOpen();
+//    }
+//  }
 
-  /**
-   * Do the real work for undo.
-   *
-   * @param userId of user
-   */
-  private void undoLastLineBy(final String userId) {
-    if (getOpenDocument() == null) {
-      out.println("Error: document is empty");
-      return;
-    }
-
-    // Find the last line written by the participant given by userId (by counting the number of
-    // <line></line> elements, and comparing to their authors).
-    final AtomicInteger totalLines = new AtomicInteger(0);
-    final AtomicInteger lastLine = new AtomicInteger(-1);
-
-    getOpenDocument().apply(new InitializationCursorAdapter(
-        new DocInitializationCursor() {
-          @Override
-          public void elementStart(String type, Attributes attrs) {
-            if (type.equals(ConsoleUtils.LINE)) {
-              totalLines.incrementAndGet();
-
-              if (userId.equals(attrs.get(ConsoleUtils.LINE_AUTHOR))) {
-                lastLine.set(totalLines.get() - 1);
-              }
-            }
-          }
-
-          @Override
-          public void characters(String s) {
-          }
-
-          @Override
-          public void annotationBoundary(AnnotationBoundaryMap map) {
-          }
-
-          @Override
-          public void elementEnd() {
-          }
-        }));
-
-    // Delete the line
-    if (lastLine.get() >= 0) {
-      WaveletDocumentOperation
-          undoOp =
-          new WaveletDocumentOperation(MAIN_DOCUMENT_ID,
-                                       ConsoleUtils.createLineDeletion(
-                                           getOpenDocument(), lastLine.get()));
-      backend.sendWaveletOperation(getOpenWavelet().getWaveletName(), undoOp);
-    } else {
-      out.println("Error: " + userId + " hasn't written anything yet");
-    }
-  }
+//  /**
+//   * Do the real work for undo.
+//   *
+//   * @param userId of user
+//   */
+//  private void undoLastLineBy(final String userId) {
+//    if (getOpenDocument() == null) {
+//      out.println("Error: document is empty");
+//      return;
+//    }
+//
+//    // Find the last line written by the participant given by userId (by counting the number of
+//    // <line></line> elements, and comparing to their authors).
+//    final AtomicInteger totalLines = new AtomicInteger(0);
+//    final AtomicInteger lastLine = new AtomicInteger(-1);
+//
+//    getOpenDocument().apply(new InitializationCursorAdapter(
+//        new DocInitializationCursor() {
+//          @Override
+//          public void elementStart(String type, Attributes attrs) {
+//            if (type.equals(ConsoleUtils.LINE)) {
+//              totalLines.incrementAndGet();
+//
+//              if (userId.equals(attrs.get(ConsoleUtils.LINE_AUTHOR))) {
+//                lastLine.set(totalLines.get() - 1);
+//              }
+//            }
+//          }
+//
+//          @Override
+//          public void characters(String s) {
+//          }
+//
+//          @Override
+//          public void annotationBoundary(AnnotationBoundaryMap map) {
+//          }
+//
+//          @Override
+//          public void elementEnd() {
+//          }
+//        }));
+//
+//    // Delete the line
+//    if (lastLine.get() >= 0) {
+//      WaveletDocumentOperation
+//          undoOp =
+//          new WaveletDocumentOperation(MAIN_DOCUMENT_ID,
+//                                       ConsoleUtils.createLineDeletion(
+//                                           getOpenDocument(), lastLine.get()));
+//      backend.sendWaveletOperation(getOpenWavelet().getWaveletName(), undoOp);
+//    } else {
+//      out.println("Error: " + userId + " hasn't written anything yet");
+//    }
+//  }
 
   /**
    * Set the number of lines to scroll by.
@@ -899,7 +892,7 @@ public class ConsoleClient implements WaveletOperationListener {
   public void onDeltaSequenceEnd(WaveletData wavelet) {
     render();
   }
-  
+
   @Override
   public void onCommitNotice(WaveletData wavelet, HashedVersion version) {
   }
