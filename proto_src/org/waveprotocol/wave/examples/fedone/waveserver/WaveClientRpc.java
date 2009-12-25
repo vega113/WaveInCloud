@@ -1308,9 +1308,19 @@ public final class WaveClientRpc {
     public boolean hasErrorMessage() { return hasErrorMessage; }
     public java.lang.String getErrorMessage() { return errorMessage_; }
     
+    // optional .protocol.ProtocolHashedVersion hashed_version_after_application = 3;
+    public static final int HASHED_VERSION_AFTER_APPLICATION_FIELD_NUMBER = 3;
+    private boolean hasHashedVersionAfterApplication;
+    private org.waveprotocol.wave.protocol.common.ProtocolHashedVersion hashedVersionAfterApplication_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
+    public boolean hasHashedVersionAfterApplication() { return hasHashedVersionAfterApplication; }
+    public org.waveprotocol.wave.protocol.common.ProtocolHashedVersion getHashedVersionAfterApplication() { return hashedVersionAfterApplication_; }
+    
     @Override
     public final boolean isInitialized() {
       if (!hasOperationsApplied) return false;
+      if (hasHashedVersionAfterApplication()) {
+        if (!getHashedVersionAfterApplication().isInitialized()) return false;
+      }
       return true;
     }
     
@@ -1322,6 +1332,9 @@ public final class WaveClientRpc {
       }
       if (hasErrorMessage()) {
         output.writeString(2, getErrorMessage());
+      }
+      if (hasHashedVersionAfterApplication()) {
+        output.writeMessage(3, getHashedVersionAfterApplication());
       }
       getUnknownFields().writeTo(output);
     }
@@ -1340,6 +1353,10 @@ public final class WaveClientRpc {
       if (hasErrorMessage()) {
         size += com.google.protobuf.CodedOutputStream
           .computeStringSize(2, getErrorMessage());
+      }
+      if (hasHashedVersionAfterApplication()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getHashedVersionAfterApplication());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1488,6 +1505,9 @@ public final class WaveClientRpc {
         if (other.hasErrorMessage()) {
           setErrorMessage(other.getErrorMessage());
         }
+        if (other.hasHashedVersionAfterApplication()) {
+          mergeHashedVersionAfterApplication(other.getHashedVersionAfterApplication());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -1528,6 +1548,15 @@ public final class WaveClientRpc {
             }
             case 18: {
               setErrorMessage(input.readString());
+              break;
+            }
+            case 26: {
+              org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.Builder subBuilder = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.newBuilder();
+              if (hasHashedVersionAfterApplication()) {
+                subBuilder.mergeFrom(getHashedVersionAfterApplication());
+              }
+              input.readMessage(subBuilder, extensionRegistry);
+              setHashedVersionAfterApplication(subBuilder.buildPartial());
               break;
             }
           }
@@ -1571,6 +1600,43 @@ public final class WaveClientRpc {
       public Builder clearErrorMessage() {
         result.hasErrorMessage = false;
         result.errorMessage_ = "";
+        return this;
+      }
+      
+      // optional .protocol.ProtocolHashedVersion hashed_version_after_application = 3;
+      public boolean hasHashedVersionAfterApplication() {
+        return result.hasHashedVersionAfterApplication();
+      }
+      public org.waveprotocol.wave.protocol.common.ProtocolHashedVersion getHashedVersionAfterApplication() {
+        return result.getHashedVersionAfterApplication();
+      }
+      public Builder setHashedVersionAfterApplication(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        result.hasHashedVersionAfterApplication = true;
+        result.hashedVersionAfterApplication_ = value;
+        return this;
+      }
+      public Builder setHashedVersionAfterApplication(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.Builder builderForValue) {
+        result.hasHashedVersionAfterApplication = true;
+        result.hashedVersionAfterApplication_ = builderForValue.build();
+        return this;
+      }
+      public Builder mergeHashedVersionAfterApplication(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion value) {
+        if (result.hasHashedVersionAfterApplication() &&
+            result.hashedVersionAfterApplication_ != org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance()) {
+          result.hashedVersionAfterApplication_ =
+            org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.newBuilder(result.hashedVersionAfterApplication_).mergeFrom(value).buildPartial();
+        } else {
+          result.hashedVersionAfterApplication_ = value;
+        }
+        result.hasHashedVersionAfterApplication = true;
+        return this;
+      }
+      public Builder clearHashedVersionAfterApplication() {
+        result.hasHashedVersionAfterApplication = false;
+        result.hashedVersionAfterApplication_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
         return this;
       }
     }
@@ -1910,15 +1976,17 @@ public final class WaveClientRpc {
       " \001(\0132\037.protocol.ProtocolHashedVersion\"\\\n" +
       "\025ProtocolSubmitRequest\022\024\n\014wavelet_name\030\001" +
       " \002(\t\022-\n\005delta\030\002 \002(\0132\036.protocol.ProtocolW" +
-      "aveletDelta\"K\n\026ProtocolSubmitResponse\022\032\n" +
-      "\022operations_applied\030\001 \002(\005\022\025\n\rerror_messa" +
-      "ge\030\002 \001(\t2\271\001\n\025ProtocolWaveClientRpc\022O\n\004Op" +
-      "en\022\037.waveserver.ProtocolOpenRequest\032!.wa" +
-      "veserver.ProtocolWaveletUpdate\"\003\330>\001\022O\n\006S" +
-      "ubmit\022!.waveserver.ProtocolSubmitRequest" +
-      "\032\".waveserver.ProtocolSubmitResponseBA\n0" +
-      "org.waveprotocol.wave.examples.fedone.wa" +
-      "veserverB\rWaveClientRpc";
+      "aveletDelta\"\226\001\n\026ProtocolSubmitResponse\022\032" +
+      "\n\022operations_applied\030\001 \002(\005\022\025\n\rerror_mess" +
+      "age\030\002 \001(\t\022I\n hashed_version_after_applic" +
+      "ation\030\003 \001(\0132\037.protocol.ProtocolHashedVer" +
+      "sion2\271\001\n\025ProtocolWaveClientRpc\022O\n\004Open\022\037" +
+      ".waveserver.ProtocolOpenRequest\032!.wavese" +
+      "rver.ProtocolWaveletUpdate\"\003\330>\001\022O\n\006Submi" +
+      "t\022!.waveserver.ProtocolSubmitRequest\032\".w" +
+      "aveserver.ProtocolSubmitResponseBA\n0org." +
+      "waveprotocol.wave.examples.fedone.wavese" +
+      "rverB\rWaveClientRpc";
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -1953,7 +2021,7 @@ public final class WaveClientRpc {
           internal_static_waveserver_ProtocolSubmitResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_ProtocolSubmitResponse_descriptor,
-              new java.lang.String[] { "OperationsApplied", "ErrorMessage", },
+              new java.lang.String[] { "OperationsApplied", "ErrorMessage", "HashedVersionAfterApplication", },
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse.class,
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse.Builder.class);
           com.google.protobuf.ExtensionRegistry registry =

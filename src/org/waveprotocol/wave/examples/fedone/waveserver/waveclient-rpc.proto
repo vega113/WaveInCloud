@@ -84,10 +84,12 @@ message ProtocolSubmitRequest {
 
 /**
  * The result of submitting the delta to the server. If an error occurs
- * errorMessage will be present. operationsApplied will report the actual
- * number of operations successfully applied to the wavelet by the server.
+ * errorMessage will be present, otherwise hashedVersionAfterApplication will be
+ * present. operationsApplied will report the actual number of operations
+ * successfully applied to the wavelet by the server.
  */
 message ProtocolSubmitResponse {
   required int32 operations_applied = 1;
   optional string error_message = 2;
+  optional protocol.ProtocolHashedVersion hashed_version_after_application = 3;
 }

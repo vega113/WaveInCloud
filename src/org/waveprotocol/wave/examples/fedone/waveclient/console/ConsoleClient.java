@@ -26,6 +26,7 @@ import jline.Completor;
 import jline.ConsoleReader;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.RandomBase64Generator;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
@@ -33,6 +34,7 @@ import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexEntry;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.fedone.waveclient.console.ScrollableWaveView.RenderMode;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
@@ -50,6 +52,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -105,7 +108,7 @@ public class ConsoleClient implements WaveletOperationListener {
    * because it's too verbose and doesn't really give us anything in return.
    */
   private final PrintStream out = System.out;
-  private AttributesImpl EMPTY_ATTRS = new AttributesImpl(emptyMap);
+  private final AttributesImpl EMPTY_ATTRS = new AttributesImpl(emptyMap);
 
 
   private class Command {
@@ -487,9 +490,9 @@ public class ConsoleClient implements WaveletOperationListener {
                                ClientUtils.MANIFEST_DOCUMENT_ID,
                                manifestDocOp.build()));
 
-      backend.sendWaveletDelta(getOpenWavelet().getWaveletName(),
+      backend.sendAndAwaitWaveletDelta(getOpenWavelet().getWaveletName(),
                                new WaveletDelta(backend.getUserId(),
-                                                operations));
+                                                operations), 1, TimeUnit.MINUTES);
     } else {
       out.println("Error: no open wave, run \"/open\"");
     }
@@ -575,7 +578,10 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void newWave() {
     if (isConnected()) {
-      backend.createConversationWave();
+      BlockingSuccessFailCallback<ProtocolSubmitResponse, String> callback =
+          BlockingSuccessFailCallback.create();
+      backend.createConversationWave(callback);
+      callback.await(1, TimeUnit.MINUTES);
     } else {
       errorNotConnected();
     }
@@ -592,8 +598,8 @@ public class ConsoleClient implements WaveletOperationListener {
 
       // Don't send an invalid op, although the server should be robust enough to deal with it
       if (!getOpenWavelet().getParticipants().contains(addId)) {
-        backend.sendWaveletOperation(getOpenWavelet().getWaveletName(),
-                                     new AddParticipant(addId));
+        backend.sendAndAwaitWaveletOperation(getOpenWavelet().getWaveletName(),
+                                     new AddParticipant(addId), 1, TimeUnit.MINUTES);
       } else {
         out.println(
             "Error: " + name + " is already a participant on this wave");
@@ -613,8 +619,8 @@ public class ConsoleClient implements WaveletOperationListener {
       ParticipantId removeId = new ParticipantId(name);
 
       if (getOpenWavelet().getParticipants().contains(removeId)) {
-        backend.sendWaveletOperation(getOpenWavelet().getWaveletName(),
-                                     new RemoveParticipant(removeId));
+        backend.sendAndAwaitWaveletOperation(getOpenWavelet().getWaveletName(),
+                                     new RemoveParticipant(removeId), 1, TimeUnit.MINUTES);
       } else {
         out.println("Error: " + name + " is not a participant on this wave");
       }

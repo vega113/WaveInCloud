@@ -19,6 +19,7 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
@@ -83,8 +84,10 @@ public class WaveClientRpcImplTest extends TestCase {
 
     public void doSubmitSuccess(WaveletName waveletName) {
       SubmitRecord record = submitRecords.remove(waveletName);
+      ProtocolHashedVersion fakeHashedVersion =
+          ProtocolHashedVersion.newBuilder().setVersion(0).setHistoryHash(ByteString.EMPTY).build();
       if (record != null) {
-        record.listener.onSuccess(record.operations);
+        record.listener.onSuccess(record.operations, fakeHashedVersion);
       }
     }
 

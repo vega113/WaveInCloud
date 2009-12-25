@@ -54,7 +54,7 @@ public interface ClientFrontend extends WaveletListener {
       SubmitResultListener listener);
 
   interface SubmitResultListener {
-    void onSuccess(int operationsApplied);
+    void onSuccess(int operationsApplied, ProtocolHashedVersion hashedVersionAfterApplication);
     void onFailure(String errorMessage);
   }
 

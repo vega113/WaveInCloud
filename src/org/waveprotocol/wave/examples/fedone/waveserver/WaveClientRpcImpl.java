@@ -137,9 +137,11 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
         }
 
         @Override
-        public void onSuccess(int operationsApplied) {
+        public void onSuccess(int operationsApplied,
+            ProtocolHashedVersion hashedVersionAfterApplication) {
           done.run(ProtocolSubmitResponse.newBuilder()
-              .setOperationsApplied(operationsApplied).build());
+              .setOperationsApplied(operationsApplied)
+              .setHashedVersionAfterApplication(hashedVersionAfterApplication).build());
         }
       });
     } catch (EncodingException e) {

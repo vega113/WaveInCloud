@@ -24,6 +24,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Provides agent connections which are used to communicate with the server.
@@ -104,7 +105,7 @@ public class AgentConnection {
   }
 
   /**
-   * Submits a wavelet operation to the backend.
+   * Submits a wavelet operation to the backend and waits for it to be applied locally (round trip).
    *
    * @param waveletName of the wavelet to operate on.
    * @param operation the operation to apply to the wavelet.
@@ -113,6 +114,6 @@ public class AgentConnection {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
     }
-    backend.sendWaveletOperation(waveletName, operation);
+    backend.sendAndAwaitWaveletOperation(waveletName, operation, 1, TimeUnit.MINUTES);
   }
 }
