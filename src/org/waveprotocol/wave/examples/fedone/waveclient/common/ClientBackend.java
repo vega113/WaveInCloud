@@ -235,8 +235,8 @@ public class ClientBackend {
             .elementStart(DocumentConstants.CONVERSATION, Attributes.EMPTY_MAP)
             .elementEnd().build());
 
-    sendWaveletDelta(convRoot.getWaveletName(),
-        new WaveletDelta(getUserId(), ImmutableList.of(addUserOp, addManifestOp)), callback);
+    sendAndAwaitWaveletDelta(convRoot.getWaveletName(),
+        new WaveletDelta(getUserId(), ImmutableList.of(addUserOp, addManifestOp)), 1, TimeUnit.MINUTES);
 
     return waveView;
   }
@@ -415,8 +415,8 @@ public class ClientBackend {
         }
       }
 
-  	  wave.setWaveletVersion(waveletName.waveletId, WaveletOperationSerializer
-  	      .deserialize(waveletUpdate.getResultingVersion()));
+      wave.setWaveletVersion(waveletName.waveletId, WaveletOperationSerializer
+          .deserialize(waveletUpdate.getResultingVersion()));
 
       // Notify listeners separately to avoid them operating on invalid wavelet state
       // TODO: take this out of the network thread

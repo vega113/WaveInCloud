@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
@@ -84,6 +85,25 @@ public abstract class AbstractAgent implements AgentEventListener {
     return connection.getNewDocumentId();
   }
 
+  /**
+   * Creates a new wave for this agent, and adds the agent as a participant.
+   *
+   * @return the new wave.
+   */
+  protected ClientWaveView newWave() {
+    return connection.newWave();
+  }
+
+  /**
+   * Fetches an existing wave for this agent.
+   *
+   * @param waveId the wave ID
+   * @return the wave, or null
+   */
+  protected ClientWaveView getWave(String waveId) {
+    return connection.getWave(waveId);
+  }
+  
   /**
    * Sends an operation to server.
    *

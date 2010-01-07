@@ -21,8 +21,10 @@ import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -113,6 +115,14 @@ public class AgentConnection {
    */
   boolean isConnected() {
     return backend != null;
+  }
+
+  public ClientWaveView newWave() {
+    return backend.createConversationWave(null); // TODO(arb): callback
+  }
+
+  public ClientWaveView getWave(String waveId) {
+    return backend.getWave(WaveId.deserialise(waveId));
   }
 
   /**
