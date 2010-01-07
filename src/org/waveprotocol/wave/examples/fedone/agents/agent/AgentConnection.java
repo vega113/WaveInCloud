@@ -18,10 +18,14 @@
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -91,8 +95,15 @@ public class AgentConnection {
    *
    * @return the agent's participant id.
    */
-  String getParticipantId() {
-    return participantId;
+  ParticipantId getParticipantId() {
+    return backend.getUserId();
+  }
+
+  /**
+   * @return a new random document id
+   */
+  String getNewDocumentId() {
+    return backend.getIdGenerator().newDocumentId();
   }
 
   /**
@@ -115,5 +126,30 @@ public class AgentConnection {
       throw new IllegalStateException("Not connected.");
     }
     backend.sendAndAwaitWaveletOperation(waveletName, operation, 1, TimeUnit.MINUTES);
+  }
+
+  /**
+   * Submits a delta to the backend.
+   *
+   * @param waveletName of the wavelet to operate on.
+   * @param waveletDelta to submit.
+   */
+  public void sendWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta) {
+    if (!isConnected()) {
+      throw new IllegalStateException("Not connected.");
+    }
+    backend.sendWaveletDelta(waveletName, waveletDelta,
+                             new SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String>() {
+
+      @Override
+      public void onSuccess(WaveClientRpc.ProtocolSubmitResponse successValue) {
+        // nothing
+      }
+
+      @Override
+      public void onFailure(String failureValue) {
+        // nothing
+      }
+    });
   }
 }

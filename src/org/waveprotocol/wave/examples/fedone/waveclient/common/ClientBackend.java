@@ -25,6 +25,7 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
 import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
+import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionZeroFactoryImpl;
@@ -33,7 +34,6 @@ import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.wave.examples.fedone.waveclient.console.ConsoleUtils;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
@@ -41,7 +41,6 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWa
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
-import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -95,7 +94,7 @@ public class ClientBackend {
   private final List<WaveletOperationListener> waveletOperationListeners = Lists.newArrayList();
 
   /** Id generator used for this (server, user) pair. */
-  private final IdGenerator idGenerator;
+  private final ClientIdGenerator idGenerator;
 
   /** Id URI encoder and decoder. */
   private final IdURIEncoderDecoder uriCodec;
@@ -226,13 +225,18 @@ public class ClientBackend {
       SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
     ClientWaveView waveView = createWave(newWaveId);
     WaveletData convRoot = waveView.createWavelet(getIdGenerator().newConversationRootWaveletId());
-    AddParticipant addOp = new AddParticipant(getUserId());
-    WaveletDocumentOperation manifestOp = new WaveletDocumentOperation(
-        ConsoleUtils.CONVERSATION, new DocOpBuilder().elementStart("conversation", Attributes.EMPTY_MAP).elementEnd().build());
+    // Add ourselves in the first operation
+    AddParticipant addUserOp = new AddParticipant(getUserId());
+  
+    // Create a document manifest in the second operation
+    WaveletDocumentOperation addManifestOp = new WaveletDocumentOperation(
+        DocumentConstants.MANIFEST_DOCUMENT_ID,
+        new DocOpBuilder()
+            .elementStart(DocumentConstants.CONVERSATION, Attributes.EMPTY_MAP)
+            .elementEnd().build());
 
-
-    sendWaveletDelta(convRoot.getWaveletName(), new WaveletDelta(getUserId(), ImmutableList.of(
-        addOp, manifestOp)), callback);
+    sendWaveletDelta(convRoot.getWaveletName(),
+        new WaveletDelta(getUserId(), ImmutableList.of(addUserOp, addManifestOp)), callback);
 
     return waveView;
   }
@@ -496,9 +500,9 @@ public class ClientBackend {
   }
 
   /**
-   * @return the id generator which generates wave and wavelet ids
+   * @return the id generator which generates wave, wavelet, and document ids
    */
-  public IdGenerator getIdGenerator() {
+  public ClientIdGenerator getIdGenerator() {
     return idGenerator;
   }
 

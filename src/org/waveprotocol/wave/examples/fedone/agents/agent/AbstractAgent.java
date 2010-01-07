@@ -19,7 +19,9 @@ package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
 
@@ -71,8 +73,15 @@ public abstract class AbstractAgent implements AgentEventListener {
   /**
    * Return the participant ID for this agent.
    */
-  protected final String getParticipantId() {
+  protected final ParticipantId getParticipantId() {
     return connection.getParticipantId();
+  }
+
+  /**
+   * @return a new random document id for this agent.
+   */
+  protected final String getNewDocumentId() {
+    return connection.getNewDocumentId();
   }
 
   /**
@@ -83,5 +92,15 @@ public abstract class AbstractAgent implements AgentEventListener {
    */
   public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
     connection.sendWaveletOperation(waveletName, operation);
+  }
+
+  /**
+   * Sends a delta to the server.
+   *
+   * @param waveletName of the wavelet to apply the operation to
+   * @param waveletDelta to send
+   */
+  public void sendWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta) {
+    connection.sendWaveletDelta(waveletName, waveletDelta);
   }
 }

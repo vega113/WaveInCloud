@@ -18,7 +18,10 @@
 package org.waveprotocol.wave.examples.fedone.waveclient.console;
 
 import com.google.common.collect.Lists;
+import com.google.inject.internal.Preconditions;
 
+import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
+import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
@@ -40,8 +43,9 @@ import java.util.Map;
  */
 public class ScrollableWaveView extends ConsoleScrollable {
 
-  public enum RenderMode {
+  private static final Log LOG = Log.get(ScrollableWaveView.class);
 
+  public enum RenderMode {
     NORMAL,
     XML
   }
@@ -74,15 +78,12 @@ public class ScrollableWaveView extends ConsoleScrollable {
 
   @Override
   public synchronized List<String> render(final int width, final int height) {
-    final List<String> lines = Lists.newArrayList();
-    final StringBuilder currentLine = new StringBuilder();
-    final Map<String, BufferedDocOp> documentMap = ClientUtils
-        .getConversationRoot(wave)
-        .getDocuments();
-
+    List<String> lines = Lists.newArrayList();
+    Map<String, BufferedDocOp> documentMap = ClientUtils.getConversationRoot(wave).getDocuments();
     BufferedDocOp manifest = documentMap.get("conversation");
+    Preconditions.checkArgument(manifest != null);
 
-    renderManifest(manifest, documentMap, width, lines, currentLine);
+    renderManifest(manifest, documentMap, width, lines);
 
     // Also render a header, not too big...
     List<String> header = renderHeader(width);
@@ -101,15 +102,11 @@ public class ScrollableWaveView extends ConsoleScrollable {
     return header;
   }
 
-  private void renderDocument(BufferedDocOp document, final int width,
-                              final List<String> lines,
-                              final StringBuilder currentLine,
-                              final String padding) {
+  private void renderDocument(BufferedDocOp document, final int width, final List<String> lines,
+      final StringBuilder currentLine, final String padding) {
     document.apply(new InitializationCursorAdapter(
         new DocInitializationCursor() {
           final Deque<String> elemStack = new LinkedList<String>();
-
-          private int stackDepth;
 
           @Override
           public void characters(String s) {
@@ -124,28 +121,22 @@ public class ScrollableWaveView extends ConsoleScrollable {
 
           @Override
           public void elementStart(String type, Attributes attrs) {
-            stackDepth++;
             elemStack.push(type);
 
             if (renderMode.equals(RenderMode.NORMAL)) {
-              if (type.equals(ConsoleUtils.LINE)) {
-                if (attrs.containsKey(ConsoleUtils.LINE_AUTHOR)) {
-                  displayAuthor(attrs.get(ConsoleUtils.LINE_AUTHOR));
-                }
+              if (type.equals(DocumentConstants.LINE)) {
                 outputCurrentLine(lines, width, currentLine);
-
-              } else if (type.equals(ConsoleUtils.CONTRIBUTOR)) {
-                if (attrs.containsKey(ConsoleUtils.CONTRIBUTOR_NAME)) {
-                  displayAuthor(attrs.get(ConsoleUtils.CONTRIBUTOR_NAME));
+              } else if (type.equals(DocumentConstants.CONTRIBUTOR)) {
+                if (attrs.containsKey(DocumentConstants.CONTRIBUTOR_NAME)) {
+                  displayAuthor(attrs.get(DocumentConstants.CONTRIBUTOR_NAME));
                 }
-              } else if (type.equals(ConsoleUtils.BODY)) {
+              } else if (type.equals(DocumentConstants.BODY)) {
                 // ignore
               } else {
-//                  throw new IllegalArgumentException(
-//                      "Unsupported element type " + type);
+                LOG.warning("Unsupported element type while rendering document: " + type);
               }
             } else if (renderMode.equals(RenderMode.XML)) {
-              for (int i = 0; i < stackDepth; i++) {
+              for (int i = 0; i < elemStack.size(); i++) {
                 currentLine.append(" ");
               }
               if (attrs.isEmpty()) {
@@ -166,14 +157,13 @@ public class ScrollableWaveView extends ConsoleScrollable {
             String type = elemStack.pop();
 
             if (renderMode.equals(RenderMode.XML)) {
-              for (int i = 0; i < stackDepth; i++) {
+              for (int i = 0; i < elemStack.size(); i++) {
                 currentLine.append(" ");
               }
               currentLine.append("</" + type + ">");
               outputCurrentLine(lines, width, currentLine);
 
             }
-            stackDepth--;
           }
 
           @Override
@@ -194,19 +184,20 @@ public class ScrollableWaveView extends ConsoleScrollable {
         }));
   }
 
-  private void renderManifest(BufferedDocOp document,
-                              final Map<String, BufferedDocOp> documentMap,
-                              final int width,
-                              final List<String> lines,
-                              final StringBuilder currentLine) {
-    if (renderMode.equals(RenderMode.XML)) {
+  private void renderManifest(BufferedDocOp document, final Map<String, BufferedDocOp> documentMap,
+      final int width, final List<String> lines) {
+    final StringBuilder currentLine = new StringBuilder();
 
+    if (renderMode.equals(RenderMode.XML)) {
+      // Only render the manifest XML itself if we are rendering the XML.
+      // TODO: refactor the XML rendering code to not share these methods (it should just iterate
+      // through all documents and render the XML, ignoring the conversation model)
       renderDocument(document, width, lines, currentLine, "");
     }
+
     document.apply(new InitializationCursorAdapter(
         new DocInitializationCursor() {
           final Deque<String> elemStack = new LinkedList<String>();
-
           private int threadDepth;
 
           @Override
@@ -219,49 +210,53 @@ public class ScrollableWaveView extends ConsoleScrollable {
             elemStack.push(type);
 
             if (renderMode.equals(RenderMode.NORMAL)) {
-              if (type.equals(ConsoleUtils.BLIP)) {
-                if (attrs.containsKey(ConsoleUtils.BLIP_ID)) {
+              if (type.equals(DocumentConstants.BLIP)) {
+                if (attrs.containsKey(DocumentConstants.BLIP_ID)) {
                   BufferedDocOp document =
-                      documentMap.get(attrs.get(ConsoleUtils.BLIP_ID));
-                  StringBuilder paddingBuilder = new StringBuilder();
-                  for (int i = 0; i < threadDepth; i++) {
-                    paddingBuilder.append("    ");
+                      documentMap.get(attrs.get(DocumentConstants.BLIP_ID));
+                  if (document == null) {
+                    // A nonexistent document is indistinguishable from the empty document, so this
+                    // is not necessarily an error.
+                  } else {
+                    StringBuilder paddingBuilder = new StringBuilder();
+                    for (int i = 0; i < threadDepth; i++) {
+                      paddingBuilder.append("    ");
+                    }
+                    String padding = paddingBuilder.toString();
+                    displayAuthor(padding + "Blip: " + attrs.get(DocumentConstants.BLIP_ID));
+                    renderDocument(document, width, lines, currentLine, padding);
+                    outputCurrentLine(lines, width, currentLine);
                   }
-                  String padding = paddingBuilder.toString();
-                  displayAuthor(
-                      padding + "Blip: " + attrs.get(ConsoleUtils.BLIP_ID));
-                  renderDocument(document, width, lines, currentLine, padding);
-                  outputCurrentLine(lines, width, currentLine);
                 }
-              } else if (type.equals(ConsoleUtils.THREAD)) {
+              } else if (type.equals(DocumentConstants.THREAD)) {
                 threadDepth++;
               } else {
-//                  throw new IllegalArgumentException(
-//                      "Unsupported element type " + type);
+                LOG.warning("Unsupported element type while rendering manifest: " + type);
               }
             } else if (renderMode.equals(RenderMode.XML)) {
-              if (type.equals(ConsoleUtils.BLIP)) {
-                if (attrs.containsKey(ConsoleUtils.BLIP_ID)) {
+              if (type.equals(DocumentConstants.BLIP)) {
+                if (attrs.containsKey(DocumentConstants.BLIP_ID)) {
                   lines.add(ConsoleUtils.ansiWrap(
                       ConsoleUtils.ANSI_BLUE_FG,
-                      "<!-- document named: " + attrs.get(ConsoleUtils.BLIP_ID)
-                      + " -->"));
-                  BufferedDocOp
-                      document =
-                      documentMap.get(attrs.get(ConsoleUtils.BLIP_ID));
-                  renderDocument(document, width, lines, currentLine, "");
+                      "<!-- document named: " + attrs.get(DocumentConstants.BLIP_ID) + " -->"));
+                  BufferedDocOp document = documentMap.get(attrs.get(DocumentConstants.BLIP_ID));
+                  if (document == null) {
+                    // A nonexistent document is indistinguishable from the empty document, so this
+                    // is not necessarily an error.
+                  } else {
+                    renderDocument(document, width, lines, currentLine, "");
+                  }
                 }
-              } else if (type.equals(ConsoleUtils.THREAD)) {
+              } else if (type.equals(DocumentConstants.THREAD)) {
                 threadDepth++;
               }
-
             }
           }
 
           @Override
           public void elementEnd() {
             String type = elemStack.pop();
-            if (type.equals(ConsoleUtils.THREAD)) {
+            if (type.equals(DocumentConstants.THREAD)) {
               threadDepth--;
             }
           }
@@ -276,16 +271,13 @@ public class ScrollableWaveView extends ConsoleScrollable {
             currentLine.delete(0, currentLine.length() - 1);
 
             lines.add(ConsoleUtils.blankLine(width));
-            lines.add(ConsoleUtils.ansiWrap(
-                ConsoleUtils.ANSI_GREEN_FG,
-                ConsoleUtils.ensureWidth(width,
-                                         author)));
+            lines.add(ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_GREEN_FG,
+                ConsoleUtils.ensureWidth(width, author)));
           }
         }));
   }
 
-  private void outputCurrentLine(List<String> lines, int width,
-                                 StringBuilder currentLine) {
+  private void outputCurrentLine(List<String> lines, int width, StringBuilder currentLine) {
     wrap(lines, width, currentLine);
     lines.add(currentLine.toString());
     currentLine.delete(0, currentLine.length());
@@ -299,15 +291,12 @@ public class ScrollableWaveView extends ConsoleScrollable {
    */
   private List<String> renderHeader(int width) {
     List<String> lines = Lists.newArrayList();
-    List<ParticipantId>
-        participants =
-        ClientUtils.getConversationRoot(wave).getParticipants();
+    List<ParticipantId> participants = ClientUtils.getConversationRoot(wave).getParticipants();
 
     // HashedVersion
     StringBuilder versionLineBuilder = new StringBuilder();
     versionLineBuilder.append("Version "
-                              + wave
-        .getWaveletVersion(ClientUtils.getConversationRootId(wave)));
+        + wave.getWaveletVersion(ClientUtils.getConversationRootId(wave)));
     wrapAndClose(lines, width, versionLineBuilder);
 
     // Participants
@@ -329,12 +318,10 @@ public class ScrollableWaveView extends ConsoleScrollable {
     wrapAndClose(lines, width, participantLineBuilder);
 
     for (int i = 0; i < lines.size(); i++) {
-      lines.set(i, ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_YELLOW_FG,
-                                         lines.get(i)));
+      lines.set(i, ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_YELLOW_FG, lines.get(i)));
     }
 
     lines.add(ConsoleUtils.ensureWidth(width, "----"));
-
     return lines;
   }
 

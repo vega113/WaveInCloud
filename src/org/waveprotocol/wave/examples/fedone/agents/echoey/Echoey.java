@@ -17,33 +17,50 @@
 
 package org.waveprotocol.wave.examples.fedone.agents.echoey;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import com.google.common.collect.MapMaker;
+import com.google.inject.internal.Sets;
 
 import org.waveprotocol.wave.examples.fedone.agents.agent.AbstractAgent;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentConnection;
+import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
-import org.waveprotocol.wave.examples.fedone.waveclient.console.ConsoleUtils;
-import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
-import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.DocOpCursor;
-import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
-import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
+import org.waveprotocol.wave.model.id.IdConstants;
+import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Example agent that echoes back operations.
  */
 public class Echoey extends AbstractAgent {
+
   private static final Log LOG = Log.get(Echoey.class);
-  private static final String MAIN_DOCUMENT_ID = "main";
+
+  private final Map<WaveletName, Set<String>> documentsSeen = new MapMaker().makeComputingMap(
+      new Function<WaveletName, Set<String>>() {
+        @Override
+        public Set<String> apply(WaveletName waveletName) {
+          return Sets.newHashSet();
+        }
+      });
+
+  /**
+   * @return the suffix that Echoey adds to each document it is editing
+   */
+  private String getEchoeyDocumentSuffix() {
+    return IdConstants.TOKEN_SEPARATOR + getParticipantId().getAddress();
+  }
 
   /**
    * Main entry point.
@@ -77,69 +94,40 @@ public class Echoey extends AbstractAgent {
     super(AgentConnection.newConnection(username, hostname, port));
   }
 
-  private void appendLines(WaveletData wavelet, List<String> lines) {
-    BufferedDocOp openDoc = wavelet.getDocuments().get(MAIN_DOCUMENT_ID);
-    int docSize = (openDoc == null) ? 0 : ClientUtils.findDocumentSize(openDoc);
-    DocOpBuilder builder = new DocOpBuilder();
-
-    if (docSize > 0) {
-      builder.retain(docSize);
-    }
-    builder.elementStart(ConsoleUtils.LINE, new AttributesImpl(
-        ImmutableMap.of(ConsoleUtils.LINE_AUTHOR, getParticipantId())));
-    builder.elementEnd();
-    for (String line : lines) {
-      if (!line.isEmpty()) {
-        builder.characters(line);
-        LOG.info("LINE: " + line);
-      }
-    }
-    WaveletDocumentOperation op =
-        new WaveletDocumentOperation(MAIN_DOCUMENT_ID, builder.build());
-    sendWaveletOperation(wavelet.getWaveletName(), op);
-  }
-
-  private void appendText(WaveletData wavelet, String text) {
-    if (text.isEmpty()) {
-      return;
-    }
-    List<String> lines = new ArrayList<String>(1);
-    lines.add(text);
-    appendLines(wavelet, lines);
-  }
-
   @Override
   public void onDocumentChanged(WaveletData wavelet, WaveletDocumentOperation documentOperation) {
-    LOG.info("onDocumentChanged: " + wavelet.getWaveletName());
-    BufferedDocOp docOp = documentOperation.getOperation();
-    // Rebuild a similar operation with only the author changed.
-    final List<String> lines = new ArrayList<String>();
-    docOp.apply(new DocOpCursor() {
-        @Override
-        public void annotationBoundary(AnnotationBoundaryMap map) {}
+    final String docId = documentOperation.getDocumentId();
+    LOG.info("onDocumentChanged: " + wavelet.getWaveletName() + ", " + docId);
 
-        @Override
-        public void characters(String chars) {
-          lines.add(chars);
-        }
+    if (docId.equals(DocumentConstants.MANIFEST_DOCUMENT_ID)) {
+      // Don't echo anything on the manifest document
+    } else if (docId.endsWith(getEchoeyDocumentSuffix())) {
+      // Don't echo any document that we created
+    } else {
+      String echoDocId = docId + getEchoeyDocumentSuffix();
+      List<WaveletOperation> ops = Lists.newArrayList();
 
-        @Override public void deleteCharacters(String chars) {}
+      // Echo the change to the other document
+      ops.add(new WaveletDocumentOperation(echoDocId, documentOperation.getOperation()));
 
-        @Override public void deleteElementEnd() {}
+      // Write the document into the manifest if it isn't already there
+      if (documentsSeen.get(wavelet.getWaveletName()).add(docId)) {
+        BufferedDocOp manifest = wavelet.getDocuments().get(DocumentConstants.MANIFEST_DOCUMENT_ID);
+        ops.add(ClientUtils.appendToManifest(manifest, echoDocId));
+      }
 
-        @Override public void deleteElementStart(String type, Attributes attrs) {}
-        @Override public void elementEnd() {}
-        @Override public void elementStart(String type, Attributes attrs) {
-          if (type.equals(ConsoleUtils.LINE)){
-            if (attrs.containsKey(ConsoleUtils.LINE_AUTHOR)) {
-            }
-          }
-        }
-        @Override public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {}
-        @Override public void retain(int itemCount) {}
-        @Override public void updateAttributes(AttributesUpdate attrUpdate) {}
-      });
-    appendLines(wavelet, lines);
+      sendWaveletDelta(wavelet.getWaveletName(), new WaveletDelta(getParticipantId(), ops));
+    }
+  }
+
+  /**
+   * Append a new blip to a wavelet with the given contents.
+   */
+  private void appendText(WaveletData wavelet, String text) {
+    String docId = getNewDocumentId() + getEchoeyDocumentSuffix();
+    WaveletDelta delta = ClientUtils.createAppendBlipDelta(wavelet.getDocuments().get(
+        DocumentConstants.MANIFEST_DOCUMENT_ID), getParticipantId(), docId, text);
+    sendWaveletDelta(wavelet.getWaveletName(), delta);
   }
 
   @Override

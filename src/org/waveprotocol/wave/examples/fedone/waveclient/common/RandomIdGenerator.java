@@ -17,19 +17,18 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.common;
 
+import org.waveprotocol.wave.examples.fedone.util.RandomBase64Generator;
 import org.waveprotocol.wave.model.id.IdConstants;
-import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.SimplePrefixEscaper;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.examples.fedone.util.RandomBase64Generator;
 
 /**
- * This class is used to generate Wave and Wavelet ids.
+ * This class is used to generate Wave, Wavelet, and Document ids.
  *
  *
  */
-public final class RandomIdGenerator implements IdGenerator, IdConstants {
+public final class RandomIdGenerator implements ClientIdGenerator, IdConstants {
 
   private final RandomBase64Generator base64Generator = new RandomBase64Generator();
   private final String domain;
@@ -58,6 +57,11 @@ public final class RandomIdGenerator implements IdGenerator, IdConstants {
   @Override
   public WaveletId newConversationRootWaveletId() {
     return new WaveletId(domain, CONVERSATION_ROOT_WAVELET);
+  }
+
+  @Override
+  public String newDocumentId() {
+    return newId(BLIP_PREFIX, 36);
   }
 
   /**
