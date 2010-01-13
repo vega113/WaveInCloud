@@ -19,10 +19,11 @@ package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
+import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -118,11 +119,15 @@ public class AgentConnection {
   }
 
   public ClientWaveView newWave() {
-    return backend.createConversationWave(null); // TODO(arb): callback
+    BlockingSuccessFailCallback<ProtocolSubmitResponse, String> callback =
+        BlockingSuccessFailCallback.create();
+    ClientWaveView waveview = backend.createConversationWave(callback);
+    callback.await(1, TimeUnit.MINUTES);
+    return waveview;
   }
 
-  public ClientWaveView getWave(String waveId) {
-    return backend.getWave(WaveId.deserialise(waveId));
+  public ClientWaveView getWave(WaveId waveId) {
+    return backend.getWave(waveId);
   }
 
   /**
@@ -149,10 +154,10 @@ public class AgentConnection {
       throw new IllegalStateException("Not connected.");
     }
     backend.sendWaveletDelta(waveletName, waveletDelta,
-                             new SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String>() {
+                             new SuccessFailCallback<ProtocolSubmitResponse, String>() {
 
       @Override
-      public void onSuccess(WaveClientRpc.ProtocolSubmitResponse successValue) {
+      public void onSuccess(ProtocolSubmitResponse successValue) {
         // nothing
       }
 

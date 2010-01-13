@@ -1,4 +1,19 @@
-// Copyright 2010 Google Inc. All Rights Reserved.
+/**
+ * Copyright 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 
 package org.waveprotocol.wave.examples.fedone.agents.probey;
 
@@ -31,6 +46,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -71,7 +87,7 @@ public class Probey extends AbstractAgent {
   private String addBlip(String waveId, String blipText) {
     ClientWaveView wave = getWave(waveId);
     if (wave == null) {
-      return "NOT FOUND";
+      throw new IllegalArgumentException("NOT FOUND");
     }
     WaveletData convRoot = ClientUtils.getConversationRoot(wave);
     BufferedDocOp manifest = convRoot.getDocuments().get(DocumentConstants.MANIFEST_DOCUMENT_ID);
@@ -86,13 +102,13 @@ public class Probey extends AbstractAgent {
    *
    * @param waveId the ID of the wave
    * @param name   the user to add to the wave
-   * @return "OK" or "NOT FOUND"
+   * @return "OK" (or throws a runtime exception)
    */
   public String addUser(String waveId, String name) {
     ParticipantId addId = new ParticipantId(name);
     ClientWaveView wave = getWave(waveId);
     if (wave == null) {
-      return "NOT FOUND";
+      throw new IllegalArgumentException("NOT FOUND");
     }
     WaveletData convRoot = ClientUtils.getConversationRoot(wave);
     AddParticipant addUserOp = new AddParticipant(addId);
@@ -119,13 +135,13 @@ public class Probey extends AbstractAgent {
   private String getBlips(String waveId) {
     ClientWaveView wave = getWave(waveId);
     if (wave == null) {
-      return "NOT FOUND";
+      throw new IllegalArgumentException("NOT FOUND");
     }
     WaveletData convRoot = ClientUtils.getConversationRoot(wave);
     BufferedDocOp manifest = convRoot.getDocuments().get(DocumentConstants.MANIFEST_DOCUMENT_ID);
     final Map<String, BufferedDocOp> documentMap = ClientUtils.getConversationRoot(wave).getDocuments();
     if (manifest == null) {
-      return "NO MANIFEST";
+      throw new IllegalArgumentException("MANIFEST MISSING");
     }
     final StringBuilder builder = new StringBuilder();
     manifest.apply(new InitializationCursorAdapter((new DocInitializationCursor() {
@@ -136,11 +152,9 @@ public class Probey extends AbstractAgent {
           if (attrs.containsKey(DocumentConstants.BLIP_ID)) {
             BufferedDocOp document =
                 documentMap.get(attrs.get(DocumentConstants.BLIP_ID));
-            if (document == null) {
-              // A nonexistent document is indistinguishable from the empty document, so this
+            if (document != null) {
+              // A nonexistent document is indistinguishable from the empty document, so document == null
               // is not necessarily an error.
-            } else {
-
               builder.append("Blip: ");
               builder.append(attrs.get(DocumentConstants.BLIP_ID));
               builder.append("\nContent: ");
@@ -238,19 +252,19 @@ public class Probey extends AbstractAgent {
         constraint.setRoles(new String[]{"probey"});
         constraint.setAuthenticate(true);
 
-        ConstraintMapping cm = new ConstraintMapping();
-        cm.setConstraint(constraint);
-        cm.setPathSpec("/*");
+        ConstraintMapping constraintMapping = new ConstraintMapping();
+        constraintMapping.setConstraint(constraint);
+        constraintMapping.setPathSpec("/*");
 
         HashUserRealm userRealm = new HashUserRealm();
         userRealm.setName("Probey");
         userRealm.setConfig("./etc/probey/realm.properties");
-        SecurityHandler sh = new SecurityHandler();
-        sh.setUserRealm(userRealm);
-        sh.setConstraintMappings(new ConstraintMapping[]{cm});
+        SecurityHandler securityHandler = new SecurityHandler();
+        securityHandler.setUserRealm(userRealm);
+        securityHandler.setConstraintMappings(new ConstraintMapping[]{constraintMapping});
 
         server.setUserRealms(new UserRealm[]{userRealm});
-        server.setHandlers(new Handler[]{sh, handler});
+        server.setHandlers(new Handler[]{securityHandler, handler});
 
         server.start();  // spawns a new thread.
         probey.run();
@@ -279,37 +293,43 @@ public class Probey extends AbstractAgent {
       response.setStatus(HttpServletResponse.SC_OK);
 
       final String url = request.getRequestURI();
-      if (url.equals("/new")) {
-        LOG.info("creating a new wave");
-        response.getWriter().println(probey.createNewWave());
-      } else if (url.startsWith("/add/")) {
-        String[] parts = url.split("/");
-        if (parts.length != 4) {
-          response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        } else {
-          LOG.info("adding user: " + parts[3] + " to wave: " + parts[2]);
-          response.getWriter().println(probey.addUser(parts[2], parts[3]));
-        }
-      } else if (url.startsWith("/addblip/")) {
-        String[] parts = url.split("/");
-        if (parts.length != 4) {
-          response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        } else {
-          LOG.info("adding blip: " + parts[3] + " to wave: " + parts[2]);
-          response.getWriter().println(probey.addBlip(parts[2], parts[3]));
-        }
-      } else if (url.startsWith("/getblips/")) {
-        String[] parts = url.split("/");
-        if (parts.length != 3) {
-          response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        } else {
-          LOG.info("getting blips for wave: " + parts[2]);
-          response.getWriter().println(probey.getBlips(parts[2]));
-        }
+      final PrintWriter writer = response.getWriter();
 
-      } else {
-        response.getWriter().println("<h1>Unknown: " + url + "</h1>");
-        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+      try {
+        if (url.equals("/new")) {
+          LOG.info("creating a new wave");
+          writer.println(probey.createNewWave());
+        } else if (url.startsWith("/add/")) {
+          String[] parts = url.split("/");
+          if (parts.length != 4) {
+            throw new IllegalArgumentException("bad request");
+          } else {
+            LOG.info("adding user: " + parts[3] + " to wave: " + parts[2]);
+            writer.println(probey.addUser(parts[2], parts[3]));
+          }
+        } else if (url.startsWith("/addblip/")) {
+          String[] parts = url.split("/");
+          if (parts.length != 4) {
+            throw new IllegalArgumentException("bad request");
+          } else {
+            LOG.info("adding blip: " + parts[3] + " to wave: " + parts[2]);
+            writer.println(probey.addBlip(parts[2], parts[3]));
+          }
+        } else if (url.startsWith("/getblips/")) {
+          String[] parts = url.split("/");
+          if (parts.length != 3) {
+            throw new IllegalArgumentException("bad request");
+          } else {
+            LOG.info("getting blips for wave: " + parts[2]);
+            writer.println(probey.getBlips(parts[2]));
+          }
+        } else {
+          response.getWriter().println("Unknown: " + url);
+          response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+      } catch (IllegalArgumentException e) {
+        writer.println(e.getMessage());
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       }
       ((Request) request).setHandled(true);
     }

@@ -112,6 +112,7 @@ public class ClientBackend {
    * @param userAtDomain the user and their domain (for example, foo@bar.org)
    * @param server the server to connect to (for example, acmewave.com)
    * @param port port to connect to server with
+   * @throws IOException if we can't connect to the server
    */
   public ClientBackend(String userAtDomain, String server, int port) throws IOException {
     if (userAtDomain.split("@").length != 2) {
@@ -207,6 +208,7 @@ public class ClientBackend {
    * Create a new conversation wave and tell the server about it, by adding ourselves as a
    * participant on the conversation root.
    *
+   * @param callback callback invoked when the server rpc is complete
    * @return the {@link ClientWaveView} created
    */
   public ClientWaveView createConversationWave(
@@ -219,6 +221,7 @@ public class ClientBackend {
    * ourselves as a participant on the conversation root.
    *
    * @param newWaveId the id to give the new wave
+   * @param callback callback invoked when the server rpc is complete
    * @return the {@link ClientWaveView} created
    */
   private ClientWaveView createConversationWave(WaveId newWaveId,
@@ -235,8 +238,8 @@ public class ClientBackend {
             .elementStart(DocumentConstants.CONVERSATION, Attributes.EMPTY_MAP)
             .elementEnd().build());
 
-    sendAndAwaitWaveletDelta(convRoot.getWaveletName(),
-        new WaveletDelta(getUserId(), ImmutableList.of(addUserOp, addManifestOp)), 1, TimeUnit.MINUTES);
+    sendWaveletDelta(convRoot.getWaveletName(),
+        new WaveletDelta(getUserId(), ImmutableList.of(addUserOp, addManifestOp)), callback);
 
     return waveView;
   }
@@ -261,7 +264,7 @@ public class ClientBackend {
    *
    * @param waveletName of the wavelet to apply the operation to
    * @param op to send
-   * @param callback
+   * @param callback callback invoked when the server rpc is complete
    */
   public void sendWaveletOperation(WaveletName waveletName, WaveletOperation op,
       SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
@@ -290,7 +293,7 @@ public class ClientBackend {
    *
    * @param waveletName of the wavelet that the delta applies to
    * @param delta to send
-   * @param callback
+   * @param callback callback invoked when the server rpc is complete
    */
   public void sendWaveletDelta(WaveletName waveletName, WaveletDelta delta,
       final SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
@@ -443,6 +446,8 @@ public class ClientBackend {
 
   /**
    * Creates a new, empty wave view and stores it in {@code waves}.
+   * @param waveId the new wave id
+   * @return the new wave's {@code ClientWaveView}
    */
   private ClientWaveView createWave(WaveId waveId) {
     ClientWaveView wave = new ClientWaveView(new HashedVersionZeroFactoryImpl(), waveId);
