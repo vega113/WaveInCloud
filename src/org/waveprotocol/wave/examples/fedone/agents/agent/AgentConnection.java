@@ -24,6 +24,7 @@ import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -135,8 +136,23 @@ public class AgentConnection {
    *
    * @param waveletName of the wavelet to operate on.
    * @param operation the operation to apply to the wavelet.
+   * @param callback the callback that will be invoked
    */
-  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
+  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation,
+      SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
+    if (!isConnected()) {
+      throw new IllegalStateException("Not connected.");
+    }
+    backend.sendWaveletOperation(waveletName, operation, callback);
+  }
+
+  /**
+   * Submits a wavelet operation to the backend and waits for it to be applied locally (round trip).
+   *
+   * @param waveletName of the wavelet to operate on.
+   * @param operation the operation to apply to the wavelet.
+   */
+  public void sendAndAwaitWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
     }
@@ -148,23 +164,27 @@ public class AgentConnection {
    *
    * @param waveletName of the wavelet to operate on.
    * @param waveletDelta to submit.
+   * @param callback callback to be invoked on response.
    */
-  public void sendWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta) {
+  public void sendWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta,
+                               SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
     }
-    backend.sendWaveletDelta(waveletName, waveletDelta,
-                             new SuccessFailCallback<ProtocolSubmitResponse, String>() {
+    backend.sendWaveletDelta(waveletName, waveletDelta, callback);
+  }
 
-      @Override
-      public void onSuccess(ProtocolSubmitResponse successValue) {
-        // nothing
-      }
-
-      @Override
-      public void onFailure(String failureValue) {
-        // nothing
-      }
-    });
+    /**
+   * Submits a delta to the backend and waits for it to be applied locally.
+   *
+   * @param waveletName of the wavelet to operate on.
+   * @param waveletDelta to submit.
+   * @param callback callback to be invoked on response.
+   */
+  public void sendAndAwaitWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta) {
+    if (!isConnected()) {
+      throw new IllegalStateException("Not connected.");
+    }
+    backend.sendAndAwaitWaveletDelta(waveletName, waveletDelta, 1, TimeUnit.MINUTES);
   }
 }

@@ -116,7 +116,7 @@ public class Echoey extends AbstractAgent {
         ops.add(ClientUtils.appendToManifest(manifest, echoDocId));
       }
 
-      sendWaveletDelta(wavelet.getWaveletName(), new WaveletDelta(getParticipantId(), ops));
+      sendAndAwaitWaveletDelta(wavelet.getWaveletName(), new WaveletDelta(getParticipantId(), ops));
     }
   }
 
@@ -127,7 +127,7 @@ public class Echoey extends AbstractAgent {
     String docId = getNewDocumentId() + getEchoeyDocumentSuffix();
     WaveletDelta delta = ClientUtils.createAppendBlipDelta(wavelet.getDocuments().get(
         DocumentConstants.MANIFEST_DOCUMENT_ID), getParticipantId(), docId, text);
-    sendWaveletDelta(wavelet.getWaveletName(), delta);
+    sendAndAwaitWaveletDelta(wavelet.getWaveletName(), delta);
   }
 
   @Override

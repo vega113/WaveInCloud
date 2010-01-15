@@ -18,7 +18,9 @@
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -101,8 +103,8 @@ public abstract class AbstractAgent implements AgentEventListener {
    * @param waveId the wave ID
    * @return the wave, or null
    */
-  protected ClientWaveView getWave(String waveId) {
-    return connection.getWave(WaveId.deserialise(waveId));
+  protected ClientWaveView getWave(WaveId waveId) {
+    return connection.getWave(waveId);
   }
   
   /**
@@ -110,9 +112,22 @@ public abstract class AbstractAgent implements AgentEventListener {
    *
    * @param waveletName of the wavelet to apply the operation to.
    * @param operation the operation to apply.
+   * @param callback completion callback
    */
-  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
-    connection.sendWaveletOperation(waveletName, operation);
+  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation,
+      SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String> callback) {
+    connection.sendWaveletOperation(waveletName, operation, callback);
+  }
+
+  /**
+   * Sends an operation to server and waits for it to be applied locally.
+   *
+   * @param waveletName of the wavelet to apply the operation to.
+   * @param operation the operation to apply.
+   * @param callback completion callback
+   */
+  public void sendAndAwaitWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
+    connection.sendAndAwaitWaveletOperation(waveletName, operation);
   }
 
   /**
@@ -120,8 +135,20 @@ public abstract class AbstractAgent implements AgentEventListener {
    *
    * @param waveletName of the wavelet to apply the operation to
    * @param waveletDelta to send
+   * @param callback completion callback
    */
-  public void sendWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta) {
-    connection.sendWaveletDelta(waveletName, waveletDelta);
+  public void sendWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta,
+      SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String> callback) {
+    connection.sendWaveletDelta(waveletName, waveletDelta, callback);
+  }
+
+    /**
+   * Sends a delta to the server and waits for a response.
+   *
+   * @param waveletName of the wavelet to apply the operation to
+   * @param waveletDelta to send
+   */
+  public void sendAndAwaitWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta) {
+    connection.sendAndAwaitWaveletDelta(waveletName, waveletDelta);
   }
 }
