@@ -1,0 +1,12 @@
+URL: http://mortbay.org/
+Version: 6.1.22
+License: Apache 2.0
+
+License File: COPYING
+
+Description:
+Jetty HTTP server (for Probey agent)
+
+Local Modifications:
+No modifications.
+
