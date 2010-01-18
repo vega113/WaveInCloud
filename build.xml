@@ -291,7 +291,7 @@
         <include name="javax/servlet/**/*" />
         <include name="org/apache/commons/codec/**/*" />
         <include name="org/waveprotocol/**/*" />
-        <include name="org/mortbay/jetty/**/*" />
+        <include name="org/mortbay/**/*" />
       </fileset>
       <manifest>
         <!-- Application entry point -->
