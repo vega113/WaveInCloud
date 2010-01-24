@@ -21,8 +21,8 @@ import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -106,7 +106,7 @@ public abstract class AbstractAgent implements AgentEventListener {
   protected ClientWaveView getWave(WaveId waveId) {
     return connection.getWave(waveId);
   }
-  
+
   /**
    * Sends an operation to server.
    *

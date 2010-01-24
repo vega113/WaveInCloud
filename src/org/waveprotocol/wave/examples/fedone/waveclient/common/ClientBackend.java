@@ -62,6 +62,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
 import java.util.logging.SimpleFormatter;
@@ -73,6 +75,55 @@ import java.util.logging.StreamHandler;
  *
  */
 public class ClientBackend {
+
+  /**
+   * Container for data to {@code WaveletOperationListener}s on events.
+   */
+  private static class WaveletEventData {
+
+    private final String author;
+    private final WaveletData waveletData;
+    private final WaveletOperation waveletOperation;
+    // Hack to mark whether this is actually the "end of a delta sequence", in which case the
+    // above data is irrelevant.
+    private final boolean isDeltaSequenceEnd;
+
+    /**
+     * Standard constructor.
+     */
+    WaveletEventData(String author, WaveletData waveletData, WaveletOperation waveletOperation) {
+      this.author = author;
+      this.waveletData = waveletData;
+      this.waveletOperation = waveletOperation;
+      this.isDeltaSequenceEnd = false;
+    }
+
+    /**
+     * Constructor to set this to a delta sequence end marker.
+     */
+    WaveletEventData(WaveletData waveletData) {
+      this.author = null;
+      this.waveletData = waveletData;
+      this.waveletOperation = null;
+      this.isDeltaSequenceEnd = true;
+    }
+
+    String getAuthor() {
+      return author;
+    }
+
+    WaveletData getWaveletData() {
+      return waveletData;
+    }
+
+    WaveletOperation getWaveletOperation() {
+      return waveletOperation;
+    }
+
+    boolean isDeltaSequenceEnd() {
+      return isDeltaSequenceEnd;
+    }
+  }
 
   private static final Log LOG = Log.get(ClientBackend.class);
   private static final ByteArrayOutputStream logOutput = new ByteArrayOutputStream();
@@ -105,6 +156,10 @@ public class ClientBackend {
   /** RPC channel for communicating with server. */
   private final ClientRpcChannel rpcChannel;
 
+  /** Producer/consumer event queue. */
+  private final BlockingQueue<WaveletEventData> eventQueue =
+      new LinkedBlockingQueue<WaveletEventData>();
+
   /**
    * Create new client backend tied permanently to a given server and user, open that client's
    * index, and begin managing waves it has access to.
@@ -127,6 +182,28 @@ public class ClientBackend {
 
     // Opening the index wave will kickstart the process of receiving waves
     openWave(CommonConstants.INDEX_WAVE_ID, "");
+
+    // Start pushing events to listeners in a separate thread.
+    new Thread() {
+      @Override
+      public void run() {
+        for (;;) {
+          try {
+            WaveletEventData nextEvent = eventQueue.take();
+            if (nextEvent.isDeltaSequenceEnd()) {
+              for (WaveletOperationListener listener : waveletOperationListeners) {
+                listener.onDeltaSequenceEnd(nextEvent.getWaveletData());
+              }
+            } else {
+              notifyWaveletOperationListeners(nextEvent.getAuthor(), nextEvent.getWaveletData(),
+                  nextEvent.getWaveletOperation());
+            }
+          } catch (InterruptedException e) {
+            // TODO: stop?
+          }
+        }
+      }
+    }.start();
   }
 
   /**
@@ -228,9 +305,10 @@ public class ClientBackend {
       SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
     ClientWaveView waveView = createWave(newWaveId);
     WaveletData convRoot = waveView.createWavelet(getIdGenerator().newConversationRootWaveletId());
+
     // Add ourselves in the first operation
     AddParticipant addUserOp = new AddParticipant(getUserId());
-  
+
     // Create a document manifest in the second operation
     WaveletDocumentOperation addManifestOp = new WaveletDocumentOperation(
         DocumentConstants.MANIFEST_DOCUMENT_ID,
@@ -373,7 +451,7 @@ public class ClientBackend {
 
     ClientWaveView wave = waves.get(waveletName.waveId);
     if (wave == null) {
-      // The wave view should always be present, since openWave adds them immediately
+      // The wave view should always be present, since openWave adds them immediately.
       throw new AssertionError("Received update on absent waveId " + waveletName.waveId);
     }
 
@@ -394,11 +472,7 @@ public class ClientBackend {
       Preconditions.checkArgument(waveletUpdate.hasResultingVersion());
       Preconditions.checkArgument(!waveletUpdate.getAppliedDeltaList().isEmpty());
 
-      for (WaveletOperationListener listener : waveletOperationListeners) {
-        listener.onDeltaSequenceStart(wavelet);
-      }
-
-      // Apply operations to the wavelet
+      // Apply operations to the wavelet.
       List<Pair<String, WaveletOperation>> successfulOps = Lists.newArrayList();
 
       for (ProtocolWaveletDelta protobufDelta : waveletUpdate.getAppliedDeltaList()) {
@@ -421,26 +495,22 @@ public class ClientBackend {
       wave.setWaveletVersion(waveletName.waveletId, WaveletOperationSerializer
           .deserialize(waveletUpdate.getResultingVersion()));
 
-      // Notify listeners separately to avoid them operating on invalid wavelet state
-      // TODO: take this out of the network thread
-      for (Pair<String, WaveletOperation> authorAndOp : successfulOps) {
-        notifyWaveletOperationListeners(authorAndOp.first, wavelet, authorAndOp.second);
-      }
-
       // If we have been removed from this wavelet then remove the data too, since if we're re-added
-      // then the deltas will come from version 0, not the latest version we've seen
+      // then the deltas will come from version 0, not the latest version we've seen.
       if (!wavelet.getParticipants().contains(getUserId())) {
         wave.removeWavelet(waveletName.waveletId);
       }
 
-      // If it was an update to the index wave, might need to open/close some more waves
+      // If it was an update to the index wave, might need to open/close some more waves.
       if (wave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
         syncWithIndexWave(wave);
       }
 
-      for (WaveletOperationListener listener : waveletOperationListeners) {
-        listener.onDeltaSequenceEnd(wavelet);
+      // Push the events to the event queue.
+      for (Pair<String, WaveletOperation> authorAndOp : successfulOps) {
+        eventQueue.offer(new WaveletEventData(authorAndOp.first, wavelet, authorAndOp.second));
       }
+      eventQueue.offer(new WaveletEventData(wavelet));
     }
   }
 

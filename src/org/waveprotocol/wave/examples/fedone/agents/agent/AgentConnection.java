@@ -51,10 +51,10 @@ public class AgentConnection {
   public static AgentConnection newConnection(String participantId, String hostname, int port) {
     return new AgentConnection(participantId, hostname, port);
   }
+
   private ClientBackend backend = null;
   private final String hostname;
   private final String participantId;
-
   private final int port;
 
   private AgentConnection(String participantId, String hostname, int port) {
@@ -167,14 +167,14 @@ public class AgentConnection {
    * @param callback callback to be invoked on response.
    */
   public void sendWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta,
-                               SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
+      SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
     }
     backend.sendWaveletDelta(waveletName, waveletDelta, callback);
   }
 
-    /**
+  /**
    * Submits a delta to the backend and waits for it to be applied locally.
    *
    * @param waveletName of the wavelet to operate on.
