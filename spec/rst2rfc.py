@@ -18,10 +18,6 @@
 Command-line utility that takes a single ReST file
 and converts it into XML suitable for processing
 by xml2rfc.
-
-Report any issues related to this program to
-  
-   http://code.google.com/p/rst2rfc/
 """
 
 try:
@@ -176,17 +172,22 @@ class RFCTranslator(nodes.NodeVisitor):
   def depart_address(self, node):
     pass
 
+  def capture_author(self, node):
+    fullname = node.astext()
+    surname = node.astext().split(" ", 1)[1]
+    initials = " ".join([n[0] + "." for n in fullname.split(" ", 1)])
+    self.body.append("<author fullname='%s' surname='%s' initials='%s'>" % (fullname, surname, initials))
+    self.context.append("</author>")
+
   def visit_author(self, node):
     if self.in_author:
       self.body.append(self.context.pop())
     self.in_author = True
     self.in_pre_document = False
-    self.body.append('<author fullname="')
-    self.context.append('</author>\n')
-    self.context.append('">\n')
+    self.textcl.append(self.capture_author)
 
   def depart_author(self, node):
-    self.body.append(self.context.pop())
+    pass
 
   def visit_authors(self, node):
     self.visit_docinfo_item(node, 'authors')
@@ -215,17 +216,15 @@ class RFCTranslator(nodes.NodeVisitor):
     pass
 
   def capture_citation(self, node):
-    if node.astext().startswith('RFC'):
-      try:
-        f = open(os.path.join('refs', node.astext() + '.xml'), 'r')
-        xml = f.readlines()
-        f.close()
-        # TODO parse as XML and serialize back out, don't treat as just text
-        self.body.extend(xml[1:])
-      except IOError:
-        sys.exit('Can not find source file for reference: '
-                + node.astext())
-    self.textcl.append(self.absorball)
+    try:
+      f = open(os.path.join('refs', node.astext() + '.xml'), 'r')
+      xml = f.readlines()
+      f.close()
+      # TODO parse as XML and serialize back out, don't treat as just text
+      self.body.extend(xml[1:])
+    except IOError:
+      sys.exit('Can not find source file for reference: '
+              + node.astext())
 
   def visit_citation(self, node):
     if self.in_middle:
@@ -246,6 +245,7 @@ class RFCTranslator(nodes.NodeVisitor):
 
   def visit_citation_reference(self, node):
     self.begintag(node, 'xref', '\n', False, target=node['refid'].upper())
+    self.textcl.append(absorb)
 
   def depart_citation_reference(self, node):
     self.endtag()
@@ -349,7 +349,6 @@ class RFCTranslator(nodes.NodeVisitor):
   def visit_docinfo_item(self, node, name, meta=1):
     if self.in_author and name not in AUTHOR_ITEMS:
       self.in_author = False
-      self.body.append(self.context.pop())
     self.in_infoitem = True
     self.body.append('<%s>%s</%s>\n' % (name, node.astext(), name))
 
@@ -622,7 +621,6 @@ class RFCTranslator(nodes.NodeVisitor):
 
   def visit_section(self, node):
     if self.in_author:
-      self.body.append(self.context.pop())
       self.in_author = False
     if self.in_document_front:
       self.in_document_front = False

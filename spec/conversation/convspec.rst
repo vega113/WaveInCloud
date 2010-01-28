@@ -837,4 +837,4 @@ remains (with "deleted" set to "true").
 References
 ##########
 
-.. [RFC2119] Bradner, S., "`Key words for use in RFCs to Indicate Requirement Levels <http://bitworking.org>`_", BCP 14, RFC 2119, March 1997.
+.. [RFC2119] Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997.
