@@ -29,6 +29,11 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * A client's view of a wave, with the current wavelet versions.
@@ -46,6 +51,24 @@ public class ClientWaveView {
   private final HashedVersionFactory hashedVersionFactory;
 
   /**
+   * Read Lock for changes to wavelet versions.
+   * TODO: move to ClientWaveletView when it exists
+   */
+  private final Lock versionReadLock;
+
+  /**
+   * Write lock for changes to wavelet versions.
+   * TODO: move to ClientWaveletView when it exists
+   */
+  private final Lock versionWriteLock;
+
+  /**
+   * Condition variable for signalling version changes to wavelets
+   * TODO: move to ClientWaveletView when it exists
+   */
+  private final Condition versionChangeCondition;
+
+  /**
    * @param hashedVersionFactory for generating hashed versions
    * @param waveId of the wave
    */
@@ -53,6 +76,10 @@ public class ClientWaveView {
     this.hashedVersionFactory = hashedVersionFactory;
     this.data = new WaveViewDataImpl(waveId);
     this.currentVersions = Maps.newHashMap();
+    ReadWriteLock versionReadWriteLock = new ReentrantReadWriteLock();
+    versionReadLock = versionReadWriteLock.readLock();
+    versionWriteLock = versionReadWriteLock.writeLock();
+    versionChangeCondition = versionWriteLock.newCondition();
   }
 
   /**
@@ -80,11 +107,16 @@ public class ClientWaveView {
    * @return last known version for wavelet
    */
   public HashedVersion getWaveletVersion(WaveletId waveletId) {
-    HashedVersion version = currentVersions.get(waveletId);
-    if (version == null) {
-      throw new IllegalArgumentException(waveletId + " is not a wavelet of " + data.getWaveId());
-    } else {
-      return version;
+    versionReadLock.lock();
+    try {
+      HashedVersion version = currentVersions.get(waveletId);
+      if (version == null) {
+        throw new IllegalArgumentException(waveletId + " is not a wavelet of " + data.getWaveId());
+      } else {
+        return version;
+      }
+    } finally {
+      versionReadLock.unlock();
     }
   }
 
@@ -95,7 +127,43 @@ public class ClientWaveView {
    * @param version of the wavelet
    */
   public void setWaveletVersion(WaveletId waveletId, HashedVersion version) {
-    currentVersions.put(waveletId, version);
+    versionWriteLock.lock();
+    try {
+      currentVersions.put(waveletId, version);
+      versionChangeCondition.signalAll();
+    } finally {
+      versionWriteLock.unlock();
+    }
+  }
+
+  /**
+   * Block and wait for a wavelet to reach a given version.  If this wave has no record of the
+   * wavelet, wait until it has been created.
+   *
+   * @param waveletId of the wavelet
+   * @param version of the wavelet
+   * @param timeout to block for
+   * @param unit of timeunit
+   * @return false if the waiting time elapsed, true otherwise
+   */
+  public boolean awaitWaveletVersion(WaveletId waveletId, long version, long timeout,
+      TimeUnit unit) {
+    versionWriteLock.lock();
+    long timeoutNanos = System.nanoTime() + TimeUnit.NANOSECONDS.convert(timeout, unit);
+    try {
+      while ((getWavelet(waveletId) == null)
+          || (getWaveletVersion(waveletId).getVersion() < version)) {
+        if (timeoutNanos < System.nanoTime()) {
+          return false;
+        }
+        versionChangeCondition.awaitNanos(timeoutNanos - System.nanoTime());
+      }
+    } catch (InterruptedException e) {
+      throw new IllegalStateException(e);
+    } finally {
+      versionWriteLock.unlock();
+    }
+    return true;
   }
 
   /**

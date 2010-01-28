@@ -222,7 +222,7 @@ public class ClientFrontendImpl implements ClientFrontend {
     @Override
     public void onSuccess(int operationsApplied,
         ProtocolHashedVersion hashedVersionAfterApplication, long applicationTimestamp) {
-      listener.onSuccess(operationsApplied);
+      listener.onSuccess(operationsApplied, hashedVersionAfterApplication);
     }
   }
 

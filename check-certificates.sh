@@ -13,15 +13,17 @@ fi
 
 if [ $WAVESERVER_DISABLE_VERIFICATION != "false" ]; then
   echo "ERROR: WAVESERVER_DISBLE_VERIFICATION should be set to false" 
+  exit 1
 fi
 
 if [ $WAVESERVER_DISABLE_SIGNER_VERIFICATION != "false" ]; then
   echo "ERROR: WAVESERVER_DISABLE_SIGNER_VERIFICATION should be set to false" 
+  exit 1
 fi
 
 if [ ! -e $PRIVATE_KEY_FILENAME ]; then
   echo "ERROR: Private key does not exist:" $PRIVATE_KEY_FILENAME
-  exit
+  exit 1
 fi
 
 # Break apart the certificate list on the commas.
@@ -30,7 +32,7 @@ certlist=(`echo $CERTIFICATE_FILENAME_LIST | sed 's/,/ /g'`)
 if [ "`openssl x509 -modulus -in ${certlist[0]} -noout`" != "`openssl \
   rsa -in $PRIVATE_KEY_FILENAME  -modulus -noout`" ]; then
   echo "ERROR: Public and private key do not match!"
-  exit
+  exit 1
 fi
 
 # Reverse the order of the list for passing into openssl.
@@ -46,7 +48,7 @@ done
 for (( i=0; $i < $len; i++ )); do 
   if [ ! -e ${certlist[$i]} ]; then
     echo "ERROR: Certificate file does not exist:" ${certlist[$i]}
-    exit
+    exit 1
   fi
 done
 

@@ -18,8 +18,14 @@
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
+import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
 
@@ -71,8 +77,34 @@ public abstract class AbstractAgent implements AgentEventListener {
   /**
    * Return the participant ID for this agent.
    */
-  protected final String getParticipantId() {
+  protected final ParticipantId getParticipantId() {
     return connection.getParticipantId();
+  }
+
+  /**
+   * @return a new random document id for this agent.
+   */
+  protected final String getNewDocumentId() {
+    return connection.getNewDocumentId();
+  }
+
+  /**
+   * Creates a new wave for this agent, and adds the agent as a participant.
+   *
+   * @return the new wave.
+   */
+  protected ClientWaveView newWave() {
+    return connection.newWave();
+  }
+
+  /**
+   * Fetches an existing wave for this agent.
+   *
+   * @param waveId the wave ID
+   * @return the wave, or null
+   */
+  protected ClientWaveView getWave(WaveId waveId) {
+    return connection.getWave(waveId);
   }
 
   /**
@@ -80,8 +112,43 @@ public abstract class AbstractAgent implements AgentEventListener {
    *
    * @param waveletName of the wavelet to apply the operation to.
    * @param operation the operation to apply.
+   * @param callback completion callback
    */
-  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
-    connection.sendWaveletOperation(waveletName, operation);
+  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation,
+      SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String> callback) {
+    connection.sendWaveletOperation(waveletName, operation, callback);
+  }
+
+  /**
+   * Sends an operation to server and waits for it to be applied locally.
+   *
+   * @param waveletName of the wavelet to apply the operation to.
+   * @param operation the operation to apply.
+   * @param callback completion callback
+   */
+  public void sendAndAwaitWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
+    connection.sendAndAwaitWaveletOperation(waveletName, operation);
+  }
+
+  /**
+   * Sends a delta to the server.
+   *
+   * @param waveletName of the wavelet to apply the operation to
+   * @param waveletDelta to send
+   * @param callback completion callback
+   */
+  public void sendWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta,
+      SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String> callback) {
+    connection.sendWaveletDelta(waveletName, waveletDelta, callback);
+  }
+
+    /**
+   * Sends a delta to the server and waits for a response.
+   *
+   * @param waveletName of the wavelet to apply the operation to
+   * @param waveletDelta to send
+   */
+  public void sendAndAwaitWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta) {
+    connection.sendAndAwaitWaveletDelta(waveletName, waveletDelta);
   }
 }

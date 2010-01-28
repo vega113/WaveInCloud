@@ -17,20 +17,27 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.common;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
+import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
+import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.List;
@@ -42,9 +49,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  */
 public class ClientUtils {
-  /** The default ("root") document id.  */
-  public static final String DEFAULT_DOCUMENT_ID = "default"; // TODO
-  public static final String MANIFEST_DOCUMENT_ID = "conversation";
 
   /**
    * Disallow construction.
@@ -124,6 +128,57 @@ public class ClientUtils {
     }
 
     return builder.build();
+  }
+
+
+  /**
+   * Create a mutation that creates a new blip containing the given text, places it in a new
+   * blip, then adds a reference to the blip in the document manifest.
+   *
+   * @param manifestDocument document containing the manifest
+   * @param author of the delta
+   * @param newBlipId
+   * @param text to place in the new blip
+   */
+  public static WaveletDelta createAppendBlipDelta(BufferedDocOp manifestDocument,
+      ParticipantId author, String newBlipId, String text) {
+    if (text.length() == 0) {
+      throw new IllegalArgumentException("Cannot append a empty String");
+    } else {
+      // Create new blip to insert at end of document.
+      BufferedDocOp newBlipOp = new DocOpBuilder()
+          .elementStart(DocumentConstants.BODY, Attributes.EMPTY_MAP)
+          .elementStart(DocumentConstants.LINE, Attributes.EMPTY_MAP)
+          .elementEnd() // </line>
+          .characters(text)
+          .elementEnd() // </body>
+          .build();
+
+      // An empty doc op to indicate a new blip is being created.
+      BufferedDocOp emptyNewBlipOp = new DocOpBuilder().build();
+
+      // Send the operation.
+      ImmutableList<WaveletDocumentOperation> operations = ImmutableList.of(
+          new WaveletDocumentOperation(newBlipId, emptyNewBlipOp),
+          new WaveletDocumentOperation(newBlipId, newBlipOp),
+          appendToManifest(manifestDocument, newBlipId));
+      return new WaveletDelta(author, operations);
+    }
+  }
+
+  /**
+   * Add record of a blip to the end of the manifest.
+   */
+  public static WaveletDocumentOperation appendToManifest(BufferedDocOp manifestDocument,
+      String blipId) {
+    BufferedDocOp manifestUpdateOp = new DocOpBuilder()
+        .retain(findDocumentSize(manifestDocument) - 1)
+        .elementStart(DocumentConstants.BLIP,
+            new AttributesImpl(ImmutableMap.of(DocumentConstants.BLIP_ID, blipId)))
+        .elementEnd() // </blip>
+        .retain(1) // retain </conversation>
+        .build();
+    return new WaveletDocumentOperation(DocumentConstants.MANIFEST_DOCUMENT_ID, manifestUpdateOp);
   }
 
   /**

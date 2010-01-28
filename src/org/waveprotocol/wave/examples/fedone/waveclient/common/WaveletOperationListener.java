@@ -67,18 +67,20 @@ public interface WaveletOperationListener {
 
   /**
    * Invoked before a sequence of deltas is applied.
+   * TODO: remove this.
    */
   public void onDeltaSequenceStart(WaveletData wavelet);
 
   /**
    * Invoked after a sequence of deltas has been applied.  It will probably be most appropriate to
    * do any rendering for wavelet changes in this method.
+   * TODO: remove this, replace with a better rendering optimisation.
    */
   public void onDeltaSequenceEnd(WaveletData wavelet);
-  
+
   /**
    * Invoked when a commit notice is received.
-   * 
+   *
    * @param wavelet the wavelet that was committed
    * @param version the latest version the server has committed to disk.
    */

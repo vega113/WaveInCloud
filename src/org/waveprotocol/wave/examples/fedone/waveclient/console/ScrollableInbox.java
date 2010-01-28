@@ -111,6 +111,8 @@ public class ScrollableInbox extends ConsoleScrollable {
 
   /**
    * Update the hashed versions for all waves.
+   *
+   * TODO: use a wavelet to store unread status
    */
   public void updateHashedVersions() {
     for (IndexEntry indexEntry : ClientUtils.getIndexEntries(indexWave)) {

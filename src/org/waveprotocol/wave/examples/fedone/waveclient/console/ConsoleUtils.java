@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 
 import jline.ANSIBuffer;
 
+import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
@@ -37,29 +38,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  */
 public class ConsoleUtils {
-  /** Key for paragraph elements. */
-  public static final String LINE = "line";
-
-  /** Tag for identifying the author of a line. */
-  public static final String LINE_AUTHOR = "by";
-
-  /** */
-  public static final String CONTRIBUTOR = "contributor";
-
-  /** */
-  public static final String CONTRIBUTOR_NAME = "name";
-
-  /** */
-  public static final String BODY = "body";
-
-  /** */
-  public static final String CONVERSATION = "conversation";
-
-  public static final String BLIP = "blip";
-
-  public static final String BLIP_ID = "id";
-
-  public static final String THREAD = "thread";
 
   /** ANSI code for text with no attributes. */
   public static final int ANSI_NO_ATTRS = 0;
@@ -221,7 +199,7 @@ public class ConsoleUtils {
       }
 
       @Override public void elementStart(String key, Attributes attrs) {
-        if (key.equals(LINE)) {
+        if (key.equals(DocumentConstants.LINE)) {
           currentLine.incrementAndGet();
         }
 

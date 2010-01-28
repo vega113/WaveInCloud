@@ -187,15 +187,18 @@
     </copy>
   </target>
 
-  <target name="dist" depends="test, dist-api, dist-server, dist-client-console, dist-agent-echoey" description="Compiles, tests and assembles artifacts">
+  <!-- target name="dist" depends="test, dist-api, dist-server, dist-client-console, dist-agent-echoey, dist-agent-probey" description="Compiles, tests and assembles artifacts" -->
+  <target name="dist" depends="test, dist-server, dist-client-console, dist-agent-echoey, dist-agent-probey" description="Compiles, tests and assembles artifacts">
   </target>
 
+  <!-- dist-api is broken due to non-runnable dependencies in the waveserver directory.  TODO: fix. -->
   <target name="dist-api" depends="stage" description="Assembles the FedOne API">
     <jar destfile="${jar.outfile-api}">
       <fileset dir="${staging}">
         <include name="org/waveprotocol/**/*" />
         <!-- Only exclude runnable targets -->
         <exclude name="org/waveprotocol/wave/examples/fedone/waveclient/agents/echoey/**/*" />
+        <exclude name="org/waveprotocol/wave/examples/fedone/waveclient/agents/probey/**/*" />
         <exclude name="org/waveprotocol/wave/examples/fedone/waveclient/console/**/*" />
         <exclude name="org/waveprotocol/wave/examples/fedone/waveserver/**/*" />
       </fileset>
@@ -275,6 +278,29 @@
           value="org.waveprotocol.wave.examples.fedone.agents.echoey.Echoey"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
         <attribute name="Implementation-Title" value="Google Wave FedOne Echoey Agent"/>
+        <attribute name="Implementation-Version" value="${fedone.version}"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="dist-agent-probey" depends="stage" description="Assembles the FedOne probey agent">
+    <jar destfile="${jar.outfile-agent-probey}">
+      <fileset dir="${staging}">
+        <include name="com/google/common/**/*" />
+        <include name="com/google/inject/**/*" />
+        <include name="com/google/protobuf/**/*" />
+        <include name="javax/inject/**/*" />
+        <include name="javax/servlet/**/*" />
+        <include name="org/apache/commons/codec/**/*" />
+        <include name="org/waveprotocol/**/*" />
+        <include name="org/mortbay/**/*" />
+      </fileset>
+      <manifest>
+        <!-- Application entry point -->
+        <attribute name="Main-Class"
+          value="org.waveprotocol.wave.examples.fedone.agents.probey.Probey"/>
+        <attribute name="Implementation-Vendor" value="Google, Inc."/>
+        <attribute name="Implementation-Title" value="Google Wave FedOne Probey Agent"/>
         <attribute name="Implementation-Version" value="${fedone.version}"/>
       </manifest>
     </jar>
