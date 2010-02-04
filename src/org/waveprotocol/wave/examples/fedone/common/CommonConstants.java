@@ -29,7 +29,7 @@ public final class CommonConstants {
   private CommonConstants() {
   }
 
-  /** The wave id of the index wave (not federated, so no domain). */
-  public static final WaveId INDEX_WAVE_ID = new WaveId("", "indexwave");
+  /** The wave id of the index wave (not federated, so fake domain). */
+  public static final WaveId INDEX_WAVE_ID = new WaveId("indexwave", "indexwave");
 
 }
