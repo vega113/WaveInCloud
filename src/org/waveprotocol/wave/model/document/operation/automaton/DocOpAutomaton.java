@@ -386,12 +386,16 @@ public final class DocOpAutomaton {
     return addViolation(v, illFormedOperation("attribute change inside insert or delete"));
   }
 
-  private ValidationResult retainPastEnd(ViolationCollector v) {
-    return addViolation(v, invalidOperation("retain past end of document"));
+  private ValidationResult retainPastEnd(ViolationCollector v, int expectedLength,
+      int retainItemCount) {
+    return addViolation(v, invalidOperation("retain past end of document, document length "
+        + expectedLength + ", retain item count " + retainItemCount));
   }
 
-  private ValidationResult missingRetainToEnd(ViolationCollector v) {
-    return addViolation(v, invalidOperation("operation shorter than document"));
+  private ValidationResult missingRetainToEnd(ViolationCollector v,
+      int expectedLength, int actualLength) {
+    return addViolation(v, invalidOperation("operation shorter than document, document length "
+        + expectedLength + ", length of input of operation " + actualLength));
   }
 
   private ValidationResult nullCharacters(ViolationCollector v) {
@@ -562,9 +566,10 @@ public final class DocOpAutomaton {
   }
 
   private ValidationResult oldAnnotationsDifferFromDocument(ViolationCollector v,
-      String oldValue, String valueInDoc) {
+      String key, String oldValue, String valueInDoc) {
     return addViolation(v, invalidOperation("old annotations differ from document: "
-        + " purported old value is " + oldValue + ", actual value in document is " + valueInDoc));
+        + "purported old value for key " + key + " is " + oldValue
+        + ", actual value in document is " + valueInDoc));
   }
 
   private ValidationResult newAnnotationsIncorrectForDeletion(ViolationCollector v) {
@@ -948,7 +953,8 @@ public final class DocOpAutomaton {
       int firstChange = doc.firstAnnotationChange(effectivePos, effectivePos + itemCount,
           key, oldValue);
       if (firstChange != -1) {
-        return oldAnnotationsDifferFromDocument(v, oldValue, doc.getAnnotation(firstChange, key));
+        return oldAnnotationsDifferFromDocument(v, key, oldValue,
+            doc.getAnnotation(firstChange, key));
       }
     }
     return valid();
@@ -960,7 +966,7 @@ public final class DocOpAutomaton {
     if (!insertionStackIsEmpty()) { return retainInsideInsertOrDelete(v); }
     if (!deletionStackIsEmpty()) { return retainInsideInsertOrDelete(v); }
     // validity
-    if (!canRetain(itemCount)) { return retainPastEnd(v); }
+    if (!canRetain(itemCount)) { return retainPastEnd(v, doc.length(), itemCount); }
     return checkAnnotationsForRetain(v, itemCount);
   }
 
@@ -1069,7 +1075,7 @@ public final class DocOpAutomaton {
       String defaultFromDocument = posToInheritFrom == -1 ? null :
         doc.getAnnotation(posToInheritFrom, key);
       if (!equal(oldValue, defaultFromDocument)) {
-        return oldAnnotationsDifferFromDocument(v, oldValue, defaultFromDocument);
+        return oldAnnotationsDifferFromDocument(v, key, oldValue, defaultFromDocument);
       }
     }
     return valid();
@@ -1148,7 +1154,8 @@ public final class DocOpAutomaton {
       int firstChange = doc.firstAnnotationChange(effectivePos, effectivePos + itemCount,
           key, oldValue);
       if (firstChange != -1) {
-        return oldAnnotationsDifferFromDocument(v, oldValue, doc.getAnnotation(firstChange, key));
+        return oldAnnotationsDifferFromDocument(v, key, oldValue,
+            doc.getAnnotation(firstChange, key));
       }
       String newValue = annotationsUpdate.getNewValue(i);
       if (!equal(newValue, targetAnnotationsForDeletion.get(key))) {
@@ -1324,7 +1331,11 @@ public final class DocOpAutomaton {
     if (!Utf16Util.isValidUtf16(chars)) { return deleteCharactersInvalidUnicode(v); }
     if (!insertionStackIsEmpty()) { return deleteInsideInsert(v); }
     // validity
+    int docLength = doc.length();
     for (int offset = 0; offset < chars.length(); offset++) {
+      if (effectivePos + offset >= docLength) {
+        return cannotDeleteSoManyCharacters(v, offset, chars);
+      }
       int charHereIfAny = doc.charAt(effectivePos + offset);
       if (charHereIfAny == -1) {
         return cannotDeleteSoManyCharacters(v, offset, chars);
@@ -1527,7 +1538,7 @@ public final class DocOpAutomaton {
 
     // validity
     if (effectivePos != doc.length()) {
-      return missingRetainToEnd(v);
+      return missingRetainToEnd(v, doc.length(), effectivePos);
     }
     return ValidationResult.VALID;
   }

@@ -63,14 +63,14 @@ public final class Utf16Util {
 
   public static boolean isSurrogate(int c) {
     if (!isCodePoint(c)) {
-      throw new IllegalArgumentException("Not a code point: 0x" + Integer.toHexString(c));
+      Preconditions.illegalArgument("Not a code point: 0x" + Integer.toHexString(c));
     }
     return 0xd800 <= c && c <= 0xdfff;
   }
 
   public static boolean isSupplementaryCodePoint(int c) {
     if (!isCodePoint(c)) {
-      throw new IllegalArgumentException("Not a code point: 0x" + Integer.toHexString(c));
+      Preconditions.illegalArgument("Not a code point: 0x" + Integer.toHexString(c));
     }
     return c >= 0x10000;
   }
@@ -199,7 +199,7 @@ public final class Utf16Util {
     if (isSurrogate(c)) {
       Preconditions.illegalArgument("Code point is a surrogate: 0x" + Integer.toHexString(c));
     }
-    
+
     // noncharacters
     {
       int d = c & 0xFFFF;
@@ -219,10 +219,13 @@ public final class Utf16Util {
    * future is easy.
    */
   public static boolean isCodePointGoodForBlip(int c) {
-    Preconditions.checkArgument(isCodePoint(c),
-        "Not a code point: 0x" + Integer.toHexString(c));
-    Preconditions.checkArgument(!isSurrogate(c),
-        "Code point is a surrogate: 0x" + Integer.toHexString(c));
+    if (!isCodePoint(c)) {
+      Preconditions.illegalArgument("Not a code point: 0x" + Integer.toHexString(c));
+    }
+    if (isSurrogate(c)) {
+      Preconditions.illegalArgument("Code point is a surrogate: 0x" + Integer.toHexString(c));
+    }
+
     if (!isCodePointValid(c)) { return false; }
     // control codes
     if (0 <= c && c <= 0x1f || 0x7f <= c && c <= 0x9f) { return false; }
@@ -249,10 +252,13 @@ public final class Utf16Util {
    * For now, it allows any valid Unicode.
    */
   public static boolean isCodePointGoodForDataDocument(int c) {
-    Preconditions.checkArgument(isCodePoint(c),
-        "Not a code point: 0x" + Integer.toHexString(c));
-    Preconditions.checkArgument(!isSurrogate(c),
-        "Code point is a surrogate: 0x" + Integer.toHexString(c));
+    if (!isCodePoint(c)) {
+      Preconditions.illegalArgument("Not a code point: 0x" + Integer.toHexString(c));
+    }
+    if (isSurrogate(c)) {
+      Preconditions.illegalArgument("Code point is a surrogate: 0x" + Integer.toHexString(c));
+    }
+
     if (!isCodePointValid(c)) { return false; }
     return true;
   }

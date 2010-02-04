@@ -21,7 +21,7 @@ package org.waveprotocol.wave.model.id;
  * Serialises and deserialises wave ids and wavelet ids to and from
  * the format &lt;domain&gt;!&lt;id&gt;.
  *
- *
+ * @author zdwang@google.com (David Wang)
  */
 public class LongIdSerialiser implements IdSerialiser {
 
@@ -41,7 +41,7 @@ public class LongIdSerialiser implements IdSerialiser {
   public WaveId deserialiseWaveId(String serialisedForm) {
     String[] parts = SimplePrefixEscaper.DEFAULT_ESCAPER.splitWithoutUnescaping(
         PART_SEPARATOR, serialisedForm);
-    if (parts.length != 2) {
+    if ((parts.length != 2) || parts[0].isEmpty() || parts[1].isEmpty()) {
       throw new IllegalArgumentException("Unable to deserialise the long wave id: " +
           serialisedForm + ". The wave id need to look like <domain>" + PART_SEPARATOR + "<id>");
     } else {
@@ -53,7 +53,7 @@ public class LongIdSerialiser implements IdSerialiser {
   public WaveletId deserialiseWaveletId(String serialisedForm) {
     String[] parts = SimplePrefixEscaper.DEFAULT_ESCAPER.splitWithoutUnescaping(
         PART_SEPARATOR, serialisedForm);
-    if (parts.length != 2) {
+    if ((parts.length != 2) || parts[0].isEmpty() || parts[1].isEmpty()) {
       throw new IllegalArgumentException("Unable to deserialise the long wavelet id: " +
           serialisedForm + ". The wavelet id need to look like <domain>" + PART_SEPARATOR + "<id>");
     } else {

@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.id;
 /**
  * This allows us to serialize and deserialise ids.
  *
- *
+ * @author zdwang@google.com (David Wang)
  */
 public interface IdSerialiser {
   /** Separates a wave id from a wavelet id in serialised form. */

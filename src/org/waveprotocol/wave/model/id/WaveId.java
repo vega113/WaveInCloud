@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.model.id;
 
+import org.waveprotocol.wave.model.util.Preconditions;
+
 /**
  * A wave is identified by a tuple of a wave provider domain and a local
  * identifier which is unique within the domain.
@@ -44,17 +46,21 @@ public final class WaveId implements Comparable<WaveId> {
    */
   public WaveId(String domain, String id) {
     if (domain == null || id == null) {
-      throw new NullPointerException("Cannot create WaveId with null value in [domain:" + domain +
-          "] [id:" + id + "]");
+      Preconditions.nullPointer("Cannot create wave id with null value in [domain:"
+          + domain + "] [id:" + id + "]");
+    }
+    if (domain.isEmpty() || id.isEmpty()) {
+      Preconditions.illegalArgument("Cannot create wave id with empty value in [domain:"
+          + domain + "] [id:" + id + "]");
     }
 
     if (SimplePrefixEscaper.DEFAULT_ESCAPER.hasEscapeCharacters(domain)) {
-      throw new IllegalArgumentException(
+      Preconditions.illegalArgument(
           "Domain cannot contain characters that requires escaping: " + domain);
     }
 
     if (!SimplePrefixEscaper.DEFAULT_ESCAPER.isEscapedProperly(IdConstants.TOKEN_SEPARATOR, id)) {
-      throw new IllegalArgumentException("Id is not properly escaped: " + id);
+      Preconditions.illegalArgument("Id is not properly escaped: " + id);
     }
 
     this.domain = domain;

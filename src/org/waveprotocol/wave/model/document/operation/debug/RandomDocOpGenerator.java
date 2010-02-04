@@ -1407,7 +1407,8 @@ public final class RandomDocOpGenerator {
         doc.consume(op);
         System.err.println("new: " + DocOpUtil.toConciseString(doc.asOperation()));
         System.err.println("new: " + DocOpUtil.toXmlString(doc.asOperation()));
-        if (!DocOpValidator.validate(null, null, doc.asOperation()).isValid()) {
+        if (!DocOpValidator.validate(null, DocumentSchema.NO_SCHEMA_CONSTRAINTS,
+            doc.asOperation()).isValid()) {
           throw new RuntimeException("doc not valid");
         }
       }

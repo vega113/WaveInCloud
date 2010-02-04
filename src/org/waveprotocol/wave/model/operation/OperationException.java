@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.model.operation;
 
+import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton.ValidationResult;
 import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton.ViolationCollector;
 
 /**
@@ -88,6 +89,14 @@ public class OperationException extends Exception {
    */
   public boolean hasViolationsInformation() {
     return violations != null;
+  }
+
+  /**
+   * @return true if the worst problem was that the schema was violated
+   */
+  public boolean isSchemaViolation() {
+    return violations != null
+        && violations.getValidationResult() == ValidationResult.INVALID_SCHEMA;
   }
 
   /**

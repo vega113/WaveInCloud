@@ -43,7 +43,7 @@ public interface AutomatonDocument {
    */
   String elementEndingAt(int pos);
 
-  // -1 if no char at that position
+  // -1 if no char (i.e., element start or end) at that position
   int charAt(int pos);
 
   // depth = 0 means enclosing element, depth = 1 means its parent,

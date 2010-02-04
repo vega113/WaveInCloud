@@ -76,9 +76,7 @@ public abstract class ImmutableUpdateMap<T extends ImmutableUpdateMap<T, U>, U e
   }
 
   public ImmutableUpdateMap(String ... triples) {
-    if (triples.length % 3 != 0) {
-      throw new IllegalArgumentException("Triples must come in groups of three");
-    }
+    Preconditions.checkArgument(triples.length % 3 == 0, "Triples must come in groups of three");
 
     ArrayList<AttributeUpdate> accu = new ArrayList<AttributeUpdate>(triples.length / 3);
     for (int i = 0; i < triples.length; i += 3) {
@@ -98,11 +96,11 @@ public abstract class ImmutableUpdateMap<T extends ImmutableUpdateMap<T, U>, U e
 
     updates = accu;
   }
-  
+
   public ImmutableUpdateMap(Map<String, Pair<String, String>> updates) {
     this(tripletsFromMap(updates));
   }
-  
+
   private static String[] tripletsFromMap(Map<String, Pair<String, String>> updates) {
     String[] triplets = new String[updates.size() * 3];
     int i = 0;
@@ -151,8 +149,8 @@ public abstract class ImmutableUpdateMap<T extends ImmutableUpdateMap<T, U>, U e
           nextAttribute = iterator.hasNext() ? iterator.next() : null;
         } else {
           if (!areEqual(nextAttribute.newValue, attribute.oldValue)) {
-            throw new IllegalArgumentException("Mismatched old value: attempt to update " +
-                nextAttribute + " with " + attribute);
+            Preconditions.illegalArgument(
+                "Mismatched old value: attempt to update " + nextAttribute + " with " + attribute);
           }
           newAttributes.add(new AttributeUpdate(attribute.name, nextAttribute.oldValue,
               attribute.newValue));
@@ -188,8 +186,8 @@ public abstract class ImmutableUpdateMap<T extends ImmutableUpdateMap<T, U>, U e
     for (AttributeUpdate u : updates) {
       Preconditions.checkNotNull(u, "Null attribute update");
       assert u.name != null;
-      if (previous != null) {
-        Preconditions.checkArgument(previous.name.compareTo(u.name) < 0,
+      if (previous != null && previous.name.compareTo(u.name) >= 0) {
+        Preconditions.illegalArgument(
             "Attribute keys not strictly monotonic: " + previous.name + ", " + u.name);
       }
       previous = u;

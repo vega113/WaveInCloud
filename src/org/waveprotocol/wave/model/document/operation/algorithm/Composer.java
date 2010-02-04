@@ -20,6 +20,7 @@ package org.waveprotocol.wave.model.document.operation.algorithm;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
+import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
@@ -791,7 +792,7 @@ public final class Composer {
 
   private Composer() {}
 
-  private BufferedDocOp composeOperations(BufferedDocOp op1, BufferedDocOp op2) 
+  private BufferedDocOp composeOperations(BufferedDocOp op1, BufferedDocOp op2)
       throws OperationException {
     target = defaultTarget;
     int op1Index = 0;
@@ -818,12 +819,12 @@ public final class Composer {
   }
 
   /**
-   * Perform a composition of two operations.
+   * Returns the composition of two operations.
    *
    * @param op1 the first operation
    * @param op2 the second operation
    * @return the result of the composition
-   * @throws OperationException if there was a problem composing
+   * @throws OperationException if applying op1 followed by op2 would be invalid
    */
   public static BufferedDocOp compose(BufferedDocOp op1, BufferedDocOp op2)
       throws OperationException {
@@ -835,6 +836,22 @@ public final class Composer {
   }
 
   /**
+   * Returns the composition of an initialization and an operation.
+   *
+   * This overload of the method returns a more specific subtype than
+   * the other one.
+   *
+   * @param op1 the first operation
+   * @param op2 the second operation
+   * @return the result of the composition
+   * @throws OperationException if applying op1 followed by op2 would be invalid
+   */
+  public static BufferedDocInitialization compose(BufferedDocInitialization op1, BufferedDocOp op2)
+      throws OperationException {
+    return DocOpUtil.asInitialization(compose((BufferedDocOp) op1, op2));
+  }
+
+  /**
    * Compose operations.
    *
    * TODO: Rewrite to have proper exceptions-throwing.
@@ -842,6 +859,7 @@ public final class Composer {
    * @param operations an iterator through the operations to compose
    * @return the result of the composition
    */
+  // TODO: DocOpCollector's API is flawed; it should throw OperationException, and so should this.
   public static BufferedDocOp compose(Iterable<BufferedDocOp> operations) {
     DocOpCollector collector = new DocOpCollector();
     for (BufferedDocOp operation : operations) {

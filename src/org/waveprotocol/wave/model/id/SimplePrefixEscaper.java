@@ -24,7 +24,7 @@ import java.util.Set;
 /**
  * Escapes and un-escapes characters by prefixing another character.
  *
- *
+ * @author zdwang@google.com (David Wang)
  */
 public class SimplePrefixEscaper {
 
@@ -37,6 +37,8 @@ public class SimplePrefixEscaper {
 
   private static final String[] EMPTY_STRING_ARRAY = new String[0];
   private final Set<Character> needsEscaping = new HashSet<Character>();
+
+  /** Character used to prefix an escaped character. */
   private final char prefix;
 
   public SimplePrefixEscaper(char prefix, char... needsEscaping) {
