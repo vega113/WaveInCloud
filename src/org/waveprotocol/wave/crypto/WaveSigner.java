@@ -19,9 +19,8 @@ package org.waveprotocol.wave.crypto;
 
 import com.google.protobuf.ByteString;
 
-
-import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.protocol.common.ProtocolSignature;
+import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;

@@ -17,8 +17,8 @@
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
+import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 /**
  * Composes a ProtocolWaveletDelta and the result of its application, the serialised representation

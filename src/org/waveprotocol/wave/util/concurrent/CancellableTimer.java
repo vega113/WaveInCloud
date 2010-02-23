@@ -137,7 +137,7 @@ public class CancellableTimer {
    * tasks are executed in sequence, and never in parallel.
    */
   public CancellableTimer() {
-    // TODO(arb): STPE eats exceptions. open source SafeExecutor.
+    // TODO(arb): STPE eats exceptions. open source the SafeExecutor class from the waveserver code.
     this(new ScheduledThreadPoolExecutor(1, Executors.defaultThreadFactory()), new Stopwatch());
   }
 
@@ -200,7 +200,8 @@ public class CancellableTimer {
     };
 
     /**
-     * Creates (but does not start) a new stopwatch using {@link System#nanoTime} as its time source.
+     * Creates (but does not start) a new stopwatch using {@link System#nanoTime} as its time
+     * source.
      */
     public Stopwatch() {
       this.ticker = JAVA_TICKER;
@@ -240,8 +241,8 @@ public class CancellableTimer {
      * Returns the current elapsed time shown on this stopwatch, expressed in the desired time unit,
      * with any fraction rounded down.
      *
-     * <p>Note that the overhead of measurement can be more than a microsecond, so it is generally not
-     * useful to specify {@link TimeUnit#NANOSECONDS} precision here.
+     * <p>Note that the overhead of measurement can be more than a microsecond, so it is generally
+     * not useful to specify {@link TimeUnit#NANOSECONDS} precision here.
      */
     public long elapsedTime(TimeUnit desiredUnit) {
       return desiredUnit.convert(elapsedNanos(), NANOSECONDS);

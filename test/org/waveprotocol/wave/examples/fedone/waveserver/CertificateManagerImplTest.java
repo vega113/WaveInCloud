@@ -16,12 +16,6 @@
  */
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.reset;
-import static org.easymock.EasyMock.verify;
-import static org.easymock.classextension.EasyMock.createStrictMock;
-import static org.waveprotocol.wave.examples.fedone.waveserver.Ticker.EASY_TICKS;
-
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -29,6 +23,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import junit.framework.TestCase;
 
 import org.apache.commons.codec.binary.Base64;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import org.waveprotocol.wave.crypto.CachedCertPathValidator;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.DefaultCacheImpl;
@@ -48,20 +47,21 @@ import org.waveprotocol.wave.crypto.WaveSignerFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
+import static org.waveprotocol.wave.examples.fedone.waveserver.Ticker.EASY_TICKS;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolSignature;
+import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm;
-import org.waveprotocol.wave.federation.FederationErrors;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 import org.waveprotocol.wave.waveserver.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -293,22 +293,18 @@ public class CertificateManagerImplTest extends TestCase {
    */
   public void test_prefetchDeltaSignerInfo1() throws Exception {
     SignerInfoPrefetchResultListener mockListener =
-        createStrictMock(SignerInfoPrefetchResultListener.class);
-    mockListener.onSuccess(getRealSignerInfo().toProtoBuf());
+        mock(SignerInfoPrefetchResultListener.class);
 
-    replay(mockListener);
     manager.prefetchDeltaSignerInfo(getSuccessfulProvider(), getRealSignerId(),
         getFakeWaveletName(DOMAIN), null, mockListener);
-    verify(mockListener);
+    verify(mockListener).onSuccess(getRealSignerInfo().toProtoBuf());
 
     // Shouldn't get a NPE from the null provider because the callback should not be used
-    reset(mockListener);
-    mockListener.onSuccess(getRealSignerInfo().toProtoBuf());
 
-    replay(mockListener);
     manager.prefetchDeltaSignerInfo(null, getRealSignerId(), getFakeWaveletName(DOMAIN), null,
         mockListener);
-    verify(mockListener);
+    verify(mockListener, times(2)).onSuccess(getRealSignerInfo().toProtoBuf());
+
   }
 
   /**
@@ -318,20 +314,19 @@ public class CertificateManagerImplTest extends TestCase {
   public void test_prefetchDeltaSignerInfo2() throws Exception {
     // The dead listener won't return
     SignerInfoPrefetchResultListener deadListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
-    replay(deadListener);
+      mock(SignerInfoPrefetchResultListener.class);
     manager.prefetchDeltaSignerInfo(getDeadProvider(), getRealSignerId(),
         getFakeWaveletName(DOMAIN), null, deadListener);
+    verifyZeroInteractions(deadListener);
 
     // But this will.  However, it shouldn't be called since the other was added first, and only
     // 1 request is started per domain
     SignerInfoPrefetchResultListener aliveListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
-    replay(aliveListener);
+      mock(SignerInfoPrefetchResultListener.class);
     manager.prefetchDeltaSignerInfo(getSuccessfulProvider(), getRealSignerId(),
         getFakeWaveletName(DOMAIN), null, aliveListener);
 
-    verify(deadListener, aliveListener);
+    verifyZeroInteractions(aliveListener);
   }
 
   /**
@@ -341,49 +336,41 @@ public class CertificateManagerImplTest extends TestCase {
   public void test_prefetchDeltaSignerInfo3() throws Exception {
     // This will never return, but the callback will run later
     SignerInfoPrefetchResultListener deadListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
+      mock(SignerInfoPrefetchResultListener.class);
 
-    replay(deadListener);
     manager.prefetchDeltaSignerInfo(getDeadProvider(), getRealSignerId(),
         getFakeWaveletName(DOMAIN), null, deadListener);
+    verifyZeroInteractions(deadListener);
 
     // This should succeed later, after some number of ticks
     SignerInfoPrefetchResultListener slowSuccessListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
+      mock(SignerInfoPrefetchResultListener.class);
 
-    replay(slowSuccessListener);
     manager.prefetchDeltaSignerInfo(getSlowSuccessfulProvider(ticker, EASY_TICKS),
         getRealSignerId(), getFakeWaveletName(OTHER_DOMAIN), null, slowSuccessListener);
+    verifyZeroInteractions(slowSuccessListener);
 
     // This would succeed right now if it didn't have to wait for the slow success
     SignerInfoPrefetchResultListener successListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
+      mock(SignerInfoPrefetchResultListener.class);
 
-    replay(successListener);
     manager.prefetchDeltaSignerInfo(getSuccessfulProvider(), getRealSignerId(),
         getFakeWaveletName(OTHER_DOMAIN), null, successListener);
+    verifyZeroInteractions(successListener);
 
     // After ticking, each callback should run
-    verify(deadListener, slowSuccessListener, successListener);
-    reset(deadListener, slowSuccessListener, successListener);
-
-    deadListener.onSuccess(getRealSignerInfo().toProtoBuf());
-    slowSuccessListener.onSuccess(getRealSignerInfo().toProtoBuf());
-    successListener.onSuccess(getRealSignerInfo().toProtoBuf());
-
-    replay(deadListener, slowSuccessListener, successListener);
     ticker.tick(EASY_TICKS);
-    verify(deadListener, slowSuccessListener, successListener);
+    verify(deadListener).onSuccess(getRealSignerInfo().toProtoBuf());
+    verify(slowSuccessListener).onSuccess(getRealSignerInfo().toProtoBuf());
+    verify(successListener).onSuccess(getRealSignerInfo().toProtoBuf());
 
     // Subsequent calls should also succeed immediately without calling the callback
     SignerInfoPrefetchResultListener nullListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
+      mock(SignerInfoPrefetchResultListener.class);
 
-    nullListener.onSuccess(getRealSignerInfo().toProtoBuf());
-    replay(nullListener);
     manager.prefetchDeltaSignerInfo(null, getRealSignerId(), getFakeWaveletName(DOMAIN), null,
         nullListener);
-    verify(nullListener);
+    verify(nullListener).onSuccess(getRealSignerInfo().toProtoBuf());
   }
 
   /**
@@ -393,30 +380,24 @@ public class CertificateManagerImplTest extends TestCase {
   public void test_prefetchDeltaSignerInfo4() throws Exception {
     // This will fail later
     SignerInfoPrefetchResultListener failListener =
-        createStrictMock(SignerInfoPrefetchResultListener.class);
+        mock(SignerInfoPrefetchResultListener.class);
 
-    replay(failListener);
     manager.prefetchDeltaSignerInfo(getSlowFailingProvider(ticker, EASY_TICKS), getRealSignerId(),
         getFakeWaveletName(DOMAIN), null, failListener);
 
     // This would succeed later if it weren't for the previous one failing
     SignerInfoPrefetchResultListener successListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
+      mock(SignerInfoPrefetchResultListener.class);
 
-    replay(successListener);
     manager.prefetchDeltaSignerInfo(getSuccessfulProvider(), getRealSignerId(),
         getFakeWaveletName(DOMAIN), null, successListener);
+    verifyZeroInteractions(failListener);
+    verifyZeroInteractions(successListener);
 
     // Both callbacks should fail after ticking
-    verify(failListener, successListener);
-    reset(failListener, successListener);
-
-    failListener.onFailure(GENERIC_ERROR);
-    successListener.onFailure(GENERIC_ERROR);
-
-    replay(failListener, successListener);
     ticker.tick(EASY_TICKS);
-    verify(failListener, successListener);
+    verify(failListener).onFailure(GENERIC_ERROR);
+    verify(successListener).onFailure(GENERIC_ERROR);
   }
 
   /**
@@ -426,31 +407,26 @@ public class CertificateManagerImplTest extends TestCase {
   public void test_prefetchDeltaSignerInfo5() throws Exception {
     // This would fail if the next (immediate) request didn't succeed
     SignerInfoPrefetchResultListener failListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
+      mock(SignerInfoPrefetchResultListener.class);
 
-    replay(failListener);
     manager.prefetchDeltaSignerInfo(getSlowFailingProvider(ticker, EASY_TICKS), getRealSignerId(),
         getFakeWaveletName(DOMAIN), getHashedVersion(), failListener);
-    verify(failListener);
-    reset(failListener);
+    verifyZeroInteractions(failListener);
 
     // This will succeed immediately
     SignerInfoPrefetchResultListener successListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
+      mock(SignerInfoPrefetchResultListener.class);
 
-    successListener.onSuccess(getRealSignerInfo().toProtoBuf());
-    failListener.onSuccess(getRealSignerInfo().toProtoBuf());
-
-    replay(failListener, successListener);
     manager.prefetchDeltaSignerInfo(getSuccessfulProvider(), getRealSignerId(),
         getFakeWaveletName(OTHER_DOMAIN), getHashedVersion(), successListener);
-    verify(failListener, successListener);
+
+    verify(successListener).onSuccess(getRealSignerInfo().toProtoBuf());
+    verify(failListener).onSuccess(getRealSignerInfo().toProtoBuf());
 
     // The failing listener shouldn't do anything, even after the ticks
-    reset(failListener, successListener);
-    replay(failListener, successListener);
     ticker.tick(EASY_TICKS);
-    verify(failListener, successListener);
+    verifyNoMoreInteractions(failListener);
+    verifyNoMoreInteractions(successListener);
   }
 
   /**
@@ -460,35 +436,29 @@ public class CertificateManagerImplTest extends TestCase {
   public void test_prefetchDeltaSignerInfo6() throws Exception {
     // This will fail later
     SignerInfoPrefetchResultListener failListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
+      mock(SignerInfoPrefetchResultListener.class);
 
-    replay(failListener);
     manager.prefetchDeltaSignerInfo(getSlowFailingProvider(ticker, EASY_TICKS), getRealSignerId(),
         getFakeWaveletName(DOMAIN), getHashedVersion(), failListener);
-    verify(failListener);
+    verifyZeroInteractions(failListener);
 
     // This will succeed later, after the failing one fails
     SignerInfoPrefetchResultListener successListener =
-      createStrictMock(SignerInfoPrefetchResultListener.class);
+      mock(SignerInfoPrefetchResultListener.class);
 
-    replay(successListener);
     manager.prefetchDeltaSignerInfo(getSlowSuccessfulProvider(ticker, EASY_TICKS * 2),
         getRealSignerId(), getFakeWaveletName(OTHER_DOMAIN), getHashedVersion(), successListener);
-    verify(successListener);
+    verifyZeroInteractions(successListener);
 
     // The failing request should fail, but successful request left alone
-    reset(failListener, successListener);
-    failListener.onFailure(GENERIC_ERROR);
-    replay(failListener, successListener);
     ticker.tick(EASY_TICKS);
-    verify(failListener, successListener);
+    verifyZeroInteractions(successListener);
+    verify(failListener).onFailure(GENERIC_ERROR);
 
     // The successful request should now succeed
-    reset(failListener, successListener);
-    successListener.onSuccess(getRealSignerInfo().toProtoBuf());
-    replay(failListener, successListener);
     ticker.tick(EASY_TICKS);
-    verify(failListener, successListener);
+    verify(successListener).onSuccess(getRealSignerInfo().toProtoBuf());
+    verifyNoMoreInteractions(failListener);
   }
 
 

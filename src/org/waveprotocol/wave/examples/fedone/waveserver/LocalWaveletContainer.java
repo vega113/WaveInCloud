@@ -22,8 +22,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
+import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 
 /**
  * A local wavelet may be updated by submits. The local wavelet will perform
