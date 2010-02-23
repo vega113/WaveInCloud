@@ -51,6 +51,9 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletOperation;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.util.Collections;
 import java.util.List;
@@ -206,8 +209,7 @@ public class ClientFrontendImpl implements ClientFrontend {
     }
   }
 
-  private static class SubmitResultListenerAdapter
-  implements org.waveprotocol.wave.examples.fedone.waveserver.SubmitResultListener {
+  private static class SubmitResultListenerAdapter implements SubmitResultListener {
     private final SubmitResultListener listener;
 
     public SubmitResultListenerAdapter(SubmitResultListener listener) {
@@ -215,14 +217,15 @@ public class ClientFrontendImpl implements ClientFrontend {
     }
 
     @Override
-    public void onFailure(String errorMessage) {
-      listener.onFailure(errorMessage);
+    public void onFailure(FederationError error) {
+      listener.onFailure(error);
     }
 
     @Override
     public void onSuccess(int operationsApplied,
-        ProtocolHashedVersion hashedVersionAfterApplication, long applicationTimestamp) {
-      listener.onSuccess(operationsApplied, hashedVersionAfterApplication);
+        ProtocolHashedVersion hashedVersionAfterApplication,
+        long applicationTimestamp) {
+      listener.onSuccess(operationsApplied, hashedVersionAfterApplication, applicationTimestamp);
     }
   }
 
@@ -234,7 +237,7 @@ public class ClientFrontendImpl implements ClientFrontend {
   public void submitRequest(final WaveletName waveletName, ProtocolWaveletDelta delta,
       final SubmitResultListener listener) {
     if (!isWaveletWritable(waveletName)) {
-      listener.onFailure("Wavelet " + waveletName + " is readonly");
+      listener.onFailure(FederationErrors.badRequest("Wavelet " + waveletName + " is readonly"));
     } else {
       waveletProvider.submitRequest(waveletName, delta, new SubmitResultListenerAdapter(listener) {
         @Override

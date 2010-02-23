@@ -58,6 +58,10 @@ import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -205,7 +209,8 @@ public class CertificateManagerImplTest extends TestCase {
     "lhMZMHD/ivqg8faZSQNYMg6xq7I=\n" +
     "-----END CERTIFICATE-----\n";
 
-  private static final String GENERIC_ERROR = "It's not my fault!";
+  private static final FederationError GENERIC_ERROR =
+      FederationErrors.badRequest("It's not my fault!");
 
   private CertPathStore store;
   private CertificateManager manager;

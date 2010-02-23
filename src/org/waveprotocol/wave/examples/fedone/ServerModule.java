@@ -22,14 +22,18 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
-import org.waveprotocol.wave.examples.fedone.federation.xmpp.WaveXmppComponent;
-import org.waveprotocol.wave.examples.fedone.federation.xmpp.XmppFederationRemote;
-import org.waveprotocol.wave.examples.fedone.waveserver.FederationHostBridge;
-import org.waveprotocol.wave.examples.fedone.waveserver.FederationRemoteBridge;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServer;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerModule;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationListener;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
+import org.waveprotocol.wave.federation.xmpp.IncomingPacketHandler;
+import org.waveprotocol.wave.federation.xmpp.OutgoingPacketTransport;
+import org.waveprotocol.wave.federation.xmpp.XmppFederationHost;
+import org.waveprotocol.wave.federation.xmpp.XmppFederationRemote;
+import org.waveprotocol.wave.federation.xmpp.XmppManager;
+import org.waveprotocol.wave.waveserver.FederationHostBridge;
+import org.waveprotocol.wave.waveserver.FederationRemoteBridge;
+import org.waveprotocol.wave.waveserver.WaveletFederationListener;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
 
 import java.util.Arrays;
 import java.util.List;
@@ -54,11 +58,14 @@ public class ServerModule extends AbstractModule {
 
     // Serve updates to the outside world about local waves.
     bind(WaveletFederationListener.Factory.class).annotatedWith(FederationHostBridge.class)
-        .to(WaveXmppComponent.class).in(Singleton.class);
+        .to(XmppFederationHost.class).in(Singleton.class);
 
     // Provide history and respond to submits about our own local waves.
     bind(WaveletFederationProvider.class).annotatedWith(FederationHostBridge.class)
         .to(WaveServer.class);
+
+    bind(IncomingPacketHandler.class).to(XmppManager.class).in(Singleton.class);
+    bind(OutgoingPacketTransport.class).to(ComponentPacketTransport.class).in(Singleton.class);
 
     install(new WaveServerModule());
     bind(String.class).annotatedWith(Names.named("privateKey")).toInstance("");
