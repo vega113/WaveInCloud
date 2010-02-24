@@ -30,9 +30,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.protocol.common;
-import org.waveprotocol.wave.examples.fedone.waveserver.SubmitResultListener;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationListener;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.WaveletFederationListener;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
 import org.xmpp.packet.Message;
 
 import java.lang.reflect.Field;

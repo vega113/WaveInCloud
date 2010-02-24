@@ -42,6 +42,8 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletOperation;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.util.HashMap;
 import java.util.List;
@@ -78,7 +80,7 @@ public class WaveClientRpcImplTest extends TestCase {
     public void doSubmitFailed(WaveletName waveletName) {
       SubmitRecord record = submitRecords.remove(waveletName);
       if (record != null) {
-        record.listener.onFailure(FAIL_MESSAGE);
+        record.listener.onFailure(FederationErrors.badRequest(FAIL_MESSAGE));
       }
     }
 
@@ -87,7 +89,7 @@ public class WaveClientRpcImplTest extends TestCase {
       ProtocolHashedVersion fakeHashedVersion =
           ProtocolHashedVersion.newBuilder().setVersion(0).setHistoryHash(ByteString.EMPTY).build();
       if (record != null) {
-        record.listener.onSuccess(record.operations, fakeHashedVersion);
+        record.listener.onSuccess(record.operations, fakeHashedVersion, 0);
       }
     }
 
@@ -289,7 +291,7 @@ public class WaveClientRpcImplTest extends TestCase {
         assertFalse(update.hasCommitNotice());
       }
     });
-    Map<String, BufferedDocOp> documentState = ImmutableMap.<String, BufferedDocOp>of();
+    Map<String, BufferedDocOp> documentState = ImmutableMap.of();
     frontend.waveletUpdate(WAVELET_NAME, DELTAS, RESULTING_VERSION, documentState);
     assertEquals(1, counter);
     assertFalse(controller.failed());
@@ -368,7 +370,6 @@ public class WaveClientRpcImplTest extends TestCase {
       .setDelta(DELTA)
       .setWaveletName("badwaveletname").build();
     counter = 0;
-    boolean failure = false;
     try {
       rpcImpl.submit(controller, request, new RpcCallback<ProtocolSubmitResponse>() {
         @Override

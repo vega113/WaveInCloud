@@ -37,7 +37,8 @@ import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
 import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.examples.fedone.util.Log;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationProvider.DeltaSignerInfoResponseListener;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
@@ -45,6 +46,8 @@ import org.waveprotocol.wave.protocol.common.ProtocolSignature;
 import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider.DeltaSignerInfoResponseListener;
 
 import java.util.List;
 import java.util.Map;
@@ -240,10 +243,10 @@ public class CertificateManagerImpl implements CertificateManager {
     if (domainCallbacks.get(domain).size() == 1) {
         provider.getDeltaSignerInfo(signerId, waveletName, deltaEndVersion,
             new DeltaSignerInfoResponseListener() {
-              @Override public void onFailure(String errorMessage) {
-                LOG.warning("getDeltaSignerInfo failed: " + errorMessage);
+              @Override public void onFailure(FederationError error) {
+                LOG.warning("getDeltaSignerInfo failed: " + error);
                 // Fail all requests on this domain
-                dequeueSignerInfoRequestForDomain(signerId, errorMessage, domain);
+                dequeueSignerInfoRequestForDomain(signerId, error, domain);
               }
 
               @Override public void onSuccess(ProtocolSignerInfo signerInfo) {
@@ -252,7 +255,7 @@ public class CertificateManagerImpl implements CertificateManager {
                   dequeueSignerInfoRequest(signerId, null);
                 } catch (SignatureException e) {
                   LOG.warning("Failed to verify signer info", e);
-                  dequeueSignerInfoRequest(signerId, e.toString());
+                  dequeueSignerInfoRequest(signerId, FederationErrors.badRequest(e.toString()));
                 }
               }});
     }
@@ -262,12 +265,12 @@ public class CertificateManagerImpl implements CertificateManager {
    * Dequeue all signer info requests for a given signer id.
    *
    * @param signerId to dequeue requests for
-   * @param errorMessage if there was an error, null for success
+   * @param error if there was an error, null for success
    */
-  private synchronized void dequeueSignerInfoRequest(ByteString signerId, String errorMessage) {
+  private synchronized void dequeueSignerInfoRequest(ByteString signerId, FederationError error) {
     List<String> domains = ImmutableList.copyOf(signerInfoRequests.get(signerId).keySet());
     for (String domain : domains) {
-      dequeueSignerInfoRequestForDomain(signerId, errorMessage, domain);
+      dequeueSignerInfoRequestForDomain(signerId, error, domain);
     }
   }
 
@@ -275,11 +278,11 @@ public class CertificateManagerImpl implements CertificateManager {
    * Dequeue all signer info requests for a given signer id and a specific domain.
    *
    * @param signerId to dequeue requests for
-   * @param errorMessage if there was an error, null for success
+   * @param error if there was an error, null for success
    * @param domain to dequeue the signer requests for
    */
   private synchronized void dequeueSignerInfoRequestForDomain(ByteString signerId,
-      String errorMessage, String domain) {
+      FederationError error, String domain) {
     Multimap<String, SignerInfoPrefetchResultListener> domainListeners =
         signerInfoRequests.get(signerId);
     if (domainListeners == null) {
@@ -290,10 +293,10 @@ public class CertificateManagerImpl implements CertificateManager {
     }
 
     for (SignerInfoPrefetchResultListener listener : domainListeners.get(domain)) {
-      if (errorMessage == null) {
+      if (error == null) {
         listener.onSuccess(retrieveSignerInfo(signerId));
       } else {
-        listener.onFailure(errorMessage);
+        listener.onFailure(error);
       }
     }
 

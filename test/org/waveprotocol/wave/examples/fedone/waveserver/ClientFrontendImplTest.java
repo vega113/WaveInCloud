@@ -57,6 +57,8 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.util.List;
 import java.util.Map;
@@ -168,8 +170,8 @@ public class ClientFrontendImplTest extends TestCase {
     waveletProvider.submitRequest(
         eq(WAVELET_NAME), eq(DELTA), (SubmitResultListener) notNull());
     replay(waveletProvider);
-    ClientFrontend.SubmitResultListener listener =
-      createMock(ClientFrontend.SubmitResultListener.class);
+    SubmitResultListener listener =
+      createMock(SubmitResultListener.class);
     replay(listener);
     clientFrontend.submitRequest(WAVELET_NAME, DELTA, listener);
     verify(waveletProvider, listener);
@@ -180,9 +182,10 @@ public class ClientFrontendImplTest extends TestCase {
    * yields an expected failure message.
    */
   public void testCannotSubmitToIndexWave() {
-    ClientFrontend.SubmitResultListener listener =
-      createMock(ClientFrontend.SubmitResultListener.class);
-    listener.onFailure("Wavelet " + INDEX_WAVELET_NAME + " is readonly");
+    SubmitResultListener listener =
+      createMock(SubmitResultListener.class);
+    listener.onFailure(FederationErrors.badRequest("Wavelet " + INDEX_WAVELET_NAME
+                                                   + " is readonly"));
     EasyMock.replay(listener);
     clientFrontend.submitRequest(INDEX_WAVELET_NAME, DELTA, listener);
     EasyMock.verify(listener); // no invocations

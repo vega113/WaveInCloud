@@ -40,10 +40,10 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletOperation;
+import org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation;
+import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 
 import java.util.List;
 import java.util.Map;

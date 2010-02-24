@@ -13,6 +13,8 @@ exec java -jar dist/fedone-server-$FEDONE_VERSION.jar \
   --client_frontend_hostname=$WAVE_SERVER_HOSTNAME \
   --client_frontend_port=$WAVE_SERVER_PORT \
   --xmpp_component_name=wave \
+  --xmpp_jid=wave.${WAVE_SERVER_DOMAIN_NAME} \
+  --xmpp_server_description="FedOne" \
   --xmpp_server_hostname=$XMPP_SERVER_HOSTNAME \
   --xmpp_server_ip=$XMPP_SERVER_IP \
   --xmpp_server_port=$XMPP_SERVER_PORT \

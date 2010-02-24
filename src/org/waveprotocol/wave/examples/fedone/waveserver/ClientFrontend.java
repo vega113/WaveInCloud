@@ -20,8 +20,10 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
+import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.util.List;
 import java.util.Set;
@@ -52,11 +54,6 @@ public interface ClientFrontend extends WaveletListener {
    */
   void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
       SubmitResultListener listener);
-
-  interface SubmitResultListener {
-    void onSuccess(int operationsApplied, ProtocolHashedVersion hashedVersionAfterApplication);
-    void onFailure(String errorMessage);
-  }
 
   /**
    * Request to open a Wave. Optional waveletIdPrefixes allows the requestor to

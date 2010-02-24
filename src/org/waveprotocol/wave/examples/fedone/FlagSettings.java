@@ -61,4 +61,10 @@ public class FlagSettings {
 
   @Flag(name="waveserver_disable_signer_verification")
   private static boolean waveserverDisableSignerVerification;
+
+  @Flag(name="xmpp_server_description")
+  private static String xmppServerDescription;
+
+  @Flag(name="xmpp_jid")
+  private static String xmppJid;
 }

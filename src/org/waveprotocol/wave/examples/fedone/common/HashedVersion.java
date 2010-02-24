@@ -88,7 +88,8 @@ public final class HashedVersion {
           .getHashedVersionAppliedAt());
     } else {
       try {
-        ProtocolWaveletDelta innerDelta = ProtocolWaveletDelta.parseFrom(appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
+        ProtocolWaveletDelta innerDelta = ProtocolWaveletDelta.parseFrom(
+            appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
         return WaveletOperationSerializer.deserialize(innerDelta.getHashedVersion());
       } catch (InvalidProtocolBufferException e) {
         throw new IllegalArgumentException(e);
