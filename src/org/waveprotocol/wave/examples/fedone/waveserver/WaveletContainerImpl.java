@@ -321,13 +321,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     try {
       for (WaveletOperation op : ops) {
         lastOp = op;
-        try {
-          op.apply(waveletData);
-        } catch (ArrayIndexOutOfBoundsException e) {
-          // This happens when two document operations of different sizes are composed
-          // TODO: OT should should throw a nicer error, update this code if/when it does
-          throw new OperationException(e);
-        }
+        op.apply(waveletData);
         opsApplied++;
       }
     } catch (OperationException e) {
