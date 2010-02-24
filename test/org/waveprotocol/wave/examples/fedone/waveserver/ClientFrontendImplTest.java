@@ -16,12 +16,12 @@
  */
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.easymock.EasyMock.eq;
-import static org.easymock.EasyMock.notNull;
-import static org.easymock.classextension.EasyMock.createMock;
-import static org.easymock.classextension.EasyMock.replay;
-import static org.easymock.classextension.EasyMock.reset;
-import static org.easymock.classextension.EasyMock.verify;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.isNotNull;
+import static org.mockito.Matchers.eq;
 import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
 import static org.waveprotocol.wave.examples.fedone.common.HashedVersion.unsigned;
 import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
@@ -39,7 +39,6 @@ import com.google.common.collect.Maps;
 
 import junit.framework.TestCase;
 
-import org.easymock.classextension.EasyMock;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
@@ -91,10 +90,9 @@ public class ClientFrontendImplTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    waveletProvider = createMock(WaveletProvider.class);
-    waveletProvider.setListener((WaveletListener) notNull());
-    replay(waveletProvider);
+    waveletProvider = mock(WaveletProvider.class);
     this.clientFrontend = new ClientFrontendImpl(waveletProvider);
+    verify(waveletProvider).setListener((WaveletListener) isNotNull());
   }
 
   /**
@@ -137,14 +135,13 @@ public class ClientFrontendImplTest extends TestCase {
    * waveletUpdate().
    */
   public void testInitialOpenRequestYieldsNothing() {
-    OpenListener listener = createMock(OpenListener.class);
-    EasyMock.replay(listener);
+    OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, listener);
-    EasyMock.verify(listener);
+    verifyZeroInteractions(listener);
     clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE,
         listener);
     // we don't expect any invocations on the listener
-    verify(listener);
+    verifyZeroInteractions(listener);
   }
 
   /**
@@ -152,13 +149,12 @@ public class ClientFrontendImplTest extends TestCase {
    * deltas arriving via waveletUpdate(), aren't forwarded to the listener.
    */
   public void testDeltasArentPropagatedIfNotSubscribedToWavelet() {
-    OpenListener listener = createMock(OpenListener.class);
-    replay(listener);
+    OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, WAVE_ID, ImmutableSet.of("nonexisting-wavelet"),
         Integer.MAX_VALUE, listener);
     clientFrontend.waveletUpdate(
         WAVELET_NAME, DELTAS, DELTAS.getEndVersion(), DOCUMENT_STATE);
-    verify(listener);
+    verifyZeroInteractions(listener);
   }
 
   /**
@@ -166,15 +162,11 @@ public class ClientFrontendImplTest extends TestCase {
    * waveletProvider.submitRequest().
    */
   public void testSubmitGetsForwardedToWaveletProvider() {
-    reset(waveletProvider);
-    waveletProvider.submitRequest(
-        eq(WAVELET_NAME), eq(DELTA), (SubmitResultListener) notNull());
-    replay(waveletProvider);
-    SubmitResultListener listener =
-      createMock(SubmitResultListener.class);
-    replay(listener);
+    SubmitResultListener listener = mock(SubmitResultListener.class);
     clientFrontend.submitRequest(WAVELET_NAME, DELTA, listener);
-    verify(waveletProvider, listener);
+    verify(waveletProvider).submitRequest(
+        eq(WAVELET_NAME), eq(DELTA), (SubmitResultListener) isNotNull());
+    verifyZeroInteractions(listener);
   }
 
   /**
@@ -182,13 +174,11 @@ public class ClientFrontendImplTest extends TestCase {
    * yields an expected failure message.
    */
   public void testCannotSubmitToIndexWave() {
-    SubmitResultListener listener =
-      createMock(SubmitResultListener.class);
-    listener.onFailure(FederationErrors.badRequest("Wavelet " + INDEX_WAVELET_NAME
-                                                   + " is readonly"));
-    EasyMock.replay(listener);
+    SubmitResultListener listener = mock(SubmitResultListener.class);
+
     clientFrontend.submitRequest(INDEX_WAVELET_NAME, DELTA, listener);
-    EasyMock.verify(listener); // no invocations
+    verify(listener).onFailure(FederationErrors.badRequest("Wavelet " + INDEX_WAVELET_NAME
+                                                           + " is readonly"));
   }
 
   /**
@@ -196,13 +186,11 @@ public class ClientFrontendImplTest extends TestCase {
    * a subscription.
    */
   public void testOpenThenSendDeltas() {
-    OpenListener listener = createMock(OpenListener.class);
+    OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, listener);
-
-    listener.onUpdate(WAVELET_NAME, DELTAS, DELTAS.getEndVersion());
-    EasyMock.replay(listener);
     clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "");
-    EasyMock.verify(listener);
+    verify(listener).onUpdate(WAVELET_NAME, DELTAS, DELTAS.getEndVersion());
+
   }
 
   /**
@@ -211,16 +199,15 @@ public class ClientFrontendImplTest extends TestCase {
    * participant or text).
    */
   public void testOpenIndexThenSendDeltasNotOfInterest() {
-    OpenListener listener = createMock(OpenListener.class);
+    OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, listener);
     List<? extends WaveletOperation> ops = ImmutableList.of(new NoOp());
     WaveletDelta delta = new WaveletDelta(USER, ops);
     DeltaSequence deltas = new DeltaSequence(
         ImmutableList.of(serialize(delta, VERSION_0)),
         serialize(HashedVersion.unsigned(1L)));
-    EasyMock.replay(listener);
     clientFrontend.participantUpdate(WAVELET_NAME, USER, deltas, true, false, "", "");
-    EasyMock.verify(listener);
+    verifyZeroInteractions(listener);
   }
 
   /**
@@ -334,11 +321,9 @@ public class ClientFrontendImplTest extends TestCase {
     NavigableSet<ProtocolWaveletDelta> expectedDeltas = new TreeSet<ProtocolWaveletDelta>(
         WaveletContainerImpl.transformedDeltaComparator);
     expectedDeltas.addAll(ImmutableList.copyOf(oldListener.deltas));
-    reset(waveletProvider);
     ProtocolHashedVersion startVersion = serialize(HashedVersion.versionZero(WAVELET_NAME));
-    EasyMock.expect(waveletProvider.requestHistory(WAVELET_NAME, startVersion,
-        oldListener.endVersion)).andReturn(expectedDeltas);
-    replay(waveletProvider);
+    when(waveletProvider.requestHistory(WAVELET_NAME, startVersion,
+        oldListener.endVersion)).thenReturn(expectedDeltas);
 
     UpdateListener newListener = new UpdateListener();
     clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, newListener);
@@ -346,12 +331,10 @@ public class ClientFrontendImplTest extends TestCase {
     assertEquals(oldListener.deltas, newListener.deltas);
     assertEquals(oldListener.endVersion, newListener.endVersion);
 
-    reset(waveletProvider);
-    EasyMock.expect(waveletProvider.requestHistory(WAVELET_NAME,
-        serialize(HashedVersion.versionZero(WAVELET_NAME)), oldListener.endVersion)).andReturn(
+    when(waveletProvider.requestHistory(WAVELET_NAME,
+        serialize(HashedVersion.versionZero(WAVELET_NAME)), oldListener.endVersion)).thenReturn(
         expectedDeltas
         );
-    replay(waveletProvider);
     HashedVersion version = WaveletOperationSerializer.deserialize(oldListener.endVersion);
     oldListener.clear();
     newListener.clear();
