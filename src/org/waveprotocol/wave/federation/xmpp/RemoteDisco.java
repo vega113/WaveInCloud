@@ -74,6 +74,7 @@ public class RemoteDisco {
    * off the disco request itself.
    */
   public RemoteDisco(XmppManager manager, String remoteDomain) {
+    Preconditions.checkNotNull(manager, "must provide non-null manager");
     this.manager = manager;
     status = new AtomicReference<Status>(Status.INIT);
     pending = new ConcurrentLinkedQueue<SuccessFailCallback<String, String>>();

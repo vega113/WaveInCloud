@@ -30,6 +30,7 @@ import org.waveprotocol.wave.federation.xmpp.OutgoingPacketTransport;
 import org.waveprotocol.wave.federation.xmpp.XmppFederationHost;
 import org.waveprotocol.wave.federation.xmpp.XmppFederationRemote;
 import org.waveprotocol.wave.federation.xmpp.XmppManager;
+import org.waveprotocol.wave.federation.xmpp.XmppDisco;
 import org.waveprotocol.wave.waveserver.FederationHostBridge;
 import org.waveprotocol.wave.waveserver.FederationRemoteBridge;
 import org.waveprotocol.wave.waveserver.WaveletFederationListener;
@@ -64,8 +65,14 @@ public class ServerModule extends AbstractModule {
     bind(WaveletFederationProvider.class).annotatedWith(FederationHostBridge.class)
         .to(WaveServer.class);
 
-    bind(IncomingPacketHandler.class).to(XmppManager.class).in(Singleton.class);
-    bind(OutgoingPacketTransport.class).to(ComponentPacketTransport.class).in(Singleton.class);
+    bind(XmppDisco.class).in(Singleton.class);
+    bind(XmppFederationRemote.class).in(Singleton.class);
+    bind(XmppFederationHost.class).in(Singleton.class);
+
+    bind(XmppManager.class).in(Singleton.class);
+    bind(IncomingPacketHandler.class).to(XmppManager.class);
+    bind(ComponentPacketTransport.class).in(Singleton.class);
+    bind(OutgoingPacketTransport.class).to(ComponentPacketTransport.class);
 
     install(new WaveServerModule());
     bind(String.class).annotatedWith(Names.named("privateKey")).toInstance("");
