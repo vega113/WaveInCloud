@@ -25,7 +25,7 @@ package org.waveprotocol.wave.model.id;
  */
 public class LongIdSerialiser implements IdSerialiser {
 
-  public static final IdSerialiser INSTANCE = new LongIdSerialiser();
+  public static final LongIdSerialiser INSTANCE = new LongIdSerialiser();
 
   @Override
   public String serialiseWaveId(WaveId waveId) {
@@ -38,24 +38,24 @@ public class LongIdSerialiser implements IdSerialiser {
   }
 
   @Override
-  public WaveId deserialiseWaveId(String serialisedForm) {
+  public WaveId deserialiseWaveId(String serialisedForm) throws InvalidIdException {
     String[] parts = SimplePrefixEscaper.DEFAULT_ESCAPER.splitWithoutUnescaping(
         PART_SEPARATOR, serialisedForm);
     if ((parts.length != 2) || parts[0].isEmpty() || parts[1].isEmpty()) {
-      throw new IllegalArgumentException("Unable to deserialise the long wave id: " +
-          serialisedForm + ". The wave id need to look like <domain>" + PART_SEPARATOR + "<id>");
+      throw new InvalidIdException(serialisedForm,
+          "Wave id must be of the form <domain>" + PART_SEPARATOR + "<id>");
     } else {
       return new WaveId(parts[0], parts[1]);
     }
   }
 
   @Override
-  public WaveletId deserialiseWaveletId(String serialisedForm) {
+  public WaveletId deserialiseWaveletId(String serialisedForm) throws InvalidIdException {
     String[] parts = SimplePrefixEscaper.DEFAULT_ESCAPER.splitWithoutUnescaping(
         PART_SEPARATOR, serialisedForm);
     if ((parts.length != 2) || parts[0].isEmpty() || parts[1].isEmpty()) {
-      throw new IllegalArgumentException("Unable to deserialise the long wavelet id: " +
-          serialisedForm + ". The wavelet id need to look like <domain>" + PART_SEPARATOR + "<id>");
+      throw new InvalidIdException(serialisedForm,
+          "Wavelet id must be of the form <domain>" + PART_SEPARATOR + "<id>");
     } else {
       return new WaveletId(parts[0], parts[1]);
     }

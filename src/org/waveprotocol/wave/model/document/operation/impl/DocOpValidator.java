@@ -99,6 +99,10 @@ public final class DocOpValidator {
     IllFormed(String message) {
       super(message);
     }
+    @Override
+    public Throwable fillInStackTrace() {
+      return this;  // don't fill in stack trace, for efficiency
+    }
   }
 
   private static final IllFormed ILL_FORMED = new IllFormed(

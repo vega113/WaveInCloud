@@ -1107,7 +1107,7 @@ public final class DocOpAutomaton {
     }
     // schema
     if (nextRequiredElement != null) {
-      childElementRequired(v, nextRequiredElement);
+      return childElementRequired(v, nextRequiredElement);
     }
     {
       ValidationResult r = checkForInsertionBeforeRequiredChild(v);
@@ -1270,7 +1270,7 @@ public final class DocOpAutomaton {
       if (!r.isValid()) { return r; }
     }
     if (nextRequiredElement != null && !nextRequiredElement.equals(type)) {
-      differentElementTypeRequired(v, nextRequiredElement, type);
+      return differentElementTypeRequired(v, nextRequiredElement, type);
     }
     return valid();
   }
@@ -1298,7 +1298,7 @@ public final class DocOpAutomaton {
     }
     // schema
     if (nextRequiredElement != null) {
-      childElementRequired(v, nextRequiredElement);
+      return childElementRequired(v, nextRequiredElement);
     }
     return valid();
   }

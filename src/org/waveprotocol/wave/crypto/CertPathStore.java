@@ -17,10 +17,11 @@
 
 package org.waveprotocol.wave.crypto;
 
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 
 /**
- * A simple store for signer infos (i.e., certificate chains).
+ * A simple store for signer infos (i.e., certificate chains).  Implementations must be
+ * thread safe.
  */
 public interface CertPathStore {
 

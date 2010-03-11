@@ -20,6 +20,7 @@ package org.waveprotocol.wave.model.operation;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.Transformer;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
@@ -30,8 +31,6 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
  *
  * The Jupiter algorithm takes 2 operations S and C and produces S' and C'.
  * Where the operations, S + C' = C + S'
- *
- *
  */
 public class Transform {
 
@@ -57,17 +56,10 @@ public class Transform {
         BufferedDocOp serverMutation = serverWaveDocOp.getOperation();
         OperationPair<BufferedDocOp> transformedDocOps =
           Transformer.transform(clientMutation, serverMutation);
-        // Only recreate boxes if transform did something.  Yes, this is != not !.equals
-        if (transformedDocOps.clientOp() != clientMutation) {
-          clientOp = transformedDocOps.clientOp() != null ?
-              new WaveletDocumentOperation(clientWaveDocOp.getDocumentId(),
-                  transformedDocOps.clientOp()) : null;
-        }
-        if (transformedDocOps.serverOp() != serverMutation) {
-          serverOp = transformedDocOps.serverOp() != null ?
-              new WaveletDocumentOperation(serverWaveDocOp.getDocumentId(),
-                  transformedDocOps.serverOp()) : null;
-        }
+        clientOp = new WaveletDocumentOperation(clientWaveDocOp.getDocumentId(),
+            transformedDocOps.clientOp());
+        serverOp = new WaveletDocumentOperation(serverWaveDocOp.getDocumentId(),
+            transformedDocOps.serverOp());
       } else {
         // Different documents don't conflict; use identity transform below
       }
@@ -78,8 +70,8 @@ public class Transform {
           ParticipantId clientParticipant = ((RemoveParticipant) clientOp).getParticipantId();
           ParticipantId serverParticipant = ((RemoveParticipant) serverOp).getParticipantId();
           if (clientParticipant.equals(serverParticipant)) {
-            clientOp = null;
-            serverOp = null;
+            clientOp = NoOp.INSTANCE;
+            serverOp = NoOp.INSTANCE;
           }
         } else if (clientOp instanceof AddParticipant) {
           checkParticipantRemovalAndAddition((RemoveParticipant) serverOp,
@@ -90,8 +82,8 @@ public class Transform {
           ParticipantId clientParticipant = ((AddParticipant) clientOp).getParticipantId();
           ParticipantId serverParticipant = ((AddParticipant) serverOp).getParticipantId();
           if (clientParticipant.equals(serverParticipant)) {
-            clientOp = null;
-            serverOp = null;
+            clientOp = NoOp.INSTANCE;
+            serverOp = NoOp.INSTANCE;
           }
         } else if (clientOp instanceof RemoveParticipant) {
           checkParticipantRemovalAndAddition((RemoveParticipant) clientOp,

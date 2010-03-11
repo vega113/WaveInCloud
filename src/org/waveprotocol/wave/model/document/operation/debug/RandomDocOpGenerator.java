@@ -129,7 +129,7 @@ public final class RandomDocOpGenerator {
             new AnnotationOption("link/auto",
                 Arrays.asList(null,
                     "http://www.youtube.com/watch?v=NBplLTBBmiA&feature=hd",
-                    "http://b/createIssue?component=35390")),
+                    "http://code.google.com/p/wave-protocols/issues/entry")),
             new AnnotationOption("style/fontWeight", Arrays.asList(null, "bold")),
             new AnnotationOption("style/textDecoration", Arrays.asList(null, "underline"))
         ));

@@ -20,6 +20,8 @@ package org.waveprotocol.wave.crypto;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.codec.binary.Base64;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.HashAlgorithm;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,9 +36,6 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.List;
-
-import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm;
 
 
 /**

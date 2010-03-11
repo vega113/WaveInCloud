@@ -1004,6 +1004,11 @@ public final class Transformer {
       while (clientIndex < clientOp.size()) {
         clientOp.applyComponent(clientIndex++, clientTarget);
         while (clientPosition.get() > 0) {
+          if (serverIndex >= serverOp.size()) {
+            throw new OperationException("Ran out of " + serverOp.size()
+                + " server op components after " + clientIndex + " of " + clientOp.size()
+                + " client op components, with " + clientPosition.get() + " spare positions");
+          }
           serverOp.applyComponent(serverIndex++, serverTarget);
         }
       }

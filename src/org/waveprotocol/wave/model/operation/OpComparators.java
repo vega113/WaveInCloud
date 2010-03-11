@@ -16,8 +16,11 @@
 
 package org.waveprotocol.wave.model.operation;
 
+import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
+import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
+import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
-import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.document.operation.DocOpComponentType;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
@@ -25,6 +28,8 @@ import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Preconditions;
+
+import java.util.Map;
 
 /**
  * Utilities for comparing operations.
@@ -35,8 +40,8 @@ public class OpComparators {
   // Proper equators would also provide hash codes.
 
   public interface OpEquator {
-    boolean equalNullable(DocOp a, DocOp b);
-    boolean equal(DocOp a, DocOp b);
+    boolean equalNullable(BufferedDocOp a, BufferedDocOp b);
+    boolean equal(BufferedDocOp a, BufferedDocOp b);
 
     boolean equalNullable(WaveletOperation a, WaveletOperation b);
     boolean equal(WaveletOperation a, WaveletOperation b);
@@ -80,23 +85,154 @@ public class OpComparators {
 
   public static final OpEquator SYNTACTIC_IDENTITY = new AbstractOpEquator() {
     @Override
-    public boolean equal(DocOp a, DocOp b) {
+    public boolean equal(BufferedDocOp a, BufferedDocOp b) {
       Preconditions.checkNotNull(a, "First argument is null");
       Preconditions.checkNotNull(b, "Second argument is null");
       return equalNullable(a, b);
     }
 
     @Override
-    public boolean equalNullable(DocOp a, DocOp b) {
+    public boolean equalNullable(BufferedDocOp a, BufferedDocOp b) {
       if (a == null) {
         return b == null;
       }
       if (b == null) {
         return false;
       }
-      // TODO: Comparing by stringifying is unnecessarily expensive.
-      return DocOpUtil.toConciseString(a).equals(DocOpUtil.toConciseString(b));
+
+      if (a.size() != b.size()) {
+        return false;
+      }
+
+      for (int i = 0; i < a.size(); ++i) {
+        if (!equalComponent(a, b, i)) {
+          return false;
+        }
+      }
+
+      return true;
     }
+
+    private boolean equalComponent(BufferedDocOp a, BufferedDocOp b, int i) {
+      DocOpComponentType type = a.getType(i);
+      if (type != b.getType(i)) {
+        return false;
+      }
+
+      if (type == DocOpComponentType.ANNOTATION_BOUNDARY) {
+        return equal(a.getAnnotationBoundary(i), b.getAnnotationBoundary(i));
+
+      } else if (type == DocOpComponentType.CHARACTERS) {
+        return equal(a.getCharactersString(i), b.getCharactersString(i));
+
+      } else if (type == DocOpComponentType.ELEMENT_START) {
+        return equal(a.getElementStartTag(i), b.getElementStartTag(i))
+            && equal(a.getElementStartAttributes(i), b.getElementStartAttributes(i));
+
+      } else if (type == DocOpComponentType.ELEMENT_END) {
+        return true;  // ignored
+
+      } else if (type == DocOpComponentType.RETAIN) {
+        return a.getRetainItemCount(i) == b.getRetainItemCount(i);
+
+      } else if (type == DocOpComponentType.DELETE_CHARACTERS) {
+        return equal(a.getDeleteCharactersString(i), b.getDeleteCharactersString(i));
+
+      } else if (type == DocOpComponentType.DELETE_ELEMENT_START) {
+        return equal(a.getDeleteElementStartTag(i), b.getDeleteElementStartTag(i))
+            && equal(a.getDeleteElementStartAttributes(i), b.getDeleteElementStartAttributes(i));
+
+      } else if (type == DocOpComponentType.DELETE_ELEMENT_END) {
+        return true;  // ignored
+
+      } else if (type == DocOpComponentType.REPLACE_ATTRIBUTES) {
+        return equal(a.getReplaceAttributesOldAttributes(i), b.getReplaceAttributesOldAttributes(i))
+            && equal(a.getReplaceAttributesNewAttributes(i),
+            b.getReplaceAttributesNewAttributes(i));
+
+      } else if (type == DocOpComponentType.UPDATE_ATTRIBUTES) {
+        return equal(a.getUpdateAttributesUpdate(i), b.getUpdateAttributesUpdate(i));
+
+      } else {
+        throw new IllegalArgumentException("unsupported DocOpComponentType: " + type);
+      }
+    }
+
+  private boolean equal(AnnotationBoundaryMap a, AnnotationBoundaryMap b) {
+      int changeSize = a.changeSize();
+      if (changeSize != b.changeSize()) {
+        return false;
+      }
+
+      for (int i = 0; i < changeSize; ++i) {
+        if (!equal(a.getChangeKey(i), b.getChangeKey(i))) {
+          return false;
+        }
+        if (!equalNullable(a.getOldValue(i), b.getOldValue(i))) {
+          return false;
+        }
+        if (!equalNullable(a.getNewValue(i), b.getNewValue(i))) {
+          return false;
+        }
+      }
+
+      int endSize = a.endSize();
+      if (endSize != b.endSize()) {
+        return false;
+      }
+
+      for (int i = 0; i < endSize; ++i) {
+        if (!equal(a.getEndKey(i), b.getEndKey(i))) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    private boolean equalNullable(String a, String b) {
+      if (a == null) {
+        return b == null;
+      }
+
+      if (b == null) {
+        return false;
+      }
+
+      return equal(a, b);
+    }
+
+    private boolean equal(String a, String b) {
+      return a.equals(Preconditions.checkNotNull(b, "b"));
+    }
+
+    private boolean equal(Map<String, String> a, Map<String, String> b) {
+      return a.equals(Preconditions.checkNotNull(b, "b"));
+    }
+
+    private boolean equal(AttributesUpdate a, AttributesUpdate b) {
+      int changeSize = a.changeSize();
+      if (changeSize != b.changeSize()) {
+        return false;
+      }
+
+      for (int i = 0; i < changeSize; ++i) {
+        if (!equal(a.getChangeKey(i), b.getChangeKey(i))) {
+          return false;
+        }
+
+        if (!equalNullable(a.getOldValue(i), b.getOldValue(i))) {
+          return false;
+        }
+
+        if (!equalNullable(a.getNewValue(i), b.getNewValue(i))) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
   };
 
   public static boolean equalDocuments(DocInitialization a, DocInitialization b) {

@@ -16,7 +16,6 @@
  */
 package org.waveprotocol.wave.crypto;
 
-
 import java.util.Date;
 
 /**

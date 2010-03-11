@@ -192,6 +192,10 @@ public final class Utf16Util {
     return traverseUtf16String(s, UNPAIRED_SURROGATES);
   }
 
+  /**
+   * @param c
+   * @return true if the code point is valid, false if it is a non-character
+   */
   public static boolean isCodePointValid(int c) {
     if (!isCodePoint(c)) {
       Preconditions.illegalArgument("Not a code point: 0x" + Integer.toHexString(c));
@@ -209,6 +213,21 @@ public final class Utf16Util {
     return true;
   }
 
+  public enum BlipCodePointResult {
+    /** Character OK for blip text. All others are not OK. */
+    OK,
+    /** Control characters */
+    CONTROL,
+    /** Deprecated format characters */
+    DEPRECATED,
+    /** Bidi markers. This restriction may be lifted in the future. */
+    BIDI,
+    /** Tag characters */
+    TAG,
+    /** Non-characters */
+    NONCHARACTER
+  }
+
   /**
    * Returns whether the given code point is acceptable for blip content.
    *
@@ -218,7 +237,7 @@ public final class Utf16Util {
    * It may turn out to be overly restrictive, but relaxing it in the
    * future is easy.
    */
-  public static boolean isCodePointGoodForBlip(int c) {
+  public static BlipCodePointResult isCodePointGoodForBlip(int c) {
     if (!isCodePoint(c)) {
       Preconditions.illegalArgument("Not a code point: 0x" + Integer.toHexString(c));
     }
@@ -226,23 +245,23 @@ public final class Utf16Util {
       Preconditions.illegalArgument("Code point is a surrogate: 0x" + Integer.toHexString(c));
     }
 
-    if (!isCodePointValid(c)) { return false; }
+    if (!isCodePointValid(c)) { return BlipCodePointResult.NONCHARACTER; }
     // control codes
-    if (0 <= c && c <= 0x1f || 0x7f <= c && c <= 0x9f) { return false; }
+    if (0 <= c && c <= 0x1f || 0x7f <= c && c <= 0x9f) { return BlipCodePointResult.CONTROL; }
     // private use
     // we permit these, they can be used for things like emoji
     //if (0xE000 <= c && c <= 0xF8FF) { return false; }
     //if (0xF0000 <= c && c <= 0xFFFFD) { return false; }
     //if (0x100000 <= c && c <= 0x10FFFD) { return false; }
     // deprecated format characters
-    if (0x206A <= c && c <= 0x206F) { return false; }
+    if (0x206A <= c && c <= 0x206F) { return BlipCodePointResult.DEPRECATED; }
     // TODO: investigate whether we can lift some of these restrictions
     // bidi markers
-    if (c == 0x200E || c == 0x200F) { return false; }
-    if (0x202A <= c && c <= 0x202E) { return false; }
+    if (c == 0x200E || c == 0x200F) { return BlipCodePointResult.BIDI; }
+    if (0x202A <= c && c <= 0x202E) { return BlipCodePointResult.BIDI; }
     // tag characters, strongly discouraged
-    if (0xE0000 <= c && c <= 0xE007F) { return false; }
-    return true;
+    if (0xE0000 <= c && c <= 0xE007F) { return BlipCodePointResult.TAG; }
+    return BlipCodePointResult.OK;
   }
 
   /**
@@ -376,7 +395,7 @@ public final class Utf16Util {
     new CodePointHandler<Boolean>() {
       @Override
       public Boolean codePoint(int cp) {
-        if (!isCodePointGoodForBlip(cp)) {
+        if (isCodePointGoodForBlip(cp) != BlipCodePointResult.OK) {
           return false;
         }
         return null;
