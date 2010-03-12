@@ -25,10 +25,10 @@
 
 syntax = "proto2";
 
-package protocol;
+package federation;
 
-option java_package = "org.waveprotocol.wave.protocol";
-option java_outer_classname = "common";
+option java_package = "org.waveprotocol.wave.federation";
+option java_outer_classname = "Proto";
 
 /**
  * An immutable list of operations for contribution to a wavelet.
@@ -191,7 +191,7 @@ message ProtocolAppliedWaveletDelta {
 }
 
 /**
- * A delta signed with a number of domain signatures.
+ * A canonicalised delta signed with a number of domain signatures.
  */
 message ProtocolSignedDelta {
   required bytes delta = 1;
