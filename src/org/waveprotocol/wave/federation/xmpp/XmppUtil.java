@@ -22,7 +22,7 @@ import com.google.protobuf.ByteString;
 
 import org.dom4j.Element;
 import org.waveprotocol.wave.federation.FederationURICodec;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -31,8 +31,8 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** 
  * Common utility code for XMPP packet generation and parsing.

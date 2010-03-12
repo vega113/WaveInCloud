@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -26,16 +24,17 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletOperation;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,7 +58,7 @@ public class UserManagerTest extends TestCase {
   private static final ParticipantId USER = new ParticipantId("user@host.com");
 
   private static final ProtocolWaveletDelta DELTA =
-    serialize(new WaveletDelta(USER, ImmutableList.of(new NoOp(), new NoOp())),
+    serialize(new WaveletDelta(USER, ImmutableList.of(NoOp.INSTANCE, NoOp.INSTANCE)),
         HashedVersion.UNSIGNED_VERSION_0);
 
   private static final ProtocolHashedVersion END_VERSION = serialize(HashedVersion.unsigned(2));
@@ -222,7 +221,7 @@ public class UserManagerTest extends TestCase {
     // Check that test was set up correctly
     assertEquals(2, DELTA.getOperationCount());
 
-    ProtocolWaveletOperation noOp = serialize(new NoOp());
+    ProtocolWaveletOperation noOp = serialize(NoOp.INSTANCE);
 
     ProtocolHashedVersion v2 =
         WaveletOperationSerializer.serialize(HashedVersion.unsigned(2));

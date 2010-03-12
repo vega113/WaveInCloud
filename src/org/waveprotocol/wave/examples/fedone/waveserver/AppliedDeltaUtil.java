@@ -19,9 +19,9 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 
 /**
  * Utility methods for {@code ProtocolAppliedWaveletDelta}s.

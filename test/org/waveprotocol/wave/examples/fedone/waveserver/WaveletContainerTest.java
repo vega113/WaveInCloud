@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
@@ -27,7 +25,11 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionZeroFactoryImpl;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -40,9 +42,6 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature;
-import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 import java.util.Collections;
 import java.util.List;

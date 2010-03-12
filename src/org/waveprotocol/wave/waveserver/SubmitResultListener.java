@@ -18,7 +18,7 @@
 package org.waveprotocol.wave.waveserver;
 
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 
 /**
  * Callback interface used to inform a submitter to a wavelet of the result.

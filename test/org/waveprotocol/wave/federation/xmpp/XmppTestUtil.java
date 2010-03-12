@@ -14,7 +14,6 @@ package org.waveprotocol.wave.federation.xmpp;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-
 import junit.framework.TestCase;
 
 import org.apache.commons.codec.binary.Base64;
@@ -22,18 +21,18 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jivesoftware.whack.ExternalComponentManager;
-import org.waveprotocol.wave.federation.FederationURICodec;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationURICodec;
+import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.ProtocolHashedVersionFactory;
 import org.waveprotocol.wave.waveserver.SubmitResultListener;
 import org.waveprotocol.wave.waveserver.WaveletFederationListener;
-import org.waveprotocol.wave.waveserver.ProtocolHashedVersionFactory;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
 import org.xmpp.component.Component;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;

@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
-
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -35,28 +33,29 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletContainer.State;
-import org.waveprotocol.wave.waveserver.WaveletFederationListener.Factory;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
-import org.waveprotocol.wave.waveserver.WaveletFederationListener;
-import org.waveprotocol.wave.waveserver.SubmitResultListener;
-import org.waveprotocol.wave.waveserver.FederationHostBridge;
-import org.waveprotocol.wave.waveserver.FederationRemoteBridge;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature;
-import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
-import org.waveprotocol.wave.federation.FederationErrors;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.waveserver.FederationHostBridge;
+import org.waveprotocol.wave.waveserver.FederationRemoteBridge;
+import org.waveprotocol.wave.waveserver.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.WaveletFederationListener;
+import org.waveprotocol.wave.waveserver.WaveletFederationListener.Factory;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
 
 import java.util.List;
 import java.util.Map;

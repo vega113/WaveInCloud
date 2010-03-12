@@ -30,10 +30,10 @@ import com.google.common.collect.Sets;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 
 import java.util.Collections;
 import java.util.List;

@@ -32,17 +32,17 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOp
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletOperation;
-import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.util.HashMap;

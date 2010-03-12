@@ -28,10 +28,10 @@ import static org.mockito.Mockito.verify;
 import org.waveprotocol.wave.waveserver.ProtocolHashedVersionFactory;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.xmpp.MockDisco.PendingMockDisco;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.waveserver.WaveletFederationListener;
 import org.xmpp.packet.Packet;
 

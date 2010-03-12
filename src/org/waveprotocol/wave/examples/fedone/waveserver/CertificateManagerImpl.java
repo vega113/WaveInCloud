@@ -39,13 +39,13 @@ import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature;
-import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
 import org.waveprotocol.wave.waveserver.WaveletFederationProvider.DeltaSignerInfoResponseListener;
 

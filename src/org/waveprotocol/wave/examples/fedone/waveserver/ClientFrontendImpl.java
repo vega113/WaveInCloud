@@ -17,9 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -31,9 +28,16 @@ import com.google.common.collect.MapMaker;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdConstants;
@@ -48,11 +52,6 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletOperation;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
-import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.util.Collections;

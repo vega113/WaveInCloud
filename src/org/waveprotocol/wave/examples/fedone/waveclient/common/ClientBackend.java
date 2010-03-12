@@ -39,12 +39,13 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSu
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
@@ -55,7 +56,6 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

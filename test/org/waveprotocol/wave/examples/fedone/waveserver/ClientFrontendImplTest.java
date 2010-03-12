@@ -16,22 +16,6 @@
  */
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.isNotNull;
-import static org.mockito.Matchers.eq;
-import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
-import static org.waveprotocol.wave.examples.fedone.common.HashedVersion.unsigned;
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_AUTHOR;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_DOCUMENT_ID;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.createUnsignedDeltas;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.indexWaveletNameFor;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.waveletNameForIndexWavelet;
-import static org.waveprotocol.wave.model.id.IdConstants.CONVERSATION_ROOT_WAVELET;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -39,11 +23,29 @@ import com.google.common.collect.Maps;
 
 import junit.framework.TestCase;
 
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import static org.waveprotocol.wave.examples.fedone.common.HashedVersion.unsigned;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
+import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_AUTHOR;
+import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_DOCUMENT_ID;
+import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.createUnsignedDeltas;
+import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.indexWaveletNameFor;
+import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.waveletNameForIndexWavelet;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
+import static org.waveprotocol.wave.model.id.IdConstants.CONVERSATION_ROOT_WAVELET;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -54,9 +56,6 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
-import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.util.List;
@@ -201,7 +200,7 @@ public class ClientFrontendImplTest extends TestCase {
   public void testOpenIndexThenSendDeltasNotOfInterest() {
     OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, listener);
-    List<? extends WaveletOperation> ops = ImmutableList.of(new NoOp());
+    List<? extends WaveletOperation> ops = ImmutableList.of(NoOp.INSTANCE);
     WaveletDelta delta = new WaveletDelta(USER, ops);
     DeltaSequence deltas = new DeltaSequence(
         ImmutableList.of(serialize(delta, VERSION_0)),
@@ -286,7 +285,7 @@ public class ClientFrontendImplTest extends TestCase {
     waveletUpdate(VERSION_0,
         ImmutableMap.of("default", makeAppend(0, "Hello, world\nignored text")),
         new AddParticipant(USER),
-        new NoOp()
+        NoOp.INSTANCE
         );
 
     assertEquals(INDEX_WAVELET_NAME, listener.waveletName);
@@ -339,7 +338,7 @@ public class ClientFrontendImplTest extends TestCase {
     oldListener.clear();
     newListener.clear();
     waveletUpdate(version, documentState,
-        new AddParticipant(new ParticipantId("another-user")), new NoOp(),
+        new AddParticipant(new ParticipantId("another-user")), NoOp.INSTANCE,
         new RemoveParticipant(USER));
 
     // Subsequent deltas go to both listeners

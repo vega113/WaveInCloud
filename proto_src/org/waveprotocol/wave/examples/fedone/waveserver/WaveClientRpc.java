@@ -490,39 +490,39 @@ public final class WaveClientRpc {
     public boolean hasWaveletName() { return hasWaveletName; }
     public java.lang.String getWaveletName() { return waveletName_; }
     
-    // repeated .protocol.ProtocolWaveletDelta applied_delta = 2;
+    // repeated .federation.ProtocolWaveletDelta applied_delta = 2;
     public static final int APPLIED_DELTA_FIELD_NUMBER = 2;
-    private java.util.List<org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta> appliedDelta_ =
+    private java.util.List<org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta> appliedDelta_ =
       java.util.Collections.emptyList();
-    public java.util.List<org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta> getAppliedDeltaList() {
+    public java.util.List<org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta> getAppliedDeltaList() {
       return appliedDelta_;
     }
     public int getAppliedDeltaCount() { return appliedDelta_.size(); }
-    public org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta getAppliedDelta(int index) {
+    public org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta getAppliedDelta(int index) {
       return appliedDelta_.get(index);
     }
     
-    // optional .protocol.ProtocolHashedVersion commit_notice = 3;
+    // optional .federation.ProtocolHashedVersion commit_notice = 3;
     public static final int COMMIT_NOTICE_FIELD_NUMBER = 3;
     private boolean hasCommitNotice;
-    private org.waveprotocol.wave.protocol.common.ProtocolHashedVersion commitNotice_;
+    private org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion commitNotice_;
     public boolean hasCommitNotice() { return hasCommitNotice; }
-    public org.waveprotocol.wave.protocol.common.ProtocolHashedVersion getCommitNotice() { return commitNotice_; }
+    public org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion getCommitNotice() { return commitNotice_; }
     
-    // optional .protocol.ProtocolHashedVersion resulting_version = 4;
+    // optional .federation.ProtocolHashedVersion resulting_version = 4;
     public static final int RESULTING_VERSION_FIELD_NUMBER = 4;
     private boolean hasResultingVersion;
-    private org.waveprotocol.wave.protocol.common.ProtocolHashedVersion resultingVersion_;
+    private org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion resultingVersion_;
     public boolean hasResultingVersion() { return hasResultingVersion; }
-    public org.waveprotocol.wave.protocol.common.ProtocolHashedVersion getResultingVersion() { return resultingVersion_; }
+    public org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion getResultingVersion() { return resultingVersion_; }
     
     private void initFields() {
-      commitNotice_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
-      resultingVersion_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
+      commitNotice_ = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance();
+      resultingVersion_ = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance();
     }
     public final boolean isInitialized() {
       if (!hasWaveletName) return false;
-      for (org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta element : getAppliedDeltaList()) {
+      for (org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta element : getAppliedDeltaList()) {
         if (!element.isInitialized()) return false;
       }
       if (hasCommitNotice()) {
@@ -540,7 +540,7 @@ public final class WaveClientRpc {
       if (hasWaveletName()) {
         output.writeString(1, getWaveletName());
       }
-      for (org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta element : getAppliedDeltaList()) {
+      for (org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta element : getAppliedDeltaList()) {
         output.writeMessage(2, element);
       }
       if (hasCommitNotice()) {
@@ -562,7 +562,7 @@ public final class WaveClientRpc {
         size += com.google.protobuf.CodedOutputStream
           .computeStringSize(1, getWaveletName());
       }
-      for (org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta element : getAppliedDeltaList()) {
+      for (org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta element : getAppliedDeltaList()) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, element);
       }
@@ -741,7 +741,7 @@ public final class WaveClientRpc {
         }
         if (!other.appliedDelta_.isEmpty()) {
           if (result.appliedDelta_.isEmpty()) {
-            result.appliedDelta_ = new java.util.ArrayList<org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta>();
+            result.appliedDelta_ = new java.util.ArrayList<org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta>();
           }
           result.appliedDelta_.addAll(other.appliedDelta_);
         }
@@ -781,13 +781,13 @@ public final class WaveClientRpc {
               break;
             }
             case 18: {
-              org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.Builder subBuilder = org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.newBuilder();
+              org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.Builder subBuilder = org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.newBuilder();
               input.readMessage(subBuilder, extensionRegistry);
               addAppliedDelta(subBuilder.buildPartial());
               break;
             }
             case 26: {
-              org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.Builder subBuilder = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.newBuilder();
+              org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.Builder subBuilder = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.newBuilder();
               if (hasCommitNotice()) {
                 subBuilder.mergeFrom(getCommitNotice());
               }
@@ -796,7 +796,7 @@ public final class WaveClientRpc {
               break;
             }
             case 34: {
-              org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.Builder subBuilder = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.newBuilder();
+              org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.Builder subBuilder = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.newBuilder();
               if (hasResultingVersion()) {
                 subBuilder.mergeFrom(getResultingVersion());
               }
@@ -830,48 +830,48 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // repeated .protocol.ProtocolWaveletDelta applied_delta = 2;
-      public java.util.List<org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta> getAppliedDeltaList() {
+      // repeated .federation.ProtocolWaveletDelta applied_delta = 2;
+      public java.util.List<org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta> getAppliedDeltaList() {
         return java.util.Collections.unmodifiableList(result.appliedDelta_);
       }
       public int getAppliedDeltaCount() {
         return result.getAppliedDeltaCount();
       }
-      public org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta getAppliedDelta(int index) {
+      public org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta getAppliedDelta(int index) {
         return result.getAppliedDelta(index);
       }
-      public Builder setAppliedDelta(int index, org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta value) {
+      public Builder setAppliedDelta(int index, org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta value) {
         if (value == null) {
           throw new NullPointerException();
         }
         result.appliedDelta_.set(index, value);
         return this;
       }
-      public Builder setAppliedDelta(int index, org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.Builder builderForValue) {
+      public Builder setAppliedDelta(int index, org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.Builder builderForValue) {
         result.appliedDelta_.set(index, builderForValue.build());
         return this;
       }
-      public Builder addAppliedDelta(org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta value) {
+      public Builder addAppliedDelta(org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta value) {
         if (value == null) {
           throw new NullPointerException();
         }
         if (result.appliedDelta_.isEmpty()) {
-          result.appliedDelta_ = new java.util.ArrayList<org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta>();
+          result.appliedDelta_ = new java.util.ArrayList<org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta>();
         }
         result.appliedDelta_.add(value);
         return this;
       }
-      public Builder addAppliedDelta(org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.Builder builderForValue) {
+      public Builder addAppliedDelta(org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.Builder builderForValue) {
         if (result.appliedDelta_.isEmpty()) {
-          result.appliedDelta_ = new java.util.ArrayList<org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta>();
+          result.appliedDelta_ = new java.util.ArrayList<org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta>();
         }
         result.appliedDelta_.add(builderForValue.build());
         return this;
       }
       public Builder addAllAppliedDelta(
-          java.lang.Iterable<? extends org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta> values) {
+          java.lang.Iterable<? extends org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta> values) {
         if (result.appliedDelta_.isEmpty()) {
-          result.appliedDelta_ = new java.util.ArrayList<org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta>();
+          result.appliedDelta_ = new java.util.ArrayList<org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta>();
         }
         super.addAll(values, result.appliedDelta_);
         return this;
@@ -881,14 +881,14 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // optional .protocol.ProtocolHashedVersion commit_notice = 3;
+      // optional .federation.ProtocolHashedVersion commit_notice = 3;
       public boolean hasCommitNotice() {
         return result.hasCommitNotice();
       }
-      public org.waveprotocol.wave.protocol.common.ProtocolHashedVersion getCommitNotice() {
+      public org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion getCommitNotice() {
         return result.getCommitNotice();
       }
-      public Builder setCommitNotice(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion value) {
+      public Builder setCommitNotice(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -896,16 +896,16 @@ public final class WaveClientRpc {
         result.commitNotice_ = value;
         return this;
       }
-      public Builder setCommitNotice(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.Builder builderForValue) {
+      public Builder setCommitNotice(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.Builder builderForValue) {
         result.hasCommitNotice = true;
         result.commitNotice_ = builderForValue.build();
         return this;
       }
-      public Builder mergeCommitNotice(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion value) {
+      public Builder mergeCommitNotice(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion value) {
         if (result.hasCommitNotice() &&
-            result.commitNotice_ != org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance()) {
+            result.commitNotice_ != org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance()) {
           result.commitNotice_ =
-            org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.newBuilder(result.commitNotice_).mergeFrom(value).buildPartial();
+            org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.newBuilder(result.commitNotice_).mergeFrom(value).buildPartial();
         } else {
           result.commitNotice_ = value;
         }
@@ -914,18 +914,18 @@ public final class WaveClientRpc {
       }
       public Builder clearCommitNotice() {
         result.hasCommitNotice = false;
-        result.commitNotice_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
+        result.commitNotice_ = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance();
         return this;
       }
       
-      // optional .protocol.ProtocolHashedVersion resulting_version = 4;
+      // optional .federation.ProtocolHashedVersion resulting_version = 4;
       public boolean hasResultingVersion() {
         return result.hasResultingVersion();
       }
-      public org.waveprotocol.wave.protocol.common.ProtocolHashedVersion getResultingVersion() {
+      public org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion getResultingVersion() {
         return result.getResultingVersion();
       }
-      public Builder setResultingVersion(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion value) {
+      public Builder setResultingVersion(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -933,16 +933,16 @@ public final class WaveClientRpc {
         result.resultingVersion_ = value;
         return this;
       }
-      public Builder setResultingVersion(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.Builder builderForValue) {
+      public Builder setResultingVersion(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.Builder builderForValue) {
         result.hasResultingVersion = true;
         result.resultingVersion_ = builderForValue.build();
         return this;
       }
-      public Builder mergeResultingVersion(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion value) {
+      public Builder mergeResultingVersion(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion value) {
         if (result.hasResultingVersion() &&
-            result.resultingVersion_ != org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance()) {
+            result.resultingVersion_ != org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance()) {
           result.resultingVersion_ =
-            org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.newBuilder(result.resultingVersion_).mergeFrom(value).buildPartial();
+            org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.newBuilder(result.resultingVersion_).mergeFrom(value).buildPartial();
         } else {
           result.resultingVersion_ = value;
         }
@@ -951,7 +951,7 @@ public final class WaveClientRpc {
       }
       public Builder clearResultingVersion() {
         result.hasResultingVersion = false;
-        result.resultingVersion_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
+        result.resultingVersion_ = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance();
         return this;
       }
       
@@ -1001,15 +1001,15 @@ public final class WaveClientRpc {
     public boolean hasWaveletName() { return hasWaveletName; }
     public java.lang.String getWaveletName() { return waveletName_; }
     
-    // required .protocol.ProtocolWaveletDelta delta = 2;
+    // required .federation.ProtocolWaveletDelta delta = 2;
     public static final int DELTA_FIELD_NUMBER = 2;
     private boolean hasDelta;
-    private org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta delta_;
+    private org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta delta_;
     public boolean hasDelta() { return hasDelta; }
-    public org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta getDelta() { return delta_; }
+    public org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta getDelta() { return delta_; }
     
     private void initFields() {
-      delta_ = org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.getDefaultInstance();
+      delta_ = org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.getDefaultInstance();
     }
     public final boolean isInitialized() {
       if (!hasWaveletName) return false;
@@ -1238,7 +1238,7 @@ public final class WaveClientRpc {
               break;
             }
             case 18: {
-              org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.Builder subBuilder = org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.newBuilder();
+              org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.Builder subBuilder = org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.newBuilder();
               if (hasDelta()) {
                 subBuilder.mergeFrom(getDelta());
               }
@@ -1272,14 +1272,14 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // required .protocol.ProtocolWaveletDelta delta = 2;
+      // required .federation.ProtocolWaveletDelta delta = 2;
       public boolean hasDelta() {
         return result.hasDelta();
       }
-      public org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta getDelta() {
+      public org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta getDelta() {
         return result.getDelta();
       }
-      public Builder setDelta(org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta value) {
+      public Builder setDelta(org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -1287,16 +1287,16 @@ public final class WaveClientRpc {
         result.delta_ = value;
         return this;
       }
-      public Builder setDelta(org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.Builder builderForValue) {
+      public Builder setDelta(org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.Builder builderForValue) {
         result.hasDelta = true;
         result.delta_ = builderForValue.build();
         return this;
       }
-      public Builder mergeDelta(org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta value) {
+      public Builder mergeDelta(org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta value) {
         if (result.hasDelta() &&
-            result.delta_ != org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.getDefaultInstance()) {
+            result.delta_ != org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.getDefaultInstance()) {
           result.delta_ =
-            org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.newBuilder(result.delta_).mergeFrom(value).buildPartial();
+            org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.newBuilder(result.delta_).mergeFrom(value).buildPartial();
         } else {
           result.delta_ = value;
         }
@@ -1305,7 +1305,7 @@ public final class WaveClientRpc {
       }
       public Builder clearDelta() {
         result.hasDelta = false;
-        result.delta_ = org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta.getDefaultInstance();
+        result.delta_ = org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta.getDefaultInstance();
         return this;
       }
       
@@ -1362,15 +1362,15 @@ public final class WaveClientRpc {
     public boolean hasErrorMessage() { return hasErrorMessage; }
     public java.lang.String getErrorMessage() { return errorMessage_; }
     
-    // optional .protocol.ProtocolHashedVersion hashed_version_after_application = 3;
+    // optional .federation.ProtocolHashedVersion hashed_version_after_application = 3;
     public static final int HASHED_VERSION_AFTER_APPLICATION_FIELD_NUMBER = 3;
     private boolean hasHashedVersionAfterApplication;
-    private org.waveprotocol.wave.protocol.common.ProtocolHashedVersion hashedVersionAfterApplication_;
+    private org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion hashedVersionAfterApplication_;
     public boolean hasHashedVersionAfterApplication() { return hasHashedVersionAfterApplication; }
-    public org.waveprotocol.wave.protocol.common.ProtocolHashedVersion getHashedVersionAfterApplication() { return hashedVersionAfterApplication_; }
+    public org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion getHashedVersionAfterApplication() { return hashedVersionAfterApplication_; }
     
     private void initFields() {
-      hashedVersionAfterApplication_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
+      hashedVersionAfterApplication_ = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance();
     }
     public final boolean isInitialized() {
       if (!hasOperationsApplied) return false;
@@ -1614,7 +1614,7 @@ public final class WaveClientRpc {
               break;
             }
             case 26: {
-              org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.Builder subBuilder = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.newBuilder();
+              org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.Builder subBuilder = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.newBuilder();
               if (hasHashedVersionAfterApplication()) {
                 subBuilder.mergeFrom(getHashedVersionAfterApplication());
               }
@@ -1666,14 +1666,14 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // optional .protocol.ProtocolHashedVersion hashed_version_after_application = 3;
+      // optional .federation.ProtocolHashedVersion hashed_version_after_application = 3;
       public boolean hasHashedVersionAfterApplication() {
         return result.hasHashedVersionAfterApplication();
       }
-      public org.waveprotocol.wave.protocol.common.ProtocolHashedVersion getHashedVersionAfterApplication() {
+      public org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion getHashedVersionAfterApplication() {
         return result.getHashedVersionAfterApplication();
       }
-      public Builder setHashedVersionAfterApplication(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion value) {
+      public Builder setHashedVersionAfterApplication(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -1681,16 +1681,16 @@ public final class WaveClientRpc {
         result.hashedVersionAfterApplication_ = value;
         return this;
       }
-      public Builder setHashedVersionAfterApplication(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.Builder builderForValue) {
+      public Builder setHashedVersionAfterApplication(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.Builder builderForValue) {
         result.hasHashedVersionAfterApplication = true;
         result.hashedVersionAfterApplication_ = builderForValue.build();
         return this;
       }
-      public Builder mergeHashedVersionAfterApplication(org.waveprotocol.wave.protocol.common.ProtocolHashedVersion value) {
+      public Builder mergeHashedVersionAfterApplication(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion value) {
         if (result.hasHashedVersionAfterApplication() &&
-            result.hashedVersionAfterApplication_ != org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance()) {
+            result.hashedVersionAfterApplication_ != org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance()) {
           result.hashedVersionAfterApplication_ =
-            org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.newBuilder(result.hashedVersionAfterApplication_).mergeFrom(value).buildPartial();
+            org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.newBuilder(result.hashedVersionAfterApplication_).mergeFrom(value).buildPartial();
         } else {
           result.hashedVersionAfterApplication_ = value;
         }
@@ -1699,7 +1699,7 @@ public final class WaveClientRpc {
       }
       public Builder clearHashedVersionAfterApplication() {
         result.hasHashedVersionAfterApplication = false;
-        result.hashedVersionAfterApplication_ = org.waveprotocol.wave.protocol.common.ProtocolHashedVersion.getDefaultInstance();
+        result.hashedVersionAfterApplication_ = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance();
         return this;
       }
       
@@ -2032,30 +2032,30 @@ public final class WaveClientRpc {
     java.lang.String[] descriptorData = {
       "\nEorg/waveprotocol/wave/examples/fedone/" +
       "waveserver/waveclient-rpc.proto\022\nwaveser" +
-      "ver\032+org/waveprotocol/wave/protocol/comm" +
-      "on.proto\0323org/waveprotocol/wave/examples" +
-      "/fedone/rpc/rpc.proto\"s\n\023ProtocolOpenReq" +
-      "uest\022\026\n\016participant_id\030\001 \002(\t\022\017\n\007wave_id\030" +
-      "\002 \002(\t\022\031\n\021wavelet_id_prefix\030\003 \003(\t\022\030\n\020maxi" +
-      "mum_wavelets\030\004 \001(\005\"\330\001\n\025ProtocolWaveletUp" +
-      "date\022\024\n\014wavelet_name\030\001 \002(\t\0225\n\rapplied_de" +
-      "lta\030\002 \003(\0132\036.protocol.ProtocolWaveletDelt",
-      "a\0226\n\rcommit_notice\030\003 \001(\0132\037.protocol.Prot" +
-      "ocolHashedVersion\022:\n\021resulting_version\030\004" +
-      " \001(\0132\037.protocol.ProtocolHashedVersion\"\\\n" +
-      "\025ProtocolSubmitRequest\022\024\n\014wavelet_name\030\001" +
-      " \002(\t\022-\n\005delta\030\002 \002(\0132\036.protocol.ProtocolW" +
-      "aveletDelta\"\226\001\n\026ProtocolSubmitResponse\022\032" +
-      "\n\022operations_applied\030\001 \002(\005\022\025\n\rerror_mess" +
-      "age\030\002 \001(\t\022I\n hashed_version_after_applic" +
-      "ation\030\003 \001(\0132\037.protocol.ProtocolHashedVer" +
-      "sion2\271\001\n\025ProtocolWaveClientRpc\022O\n\004Open\022\037",
-      ".waveserver.ProtocolOpenRequest\032!.wavese" +
-      "rver.ProtocolWaveletUpdate\"\003\330>\001\022O\n\006Submi" +
-      "t\022!.waveserver.ProtocolSubmitRequest\032\".w" +
-      "aveserver.ProtocolSubmitResponseBA\n0org." +
-      "waveprotocol.wave.examples.fedone.wavese" +
-      "rverB\rWaveClientRpc"
+      "ver\0323org/waveprotocol/wave/examples/fedo" +
+      "ne/rpc/rpc.proto\0326org/waveprotocol/wave/" +
+      "federation/federation.protodevel\"s\n\023Prot" +
+      "ocolOpenRequest\022\026\n\016participant_id\030\001 \002(\t\022" +
+      "\017\n\007wave_id\030\002 \002(\t\022\031\n\021wavelet_id_prefix\030\003 " +
+      "\003(\t\022\030\n\020maximum_wavelets\030\004 \001(\005\"\336\001\n\025Protoc" +
+      "olWaveletUpdate\022\024\n\014wavelet_name\030\001 \002(\t\0227\n" +
+      "\rapplied_delta\030\002 \003(\0132 .federation.Protoc",
+      "olWaveletDelta\0228\n\rcommit_notice\030\003 \001(\0132!." +
+      "federation.ProtocolHashedVersion\022<\n\021resu" +
+      "lting_version\030\004 \001(\0132!.federation.Protoco" +
+      "lHashedVersion\"^\n\025ProtocolSubmitRequest\022" +
+      "\024\n\014wavelet_name\030\001 \002(\t\022/\n\005delta\030\002 \002(\0132 .f" +
+      "ederation.ProtocolWaveletDelta\"\230\001\n\026Proto" +
+      "colSubmitResponse\022\032\n\022operations_applied\030" +
+      "\001 \002(\005\022\025\n\rerror_message\030\002 \001(\t\022K\n hashed_v" +
+      "ersion_after_application\030\003 \001(\0132!.federat" +
+      "ion.ProtocolHashedVersion2\271\001\n\025ProtocolWa",
+      "veClientRpc\022O\n\004Open\022\037.waveserver.Protoco" +
+      "lOpenRequest\032!.waveserver.ProtocolWavele" +
+      "tUpdate\"\003\330>\001\022O\n\006Submit\022!.waveserver.Prot" +
+      "ocolSubmitRequest\032\".waveserver.ProtocolS" +
+      "ubmitResponseBA\n0org.waveprotocol.wave.e" +
+      "xamples.fedone.waveserverB\rWaveClientRpc"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2097,16 +2097,16 @@ public final class WaveClientRpc {
           com.google.protobuf.ExtensionRegistry registry =
             com.google.protobuf.ExtensionRegistry.newInstance();
           registerAllExtensions(registry);
-          org.waveprotocol.wave.protocol.common.registerAllExtensions(registry);
           org.waveprotocol.wave.examples.fedone.rpc.Rpc.registerAllExtensions(registry);
+          org.waveprotocol.wave.federation.Proto.registerAllExtensions(registry);
           return registry;
         }
       };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          org.waveprotocol.wave.protocol.common.getDescriptor(),
           org.waveprotocol.wave.examples.fedone.rpc.Rpc.getDescriptor(),
+          org.waveprotocol.wave.federation.Proto.getDescriptor(),
         }, assigner);
   }
   

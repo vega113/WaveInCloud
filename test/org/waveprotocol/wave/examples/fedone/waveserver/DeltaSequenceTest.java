@@ -16,22 +16,21 @@
  */
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
-
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 import java.util.List;
 
@@ -54,7 +53,8 @@ public class DeltaSequenceTest extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     ops = ImmutableList.of(
-        new NoOp(), new NoOp(), new AddParticipant(USER), new NoOp(), new RemoveParticipant(USER));
+        NoOp.INSTANCE, NoOp.INSTANCE, new AddParticipant(USER), NoOp.INSTANCE, 
+        new RemoveParticipant(USER));
 
     WaveletDelta delta = new WaveletDelta(USER, ops);
     WaveletDelta delta2 = new WaveletDelta(USER, ops);

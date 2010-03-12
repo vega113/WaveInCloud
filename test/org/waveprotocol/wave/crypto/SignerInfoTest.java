@@ -28,8 +28,8 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 import org.waveprotocol.wave.crypto.SignerInfo;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.HashAlgorithm;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 
 public class SignerInfoTest extends TestCase {
 

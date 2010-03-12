@@ -23,19 +23,19 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.waveprotocol.wave.waveserver.WaveletFederationListener;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
-import org.waveprotocol.wave.waveserver.FederationHostBridge;
-import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import org.dom4j.Element;
-import org.waveprotocol.wave.federation.FederationErrors;
-import org.waveprotocol.wave.federation.xmpp.XmppUtil.UnknownSignerType;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.xmpp.XmppUtil.UnknownSignerType;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
+import org.waveprotocol.wave.waveserver.FederationHostBridge;
+import org.waveprotocol.wave.waveserver.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.WaveletFederationListener;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
 import org.xmpp.packet.IQ;
 
 import java.util.List;

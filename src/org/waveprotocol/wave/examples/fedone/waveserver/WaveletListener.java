@@ -17,10 +17,10 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 
 import java.util.List;
 import java.util.Map;

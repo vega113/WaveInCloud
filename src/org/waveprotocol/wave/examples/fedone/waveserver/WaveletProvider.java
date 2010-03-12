@@ -17,9 +17,9 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.util.NavigableSet;

@@ -17,11 +17,14 @@
 
 package org.waveprotocol.wave.examples.fedone.common;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 
+import org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
@@ -40,10 +43,6 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletOperation;
-import org.waveprotocol.wave.protocol.common.ProtocolDocumentOperation;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
 
 import java.util.List;
 import java.util.Map;
@@ -282,7 +281,7 @@ public class WaveletOperationSerializer {
    */
   public static WaveletOperation deserialize(ProtocolWaveletOperation protobufOp) {
     if (protobufOp.hasNoOp()) {
-      return new NoOp();
+      return NoOp.INSTANCE;
     } else if (protobufOp.hasAddParticipant()) {
       return new AddParticipant(new ParticipantId(protobufOp.getAddParticipant()));
     } else if (protobufOp.hasRemoveParticipant()) {

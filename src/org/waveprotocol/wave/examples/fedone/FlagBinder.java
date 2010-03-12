@@ -29,7 +29,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common;
+import org.waveprotocol.wave.federation.Proto;
 import org.waveprotocol.wave.waveserver.SubmitResultListener;
 import org.waveprotocol.wave.waveserver.WaveletFederationListener;
 import org.waveprotocol.wave.waveserver.WaveletFederationProvider;

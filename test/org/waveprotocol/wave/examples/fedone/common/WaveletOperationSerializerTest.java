@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
@@ -38,7 +39,6 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 import java.util.Arrays;
 import java.util.List;
@@ -87,7 +87,7 @@ public class WaveletOperationSerializerTest extends TestCase {
   }
 
   public void testNoOp() {
-    assertReversible(new NoOp());
+    assertReversible(NoOp.INSTANCE);
   }
 
   public void testAddParticipant() {

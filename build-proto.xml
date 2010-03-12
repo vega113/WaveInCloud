@@ -8,7 +8,7 @@
     <exec executable="protoc">
       <arg value="--proto_path=src/"/>
       <arg value="--java_out=proto_src"/>
-      <arg value="${src}/org/waveprotocol/wave/protocol/common.proto"/>
+      <arg value="${src}/org/waveprotocol/wave/federation/federation.protodevel"/>
     </exec>
 
     <exec executable="protoc">
