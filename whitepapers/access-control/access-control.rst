@@ -5,12 +5,12 @@ Access Control in Google Wave
 :Authors:
   Jon Tirsen
 
-:Version: 1.0 - May 2009 
+:Version: 1.0 - May 2009
 
 Google Wave's primary means of access control is the list of addresses that
 participate on a wavelet and what access accounts has to these addresses. This
 white paper outlines how the wave platform stores, exchanges and enforces
-access control.  
+access control.
 
 This whitepaper is part of a series. All of the whitepapers
 can be found on `Google Wave Federation Protocol site`_.
@@ -56,7 +56,7 @@ Account
 Address
   Most of the system does not deal directly with accounts but rather with
   addresses. An address is a string formatted as an email address (RFC 2822).
-  Addresses, rather than accounts, participate in wavelets.  
+  Addresses, rather than accounts, participate in wavelets.
 
 Canonical address
   Each account has a canonical address which is the address the user acts as
@@ -70,13 +70,13 @@ Authentication
 Each wave provider chooses how they authenticate their users. In Google Wave we
 use a simple username and password scheme for individuals. Robots are contacted
 by the Google Wave provider through a well-defined URL and are therefore
-authenticated that way.  
+authenticated that way.
 
 Address access as a graph
 =========================
 
 Address access can be seen as a directed graph of address to address edges
-where each edge is restricted by access settings. 
+where each edge is restricted by access settings.
 
 .. image:: img/address-address.png
 
@@ -87,12 +87,12 @@ The entry point into the graph for a user or a robot is their canonical address.
 There are multiple types of access which indicate what address A can do as address B.
 
 * Indexed to (INDEX) - wavelets addressed to address B will be written into the
-  index of the account associated with address A (transitively).  
+  index of the account associated with address A (transitively).
 * Add (ADD) - address A can add address B to wavelets.
 * Add myself as (ADD_ME) - address A can add address A to wavelets as address B.
 * Read (READ) - address A can read wavelets addressed to address B.
 * Write (WRITE) - address A can do anything as address B. This could also be
-  called "act as".  
+  called "act as".
 * Grant (GRANT) - address A can grant additional access
   edges to address B.
 
@@ -114,7 +114,7 @@ Authorized access edge
   attributed to an author that has a Grant access edge to the to address she is
   granting additional access too. This attribution should be enforced and
   verified by the wave provider. For example, the Google wave provider uses a
-  namespace for all access edges. The namespace policer for that namespace will
+  namespace for all access edges. The namespace policy for that namespace will
   not allow edits that are not authorized.
 
 Access wave
@@ -153,8 +153,8 @@ If an authorization fails, the client has typically already optimistically
 applied the operation to the wave so will either need to reverse those
 operations or indicate an error to the user. In a well-behaved system this
 should only occur if an access edge has been removed or changed and this change
-has yet to be forwarded to the clients wave provider. In this case the access
-wave would access edges that are no longer valid.  
+has yet to be forwarded to the clients wave provider. In this case the client
+would access edges that are no longer valid.
 
 Groups
 ######
@@ -188,7 +188,7 @@ read-only member of an outer group:
 .. image:: img/member-group-read-group.png
 
 This means the member can become a participant of wavelets addressed to Group 1
-but not to wavelets addressed to Group 2.  
+but not to wavelets addressed to Group 2.
 
 Delegation
 ==========
@@ -197,7 +197,7 @@ Delegation allows an account to perform operations with another address as the
 author. Google Wave currently uses this for two cases:
 
 * An account that is a write-member of a group can perform an AddParticipant
-  operation to add an address belonging to that account to a wavelet. 
+  operation to add an address belonging to that account to a wavelet.
 * Google Wave's spelling ("Spelly"), linking ("Linky"), and other infrastructure
   services act on behalf of any address in a wavelet with those services
   enabled.
@@ -219,4 +219,4 @@ example:
 * A "commenter" role whereby a user can only create new blips and edit their own blips.
 * A "confidential" mode (on the whole wavelet) or role (on a participant) where
   participants can't add new participants.
-  
+
