@@ -47,6 +47,12 @@ public class FlagSettings {
   @Flag(name="client_frontend_port")
   private static String clientFrontEndPort;
 
+  @Flag(name="websocket_frontend_hostname")
+  private static String websocketFrontendHost;
+
+  @Flag(name="websocket_frontend_port")
+  private static String websocketFrontEndPort;
+
   @Flag(name="certificate_private_key")
   private static String certificatePrivKey;
 

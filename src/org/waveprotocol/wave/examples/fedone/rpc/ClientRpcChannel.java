@@ -44,8 +44,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ClientRpcChannel implements RpcChannel {
   private static final Log LOG = Log.get(ClientRpcChannel.class);
 
-  private final SocketChannel channel;
-  private final SequencedProtoChannel protoChannel;
+  private final MessageExpectingChannel protoChannel;
   private final AtomicLong lastSequenceNumber;
   private final BiMap<Long, ClientRpcController> activeMethodMap = HashBiMap.create();
 
@@ -58,7 +57,7 @@ public class ClientRpcChannel implements RpcChannel {
       throws IOException {
     lastSequenceNumber = new AtomicLong();
 
-    SequencedProtoChannel.ProtoCallback callback = new SequencedProtoChannel.ProtoCallback() {
+    ProtoCallback callback = new ProtoCallback() {
       @Override
       public void message(long sequenceNo, Message message) {
         final ClientRpcController controller;
@@ -79,7 +78,7 @@ public class ClientRpcChannel implements RpcChannel {
       }
 
       @Override
-      public void unknown(long sequenceNo, String messageType, UnknownFieldSet message) {
+      public void unknown(long sequenceNo, String messageType, Object message) {
         final ClientRpcController controller;
         synchronized (activeMethodMap) {
           controller = activeMethodMap.get(sequenceNo);
@@ -88,11 +87,18 @@ public class ClientRpcChannel implements RpcChannel {
       }
     };
     
-    channel = SocketChannel.open(serverAddress);
-    protoChannel = new SequencedProtoChannel(channel, callback, threadPool);
+    protoChannel = startChannel(serverAddress, threadPool, callback);
+  }
+  
+  protected MessageExpectingChannel startChannel(SocketAddress serverAddress, 
+      ExecutorService threadPool, ProtoCallback callback) throws IOException {
+    SocketChannel channel = SocketChannel.open(serverAddress);
+    SequencedProtoChannel protoChannel = 
+      new SequencedProtoChannel(channel, callback, threadPool);
     protoChannel.expectMessage(Rpc.RpcFinished.getDefaultInstance());
     protoChannel.startAsyncRead();
-    LOG.fine("Opened a new ClientRpcChannel to " + serverAddress);
+    LOG.fine("Opened a new ClientRpcChannel to " + serverAddress);    
+    return protoChannel;
   }
 
   /**
@@ -131,7 +137,7 @@ public class ClientRpcChannel implements RpcChannel {
             .getExtension(Rpc.isStreamingRpc), callback, new Runnable() {
           @Override
           public void run() {
-            protoChannel.sendMessage(sequenceNo, Rpc.CancelRpc.getDefaultInstance());
+            sendMessage(sequenceNo, Rpc.CancelRpc.getDefaultInstance());
           }
         });
     controller.configure(rpcStatus);
@@ -139,9 +145,16 @@ public class ClientRpcChannel implements RpcChannel {
       activeMethodMap.put(sequenceNo, controller);
     }
     LOG.fine("Calling a new RPC (seq " + sequenceNo + "), method " + method.getFullName() + " for "
-        + channel);
+        + protoChannel);
 
     // Kick off the RPC by sending the request to the server end-point.
-    protoChannel.sendMessage(sequenceNo, request, responsePrototype);
+    sendMessage(sequenceNo, request, responsePrototype);
   }
+  
+  protected void sendMessage(long sequenceNo, Message message, Message responsePrototype) {
+    protoChannel.sendMessage(sequenceNo, message, responsePrototype);
+  }
+  protected void sendMessage(long sequenceNo, Message message) {
+    protoChannel.sendMessage(sequenceNo, message);
+  }  
 }

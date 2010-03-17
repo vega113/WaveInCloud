@@ -1,28 +1,18 @@
-<project name="fedone_proto" default="compile">
+<project name="fedone_proto" default="compile_json">
   <description>Generation of Protocol Buffers</description>
 
   <property file="build.properties"/>
   <property file="build-proto.properties"/>
-
-  <target name="compile" >
-    <exec executable="protoc">
-      <arg value="--proto_path=src/"/>
-      <arg value="--java_out=proto_src"/>
-      <arg value="${src}/org/waveprotocol/wave/protocol/common.proto"/>
-    </exec>
-
-    <exec executable="protoc">
-      <arg value="--proto_path=src/"/>
-      <arg value="--proto_path=${protoc_dist}/src/"/>
-      <arg value="--java_out=proto_src"/>
-      <arg value="${src}/org/waveprotocol/wave/examples/fedone/rpc/rpc.proto"/>
-    </exec>
-
-    <exec executable="protoc">
-      <arg value="--proto_path=src/"/>
-      <arg value="--proto_path=${protoc_dist}/src"/>
-      <arg value="--java_out=proto_src"/>
-      <arg value="${src}/org/waveprotocol/wave/examples/fedone/waveserver/waveclient-rpc.proto"/>
-    </exec>
+  
+  <target name="compile_json">
+    <java classname="com.dyuproject.protostuff.compiler.CompilerMain">
+      <arg value="etc/modules.properties"/>
+      <classpath>
+        <pathelement location="${proto.classes}"/>
+        <pathelement location="third_party/codegen/protostuff/protostuff.jar"/>
+        <pathelement location="third_party/codegen/stringtemplate/stringtemplate-3.2.1.jar"/>
+        <pathelement location="third_party/codegen/antlr/antlr-3.2.jar"/>
+      </classpath>
+    </java>
   </target>
 </project>

@@ -48,8 +48,8 @@ public class RpcTest extends TestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    server = new ServerRpcProvider(null);
-    server.startServer();
+    server = new ServerRpcProvider(null, null, null);
+    server.startRpcServer();
   }
 
   @Override

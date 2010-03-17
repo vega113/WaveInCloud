@@ -30,6 +30,7 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.rpc.ClientRpcChannel;
+import org.waveprotocol.wave.examples.fedone.rpc.WebSocketClientRpcChannel;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
@@ -122,7 +123,7 @@ public class ClientBackend {
     this.userId = new ParticipantId(userAtDomain);
     this.idGenerator = new RandomIdGenerator(userId.getDomain());
     this.uriCodec = new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
-    this.rpcChannel = new ClientRpcChannel(new InetSocketAddress(server, port));
+    this.rpcChannel = new WebSocketClientRpcChannel(new InetSocketAddress(server, port));
     this.rpcServer = ProtocolWaveClientRpc.newStub(rpcChannel);
 
     // Opening the index wave will kickstart the process of receiving waves

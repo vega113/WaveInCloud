@@ -28,7 +28,11 @@
     <fileset dir="${lib.runtime}">
       <include name="*/*.jar"/>
     </fileset>
+    <fileset dir="${lib.codegen}">
+      <include name="*/*.jar"/>
+    </fileset>
   </path>
+  
 
   <!-- Classpath for testing only -->
   <path id="fedone.test.classpath">
@@ -48,6 +52,7 @@
     <mkdir dir="${instr.classes}"/>
     <mkdir dir="${dir.distribute}"/>
     <mkdir dir="${staging}"/>
+    <mkdir dir="${dir.testout}"/>
   </target>
 
   <!-- compiles pre-generated proto sources; does NOT generate protos -->
@@ -142,22 +147,33 @@
       <classpath refid="fedone.test.classpath"/>
     </taskdef>
 
-    <junit fork="yes" showoutput="no" haltonerror="yes">
+    <junit fork="yes" showoutput="no" failureProperty="test.failed">
       <classpath>
         <path refid="fedone.classpath"/>
         <path refid="fedone.test.classpath"/>
         <pathelement location="${instr.classes}"/>
         <pathelement location="${test.classes}"/>
       </classpath>
-      <batchtest>
+      <batchtest todir="${dir.testout}">
         <fileset dir="${test}">
           <include name="**/*Test.java"/>
         </fileset>
       </batchtest>
       <formatter type="xml"/>
+<!--      <formatter type="brief" usefile="false" /> -->
       <jvmarg value="-Demma.coverage.out.file=${build}/coverage.emma" />
       <jvmarg value="-Demma.coverage.out.merge=false" />
     </junit>
+
+    <junitreport todir="${dir.testout}">
+      <fileset dir="${dir.testout}"> 
+        <include name="TEST-*.xml"/> 
+      </fileset> 
+      <report format="frames" todir="${dir.testout}"/> 
+    </junitreport>
+    
+    <fail message="Tests failed. Check log and/or reports."
+      if="test.failed" />
 
     <emma enabled="false">
       <report sourcepath="${src}" >
@@ -215,15 +231,18 @@
       <fileset dir="${staging}">
         <include name="META-INF/services/*" />
         <include name="com/google/common/**/*" />
+        <include name="com/google/gson/**/*" />
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
         <include name="gnu/inet/**/*" />
         <include name="javax/inject/**/*" />
+        <include name="javax/servlet/**/*" />
         <include name="javax/xml/**/*" />
         <include name="org/aopalliance/**/*" />
         <include name="org/apache/commons/cli/**/*" />
         <include name="org/apache/commons/codec/**/*" />
         <include name="org/dom4j/**/*" />
+        <include name="org/eclipse/**/*" />
         <include name="org/jivesoftware/**/*" />
         <include name="org/waveprotocol/**/*" />
         <include name="org/xmlpull/**/*" />
@@ -244,8 +263,10 @@
     <jar destfile="${jar.outfile-client-console}">
       <fileset dir="${staging}">
         <include name="com/google/common/**/*" />
+        <include name="com/google/gson/**/*" />
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
+        <include name="com/sixfire/websocket/*" />
         <include name="javax/inject/**/*" />
         <include name="jline/**/*" />
         <include name="org/apache/commons/codec/**/*" />
@@ -326,6 +347,14 @@
       </batchtest>
       <formatter type="xml"/>
     </junit>
+  </target>
+
+  <target name="doc" depends="stage" description="Builds the Java documentation for the mode, protocol, and FedOne">
+    <javadoc sourcepath="${src}" destdir="${dir.docs}" linksource="yes">
+      <classpath>
+	<pathelement location="${staging}" />
+      </classpath>
+    </javadoc>
   </target>
 
 </project>

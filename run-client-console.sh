@@ -14,5 +14,5 @@ if [[ $# != 1 ]]; then
 else
   USER_NAME=$1@$WAVE_SERVER_DOMAIN_NAME
   echo "running client as user: ${USER_NAME}"
-  exec java -jar dist/fedone-client-console-$FEDONE_VERSION.jar $USER_NAME $WAVE_SERVER_HOSTNAME $WAVE_SERVER_PORT
+  exec java -jar dist/fedone-client-console-$FEDONE_VERSION.jar $USER_NAME $WAVE_SERVER_HOSTNAME $WEBSOCKET_SERVER_PORT
 fi
