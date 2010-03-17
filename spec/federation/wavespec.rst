@@ -530,7 +530,7 @@ range.
 *  'end-version' -- OPTIONAL attribute with ending version number
    (exclusive) up to which to retrieve the wavelet's history.  (Note
    that the end version MUST fall on a delta boundary).
-*  'end-version-hash' -- REQUIRED attribute with the hash for the
+*  'end-version-hash' -- OPTIONAL attribute with the hash for the
    associated end version.
 *  'response-length-limit' -- OPTIONAL attribute containing advice
    from the requester about the preferred response limit, measured as
