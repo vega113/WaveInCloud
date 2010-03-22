@@ -3,6 +3,7 @@ package org.waveprotocol.wave.examples.fedone.rpc;
 import java.io.IOException;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import com.google.protobuf.JsonFormat;
 import com.google.protobuf.Message;
 
@@ -12,6 +13,7 @@ import org.eclipse.jetty.websocket.WebSocket;
 
 public abstract class WebSocketChannel extends MessageExpectingChannel {
   private static final Log LOG = Log.get(WebSocketChannel.class);
+  private static final int VERSION = 0;
 
   private final ProtoCallback callback;
   private Gson gson = new Gson();
@@ -21,6 +23,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
   }
   
   public static class MessageWrapper {
+    private int version;
     private long sequenceNumber;
     private String messageType;
     private String messageJson;
@@ -28,7 +31,8 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
     MessageWrapper() {
       // no-args constructor
     }
-    MessageWrapper(long sNo, String mType, String mJson) {
+    MessageWrapper(int v, long sNo, String mType, String mJson) {
+      v = version;
       sequenceNumber = sNo;
       messageType = mType;
       messageJson = mJson;
@@ -36,7 +40,16 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
   }
   
   public void handleMessageString(String data) {
-    MessageWrapper wrapper = gson.fromJson(data, MessageWrapper.class);
+    MessageWrapper wrapper = null;
+    try {
+      wrapper = gson.fromJson(data, MessageWrapper.class);
+    } catch (JsonParseException jpe) {
+      throw new IllegalStateException("Unable to parse JSON.", jpe);
+    }
+    
+    if (wrapper.version != VERSION) {
+      throw new IllegalStateException("Bad message version number: " + wrapper.version);
+    }
     
     Message prototype = getMessagePrototype(wrapper.messageType);
     if (prototype == null) {
@@ -71,7 +84,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
    */
   public void sendMessage(long sequenceNo, Message message) {
     sendMessageString(gson.toJson(new MessageWrapper(
-      sequenceNo, message.getDescriptorForType().getFullName(),
+      VERSION, sequenceNo, message.getDescriptorForType().getFullName(),
       JsonFormat.printToString(message))));      
   }
 }
