@@ -491,7 +491,7 @@ documents.
 Style
 -----
 Style annotations control the display of the content in the
-blip. All style annotations have names that begin with
+blip. All style annotations have keys that begin with
 "style/". The allowed values for the style annotations are
 the same as those of the CSS properties of the same name. 
 
@@ -519,7 +519,7 @@ content in the blip.
 
 User annotations contain information that is
 specific to each user session. All user
-annotations begin with 'user/'.  
+annotation keys begin with 'user/'.  
 
                                 
 user/d/&lt;session id>
@@ -567,7 +567,7 @@ user/e/&lt;session id>
 Links
 -----
 Link annotations define links to
-other resources. All link annotations have names that begin
+other resources. All link annotations have keys that begin
 with "link/". 
 
 link/manual
@@ -837,4 +837,4 @@ remains (with "deleted" set to "true").
 References
 ##########
 
-.. [RFC2119] Bradner, S., "`Key words for use in RFCs to Indicate Requirement Levels <http://bitworking.org>`_", BCP 14, RFC 2119, March 1997.
+.. [RFC2119] Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997.

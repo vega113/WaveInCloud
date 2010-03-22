@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.deserialize;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
@@ -29,20 +27,24 @@ import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.deserialize;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationProvider.HistoryResponseListener;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
-import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature;
-import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
+
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider.HistoryResponseListener;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -108,8 +110,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     final AtomicInteger numSignerInfoPrefetched = new AtomicInteger(1); // extra 1 for sentinel
     SignerInfoPrefetchResultListener prefetchListener = new SignerInfoPrefetchResultListener() {
       @Override
-      public void onFailure(String errorMessage) {
-        LOG.warning("Signer info prefetch failed: " + errorMessage);
+      public void onFailure(FederationError error) {
+        LOG.warning("Signer info prefetch failed: " + error);
         countDown();
       }
 
@@ -226,13 +228,13 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
             federationProvider.requestHistory(waveletName, domain, expectedVersion, appliedAt, -1,
                 new HistoryResponseListener() {
                   @Override
-                  public void onFailure(String errorMessage) {
-                    LOG.severe("Callback failure: " + errorMessage);
+                  public void onFailure(FederationError error) {
+                    LOG.severe("Callback failure: " + error);
                   }
 
                   @Override
                   public void onSuccess(List<ByteString> deltaList,
-                      long lastCommittedVersion, long versionTruncatedAt) {
+                      ProtocolHashedVersion lastCommittedVersion, long versionTruncatedAt) {
                     LOG.info("Got response callback: " + waveletName + ", lcv "
                         + lastCommittedVersion + " sizeof(deltaSet) = " + deltaList.size());
 

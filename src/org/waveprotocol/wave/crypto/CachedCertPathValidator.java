@@ -112,8 +112,7 @@ public class CachedCertPathValidator implements WaveCertPathValidator {
 
     @Override
     public void check(Certificate cert, Collection<String> unresolvedCritExts) {
-
-      // we know about the WAVE OID - if it's in the unresolved critical
+      // We know about the WAVE OID - if it's in the unresolved critical
       // extensions, that should not cause an error. In fact, in the future
       // we might _require_ this extension
       unresolvedCritExts.remove(WAVE_OID);

@@ -24,19 +24,20 @@ import com.google.protobuf.RpcController;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
-import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.SubmitResultListener;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
+import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.util.HashSet;
 import java.util.List;
@@ -71,7 +72,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
   public void open(final RpcController controller, ProtocolOpenRequest request,
       final RpcCallback<ProtocolWaveletUpdate> done) {
     ParticipantId id = new ParticipantId(request.getParticipantId());
-    WaveId waveId = null;
+    WaveId waveId;
     try {
       waveId = WaveId.deserialise(request.getWaveId());
     } catch (IllegalArgumentException e) {
@@ -125,23 +126,25 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
   @Override
   public void submit(RpcController controller, ProtocolSubmitRequest request,
       final RpcCallback<ProtocolSubmitResponse> done) {
-    WaveletName waveletName = null;
+    WaveletName waveletName;
     String errorMessage = null;
     try {
       waveletName = uriCodec.uriToWaveletName(request.getWaveletName());
       frontend.submitRequest(waveletName, request.getDelta(), new SubmitResultListener() {
         @Override
-        public void onFailure(String errorMessage) {
+        public void onFailure(FederationError error) {
           done.run(ProtocolSubmitResponse.newBuilder()
-              .setOperationsApplied(0).setErrorMessage(errorMessage).build());
+              .setOperationsApplied(0).setErrorMessage(error.getErrorMessage()).build());
         }
 
         @Override
         public void onSuccess(int operationsApplied,
-            ProtocolHashedVersion hashedVersionAfterApplication) {
+            ProtocolHashedVersion hashedVersionAfterApplication,
+            long applicationTimestamp) {
           done.run(ProtocolSubmitResponse.newBuilder()
               .setOperationsApplied(operationsApplied)
               .setHashedVersionAfterApplication(hashedVersionAfterApplication).build());
+          // TODO(arb): applicationTimestamp??
         }
       });
     } catch (EncodingException e) {

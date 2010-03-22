@@ -157,9 +157,7 @@ public abstract class ImmutableStateMap<T extends ImmutableStateMap<T, U>, U ext
   }
 
   public ImmutableStateMap(String ... pairs) {
-    if (pairs.length % 2 != 0) {
-      throw new IllegalArgumentException("Pairs must contain an even number of strings");
-    }
+    Preconditions.checkArgument(pairs.length % 2 == 0, "Pairs must come in groups of two");
 
     Map<String, String> map = new HashMap<String, String>();
 
@@ -167,7 +165,7 @@ public abstract class ImmutableStateMap<T extends ImmutableStateMap<T, U>, U ext
       Preconditions.checkNotNull(pairs[i], "Null key");
       Preconditions.checkNotNull(pairs[i + 1], "Null value");
       if (map.containsKey(pairs[i])) {
-        throw new IllegalArgumentException("Duplicate key: " + pairs[i]);
+        Preconditions.illegalArgument("Duplicate key: " + pairs[i]);
       }
       map.put(pairs[i], pairs[i + 1]);
     }
@@ -177,11 +175,9 @@ public abstract class ImmutableStateMap<T extends ImmutableStateMap<T, U>, U ext
 
   private List<Attribute> attributeListFromMap(Map<String, String> map) {
     ArrayList<Attribute> attributeList = new ArrayList<Attribute>(map.size());
-    for (Iterator<Map.Entry<String,String>> iterator = map.entrySet().iterator();
-        iterator.hasNext();) {
-      Map.Entry<String,String> entry = iterator.next();
+    for (Map.Entry<String, String> entry : map.entrySet()) {
       if (entry.getKey() == null || entry.getValue() == null) {
-        throw new NullPointerException("This map does not allow null keys or values");
+        Preconditions.nullPointer("This map does not allow null keys or values");
       }
       attributeList.add(new Attribute(entry));
     }
@@ -229,14 +225,14 @@ public abstract class ImmutableStateMap<T extends ImmutableStateMap<T, U>, U ext
           nextAttribute = iterator.hasNext() ? iterator.next() : null;
         } else if (comparison < 0) {
           if (checkCompatibility && update.oldValue != null) {
-            throw new IllegalArgumentException(
+            Preconditions.illegalArgument(
                 "Mismatched old value: attempt to update unset attribute with " + update);
           }
           break;
         } else if (comparison == 0) {
           if (checkCompatibility && !nextAttribute.value.equals(update.oldValue)) {
-            throw new IllegalArgumentException("Mismatched old value: attempt to update " +
-                nextAttribute + " with " + update);
+            Preconditions.illegalArgument(
+                "Mismatched old value: attempt to update " + nextAttribute + " with " + update);
           }
           nextAttribute = iterator.hasNext() ? iterator.next() : null;
           break;
@@ -263,8 +259,8 @@ public abstract class ImmutableStateMap<T extends ImmutableStateMap<T, U>, U ext
       Preconditions.checkNotNull(a, "Null attribute");
       assert a.name != null;
       assert a.value != null;
-      if (previous != null) {
-        Preconditions.checkArgument(previous.name.compareTo(a.name) < 0,
+      if (previous != null && previous.name.compareTo(a.name) >= 0) {
+        Preconditions.illegalArgument(
             "Attribute keys not strictly monotonic: " + previous.name + ", " + a.name);
       }
       previous = a;

@@ -16,11 +16,6 @@
 
 package org.waveprotocol.wave.model.document.operation.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
@@ -38,7 +33,14 @@ import org.waveprotocol.wave.model.document.operation.algorithm.RangeNormalizer;
 import org.waveprotocol.wave.model.document.operation.util.ExplodedDocOp;
 import org.waveprotocol.wave.model.operation.OpCursorException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+
 public class DocOpUtil {
+
+  private DocOpUtil() { /* utility class, not to be instantiated */ }
 
   /**
    * Name of the XML Processing Instruction used for annotations.
@@ -349,14 +351,16 @@ public class DocOpUtil {
           b.append("<?" + PI_TARGET);
           for (Map.Entry<String, String> entry : changes.entrySet()) {
             if (entry.getValue() != null) {
-              b.append(" " + entry.getKey() + "=\"" + annotationEscape(entry.getValue()) + "\"");
+              b.append(" \"" + xmlTextEscape(annotationEscape(entry.getKey())) + "\"");
+              b.append("=");
+              b.append("\"" + xmlTextEscape(annotationEscape(entry.getValue())) + "\"");
             } else {
               // This code renders ending annotations and annotations that are
               // changed to null the same way, which is OK since we are
               // only concerned with DocIntializations.  (It's, in fact, the
               // only correct solution since our test cases use this code for
               // equality comparison of documents.)
-              b.append(" " + entry.getKey());
+              b.append(" \"" + xmlTextEscape(annotationEscape(entry.getKey())) + "\"");
             }
           }
           b.append("?>");

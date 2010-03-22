@@ -23,11 +23,13 @@ import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.crypto.WaveSigner;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
 
 import java.util.Set;
 
@@ -89,7 +91,7 @@ public interface CertificateManager {
    */
   interface SignerInfoPrefetchResultListener {
     void onSuccess(ProtocolSignerInfo signerInfo);
-    void onFailure(String errorMessage);
+    void onFailure(FederationError error);
   }
 
   /**

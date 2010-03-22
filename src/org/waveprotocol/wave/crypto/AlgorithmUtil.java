@@ -17,13 +17,16 @@
 
 package org.waveprotocol.wave.crypto;
 
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.HashAlgorithm;
 
 /**
- *
+ * Utilities for stringifying enums from the wave protocol protobufs.
  */
 public class AlgorithmUtil {
+
+  private AlgorithmUtil() {
+  }
 
   public static String getJceName(HashAlgorithm hashAlg) {
     switch (hashAlg) {

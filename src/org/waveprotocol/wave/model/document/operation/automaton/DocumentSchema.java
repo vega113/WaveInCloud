@@ -17,6 +17,7 @@
 package org.waveprotocol.wave.model.document.operation.automaton;
 
 import org.waveprotocol.wave.model.util.Utf16Util;
+import org.waveprotocol.wave.model.util.Utf16Util.BlipCodePointResult;
 import org.waveprotocol.wave.model.util.Utf16Util.CodePointHandler;
 
 import java.util.Collections;
@@ -54,8 +55,8 @@ public interface DocumentSchema {
             } else if (Utf16Util.isSupplementaryCodePoint(cp)) {
               // NOTE: This will need updating when we support supplementary code points.
               result.append(Utf16Util.REPLACEMENT_CHARACTER);
-            } else if (Utf16Util.isCodePointGoodForBlip(cp)) {
-              assert 0 <= cp && cp <= 0xFFFF;
+            } else if (Utf16Util.isCodePointGoodForBlip(cp) == BlipCodePointResult.OK) {
+              assert 0 <= cp && cp <= 0xFFFF : "Not handling supplementary code points (yet)";
               result.append((char) cp);
             } else {
               result.append(Utf16Util.REPLACEMENT_CHARACTER);

@@ -24,9 +24,11 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 public final class NoOp extends WaveletOperation {
 
   /**
-   * Constructs a no-op.
+   * The singleton instance.
    */
-  public NoOp() {}
+  public static final NoOp INSTANCE = new NoOp();
+
+  private NoOp() {}
 
   /**
    * Does nothing.

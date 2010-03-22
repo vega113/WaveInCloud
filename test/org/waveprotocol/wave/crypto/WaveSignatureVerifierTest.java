@@ -30,9 +30,9 @@ import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo.HashAlgorithm;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.HashAlgorithm;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
 
 import java.security.cert.X509Certificate;
 

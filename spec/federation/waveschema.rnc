@@ -30,7 +30,7 @@ update =
             attribute wavelet-name { xsd:string },
             element wavesrv:applied-delta { text }*,
             commit-notice?
-          }
+          } *
         }
       }
     }

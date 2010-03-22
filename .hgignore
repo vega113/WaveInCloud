@@ -2,6 +2,9 @@ syntax: glob
 *\.cert
 *\.key
 *\.orig
+*\.iml
+*\.ipr
+*\.iws
 TEST-*\.xml
 bin
 build
@@ -9,3 +12,4 @@ dist
 run-config\.sh
 \.classpath
 \.project
+out

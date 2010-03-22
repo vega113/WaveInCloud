@@ -24,10 +24,10 @@ import com.google.inject.Module;
 import com.google.inject.name.Named;
 
 import org.apache.commons.cli.ParseException;
-import org.waveprotocol.wave.examples.fedone.federation.xmpp.WaveXmppComponent;
 import org.waveprotocol.wave.examples.fedone.rpc.ServerRpcProvider;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
+import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
 import org.waveprotocol.wave.examples.fedone.waveserver.WebSocketServerManager;
 import org.xmpp.component.ComponentException;
 
@@ -59,14 +59,14 @@ public class ServerMain {
       throws IOException {
 
     Injector injector = Guice.createInjector(new ServerModule(), flags);
-    WaveXmppComponent wxComponent = injector.getInstance(WaveXmppComponent.class);
+    ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
     ProtocolWaveClientRpc.Interface rpcImpl = injector.getInstance(
         ProtocolWaveClientRpc.Interface.class);
 //    WebSocketServerManager wsServer = injector.getInstance(WebSocketServerManager.class);
     server.registerService(ProtocolWaveClientRpc.newReflectiveService(rpcImpl));
     try {
-      wxComponent.run();
+      xmppComponent.run();
     } catch (ComponentException e) {
       System.err.println("couldn't connect to XMPP server:" + e);
     }

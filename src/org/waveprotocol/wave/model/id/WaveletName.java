@@ -17,10 +17,15 @@
 
 package org.waveprotocol.wave.model.id;
 
+import org.waveprotocol.wave.model.id.IdSerialiser.RuntimeInvalidIdException;
+import org.waveprotocol.wave.model.util.Preconditions;
+
 /**
  * A globally-unique wavelet identifier.
  *
+ * A wavelet name is a tuple of a wave identifier and a wavelet identifier.
  *
+ * @author anorth@google.com (Alex North)
  */
 public class WaveletName implements Comparable<WaveletName> {
   public final WaveId waveId;
@@ -31,13 +36,21 @@ public class WaveletName implements Comparable<WaveletName> {
     return new WaveletName(waveId, waveletId);
   }
 
-  /** Constructs a wavelet name for a serialised wave id and wavelet id. */
-  public static WaveletName of(String waveId, String waveletId) {
+  /**
+   * Constructs a wavelet name for a serialised wave id and wavelet id.
+   *
+   * @throws RuntimeInvalidIdException if either string is invalid
+   */
+  public static WaveletName of(String waveId, String waveletId) throws RuntimeInvalidIdException {
     return new WaveletName(WaveId.deserialise(waveId), WaveletId.deserialise(waveletId));
   }
 
   /** Private constructor to allow future instance optimisation. */
   private WaveletName(WaveId waveId, WaveletId waveletId) {
+    if (waveId == null || waveletId == null) {
+      Preconditions.nullPointer("Cannot create WaveletName with null value in [waveId:"
+          + waveId + "] [waveletId:" + waveletId + "]");
+    }
     this.waveId = waveId;
     this.waveletId = waveletId;
   }

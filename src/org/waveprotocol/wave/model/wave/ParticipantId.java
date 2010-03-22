@@ -18,10 +18,8 @@
 package org.waveprotocol.wave.model.wave;
 
 /**
- * A ParticipantId uniquely identifies a {@link Participant}. It looks like
- * an e-mail address, e.g. 'joe@gmail.com'
- *
- *
+ * A ParticipantId uniquely identifies a participant. It looks like an email
+ * address, e.g. 'joe@gmail.com'
  */
 public final class ParticipantId {
 
@@ -69,9 +67,6 @@ public final class ParticipantId {
     return parts[parts.length - 1];
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public boolean equals(Object o) {
     if (o == this) {
@@ -83,15 +78,11 @@ public final class ParticipantId {
     return false;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public int hashCode() {
     return address.hashCode();
   }
 
-  /** {@inheritDoc} */
   @Override
   public String toString() {
     return getAddress();

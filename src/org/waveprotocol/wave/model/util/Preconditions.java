@@ -23,7 +23,7 @@ package org.waveprotocol.wave.model.util;
  *
  * This class mostly mimics com.google.common.base.Preconditions but only
  * implement the parts we need.
- * (we avoid external dependencies from model/)
+ * (we avoid external dependencies from model/) 
  */
 public final class Preconditions {
   private Preconditions() {}
@@ -72,6 +72,28 @@ public final class Preconditions {
     checkPositionIndexesInRange(0, start, end, size);
   }
 
+  /**
+   * Note a failed null check.
+   *
+   * Useful when an explicit check was done separately, to avoid building up
+   * the error message object or string unecessarily (if profiling reveals a
+   * hotspot).
+   *
+   * @param errorMessage error message
+   * @throws NullPointerException
+   */
+  public static void nullPointer(Object errorMessage) {
+    throw new NullPointerException("" + errorMessage);
+  }
+
+  /**
+   * Ensures that the specified object is not null.
+   *
+   * @param x the object to check
+   * @param errorMessage error message
+   * @return the object if it is not null
+   * @throws NullPointerException if {@code x} is null
+   */
   public static <T> T checkNotNull(T x, Object errorMessage) {
     if (x == null) {
       throw new NullPointerException("" + errorMessage);
@@ -82,15 +104,25 @@ public final class Preconditions {
   /**
    * Note an illegal argument
    *
-   * Useful when an explicit check was done separately, to avoid building up the
-   * error message object or string unecessarily (if profiling reveals a hotspot).
+   * Useful when an explicit check was done separately, to avoid building up
+   * the error message object or string unecessarily (if profiling reveals a
+   * hotspot).
    *
-   * @param errorMessage
+   * @param errorMessage error message
+   * @throws IllegalArgumentException
    */
   public static void illegalArgument(Object errorMessage) {
     throw new IllegalArgumentException("" + errorMessage);
   }
 
+  /**
+   * Ensures the truth of an condition involving the a parameter to the
+   * calling method, but not involving the state of the calling instance.
+   *
+   * @param condition a boolean expression
+   * @param errorMessage error message
+   * @throws IllegalArgumentException if {@code condition} is false
+   */
   public static void checkArgument(boolean condition, Object errorMessage) {
     if (!condition) {
       throw new IllegalArgumentException("" + errorMessage);
@@ -98,15 +130,29 @@ public final class Preconditions {
   }
 
   /**
-   * Ensures the truth of an expression involving the state of the calling
+   * Note an illegal state.
+   *
+   * Useful when an explicit check was done separately, to avoid building up
+   * the error message object or string unecessarily (if profiling reveals a
+   * hotspot).
+   *
+   * @param errorMessage error message
+   * @throws IllegalStateException
+   */
+  public static void illegalState(Object errorMessage) {
+    throw new IllegalStateException("" + errorMessage);
+  }
+
+  /**
+   * Ensures the truth of an condition involving the state of the calling
    * instance, but not involving any parameters to the calling method.
    *
-   * @param expression a boolean expression
+   * @param condition a boolean expression
    * @param errorMessage error message
-   * @throws IllegalStateException if {@code expression} is false
+   * @throws IllegalStateException if {@code condition} is false
    */
-  public static void checkState(boolean expression, Object errorMessage) {
-    if (!expression) {
+  public static void checkState(boolean condition, Object errorMessage) {
+    if (!condition) {
       throw new IllegalStateException("" + errorMessage);
     }
   }

@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
@@ -27,7 +25,13 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionZeroFactoryImpl;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -35,11 +39,9 @@ import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature;
-import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 import java.util.Collections;
 import java.util.List;
@@ -90,7 +92,6 @@ public class WaveletContainerTest extends TestCase {
 
     addParticipantOps = Lists.newArrayList();
     removeParticipantOps = Lists.newArrayList();
-
 
     for (ParticipantId p : participants) {
       addParticipantOps.add(new AddParticipant(p));
@@ -224,6 +225,23 @@ public class WaveletContainerTest extends TestCase {
     }
   }
 
+  public void testOperationsOfDifferentSizes() throws EmptyDeltaException, OperationException {
+    String docId = "b+somedoc";
+    BufferedDocOp docOp1 = new DocOpBuilder().characters("hi").build();
+    BufferedDocOp docOp2 = new DocOpBuilder().characters("bye").build();
+    localWavelet.applyWaveletOperations(ImmutableList.<WaveletOperation> of(
+        new WaveletDocumentOperation(docId, docOp1)));
+    try {
+      // Version will still be 0 (applyWaveletOperations doesn't affect it) so "hi" and "bye"
+      // won't compose properly.
+      localWavelet.applyWaveletOperations(ImmutableList.<WaveletOperation> of(
+          new WaveletDocumentOperation(docId, docOp2)));
+      fail("Composition of \"hi\" and \"bye\" did not throw OperationException");
+    } catch (OperationException expected) {
+      // Correct
+    }
+  }
+
   // Utilities
 
   /**
@@ -232,10 +250,10 @@ public class WaveletContainerTest extends TestCase {
    */
   private void assertSuccessfulApplyWaveletOperations(WaveletContainerImpl with) throws Exception {
     with.applyWaveletOperations(addParticipantOps);
-    assertDeepEquals(with.getParticipants(), participants);
+    assertEquals(with.getParticipants(), participants);
 
     with.applyWaveletOperations(removeParticipantOps);
-    assertDeepEquals(with.getParticipants(), Collections.emptyList());
+    assertEquals(with.getParticipants(), Collections.emptyList());
   }
 
   /**
@@ -249,7 +267,7 @@ public class WaveletContainerTest extends TestCase {
     } catch (OperationException e) {
       // Correct
     }
-    assertDeepEquals(localWavelet.getParticipants(), Collections.emptyList());
+    assertEquals(localWavelet.getParticipants(), Collections.emptyList());
 
     with.applyWaveletOperations(addParticipantOps);
     try {
@@ -258,7 +276,7 @@ public class WaveletContainerTest extends TestCase {
     } catch (OperationException e) {
       // Correct
     }
-    assertDeepEquals(with.getParticipants(), participants);
+    assertEquals(with.getParticipants(), participants);
 
     try {
       with.applyWaveletOperations(doubleRemoveParticipantOps);
@@ -266,16 +284,6 @@ public class WaveletContainerTest extends TestCase {
     } catch (OperationException e) {
       // Correct
     }
-    assertDeepEquals(with.getParticipants(), participants);
-  }
-
-  /**
-   * Assert two lists are equals using equals() on elements (rather than ==).
-   */
-  private static void assertDeepEquals(List<?> list1, List<?> list2) {
-    assertEquals(list1.size(), list2.size());
-    for (int i = 0; i < list1.size(); i++) {
-      assertEquals(list1.get(i), list2.get(i));
-    }
+    assertEquals(with.getParticipants(), participants);
   }
 }

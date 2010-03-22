@@ -19,8 +19,6 @@ package org.waveprotocol.wave.model.operation;
 
 /**
  * A pair of operations.
- *
- *
  */
 public final class OperationPair<O> {
 

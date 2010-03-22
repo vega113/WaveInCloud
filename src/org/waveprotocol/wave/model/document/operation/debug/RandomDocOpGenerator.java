@@ -129,7 +129,7 @@ public final class RandomDocOpGenerator {
             new AnnotationOption("link/auto",
                 Arrays.asList(null,
                     "http://www.youtube.com/watch?v=NBplLTBBmiA&feature=hd",
-                    "http://b/createIssue?component=35390")),
+                    "http://code.google.com/p/wave-protocols/issues/entry")),
             new AnnotationOption("style/fontWeight", Arrays.asList(null, "bold")),
             new AnnotationOption("style/textDecoration", Arrays.asList(null, "underline"))
         ));
@@ -1407,7 +1407,8 @@ public final class RandomDocOpGenerator {
         doc.consume(op);
         System.err.println("new: " + DocOpUtil.toConciseString(doc.asOperation()));
         System.err.println("new: " + DocOpUtil.toXmlString(doc.asOperation()));
-        if (!DocOpValidator.validate(null, null, doc.asOperation()).isValid()) {
+        if (!DocOpValidator.validate(null, DocumentSchema.NO_SCHEMA_CONSTRAINTS,
+            doc.asOperation()).isValid()) {
           throw new RuntimeException("doc not valid");
         }
       }

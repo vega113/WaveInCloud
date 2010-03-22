@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
-
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -35,21 +33,29 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletContainer.State;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletFederationListener.Factory;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolHashedVersion;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature;
-import org.waveprotocol.wave.protocol.common.ProtocolSignedDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
+import org.waveprotocol.wave.waveserver.FederationHostBridge;
+import org.waveprotocol.wave.waveserver.FederationRemoteBridge;
+import org.waveprotocol.wave.waveserver.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.WaveletFederationListener;
+import org.waveprotocol.wave.waveserver.WaveletFederationListener.Factory;
+import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -125,7 +131,7 @@ public class WaveServerImpl implements WaveServer {
         if (wavelet != null && wavelet.getState() == State.CORRUPTED) {
           // TODO: throw away whole wavelet and start again
           LOG.info("Received update for corrupt wavelet");
-          callback.onFailure("Corrupt wavelet");
+          callback.onFailure(FederationErrors.badRequest("Corrupt wavelet"));
           return;
         }
 
@@ -138,7 +144,7 @@ public class WaveServerImpl implements WaveServer {
           } catch (InvalidProtocolBufferException e) {
             LOG.info("Invalid applied delta protobuf for incoming " + waveletName, e);
             safeMarkWaveletCorrupted(wavelet);
-            callback.onFailure("Invalid applied delta protocol buffer");
+            callback.onFailure(FederationErrors.badRequest("Invalid applied delta protocol buffer"));
             return;
           }
         }
@@ -170,7 +176,7 @@ public class WaveServerImpl implements WaveServer {
                 @Override
                 public void onFailure(String errorMessage) {
                   LOG.warning("Update failed: e" + errorMessage);
-                  callback.onFailure(errorMessage);
+                  callback.onFailure(FederationErrors.badRequest(errorMessage));
                 }
               });
           // TODO: when we support federated groups, forward to federationHosts too.
@@ -189,7 +195,7 @@ public class WaveServerImpl implements WaveServer {
           callback.onSuccess();
         } else {
           LOG.warning("incoming waveletUpdate: bad update, " + error);
-          callback.onFailure(error);
+          callback.onFailure(FederationErrors.badRequest(error));
         }
       }
 
@@ -238,11 +244,11 @@ public class WaveServerImpl implements WaveServer {
           ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
       if (delta.getMessage().getHashedVersion().getVersion() == 0) {
         LOG.warning("Remote user tried to submit delta at version 0 - disallowed. " + signedDelta);
-        listener.onFailure("Remote users may not create wavelets.");
+        listener.onFailure(FederationErrors.badRequest("Remote users may not create wavelets."));
         return;
       }
     } catch (InvalidProtocolBufferException e) {
-      listener.onFailure("Signed delta contains invalid delta");
+      listener.onFailure(FederationErrors.badRequest("Signed delta contains invalid delta"));
       return;
     }
 
@@ -252,15 +258,15 @@ public class WaveServerImpl implements WaveServer {
       submitDelta(waveletName, signedDelta, listener);
     } catch (HostingException e) {
       LOG.warning("Remote tried to submit to local wavelet", e);
-      listener.onFailure("Local wavelet update");
+      listener.onFailure(FederationErrors.badRequest("Local wavelet update"));
     } catch (SignatureException e) {
       LOG.warning("Submit request: Delta failed verification. WaveletName: " + waveletName +
           " delta: " + signedDelta, e);
-      listener.onFailure("Remote verification failed");
+      listener.onFailure(FederationErrors.badRequest("Remote verification failed"));
     } catch (UnknownSignerException e) {
       LOG.warning("Submit request: unknown signer.  WaveletName: " + waveletName +
           "delta: " + signedDelta, e);
-      listener.onFailure("Unknown signer");
+      listener.onFailure(FederationErrors.badRequest("Unknown signer"));
     }
   }
 
@@ -270,14 +276,15 @@ public class WaveServerImpl implements WaveServer {
       long lengthLimit, HistoryResponseListener listener) {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
-      listener.onFailure("Wavlet " + waveletName + " does not exist.");
+      listener.onFailure(FederationErrors.badRequest("Wavlet " + waveletName + " does not exist."));
       LOG.info("Request history: " + domain + " requested non-existant wavelet: " +
           waveletName);
     } else {
       // TODO: once we support federated groups, expand support to request
       // remote wavelets too.
       if (!isLocalWavelet(waveletName)) {
-        listener.onFailure("Wavlet " + waveletName + " not hosted here.");
+        listener.onFailure(FederationErrors.badRequest("Wavelet " + waveletName
+                                                       + " not hosted here."));
         LOG.info("Federation remote for domain: " + domain + " requested a remote wavelet: " +
             waveletName);
       } else {
@@ -292,7 +299,10 @@ public class WaveServerImpl implements WaveServer {
           // Now determine whether we received the entire requested wavelet history.
           LOG.info("Found deltaHistory between " + startVersion + " - " + endVersion
               + ", returning to requester domain " + domain + " -- " + deltaHistory);
-          listener.onSuccess(deltaHistoryBytes, endVersion.getVersion(), endVersion.getVersion());
+          ProtocolHashedVersion hashedEndVersion =
+              ProtocolHashedVersion.newBuilder().setHistoryHash(endVersion.getHistoryHash())
+                  .setVersion(endVersion.getVersion()).build();
+          listener.onSuccess(deltaHistoryBytes, hashedEndVersion, endVersion.getVersion());
           // TODO: ### check length limit ??
 //           else {
 //            ProtocolAppliedWaveletDelta lastDelta = deltaHistory.last();
@@ -304,8 +314,8 @@ public class WaveServerImpl implements WaveServer {
         } catch (WaveletStateException e) {
           LOG.severe("Error retrieving wavelet history: " + waveletName + " " + startVersion +
               " - " + endVersion);
-          listener.onFailure("Server error while retrieving wavelet history.");
-          return;
+          listener.onFailure(FederationErrors.badRequest(
+              "Server error while retrieving wavelet history."));
         }
       }
     }
@@ -319,10 +329,10 @@ public class WaveServerImpl implements WaveServer {
 
     if (wavelet == null) {
       LOG.info("getDeltaSignerInfo for nonexistent wavelet " + waveletName);
-      listener.onFailure("Wavelet does not exist");
+      listener.onFailure(FederationErrors.badRequest("Wavelet does not exist"));
     } else if (!(wavelet instanceof LocalWaveletContainer)) {
       LOG.info("getDeltaSignerInfo for remote wavelet " + waveletName);
-      listener.onFailure("Wavelet is not locally hosted");
+      listener.onFailure(FederationErrors.badRequest("Wavelet is not locally hosted"));
     } else {
       LocalWaveletContainer localWavelet = (LocalWaveletContainer) wavelet;
       if (localWavelet.isDeltaSigner(deltaEndVersion, signerId)) {
@@ -330,14 +340,14 @@ public class WaveServerImpl implements WaveServer {
         if (signerInfo == null) {
           // Oh no!  We are supposed to store it, and we already know they did sign this delta.
           LOG.severe("No stored signer info for valid getDeltaSignerInfo on " + waveletName);
-          listener.onFailure("Unknown signer info");
+          listener.onFailure(FederationErrors.badRequest("Unknown signer info"));
         } else {
           listener.onSuccess(signerInfo);
         }
       } else {
         LOG.info("getDeltaSignerInfo was not authrorised for wavelet " + waveletName
             + ", end version " + deltaEndVersion);
-        listener.onFailure("Not authorised to get signer info");
+        listener.onFailure(FederationErrors.badRequest("Not authorised to get signer info"));
       }
     }
   }
@@ -350,7 +360,7 @@ public class WaveServerImpl implements WaveServer {
     } catch (SignatureException e) {
       String error = "verification failure from domain " + signerInfo.getDomain();
       LOG.warning("incoming postSignerInfo: " + error, e);
-      listener.onFailure(error);
+      listener.onFailure(FederationErrors.badRequest(error));
       return;
     }
     listener.onSuccess();
@@ -407,6 +417,9 @@ public class WaveServerImpl implements WaveServer {
    *        domains this wave server regards as local wavelets.
    * @param federationHostFactory factory that returns federation host instance listening
    *        on a given domain.
+   * @param federationRemote
+   * @param localWaveletContainerFactory
+   * @param remoteWaveletContainerFactory
    */
   @Inject
   public WaveServerImpl(CertificateManager certificateManager,
@@ -598,8 +611,8 @@ public class WaveServerImpl implements WaveServer {
                   }
 
                   @Override
-                  public void onFailure(String errorMessage) {
-                    LOG.warning("outgoing waveletDeltaUpdate failure: " + errorMessage);
+                  public void onFailure(FederationError error) {
+                    LOG.warning("outgoing waveletDeltaUpdate failure: " + error);
                   }
                 });
 
@@ -611,32 +624,32 @@ public class WaveServerImpl implements WaveServer {
                   }
 
                   @Override
-                  public void onFailure(String errorMessage) {
-                    LOG.warning("outgoing waveletCommitUpdate failure: " + errorMessage);
+                  public void onFailure(FederationError error) {
+                    LOG.warning("outgoing waveletCommitUpdate failure: " + error);
                   }
             });
           }
         }
       } catch (AccessControlException e) {
-        resultListener.onFailure(e.getMessage());
+        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       } catch (OperationException e) {
-        resultListener.onFailure(e.getMessage());
+        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       } catch (WaveletStateException e) {
-        resultListener.onFailure(e.getMessage());
+        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       } catch (IllegalArgumentException e) {
-        resultListener.onFailure(e.getMessage());
+        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       } catch (HostingException e) {
         throw new IllegalStateException("Should not get HostingException after " +
-        		"checking isLocalWavelet", e);
+                                        "checking isLocalWavelet", e);
       } catch (InvalidProtocolBufferException e) {
-        resultListener.onFailure(e.getMessage());
+        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       } catch (InvalidHashException e) {
-        resultListener.onFailure(e.getMessage());
+        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       } catch (EmptyDeltaException e) {
         // This is okay, just succeed silently.  Use an empty timestamp since nothing was applied.
@@ -687,8 +700,8 @@ public class WaveServerImpl implements WaveServer {
       } else {
         federationRemote.postSignerInfo(domain, psi, new PostSignerInfoResponseListener() {
           @Override
-          public void onFailure(String errorMessage) {
-            LOG.warning("Failed to post " + sig + " to " + domain + ": " + errorMessage);
+          public void onFailure(FederationError error) {
+            LOG.warning("Failed to post " + sig + " to " + domain + ": " + error);
             countDown();
           }
 

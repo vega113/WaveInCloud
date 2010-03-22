@@ -23,8 +23,8 @@
 
 syntax = "proto2";
 
-import "org/waveprotocol/wave/protocol/common.proto";
 import "org/waveprotocol/wave/examples/fedone/rpc/rpc.proto";
+import "org/waveprotocol/wave/federation/federation.protodevel";
 
 package waveserver;
 
@@ -63,15 +63,15 @@ message ProtocolWaveletUpdate {
   required string wavelet_name = 1;
 
   // Zero or more deltas for this wavelet, streamed in order.
-  repeated protocol.ProtocolWaveletDelta applied_delta = 2;
+  repeated federation.ProtocolWaveletDelta applied_delta = 2;
   
   // Indicates that the host server has committed the wavelet to disk at the
   // given version.
-  optional protocol.ProtocolHashedVersion commit_notice = 3;
+  optional federation.ProtocolHashedVersion commit_notice = 3;
 
   // Resulting version of the wavelet after all deltas have been applied
   // May only be missing if there are no appliedDeltas
-  optional protocol.ProtocolHashedVersion resulting_version = 4;
+  optional federation.ProtocolHashedVersion resulting_version = 4;
 }
 
 /**
@@ -79,7 +79,7 @@ message ProtocolWaveletUpdate {
  */
 message ProtocolSubmitRequest {
   required string wavelet_name = 1;
-  required protocol.ProtocolWaveletDelta delta = 2;
+  required federation.ProtocolWaveletDelta delta = 2;
 }
 
 /**
@@ -91,5 +91,5 @@ message ProtocolSubmitRequest {
 message ProtocolSubmitResponse {
   required int32 operations_applied = 1;
   optional string error_message = 2;
-  optional protocol.ProtocolHashedVersion hashed_version_after_application = 3;
+  optional federation.ProtocolHashedVersion hashed_version_after_application = 3;
 }

@@ -20,34 +20,75 @@ package org.waveprotocol.wave.model.id;
 /**
  * This allows us to serialize and deserialise ids.
  *
- *
+ * @author zdwang@google.com (David Wang)
+ * @author anorth@google.com (Alex North)
  */
 public interface IdSerialiser {
+  /**
+   * Checked exception indicating that a serialised wave or wavelet id is
+   * invalid.
+   */
+  public static class InvalidIdException extends Exception {
+    private final String id;
+    public InvalidIdException(String id, String message) {
+      super(message);
+      this.id = id;
+    }
+
+    public String getId() {
+      return id;
+    }
+
+    @Override
+    public String getMessage() {
+      return "Invalid id '" + id + "': " + super.getMessage();
+    }
+  }
+
+  /**
+   * Runtime exception indicating that a serialised wave or wavelet id is
+   * invalid. It's an @link {@link IllegalArgumentException} but more specific
+   * so that it may be caught without catching other IAEs.
+   */
+  public static class RuntimeInvalidIdException extends IllegalArgumentException {
+    private final String id;
+    public RuntimeInvalidIdException(String id, String message) {
+      super(message);
+      this.id = id;
+    }
+
+    public String getId() {
+      return id;
+    }
+
+    @Override
+    public String getMessage() {
+      return "Invalid id '" + id + "': " + super.getMessage();
+    }
+  }
+
   /** Separates a wave id from a wavelet id in serialised form. */
   public static final char PART_SEPARATOR = '!';
 
   /**
-   * Turn a wave id into a string. If the domain of the id is the same as this,
-   * then the serialised form does not contain the domain.
+   * Serialises a wave id into a string.
    */
   String serialiseWaveId(WaveId waveId);
 
   /**
-   * Turn a wavelet id into a string. If the domain of the id is the same as this,
-   * then the serialised form does not contain the domain.
+   * Serialises a wavelet id into a string.
    */
   String serialiseWaveletId(WaveletId waveletId);
 
   /**
-   * Turn a string into a wavel id. If the domain is not specified in the string, then the
-   * wave id returned has the default domain.
+   * Deserialises a wave id encoded in a string.
+   *
+   * @throws InvalidIdException if the serialised id is invalid
    */
-  WaveId deserialiseWaveId(String serialisedForm);
+  WaveId deserialiseWaveId(String serialisedForm) throws InvalidIdException;
 
   /**
-   * Turn a string into a wavel id. If the domain is not specified in the string, then the
-   * wave id returned has the default domain.
+   * @throws InvalidIdException if the serialised id is invalid
    */
-  WaveletId deserialiseWaveletId(String serialisedForm);
-
+  WaveletId deserialiseWaveletId(String serialisedForm) throws InvalidIdException;
 }

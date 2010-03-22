@@ -17,7 +17,7 @@
 package org.waveprotocol.wave.crypto;
 
 import org.apache.commons.codec.binary.Base64;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;

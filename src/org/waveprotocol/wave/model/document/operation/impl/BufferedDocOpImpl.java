@@ -81,8 +81,7 @@ final class BufferedDocOpImpl implements BufferedDocOp {
       // Check again, collecting violations this time.
       ViolationCollector v = new ViolationCollector();
       DocOpValidator.isWellFormed(v, value);
-      throw new IllegalStateException("Attempt to build ill-formed operation ("
-          + v + "): " + value);
+      Preconditions.illegalState("Attempt to build ill-formed operation (" + v + "): " + value);
     }
   }
 
@@ -196,10 +195,12 @@ final class BufferedDocOpImpl implements BufferedDocOp {
     knownToBeWellFormed = true;
   }
 
-  private void check(int i, DocOpComponentType type) {
-    Preconditions.checkArgument(components[i].getType() == type,
-        "Component " + i + " is not of type ' " + type + "', " +
-        "it is '" + components[i].getType() + "'");
+  private void check(int i, DocOpComponentType expectedType) {
+    DocOpComponentType actualType = components[i].getType();
+    if (actualType != expectedType) {
+      Preconditions.illegalArgument(
+          "Component " + i + " is not of type ' " + expectedType + "', it is '" + actualType + "'");
+    }
   }
 
   @Override

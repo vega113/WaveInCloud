@@ -20,7 +20,9 @@ package org.waveprotocol.wave.model.document.operation;
 /**
  * Information required by an annotation boundary operation component.
  *
- * Implementations must be immutable.
+ * Implementations must be immutable. The order of end keys and change keys
+ * must be strictly monotonic (as verified by
+ * DocOpAutomaton.checkAnnotationBoundary).
  */
 public interface AnnotationBoundaryMap {
   int endSize();

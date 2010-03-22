@@ -19,7 +19,7 @@ package org.waveprotocol.wave.crypto;
 
 import com.google.common.collect.MapMaker;
 
-import org.waveprotocol.wave.protocol.common.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentMap;

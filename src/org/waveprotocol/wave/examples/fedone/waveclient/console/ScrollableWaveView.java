@@ -136,7 +136,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
                 LOG.warning("Unsupported element type while rendering document: " + type);
               }
             } else if (renderMode.equals(RenderMode.XML)) {
-              for (int i = 0; i < elemStack.size(); i++) {
+              for (int i = 0; i < elemStack.size() - 1; i++) {
                 currentLine.append(" ");
               }
               if (attrs.isEmpty()) {
@@ -230,6 +230,8 @@ public class ScrollableWaveView extends ConsoleScrollable {
                 }
               } else if (type.equals(DocumentConstants.THREAD)) {
                 threadDepth++;
+              } else if (type.equals(DocumentConstants.CONVERSATION)) {
+                // There should be a toplevel conversation element in every manifest.
               } else {
                 LOG.warning("Unsupported element type while rendering manifest: " + type);
               }

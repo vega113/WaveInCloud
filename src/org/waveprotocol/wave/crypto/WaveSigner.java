@@ -19,8 +19,8 @@ package org.waveprotocol.wave.crypto;
 
 import com.google.protobuf.ByteString;
 
-import org.waveprotocol.wave.protocol.common.ProtocolSignature;
-import org.waveprotocol.wave.protocol.common.ProtocolSignature.SignatureAlgorithm;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -72,8 +72,8 @@ public class WaveSigner {
   }
 
   /**
-   * Signs a payload and returns a {@link SignerInfo} object representing the
-   * signature.
+   * Signs a payload and returns a {@link ProtocolSignature} object
+   * representing the signature.
    * @param payload the bits that are to be signed.
    * @return the {@link SignerInfo} object.
    */

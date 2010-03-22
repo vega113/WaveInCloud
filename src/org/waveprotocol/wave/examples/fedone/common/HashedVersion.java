@@ -22,10 +22,10 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.commons.codec.binary.Hex;
 import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.ByteStringMessage;
+import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.protocol.common.ProtocolWaveletDelta;
 
 import java.util.Arrays;
 
@@ -88,7 +88,8 @@ public final class HashedVersion {
           .getHashedVersionAppliedAt());
     } else {
       try {
-        ProtocolWaveletDelta innerDelta = ProtocolWaveletDelta.parseFrom(appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
+        ProtocolWaveletDelta innerDelta = ProtocolWaveletDelta.parseFrom(
+            appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
         return WaveletOperationSerializer.deserialize(innerDelta.getHashedVersion());
       } catch (InvalidProtocolBufferException e) {
         throw new IllegalArgumentException(e);
