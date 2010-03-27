@@ -32,6 +32,10 @@ import java.security.spec.PKCS8EncodedKeySpec;
  * Parses byte arrays into certificates or private keys.
  */
 public class CertUtil {
+
+  private CertUtil() {
+  }
+
   public static X509Certificate getCertFromBase64Bytes(String b64cert)
       throws GeneralSecurityException {
     return getCertFromBytes(Base64.decodeBase64(b64cert.getBytes()));

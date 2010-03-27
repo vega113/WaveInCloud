@@ -19,8 +19,6 @@ package org.waveprotocol.wave.crypto;
 
 import com.google.common.collect.ImmutableSet;
 
-import org.waveprotocol.wave.crypto.TrustRootsProvider;
-
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.Set;

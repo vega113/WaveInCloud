@@ -20,11 +20,6 @@ import com.google.common.collect.Lists;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.crypto.CachedCertPathValidator;
-import org.waveprotocol.wave.crypto.DefaultCacheImpl;
-import org.waveprotocol.wave.crypto.SignatureException;
-import org.waveprotocol.wave.crypto.VerifiedCertChainCache;
-
 import java.security.cert.X509Certificate;
 import java.util.List;
 
@@ -33,7 +28,7 @@ public class CachedCertPathValidatorTest extends TestCase {
   private FakeTimeSource timeSource;
   private CachedCertPathValidator validator;
   private VerifiedCertChainCache cache;
-  private List<X509Certificate> serverChain = Lists.newArrayList(
+  private final List<X509Certificate> serverChain = Lists.newArrayList(
       CertConstantUtil.SERVER_PUB_CERT, CertConstantUtil.INTERMEDIATE_PUB_CERT);
 
   @Override
