@@ -837,7 +837,10 @@ public class DocHelper {
     if (el == null) {
       return null;
     }
-    return el == location.getContainer() ? location : Point.inElement(el, nodeAfter);
+    // nodeAfter is of type N, el is of type (E extends N), so inElement(el, nodeAfter)
+    // should return a Point<N>. But Sun's java compiler doesn't figure that out, 
+    // so we need to hint: Point.<N>inElement(...)
+    return el == location.getContainer() ? location : Point.<N>inElement(el, nodeAfter);
   }
 
   /**
