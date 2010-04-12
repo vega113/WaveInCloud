@@ -8,7 +8,7 @@ default: wavespec.html
 clean:
 	-rm wavespec.html waveschema.xml
 
-wavespec.html: wavespec.xml waveschema.rnc ../../src/org/waveprotocol/wave/protocol/common.proto
+wavespec.html: wavespec.xml waveschema.rnc ../../src/org/waveprotocol/wave/federation/federation.protodevel
 # If there's a syntax error, xml2rfc will, by default, bring up a
 # dialog window if DISPLAY is set.  We just want the message on
 # stderr, so we run it without DISPLAY.

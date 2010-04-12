@@ -51,8 +51,8 @@ history-request =
           attribute wavelet-name { xsd:string },
           attribute start-version { xsd:integer },
           attribute start-version-hash { xsd:string },
-          attribute end-version { xsd:integer }?,
-          attribute end-version-hash { xsd:string }?,
+          attribute end-version { xsd:integer },
+          attribute end-version-hash { xsd:string },
           attribute response-length-limit { xsd:integer }?
         } *
       }
