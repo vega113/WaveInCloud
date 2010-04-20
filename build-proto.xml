@@ -32,10 +32,11 @@
       <arg
         value="${src}/org/waveprotocol/wave/federation/federation_error.protodevel"/>
     </exec>
+  </target>
 
   <target name="compile_json">
-    <java classname="com.dyuproject.protostuff.compiler.CompilerMain">
-      <arg value="etc/modules.properties"/>
+    <java classname="com.dyuproject.protostuff.compiler.CompilerMain" fork="true" dir="src">
+      <arg value="../etc/proto-profiles.properties"/>
       <classpath>
         <pathelement location="${proto.classes}"/>
         <pathelement location="third_party/codegen/protostuff/protostuff.jar"/>
@@ -43,6 +44,5 @@
         <pathelement location="third_party/codegen/antlr/antlr-3.2.jar"/>
       </classpath>
     </java>
-
   </target>
 </project>
