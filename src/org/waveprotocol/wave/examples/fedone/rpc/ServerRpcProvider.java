@@ -196,17 +196,28 @@ public class ServerRpcProvider {
     }
 
     @Override
-    public void unknown(long sequenceNo, String messageType, Object message) {
+    public void unknown(long sequenceNo, String messageType, UnknownFieldSet message) {
+      throw new IllegalStateException("Got unknown message (type: " + messageType + ", " + message
+          + ") for sequence: " + sequenceNo);
+    }
+
+    @Override 
+    public void unknown(long sequenceNo, String messageType, String message) {
       throw new IllegalStateException("Got unknown message (type: " + messageType + ", " + message
           + ") for sequence: " + sequenceNo);
     }
   }
 
   /**
-   * Construct a new ServerRpcProvider, hosting on the passed SocketAddress.
+   * Construct a new ServerRpcProvider, hosting on the passed SocketAddress
+   * and WebSocket host and port. (The websocket isn't passed in as a 
+   * SocketAddress beacuse Jetty requires host + port.)
+   *
    * Also accepts an ExecutorService for spawning managing threads.
    * 
-   * @param host the hosting socket
+   * @param rpcHost the hosting socket
+   * @param websocketHost host for websocket server
+   * @param websocketPort port for websocket server
    * @param threadPool the service used to create threads
    */
   public ServerRpcProvider(SocketAddress rpcHost, 
@@ -300,26 +311,42 @@ public class ServerRpcProvider {
   public SocketAddress getBoundAddress() {
     return rpcServer != null ? rpcServer.socket().getLocalSocketAddress() : null;
   }
+  
+  /**
+   * Returns the socket the WebSocket server is listening on.
+   */
+  public SocketAddress getWebSocketAddress() {
+    if (websocketServer == null) {
+      return null;
+    } else {
+      Connector c = websocketServer.getConnectors()[0];
+      return new InetSocketAddress(c.getHost(), c.getLocalPort());
+    }
+  }
 
   /**
    * Stops this server.
    */
   public void stopServer() throws IOException {
-    rpcServer.close();
+    if (rpcServer != null) {
+      rpcServer.close();
+    }
     try {
       websocketServer.stop(); // yes, .stop() throws "Exception"
     } catch (Exception e) {
       LOG.warning("Fatal error stopping websocket server.", e);
     }
-    try {
-      acceptorThread.get();
-    } catch (InterruptedException e) {
-      throw new IllegalStateException();
-    } catch (ExecutionException e) {
-      throw new IllegalStateException("Server thread threw an exception", e.getCause());
-    }
-    if (!acceptorThread.isDone()) {
-      throw new IllegalStateException("Server acceptor thread has not stopped.");
+    if (acceptorThread != null) {
+      try {
+        acceptorThread.get();
+      } catch (InterruptedException e) {
+        throw new IllegalStateException();
+      } catch (ExecutionException e) {
+        throw new IllegalStateException("Server thread threw an exception", e.getCause());
+      }
+      if (!acceptorThread.isDone()) {
+        throw new IllegalStateException("Server acceptor thread has not stopped.");
+      }
     }
     LOG.fine("server shutdown.");
   }

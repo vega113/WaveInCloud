@@ -79,7 +79,12 @@ public class FakeProtoChannelManager {
       }
 
       @Override
-      public void unknown(long sequenceNo, String messageType, Object message) {
+      public void unknown(long sequenceNo, String messageType, UnknownFieldSet message) {
+        queue.add(SequencedObject.of(sequenceNo, message));
+      }
+
+      @Override
+      public void unknown(long sequenceNo, String messageType, String message) {
         queue.add(SequencedObject.of(sequenceNo, message));
       }
     });

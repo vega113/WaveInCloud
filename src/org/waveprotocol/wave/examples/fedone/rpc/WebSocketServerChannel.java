@@ -27,29 +27,57 @@ import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import org.eclipse.jetty.websocket.WebSocket;
 
+/**
+ * The server side of WebSocketChannel.
+ */
 public class WebSocketServerChannel extends WebSocketChannel implements WebSocket {
   private static final Log LOG = Log.get(WebSocketServerChannel.class);
   
   private Outbound outbound;
   
+  /**
+   * Creates a new WebSocketServerChannel using the callback for incoming messages.
+   * 
+   * @param callback A ProtoCallback instance called with incoming messages.
+   */
   public WebSocketServerChannel(ProtoCallback callback) {
     super(callback);
   }
   
+  /**
+   * Handles an incoming connection
+   * 
+   * @param outbound The outbound direction of the new connection.
+   */
+  @Override
   public void onConnect(Outbound outbound) {
     this.outbound = outbound;
   }
 
+  /**
+   * Does nothing, as this only understands String messages, not byte ones.
+   */
+  @Override
   public void onMessage(byte frame, byte[] data, int offset, int length) {
-    // do nothing. we don't expect this type of message.
   }
   
+  /**
+   * Pass on an incoming String message.
+   * 
+   * @param frame Which framing byte was used
+   * @param data The message data itself
+   */
+  @Override
   public void onMessage(byte frame, String data) {
     handleMessageString(data);
   }
   
+  /**
+   * Handle a client disconnect.
+   */
+  @Override
   public void onDisconnect() {
-    LOG.info("disconnected: "+this);
+    LOG.info("websocket disconnected: "+this);
   }
   
   /**
@@ -57,8 +85,10 @@ public class WebSocketServerChannel extends WebSocketChannel implements WebSocke
    *
    * @param data
    */
+  @Override
   protected void sendMessageString(String data) {
     try {
+      // we always use null to frame our UTF-8 strings.
       outbound.sendMessage((byte) 0x00, data);
     } catch (IOException e) {
       throw new IllegalStateException(e);

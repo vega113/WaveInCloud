@@ -77,13 +77,22 @@ public class ClientRpcChannel implements RpcChannel {
         }
       }
 
-      @Override
-      public void unknown(long sequenceNo, String messageType, Object message) {
+      private void unknown(long sequenceNo, String messageType) {
         final ClientRpcController controller;
         synchronized (activeMethodMap) {
           controller = activeMethodMap.get(sequenceNo);
         }
-        controller.failure("Client RPC got unknown message: " + messageType);
+        controller.failure("Client RPC got unknown message: " + messageType);        
+      }
+
+      @Override
+      public void unknown(long sequenceNo, String messageType, UnknownFieldSet message) {
+        unknown(sequenceNo, messageType);
+      }
+
+      @Override
+      public void unknown(long sequenceNo, String messageType, String message) {
+        unknown(sequenceNo, messageType);
       }
     };
     

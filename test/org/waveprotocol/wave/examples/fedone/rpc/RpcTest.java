@@ -29,6 +29,7 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSu
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -42,14 +43,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class RpcTest extends TestCase {
 
-  private ServerRpcProvider server = null;
-  private ClientRpcChannel client = null;
+  protected ServerRpcProvider server = null;
+  protected ClientRpcChannel client = null;
+
+  protected ClientRpcChannel newClient() throws IOException {
+     return new ClientRpcChannel(server.getBoundAddress());
+  }
+    
+  protected void startServer() throws IOException {
+    server = new ServerRpcProvider(null, null, null);
+    server.startRpcServer();
+  }
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    server = new ServerRpcProvider(null, null, null);
-    server.startRpcServer();
+    startServer();
   }
 
   @Override
@@ -114,7 +123,7 @@ public class RpcTest extends TestCase {
     server.registerService(WaveClientRpc.ProtocolWaveClientRpc.newReflectiveService(rpcImpl));
 
     // Create a client connection to the server, *after* it has registered services.
-    client = new ClientRpcChannel(server.getBoundAddress());
+    client = newClient();
     
     // Create a client-side stub for talking to the server.
     WaveClientRpc.ProtocolWaveClientRpc.Stub stub =
@@ -167,7 +176,7 @@ public class RpcTest extends TestCase {
     server.registerService(WaveClientRpc.ProtocolWaveClientRpc.newReflectiveService(rpcImpl));
 
     // Create a client connection to the server, *after* it has registered services.
-    client = new ClientRpcChannel(server.getBoundAddress());
+    client = newClient();
 
     // Create a client-side stub for talking to the server.
     WaveClientRpc.ProtocolWaveClientRpc.Stub stub =
@@ -240,7 +249,7 @@ public class RpcTest extends TestCase {
 
     // Create a client connection to the server, *after* it has registered
     // services.
-    client = new ClientRpcChannel(server.getBoundAddress());
+    client = newClient();
 
     // Create a client-side stub for talking to the server.
     WaveClientRpc.ProtocolWaveClientRpc.Stub stub =

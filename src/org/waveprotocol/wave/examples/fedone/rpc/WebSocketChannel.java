@@ -28,6 +28,9 @@ import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import org.eclipse.jetty.websocket.WebSocket;
 
+/**
+ * A channel abstraction for websocket, for sending and receiving strings.
+ */
 public abstract class WebSocketChannel extends MessageExpectingChannel {
   private static final Log LOG = Log.get(WebSocketChannel.class);
   private static final int VERSION = 0;
@@ -35,10 +38,21 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
   private final ProtoCallback callback;
   private Gson gson = new Gson();
   
+  /**
+   * Constructs a new WebSocketChannel, using the callback to handle any
+   * incoming messages.
+   *
+   * @param callback a protocallback to be called when data arrives on this
+   *                 channel
+   */
   public WebSocketChannel(ProtoCallback callback) {
     this.callback = callback;
   }
   
+  /**
+   * A simple message wrapper that bundles a json string with a version,
+   * sequence number, and type information.
+   */
   public static class MessageWrapper {
     private int version;
     private long sequenceNumber;
@@ -48,24 +62,31 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
     MessageWrapper() {
       // no-args constructor
     }
-    MessageWrapper(int v, long sNo, String mType, String mJson) {
-      v = version;
-      sequenceNumber = sNo;
-      messageType = mType;
-      messageJson = mJson;
+    MessageWrapper(int version, long sequenceNumber, String messageType, 
+        String messageJson) {
+      this.version = version;
+      this.sequenceNumber = sequenceNumber;
+      this.messageType = messageType;
+      this.messageJson = messageJson;
     }
   }
   
+  /**
+   * Convert the given string into a Message object and pass it to the proto 
+   * callback.
+   *
+   * @param data A json-encoded MessageWrapper object.
+   */
   public void handleMessageString(String data) {
     MessageWrapper wrapper = null;
     try {
       wrapper = gson.fromJson(data, MessageWrapper.class);
     } catch (JsonParseException jpe) {
-      throw new IllegalStateException("Unable to parse JSON.", jpe);
+      LOG.info("Unable to parse JSON: " + jpe.getMessage());
     }
     
     if (wrapper.version != VERSION) {
-      throw new IllegalStateException("Bad message version number: " + wrapper.version);
+      LOG.info("Bad message version number: " + wrapper.version);
     }
     
     Message prototype = getMessagePrototype(wrapper.messageType);

@@ -28,7 +28,6 @@ import org.waveprotocol.wave.examples.fedone.rpc.ServerRpcProvider;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
-import org.waveprotocol.wave.examples.fedone.waveserver.WebSocketServerManager;
 import org.xmpp.component.ComponentException;
 
 import java.io.IOException;
@@ -63,7 +62,6 @@ public class ServerMain {
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
     ProtocolWaveClientRpc.Interface rpcImpl = injector.getInstance(
         ProtocolWaveClientRpc.Interface.class);
-//    WebSocketServerManager wsServer = injector.getInstance(WebSocketServerManager.class);
     server.registerService(ProtocolWaveClientRpc.newReflectiveService(rpcImpl));
     try {
       xmppComponent.run();

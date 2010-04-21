@@ -24,6 +24,9 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.ExecutorService;
 
+/**
+ * WebSocketClientRpcChannel starts a WebSocketClientChannel and returns it.
+ */
 public class WebSocketClientRpcChannel extends ClientRpcChannel {
   private static final Log LOG = Log.get(ClientRpcChannel.class);
   
@@ -37,10 +40,24 @@ public class WebSocketClientRpcChannel extends ClientRpcChannel {
     super(serverAddress);
   }
   
+  /**
+   * Creates, starts, and returns a new WebSocketClientChannel connected to the given 
+   * address, reading in the given thread pool, with incoming messages handled by the
+   * given callback.
+   * 
+   * @param serverAddress Which websocket server to connect to.
+   * @param threadPool The thread pool to create a thread to read on.
+   * @param callback The callback to handle incoming messages.
+   * @return a WebSocketClientChannel already reading
+   */
   @Override
   protected MessageExpectingChannel startChannel(SocketAddress serverAddress, 
       ExecutorService threadPool, ProtoCallback callback) throws IOException {
     InetSocketAddress inetAddress = (InetSocketAddress) serverAddress;
+
+    if (inetAddress == null) {
+      throw new IllegalArgumentException("can't have null serverAddress!");
+    }
     
     WebSocketClientChannel protoChannel = 
       new WebSocketClientChannel(inetAddress.getHostName(), inetAddress.getPort(),
