@@ -35,6 +35,9 @@
   </target>
 
   <target name="compile_json">
+    <!-- note: this target currently causes problems; its output is also currently unused.
+         it will be used to generate JSON-happy protomessages once the rest of the code is
+         ready for it. -->
     <java classname="com.dyuproject.protostuff.compiler.CompilerMain" fork="true" dir="src">
       <arg value="../etc/proto-profiles.properties"/>
       <classpath>

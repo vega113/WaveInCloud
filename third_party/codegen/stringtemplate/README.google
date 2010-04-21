@@ -1,0 +1,12 @@
+URL: http://www.stringtemplate.org/
+Version: 3.2.2
+License: BSD
+
+License File: COPYING
+
+Description:
+StringTemplate tool for generating code
+
+Local Modifications:
+No modifications.
+
