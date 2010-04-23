@@ -37,15 +37,37 @@ public class Transform {
   /**
    * Transforms a pair of operations.
    *
+   * TODO: remove this as soon as all callers have been changed to call
+   * transform(WaveletOperation, ParticipantId, WaveletOperation, ParticipantId)
+   * and pass in the proper clientOpAuthor and serverOpAuthor
+   *
    * @param clientOp The client's operation.
    * @param serverOp The server's operation.
    * @return The resulting transformed client and server operations.
    * @throws TransformException if a problem was encountered during the
    *         transformation.
-   * @throws OperationException if one (or both) operations are invalid
+   */
+  @Deprecated
+  public static OperationPair<WaveletOperation> transform(WaveletOperation clientOp,
+      WaveletOperation serverOp) throws TransformException {
+    ParticipantId dummyId = new ParticipantId("");
+    return transform(clientOp, dummyId, serverOp, dummyId);
+  }
+
+  /**
+   * Transforms a pair of operations.
+   *
+   * @param clientOp The client's operation.
+   * @param clientOpAuthor The author of the client's operation.
+   * @param serverOp The server's operation.
+   * @param serverOpAuthor The author of the server's operation.
+   * @return The resulting transformed client and server operations.
+   * @throws TransformException if a problem was encountered during the
+   *         transformation.
    */
   public static OperationPair<WaveletOperation> transform(WaveletOperation clientOp,
-      WaveletOperation serverOp) throws TransformException, OperationException {
+      ParticipantId clientOpAuthor, WaveletOperation serverOp, ParticipantId serverOpAuthor)
+      throws TransformException {
     if (clientOp instanceof WaveletDocumentOperation && serverOp instanceof
         WaveletDocumentOperation) {
       WaveletDocumentOperation clientWaveDocOp = (WaveletDocumentOperation) clientOp;
@@ -66,28 +88,31 @@ public class Transform {
     } else {
 
       if (serverOp instanceof RemoveParticipant) {
+        RemoveParticipant serverRemoveOp = (RemoveParticipant) serverOp;
+        if (serverRemoveOp.getParticipantId().equals(clientOpAuthor)) {
+          // clientOpAuthor has issued a client operation that is concurrent with a server
+          // operation to remove clientOpAuthor, hence the client operation is doomed
+          throw new RemovedAuthorException(clientOpAuthor.getAddress());
+        }
         if (clientOp instanceof RemoveParticipant) {
-          ParticipantId clientParticipant = ((RemoveParticipant) clientOp).getParticipantId();
-          ParticipantId serverParticipant = ((RemoveParticipant) serverOp).getParticipantId();
-          if (clientParticipant.equals(serverParticipant)) {
+          RemoveParticipant clientRemoveOp = (RemoveParticipant) clientOp;
+          if (clientRemoveOp.getParticipantId().equals(serverRemoveOp.getParticipantId())) {
             clientOp = NoOp.INSTANCE;
             serverOp = NoOp.INSTANCE;
           }
         } else if (clientOp instanceof AddParticipant) {
-          checkParticipantRemovalAndAddition((RemoveParticipant) serverOp,
-              (AddParticipant) clientOp);
+          checkParticipantRemovalAndAddition(serverRemoveOp, (AddParticipant) clientOp);
         }
       } else if (serverOp instanceof AddParticipant) {
+        AddParticipant serverAddOp = (AddParticipant) serverOp;
         if (clientOp instanceof AddParticipant) {
-          ParticipantId clientParticipant = ((AddParticipant) clientOp).getParticipantId();
-          ParticipantId serverParticipant = ((AddParticipant) serverOp).getParticipantId();
-          if (clientParticipant.equals(serverParticipant)) {
+          AddParticipant clientAddOp = (AddParticipant) clientOp;
+          if (clientAddOp.getParticipantId().equals(serverAddOp.getParticipantId())) {
             clientOp = NoOp.INSTANCE;
             serverOp = NoOp.INSTANCE;
           }
         } else if (clientOp instanceof RemoveParticipant) {
-          checkParticipantRemovalAndAddition((RemoveParticipant) clientOp,
-              (AddParticipant) serverOp);
+          checkParticipantRemovalAndAddition((RemoveParticipant) clientOp, serverAddOp);
         }
       }
     }

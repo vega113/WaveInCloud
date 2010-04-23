@@ -26,7 +26,7 @@ public interface DataDomain<R, T extends R> {
    * @param changes
    * @param base
    */
-  void compose(T target, T changes, R base);
+  void compose(T target, R changes, R base);
 
   /**
    * @param modifiable

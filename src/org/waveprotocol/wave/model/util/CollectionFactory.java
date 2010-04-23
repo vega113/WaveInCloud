@@ -8,29 +8,32 @@ import java.util.Queue;
 /**
  * A factory interface for creating the types of collections that we
  * have optimized JavaScript implementations for.
- *
- * @param <V> the type of values in StringMaps
  */
-public interface CollectionFactory<V> {
+public interface CollectionFactory {
   /**
    * Returns a new, empty StringMap.
    */
-  StringMap<V> createStringMap();
+  <V> StringMap<V> createStringMap();
 
   /**
    * Returns a new, empty NumberMap.
    */
-  NumberMap<V> createNumberMap();
+  <V> NumberMap<V> createNumberMap();
 
   /**
    * Returns a new, empty IntMap.
    */
-  IntMap<V> createIntMap();
+  <V> IntMap<V> createIntMap();
 
   /**
    * Returns a new, empty StringSet.
    */
-  StringSet createStringSet();
+  <V> StringSet createStringSet();
+
+  /**
+   * Returns a new, empty IdentitySet.
+   */
+  <T> IdentitySet<T> createIdentitySet();
 
   /**
    * Returns a queue.
@@ -45,5 +48,5 @@ public interface CollectionFactory<V> {
   /**
    * Returns an identity map.
    */
-  <K> IdentityMap<K, V> createIdentityMap();
+  <K, V> IdentityMap<K, V> createIdentityMap();
 }

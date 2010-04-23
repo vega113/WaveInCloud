@@ -16,7 +16,6 @@ import org.waveprotocol.wave.model.document.ReadableDocument;
  * @author danilatos@google.com (Daniel Danilatos)
  */
 public interface ReadableDocumentView<N,E extends N,T extends N> extends ReadableDocument<N,E,T> {
-
   /**
    * TODO(danilatos): Rename this to getVisibleNodeUpwards or something in a separate CL
    *
@@ -59,4 +58,12 @@ public interface ReadableDocumentView<N,E extends N,T extends N> extends Readabl
    * @param node
    */
   N getVisibleNodeLast(N node);
+
+
+  /**
+   * Notify the document that a particular point is about to be filtered against it.
+   *
+   * @param at
+   */
+  void onBeforeFilter(Point<N> at);
 }

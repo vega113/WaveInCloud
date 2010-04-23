@@ -64,7 +64,7 @@ public class AnnotationTree<V> implements RawAnnotationSet<V> {
     return !(Annotations.isLocal(key));
   }
 
-  private final CollectionFactory<V> factory = CollectionUtils.getCollectionFactory();
+  private final CollectionFactory factory = CollectionUtils.getCollectionFactory();
 
   private final AnnotationTreeImpl tree;
   private AnnotationSetListener<V> listener;
@@ -655,11 +655,11 @@ public class AnnotationTree<V> implements RawAnnotationSet<V> {
     }
 
     Node newLeaf(int subtreeLength) {
-      return new Node(NodeType.LEAF_BLACK, subtreeLength, factory.createStringMap());
+      return new Node(NodeType.LEAF_BLACK, subtreeLength, factory.<V>createStringMap());
     }
 
     Node newInternalNode(int subtreeLength) {
-      return new Node(NodeType.INTERNAL_BLACK, subtreeLength, factory.createStringMap());
+      return new Node(NodeType.INTERNAL_BLACK, subtreeLength, factory.<V>createStringMap());
     }
 
     Node newInternalNode(int subtreeLength, StringMap<V> localMap) {

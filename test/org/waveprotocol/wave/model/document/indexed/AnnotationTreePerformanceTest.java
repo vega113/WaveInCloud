@@ -17,8 +17,8 @@ import java.util.Random;
 // Not really a test case, but presubmit fails without this annotation.
 public class AnnotationTreePerformanceTest {
 
-  CollectionFactory<Object> getFactory() {
-    return CollectionUtils.<Object>getCollectionFactory();
+  CollectionFactory getFactory() {
+    return CollectionUtils.getCollectionFactory();
   }
 
   static final int INSERT_LENGTH_LIMIT = 20000;

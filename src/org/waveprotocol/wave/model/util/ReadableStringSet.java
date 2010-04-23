@@ -10,8 +10,8 @@ import java.util.Set;
  * We define this in favor of using a standard Java collections interface so
  * that we can write an optimized implementation for GWT.
  *
- * Null is not permitted as a value. All methods, even {@link #contains(String)}
- * will reject null values.
+ * Null is not permitted as an element. All methods, even {@link #contains(String)}
+ * will reject null elements.
  *
  * @author ohler@google.com (Christian Ohler)
  */
@@ -28,6 +28,11 @@ public interface ReadableStringSet {
    * Returns true iff s is in the set.
    */
   boolean contains(String s);
+
+  /**
+   * @return some element in the set. If the set is empty, null is returned.
+   */
+  String someElement();
 
   /**
    * Returns true iff the set is empty.

@@ -81,13 +81,14 @@ public class PersistentContent<N, E extends N, T extends N>
    * unqualified dom method, instead explicitly use filteredDoc
    * so that accidental ommissions of "fullDoc." are easier to catch.
    */
-  private final RawDocument<N, E, T> filteredDoc = this;
+  private final FilteredView<N, E, T> filteredDoc = this;
 
   private final HardContent hardDoc;
 
   /**
    * @param fullDoc underlying raw document
    * @param elementManager ElementManager implementation to delegate to
+   * @param sink Outgoing sink for operations only applied to server.
    */
   public PersistentContent(RawDocument<N, E, T> fullDoc, ElementManager<E> elementManager) {
     super(fullDoc);
@@ -124,7 +125,7 @@ public class PersistentContent<N, E extends N, T extends N>
 
   //////////////
 
-  /** {@inheritDoc} */
+  @Override
   public E transparentCreate(String tagName, Map<String, String> attributes,
       E parent, N nodeAfter) {
 
@@ -135,7 +136,7 @@ public class PersistentContent<N, E extends N, T extends N>
     return el;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public T transparentCreate(String text, E parent, N nodeAfter) {
     Point.checkRelationship(fullDoc, parent, nodeAfter, "transparentCreate");
     if (isPersistent(parent)) {
@@ -163,7 +164,7 @@ public class PersistentContent<N, E extends N, T extends N>
     }
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void transparentUnwrap(E element) {
     if (isPersistent(element)) {
       throw new IllegalArgumentException(
@@ -175,7 +176,7 @@ public class PersistentContent<N, E extends N, T extends N>
     fullDoc.removeChild(parent, element);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void transparentDeepRemove(N node) {
     if (isPersistent(node) || filteredDoc.getFirstChild(node) != null) {
       throw new IllegalArgumentException(
@@ -185,7 +186,7 @@ public class PersistentContent<N, E extends N, T extends N>
     fullDoc.removeChild(fullDoc.getParentElement(node), node);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void transparentMove(E newParent, N fromIncl,
       N toExcl, N refChild) {
 
@@ -202,8 +203,12 @@ public class PersistentContent<N, E extends N, T extends N>
     }
 
     // XXX(danilatos): DANGEROUS - need more validation that persistent view is not affected
-
     fullDoc.insertBefore(newParent, fromIncl, toExcl, refChild);
+  }
+
+  @Override
+  public void markNodeForPersistence(N localNode, boolean lazy) {
+    // by default, do nothing.
   }
 
   ///////////////
@@ -250,13 +255,13 @@ public class PersistentContent<N, E extends N, T extends N>
     return fullDoc.insertBefore(parent, fromIncl, toExcl, refChild);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public N insertBefore(E parent, N newChild, N refChild) {
     return insertBefore(parent,
         newChild, filteredDoc.getNextSibling(newChild), refChild);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void removeChild(E parent, N oldChild) {
     fullDoc.removeChild(fullDoc.getParentElement(oldChild), oldChild);
   }
@@ -318,12 +323,12 @@ public class PersistentContent<N, E extends N, T extends N>
 
   // Simple delegation
 
-  /** {@inheritDoc} */
+  @Override
   public void appendData(T textNode, String arg) {
     fullDoc.appendData(textNode, arg);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public E createElement(String tagName, Map<String, String> attributes, E parent, N nodeAfter) {
     nodeAfter = transparentSlice(nodeAfter);
     if (nodeAfter != null) {
@@ -332,7 +337,7 @@ public class PersistentContent<N, E extends N, T extends N>
     return fullDoc.createElement(tagName, attributes, parent, nodeAfter);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public T createTextNode(String data, E parent, N nodeAfter) {
     nodeAfter = transparentSlice(nodeAfter);
     if (nodeAfter != null) {
@@ -341,37 +346,37 @@ public class PersistentContent<N, E extends N, T extends N>
     return fullDoc.createTextNode(data, parent, nodeAfter);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void deleteData(T textNode, int offset, int count) {
     fullDoc.deleteData(textNode, offset, count);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void insertData(T textNode, int offset, String arg) {
     fullDoc.insertData(textNode, offset, arg);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void removeAttribute(E element, String name) {
     fullDoc.removeAttribute(element, name);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void setAttribute(E element, String name, String value) {
     fullDoc.setAttribute(element, name, value);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public T splitText(T textNode, int offset) {
     return fullDoc.splitText(textNode, offset);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void setIndexingContainer(N domNode, OffsetList.Container<N> indexingNode) {
     fullDoc.setIndexingContainer(domNode, indexingNode);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public OffsetList.Container<N> getIndexingContainer(N domNode) {
     return fullDoc.getIndexingContainer(domNode);
   }
@@ -389,6 +394,16 @@ public class PersistentContent<N, E extends N, T extends N>
   @Override
   public <X> void setProperty(Property<X> property, E element, X value) {
     elementManager.setProperty(property, element, value);
+  }
+
+  @Override
+  public boolean isTransparent(N node) {
+    return !isPersistent(node);
+  }
+
+  @Override
+  public void onBeforeFilter(Point<N> at) {
+    // by default, do nothing
   }
 
   @Override

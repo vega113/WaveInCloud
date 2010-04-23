@@ -12,6 +12,7 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.operation.Domain;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.OperationPair;
+import org.waveprotocol.wave.model.operation.TransformException;
 
 public class DocumentDomain implements Domain<BootstrapDocument, BufferedDocOp> {
 
@@ -32,7 +33,7 @@ public class DocumentDomain implements Domain<BootstrapDocument, BufferedDocOp> 
 
   @Override
   public OperationPair<BufferedDocOp> transform(BufferedDocOp clientOp, BufferedDocOp serverOp)
-      throws OperationException {
+      throws TransformException {
     return Transformer.transform(clientOp, serverOp);
   }
 

@@ -5,6 +5,7 @@ package org.waveprotocol.wave.model.operation.testing;
 import org.waveprotocol.wave.model.operation.Domain;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.OperationPair;
+import org.waveprotocol.wave.model.operation.TransformException;
 
 public class RationalDomain implements Domain<RationalDomain.Data, RationalDomain.Affine> {
 
@@ -93,13 +94,15 @@ public class RationalDomain implements Domain<RationalDomain.Data, RationalDomai
 
   @Override
   public OperationPair<Affine> transform(Affine clientOp, Affine serverOp)
-      throws OperationException {
-
-    Affine undoAndDoOther = serverOp.of(clientOp.inverse());
-    return new OperationPair<Affine>(
-        new Affine(serverOp.finalState, clientOp.a, clientOp.b),
-        clientOp.of(undoAndDoOther, undoAndDoOther.finalState)
-        );
+      throws TransformException {
+    try {
+      Affine undoAndDoOther = serverOp.of(clientOp.inverse());
+      return new OperationPair<Affine>(
+          new Affine(serverOp.finalState, clientOp.a, clientOp.b),
+          clientOp.of(undoAndDoOther, undoAndDoOther.finalState));
+    } catch(OperationException e) {
+      throw new TransformException(e.getMessage());
+    }
   }
 
   @Override

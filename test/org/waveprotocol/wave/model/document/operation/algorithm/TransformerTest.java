@@ -6,18 +6,18 @@ package org.waveprotocol.wave.model.document.operation.algorithm;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
-import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.operation.TransformException;
 
 /**
 *
  */
 public class TransformerTest extends TestCase {
 
-  public void testClientOpLongerThanServerOp() throws OperationException {
+  public void testClientOpLongerThanServerOp() throws TransformException {
     try {
       Transformer.transform(new DocOpBuilder().retain(1).build(), new DocOpBuilder().build());
       fail();
-    } catch (OperationException e) {
+    } catch (TransformException e) {
       // ok
     }
   }

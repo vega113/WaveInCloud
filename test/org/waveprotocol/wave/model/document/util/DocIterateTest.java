@@ -11,12 +11,13 @@ import org.waveprotocol.wave.model.document.raw.impl.Element;
 import org.waveprotocol.wave.model.document.raw.impl.Node;
 import org.waveprotocol.wave.model.document.raw.impl.Text;
 
+import java.util.Iterator;
+
 /**
  * @author danilatos@google.com (Daniel Danilatos)
  */
 public class DocIterateTest extends TestCase {
 
-  /***/
   public void testIteration() {
     MutableDocument<Node, Element, Text> doc = ContextProviders.createTestPojoContext(
         "<x>hello</x><y><yy>blah</yy>yeah</y><z>final</z>", null, null, null,
@@ -71,11 +72,14 @@ public class DocIterateTest extends TestCase {
     assertEquals(1, i);
   }
 
-  /***/
-  public void testElementsByTagNameIteration() {
-    MutableDocument<Node, Element, Text> doc = ContextProviders.createTestPojoContext(
+  private MutableDocument<Node, Element, Text> makeTestDocument() {
+    return ContextProviders.createTestPojoContext(
         "<foo id=\"0\"/><x>hello</x><y><foo id=\"1\">hello</foo>yeah</y><z>sup</z><foo id=\"2\"/>",
         null, null, null, DocumentSchema.NO_SCHEMA_CONSTRAINTS).document();
+  }
+
+  public void testElementsByTagNameIteration() {
+    MutableDocument<Node, Element, Text> doc = makeTestDocument();
 
     int i = 0;
     for (Element e : DocIterate.deepElementsWithTagName(doc, "foo")) {
@@ -89,5 +93,38 @@ public class DocIterateTest extends TestCase {
       i++;
     }
     assertEquals(0, i);
+  }
+
+  public void testElementsByTagName_startNode() {
+    MutableDocument<Node, Element, Text> doc = makeTestDocument();
+
+    Element secondFoo = DocHelper.findElementById(doc, "1");
+    Iterator<Element> iter = DocIterate.deepElementsWithTagName(
+        doc, "foo", secondFoo, null).iterator();
+    assertTrue(iter.hasNext());
+    assertEquals("1", iter.next().getAttribute("id"));
+    assertEquals("2", iter.next().getAttribute("id"));
+    assertFalse(iter.hasNext());
+  }
+
+  public void testElementsByTagName_endNode() {
+    MutableDocument<Node, Element, Text> doc = makeTestDocument();
+
+    Element secondFoo = DocHelper.findElementById(doc, "1");
+    Iterator<Element> iter = DocIterate.deepElementsWithTagName(
+        doc, "foo", DocHelper.getElementWithTagName(doc, "foo"), secondFoo).iterator();
+    assertTrue(iter.hasNext());
+    assertEquals("0", iter.next().getAttribute("id"));
+    assertEquals("1", iter.next().getAttribute("id"));
+    assertFalse(iter.hasNext());
+  }
+
+  public void testElementsByTagName_nullStartNode() {
+    MutableDocument<Node, Element, Text> doc = makeTestDocument();
+
+    Element secondFoo = DocHelper.findElementById(doc, "1");
+    Iterator<Element> iter = DocIterate.deepElementsWithTagName(
+        doc, "foo", null, secondFoo).iterator();
+    assertFalse(iter.hasNext());
   }
 }

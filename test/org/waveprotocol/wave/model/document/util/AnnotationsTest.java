@@ -57,7 +57,21 @@ public class AnnotationsTest extends TestCase {
     MutableDocument<Node, Element, Text> doc = ContextProviders.createTestPojoContext(
         "abcdefgh", null, check, null, DocumentSchema.NO_SCHEMA_CONSTRAINTS).document();
 
+    // check boundary conditions
+    check.reset();
+    assertFalse(Annotations.guardedResetAnnotation(doc, 0, 3, "a", null));
+    assertFalse(Annotations.guardedResetAnnotation(doc, 3, doc.size(), "a", null));
+    assertFalse(Annotations.guardedResetAnnotation(doc, 0, doc.size(), "a", null));
+    assertFalse(check.wasChanged());
+
+    // and again with non-null value
+    doc.setAnnotation(0, doc.size(), "a", "b");
+    check.reset();
+    assertFalse(Annotations.guardedResetAnnotation(doc, 0, doc.size(), "a", "b"));
+    assertFalse(check.wasChanged());
+
     // check on null annotation:
+    doc.setAnnotation(0, doc.size(), "a", null);
     check.reset();
     assertTrue(Annotations.guardedResetAnnotation(doc, 3, 6, "a", "b"));
     assertTrue(check.wasChanged());

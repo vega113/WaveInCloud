@@ -72,4 +72,17 @@ public interface WritableLocalDocument<N, E extends N, T extends N> extends Elem
    *   splitAt node, or the second half of the topmost split transparent node)
    */
   N transparentSlice(N splitAt);
+
+  /**
+   * Marks a node to be persisted only when its needed (defined as its position being filtered).
+   * NOTE(patcoleman): This must be given a local node, with no children persisted.
+   *
+   * @param localNode The node to promoted.
+   */
+  void markNodeForPersistence(N localNode, boolean lazy);
+
+  /**
+   * Check whether the given (non-null) node is transparent = local only.
+   */
+  boolean isTransparent(N node);
 }

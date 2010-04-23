@@ -33,8 +33,11 @@ public class XmlStringBuilderDoc<N, E extends N, T extends N> extends XmlStringB
 
   private final ReadableDocument<N, E, T> view;
 
-  private XmlStringBuilderDoc(ReadableDocument<N, E, T> view) {
+  private final PermittedCharacters permittedChars;
+
+  private XmlStringBuilderDoc(ReadableDocument<N, E, T> view, PermittedCharacters permittedChars) {
     this.view = view;
+    this.permittedChars = permittedChars;
   }
 
   /**
@@ -42,7 +45,15 @@ public class XmlStringBuilderDoc<N, E extends N, T extends N> extends XmlStringB
    */
   public static <N, E extends N, T extends N> XmlStringBuilderDoc<N,E,T>
       createEmpty(ReadableDocument<N, E, T> view) {
-    return new XmlStringBuilderDoc<N,E,T>(view);
+    return new XmlStringBuilderDoc<N,E,T>(view, PermittedCharacters.ANY);
+  }
+
+  /**
+   * Constructs empty xml with restriction on PermittedCharacters
+   */
+  public static <N, E extends N, T extends N> XmlStringBuilderDoc<N,E,T>
+      createEmptyWithCharConstraints(ReadableDocument<N, E, T> view, PermittedCharacters permittedChars) {
+    return new XmlStringBuilderDoc<N,E,T>(view, permittedChars);
   }
 
   /** {@inheritDoc} */
@@ -216,7 +227,8 @@ public class XmlStringBuilderDoc<N, E extends N, T extends N> extends XmlStringB
 
       return len;
     } else {
-      return addText(view.getData(view.asText(node)));
+      String data = view.getData(view.asText(node));
+      return addText(permittedChars.coerceString(data));
     }
   }
 
