@@ -24,4 +24,6 @@ exec java -jar dist/fedone-server-$FEDONE_VERSION.jar \
   --certificate_files=$CERTIFICATE_FILENAME_LIST \
   --certificate_domain=$CERTIFICATE_DOMAIN_NAME \
   --waveserver_disable_verification=$WAVESERVER_DISABLE_VERIFICATION \
-  --waveserver_disable_signer_verification=$WAVESERVER_DISABLE_SIGNER_VERIFICATION
+  --waveserver_disable_signer_verification=$WAVESERVER_DISABLE_SIGNER_VERIFICATION \
+  --websocket_frontend_hostname=$WEBSOCKET_SERVER_HOSTNAME \
+  --websocket_frontend_port=$WEBSOCKET_SERVER_PORT
