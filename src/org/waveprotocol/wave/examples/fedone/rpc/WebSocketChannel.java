@@ -100,7 +100,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
         JsonFormat.merge(wrapper.messageJson, builder);
         callback.message(wrapper.sequenceNumber, builder.build());        
       } catch (JsonFormat.ParseException pe) {
-        LOG.info("Unable to parse message ("+wrapper.messageType+", seq "
+        LOG.info("Unable to parse message (" + wrapper.messageType + ", seq "
           + wrapper.sequenceNumber + ") from: " + this + " -- " + wrapper.messageJson);
         callback.unknown(wrapper.sequenceNumber, wrapper.messageType, wrapper.messageJson);
       }
