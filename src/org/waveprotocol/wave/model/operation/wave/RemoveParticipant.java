@@ -69,4 +69,17 @@ public final class RemoveParticipant extends WaveletOperation {
     return "RemoveParticipant(" + participant + ")";
   }
 
+  @Override
+  public int hashCode() {
+    return participant.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof RemoveParticipant)) {
+      return false;
+    }
+    RemoveParticipant other = (RemoveParticipant) obj;
+    return participant.equals(other.participant);
+  }
 }
