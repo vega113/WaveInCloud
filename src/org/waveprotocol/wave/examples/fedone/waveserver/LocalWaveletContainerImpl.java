@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.protobuf.ByteString;
@@ -93,39 +94,45 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     Pair<WaveletDelta, HashedVersion> deltaAndVersion =
       WaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
-    // Transform operations against the current version.  We need to track whether the operations
-    // were actually transformed in order to set up the applied delta protobuf properly.
-    List<WaveletOperation> transformedOps =
+    VersionedWaveletDelta transformed =
         maybeTransformSubmittedDelta(deltaAndVersion.first, deltaAndVersion.second);
-    boolean opsWereTransformed = (transformedOps != null);
-    if (transformedOps == null) {
-      transformedOps = deltaAndVersion.first.getOperations();
+
+    if (transformed.delta.getOperations().isEmpty()) {
+      Preconditions.checkState(transformed.version.getVersion() <= currentVersion.getVersion());
+      // The delta was transformed away. That's OK but we don't call either
+      // applyWaveletOperations(), because that will throw EmptyDeltaException, or
+      // commitAppliedDelta(), because empty deltas cannot be part of the delta history.
+      return new DeltaApplicationResult(buildAppliedDelta(signedDelta, transformed),
+          WaveletOperationSerializer.serialize(transformed.delta, transformed.version),
+          WaveletOperationSerializer.serialize(transformed.version));
+    }
+
+    if (!transformed.version.equals(currentVersion)) {
+      Preconditions.checkState(transformed.version.getVersion() < currentVersion.getVersion());
+      // The delta was a duplicate of an existing server delta.
+      // We duplicate-eliminate it (don't apply it to the wavelet state and don't store it in
+      // the delta history) and return the server delta which it was a duplicate of
+      // (so delta submission becomes idem-potent).
+      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
+          lookupAppliedDelta(transformed.version);
+      // TODO: look this up (in appliedDeltas or currentVersion) rather than compute it?
+      HashedVersion hashedVersionAfterApplication = HASHED_HISTORY_VERSION_FACTORY.create(
+        appliedDelta.getByteArray(), transformed.version, transformed.delta.getOperations().size());
+      return new DeltaApplicationResult(appliedDelta,
+          WaveletOperationSerializer.serialize(transformed.delta, transformed.version),
+          WaveletOperationSerializer.serialize(hashedVersionAfterApplication));
     }
 
     // If any of the operations fail to apply, the wavelet data will be returned to its original
     // state and an OperationException thrown
-    applyWaveletOperations(transformedOps);
+    applyWaveletOperations(transformed.delta.getOperations());
 
     // Build the applied delta to commit
-    ProtocolAppliedWaveletDelta.Builder appliedDeltaBuilder =
-        ProtocolAppliedWaveletDelta.newBuilder()
-            .setSignedOriginalDelta(signedDelta)
-            .setOperationsApplied(transformedOps.size())
-            .setApplicationTimestamp(System.currentTimeMillis());
-
-    // TODO: re-enable this condition for version 0.3 of the spec
-    if (/*opsWereTransformed*/ true) {
-      // This is set to indicate the head version of the wavelet was different to the intended
-      // version of the wavelet (so the hash will have changed)
-      appliedDeltaBuilder.setHashedVersionAppliedAt(
-          WaveletOperationSerializer.serialize(currentVersion));
-    }
-
-    ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = ByteStringMessage.fromMessage(
-        appliedDeltaBuilder.build());
+    ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
+        buildAppliedDelta(signedDelta, transformed);
 
     DeltaApplicationResult applicationResult = commitAppliedDelta(appliedDelta,
-        new WaveletDelta(deltaAndVersion.first.getAuthor(), transformedOps));
+        transformed.delta);
 
     // Associate this hashed version with its signers.
     for (ProtocolSignature signature : signedDelta.getSignatureList()) {
@@ -134,6 +141,25 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     }
 
     return applicationResult;
+  }
+
+  private static ByteStringMessage<ProtocolAppliedWaveletDelta> buildAppliedDelta(
+      ProtocolSignedDelta signedDelta, VersionedWaveletDelta transformed) {
+    ProtocolAppliedWaveletDelta.Builder appliedDeltaBuilder =
+        ProtocolAppliedWaveletDelta.newBuilder()
+            .setSignedOriginalDelta(signedDelta)
+            .setOperationsApplied(transformed.delta.getOperations().size())
+            .setApplicationTimestamp(System.currentTimeMillis());
+
+    // TODO: re-enable this condition for version 0.3 of the spec
+    if (/*opsWereTransformed*/ true) {
+      // This is set to indicate the head version of the wavelet was different to the intended
+      // version of the wavelet (so the hash will have changed)
+      appliedDeltaBuilder.setHashedVersionAppliedAt(
+          WaveletOperationSerializer.serialize(transformed.version));
+    }
+
+    return ByteStringMessage.fromMessage(appliedDeltaBuilder.build());
   }
 
   @Override

@@ -281,15 +281,18 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    *
    * @param delta to possibly transform
    * @param appliedVersion that the delta is applied to
-   * @return transformed ops if OT was performed, null otherwise
+   * @return the transformed delta and the version it was applied at
+   *   (the version is the current version of the wavelet, unless the delta is
+   *   a duplicate in which case it is the version at which it was originally
+   *   applied)
    * @throws InvalidHashException if submitting against same version but different hash
    * @throws OperationException if transformation fails
    */
-  protected List<WaveletOperation> maybeTransformSubmittedDelta(WaveletDelta delta,
+  protected VersionedWaveletDelta maybeTransformSubmittedDelta(WaveletDelta delta,
       HashedVersion appliedVersion) throws InvalidHashException, OperationException {
     if (appliedVersion.equals(currentVersion)) {
       // Applied version is the same, we're submitting against head, don't need to do OT
-      return null;
+      return new VersionedWaveletDelta(delta, appliedVersion);
     } else {
       // Not submitting against head, we need to do OT, but check the versions really are different
       if (appliedVersion.getVersion() == currentVersion.getVersion()) {
@@ -354,10 +357,8 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * Finds range of server deltas needed to transform against, then transforms all client
    * ops against the server ops.
    */
-  private List<WaveletOperation> transformSubmittedDelta(WaveletDelta submittedDelta,
+  private VersionedWaveletDelta transformSubmittedDelta(WaveletDelta submittedDelta,
       HashedVersion appliedVersion) throws OperationException, InvalidHashException {
-
-    List<WaveletOperation> clientOps = submittedDelta.getOperations();
 
     NavigableSet<VersionedWaveletDelta> serverDeltas = deserializedTransformedDeltas.tailSet(
         deserializedTransformedDeltas.floor(emptyDeserializedDeltaAtVersion(
@@ -377,23 +378,36 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       throw new InvalidHashException("Mismatched hashes at version " + appliedVersion.getVersion());
     }
 
-    List<WaveletOperation> serverOps = new ArrayList<WaveletOperation>();
+    ParticipantId clientAuthor = submittedDelta.getAuthor();
+    List<WaveletOperation> clientOps = submittedDelta.getOperations();
     for (VersionedWaveletDelta d : serverDeltas) {
-      serverOps.addAll(d.delta.getOperations());
+      // If the client delta transforms to nothing before we've traversed all the server
+      // deltas, return the version at which the delta was obliterated (rather than the
+      // current version) to ensure that delta submission is idempotent.
+      if (clientOps.isEmpty()) {
+System.err.println("empty\nc=" + clientAuthor + "\ns=" + d.delta.getAuthor() + ":" + d.delta.getOperations().size() + d.delta.getOperations().get(0) + "\nv=" + d.version);
+        return new VersionedWaveletDelta(new WaveletDelta(clientAuthor, clientOps), d.version);
+      }
+      ParticipantId serverAuthor = d.delta.getAuthor();
+      List<WaveletOperation> serverOps = d.delta.getOperations();
+System.err.println("c=" + clientAuthor + ":" + clientOps.size() + clientOps.get(0) + "\ns=" + serverAuthor + ":" + serverOps.size() + serverOps.get(0) + "\nv=" + d.version + "\nequal=" + clientOps.equals(serverOps) + "," + clientOps.get(0).equals(serverOps.get(0)));
+      if (clientAuthor.equals(serverAuthor) && clientOps.equals(serverOps)) {
+System.err.println("dup\nc=" + clientAuthor + ":" + clientOps.size() + clientOps.get(0) + "\ns=" + serverAuthor + ":" + serverOps.size() + serverOps.get(0) + "\nv=" + d.version + "\nequal=" + clientOps.equals(serverOps) + "," + clientOps.get(0).equals(serverOps.get(0)));
+        return d;
+      }
+      clientOps = transformOps(clientOps, serverOps);
     }
-    List<WaveletOperation> transformedClientOps = transformOps(clientOps, serverOps);
-    return transformedClientOps;
+System.err.println("non-dup\nc=" + clientAuthor + ":" + clientOps.size() + clientOps.get(0) + "\ncurrentVersion=" + currentVersion);
+    return new VersionedWaveletDelta(new WaveletDelta(clientAuthor, clientOps), currentVersion);
   }
 
   /**
    * Transforms the specified client operations against the specified server operations,
-   * transforming the server operations in place but returning the transformed client operations
-   * in a new list.
+   * returning the transformed client operations in a new list.
    *
    * @param clientOps may be unmodifiable
-   * @param serverOps must support set(). Will contain the server ops transformed against client
-   *        ops when this method returns
-   * @return The result of transforming the client ops against the server ops.
+   * @param serverOps may be unmodifiable
+   * @return The transformed client ops
    */
   private List<WaveletOperation> transformOps(List<WaveletOperation> clientOps,
       List<WaveletOperation> serverOps) throws OperationException {
@@ -409,7 +423,6 @@ abstract class WaveletContainerImpl implements WaveletContainer {
           throw new OperationException(e);
         }
         c = pair.clientOp();
-        serverOps.set(i, pair.serverOp());
       }
       transformedClientOps.add(c);
     }
@@ -439,6 +452,15 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
     return new DeltaApplicationResult(appliedDelta, transformedProtocolDelta,
         WaveletOperationSerializer.serialize(newVersion));
+  }
+
+  /**
+   * @param version
+   * @return the applied delta applied at the specified hashed version
+   */
+  protected ByteStringMessage<ProtocolAppliedWaveletDelta> lookupAppliedDelta(
+      HashedVersion version) {
+    return appliedDeltas.floor(emptyAppliedDeltaAtVersion(version.getVersion()));
   }
 
   @Override
