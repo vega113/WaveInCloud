@@ -26,6 +26,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
+import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -46,6 +47,8 @@ import java.util.List;
  */
 class LocalWaveletContainerImpl extends WaveletContainerImpl
     implements LocalWaveletContainer {
+
+  private static final Log LOG = Log.get(LocalWaveletContainerImpl.class);
 
   /**
    * Associates a delta (represented by the hashed version of the wavelet state after its
@@ -94,6 +97,11 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     Pair<WaveletDelta, HashedVersion> deltaAndVersion =
       WaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
+    if (deltaAndVersion.first.getOperations().isEmpty()) {
+      LOG.warning("No operations to apply at version " + currentVersion);
+      throw new EmptyDeltaException();
+    }
+    
     VersionedWaveletDelta transformed =
         maybeTransformSubmittedDelta(deltaAndVersion.first, deltaAndVersion.second);
 

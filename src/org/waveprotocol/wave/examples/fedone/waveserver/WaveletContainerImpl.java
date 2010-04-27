@@ -385,19 +385,15 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       // deltas, return the version at which the delta was obliterated (rather than the
       // current version) to ensure that delta submission is idempotent.
       if (clientOps.isEmpty()) {
-System.err.println("empty\nc=" + clientAuthor + "\ns=" + d.delta.getAuthor() + ":" + d.delta.getOperations().size() + d.delta.getOperations().get(0) + "\nv=" + d.version);
         return new VersionedWaveletDelta(new WaveletDelta(clientAuthor, clientOps), d.version);
       }
       ParticipantId serverAuthor = d.delta.getAuthor();
       List<WaveletOperation> serverOps = d.delta.getOperations();
-System.err.println("c=" + clientAuthor + ":" + clientOps.size() + clientOps.get(0) + "\ns=" + serverAuthor + ":" + serverOps.size() + serverOps.get(0) + "\nv=" + d.version + "\nequal=" + clientOps.equals(serverOps) + "," + clientOps.get(0).equals(serverOps.get(0)));
       if (clientAuthor.equals(serverAuthor) && clientOps.equals(serverOps)) {
-System.err.println("dup\nc=" + clientAuthor + ":" + clientOps.size() + clientOps.get(0) + "\ns=" + serverAuthor + ":" + serverOps.size() + serverOps.get(0) + "\nv=" + d.version + "\nequal=" + clientOps.equals(serverOps) + "," + clientOps.get(0).equals(serverOps.get(0)));
         return d;
       }
       clientOps = transformOps(clientOps, serverOps);
     }
-System.err.println("non-dup\nc=" + clientAuthor + ":" + clientOps.size() + clientOps.get(0) + "\ncurrentVersion=" + currentVersion);
     return new VersionedWaveletDelta(new WaveletDelta(clientAuthor, clientOps), currentVersion);
   }
 
@@ -414,12 +410,11 @@ System.err.println("non-dup\nc=" + clientAuthor + ":" + clientOps.size() + clien
     List<WaveletOperation> transformedClientOps = new ArrayList<WaveletOperation>();
 
     for (WaveletOperation c : clientOps) {
-      for (int i = 0; i < serverOps.size(); i++) {
-        WaveletOperation s = serverOps.get(i);
+      for (WaveletOperation s : serverOps) {
         OperationPair<WaveletOperation> pair;
         try {
           pair = Transform.transform(c, s);
-        } catch(TransformException e) {
+        } catch (TransformException e) {
           throw new OperationException(e);
         }
         c = pair.clientOp();
@@ -455,7 +450,9 @@ System.err.println("non-dup\nc=" + clientAuthor + ":" + clientOps.size() + clien
   }
 
   /**
-   * @param version
+   * Returns the applied delta that was applied at a given hashed version.
+   *
+   * @param version the version to look up
    * @return the applied delta applied at the specified hashed version
    */
   protected ByteStringMessage<ProtocolAppliedWaveletDelta> lookupAppliedDelta(
