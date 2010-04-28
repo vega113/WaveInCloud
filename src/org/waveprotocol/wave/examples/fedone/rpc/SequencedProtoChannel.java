@@ -163,6 +163,16 @@ public class SequencedProtoChannel {
       public void write(int b) throws IOException {
         channel.write(ByteBuffer.wrap(new byte[] {(byte) b}));
       }
+
+      @Override
+      public void write(byte[] buf) throws IOException {
+        channel.write(ByteBuffer.wrap(buf));
+      }
+
+      @Override
+      public void write(byte[] buf, int off, int len) throws IOException {
+        channel.write(ByteBuffer.wrap(buf, off, len));
+      }
     });
   }
 
