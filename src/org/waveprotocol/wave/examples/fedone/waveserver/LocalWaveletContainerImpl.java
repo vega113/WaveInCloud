@@ -105,6 +105,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     VersionedWaveletDelta transformed =
         maybeTransformSubmittedDelta(deltaAndVersion.first, deltaAndVersion.second);
 
+    // This is always false right now because the current algorithm doesn't transform ops away.
     if (transformed.delta.getOperations().isEmpty()) {
       Preconditions.checkState(transformed.version.getVersion() <= currentVersion.getVersion());
       // The delta was transformed away. That's OK but we don't call either

@@ -74,7 +74,11 @@ public final class WaveletDocumentOperation extends WaveletOperation {
 
   @Override
   public int hashCode() {
-    return operation.hashCode();
+    // Note that we don't have an implementation of operation.hashCode()
+    // which is compatible with OpComparators.SYNTACTIC_IDENTITY.equal().
+    // Therefore we ignore operation in the hash code computation here
+    // so that it's compatible with equals().
+    return documentId.hashCode();
   }
 
   @Override
@@ -86,5 +90,4 @@ public final class WaveletDocumentOperation extends WaveletOperation {
     return documentId.equals(other.documentId)
         && OpComparators.SYNTACTIC_IDENTITY.equal(operation, other.operation);
   }
-
 }
