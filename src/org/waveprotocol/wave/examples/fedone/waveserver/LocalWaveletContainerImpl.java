@@ -98,7 +98,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       WaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
     if (deltaAndVersion.first.getOperations().isEmpty()) {
-      LOG.warning("No operations to apply at version " + currentVersion);
+      LOG.warning("No operations to apply at version " + deltaAndVersion.second);
       throw new EmptyDeltaException();
     }
     
