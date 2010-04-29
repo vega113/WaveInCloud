@@ -366,10 +366,11 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     Pair<WaveletDelta, HashedVersion> deltaAndVersion =
       WaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
-    // Transform operations against the current version
-    List<WaveletOperation> transformedOps =
+    // Transform operations against earlier deltas, if necessary
+    VersionedWaveletDelta transformed =
         maybeTransformSubmittedDelta(deltaAndVersion.first, deltaAndVersion.second);
-    if (transformedOps == null) {
+    if (transformed.version.equals(deltaAndVersion.second)) {
+      // No transformation took place.
       // As a sanity check, the hash from the applied delta should NOT be set (an optimisation, but
       // part of the protocol).
       if (appliedDelta.getMessage().hasHashedVersionAppliedAt()) {
@@ -377,14 +378,12 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         // TODO: re-enable this exception for version 0.3 of the spec
 //        throw new InvalidHashException("Applied delta and its contained delta have same hash");
       }
-      transformedOps = deltaAndVersion.first.getOperations();
     }
 
     // Apply operations.  These shouldn't fail since they're the authoritative versions, so if they
     // do then the wavelet is corrupted (and the caller of this method will sort it out).
-    applyWaveletOperations(transformedOps);
+    applyWaveletOperations(transformed.delta.getOperations());
 
-    return commitAppliedDelta(appliedDelta,
-        new WaveletDelta(deltaAndVersion.first.getAuthor(), transformedOps));
+    return commitAppliedDelta(appliedDelta, transformed.delta);
   }
 }

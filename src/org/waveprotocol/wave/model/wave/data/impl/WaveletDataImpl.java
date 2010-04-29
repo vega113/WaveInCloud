@@ -117,7 +117,7 @@ public class WaveletDataImpl implements WaveletData {
   public boolean modifyDocument(String documentId, BufferedDocOp operation)
       throws OperationException {
     BufferedDocOp newDoc = Composer.compose(getOrCreateDocument(documentId), operation);
-    if (OpComparators.SYNTACTIC_IDENTITY.equal(newDoc, EMPTY_DOC_OP)) {
+    if (OpComparators.SYNTACTIC_IDENTITY.equal(EMPTY_DOC_OP, newDoc)) {
       documents.remove(documentId);
     } else {
       documents.put(documentId, newDoc);
