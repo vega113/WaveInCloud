@@ -17,6 +17,8 @@
  
 package org.waveprotocol.wave.examples.fedone.rpc;
 
+import com.google.common.base.Preconditions;
+
 import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import java.io.IOException;
@@ -53,12 +55,9 @@ public class WebSocketClientRpcChannel extends ClientRpcChannel {
   @Override
   protected MessageExpectingChannel startChannel(SocketAddress serverAddress, 
       ExecutorService threadPool, ProtoCallback callback) throws IOException {
-    InetSocketAddress inetAddress = (InetSocketAddress) serverAddress;
+    Preconditions.checkArgument(serverAddress != null);
 
-    if (inetAddress == null) {
-      throw new IllegalArgumentException("can't have null serverAddress!");
-    }
-    
+    InetSocketAddress inetAddress = (InetSocketAddress) serverAddress;
     WebSocketClientChannel protoChannel = 
       new WebSocketClientChannel(inetAddress.getHostName(), inetAddress.getPort(),
         callback, threadPool);

@@ -5,7 +5,7 @@ License: Apache 2.0
 License File: COPYING
 
 Description:
-ANTLR tool for parsing
+A library for generating GWT-happy JSON-backed protobuf classes.
 
 Local Modifications:
 No modifications.

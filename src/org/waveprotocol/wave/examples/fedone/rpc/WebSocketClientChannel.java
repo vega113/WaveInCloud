@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * The client side of a WebSocketHannel. 
+ * The client side of a WebSocketChannel. 
  */
 class WebSocketClientChannel extends WebSocketChannel {
   private static final Log LOG = Log.get(WebSocketClientChannel.class);
@@ -40,7 +40,7 @@ class WebSocketClientChannel extends WebSocketChannel {
 
   /**
    * Creates a WebSocketClientChannel with a default thread executor. See 
-   * {@link #WebSocketCLientChannel(String, Integer, ProtoCallback, ExecutorService)}
+   * {@link #WebSocketClientChannel(String, Integer, ProtoCallback, ExecutorService)}
    */
   public WebSocketClientChannel(String host, Integer port, ProtoCallback callback) {
     this(host, port, callback, Executors.newSingleThreadExecutor());

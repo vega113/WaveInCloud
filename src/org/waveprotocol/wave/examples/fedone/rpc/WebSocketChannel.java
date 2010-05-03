@@ -53,7 +53,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
    * A simple message wrapper that bundles a json string with a version,
    * sequence number, and type information.
    */
-  public static class MessageWrapper {
+  private static class MessageWrapper {
     private int version;
     private long sequenceNumber;
     private String messageType;
@@ -83,10 +83,12 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
       wrapper = gson.fromJson(data, MessageWrapper.class);
     } catch (JsonParseException jpe) {
       LOG.info("Unable to parse JSON: " + jpe.getMessage());
+      throw new IllegalArgumentException(jpe);
     }
     
     if (wrapper.version != VERSION) {
       LOG.info("Bad message version number: " + wrapper.version);
+      throw new IllegalArgumentException("Bad version number: " + wrapper.version);
     }
     
     Message prototype = getMessagePrototype(wrapper.messageType);

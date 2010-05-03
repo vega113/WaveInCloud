@@ -9,6 +9,10 @@ else
   echo "You need to copy run-config.sh.example to run-config.sh and configure" ; exit 1
 fi
 
+if [ -z "$WEBSOCKET_SERVER_PORT" -o -z "$WEBSOCKET_SERVER_HOSTNAME" ]; then
+  echo "You need to specity WEBSOCKET_SERVER_HOSTNAME and WEBSOCKET_SERVER_PORT in run-config.sh"; exit 1
+fi
+
 if [[ $# != 1 ]]; then
   echo "usage: ${0} <username EXCLUDING DOMAIN>"
 else

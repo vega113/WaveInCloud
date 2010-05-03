@@ -59,6 +59,7 @@ public class WebSocketServerChannel extends WebSocketChannel implements WebSocke
    */
   @Override
   public void onMessage(byte frame, byte[] data, int offset, int length) {
+    // do nothing. we don't expect this type of message.
   }
   
   /**
