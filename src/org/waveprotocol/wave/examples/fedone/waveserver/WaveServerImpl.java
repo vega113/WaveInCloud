@@ -582,6 +582,9 @@ public class WaveServerImpl implements WaveServer {
          * happen is the update is pushed onto a queue which is handled in another thread.
          */
         synchronized (wc) {
+          // Get the host domains before applying the delta in case
+          // the delta contains a removeParticipant operation.
+          Set<String> hostDomains = Sets.newHashSet(getParticipantDomains(wc));
           submitResult = wc.submitRequest(waveletName, delta);
           appliedDelta = submitResult.getAppliedDelta();
 
@@ -601,8 +604,11 @@ public class WaveServerImpl implements WaveServer {
                 submitResult.getHashedVersionAfterApplication(), documentState);
           }
 
+          // Capture any new domains from addParticipant operations.
+          hostDomains.addAll(getParticipantDomains(wc));
+
           // Broadcast results to the remote servers, but make sure they all have our signatures
-          for (final String hostDomain : getParticipantDomains(wc)) {
+          for (final String hostDomain : hostDomains) {
             final WaveletFederationListener host = federationHosts.get(hostDomain);
             host.waveletDeltaUpdate(waveletName, ImmutableList.of(appliedDelta.getByteString()),
                 new WaveletFederationListener.WaveletUpdateCallback() {

@@ -68,7 +68,9 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
    * Returns true if this was an event originated by the agent itself.
    */
   private boolean isSelfEvent(String author, WaveletData wavelet) {
-    return author.equals(connection.getParticipantId());
+    // TODO: in the coming agent framework refactor, change author to be
+    // a participantId throughout.
+    return new ParticipantId(author).equals(connection.getParticipantId());
   }
 
   @Override
@@ -124,7 +126,7 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
       return;
     }
 
-    if (participantId.getAddress().equals(connection.getParticipantId())) {
+    if (participantId.equals(connection.getParticipantId())) {
       onSelfAdded(wavelet);
     } else {
       onParticipantAdded(wavelet, participantId);
@@ -137,7 +139,7 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
       return;
     }
 
-    if (participantId.getAddress().equals(connection.getParticipantId())) {
+    if (participantId.equals(connection.getParticipantId())) {
       onSelfRemoved(wavelet);
     } else {
       onParticipantRemoved(wavelet, participantId);

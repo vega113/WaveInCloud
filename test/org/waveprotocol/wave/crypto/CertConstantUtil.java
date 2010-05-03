@@ -43,4 +43,7 @@ public class CertConstantUtil {
       throw new RuntimeException(e);
     }
   }
+
+  private CertConstantUtil() {
+  }
 }

@@ -17,12 +17,11 @@
 
 package org.waveprotocol.wave.crypto;
 
-import org.waveprotocol.wave.crypto.TimeSource;
-
 import java.util.Date;
 
 class FakeTimeSource implements TimeSource {
   private long time;
+
   public FakeTimeSource(long time) {
     this.time = time;
   }
@@ -31,6 +30,7 @@ class FakeTimeSource implements TimeSource {
   public long currentTimeMillis() {
     return time;
   }
+
   @Override
   public Date now() {
     return new Date(time);

@@ -527,10 +527,10 @@ range.
    that the start version MUST fall on a delta boundary).
 *  'start-version-hash' -- REQUIRED attribute with the hash for the
    associated start version.
-*  'end-version' -- OPTIONAL attribute with ending version number
+*  'end-version' -- REQUIRED attribute with ending version number
    (exclusive) up to which to retrieve the wavelet's history.  (Note
    that the end version MUST fall on a delta boundary).
-*  'end-version-hash' -- OPTIONAL attribute with the hash for the
+*  'end-version-hash' -- REQUIRED attribute with the hash for the
    associated end version.
 *  'response-length-limit' -- OPTIONAL attribute containing advice
    from the requester about the preferred response limit, measured as
@@ -1049,6 +1049,6 @@ Protocol Buffers
 
 The protocol buffer definitions:
 
-.. include:: ../../src/org/waveprotocol/wave/protocol/common.proto 
+.. include:: ../../src/org/waveprotocol/wave/federation/federation.protodevel
      :literal: 
  

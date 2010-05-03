@@ -157,6 +157,11 @@
       <batchtest todir="${dir.testout}">
         <fileset dir="${test}">
           <include name="**/*Test.java"/>
+          <exclude name="org/waveprotocol/wave/model/document/AnnotationCursorTest.java"/>
+          <exclude name="org/waveprotocol/wave/model/document/RangedAnnotationIterableTest.java"/>
+          <exclude name="org/waveprotocol/wave/model/document/operation/AbstractModifiableDocumentTest.java"/>
+          <exclude name="org/waveprotocol/wave/model/document/util/AnnotationIntervalIterableTest.java"/>
+          <exclude name="org/waveprotocol/wave/model/document/indexed/AnnotationTreePerformanceTest.java"/>
         </fileset>
       </batchtest>
       <formatter type="xml"/>

@@ -22,6 +22,7 @@ import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.JsonFormat;
 import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import com.google.protobuf.UnknownFieldSet;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
@@ -158,6 +159,16 @@ public class SequencedProtoChannel extends MessageExpectingChannel {
       public void write(int b) throws IOException {
         channel.write(ByteBuffer.wrap(new byte[] {(byte) b}));
       }
+
+      @Override
+      public void write(byte[] buf) throws IOException {
+        channel.write(ByteBuffer.wrap(buf));
+      }
+
+      @Override
+      public void write(byte[] buf, int off, int len) throws IOException {
+        channel.write(ByteBuffer.wrap(buf, off, len));
+      }
     });
   }
 
@@ -189,13 +200,16 @@ public class SequencedProtoChannel extends MessageExpectingChannel {
    * @param message
    */
   public void sendMessage(long sequenceNo, Message message) {
-    String messageType = message.getDescriptorForType().getFullName();    
+    internalSendMessage(sequenceNo, message, message.getDescriptorForType().getFullName());
+  }
+
+  private void internalSendMessage(long sequenceNo, MessageLite message, String messageType) {
+    int messageSize = message.getSerializedSize();
     int size = CodedOutputStream.computeInt64SizeNoTag(sequenceNo)
-            + CodedOutputStream.computeStringSizeNoTag(messageType)
-            + CodedOutputStream.computeMessageSizeNoTag(message);
+             + CodedOutputStream.computeStringSizeNoTag(messageType)
+             + CodedOutputStream.computeMessageSizeNoTag(message);
     // TODO: change to LOG.debug
-    LOG.fine("Sending message (" + message.getDescriptorForType().getFullName() + ", seq "
-        + sequenceNo + ") to: " + channel);
+    LOG.fine("Sending message (" + messageType + ", seq " + sequenceNo + ") to: " + channel);
     // Only one message should be written at at time.
     synchronized (outputStream) {
       try {

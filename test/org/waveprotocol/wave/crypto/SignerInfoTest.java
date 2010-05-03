@@ -18,18 +18,16 @@
 package org.waveprotocol.wave.crypto;
 
 import com.google.common.collect.ImmutableList;
-
 import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
+import org.apache.commons.codec.binary.Base64;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.HashAlgorithm;
+
 import java.security.cert.X509Certificate;
 import java.util.List;
-
-import org.apache.commons.codec.binary.Base64;
-import org.waveprotocol.wave.crypto.SignerInfo;
-import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.HashAlgorithm;
-import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 
 public class SignerInfoTest extends TestCase {
 

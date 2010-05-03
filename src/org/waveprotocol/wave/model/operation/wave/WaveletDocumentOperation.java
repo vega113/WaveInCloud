@@ -19,6 +19,7 @@ package org.waveprotocol.wave.model.operation.wave;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpInverter;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
+import org.waveprotocol.wave.model.operation.OpComparators;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.util.Preconditions;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -69,5 +70,24 @@ public final class WaveletDocumentOperation extends WaveletOperation {
   @Override
   public String toString() {
     return "WaveletDocumentOperation(" + documentId + "," + operation + ")";
+  }
+
+  @Override
+  public int hashCode() {
+    // Note that we don't have an implementation of operation.hashCode()
+    // which is compatible with OpComparators.SYNTACTIC_IDENTITY.equal().
+    // Therefore we ignore operation in the hash code computation here
+    // so that it's compatible with equals().
+    return documentId.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof WaveletDocumentOperation)) {
+      return false;
+    }
+    WaveletDocumentOperation other = (WaveletDocumentOperation) obj;
+    return documentId.equals(other.documentId)
+        && OpComparators.SYNTACTIC_IDENTITY.equal(operation, other.operation);
   }
 }

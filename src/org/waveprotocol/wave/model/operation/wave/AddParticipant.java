@@ -68,4 +68,17 @@ public final class AddParticipant extends WaveletOperation {
     return "AddParticipant(" + participant + ")";
   }
 
+  @Override
+  public int hashCode() {
+    return participant.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof AddParticipant)) {
+      return false;
+    }
+    AddParticipant other = (AddParticipant) obj;
+    return participant.equals(other.participant);
+  }
 }

@@ -22,12 +22,7 @@ import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 import org.apache.commons.codec.binary.Base64;
-
-import org.waveprotocol.wave.crypto.SignerInfo;
-import org.waveprotocol.wave.crypto.WaveSigner;
-import org.waveprotocol.wave.crypto.WaveSignerFactory;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
-import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.HashAlgorithm;
 
 import java.io.ByteArrayInputStream;
