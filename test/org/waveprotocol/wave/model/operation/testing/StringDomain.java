@@ -10,6 +10,7 @@ import java.util.List;
 import org.waveprotocol.wave.model.operation.Domain;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.OperationPair;
+import org.waveprotocol.wave.model.operation.TransformException;
 import org.waveprotocol.wave.model.operation.testing.StringDomain.StringOp.Component;
 import org.waveprotocol.wave.model.operation.testing.StringDomain.StringOp.Delete;
 import org.waveprotocol.wave.model.operation.testing.StringDomain.StringOp.Insert;
@@ -266,7 +267,7 @@ public class StringDomain implements Domain<StringDomain.Data, StringDomain.Stri
 
   @Override
   public OperationPair<StringOp> transform(StringOp clientOp, StringOp serverOp)
-      throws OperationException {
+      throws TransformException {
     Iterator<Component> client = clientOp.components.iterator();
     Iterator<Component> server = serverOp.components.iterator();
 

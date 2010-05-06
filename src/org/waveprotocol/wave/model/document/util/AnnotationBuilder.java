@@ -106,4 +106,3 @@ public class AnnotationBuilder<N, E extends N, T extends N> {
     return b.build();
   }
 }
-

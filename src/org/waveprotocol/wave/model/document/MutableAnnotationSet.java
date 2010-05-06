@@ -68,7 +68,7 @@ public interface MutableAnnotationSet<V> extends ReadableAnnotationSet<V> {
 
     @SuppressWarnings("unchecked")
     @Override
-    
+
     public boolean equals(Object obj) {
       if (!(obj instanceof RangedValue) || obj == null) {
         return false;
@@ -78,7 +78,7 @@ public interface MutableAnnotationSet<V> extends ReadableAnnotationSet<V> {
     }
 
     @Override
-    
+
     public int hashCode() {
       int result = 17;
       result = 31 * result + start;

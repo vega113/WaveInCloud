@@ -44,21 +44,18 @@ public abstract class FilteredView<N, E extends N, T extends N>
     super(innerView);
   }
 
-  /** {@inheritDoc} */
   @Override
   public N getFirstChild(N node) {
     N find = inner.getFirstChild(node);
     return getNextVisibleNodeDepthFirst(find, node, true);
   }
 
-  /** {@inheritDoc} */
   @Override
   public N getLastChild(N node) {
     N find = inner.getLastChild(node);
     return getPreviousVisibleNodeDepthFirst(find, node, true);
   }
 
-  /** {@inheritDoc} */
   @Override
   public N getNextSibling(N node) {
     E parent = getParentElement(node);
@@ -66,7 +63,6 @@ public abstract class FilteredView<N, E extends N, T extends N>
     return getNextVisibleNodeDepthFirst(find, parent, true);
   }
 
-  /** {@inheritDoc} */
   @Override
   public N getPreviousSibling(N node) {
     E parent = getParentElement(node);
@@ -74,7 +70,6 @@ public abstract class FilteredView<N, E extends N, T extends N>
     return getPreviousVisibleNodeDepthFirst(find, parent, true);
   }
 
-  /** {@inheritDoc} */
   @Override
   public E getParentElement(N node) {
     E element = inner.getParentElement(node);
@@ -99,31 +94,26 @@ public abstract class FilteredView<N, E extends N, T extends N>
     return null;
   }
 
-  /** {@inheritDoc} */
   @Override
   public N getVisibleNodeNext(N node) {
     return getNextVisibleNodeDepthFirst(node, null, false);
   }
 
-  /** {@inheritDoc} */
   @Override
   public N getVisibleNodePrevious(N node) {
     return getPreviousVisibleNodeDepthFirst(node, null, false);
   }
 
-  /** {@inheritDoc} */
   @Override
   public N getVisibleNodeFirst(N node) {
     return getNextVisibleNodeDepthFirst(node, null, true);
   }
 
-  /** {@inheritDoc} */
   @Override
   public N getVisibleNodeLast(N node) {
     return getPreviousVisibleNodeDepthFirst(node, null, true);
   }
 
-  /** {@inheritDoc} */
   @Override
   public N getVisibleNode(N node) {
     if (node == null) {
@@ -140,6 +130,11 @@ public abstract class FilteredView<N, E extends N, T extends N>
       default:
         throw new RuntimeException("Unimplemented");
     }
+  }
+
+  @Override
+  public void onBeforeFilter(Point<N> at) {
+    // default = do nothing.
   }
 
   // Helpers

@@ -53,7 +53,7 @@ public class IndexedDocProvider<N, E extends N, T extends N, D extends RawDocume
 
   @Override
   public IndexedDocument<N, E, T> create(String tag, Map<String, String> attributes) {
-    
+
     return adapt(((RawDocument.Factory<D>) substrateProvider).create(tag, attributes),
         NO_SCHEMA_CONSTRAINTS);
   }

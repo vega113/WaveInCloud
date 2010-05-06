@@ -138,8 +138,8 @@ public final class Annotations {
     int size = annotations.size();
 
     // check if there's nothing to do:
-    boolean isSet = annotations.firstAnnotationChange(0, size, key, null) == start &&
-                    annotations.firstAnnotationChange(start, size, key, value) == end &&
+    boolean isSet = annotations.firstAnnotationChange(0, start, key, null) == -1 &&
+                    annotations.firstAnnotationChange(start, end, key, value) == -1 &&
                     annotations.firstAnnotationChange(end, size, key, null) == -1;
 
     if (!isSet) {

@@ -63,7 +63,7 @@ public class ElementHandlerRegistry {
                       ? target.handlers.get(key)
                       : CollectionUtils.<Class<Object>, Object>createIdentityMap();
 
-              sourceElemHandlers.each(new IdentityMap.Each<Class<Object>, Object>() {
+              sourceElemHandlers.each(new IdentityMap.ProcV<Class<Object>, Object>() {
                 public void apply(Class<Object> key, Object handler) {
                   destElementHandlers.put(key, handler);
                 }

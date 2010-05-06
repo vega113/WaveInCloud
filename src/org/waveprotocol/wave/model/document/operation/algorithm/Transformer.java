@@ -26,8 +26,8 @@ import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
-import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.OperationPair;
+import org.waveprotocol.wave.model.operation.TransformException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,9 +44,14 @@ import java.util.Set;
  */
 public final class Transformer {
 
-  private static class TransformException extends RuntimeException {
+  /**
+   * For internal error propagation. It is a RuntimeException to facilitate
+   * error propagation through document.operation interfaces from outside
+   * this package.
+   */
+  private static class InternalTransformException extends RuntimeException {
 
-    TransformException(String message) {
+    InternalTransformException(String message) {
       super(message);
     }
 
@@ -232,23 +237,23 @@ public final class Transformer {
     abstract void resolveRetain(int retain);
 
     void resolveDeleteCharacters(String characters) {
-      throw new TransformException("Incompatible operations in transformation");
+      throw new InternalTransformException("Incompatible operations in transformation");
     }
 
     void resolveDeleteElementStart(String type, Attributes attributes) {
-      throw new TransformException("Incompatible operations in transformation");
+      throw new InternalTransformException("Incompatible operations in transformation");
     }
 
     void resolveDeleteElementEnd() {
-      throw new TransformException("Incompatible operations in transformation");
+      throw new InternalTransformException("Incompatible operations in transformation");
     }
 
     void resolveReplaceAttributes(Attributes oldAttributes, Attributes newAttributes) {
-      throw new TransformException("Incompatible operations in transformation");
+      throw new InternalTransformException("Incompatible operations in transformation");
     }
 
     void resolveUpdateAttributes(AttributesUpdate update) {
-      throw new TransformException("Incompatible operations in transformation");
+      throw new InternalTransformException("Incompatible operations in transformation");
     }
 
   }
@@ -977,11 +982,11 @@ public final class Transformer {
    * @param clientOp The operation from the client.
    * @param serverOp The operation from the server.
    * @return The transformed pair of operations.
-   * @throws OperationException if a problem was encountered during the
+   * @throws TransformException if a problem was encountered during the
    *         transformation process.
    */
   public OperationPair<BufferedDocOp> transformOperations(BufferedDocOp clientOp,
-      BufferedDocOp serverOp) throws OperationException {
+      BufferedDocOp serverOp) throws TransformException {
     try {
       PositionTracker positionTracker = new PositionTracker();
 
@@ -1005,7 +1010,7 @@ public final class Transformer {
         clientOp.applyComponent(clientIndex++, clientTarget);
         while (clientPosition.get() > 0) {
           if (serverIndex >= serverOp.size()) {
-            throw new OperationException("Ran out of " + serverOp.size()
+            throw new TransformException("Ran out of " + serverOp.size()
                 + " server op components after " + clientIndex + " of " + clientOp.size()
                 + " client op components, with " + clientPosition.get() + " spare positions");
           }
@@ -1017,8 +1022,8 @@ public final class Transformer {
       }
       clientOp = clientTarget.finish();
       serverOp = serverTarget.finish();
-    } catch (TransformException e) {
-      throw new OperationException(e.getMessage());
+    } catch (InternalTransformException e) {
+      throw new TransformException(e.getMessage());
     }
     return new OperationPair<BufferedDocOp>(clientOp, serverOp);
   }
@@ -1029,11 +1034,11 @@ public final class Transformer {
    * @param clientOp The operation from the client.
    * @param serverOp The operation from the server.
    * @return The transformed pair of operations.
-   * @throws OperationException if a problem was encountered during the
+   * @throws TransformException if a problem was encountered during the
    *         transformation process.
    */
   public static OperationPair<BufferedDocOp> transform(BufferedDocOp clientOp,
-      BufferedDocOp serverOp) throws OperationException {
+      BufferedDocOp serverOp) throws TransformException {
     return new Transformer().transformOperations(clientOp, serverOp);
   }
 

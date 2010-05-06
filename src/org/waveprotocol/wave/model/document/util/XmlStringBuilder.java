@@ -51,6 +51,23 @@ public abstract class XmlStringBuilder {
   }
 
   /**
+   * Serializes the inner XML of a document with constraints.
+   *
+   * @param doc document
+   * @return the XML representation of the inner contents of {@code doc}.
+   */
+  public static <N> XmlStringBuilderDoc<N, ?, ?> innerXml(ReadableDocument<N, ?, ?> doc,
+      PermittedCharacters permittedChars) {
+    return innerXmlHelper(doc, permittedChars);
+  }
+
+  private static <N, E extends N, T extends N> XmlStringBuilderDoc<N, E, T> innerXmlHelper(
+      ReadableDocument<N, E, T> doc, PermittedCharacters permittedChars) {
+    return XmlStringBuilderDoc.createEmptyWithCharConstraints(doc, permittedChars)
+        .appendChildXmlFragment(doc.getDocumentElement());
+  }
+
+  /**
    * Serializes the outer XML of a document.
    *
    * @param doc  a document
@@ -79,12 +96,29 @@ public abstract class XmlStringBuilder {
   }
 
   /**
+   * Same as {@link #createEmpty()}, but with constraints on characters.
+   * @param permittedChars
+   */
+  public static XmlStringBuilder createEmptyWithCharConstraints(
+      PermittedCharacters permittedChars) {
+    return XmlStringBuilderDoc.createEmptyWithCharConstraints(null, permittedChars);
+  }
+  /**
    * Constructs a builder from a string containing a bit of xml
    * @param xmlContent the xml content
    * @return new {@link XmlStringBuilder} with the xml as content
    */
   public static XmlStringBuilder createFromXmlString(String xmlContent) {
     return XmlStringBuilder.innerXml(DocProviders.POJO.parse(xmlContent));
+  }
+
+  /**
+   * Same as {@link #createFromXmlString(String)}, but with constraints on characters.
+   * @param xmlContent
+   */
+  public static XmlStringBuilder createFromXmlStringWithContraints(String xmlContent,
+      PermittedCharacters permittedChars) {
+    return XmlStringBuilder.innerXml(DocProviders.POJO.parse(xmlContent), permittedChars);
   }
 
   /**

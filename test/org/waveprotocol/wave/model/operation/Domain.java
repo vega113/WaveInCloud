@@ -47,7 +47,7 @@ public interface Domain<D, O> {
    * @param serverOp
    * @return The transformed pair of operations
    */
-  OperationPair<O> transform(O clientOp, O serverOp) throws OperationException;
+  OperationPair<O> transform(O clientOp, O serverOp) throws TransformException;
 
   /**
    * Where possible, invert an operation, such that (invert x) . x == id when

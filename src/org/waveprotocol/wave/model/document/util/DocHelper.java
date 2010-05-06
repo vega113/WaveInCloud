@@ -188,16 +188,22 @@ public class DocHelper {
     return getText(doc, doc, start, end);
   }
 
-  /** Get the text between a given range */
+  /**
+   * Gets text between two locations, using a mapper to convert to points.
+   * @see #getText(ReadableDocument, Point, Point)
+   */
   public static <N, E extends N, T extends N> String getText(
       ReadableDocument<N, E, T> doc, LocationMapper<N> mapper,
       int start, int end) {
-
     Preconditions.checkPositionIndexes(start, end, mapper.size());
-
     Point<N> startPoint = mapper.locate(start);
     Point<N> endPoint = mapper.locate(end);
+    return getText(doc, startPoint, endPoint);
+  }
 
+  /** Get the text between a given range */
+  public static <N, E extends N, T extends N> String getText(
+      ReadableDocument<N, E, T> doc, Point<N> startPoint, Point<N> endPoint) {
     NodeOffset<N> output = new NodeOffset<N>();
 
     getNodeAfterOutwards(doc, startPoint, output);
@@ -356,6 +362,8 @@ public class DocHelper {
    */
   public static <N, E extends N, T extends N> Point<N> getFilteredPoint(
       ReadableDocumentView<N, E, T> filteredView, Point<N> point) {
+    filteredView.onBeforeFilter(point);
+
     if (point.isInTextNode()) {
       N visible;
 
@@ -838,7 +846,7 @@ public class DocHelper {
       return null;
     }
     // nodeAfter is of type N, el is of type (E extends N), so inElement(el, nodeAfter)
-    // should return a Point<N>. But Sun's java compiler doesn't figure that out, 
+    // should return a Point<N>. But Sun's java compiler doesn't figure that out,
     // so we need to hint: Point.<N>inElement(...)
     return el == location.getContainer() ? location : Point.<N>inElement(el, nodeAfter);
   }

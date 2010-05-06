@@ -50,6 +50,11 @@ public interface ReadableStringMap<V> {
   boolean containsKey(String key);
 
   /**
+   * @return some key in the map. If the map is empty, null is returned.
+   */
+  String someKey();
+
+  /**
    * Return true iff this map does not contain a value for any key.
    */
   boolean isEmpty();
@@ -58,7 +63,7 @@ public interface ReadableStringMap<V> {
    * Call the callback for every key-value pair in the map, in undefined
    * order.
    */
-  void each(ProcV<V> callback);
+  void each(ProcV<? super V> callback);
 
   /**
    * Count the number of key-value pairs in the map.
@@ -68,4 +73,9 @@ public interface ReadableStringMap<V> {
    */
   int countEntries();
 
+  /**
+   * @return a live, unmodifiable view of the keys, as a set. If the map is
+   *         modified while iterating over the key set, the result is undefined.
+   */
+  ReadableStringSet keySet();
 }

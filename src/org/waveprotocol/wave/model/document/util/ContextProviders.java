@@ -1,5 +1,6 @@
 // Copyright 2008 Google Inc. All Rights Reserved.
 
+
 package org.waveprotocol.wave.model.document.util;
 
 import org.waveprotocol.wave.model.document.AnnotationMutationHandler;
@@ -61,52 +62,58 @@ public class ContextProviders {
 
     private final WritableLocalDocument<N, E, T> writable;
 
-    public LocalDocImpl(RawDocument<N, E, T> fullDoc, WritableLocalDocument<N, E, T> writable) {
+    public LocalDocImpl(RawDocument<N, E, T> fullDoc, WritableLocalDocument<N, E, T> local) {
       super(fullDoc);
-      this.writable = writable;
+      this.writable = local;
     }
-
+    @Override
     public <T> T getProperty(Property<T> property, E element) {
       return writable.getProperty(property, element);
     }
-
+    @Override
     public boolean isDestroyed(E element) {
       return writable.isDestroyed(element);
     }
-
+    @Override
     public <T> void setProperty(Property<T> property, E element, T value) {
       writable.setProperty(property, element, value);
     }
-
+    @Override
     public T transparentCreate(String text, E parent, N nodeAfter) {
       return writable.transparentCreate(text, parent, nodeAfter);
     }
-
+    @Override
     public E transparentCreate(String tagName, Map<String, String> attributes,
         E parent, N nodeAfter) {
       return writable.transparentCreate(tagName, attributes, parent, nodeAfter);
     }
-
     @Override
     public void transparentSetAttribute(E element, String name, String value) {
       writable.transparentSetAttribute(element, name, value);
     }
-
+    @Override
     public void transparentDeepRemove(N node) {
       writable.transparentDeepRemove(node);
     }
-
-    public void transparentMove(E newParent, N fromIncl,
-        N toExcl, N refChild) {
+    @Override
+    public void transparentMove(E newParent, N fromIncl, N toExcl, N refChild) {
       writable.transparentMove(newParent, fromIncl, toExcl, refChild);
     }
-
+    @Override
     public N transparentSlice(N splitAt) {
       return writable.transparentSlice(splitAt);
     }
-
+    @Override
     public void transparentUnwrap(E element) {
       writable.transparentUnwrap(element);
+    }
+    @Override
+    public void markNodeForPersistence(N localNode, boolean lazy) {
+      writable.markNodeForPersistence(localNode, lazy);
+    }
+    @Override
+    public boolean isTransparent(N node) {
+      return writable.isTransparent(node);
     }
   }
 

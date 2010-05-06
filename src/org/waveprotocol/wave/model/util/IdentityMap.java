@@ -31,7 +31,7 @@ public interface IdentityMap<K, V> {
    * @param <K> IdentityMap's key type
    * @param <V> IdentityMap's value type
    */
-  public interface Each<K, V> {
+  public interface ProcV<K, V> {
     /** The procedure */
     public void apply(K key, V item);
   }
@@ -107,7 +107,7 @@ public interface IdentityMap<K, V> {
    *
    * @param proc
    */
-  void each(Each<? super K, ? super V> proc);
+  void each(ProcV<? super K, ? super V> proc);
 
   /**
    * Same as ruby/prototype reduce. Same as functional fold. Apply a function

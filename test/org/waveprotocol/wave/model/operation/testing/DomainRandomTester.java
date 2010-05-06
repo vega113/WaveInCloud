@@ -5,6 +5,7 @@ package org.waveprotocol.wave.model.operation.testing;
 import org.waveprotocol.wave.model.operation.Domain;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.OperationPair;
+import org.waveprotocol.wave.model.operation.TransformException;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -320,6 +321,8 @@ public class DomainRandomTester<D, O> {
 
       } catch (OperationException e) {
         logException("TRANSFORM BUG? Operation exception", e);
+      } catch (TransformException e) {
+        logException("TRANSFORM BUG? Transform exception", e);
       } catch (RuntimeException e) {
         logException("TRANSFORM BUG? Runtime exception", e);
       }
@@ -449,6 +452,8 @@ public class DomainRandomTester<D, O> {
 
       } catch (OperationException e) {
         logException("TRANSFORM BUG? Operation exception", e);
+      } catch (TransformException e) {
+        logException("TRANSFORM BUG? Transform exception", e);
       } catch (RuntimeException e) {
         logException("TRANSFORM BUG? Runtime exception", e);
       }

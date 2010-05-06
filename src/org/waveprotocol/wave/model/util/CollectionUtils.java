@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -31,7 +32,7 @@ public class CollectionUtils {
   public static final DataDomain<ReadableStringSet, StringSet> STRING_SET_DOMAIN =
       new DataDomain<ReadableStringSet, StringSet>() {
     @Override
-    public void compose(StringSet target, StringSet changes, ReadableStringSet base) {
+    public void compose(StringSet target, ReadableStringSet changes, ReadableStringSet base) {
       target.clear();
       target.addAll(base);
       target.addAll(changes);
@@ -51,7 +52,7 @@ public class CollectionUtils {
   public static final DataDomain<ReadableStringMap<Object>, StringMap<Object>> STRING_MAP_DOMAIN =
       new DataDomain<ReadableStringMap<Object>, StringMap<Object>>() {
     @Override
-    public void compose(StringMap<Object> target, StringMap<Object> changes,
+    public void compose(StringMap<Object> target, ReadableStringMap<Object>  changes,
         ReadableStringMap<Object> base) {
       target.clear();
       target.putAll(base);
@@ -182,14 +183,14 @@ public class CollectionUtils {
     }
 
     @Override
-    public void each(ProcV<V> callback) {
+    public void each(ProcV<? super V> callback) {
       for (Map.Entry<String, V> entry : backend.entrySet()) {
         callback.apply(entry.getKey(), entry.getValue());
       }
     }
 
     @Override
-    public void filter(EntryFilter<V> filter) {
+    public void filter(EntryFilter<? super V> filter) {
       for (Iterator<Map.Entry<String, V>> iterator = backend.entrySet().iterator();
           iterator.hasNext();) {
         Map.Entry<String, V> entry = iterator.next();
@@ -207,34 +208,22 @@ public class CollectionUtils {
     }
 
     @Override
+    public String someKey() {
+      return isEmpty() ? null : backend.keySet().iterator().next();
+    }
+
+    @Override
+    public ReadableStringSet keySet() {
+      return new StringSetAdapter(backend.keySet());
+    }
+
+    @Override
     public String toString() {
       return backend.toString();
     }
 
-    @Override
-    public int hashCode() {
-      return backend.hashCode();
-    }
-
-    // TODO(danilatos) This method should throw an exception.
-    // The JSO string map cannot implement this method,
-    // so it should not be used
-    @SuppressWarnings("unchecked")
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (obj instanceof StringMapAdapter) {
-        StringMapAdapter other = (StringMapAdapter) obj;
-        return backend.equals(other.backend);
-      } else {
-        return false;
-      }
-    }
+    // NOTE(patcoleman): equals() and hashCode() should not be implemented in this adaptor, as
+    // they are unsupported in the javascript collections.
   }
 
   /**
@@ -336,15 +325,8 @@ public class CollectionUtils {
       return backend.toString();
     }
 
-    @Override
-    public int hashCode() {
-      return backend.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      throw new UnsupportedOperationException();
-    }
+    // NOTE(patcoleman): equals() and hashCode() should not be implemented in this adaptor, as
+    // they are unsupported in the javascript collections.
   }
 
 
@@ -447,15 +429,8 @@ public class CollectionUtils {
       return backend.toString();
     }
 
-    @Override
-    public int hashCode() {
-      return backend.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      throw new UnsupportedOperationException();
-    }
+    // NOTE(patcoleman): equals() and hashCode() should not be implemented in this adaptor, as
+    // they are unsupported in the javascript collections.
   }
 
   /**
@@ -544,6 +519,76 @@ public class CollectionUtils {
     }
 
     @Override
+    public String someElement() {
+      return isEmpty() ? null : backend.iterator().next();
+    }
+
+    @Override
+    public String toString() {
+      return backend.toString();
+    }
+
+    @Override
+    public int countEntries() {
+      return backend.size();
+    }
+  }
+
+  /**
+   * An adapter that wraps a {@link IdentityHashMap}, presenting it as an
+   * {@link IdentitySet}.
+   */
+  private static class IdentitySetAdapter<T> implements IdentitySet<T> {
+    private final Map<T, T> backend = new IdentityHashMap<T, T>();
+
+    private IdentitySetAdapter() {
+    }
+
+    @Override
+    public void add(T x) {
+      Preconditions.checkNotNull(x, "IdentitySet cannot contain null values");
+      // Note: Boxed primitives, and String, are disallowed. There are special
+      // purpose maps for those key types, and the equality semantics between
+      // the boxed primitives of Javascript and Java are dubious at best.
+      if (x instanceof String || x instanceof Integer || x instanceof Double || x instanceof Long
+          || x instanceof Boolean) {
+        throw new UnsupportedOperationException(
+            "Should NOT use boxed primitives with IdentitySet");
+      }
+
+      backend.put(x, x);
+    }
+
+    @Override
+    public void clear() {
+      backend.clear();
+    }
+
+    @Override
+    public boolean contains(T s) {
+      Preconditions.checkNotNull(s, "IdentitySet cannot contain null values");
+      return backend.containsKey(s);
+    }
+
+    @Override
+    public void remove(T s) {
+      Preconditions.checkNotNull(s, "IdentitySet cannot contain null values");
+      backend.remove(s);
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return backend.isEmpty();
+    }
+
+    @Override
+    public void each(Proc<? super T> procedure) {
+      for (T s : backend.keySet()) {
+        procedure.apply(s);
+      }
+    }
+
+    @Override
     public String toString() {
       return backend.toString();
     }
@@ -608,12 +653,10 @@ public class CollectionUtils {
 
     @Override
     public void put(K key, V value) {
-      // NOTE(user): Identity map doesn't work for any object that override
-      // equals and hashCode. We normally don't think of it that way, but all
-      // the primitive type override equals and hashCode. This check make sure
-      // it is okay.
-      if (key instanceof String || key instanceof Integer || key instanceof Double ||
-          key instanceof Long || key instanceof Boolean) {
+      // Note: Boxed primitives, and String, are disallowed. See explanation in
+      // IdentitySetAdapter.
+      if (key instanceof String || key instanceof Integer || key instanceof Double
+          || key instanceof Long || key instanceof Boolean) {
         throw new UnsupportedOperationException(
             "Should NOT use boxed primitives as key with identity map");
       }
@@ -641,7 +684,7 @@ public class CollectionUtils {
     }
 
     @Override
-    public void each(Each<? super K, ? super V> proc) {
+    public void each(ProcV<? super K, ? super V> proc) {
       for (Map.Entry<K, V> entry : backend.entrySet()) {
         proc.apply(entry.getKey(), entry.getValue());
       }
@@ -665,6 +708,9 @@ public class CollectionUtils {
     public int countEntries() {
       return backend.size();
     }
+
+    // NOTE(patcoleman): equals() and hashCode() should not be implemented in this adaptor, as
+    // they are unsupported in the javascript collections.
   }
 
   /**
@@ -672,28 +718,31 @@ public class CollectionUtils {
    * java.util.HashMap.
    *
    * @author ohler@google.com (Christian Ohler)
-   *
-   * @param <V> the value type for StringMap
    */
-  private static class HashCollectionFactory<V> implements CollectionFactory<V> {
+  private static class HashCollectionFactory implements CollectionFactory {
     @Override
-    public StringMap<V> createStringMap() {
+    public <V> StringMap<V> createStringMap() {
       return CollectionUtils.adaptStringMap(new HashMap<String, V>());
     }
 
     @Override
-    public NumberMap<V> createNumberMap() {
+    public <V> NumberMap<V> createNumberMap() {
       return CollectionUtils.adaptNumberMap(new HashMap<Double, V>());
     }
 
     @Override
-    public IntMap<V> createIntMap() {
+    public <V> IntMap<V> createIntMap() {
       return CollectionUtils.adaptIntMap(new HashMap<Integer, V>());
     }
 
     @Override
     public StringSet createStringSet() {
       return CollectionUtils.adaptStringSet(new HashSet<String>());
+    }
+
+    @Override
+    public <T> IdentitySet<T> createIdentitySet() {
+      return new IdentitySetAdapter<T>();
     }
 
     @Override
@@ -707,19 +756,15 @@ public class CollectionUtils {
     }
 
     @Override
-    public <K> IdentityMap<K, V> createIdentityMap() {
-      // NOTE(user)
-      // For some reason, "return new IdentityHashMapAdapter<K, V>();" results
-      // in a compiler warning, but splitting across two statements is OK.
-      IdentityMap<K, V> result = new IdentityHashMapAdapter<K, V>();
-      return result;
+    public <K, V> IdentityMap<K, V> createIdentityMap() {
+      return new IdentityHashMapAdapter<K, V>();
     }
   }
 
-  private static final HashCollectionFactory<Object> HASH_COLLECTION_FACTORY =
-      new HashCollectionFactory<Object>();
+  private static final HashCollectionFactory HASH_COLLECTION_FACTORY =
+      new HashCollectionFactory();
 
-  private static CollectionFactory<Object> defaultCollectionFactory = HASH_COLLECTION_FACTORY;
+  private static CollectionFactory defaultCollectionFactory = HASH_COLLECTION_FACTORY;
 
   /**
    * Implements a persistently empty string map that throws exceptions on
@@ -732,7 +777,7 @@ public class CollectionUtils {
     }
 
     @Override
-    public void filter(StringMap.EntryFilter<V> filter) {
+    public void filter(StringMap.EntryFilter<? super V> filter) {
     }
 
     @Override
@@ -765,7 +810,7 @@ public class CollectionUtils {
     }
 
     @Override
-    public void each(org.waveprotocol.wave.model.util.ReadableStringMap.ProcV<V> callback) {
+    public void each(org.waveprotocol.wave.model.util.ReadableStringMap.ProcV<? super V> callback) {
     }
 
     @Override
@@ -786,6 +831,17 @@ public class CollectionUtils {
     @Override
     public boolean isEmpty() {
       return true;
+    }
+
+    @Override
+    public String someKey() {
+      return null;
+    }
+
+    @Override
+    public ReadableStringSet keySet() {
+      // TODO(danilatos/ohler): Implement an immutable EMPTY_SET
+      return CollectionUtils.createStringSet();
     }
   }
 
@@ -931,7 +987,7 @@ public class CollectionUtils {
    * collection factory. There shouldn't be any need to call this from other
    * places.
    */
-  public static void setDefaultCollectionFactory(CollectionFactory<Object> f) {
+  public static void setDefaultCollectionFactory(CollectionFactory f) {
     defaultCollectionFactory = f;
   }
 
@@ -940,24 +996,22 @@ public class CollectionUtils {
    *
    * Note: getCollectionFactory() is probably a better choice.
    */
-  @SuppressWarnings("unchecked")
-  public static <V> CollectionFactory<V> getHashCollectionFactory() {
-    return (CollectionFactory<V>) HASH_COLLECTION_FACTORY;
+  public static CollectionFactory getHashCollectionFactory() {
+    return HASH_COLLECTION_FACTORY;
   }
 
   /**
    * Returns the default CollectionFactory.
    */
-  @SuppressWarnings("unchecked")
-  public static <V> CollectionFactory<V> getCollectionFactory() {
-    return (CollectionFactory<V>) defaultCollectionFactory;
+  public static CollectionFactory getCollectionFactory() {
+    return defaultCollectionFactory;
   }
 
   /**
    * Creates a new StringMap using the default collection factory.
    */
   public static <V> StringMap<V> createStringMap() {
-    return CollectionUtils.<V> getCollectionFactory().createStringMap();
+    return CollectionUtils.getCollectionFactory().createStringMap();
   }
 
   /**
@@ -973,21 +1027,21 @@ public class CollectionUtils {
    * Creates a new NumberMap using the default collection factory.
    */
   public static <V> NumberMap<V> createNumberMap() {
-    return CollectionUtils.<V> getCollectionFactory().createNumberMap();
+    return CollectionUtils.getCollectionFactory().createNumberMap();
   }
 
   /**
    * Creates a new NumberMap using the default collection factory.
    */
   public static <V> IntMap<V> createIntMap() {
-    return CollectionUtils.<V> getCollectionFactory().createIntMap();
+    return CollectionUtils.getCollectionFactory().createIntMap();
   }
 
   /**
    * Creates a new queue using the default collection factory.
    */
   public static <V> Queue<V> createQueue() {
-    return CollectionUtils.<V> getCollectionFactory().createQueue();
+    return CollectionUtils.getCollectionFactory().createQueue();
   }
 
   /**
@@ -998,10 +1052,17 @@ public class CollectionUtils {
   }
 
   /**
-   * Creates a new NumberMap using the default collection factory.
+   * Creates a new IdentityMap using the default collection factory.
    */
   public static <K, V> IdentityMap<K, V> createIdentityMap() {
-    return CollectionUtils.<V> getCollectionFactory().<K> createIdentityMap();
+    return CollectionUtils.getCollectionFactory().createIdentityMap();
+  }
+
+  /**
+   * Creates a new IdentitySet using the default collection factory.
+   */
+  public static <V> IdentitySet<V> createIdentitySet() {
+    return CollectionUtils.getCollectionFactory().createIdentitySet();
   }
 
   /**
@@ -1049,7 +1110,7 @@ public class CollectionUtils {
    */
   public static <K, V> Map<K, V> copyToJavaIdentityMapForTesting(IdentityMap<K, V> source) {
     final Map<K, V> result = new IdentityHashMap<K, V>();
-    source.each(new IdentityMap.Each<K, V>() {
+    source.each(new IdentityMap.ProcV<K, V>() {
       @Override
       public void apply(K key, V value) {
         result.put(key, value);
@@ -1066,11 +1127,12 @@ public class CollectionUtils {
   }
 
   /**
-   * Adds all elements from the source set to the target set.
+   * Adds all elements from the source set to the target collection.
    *
-   * @return the target set, for convenience
+   * @return the target collection, for convenience
    */
-  public static <V extends Set<String>> V copyToJavaSet(ReadableStringSet source, final V target) {
+  public static <C extends Collection<String>> C copyToJavaCollection(
+      ReadableStringSet source, final C target) {
     source.each(new StringSet.Proc() {
       @Override
       public void apply(String element) {
@@ -1081,10 +1143,41 @@ public class CollectionUtils {
   }
 
   /**
+   * Adds all values from the source map to the target collection.
+   *
+   * @return the target collection, for convenience
+   */
+  public static <T, C extends Collection<T>> C copyValuesToJavaCollection(
+      ReadableStringMap<T> source, final C target) {
+    source.each(new StringMap.ProcV<T>() {
+      @Override
+      public void apply(String key, T value) {
+        target.add(value);
+      }
+    });
+    return target;
+  }
+
+  /**
    * Creates a new java set with the same contents as the source StringSet.
    */
   public static Set<String> newJavaSet(ReadableStringSet source) {
-    return copyToJavaSet(source, new HashSet<String>());
+    return copyToJavaCollection(source, new HashSet<String>());
+  }
+
+  /**
+   * Creates a new java list with the same contents as the source StringSet.
+   */
+  public static List<String> newJavaList(ReadableStringSet source) {
+    return copyToJavaCollection(source, new ArrayList<String>());
+  }
+
+  /**
+   * Creates a new java list with the same contents as the values of the source
+   * StringMap.
+   */
+  public static <T> List<T> newJavaList(ReadableStringMap<T> source) {
+    return copyValuesToJavaCollection(source, new ArrayList<T>());
   }
 
   /**

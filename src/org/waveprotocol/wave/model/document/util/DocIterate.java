@@ -14,17 +14,18 @@ import java.util.Iterator;
 public class DocIterate {
 
   /**
-   *
-   * @param <V> Value to map the nodes to
+   * @param <V> Value to map the nodes to.
+   * @param <N> Node type in the document this filter is over.
+   * @param <E> Element type in the document this filter is over.
+   * @param <T> Text node type in the document this filter is over.
    */
-  public interface DocIterationFilter<V> {
+  public interface DocIterationFilter<V, N, E extends N, T extends N> {
     /**
      * @param doc useful to keep most implementations as singletons
      * @param current the current node
      * @param stopAt the node to stop at (exclude)
      * @return the next node in the iteration
      */
-    <N, E extends N, T extends N>
     N next(ReadableDocument<N, E, T> doc, N current, N stopAt);
 
     /**
@@ -32,7 +33,6 @@ public class DocIterate {
      * @param node
      * @return the value the node should map to
      */
-    <N, E extends N, T extends N>
     V value(ReadableDocument<N, E, T> doc, N node);
   }
 
@@ -48,7 +48,7 @@ public class DocIterate {
    */
   public static <V, N, E extends N, T extends N> Iterable<V> iterate(
       final ReadableDocument<N, E, T> doc, final N startNode, final N stopAt,
-      final DocIterationFilter<V> iterateFunction) {
+      final DocIterationFilter<V, N, E, T> iterateFunction) {
     return new Iterable<V>() {
       @Override
       public Iterator<V> iterator() {
@@ -77,20 +77,134 @@ public class DocIterate {
     };
   }
 
-  static final DocIterationFilter<Object> FORWARD_DEPTH_FIRST_ITERATOR =
-      new DocIterationFilter<Object>() {
+  /*
+   * Filters
+   */
 
-        @Override
-        public <N, E extends N, T extends N> N next(ReadableDocument<N, E, T> doc,
-            N current, N stopAt) {
-          return DocHelper.getNextNodeDepthFirst(doc, current, stopAt, true);
-        }
+  /** Depth-first recursive iterator that navigates forwards or backwards through the tree. */
+  static class DeepIteratorFilter implements DocIterationFilter<Object, Object, Object, Object> {
+    private final boolean rightwards;
+    DeepIteratorFilter(boolean rightwards) {
+      this.rightwards = rightwards; // store direction.
+    }
 
-        @Override
-        public <N, E extends N,T extends N> N value(ReadableDocument<N, E, T> doc, N node) {
-          return node;
-        }
-      };
+    @Override
+    public Object next(ReadableDocument<Object, Object, Object> doc,
+        Object current, Object stopAt) {
+      return DocHelper.getNextOrPrevNodeDepthFirst(doc, current, stopAt, true, rightwards);
+    }
+    @Override
+    public Object value(ReadableDocument<Object, Object, Object> doc, Object node) {
+      return node;
+    }
+  }
+
+  /** Deep Iterator that skips text nodes. */
+  static class ElementFilter extends DeepIteratorFilter {
+    public ElementFilter(boolean rightwards) {
+      super(rightwards);
+    }
+
+    @Override
+    public Object next(ReadableDocument<Object, Object, Object> doc,
+        Object current, Object stopAt) {
+      Object next = super.next(doc, current, stopAt);
+      while (next != null && doc.asElement(next) == null) {
+        next = super.next(doc, next, stopAt);
+      }
+      return next;
+    }
+
+    @Override
+    public Object value(ReadableDocument<Object, Object, Object> doc, Object node) {
+      Object ret = doc.asElement(super.value(doc, node));
+      assert ret != null;
+      return ret;
+    }
+  }
+
+  /**
+   * Iteration filter that filters out elements by tag name.
+   */
+  static class ElementByTagNameFilter extends ElementFilter {
+    private final String tagName;
+
+    public ElementByTagNameFilter(String tagName, boolean rightwards) {
+      super(rightwards);
+      this.tagName = tagName;
+    }
+
+    @Override
+    public Object next(ReadableDocument<Object, Object, Object> doc,
+        Object current, Object stopAt) {
+      Object next = super.next(doc, current, stopAt);
+      while (next != null && !doc.getTagName(doc.asElement(next)).equals(tagName)) {
+        next = super.next(doc, next, stopAt);
+      }
+      return next;
+    }
+  }
+
+  /*
+   * Overly generic (Object-based) implementations
+   * NOTE(patcoleman): where possible , access by the static casting getter methods versions.
+   */
+
+  /** Depth first forwards/backwards traversal of the tree nodes. */
+  static final DocIterationFilter<Object, Object, Object, Object>
+      FORWARD_DEPTH_FIRST_ITERATOR = new DeepIteratorFilter(true);
+  static final DocIterationFilter<Object, Object, Object, Object>
+      REVERSE_DEPTH_FIRST_ITERATOR = new DeepIteratorFilter(false);
+
+  /** Backwards and forwards element iterator filters. */
+  static final DocIterationFilter<Object, Object, Object, Object>
+      FORWARD_DEPTH_FIRST_ELEMENT_ITERATOR = new ElementFilter(true);
+  static final DocIterationFilter<Object, Object, Object, Object>
+      REVERSE_DEPTH_FIRST_ELEMENT_ITERATOR = new ElementFilter(false);
+
+  /*
+   * Casting wrappers for typesafe iteration. See funge section at the end for sources.
+   * All return DocIterationFilter<?,?,?,?>
+   */
+
+  /** @return A Forward depth first iterator bound to an (N, E, T) type tuple. */
+  @SuppressWarnings("unchecked")
+  public static <N, E extends N, T extends N>
+      DocIterationFilter<N, N, E, T> forwardDepthFirstIterator() {
+    return (DocIterationFilter<N, N, E, T>) fungeForwardDepthFirstIterator();
+  }
+
+  /** @return A Backwards depth first iterator bound to an (N, E, T) type tuple. */
+  @SuppressWarnings("unchecked")
+  public static <N, E extends N, T extends N>
+      DocIterationFilter<N, N, E, T> reverseDepthFirstIterator() {
+    return (DocIterationFilter<N, N, E, T>) fungeReverseDepthFirstIterator();
+  }
+
+  /** @return A Forward depth first iterator bound to an (N, E, T) type tuple. */
+  @SuppressWarnings("unchecked")
+  public static <N, E extends N, T extends N>
+      DocIterationFilter<E, N, E, T> forwardDepthFirstElementIterator() {
+    return (DocIterationFilter<E, N, E, T>) fungeForwardDepthFirstElementIterator();
+  }
+
+  /** @return A Backwards depth first iterator bound to an (N, E, T) type tuple. */
+  @SuppressWarnings("unchecked")
+  public static <N, E extends N, T extends N>
+      DocIterationFilter<E, N, E, T> reverseDepthFirstElementIterator() {
+    return (DocIterationFilter<E, N, E, T>) fungeReverseDepthFirstElementIterator();
+  }
+
+  /** @return A Forwards depth first element iterator bound to an (N, E, T) type tuple. */
+  @SuppressWarnings("unchecked")
+  public static <N, E extends N, T extends N>
+      DocIterationFilter<E, N, E, T> forwardDepthFirstElementByTagNameIterator(String tag) {
+    return (DocIterationFilter<E, N, E, T>) fungeForwardDepthFirstElementTagNameIterator(tag);
+  }
+
+  /*
+   * Iterators - all of these should return Iterable<?>
+   */
 
   /**
    * Iterates using
@@ -101,28 +215,10 @@ public class DocIterate {
    * @param startNode
    * @param stopAt
    */
-  @SuppressWarnings("unchecked") // in the name of a singleton iterator
   public static <N, E extends N, T extends N> Iterable<N> deep(
       final ReadableDocument<N, E, T> doc, final N startNode, final N stopAt) {
-    return iterate(doc, startNode, stopAt,
-        (DocIterationFilter<N>) FORWARD_DEPTH_FIRST_ITERATOR);
+    return iterate(doc, startNode, stopAt, DocIterate.<N, E, T>forwardDepthFirstIterator());
   }
-
-
-  static final DocIterationFilter<Object> REVERSE_DEPTH_FIRST_ITERATOR =
-      new DocIterationFilter<Object>() {
-
-        @Override
-        public <N, E extends N, T extends N> N next(ReadableDocument<N, E, T> doc,
-            N current, N stopAt) {
-          return DocHelper.getPrevNodeDepthFirst(doc, current, stopAt, true);
-        }
-
-        @Override
-        public <N, E extends N,T extends N> N value(ReadableDocument<N, E, T> doc, N node) {
-          return node;
-        }
-      };
 
   /**
    * Iterates using
@@ -133,89 +229,34 @@ public class DocIterate {
    * @param startNode
    * @param stopAt
    */
-  @SuppressWarnings("unchecked") // in the name of a singleton iterator
   public static <N, E extends N, T extends N> Iterable<N> deepReverse(
       final ReadableDocument<N, E, T> doc, final N startNode, final N stopAt) {
-    return iterate(doc, startNode, stopAt,
-        (DocIterationFilter<N>) REVERSE_DEPTH_FIRST_ITERATOR);
+    return iterate(doc, startNode, stopAt, DocIterate.<N, E, T>reverseDepthFirstIterator());
   }
-
-  static class ElementIterator implements DocIterationFilter<Object> {
-    final boolean rightwards;
-
-    public ElementIterator(boolean rightwards) {
-      this.rightwards = rightwards;
-    }
-
-    @Override
-    public <N, E extends N, T extends N> N next(ReadableDocument<N, E, T> doc,
-        N current, N stopAt) {
-      N maybeNext = current;
-      do {
-        maybeNext = DocHelper.getNextOrPrevNodeDepthFirst(doc, maybeNext, stopAt, true, rightwards);
-      } while (maybeNext != null && doc.asElement(maybeNext) == null);
-      return maybeNext;
-    }
-
-    @Override
-    public <N, E extends N,T extends N> N value(ReadableDocument<N, E, T> doc, N node) {
-      assert doc.asElement(node) != null;
-      return node;
-    }
-  }
-
-  static final ElementIterator FORWARD_DEPTH_FIRST_ELEMENT_ITERATOR = new ElementIterator(true);
-  static final ElementIterator REVERSE_DEPTH_FIRST_ELEMENT_ITERATOR = new ElementIterator(false);
 
   /**
    * Same as {@link #deep(ReadableDocument, Object, Object)}, but filters out
    * non-elements
    */
-  @SuppressWarnings("unchecked") // in the name of a singleton iterator
   public static <N, E extends N, T extends N> Iterable<E> deepElements(
       final ReadableDocument<N, E, T> doc, final E startNode, final E stopAt) {
-    return iterate(doc, startNode, stopAt,
-        (DocIterationFilter<E>) (DocIterationFilter) FORWARD_DEPTH_FIRST_ELEMENT_ITERATOR);
+    return iterate(doc, startNode, stopAt, DocIterate.<N, E, T>forwardDepthFirstElementIterator());
   }
 
   /**
-   * Same as {@link #deep(ReadableDocument, Object, Object)}, but filters out
+   * Same as {@link #deepReverse(ReadableDocument, Object, Object)}, but filters out
    * non-elements
    */
-  @SuppressWarnings("unchecked") // in the name of a singleton iterator
   public static <N, E extends N, T extends N> Iterable<E> deepElementsReverse(
       final ReadableDocument<N, E, T> doc, final E startNode, final E stopAt) {
-    return iterate(doc, startNode, stopAt,
-        (DocIterationFilter<E>) (DocIterationFilter) REVERSE_DEPTH_FIRST_ELEMENT_ITERATOR);
+    return iterate(doc, startNode, stopAt, DocIterate.<N, E, T>reverseDepthFirstElementIterator());
   }
 
-  /**
-   * Iteration filter that filters out elements by tag name.
-   */
-  static class ElementByTagNameIterator implements DocIterationFilter<Object> {
-    private String tagName;
-
-    public ElementByTagNameIterator(String tagName) {
-      this.tagName = tagName;
-    }
-
-    @Override
-    public <N, E extends N, T extends N> N next(ReadableDocument<N, E, T> doc,
-        N current, N stopAt) {
-      do {
-        current = DocHelper.getNextNodeDepthFirst(doc, current, stopAt, true);
-        E element = doc.asElement(current);
-        if (element != null && doc.getTagName(element).equals(tagName)) {
-          return element;
-        }
-      } while (current != null);
-      return null;
-    }
-
-    @Override
-    public <N, E extends N, T extends N> E value(ReadableDocument<N, E, T> doc, N node) {
-      return doc.asElement(node);
-    }
+  /** See {@link #deepElementsWithTagName(ReadableDocument, String, Object, Object)}. */
+  public static <N, E extends N, T extends N> Iterable<E> deepElementsWithTagName(
+      final ReadableDocument<N, E, T> doc, String tagName) {
+    return deepElementsWithTagName(
+        doc, tagName, DocHelper.getElementWithTagName(doc, tagName), null);
   }
 
   /**
@@ -224,10 +265,49 @@ public class DocIterate {
    *
    * @return an iterable used for iterating matching elements.
    */
-  @SuppressWarnings("unchecked") // in the name of a singleton iterator
   public static <N, E extends N, T extends N> Iterable<E> deepElementsWithTagName(
-      final ReadableDocument<N, E, T> doc, String tagName) {
-    return iterate(doc, DocHelper.getElementWithTagName(doc, tagName), null,
-        (DocIterationFilter<E>) (DocIterationFilter) new ElementByTagNameIterator(tagName));
+      final ReadableDocument<N, E, T> doc, String tagName, final E startNode, final E stopAt) {
+    return iterate(doc, startNode, stopAt,
+        DocIterate.<N, E, T>forwardDepthFirstElementByTagNameIterator(tagName));
+  }
+
+  /*
+   * Funge methods for unfurling generics, required only for Sun JDK compiler.
+   */
+
+  /** @return A Forward depth first filter funged to the type N. */
+  @SuppressWarnings("unchecked")
+  private static <N> DocIterationFilter<?, N, ?, ?> fungeForwardDepthFirstIterator() {
+    return (DocIterationFilter<?, N, ?, ?>) FORWARD_DEPTH_FIRST_ITERATOR;
+  }
+
+  /** @return A Backwards depth first filter funged to the type N. */
+  @SuppressWarnings("unchecked")
+  private static <N> DocIterationFilter<?, N, ?, ?> fungeReverseDepthFirstIterator() {
+    return (DocIterationFilter<?, N, ?, ?>) REVERSE_DEPTH_FIRST_ITERATOR;
+  }
+
+  /** @return A Forward depth first element filter funged to the type N. */
+  @SuppressWarnings("unchecked")
+  private static <N> DocIterationFilter<?, N, ?, ?> fungeForwardDepthFirstElementIterator() {
+    return (DocIterationFilter<?, N, ?, ?>) FORWARD_DEPTH_FIRST_ELEMENT_ITERATOR;
+  }
+
+  /** @return A Backwards depth first element filter funged to the type N. */
+  @SuppressWarnings("unchecked")
+  private static <N> DocIterationFilter<?, N, ?, ?> fungeReverseDepthFirstElementIterator() {
+    return (DocIterationFilter<?, N, ?, ?>) REVERSE_DEPTH_FIRST_ELEMENT_ITERATOR;
+  }
+
+  /** @return A Forward depth first element filter by tag name, funged to the type N. */
+  @SuppressWarnings("unchecked")
+  private static <N> DocIterationFilter<?, N, ?, ?> fungeForwardDepthFirstElementTagNameIterator(
+      String tagName) {
+    // NOTE(patcoleman): Must remain on two lines so the compiler knows what it's doing.
+    // Here we have to funge an ElementByTagName filter into a DocIterationFilter, then funge in
+    // the N type, then funge in the remainding generics. Fun.
+    DocIterationFilter<Object, Object, Object, Object> filter
+        = new ElementByTagNameFilter(tagName, true);
+    return (DocIterationFilter<?, N, ?, ?>) filter;
   }
 }

@@ -24,107 +24,112 @@ public class IdentityView<N, E extends N, T extends N>
 
   protected IdentityView(ReadableDocument<N, E, T> inner) {
     Preconditions.checkNotNull(inner, "IdentityView (or subclass): " +
-    		"Inner document may not be null!");
+        "Inner document may not be null!");
     this.inner = inner;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public E asElement(N node) {
     return inner.asElement(node);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public T asText(N node) {
     return inner.asText(node);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public String getAttribute(E element, String name) {
     return inner.getAttribute(element, name);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public Map<String, String> getAttributes(E element) {
     return inner.getAttributes(element);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public String getData(T textNode) {
     return inner.getData(textNode);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public E getDocumentElement() {
     return inner.getDocumentElement();
   }
 
-  /** {@inheritDoc} */
+  @Override
   public int getLength(T textNode) {
     return inner.getLength(textNode);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public short getNodeType(N node) {
     return inner.getNodeType(node);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public String getTagName(E element) {
     return inner.getTagName(element);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public boolean isSameNode(N node, N other) {
     return inner.isSameNode(node, other);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public N getFirstChild(N node) {
     return inner.getFirstChild(node);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public N getLastChild(N node) {
     return inner.getLastChild(node);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public N getNextSibling(N node) {
     return inner.getNextSibling(node);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public E getParentElement(N node) {
     return inner.getParentElement(node);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public N getPreviousSibling(N node) {
     return inner.getPreviousSibling(node);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public N getVisibleNode(N node) {
     return node;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public N getVisibleNodeFirst(N node) {
     return node;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public N getVisibleNodeLast(N node) {
     return node;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public N getVisibleNodeNext(N node) {
     return node;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public N getVisibleNodePrevious(N node) {
     return node;
+  }
+
+  @Override
+  public void onBeforeFilter(Point<N> at) {
+    // do nothing.
   }
 }

@@ -61,6 +61,6 @@ public interface StringMap<V> extends ReadableStringMap<V> {
    * order.  If the filter returns false, the pair is removed from the map;
    * if it returns true, it remains.
    */
-  void filter(EntryFilter<V> filter);
+  void filter(EntryFilter<? super V> filter);
 
 }
