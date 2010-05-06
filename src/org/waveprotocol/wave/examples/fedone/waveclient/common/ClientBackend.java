@@ -178,7 +178,7 @@ public class ClientBackend {
     this.userId = new ParticipantId(userAtDomain);
     this.idGenerator = new RandomIdGenerator(userId.getDomain());
     this.uriCodec = new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
-    this.rpcChannel = new WebSocketClientRpcChannel(new InetSocketAddress(server, port));
+    this.rpcChannel = new ClientRpcChannel(new InetSocketAddress(server, port));
     this.rpcServer = ProtocolWaveClientRpc.newStub(rpcChannel);
 
     // Opening the index wave will kickstart the process of receiving waves
