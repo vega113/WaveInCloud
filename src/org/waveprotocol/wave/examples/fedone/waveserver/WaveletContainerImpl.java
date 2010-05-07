@@ -402,7 +402,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       if (clientAuthor.equals(serverAuthor) && clientOps.equals(serverOps)) {
         return d;
       }
-      clientOps = transformOps(clientOps, serverOps);
+      clientOps = transformOps(clientOps, clientAuthor, serverOps, serverAuthor);
     }
     return new VersionedWaveletDelta(new WaveletDelta(clientAuthor, clientOps), currentVersion);
   }
@@ -412,18 +412,21 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * returning the transformed client operations in a new list.
    *
    * @param clientOps may be unmodifiable
+   * @param clientAuthor
    * @param serverOps may be unmodifiable
+   * @param serverAuthor
    * @return The transformed client ops
    */
-  private List<WaveletOperation> transformOps(List<WaveletOperation> clientOps,
-      List<WaveletOperation> serverOps) throws OperationException {
+  private List<WaveletOperation> transformOps(
+      List<WaveletOperation> clientOps, ParticipantId clientAuthor,
+      List<WaveletOperation> serverOps, ParticipantId serverAuthor) throws OperationException {
     List<WaveletOperation> transformedClientOps = new ArrayList<WaveletOperation>();
 
     for (WaveletOperation c : clientOps) {
       for (WaveletOperation s : serverOps) {
         OperationPair<WaveletOperation> pair;
         try {
-          pair = Transform.transform(c, s);
+          pair = Transform.transform(c, clientAuthor, s, serverAuthor);
         } catch (TransformException e) {
           throw new OperationException(e);
         }
