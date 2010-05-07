@@ -49,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
 /**
  * Tests {@link WaveClientRpcImpl}.
@@ -102,7 +103,8 @@ public class WaveClientRpcImplTest extends TestCase {
 
     @Override
     public void openRequest(ParticipantId participant, WaveId waveId,
-        Set<String> waveletIdPrefixes, int maximumInitialWavelets, OpenListener openListener) {
+        Set<String> waveletIdPrefixes, int maximumInitialWavelets, boolean snapshotsEnabled,
+        OpenListener openListener) {
       openListeners.put(waveId, openListener);
     }
 
@@ -116,7 +118,8 @@ public class WaveClientRpcImplTest extends TestCase {
     public void waveletCommitted(WaveletName waveletName, ProtocolHashedVersion version) {
       OpenListener listener = openListeners.get(waveletName.waveId);
       if (listener != null) {
-        listener.onCommit(waveletName, HASHED_VERSION);
+        final List<ProtocolWaveletDelta> emptyList = Collections.emptyList();
+        listener.onUpdate(waveletName, null, emptyList, null, HASHED_VERSION);
       }
     }
 
@@ -125,7 +128,7 @@ public class WaveClientRpcImplTest extends TestCase {
         ProtocolHashedVersion resultingVersion, Map<String, BufferedDocOp> documentState) {
       OpenListener listener = openListeners.get(waveletName.waveId);
       if (listener != null) {
-        listener.onUpdate(waveletName, newDeltas, resultingVersion);
+        listener.onUpdate(waveletName, null, newDeltas, resultingVersion, null);
       }
     }
   }

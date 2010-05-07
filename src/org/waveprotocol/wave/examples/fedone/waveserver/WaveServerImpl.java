@@ -276,9 +276,9 @@ public class WaveServerImpl implements WaveServer {
       long lengthLimit, HistoryResponseListener listener) {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
-      listener.onFailure(FederationErrors.badRequest("Wavlet " + waveletName + " does not exist."));
-      LOG.info("Request history: " + domain + " requested non-existant wavelet: " +
-          waveletName);
+      listener.onFailure(FederationErrors.badRequest("Wavelet " + waveletName
+          + " does not exist."));
+      LOG.info("Request history: " + domain + " requested non-existent wavelet: " + waveletName);
     } else {
       // TODO: once we support federated groups, expand support to request
       // remote wavelets too.
@@ -371,11 +371,11 @@ public class WaveServerImpl implements WaveServer {
   // -------------------------------------------------------------------------------------------
 
   @Override
-  public NavigableSet<ProtocolWaveletDelta> requestHistory(WaveletName waveletName,
+  public NavigableSet<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
       ProtocolHashedVersion startVersion, ProtocolHashedVersion endVersion) {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
-      LOG.info("Client request for history made for non-existant wavelet: " + waveletName);
+      LOG.info("Client request for history made for non-existent wavelet: " + waveletName);
       return null;
     } else {
       NavigableSet<ProtocolWaveletDelta> deltaHistory = null;
@@ -394,6 +394,17 @@ public class WaveServerImpl implements WaveServer {
         }
       }
       return deltaHistory;
+    }
+  }
+
+  @Override
+  public <T> T getSnapshot(WaveletName waveletName, WaveletSnapshotBuilder<T> builder) {
+    WaveletContainer wc = getWavelet(waveletName);
+    if (wc == null) {
+      LOG.info("client requested snapshot for non-existent wavelet: " + waveletName);
+      return null;
+    } else {
+      return wc.getSnapshot(builder);
     }
   }
 
@@ -417,9 +428,9 @@ public class WaveServerImpl implements WaveServer {
    *        domains this wave server regards as local wavelets.
    * @param federationHostFactory factory that returns federation host instance listening
    *        on a given domain.
-   * @param federationRemote
-   * @param localWaveletContainerFactory
-   * @param remoteWaveletContainerFactory
+   * @param federationRemote federation remote interface
+   * @param localWaveletContainerFactory factory for local WaveletContainers
+   * @param remoteWaveletContainerFactory factory for remote WaveletContainers
    */
   @Inject
   public WaveServerImpl(CertificateManager certificateManager,
@@ -569,6 +580,7 @@ public class WaveServerImpl implements WaveServer {
       try {
         LOG.info("## WS: Got submit: " + waveletName + " delta: " + waveletDelta);
 
+        // TODO(arb): add v0 policer here.
         wc = getOrCreateLocalWavelet(waveletName,
             new ParticipantId(waveletDelta.getMessage().getAuthor()));
 

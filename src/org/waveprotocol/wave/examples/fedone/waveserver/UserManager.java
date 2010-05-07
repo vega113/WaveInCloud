@@ -31,6 +31,7 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -163,7 +164,7 @@ final class UserManager {
     List<OpenListener> listeners = matchSubscriptions(waveletName);
     for (OpenListener listener : listeners) {
       try {
-        listener.onUpdate(waveletName, deltas, deltas.getEndVersion());
+        listener.onUpdate(waveletName, null, deltas, deltas.getEndVersion(), null);
       } catch (IllegalStateException e) {
         // TODO: remove the listener
       }
@@ -183,9 +184,10 @@ final class UserManager {
     if (!isParticipant(waveletName)) {
       throw new IllegalStateException("Not a participant of wavelet " + waveletName);
     }
+    List<ProtocolWaveletDelta> emptyList = Collections.emptyList();
     List<OpenListener> listeners = matchSubscriptions(waveletName);
     for (OpenListener listener : listeners) {
-      listener.onCommit(waveletName, version);
+      listener.onUpdate(waveletName, null, emptyList, null, version);
     }
   }
 

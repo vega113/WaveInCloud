@@ -40,6 +40,7 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSu
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
@@ -262,6 +263,7 @@ public class ClientBackend {
     openRequest.setParticipantId(getUserId().getAddress());
     openRequest.setWaveId(waveId.serialise());
     openRequest.addWaveletIdPrefix(waveletIdPrefix);
+    openRequest.setSnapshots(true);
 
     final RpcController rpcController = rpcChannel.newRpcController();
     waveControllers.put(waveId, rpcController);
@@ -461,24 +463,32 @@ public class ClientBackend {
       wavelet = wave.createWavelet(waveletName.waveletId);
     }
 
-    if (waveletUpdate.hasCommitNotice()) {
-      Preconditions.checkArgument(waveletUpdate.getAppliedDeltaList().isEmpty());
-      Preconditions.checkArgument(!waveletUpdate.hasResultingVersion());
 
-      for (WaveletOperationListener listener : waveletOperationListeners) {
-        listener.onCommitNotice(wavelet, WaveletOperationSerializer
-                .deserialize(waveletUpdate.getCommitNotice()));
+    // Apply operations to the wavelet.
+    List<Pair<String, WaveletOperation>> successfulOps = Lists.newArrayList();
+    if (waveletUpdate.hasSnapshot()) {
+      Preconditions.checkArgument(waveletUpdate.hasResultingVersion());
+      final WaveletSnapshot snapshot = waveletUpdate.getSnapshot();
+      // Kinda bogus - we need something better here.
+      // TODO(arb): talk to soren about this - what should we do about contributors?
+      final String creator = snapshot.getParticipantId(0);
+      for (WaveletOperation op : WaveletOperationSerializer.deserialize(snapshot)) {
+        try {
+          op.apply(wavelet);
+          successfulOps.add(Pair.of(creator, op));
+        } catch (OperationException e) {
+          // It should be okay (if cheeky) for the client to just ignore failed ops.  In any case,
+          // this should never happen if our server is behaving correctly.
+          LOG.severe("OperationException when applying snapshot " + op + " to " + wavelet);
+        }
       }
-    } else {
+    } else if (!waveletUpdate.getAppliedDeltaList().isEmpty()) {
       Preconditions.checkArgument(waveletUpdate.hasResultingVersion());
       Preconditions.checkArgument(!waveletUpdate.getAppliedDeltaList().isEmpty());
 
-      // Apply operations to the wavelet.
-      List<Pair<String, WaveletOperation>> successfulOps = Lists.newArrayList();
-
       for (ProtocolWaveletDelta protobufDelta : waveletUpdate.getAppliedDeltaList()) {
         Pair<WaveletDelta, HashedVersion> deltaAndVersion =
-          WaveletOperationSerializer.deserialize(protobufDelta);
+            WaveletOperationSerializer.deserialize(protobufDelta);
         List<WaveletOperation> ops = deltaAndVersion.first.getOperations();
 
         for (WaveletOperation op : ops) {
@@ -492,27 +502,37 @@ public class ClientBackend {
           }
         }
       }
+    }
 
+    if (waveletUpdate.hasResultingVersion()) {
       wave.setWaveletVersion(waveletName.waveletId, WaveletOperationSerializer
           .deserialize(waveletUpdate.getResultingVersion()));
-
-      // If we have been removed from this wavelet then remove the data too, since if we're re-added
-      // then the deltas will come from version 0, not the latest version we've seen.
-      if (!wavelet.getParticipants().contains(getUserId())) {
-        wave.removeWavelet(waveletName.waveletId);
-      }
-
-      // If it was an update to the index wave, might need to open/close some more waves.
-      if (wave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
-        syncWithIndexWave(wave);
-      }
-
-      // Push the events to the event queue.
-      for (Pair<String, WaveletOperation> authorAndOp : successfulOps) {
-        eventQueue.offer(new WaveletEventData(authorAndOp.first, wavelet, authorAndOp.second));
-      }
-      eventQueue.offer(new WaveletEventData(wavelet));
     }
+    // If we have been removed from this wavelet then remove the data too, since if we're re-added
+    // then we will get a fresh snapshot or deltas from version 0, not the latest version we've
+    // seen.
+    if (!wavelet.getParticipants().contains(getUserId())) {
+      wave.removeWavelet(waveletName.waveletId);
+    }
+
+    // If it was an update to the index wave, might need to open/close some more waves.
+    if (wave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
+      syncWithIndexWave(wave);
+    }
+
+    // Push the events to the event queue.
+    for (Pair<String, WaveletOperation> authorAndOp : successfulOps) {
+      eventQueue.offer(new WaveletEventData(authorAndOp.first, wavelet, authorAndOp.second));
+    }
+    eventQueue.offer(new WaveletEventData(wavelet));
+
+    if (waveletUpdate.hasCommitNotice()) {
+      for (WaveletOperationListener listener : waveletOperationListeners) {
+        listener.onCommitNotice(wavelet, WaveletOperationSerializer
+            .deserialize(waveletUpdate.getCommitNotice()));
+      }
+    }
+
   }
 
   /**

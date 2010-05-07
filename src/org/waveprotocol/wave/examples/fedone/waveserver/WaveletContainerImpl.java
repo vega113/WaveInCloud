@@ -275,6 +275,16 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     return waveletData;
   }
 
+  @Override
+  public <T> T getSnapshot(WaveletSnapshotBuilder<T> builder) {
+    acquireWriteLock();
+    try {
+      return builder.build(waveletData, currentVersion, lastCommittedVersion);
+    } finally {
+      releaseWriteLock();
+    }
+  }
+
   /**
    * Transform a wavelet delta if it has been submitted against a different head (currentVersion).
    * Must be called with write lock held.

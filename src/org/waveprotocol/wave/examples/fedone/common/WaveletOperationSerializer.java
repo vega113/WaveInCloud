@@ -43,6 +43,8 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.DocumentSnapshot;
 
 import java.util.List;
 import java.util.Map;
@@ -294,6 +296,26 @@ public class WaveletOperationSerializer {
       throw new IllegalArgumentException("Unsupported operation: " + protobufOp);
     }
   }
+
+  /**
+   * Deserialize a {@link WaveletSnapshot} into a list of {@link WaveletOperation}s.
+   *
+   * @param snapshot snapshot protocol buffer to deserialize
+   * @return a list of operations
+   */
+   public static List<WaveletOperation> deserialize(WaveletSnapshot snapshot) {
+     List<WaveletOperation> ops = Lists.newArrayList();
+     for (String participant : snapshot.getParticipantIdList()) {
+       AddParticipant addOp = new AddParticipant(new ParticipantId(participant));
+       ops.add(addOp);
+     }
+     for (DocumentSnapshot document : snapshot.getDocumentList()) {
+       WaveletDocumentOperation docOp = new WaveletDocumentOperation(document.getDocumentId(),
+           deserialize(document.getDocumentOperation()));
+       ops.add(docOp);
+     }
+     return ops;
+   }
 
   /**
    * Deserialize a {@link ProtocolDocumentOperation} into a {@link DocOp}.

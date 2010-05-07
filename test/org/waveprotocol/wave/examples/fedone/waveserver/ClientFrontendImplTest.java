@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.inject.internal.Nullable;
 
 import junit.framework.TestCase;
 
@@ -135,9 +136,9 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testInitialOpenRequestYieldsNothing() {
     OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, listener);
+    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, listener);
     verifyZeroInteractions(listener);
-    clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE,
+    clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false,
         listener);
     // we don't expect any invocations on the listener
     verifyZeroInteractions(listener);
@@ -150,7 +151,7 @@ public class ClientFrontendImplTest extends TestCase {
   public void testDeltasArentPropagatedIfNotSubscribedToWavelet() {
     OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, WAVE_ID, ImmutableSet.of("nonexisting-wavelet"),
-        Integer.MAX_VALUE, listener);
+        Integer.MAX_VALUE, false, listener);
     clientFrontend.waveletUpdate(
         WAVELET_NAME, DELTAS, DELTAS.getEndVersion(), DOCUMENT_STATE);
     verifyZeroInteractions(listener);
@@ -186,9 +187,9 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenThenSendDeltas() {
     OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, listener);
+    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, listener);
     clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "");
-    verify(listener).onUpdate(WAVELET_NAME, DELTAS, DELTAS.getEndVersion());
+    verify(listener).onUpdate(WAVELET_NAME, null, DELTAS, DELTAS.getEndVersion(), null);
 
   }
 
@@ -199,7 +200,8 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenIndexThenSendDeltasNotOfInterest() {
     OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, listener);
+    clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false,
+        listener);
     List<? extends WaveletOperation> ops = ImmutableList.of(NoOp.INSTANCE);
     WaveletDelta delta = new WaveletDelta(USER, ops);
     DeltaSequence deltas = new DeltaSequence(
@@ -219,19 +221,20 @@ public class ClientFrontendImplTest extends TestCase {
     ProtocolHashedVersion endVersion = null;
 
     @Override
-    public void onCommit(WaveletName wn, ProtocolHashedVersion commitNotice) {
-      fail("unexpected");
-    }
-
-    @Override
     public void onFailure(String errorMessage) {
       fail("unexpected");
     }
 
     @Override
-    public void onUpdate(WaveletName wn, List<ProtocolWaveletDelta> newDeltas,
-        ProtocolHashedVersion endVersion) {
+    public void onUpdate(WaveletName wn,
+        @Nullable WaveletSnapshotAndVersions snapshot,
+        List<ProtocolWaveletDelta> newDeltas,
+        @Nullable ProtocolHashedVersion endVersion,
+        @Nullable ProtocolHashedVersion committedVersion) {
+      assertNull(snapshot);
       assertNull(this.waveletName); // make sure we're not called twice
+      assertNotNull(endVersion);
+      // TODO(arb): check the committedVersion field correctly
       this.waveletName = wn;
       this.deltas = new DeltaSequence(newDeltas, endVersion);
       this.endVersion = endVersion;
@@ -280,7 +283,8 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenIndexThenSendInterestingDeltas() {
     UpdateListener listener = new UpdateListener();
-    clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, listener);
+    clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false,
+        listener);
 
     waveletUpdate(VERSION_0,
         ImmutableMap.of("default", makeAppend(0, "Hello, world\nignored text")),
@@ -306,7 +310,7 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenAfterVersionZero() {
     UpdateListener oldListener = new UpdateListener();
-    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, oldListener);
+    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, oldListener);
     Map<String, BufferedDocOp> documentState = Maps.newHashMap();
 
     BufferedDocOp addTextOp = makeAppend(0, "Hello, world");
@@ -316,21 +320,21 @@ public class ClientFrontendImplTest extends TestCase {
 
     assertTrue(!oldListener.deltas.isEmpty());
 
-    // TODO(tobiast): Let requestHistory() return a DeltaSequence, and simplify this test
+    // TODO(tobiast): Let getHistory() return a DeltaSequence, and simplify this test
     NavigableSet<ProtocolWaveletDelta> expectedDeltas = new TreeSet<ProtocolWaveletDelta>(
         WaveletContainerImpl.transformedDeltaComparator);
     expectedDeltas.addAll(ImmutableList.copyOf(oldListener.deltas));
     ProtocolHashedVersion startVersion = serialize(HashedVersion.versionZero(WAVELET_NAME));
-    when(waveletProvider.requestHistory(WAVELET_NAME, startVersion,
+    when(waveletProvider.getHistory(WAVELET_NAME, startVersion,
         oldListener.endVersion)).thenReturn(expectedDeltas);
 
     UpdateListener newListener = new UpdateListener();
-    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, newListener);
+    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, newListener);
     // Upon subscription, newListener immediately got all the previous deltas
     assertEquals(oldListener.deltas, newListener.deltas);
     assertEquals(oldListener.endVersion, newListener.endVersion);
 
-    when(waveletProvider.requestHistory(WAVELET_NAME,
+    when(waveletProvider.getHistory(WAVELET_NAME,
         serialize(HashedVersion.versionZero(WAVELET_NAME)), oldListener.endVersion)).thenReturn(
         expectedDeltas
         );

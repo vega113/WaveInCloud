@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import com.google.inject.internal.Nullable;
+
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -62,16 +64,18 @@ public interface ClientFrontend extends WaveletListener {
    * @param waveId the wave id.
    * @param waveletIdPrefixes set containing restricts on the wavelet id's.
    * @param maximumInitialWavelets limit on the number of wavelets to
+   * @param snapshotsEnabled
    * @param openListener callback for updates.
    */
 
   void openRequest(ParticipantId participant, WaveId waveId, Set<String> waveletIdPrefixes,
-      int maximumInitialWavelets, OpenListener openListener);
+      int maximumInitialWavelets, boolean snapshotsEnabled, OpenListener openListener);
 
   interface OpenListener {
-    void onUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> deltas,
-        ProtocolHashedVersion endVersion);
-    void onCommit(WaveletName waveletName, ProtocolHashedVersion commitNotice);
+    void onUpdate(WaveletName waveletName,
+        @Nullable WaveletSnapshotAndVersions snapshot,
+        List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
+        @Nullable ProtocolHashedVersion committedVersion);
     void onFailure(String errorMessage);
   }
 }

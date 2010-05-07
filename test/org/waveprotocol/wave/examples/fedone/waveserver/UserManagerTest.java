@@ -19,6 +19,7 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.internal.Nullable;
 
 import junit.framework.TestCase;
 
@@ -134,10 +135,7 @@ public class UserManagerTest extends TestCase {
       this.serializedForm = serializedForm;
     }
 
-    @Override
-    public void onCommit(WaveletName waveletName, ProtocolHashedVersion commitNotice) {
-      throw new UnsupportedOperationException();
-    }
+
 
     @Override
     public void onFailure(String errorMessage) {
@@ -145,8 +143,10 @@ public class UserManagerTest extends TestCase {
     }
 
     @Override
-    public void onUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> deltas,
-        ProtocolHashedVersion resultingVersion) {
+    public void onUpdate(WaveletName waveletName,
+        @Nullable WaveletSnapshotAndVersions snapshot,
+        List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
+        @Nullable ProtocolHashedVersion committedVersion) {
       throw new UnsupportedOperationException();
     }
 
@@ -247,8 +247,10 @@ public class UserManagerTest extends TestCase {
     final AtomicInteger updates = new AtomicInteger(0);
     OpenListener listener = new MockListener("1") {
       @Override
-      public void onUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> deltas,
-          ProtocolHashedVersion endVersion) {
+      public void onUpdate(WaveletName waveletName,
+          @Nullable WaveletSnapshotAndVersions snapshot,
+          List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
+          @Nullable ProtocolHashedVersion committedVersion) {
         updates.incrementAndGet();
         assertEquals(DELTAS, new DeltaSequence(deltas, endVersion));
       }

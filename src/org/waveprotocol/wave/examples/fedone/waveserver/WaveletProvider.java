@@ -48,7 +48,7 @@ public interface WaveletProvider {
       SubmitResultListener listener);
 
   /**
-   * Retrieve the wavlet history of deltas applied to the wavelet.
+   * Retrieve the wavelet history of deltas applied to the wavelet.
    *
    * @param waveletName name of wavelet.
    * @param versionStart start version (inclusive), minimum 0.
@@ -56,6 +56,16 @@ public interface WaveletProvider {
    * @return deltas in the range as requested, or null if there was an error. Note that
    *         if a delta straddles one of the requested version boundaries, it will be included.
    */
-  NavigableSet<ProtocolWaveletDelta> requestHistory(WaveletName waveletName,
+  NavigableSet<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
       ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd);
+
+  /**
+   * Request the current state of the wavelet.
+   *
+   * @param waveletName the name of the wavelet
+   * @return the wavelet as @code{WaveletData} or null if the wavelet doesn't exist
+   */
+  <T> T getSnapshot(WaveletName waveletName, WaveletSnapshotBuilder<T> builder);
+
+  // TODO(arb): add getLastCommittedVersion
 }

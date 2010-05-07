@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.inject.Inject;
+import com.google.inject.internal.Nullable;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
@@ -86,19 +87,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
     }
 
     frontend.openRequest(id, waveId, prefixes, request.getMaximumWavelets(),
-        new OpenListener() {
-          @Override
-          public void onCommit(WaveletName waveletName, ProtocolHashedVersion commitNotice) {
-            try {
-              ProtocolWaveletUpdate.Builder builder = ProtocolWaveletUpdate.newBuilder();
-              builder.setWaveletName(uriCodec.waveletNameToURI(waveletName));
-              builder.setCommitNotice(commitNotice);
-              done.run(builder.build());
-            } catch (EncodingException e) {
-              LOG.warning(e.getMessage());
-              controller.setFailed(e.getMessage());
-            }
-          }
+        false, new OpenListener() {
 
           @Override
           public void onFailure(String errorMessage) {
@@ -107,13 +96,31 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
           }
 
           @Override
-          public void onUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> deltas,
-              ProtocolHashedVersion resultingVersion) {
+          public void onUpdate(WaveletName waveletName,
+              @Nullable WaveletSnapshotAndVersions snapshot,
+              List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
+              @Nullable ProtocolHashedVersion committedVersion) {
             ProtocolWaveletUpdate.Builder builder = ProtocolWaveletUpdate.newBuilder();
             try {
               builder.setWaveletName(uriCodec.waveletNameToURI(waveletName));
               builder.addAllAppliedDelta(deltas);
-              builder.setResultingVersion(resultingVersion);
+              if (snapshot != null) {
+                builder.setSnapshot(snapshot.snapshot);
+                if (snapshot.currentVersion != null) {
+                  builder.setResultingVersion(snapshot.currentVersion);
+                }
+                if (snapshot.committedVersion != null) {
+                  builder.setCommitNotice(snapshot.committedVersion);
+                }
+              } else {
+                if (endVersion != null) {
+                  builder.setResultingVersion(endVersion);
+                }
+                if (committedVersion != null) {
+                  builder.setCommitNotice(committedVersion);
+                }
+              }
+
               done.run(builder.build());
             } catch (EncodingException e) {
               LOG.warning(e.getMessage());

@@ -51,9 +51,11 @@ abstract interface WaveletContainer {
 
   WaveletData getWaveletData();
 
+  <T> T getSnapshot(WaveletSnapshotBuilder<T> builder);
+
   // TODO: decide which to go for depending on common.proto modification. ###
   /**
-   * Retrieve the wavlet history of deltas applied to the wavelet.
+   * Retrieve the wavelet history of deltas applied to the wavelet.
    *
    * @param versionStart start version (inclusive), minimum 0.
    * @param versionEnd end version (exclusive).
@@ -66,7 +68,7 @@ abstract interface WaveletContainer {
       throws WaveletStateException;
 
   /**
-   * Retrieve the wavlet history of deltas applied to the wavelet, with additional
+   * Retrieve the wavelet history of deltas applied to the wavelet, with additional
    * safety check that
    *
    * @param versionStart start version (inclusive), minimum 0.

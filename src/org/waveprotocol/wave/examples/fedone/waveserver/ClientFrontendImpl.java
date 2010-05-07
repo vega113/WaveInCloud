@@ -33,6 +33,8 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.DocumentSnapshot;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -52,12 +54,14 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.waveserver.SubmitResultListener;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -164,7 +168,7 @@ public class ClientFrontendImpl implements ClientFrontend {
 
   @Override
   public void openRequest(ParticipantId participant, WaveId waveId, Set<String> waveletIdPrefixes,
-      int maximumInitialWavelets, OpenListener openListener) {
+      int maximumInitialWavelets, boolean snapshotsEnabled, OpenListener openListener) {
     if (waveletIdPrefixes == null || waveletIdPrefixes.isEmpty()) {
       waveletIdPrefixes = ImmutableSet.of("");
     }
@@ -190,22 +194,73 @@ public class ClientFrontendImpl implements ClientFrontend {
         ProtocolHashedVersion startVersion = perWavelet.get(sourceWaveletName).version0;
         ProtocolHashedVersion endVersion = userManager.getWaveletVersion(sourceWaveletName);
 
-        DeltaSequence deltaSequence = new DeltaSequence(
-            waveletProvider.requestHistory(sourceWaveletName, startVersion, endVersion),
-            endVersion);
-        if (isIndexWave) { // Construct fake index wave deltas from the deltas
-          String newDigest = perWavelet.get(sourceWaveletName).digest;
-          deltaSequence = createIndexDeltas(startVersion, deltaSequence, "", newDigest);
+        List<ProtocolWaveletDelta> deltaList;
+        WaveletSnapshotAndVersions snapshot;
+
+        // TODO(arb): can I snapshot the indexWave?
+        if (isIndexWave || !snapshotsEnabled) {
+          DeltaSequence deltaSequence = new DeltaSequence(
+              waveletProvider.getHistory(sourceWaveletName, startVersion, endVersion),
+              endVersion);
+          if (isIndexWave) { // Construct fake index wave deltas from the deltas
+            String newDigest = perWavelet.get(sourceWaveletName).digest;
+            deltaSequence = createIndexDeltas(startVersion, deltaSequence, "", newDigest);
+          }
+          deltaList = deltaSequence;
+          endVersion = deltaSequence.getEndVersion();
+          snapshot = null;
+        } else {
+          // TODO(arb): when we have uncommitted deltas, look them up here.
+          deltaList = Collections.emptyList();
+          WaveletSnapshotBuilder<WaveletSnapshotAndVersions> snapshotBuilder =
+              new WaveletSnapshotBuilder<WaveletSnapshotAndVersions>() {
+                @Override
+                public WaveletSnapshotAndVersions build(WaveletData waveletData,
+                    HashedVersion currentVersion, ProtocolHashedVersion committedVersion) {
+                  return new WaveletSnapshotAndVersions(serializeSnapshot(waveletData),
+                      currentVersion, committedVersion);
+                }
+              };
+          snapshot = waveletProvider.getSnapshot(sourceWaveletName, snapshotBuilder);
         }
 
         // TODO: Once we've made sure that all listeners have received the
         // same number of ops for the index wavelet, enable the following check:
-        //if (!deltaSequence.getEndVersion().equals(userManager.getWaveletVersion(waveletName))) {
+        //if (!deltaList.getEndVersion().equals(userManager.getWaveletVersion(waveletName))) {
         //  throw new IllegalStateException(..)
         // }
-        openListener.onUpdate(waveletName, deltaSequence, deltaSequence.getEndVersion());
+        if (snapshot == null) {
+          // TODO(arb): get the LCV - maybe add to waveletProvider?
+          openListener.onUpdate(waveletName, snapshot, deltaList, endVersion,
+              null);
+        } else {
+          openListener.onUpdate(waveletName, snapshot, deltaList, endVersion,
+              snapshot.committedVersion);
+        }
       }
     }
+  }
+
+  /**
+   * Serializes a WaveletData into a WaveletSnapshot protobuffer.
+   *
+   * @param snapshot the snapshot
+   * @return the new protobuffer
+   */
+  private WaveletSnapshot serializeSnapshot(WaveletData snapshot) {
+    WaveletSnapshot.Builder snapshotBuilder = WaveletSnapshot.newBuilder();
+    Map<String, BufferedDocOp> documentMap = snapshot.getDocuments();
+    for (Entry<String,BufferedDocOp> document : documentMap.entrySet()) {
+      DocumentSnapshot.Builder documentBuilder = DocumentSnapshot.newBuilder();
+      documentBuilder.setDocumentId(document.getKey());
+      documentBuilder.setDocumentOperation(
+          WaveletOperationSerializer.serialize(document.getValue()));
+      snapshotBuilder.addDocument(documentBuilder.build());
+    }
+    for (ParticipantId participant : snapshot.getParticipants()) {
+      snapshotBuilder.addParticipantId(participant.toString());
+    }
+    return snapshotBuilder.build();
   }
 
   private static class SubmitResultListenerAdapter implements SubmitResultListener {
@@ -290,7 +345,7 @@ public class ClientFrontendImpl implements ClientFrontend {
       ProtocolHashedVersion version0 = perWavelet.get(waveletName).version0;
       ProtocolHashedVersion firstKnownDelta = newDeltas.getStartVersion();
       deltasToSend = newDeltas.prepend(
-          waveletProvider.requestHistory(waveletName, version0, firstKnownDelta));
+          waveletProvider.getHistory(waveletName, version0, firstKnownDelta));
       oldDigest = "";
     } else {
       deltasToSend = newDeltas;
