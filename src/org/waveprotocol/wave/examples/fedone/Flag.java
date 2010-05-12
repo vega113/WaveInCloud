@@ -32,7 +32,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface Flag {
   String name();
-  // TODO: setting mandatory to false makes the binding fail.
-  boolean mandatory() default true;
   String description() default "";
+  String defaultValue() default "";
 }

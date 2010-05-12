@@ -24,6 +24,7 @@ import com.google.inject.name.Names;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -95,11 +96,16 @@ public class FlagBinder {
       }
 
       Flag flag = field.getAnnotation(Flag.class);
-      options.addOption(OptionBuilder.withLongOpt(flag.name())
-          .withDescription(flag.description())
+      final OptionBuilder option = OptionBuilder.withLongOpt(flag.name())
           .hasArg()
-          .withArgName(flag.name().toUpperCase())
-          .create());
+          .withArgName(flag.name().toUpperCase());
+      if (flag.defaultValue().isEmpty()) {
+        OptionBuilder.withDescription(flag.description());
+      } else {
+        OptionBuilder.withDescription(flag.description() + "(default: " + flag.defaultValue() + ")");
+      }
+
+      options.addOption(OptionBuilder.create());
 
       flags.put(flag, field);
     }
@@ -110,7 +116,7 @@ public class FlagBinder {
 
     // Now validate them
     for (Flag flag : flags.keySet()) {
-      if (flag.mandatory()) {
+      if (flag.defaultValue().isEmpty()) {
         String help = !"".equals(flag.description()) ? flag.description()
             : flag.name();
         mandatoryOption(cmd, flag.name(), "must supply " + help, options);
@@ -130,23 +136,39 @@ public class FlagBinder {
           Flag flag = entry.getKey();
 
           // Skip non-mandatory, missing flags.
-          if (!flag.mandatory()) {
-            continue;
-          }
+//          if (!flag.mandatory()) {
+//            continue;
+//          }
 
           String flagValue = cmd.getOptionValue(flag.name());
-
-          // Coerce String flag into target type.
+          // Coerce String flag or defaultValue into target type.
           // NOTE(dhanji): only supported types are int, String and boolean.
-          if (int.class.equals(type)) {
-            bindConstant().annotatedWith(Names.named(flag.name()))
-                .to(Integer.parseInt(flagValue));
-          } else if (boolean.class.equals(type)) {
-            bindConstant().annotatedWith(Names.named(flag.name()))
-                .to(Boolean.parseBoolean(flagValue));
-          } else {
-            bindConstant().annotatedWith(Names.named(flag.name()))
-                .to(flagValue);
+          if (flagValue == null ||
+              // The empty string is a valid value for a string type.
+              (flagValue.isEmpty() && (int.class.equals(type) || boolean.class.equals(type)))) {
+            // Use the default.
+            if (int.class.equals(type)) {
+              bindConstant().annotatedWith(Names.named(flag.name()))
+                  .to(Integer.parseInt(flag.defaultValue()));
+            } else if (boolean.class.equals(type)) {
+              bindConstant().annotatedWith(Names.named(flag.name()))
+                  .to(Boolean.parseBoolean(flag.defaultValue()));
+            } else {
+              bindConstant().annotatedWith(Names.named(flag.name()))
+                  .to(flag.defaultValue());
+            }
+          }
+          else {
+            if (int.class.equals(type)) {
+              bindConstant().annotatedWith(Names.named(flag.name()))
+                  .to(Integer.parseInt(flagValue));
+            } else if (boolean.class.equals(type)) {
+              bindConstant().annotatedWith(Names.named(flag.name()))
+                  .to(Boolean.parseBoolean(flagValue));
+            } else {
+              bindConstant().annotatedWith(Names.named(flag.name()))
+                  .to(flagValue);
+            }
           }
         }
       }

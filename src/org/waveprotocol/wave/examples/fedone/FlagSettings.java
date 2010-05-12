@@ -47,11 +47,11 @@ public class FlagSettings {
   @Flag(name="client_frontend_port")
   private static String clientFrontEndPort;
 
-  @Flag(name="websocket_frontend_hostname")
+  @Flag(name="websocket_frontend_hostname", defaultValue="localhost")
   private static String websocketFrontendHost;
 
-  @Flag(name="websocket_frontend_port")
-  private static String websocketFrontEndPort;
+  @Flag(name="websocket_frontend_port", defaultValue="9898")
+  private static int websocketFrontEndPort;
 
   @Flag(name="certificate_private_key")
   private static String certificatePrivKey;
@@ -73,4 +73,8 @@ public class FlagSettings {
 
   @Flag(name="xmpp_jid")
   private static String xmppJid;
+
+  /*set to true to enable or false to disable persistence*/
+  @Flag(name="waveserver_enable_persistence", defaultValue="false")
+  private static boolean waveserverEnablePersistence;
 }
