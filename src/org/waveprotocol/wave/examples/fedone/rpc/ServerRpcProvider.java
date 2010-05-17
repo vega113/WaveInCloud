@@ -286,8 +286,11 @@ public class ServerRpcProvider {
     context.setContextPath("/");
     websocketServer.setHandler(context);
     
-    context.addServlet(new ServletHolder(new WaveWebSocketServlet()), "/");
-
+    ServletHolder holder = new ServletHolder(new WaveWebSocketServlet());
+    holder.setInitParameter("bufferSize", ""+1024*1024); // 1M buffer. TODO(zamfi): fix to let messages span frames.
+    holder.setInitParameter("maxIdleTime", "-1");
+    context.addServlet(holder, "/");
+    
     try {
       websocketServer.start();      
     } catch (Exception e) { // yes, .start() throws "Exception"
