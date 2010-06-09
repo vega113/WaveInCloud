@@ -1,9 +1,0 @@
-This directory contains an unmodified exerpt of a subset of the java
-source code of the bouncycastle crypto sources, as extracted from the
-tarfile lcrypto-jdk16-145.tar.gz
-
-Specificially, this directory contains the code implementing several
-AES crypto engines. Unittests exist in the original tar archive, but
-would inflate the size of this excerpt and have been excluded.
-
-License file is included.
