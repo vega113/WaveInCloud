@@ -1,208 +1,333 @@
-#################################################
-Google Wave Data Model and Client-Server Protocol
-#################################################
+#############################################
+Google Wave Client-Server Protocol Whitepaper
+#############################################
+
+.. Use headers in this order #=~-_
 
 :Authors: 
-    Jochen Bekmann, 
-    Michael Lancaster, 
-    Soren Lassen, 
-    David Wang 
+    Joe Gregorio
 
-:Version: 1.0 - May 2009
+:Version: 2.0 - May 2010
 
 This whitepaper is part of a series. All of the whitepapers
 can be found on `Google Wave Federation Protocol site`_.
 
 .. _Google Wave Federation Protocol site: http://www.waveprotocol.org/whitepapers
 
+
+Editorial Notes
+###############
+To provide feedback on this draft join the wave-protocol 
+mailing list at
+`http://groups.google.com/group/wave-protocol <http://groups.google.com/group/wave-protocol>`_
+
+This current draft only covers a small subset of the functionality
+that is required to build a full client. Future drafts
+will expand to cover more functionality. 
+
 Introduction
 ############
+This document describes the protocol by which a
+wave client communicates with a wave server in order to 
+create, read, and modify waves. The protocol is defined in
+terms of JSON messages exchanged over WebSockets. 
 
-This document describes the Google Wave data model and the protocol by which a
-wave client communicates with a wave server in order to create, read, and
-modify waves. 
+Background
+##########
+There is already a protocol being defined to handle the federation 
+of Waves, however it was designed as a server-to-server protocol and
+is not well suited for clients.
+What is needed is a lighter weight protocol that only captures
+the needs of a client-server communication channel. The WebSockets protocol 
+was chosen because it provides the two-way communication
+channel needed to efficiently handle wave messages, while being light weight
+and targeted to browsers, which are considered a primary platform 
+for client developers. 
+
+Scope
+#####
+This specification only covers the rudiments of the communication between
+a client and a server. There are many things that are not covered by 
+this specification at this time, such as authentication, authorization, 
+how a client determines which server to talk to, or which port to use.   
+This protocol is a very simple client/server protocol implementation, 
+and does not reflect the Google Wave web client protocol
+used in production today.
 
 Data Model
 ##########
+It is important to understand the `Wave Federation Protocol`_ 
+and `Conversation Model`_ as a prerequisite to this specification. 
 
-Wave Data Model
-===============
+.. _Conversation Model: http://www.waveprotocol.org/draft-protocol-specs/wave-conversation-model
+.. _Wave Federation Protocol: http://www.waveprotocol.org/draft-protocol-specs/draft-protocol-spec
 
-Wave
-  Each wave has a globally unique wave ID and consists of a set of wavelets.
+Terminology
+===========
+The following terminology is used by this specification: 
 
-Wavelet
-  A wavelet has an ID that is unique within its containing wave and is composed
-  of a participant list and a set of documents. The wavelet is the entity to
-  which Concurrency Control / Operational Transformations apply.
+* wave - a collection of wavelets 
+* wavelet - a collection of named documents and participants, and the domain of operational transformation 
+* document - a structured wave document
+* wave message - a single message sent either from the client to the server or from the server to the client.  
 
-Participant
-  A participant is identified by a wave address, which is a text string in the
-  same format as an email address (local-part@domain). A participant may be a
-  user, a group or a robot. Each participant may occur at most once in the
-  participant list.
+Wave messages do not include the WebSocket opening handshake messages.
 
-Document
-  A document has an ID that is unique within its containing wavelet and is
-  composed of an XML document and a set of "stand-off" annotations. Stand-off
-  annotations are pointers into the XML document and are independent of the XML
-  document structure. They are used to represent text formatting, spelling
-  suggestions and hyper-links. Documents form a tree within the wavelet.  There
-  are currently two types of documents: text documents, used to represent
-  the rich text messages in a wavelet (casually known as blips), and data
-  documents which are typically invisible to the user (for example, tags). For
-  detailed information on the XML structure of documents, please refer to the
-  Google Wave Operational Transformation paper.
+Operation
+#########
+This section assumes an elementary understanding of the theory of `Operational
+Transforms`_. 
 
-Wave view
-  A wave view is the subset of wavelets in a wave that a particular user has
-  access to. A user gains access to a wavelet either by being a participant on
-  the wavelet or by being a member of a group that is a participant (groups may
-  be nested).
+.. _Operational Transforms: http://www.waveprotocol.org/whitepapers/operational-transform
 
-Sharing Model
-=============
+Protocol Version
+================
+In the current implementation the version of the protocol is carried in each
+message and if the server does not understand the version sent it closes
+the connection. Future revisions may have the client and server negotiate
+for an agreed upon protocol version.
 
-The unit of sharing is a wavelet. In the first version of this protocol, all
-participants on a wavelet have full access to modify the contents and
-participant list of that wavelet.
+The version of the protocol used is 1.
 
-Heterogeneous sharing within a wave is achieved by having differing participant
-lists on wavelets within the wave. Currently, the two primary uses of this are
-user-data and private replies.
+Transport
+=========
+The protocol begins when a Wave client connects with a Wave server.
+The connection is handled by the WebSockets protocol. After the connection
+is initiated Wave messages are sent between the client and 
+server encapsulated in WebSocket frames. Each message occupies
+a single frame. 
 
-User-data wavelets are used to store information which is private to an
-individual user (that is, the user is the sole participant), such as
-read/unread state.
+Transport Error Conditions
+==========================
 
-A private reply is a wavelet whose participant list is a subset of that of the
-parent wave.
+WebSocket Errors
+~~~~~~~~~~~~~~~~
+TBD
 
-Client-Server Protocol
-######################
+Timeouts
+~~~~~~~~
+TBD
 
-This section assumes an elementary understanding of the theory of Operational
-Transformation (OT).
+Error recovery
+~~~~~~~~~~~~~~
+TDB
 
-Operations
-==========
+Message Flow
+============
+There are two kinds of Wave requests, ProtocolOpenRequest
+and ProtocolSubmitRequest. Communication begins when
+a client sends a ProtocolOpenRequest to the server with the 
+id of a Wave it wishes to monitor and/or mutate. After opening
+a wave the client may send ProtocolSubmitRequests
+to the server to manipulate the wave. The server will 
+send ProtocolWaveletUpdates to the client as the server
+representation of the wave changes.
 
-Operations are mutations on wavelets. The state of a wavelet is entirely
-defined by a sequence of operations on that wavelet.
+Any error messages related to the opening of a wave
+are sent back from the server in a ProtocolWaveletUpdate.
 
-Clients and servers exchange operations in order to communicate modifications
-to a wavelet. Operations propagate through the system to all clients and
-servers interested in that wavelet. They each apply the operation to their own
-copy of the wavelet. In order for the wavelet state to be consistent throughout
-the system, all communication participants (clients and servers) must apply
-operations identically.
+A client may send more than one ProtocolOpenRequest, one for
+each wave that the client is interested in.
 
-In a typical configuration, a wavelet it hosted by a master server - all
-clients interested in a particular wavelet send operations to the hosting wave
-server. The wave server acts as communication hub, storing operations and
-echoing them to clients which are connected and 'interested' in that wavelet
-(see "opening a wavelet" below). Wavelets may be federated, meaning that
-wavelet servers can exchange operations about wavelets amongst themselves. For
-more details see the Google Wave Federation Architecture whitepaper.  
+The client MUST send a ProtocolOpenRequest for each 
+wave that the client is interested in. A client MUST NOT
+send mutations for a wave id that it has not issued a
+ProtocolOpenRequest for. The client must
+wait for the server to acknowledge the ProtocolOpenRequest
+before sending ProtocolSubmitRequests for the given
+wave as it needs to include the document hash with
+each ProtocolSubmitRequest. 
 
-Operation Sequencing
+ProtocolOpenRequest
+~~~~~~~~~~~~~~~~~~~
+The ProtocolOpenRequest contains a wave id and 
+a wavelet_id_prefix. Those two determine the set of 
+wavelets that the client will be notified of changes
+to. 
+
+The wavelet_id_prefix may be shortened to match
+a larger subset of wavelets, with the empty string
+matching all wavelets in the given wave.  
+
+The client can indicate if it supports snapshots when
+it sends a ProtocolOpenRequest.
+
+It also contains the protocol version number, which is
+defined as 1, per the previous section on Protocol Version.
+
+
+ProtocolWaveletUpdate
+~~~~~~~~~~~~~~~~~~~~~
+In response to a ProtocolOpenRequest the server may
+send any number of ProtocolWaveletUpdate messages.
+The ProtocolWaveletUpdate may contain a snapshot of 
+the current wave state or it will contain one or more
+ProtocolWaveletDelta messages that represent deltas
+to be applied to wavelets that the client is monitoring.
+The inclusion of the snapshot is determined by the 
+server, it will only be sent on the first ProtocolWaveletUpdate,
+and will only be sent if the client has indicated in its 
+ProtocolOpenRequest that it supports receiving snapshots.
+
+ProtocolWaveletUpdate messages will only be sent for 
+wavelets that the client is an explicit participant in.
+
+ProtocolSubmitRequest
+~~~~~~~~~~~~~~~~~~~~~
+This message contains a ProtocolWaveletDelta which the 
+client requests the server to apply to a wave. Only one 
+submit per wavelet may be outstanding at any one time.
+
+The client specifies which version to apply the delta at, 
+and the client is expected to transform deltas pending 
+for submission against deltas received in 
+ProtocolWaveletUpdates from the server.  
+
+ProtocolWaveletDelta's are applied atomically and either 
+fully succeed, or the whole delta will fail.
+
+ProtocolSubmitResponse
+~~~~~~~~~~~~~~~~~~~~~~
+The ProtocolSubmitResponse acknowledges the ProtocolSubmitRequest
+and if the delta was successfully applied it also supplies the
+ProtocolHashedVersion of the wavelet after the delta, which 
+the client will need to successfully submit future deltas
+to the wavelet.
+
+Closing a wave
+~~~~~~~~~~~~~~
+TBD
+
+Specific Flows
+##############
+
+Search
+======
+TBD
+
+Creating a new wave
+===================
+Creating a new wave is different from other flows
+since neither the client nor the server have the wave
+id. The client must generate a unique id for the wave
+and send a ProtocolOpenRequest for that wave id. 
+
+Entropy and Wave ID Length
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+TBD
+
+Serializing Protocol Buffers as JSON
+####################################
+There is no standard serialization of Protocol Buffers
+into JSON. This section will define the serialization
+that is used to construct Wave Messages from the protocol
+buffers included in this specification.
+
+Protocol buffer messages may be nested, so this serialization
+algorithm must be applied recursively.
+
+The root level message is emitted as a JSON object. Each
+member of the message will be emitted as a key-value pair
+in the JSON object. Each member's key name in
+the JSON serialization is set to normalize(key), where 
+normalize is a function that takes in the protocol
+buffer member key name and returns a JSON utf-8 string.
+
+normalize()
+===========
+TBD
+
+Member value serialization
+==========================
+The serialization of a value for the key is dependent 
+on the type and modifiers of that member. If the member
+is flagged as 'repeated' then the serialized 
+value will be a JSON array. The array will be filled
+with the serialized values of the repeated members. 
+
+Modifiers
+=========
+The following modifiers can be applied to message
+values and they alter how the values are serialized.
+
+repeated
+~~~~~~~~
+For each repeated member value, serialize it as
+JSON according to the following rules and add the serialization
+to the JSON array.
+
+required
+~~~~~~~~
+Required parameters are always serialized into JSON.
+
+optional
+~~~~~~~~
+Optional parameters are only serialized if they appear in the
+protocol buffer.
+
+string
+======
+A string member of a protocol buffer message is serialized 
+as a JSON string.
+
+int
+===
+An int32 or int64 member of a protocol buffer message 
+is serialized as a JSON number.
+
+bool
+====
+A bool value is serialized as a JSON number with a value of
+1 for true and 0 for false.
+
+enum
+====
+An enum value is serialized as a JSON string for the enumeration's value.
+
+bytes
+=====
+A bytes value is hex encoded and serialized as a JSON string.
+
+message
+=======
+A protocol buffer message is serialized by recursively applying
+the rules in this section. 
+ 
+Security
+########
+
+Securing the channel
 ====================
+TBD
 
-Operational Transformation requires that the operations transmitted between
-client and server be ordered. In Wave OT, the client never sends a "delta" (a
-sequence of one or more operations) until the previous one has been
-acknowledged by the server. The client is responsible for ordering the
-operations that were received from the server before applying them to its local
-copy of the wavelet copy. Operations are ordered according to a version number
-provided by the server.
+Authenticating the client
+=========================
+TBD
 
-A client and server can verify that they are referring to the same wavelet
-state by exchanging a version number and a "wavelet history hash". The latter
-is a rolling hash over the sequence of operations between version zero and the
-provided version number.
+Authorization
+=============
+Authorization is covered in the `Access Control Whitepaper`_. 
 
-Opening a Wavelet
-=================
+.. _Access Control Whitepaper: http://www.waveprotocol.org/whitepapers/access-control
 
-A communication participant has a wavelet "open" if it is actively exchanging
-operations pertaining to that wavelet. For the purposes of communication,
-wavelets are grouped into a "wave-view", which is the set of wavelets on a wave
-visible to a given user.  To open a wavelet, the client sends an Open Request
-containing:
+Client-Server Protocol Buffers
+##############################
+While the client server protocol is implemented as JSON over WebSockets, 
+each Wave message is a JSON serialization of a protocol buffer. The 
+protocol buffer definitions are defined as:
 
-* Wave ID
-* Wavelet ID
+  TBD
 
-The server then responds with:
-* A snapshot - the serialized state of the wavelet
-* History hash at that version
+Example Client-Server Flow
+##########################
 
-Communicating changes to the Client
-===================================
+  TBD  
 
-The server sends:
+Appendix A - Open Source Implementation Notes
+#############################################
+The current open source implementation of the 
+client-server protocol begins with the client
+opening the wave "indexwave!indexwave". That
+is currently an implementation detail and is not 
+documented.  
 
-* Delta
-* Version number
-* History hash
-
-Communicating changes to the Server
-===================================
-
-The client sends:
-
-* Delta
-* Version number
-
-The server acknowledges the delta with:
-
-* The version of the Wavelet after applying the delta
-* History hash
-
-The server can continue to send operations to the client while the client is
-waiting for an acknowledgement. The client is responsible for transforming the
-server operation and locally cached client operations (please refer to the
-Google Wave Operational Transformation paper). The client sends the transformed
-local operations to the server.
-
-Recovery
-========
-
-When client-server communications fail, the client and server need to agree on
-a common state of the wavelet upon reconnecting. The client reopens the
-wavelet, sending a list of history hashes previously received from the server.
-
-The client sends:
-
-* Wave ID
-* Wavelet ID
-* List of history hashes known to the client
-
-The server then responds with:
-
-* Last known (by the server) history hash selected from the list of history hashes sent by the client (1)
-* Most recent history hash on the Wavelet (2)
-* A sequence of deltas
-
-If the last known history hash (1) is the last history hash sent by the client,
-and is equal to the most recent history hash (2), then the client and server
-are in synch, and the client may resume receiving and sending deltas with no
-further recovery.
-
-If the last known history hash sent by the server does not match the last known
-history hash sent by the client, or the server does not recognize any of the
-client-provided hashes, the client and server have failed to agree on a common
-state of the wavelet. The client must reload the wave at the server's current
-state (the client-side state may be preserved for manual / prompted recovery of
-data with the user).
-
-The Google Wave Protocol contains optimizations to this recovery protocol that
-reduce the number of cases requiring a complete state reset, but these are
-beyond the scope of this document.
-
-References
-##########
-
-David A. Nichols, Pavel Curtis, Michael Dixon, and John Lamping: `High-latency, low-bandwidth windowing in the Jupiter collaboration system`_, UIST '95: Proceedings of the 8th annual ACM symposium on User interface and software technology, pp.111-120. ACM, 1995.
-
-.. _High-latency, low-bandwidth windowing in the Jupiter collaboration system: http://doi.acm.org/10.1145/215585.215706
