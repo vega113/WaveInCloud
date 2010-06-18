@@ -46,10 +46,6 @@ Google Wave Federation Protocol Over XMPP
     Protocol Over XMPP, an open extension to the XMPP core [RFC3920]_ protocol
     allowing near real-time communication of wave updates between two wave servers.
 
-    This document is one in a larger set of specifications for Google
-    Wave; see http://www.waveprotocol.org/draft-protocol-specs.
-
-
 
 :date: 2009 July 
 
@@ -64,6 +60,9 @@ are unable to capture at this point and we expect parts of the
 protocol to change.  Please also note that while we revise the
 protocol and white papers, some transient inconsistencies will occur.
 
+This document is one in a larger set of specifications for Google
+Wave; see `http://www.waveprotocol.org/draft-protocol-specs 
+<http://www.waveprotocol.org/draft-protocol-specs>`_.
 
 Overview
 ========

@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="en"><head><title>Google Wave Conversation Model</title>
-<meta http-equiv="Expires" content="Fri, 18 Jun 2010 13:55:46 +0000">
+<meta http-equiv="Expires" content="Fri, 18 Jun 2010 14:13:02 +0000">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="description" content="Google Wave Conversation Model">
 <meta name="generator" content="xml2rfc v1.33 (http://xml.resource.org/)">
@@ -166,57 +166,59 @@ Protocol; see http://www.waveprotocol.org/draft-protocol-specs.
 <p class="toc">
 <a href="#anchor1">1.</a>&nbsp;
 Introduction<br />
-<a href="#anchor2">2.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor2">1.1.</a>&nbsp;
+Document Status<br />
+<a href="#anchor3">2.</a>&nbsp;
 Applicability<br />
-<a href="#anchor3">3.</a>&nbsp;
+<a href="#anchor4">3.</a>&nbsp;
 Terminology<br />
-<a href="#anchor4">4.</a>&nbsp;
+<a href="#anchor5">4.</a>&nbsp;
 Editorial Notes<br />
-<a href="#anchor5">5.</a>&nbsp;
+<a href="#anchor6">5.</a>&nbsp;
 Roadmap<br />
-<a href="#anchor6">6.</a>&nbsp;
+<a href="#anchor7">6.</a>&nbsp;
 Relationship between specifications<br />
-<a href="#anchor7">7.</a>&nbsp;
+<a href="#anchor8">7.</a>&nbsp;
 Terminology<br />
-<a href="#anchor8">8.</a>&nbsp;
+<a href="#anchor9">8.</a>&nbsp;
 Model<br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor9">8.1.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor10">8.1.</a>&nbsp;
 Document namespace and validation<br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor10">8.2.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor11">8.2.</a>&nbsp;
 Documents<br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor11">8.3.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor12">8.3.</a>&nbsp;
 Conversation Manifest Document<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor12">8.3.1.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor13">8.3.1.</a>&nbsp;
 Elements<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor17">8.3.2.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor18">8.3.2.</a>&nbsp;
 Private Replies<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor18">8.3.3.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor19">8.3.3.</a>&nbsp;
 Examples<br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor19">8.4.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor20">8.4.</a>&nbsp;
 Blip Document<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor20">8.4.1.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor21">8.4.1.</a>&nbsp;
 Schema Design<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor21">8.4.2.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor22">8.4.2.</a>&nbsp;
 Elements<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor27">8.4.3.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor28">8.4.3.</a>&nbsp;
 Annotations<br />
-<a href="#anchor31">9.</a>&nbsp;
+<a href="#anchor32">9.</a>&nbsp;
 Example Conversations<br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor32">9.1.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor33">9.1.</a>&nbsp;
 Simple Replies<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor33">9.1.1.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor34">9.1.1.</a>&nbsp;
 In-line Replies<br />
-<a href="#anchor35">10.</a>&nbsp;
+<a href="#anchor36">10.</a>&nbsp;
 Display<br />
-<a href="#anchor36">11.</a>&nbsp;
+<a href="#anchor37">11.</a>&nbsp;
 Mechanisms<br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor37">11.1.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor38">11.1.</a>&nbsp;
 Creating a new blip<br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor38">11.2.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor39">11.2.</a>&nbsp;
 Creating a reply thread<br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor39">11.3.</a>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor40">11.3.</a>&nbsp;
 Deleting a blip<br />
-<a href="#anchor40">12.</a>&nbsp;
+<a href="#anchor41">12.</a>&nbsp;
 References<br />
 <a href="#rfc.references1">13.</a>&nbsp;
 References<br />
@@ -237,6 +239,21 @@ within structured documents in a wave.
 </p>
 <a name="anchor2"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.1.1"></a><h3>1.1.&nbsp;
+Document Status</h3>
+
+<p>
+This document represents work in progress.  It omits details that we
+are unable to capture at this point and we expect parts of the
+protocol to change.  Please also note that while we revise the
+protocol and white papers, some transient inconsistencies will occur.
+</p>
+<p>
+This document is one in a larger set of specifications for Google
+Wave; see <a href='http://www.waveprotocol.org/draft-protocol-specs'>http://www.waveprotocol.org/draft-protocol-specs</a>.
+</p>
+<a name="anchor3"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.2"></a><h3>2.&nbsp;
 Applicability</h3>
 
@@ -255,7 +272,7 @@ to be XML-based. That is, XML is used as a convenient model and implementations
 are free to implement that model in the manner that is most convenient and
 performant.
 </p>
-<a name="anchor3"></a><br /><hr />
+<a name="anchor4"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.3"></a><h3>3.&nbsp;
 Terminology</h3>
@@ -268,7 +285,7 @@ The capitalized key words &quot;MUST&quot;, &quot;MUST NOT&quot;,
 interpreted as described in <a class='info' href='#RFC2119'>[RFC2119]<span> (</span><span class='info'>Bradner, S., &ldquo;Key words for use in RFCs to Indicate Requirement Levels,&rdquo; March&nbsp;1997.</span><span>)</span></a>
 .
 </p>
-<a name="anchor4"></a><br /><hr />
+<a name="anchor5"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.4"></a><h3>4.&nbsp;
 Editorial Notes</h3>
@@ -278,7 +295,7 @@ To provide feedback on this draft join the wave-protocol
 mailing list at
 <a href='http://groups.google.com/group/wave-protocol'>http://groups.google.com/group/wave-protocol</a>
 </p>
-<a name="anchor5"></a><br /><hr />
+<a name="anchor6"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.5"></a><h3>5.&nbsp;
 Roadmap</h3>
@@ -316,7 +333,7 @@ Rich text
 </ul><p>
 
 </p>
-<a name="anchor6"></a><br /><hr />
+<a name="anchor7"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.6"></a><h3>6.&nbsp;
 Relationship between specifications</h3>
@@ -331,7 +348,7 @@ including the wave id, wavelet id, and list of named
 participants for the wavelet. See the Federation Protocol for
 more details on wavelets and participants.
 </p>
-<a name="anchor7"></a><br /><hr />
+<a name="anchor8"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.7"></a><h3>7.&nbsp;
 Terminology</h3>
@@ -375,7 +392,7 @@ private reply - a conversation wavelet with a restricted set of participants
 </ul><p>
 
 </p>
-<a name="anchor8"></a><br /><hr />
+<a name="anchor9"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8"></a><h3>8.&nbsp;
 Model</h3>
@@ -413,7 +430,7 @@ content.
 </ul><p>
 
 </p>
-<a name="anchor9"></a><br /><hr />
+<a name="anchor10"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.1"></a><h3>8.1.&nbsp;
 Document namespace and validation</h3>
@@ -447,7 +464,7 @@ Conversation Manifest document
 An example blip document id:
 </p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
 b+a8w3SD_k</pre></div>
-<a name="anchor10"></a><br /><hr />
+<a name="anchor11"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.2"></a><h3>8.2.&nbsp;
 Documents</h3>
@@ -500,7 +517,7 @@ Conversation manifest document example:
         &lt;/thread&gt;
     &lt;/blip&gt;
 &lt;/conversation&gt;</pre></div>
-<a name="anchor11"></a><br /><hr />
+<a name="anchor12"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.3"></a><h3>8.3.&nbsp;
 Conversation Manifest Document</h3>
@@ -546,7 +563,7 @@ Here is a more complex conversation manifest that references multiple blips.
         &lt;/thread&gt;
     &lt;/blip&gt;
 &lt;/conversation&gt;</pre></div>
-<a name="anchor12"></a><br /><hr />
+<a name="anchor13"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.3.1"></a><h3>8.3.1.&nbsp;
 Elements</h3>
@@ -554,7 +571,7 @@ Elements</h3>
 <p>
 These are the allowed elements in a conversation manifest.
 </p>
-<a name="anchor13"></a><br /><hr />
+<a name="anchor14"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.3.1.1"></a><h3>8.3.1.1.&nbsp;
 conversation</h3>
@@ -596,7 +613,7 @@ An integer offset into the replied-to blip document that anchors the private rep
 </dl></blockquote><p>
 
 </p>
-<a name="anchor14"></a><br /><hr />
+<a name="anchor15"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.3.1.2"></a><h3>8.3.1.2.&nbsp;
 blip</h3>
@@ -610,7 +627,7 @@ deleted. See the section below on deleting blips.
 A blip may have zero or more 'thread' and 'peer' elements
 as children.
 </p>
-<a name="anchor15"></a><br /><hr />
+<a name="anchor16"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.3.1.3"></a><h3>8.3.1.3.&nbsp;
 thread</h3>
@@ -623,7 +640,7 @@ whether the thread is anchored inline in the parent blip. The default value
 for &quot;inline&quot; if false, that is, the inline attribute not being present is
 the same thing as inline=false. A thread may have zero or more 'blip' elements as children.
 </p>
-<a name="anchor16"></a><br /><hr />
+<a name="anchor17"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.3.1.4"></a><h3>8.3.1.4.&nbsp;
 peer</h3>
@@ -633,7 +650,7 @@ A peer element has an &quot;id&quot; attribute. The &quot;id&quot; attribute val
 data document. The identified data document is not a blip or conversation
 manifest document.
 </p>
-<a name="anchor17"></a><br /><hr />
+<a name="anchor18"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.3.2"></a><h3>8.3.2.&nbsp;
 Private Replies</h3>
@@ -667,7 +684,7 @@ conversation to the private reply.
 The anchoring tuple is represented as a set of optional attributes on the
 conversation tag of the conversation manifest document.
 </p>
-<a name="anchor18"></a><br /><hr />
+<a name="anchor19"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.3.3"></a><h3>8.3.3.&nbsp;
 Examples</h3>
@@ -700,7 +717,7 @@ referring to the replied-to blip.
    anchorVersion="7436"
    anchorOffset="784"&gt;
 &lt;/conversation&gt;</pre></div>
-<a name="anchor19"></a><br /><hr />
+<a name="anchor20"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4"></a><h3>8.4.&nbsp;
 Blip Document</h3>
@@ -731,7 +748,7 @@ A more complex blip document.
         &lt;caption&gt;A lazy dog.&lt;/caption&gt;
     &lt;/image&gt;
 &lt;/body&gt;</pre></div>
-<a name="anchor20"></a><br /><hr />
+<a name="anchor21"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.1"></a><h3>8.4.1.&nbsp;
 Schema Design</h3>
@@ -748,7 +765,7 @@ overlapping regions of text. The document representation may not correspond to
 the most natural semantic interpretation, but is designed to behave most
 naturally under operational transformation.
 </p>
-<a name="anchor21"></a><br /><hr />
+<a name="anchor22"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.2"></a><h3>8.4.2.&nbsp;
 Elements</h3>
@@ -756,7 +773,7 @@ Elements</h3>
 <p>
 The allowed elements of a blip are:
 </p>
-<a name="anchor22"></a><br /><hr />
+<a name="anchor23"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.2.1"></a><h3>8.4.2.1.&nbsp;
 contributor</h3>
@@ -773,7 +790,7 @@ annotators to voluntarily omit themselves. Absolute
 contributor information may be recovered from the operation
 history if required.
 </p>
-<a name="anchor23"></a><br /><hr />
+<a name="anchor24"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.2.2"></a><h3>8.4.2.2.&nbsp;
 body</h3>
@@ -785,7 +802,7 @@ element must be a line element. If a document contains two
 body elements then the first is the canonical body and others
 should be ignored or removed.
 </p>
-<a name="anchor24"></a><br /><hr />
+<a name="anchor25"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.2.3"></a><h3>8.4.2.3.&nbsp;
 line</h3>
@@ -824,7 +841,7 @@ l = left to right, r = right to left
 </dl></blockquote><p>
 
 </p>
-<a name="anchor25"></a><br /><hr />
+<a name="anchor26"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.2.4"></a><h3>8.4.2.4.&nbsp;
 image</h3>
@@ -836,7 +853,7 @@ that is the id of that attachment's data document.
 Attachments and attachment documents are described in the
 Google Wave Attachments whitepaper.
 </p>
-<a name="anchor26"></a><br /><hr />
+<a name="anchor27"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.2.5"></a><h3>8.4.2.5.&nbsp;
 reply</h3>
@@ -847,7 +864,7 @@ thread. It has an attribute 'id' that contains the id of the
 thread whose location it marks. Thus an inline reply's inline
 location is marked with a reply element.
 </p>
-<a name="anchor27"></a><br /><hr />
+<a name="anchor28"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.3"></a><h3>8.4.3.&nbsp;
 Annotations</h3>
@@ -856,7 +873,7 @@ Annotations</h3>
 The following are the allowed annotations allowed in blip
 documents.
 </p>
-<a name="anchor28"></a><br /><hr />
+<a name="anchor29"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.3.1"></a><h3>8.4.3.1.&nbsp;
 Style</h3>
@@ -897,7 +914,7 @@ style/verticalAlign
 </ul><p>
 
 </p>
-<a name="anchor29"></a><br /><hr />
+<a name="anchor30"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.3.2"></a><h3>8.4.3.2.&nbsp;
 User</h3>
@@ -970,7 +987,7 @@ annotation is the user id.
 </dl></blockquote><p>
 
 </p>
-<a name="anchor30"></a><br /><hr />
+<a name="anchor31"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.8.4.3.3"></a><h3>8.4.3.3.&nbsp;
 Links</h3>
@@ -1002,12 +1019,12 @@ for this annotation.
 </dl></blockquote><p>
 
 </p>
-<a name="anchor31"></a><br /><hr />
+<a name="anchor32"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.9"></a><h3>9.&nbsp;
 Example Conversations</h3>
 
-<a name="anchor32"></a><br /><hr />
+<a name="anchor33"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.9.1"></a><h3>9.1.&nbsp;
 Simple Replies</h3>
@@ -1058,7 +1075,7 @@ And a reply blip with an id of &quot;b+c&quot;:
 &lt;body&gt;
     &lt;line&gt;&lt;/line&gt;Yes it is.
 &lt;/body&gt;</pre></div>
-<a name="anchor33"></a><br /><hr />
+<a name="anchor34"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.9.1.1"></a><h3>9.1.1.&nbsp;
 In-line Replies</h3>
@@ -1114,7 +1131,7 @@ And a reply blip with an id of &quot;b+c&quot;:
 &lt;body&gt;
     &lt;line&gt;&lt;/line&gt;Yes it is.
 &lt;/body&gt;</pre></div>
-<a name="anchor34"></a><br /><hr />
+<a name="anchor35"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.9.1.1.1"></a><h3>9.1.1.1.&nbsp;
 Private In-line Replies</h3>
@@ -1177,7 +1194,7 @@ And a reply blip with an id of &quot;b+c&quot;:
 &lt;body&gt;
     &lt;line&gt;&lt;/line&gt;Yes it is.
 &lt;/body&gt;</pre></div>
-<a name="anchor35"></a><br /><hr />
+<a name="anchor36"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.10"></a><h3>10.&nbsp;
 Display</h3>
@@ -1224,7 +1241,7 @@ inline replies should include an indication that it is private, such as
 displaying the participants for that wavelet, along with the content of the
 sub-conversation.
 </p>
-<a name="anchor36"></a><br /><hr />
+<a name="anchor37"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.11"></a><h3>11.&nbsp;
 Mechanisms</h3>
@@ -1234,7 +1251,7 @@ This section describes some mechanisms for changing the conversation
 structure. Additional mechanisms remain to be defined. In addition, the
 interactions of concurrent modifications have yet to be detailed.
 </p>
-<a name="anchor37"></a><br /><hr />
+<a name="anchor38"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.11.1"></a><h3>11.1.&nbsp;
 Creating a new blip</h3>
@@ -1244,7 +1261,7 @@ To add a new blip to a thread an operation is sent to
 insert a blip element (with a unique id) to the thread in the conversation
 manifest. The added blip document may or may not be empty
 </p>
-<a name="anchor38"></a><br /><hr />
+<a name="anchor39"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.11.2"></a><h3>11.2.&nbsp;
 Creating a reply thread</h3>
@@ -1255,7 +1272,7 @@ element (with a unique id) to the replied-to blip element in the conversation
 manifest. If the thread is an inline reply an anchor element must first be
 inserted in the replied to blip.
 </p>
-<a name="anchor39"></a><br /><hr />
+<a name="anchor40"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.11.3"></a><h3>11.3.&nbsp;
 Deleting a blip</h3>
@@ -1302,7 +1319,7 @@ deletion are nullified in transform. Concurrently created replies to a deleted
 blip are deleted if the blip has no replies, but survive if the blip element
 remains (with &quot;deleted&quot; set to &quot;true&quot;).
 </p>
-<a name="anchor40"></a><br /><hr />
+<a name="anchor41"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.12"></a><h3>12.&nbsp;
 References</h3>
