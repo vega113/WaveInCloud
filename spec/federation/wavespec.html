@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en"><head><title>.: Google Wave Federation Protocol Over XMPP</title>
-<meta http-equiv="Expires" content="Tue, 15 Dec 2009 21:22:06 +0000">
+<html lang="en"><head><title>Google Wave Federation Protocol Over XMPP</title>
+<meta http-equiv="Expires" content="Fri, 18 Jun 2010 13:57:49 +0000">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="description" content="Google Wave Federation Protocol Over XMPP">
 <meta name="generator" content="xml2rfc v1.33 (http://xml.resource.org/)">
@@ -142,7 +142,7 @@
 <body>
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <table summary="layout" width="66%" border="0" cellpadding="0" cellspacing="0"><tr><td><table summary="layout" width="100%" border="0" cellpadding="2" cellspacing="1">
-<tr><td class="header">.</td><td class="header">A. Baxter</td></tr>
+<tr><td class="header"> </td><td class="header">A. Baxter</td></tr>
 <tr><td class="header">&nbsp;</td><td class="header">J. Bekmann</td></tr>
 <tr><td class="header">&nbsp;</td><td class="header">D. Berlin</td></tr>
 <tr><td class="header">&nbsp;</td><td class="header">J. Gregorio</td></tr>
@@ -163,6 +163,10 @@ participants. This specification describes the Google Wave Federation
 Protocol Over XMPP, an open extension to the XMPP core <a class='info' href='#RFC3920'>[RFC3920]<span> (</span><span class='info'>Saint-Andre, P., Ed., &ldquo;Extensible Messaging and Presence Protocol (XMPP): Core,&rdquo; October&nbsp;2004.</span><span>)</span></a>
  protocol
 allowing near real-time communication of wave updates between two wave servers.
+</p>
+<p>
+This document is one in a larger set of specifications for Google
+Wave; see http://www.waveprotocol.org/draft-protocol-specs.
 </p><a name="toc"></a><br /><hr />
 <h3>Table of Contents</h3>
 <p class="toc">
@@ -656,19 +660,21 @@ components:
 <li>
 A &quot;wave id&quot; specifies the domain of the wave provider that
 originally started the wave, plus an identifier unique within that
-domain.
+domain. The identifier starts with &quot;w+&quot; by convention.
 </li>
 <li>
 A &quot;wavelet id&quot; specifies the domain of the wave provider that
 hosts the wavelet, plus a unique identifier which is unique within
-all wavelets with that domain, within the wave.
+all wavelets with that domain. The identifier starts with &quot;conv+&quot;
+by convention. The first wavelet added to a wave has the identifier
+&quot;conv+root&quot; by convention.
 </li>
 </ul><p>
 
 </p>
 <p>
 These components are encoded into a single string in the format of a
-netpath of an URI.  The wavelet id domain is used as the host part
+an absolute URI.  The wavelet id domain is used as the host part
 (since this is where the wavelet is hosted).  The wave id is used as
 the first path element, which contains the wave id domain if it does
 not match the wavelet id domain, in this case it is prepended to a
@@ -678,14 +684,14 @@ characters (:/?#[]@) appearing in the id parts must be percent-
 escaped.
 </p>
 <p>
-For example, a 'wavelet-name' might be &quot;initech-corp.com/
+For example, a 'wavelet-name' might be &quot;wave://initech-corp.com/
 acmewave.com$w+4Kl2/conv+3sG7&quot;, where the wavelet id has domain
 &quot;initech-corp.com&quot; and unique identifier &quot;conv+3sG7&quot;, and the wave id
 has domain &quot;acmewave.com&quot; and unique identifier &quot;w+4Kl2&quot;.
 </p>
 <p>
 If the wavelet was hosted at &quot;initech-corp.com&quot; and the wave had also
-been started on that domain, the 'wavelet-name' would be &quot;initech-
+been started on that domain, the 'wavelet-name' would be &quot;wave://initech-
 corp.com/w+4Kl2/conv+3sG7&quot;.
 </p>
 <a name="anchor20"></a><br /><hr />
@@ -707,14 +713,35 @@ pair of a wavelet.
 <ul class="text">
 <li>
 'version' -- REQUIRED attribute which contains the version of the
-wavelet.
+wavelet. The value of this attribute is a 64-bit integer to base 10.
 </li>
 <li>
 'history-hash' -- REQUIRED attribute which is the value of the
-rolling history hash at the given version.
+rolling history hash at the given version. The history-hash attribute is
+a base64 encoding of the rolling hash.
 </li>
 </ul><p>
 
+</p>
+<p>
+The rolling hash is computed as follows:
+</p>
+<p>
+</p>
+<ul class="text">
+<li>
+The initial hash value H(0) is the wavelet-name.
+</li>
+<li>
+The hash value H(n) is computed as SHA256( H(n-1) + delta )[0..20].
+</li>
+</ul><p>
+
+</p>
+<p>
+The '+' operator means that the hash and the delta are concatenated.
+The delta is a protocol buffer encoding of the message type
+protocol::ProtocolAppliedWaveletDelta.
 </p>
 <a name="anchor22"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
@@ -730,7 +757,9 @@ deltas up to this point.
 </p>
 <ul class="text">
 <li>
-'version' -- REQUIRED attribute which contains the version of the wavelet.
+'version' -- REQUIRED attribute which contains the version of
+the wavelet. The value of this attribute is a 64-bit integer
+to base 10.
 </li>
 </ul><p>
 
@@ -752,7 +781,8 @@ grouped for communication to and between wave servers:
 </li>
 <li>
 &lt;operation/&gt; -- The operation is carried as the text of the
-&lt;delta&gt; element as a Base64 encoded protocol buffer.
+&lt;delta&gt; element as a Base64 encoded protocol buffer of the
+message type protocol::ProtocolSignedDelta.
 </li>
 </ul><p>
 
@@ -772,7 +802,8 @@ supplementary information about the result of the application.
 <ul class="text">
 <li>
 &lt;operation/&gt; -- The operation is carried as the text of the
-&lt;applied-delta&gt; element as a Base64 encoded protocol buffer.
+&lt;applied-delta&gt; element as a Base64 encoded protocol buffer
+of the message type protocol::ProtocolAppliedWaveletDelta.
 </li>
 </ul><p>
 
@@ -825,7 +856,7 @@ federation remote:
       &lt;item&gt;
         &lt;wavelet-update
           xmlns="http://waveprotocol.org/protocol/0.2/waveserver"
-          wavelet-name="acmewave.com/initech-corp.com!a/b"&gt;
+          wavelet-name="wave://acmewave.com/initech-corp.com$w+a/conv+b"&gt;
           &lt;applied-delta&gt;&lt;![CDATA[CiI...MwE] ]&gt;&lt;/applied-delta&gt;
         &lt;/wavelet-update&gt;
       &lt;/item&gt;
@@ -954,11 +985,11 @@ to the acmewave.com federation host:
       &lt;delta-history
         xmlns="http://waveprotocol.org/protocol/0.2/waveserver"
         start-version="12"
-        start-version-hash=""
+        start-version-hash="..."
         end-version="2345"
-        end-version-hash=""
+        end-version-hash="..."
         response-length-limit="300000"
-        wavelet-name="acmewave.com/initech-corp.com!a/b"/&gt;
+        wavelet-name="wave://acmewave.com/initech-corp.com$w+a/conv+b"/&gt;
     &lt;/items&gt;
   &lt;/pubsub&gt;
 &lt;/iq&gt;</pre></div>
@@ -1024,11 +1055,13 @@ server has processed the submitted delta.
 <li>
 'operations-applied' -- REQUIRED attribute with the number of
 operations applied by the wave server after transforming the
-submitted delta.
+submitted delta. The value of this attribute is a 32-bit integer
+to base 10.
 </li>
 <li>
 'application-timestamp' -- REQUIRED timestamp (milliseconds since
-epoch) attribute recording the time of delta application.
+1.1.1979) attribute recording the time of delta application.
+The value of this attribute is a 64-bit integer to base 10.
 </li>
 <li>
 'error-message' -- OPTIONAL string attribute containing an error
@@ -1049,7 +1082,7 @@ hash of the wavelet after the submitted delta was applied.
 Successful submit request / submit response example</h3>
 
 <p>
-Step 1: The federation remote makes an submit request to the initech-
+Step 1: The federation remote makes a submit request to the initech-
 corp.com federation host:
 </p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
 &lt;iq type="set" id="1-1" from="wave.initech-corp.com" to="wave.acmewave.com"&gt;
@@ -1058,7 +1091,7 @@ corp.com federation host:
       &lt;item&gt;
         &lt;submit-request
           xmlns="http://waveprotocol.org/protocol/0.2/waveserver"&gt;
-          &lt;delta wavelet-name="acmewave.com/initech-corp.com!a/b"&gt;
+          &lt;delta wavelet-name="wave://acmewave.com/initech-corp.com$w+a/conv+b"&gt;
             &lt;![CDATA[CiA...NvbQ==] ]&gt;
           &lt;/delta&gt;
         &lt;/submit-request&gt;
@@ -1068,11 +1101,7 @@ corp.com federation host:
 &lt;/iq&gt;</pre></div>
 <p>
 Step 2: The initech-corp.com federation host returns a response to
-the submit request.  Note that this example shows the case where a
-different party submitted a delta at version 100 with 3 operations
-before this submit-request was received.  The requester's submitted
-delta was thus transformed before it was applied, and as a result the
-version number at which it was applied was 103.:
+the submit request.:
 </p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
 &lt;iq type="result" id="1-1" from="wave.acmewave.com" to="wave.initech-corp.com"&gt;
   &lt;pubsub xmlns="http://jabber.org/protocol/pubsub"&gt;
@@ -1083,7 +1112,7 @@ version number at which it was applied was 103.:
           application-timestamp="1234567890"
           operations-applied="2"&gt;
           &lt;hashed-version
-            history-hash=""
+            history-hash="..."
             version="1234"/&gt;
         &lt;/submit-response&gt;
       &lt;/item&gt;
@@ -1098,7 +1127,7 @@ Wavelet Update</h3>
 <p>
 Wavelet update operations mutate wavelets.  The actual operation is a
 signed protocol buffer that is included in the applied-delta element
-Base64 encoded text.  The wavelet update MAY contain multple applied-
+Base64 encoded text.  The wavelet update MAY contain zero or more applied-
 delta's and an optional commit-notice.  The wavelet update response
 is an XMPP receipt of the form specified in XEP-0184.
 </p>
@@ -1110,7 +1139,8 @@ Here is an example exchange:
   &lt;event xmlns="http://jabber.org/protocol/pubsub#event"&gt;
     &lt;items&gt;
       &lt;item&gt;
-        &lt;wavelet-update xmlns="http://waveprotocol.org/protocol/0.2/waveserver" wavelet-name="acmewave.com/initech-corp.com!a/b"&gt;
+        &lt;wavelet-update xmlns="http://waveprotocol.org/protocol/0.2/waveserver"
+          wavelet-name="wave://acmewave.com/initech-corp.com$w+a/conv+b"&gt;
           &lt;applied-delta&gt;&lt;![CDATA[CiIKIAoFCNIJEgASF2ZvenppZUBpbml0ZWNoLWNvcnAuY29tEgUI0gkSABgCINKF2MwE] ]&gt;&lt;/applied-delta&gt;
         &lt;/wavelet-update&gt;
       &lt;/item&gt;
@@ -1130,9 +1160,12 @@ Get Signer</h3>
 <p>
 A remote wave server issues a signer-request to request certificates
 for wavelets where the signer of the wavelet is currently unknown.
-The request is sent to the wave server that hosts the wavelet.  The
-provided history-hash identifies the delta for which the certificate
-is being requested.
+i.e. the request is being sent in response to a received wavelet update.
+A signer is identified by a sequence of bytes as used in
+protocol::ProtocolSignature.signer_id. The request is sent to the wave
+server that hosts the wavelet. The request MUST NOT be sent to a remote
+wave server. The provided history-hash identifies the delta for which
+the certificate is being requested.
 </p>
 <p>
 Here is an example exchange:
@@ -1142,7 +1175,8 @@ Here is an example exchange:
     &lt;items node="signer"&gt;
       &lt;signer-request xmlns="http://waveprotocol.org/protocol/0.2/waveserver"
         history-hash="somehash" version="1234"
-        wavelet-name="acmewave.com/initech-corp.com!a/b"/&gt; &lt;/items&gt;
+        wavelet-name="wave://acmewave.com/initech-corp.com$w+a/conv+b"/&gt;
+    &lt;/items&gt;
   &lt;/pubsub&gt;
 &lt;/iq&gt;</pre></div>
 <p>
@@ -1164,16 +1198,61 @@ details on signing are still to be added to this document.:
     &lt;/items&gt;
   &lt;/pubsub&gt;
 &lt;/iq&gt;</pre></div>
+<p>
+The certificates are base64 encoded (almost as in PEM).
+A (shortened) PEM certificate as follows:
+</p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+-----BEGIN CERTIFICATE-----
+MIIDmTCCAwKgAwIBAgIJAJbxsoszxI+5MA0GCSqGSIb3DQEBBQUAMIGQMQswCQYD
+qBgkuse74JojLyzxHg==
+-----END CERTIFICATE-----</pre></div>
+<p>
+is compressed by omitting the first and last line and by removing
+the line break, resulting in:
+</p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+MIIDmTCCAwKgAwIBAgIJAJbxsoszxI+5MA0GCSqGSIb3DQEBBQUAMIGQMQswCQYDqBgkuse74JojLyzxHg==</pre></div>
+<p>
+This value is base64 encoded and sent as text or CDATA inside the
+certificate element. Upon receiving the response, the remote wave
+server must compute the signer ID from the list of certificates
+to check that the received certificates match the requested signer.
+Therefore, the remote wave server decodes the certificates, encodes
+them using DER (ASN.1 Distinguished Encoding Rules), reversers their
+order, i.e. the root certificate of the chain is first and the
+closest certificate is the last. These DER encoded certificates are
+treated as an ASN.1 SEQUENCE OF data type and are concatenated
+accordingly resulting in a byte sequence. Finally, a SHA256 hash
+of the resulting byte sequence is computed. The hash must match the
+signer ID used in the signed delta.
+</p>
+<p>
+A ASN.1 SEQUENCE OF is enocded as follows:
+</p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+Byte 1: 0b110000 (this indicates the data type, i.e. SEQUENCE OF)
+Byte 2: 0b10000000 OR (the number of bytes required to express the length of the data as a binary number)
+Bytes 3 .. n: The data length encoded as a big endian number
+Bytes n+1 ff.: The data</pre></div>
+<p>
+For example, a data of length 0x293 is encoded as:
+</p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+Byte 1: 0b110000
+Byte 2: 0b10000010
+Byte 3: 0x02
+Byte 4: 0x93
+Bytes 5 ff.: The data</pre></div>
 <a name="anchor37"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.6"></a><h3>6.&nbsp;
 Post Signer</h3>
 
 <p>
-Before submitting a wavelet delta for the first time, a remote wave
-server will supply the certificate chain that will allow the hosting
-wave server to authenticate the signed wave delta.  More details on
-signing are still to be added to this document.
+Before its first submit request to a hosting wave server, a remote wave
+server MUST supply the certificate chain that will allow the hosting
+wave server to authenticate the signed wave delta.
+If the signature is not sent in advance, the hosting wave server will
+reject the submit request and the remote wave server must send the signature
+before it resends the submit request. More details on signing are still
+to be added to this document.
 </p>
 <p>
 Here is an example exchange:
@@ -1203,6 +1282,9 @@ The hosting wave server acks the message.:
     &lt;/publish&gt;
   &lt;/pubsub&gt;
 &lt;/iq&gt;</pre></div>
+<p>
+The encoding of the certificates are the same as in the signer request.
+</p>
 <a name="anchor38"></a><br /><hr />
 <table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
 <a name="rfc.section.7"></a><h3>7.&nbsp;
@@ -1525,7 +1607,7 @@ update =
             attribute wavelet-name { xsd:string },
             element wavesrv:applied-delta { text }*,
             commit-notice?
-          }
+          } *
         }
       }
     }
@@ -1546,8 +1628,8 @@ history-request =
           attribute wavelet-name { xsd:string },
           attribute start-version { xsd:integer },
           attribute start-version-hash { xsd:string },
-          attribute end-version { xsd:integer }?,
-          attribute end-version-hash { xsd:string }?,
+          attribute end-version { xsd:integer },
+          attribute end-version-hash { xsd:string },
           attribute response-length-limit { xsd:integer }?
         } *
       }
@@ -1748,10 +1830,10 @@ Protocol Buffers</h3>
 
 syntax = "proto2";
 
-package protocol;
+package federation;
 
-option java_package = "org.waveprotocol.wave.protocol";
-option java_outer_classname = "common";
+option java_package = "org.waveprotocol.wave.federation";
+option java_outer_classname = "Proto";
 
 /**
  * An immutable list of operations for contribution to a wavelet.
@@ -1914,7 +1996,7 @@ message ProtocolAppliedWaveletDelta {
 }
 
 /**
- * A delta signed with a number of domain signatures.
+ * A canonicalised delta signed with a number of domain signatures.
  */
 message ProtocolSignedDelta {
   required bytes delta = 1;

@@ -34,6 +34,9 @@ Google Wave Identifiers
     Wave. This specification describes Google Wave identifiers, which are used
     to identify waves, wavelets, and documents.
 
+    This document is one in a larger set of specifications for Google
+    Wave; see http://www.waveprotocol.org/draft-protocol-specs.
+
 :date: 2010 Mar
 
 

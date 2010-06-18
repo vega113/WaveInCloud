@@ -31,7 +31,7 @@ Google Wave Conversation Model
     schema and blip document schema, which together define the Google Wave
     conversation model. This application model is layered upon the documents,
     operations and operational transformation defined in the Wave Federation
-    Protocol; see http://waveprotocol.org.
+    Protocol; see http://www.waveprotocol.org/draft-protocol-specs.
 
 :date: 2009 Oct
 
