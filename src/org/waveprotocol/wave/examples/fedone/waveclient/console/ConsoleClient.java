@@ -505,17 +505,19 @@ public class ConsoleClient implements WaveletOperationListener {
 
   /**
    * Add a participant to the currently open wave(let).
-   *
+   * 
    * @param name name of the participant to add
    */
   private void addParticipant(String name) {
     if (isWaveOpen()) {
-      ParticipantId addId = new ParticipantId(name);
+      name = ensureHasDomain(name);
+      ParticipantId addId = ParticipantId.ofUnsafe(name);
 
-      // Don't send an invalid op, although the server should be robust enough to deal with it
+      // Don't send an invalid op, although the server should be robust enough
+      // to deal with it
       if (!getOpenWavelet().getParticipants().contains(addId)) {
-        backend.sendAndAwaitWaveletOperation(getOpenWavelet().getWaveletName(),
-                                     new AddParticipant(addId), 1, TimeUnit.MINUTES);
+        backend.sendAndAwaitWaveletOperation(getOpenWavelet().getWaveletName(), new AddParticipant(
+            addId), 1, TimeUnit.MINUTES);
       } else {
         out.println("Error: " + name + " is already a participant on this wave");
       }
@@ -526,22 +528,41 @@ public class ConsoleClient implements WaveletOperationListener {
 
   /**
    * Remove a participant from the currently open wave(let).
-   *
+   * 
    * @param name name of the participant to remove
    */
   private void removeParticipant(String name) {
     if (isWaveOpen()) {
-      ParticipantId removeId = new ParticipantId(name);
+      name = ensureHasDomain(name);
+      ParticipantId removeId = ParticipantId.ofUnsafe(name);
 
       if (getOpenWavelet().getParticipants().contains(removeId)) {
         backend.sendAndAwaitWaveletOperation(getOpenWavelet().getWaveletName(),
-                                     new RemoveParticipant(removeId), 1, TimeUnit.MINUTES);
+            new RemoveParticipant(removeId), 1, TimeUnit.MINUTES);
       } else {
         out.println("Error: " + name + " is not a participant on this wave");
       }
     } else {
       errorNoWaveOpen();
     }
+  }
+
+  /**
+   * Ensures that a domain name is present in the returned string, by either
+   * returning the given string or by appending the domain name of the local
+   * user.
+   * 
+   * @param address the address to ensure has a domain
+   * @return {@link String} which at least contains the domain prefix.
+   */
+  private String ensureHasDomain(String address) {
+    // Ensure that the given name has an explicit domain
+    if (!address.contains(ParticipantId.DOMAIN_PREFIX)) {
+      // No domain so add the domain of the local user
+      String localDomain = backend.getUserId().getDomain();
+      address += ParticipantId.DOMAIN_PREFIX + localDomain;
+    }
+    return address;
   }
 
   /**
