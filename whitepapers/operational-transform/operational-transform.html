@@ -3,14 +3,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.5: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
 <title>Google Wave Operational Transformation</title>
-<meta name="authors" content="David Wang  Alex Mah" />
+<meta name="authors" content="David Wang  Alex Mah  Soren Lassen" />
 <style type="text/css">
 
 /*
-:Author: David Goodger (goodger@python.org)
-:Id: $Id: html4css1.css 5196 2007-06-03 20:25:28Z wiemann $
+:Author: David Goodger
+:Contact: goodger@users.sourceforge.net
+:Date: $Date: 2005-12-18 01:56:14 +0100 (Sun, 18 Dec 2005) $
+:Revision: $Revision: 4224 $
 :Copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -116,7 +118,7 @@ div.line-block div.line-block {
   margin-left: 1.5em }
 
 div.sidebar {
-  margin: 0 0 0.5em 1em ;
+  margin-left: 1em ;
   border: medium outset ;
   padding: 1em ;
   background-color: #ffffee ;
@@ -222,7 +224,8 @@ pre.address {
 
 pre.literal-block, pre.doctest-block {
   margin-left: 2em ;
-  margin-right: 2em }
+  margin-right: 2em ;
+  background-color: #eeeeee }
 
 span.classifier {
   font-family: sans-serif ;
@@ -279,6 +282,9 @@ h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
 h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
   font-size: 100% }
 
+tt.docutils {
+  background-color: #eeeeee }
+
 ul.auto-toc {
   list-style-type: none }
 
@@ -293,44 +299,39 @@ ul.auto-toc {
 <tbody valign="top">
 <tr><th class="docinfo-name">Authors:</th>
 <td>David Wang
-<br />Alex Mah</td></tr>
+<br />Alex Mah
+<br />Soren Lassen</td></tr>
 <tr><th class="docinfo-name">Version:</th>
-<td>1.0 - May 2009</td></tr>
+<td>1.1 - July 2010</td></tr>
 </tbody>
 </table>
 <p>This whitepaper is part of a series. All of the whitepapers
-can be found on <a class="reference external" href="http://www.waveprotocol.org/whitepapers">Google Wave Federation Protocol site</a>.</p>
-<p>Waves are hosted XML documents that allow seamless and low latency concurrent
-modifications.  To provide this live experience, Wave uses Operational
-Transformation (OT) as the theoretical framework of concurrency control.</p>
-<div class="section" id="executive-summary">
-<h1>Executive Summary</h1>
-<p>Collaborative document editing means multiple editors being able to edit a
-shared document at the same time.. Live and concurrent means being able to see
-the changes another person is making, keystroke by keystroke.</p>
-<p>Currently, there are already a number of products on the market that offer
-collaborative document editing. Some offer live concurrent editing, such as
-EtherPad and SubEthaEdit, but do not offer rich text. There are others that
-offer rich text, such as Google Docs, but do not offer a seamless live
-concurrent editing experience, as merge failures can occur.</p>
-<p>Wave stands as a solution that offers both live concurrent editing and rich
-text document support.</p>
-<p>The result is that Wave allows for a very engaging conversation where you can
-see what the other person is typing, character by character much like how you
+can be found on <a class="reference" href="http://www.waveprotocol.org/whitepapers">Google Wave Federation Protocol site</a>.</p>
+<p>Waves are hosted, structured documents that allow seamless and low latency concurrent
+modifications.  To provide this live experience, Google Wave uses the Operational
+Transformation (OT) framework of concurrency control.</p>
+<div class="section">
+<h1><a id="executive-summary" name="executive-summary">Executive Summary</a></h1>
+<p>Collaborative document editing means multiple editors are able to edit a
+shared document at the same time. It is live and concurrent when a user can see
+the changes another person is making, keystroke by keystroke.
+Google Wave offers live concurrent editing of rich text documents.</p>
+<p>The result is that Google Wave allows for a very engaging conversation where you can
+see what the other person is typing, character by character, much like how you
 would converse in a cafe. This is very much like instant messaging except you
-can see what the other person is typing, live. Wave also allows for a more
+can see what the other person is typing, live. Google Wave also allows for a more
 productive collaborative document editing experience, where people don't have
 to worry about stepping on each others toes and still use common word processor
 functionalities such as bold, italics, bullet points, and headings.</p>
-<p>Wave is more than just rich text documents. In fact, Wave's core technology
-allows live concurrent modifications of XML documents which can be used to
+<p>Waves are more than just rich text documents. In fact, Google Wave's core technology
+allows live concurrent modifications of structured documents which can be used to
 represent any structured content including system data that is shared between
 clients and backend systems.</p>
-<p>To achieve these goals, Wave uses a concurrency control system based on
+<p>To achieve these goals, Google Wave uses a concurrency control system based on
 Operational Transformation.</p>
 </div>
-<div class="section" id="introduction">
-<h1>Introduction</h1>
+<div class="section">
+<h1><a id="introduction" name="introduction">Introduction</a></h1>
 <p>Operational transformation (OT) is a theoretical framework of concurrency
 control that has been continuously researched in the context of group editing
 for more than 10 years. This document does not describe the basic theory of OT
@@ -344,135 +345,108 @@ response time insensitive to networking latencies. These properties of OT play
 a big part in providing the Optimistic User Interface (UI) of Wave. Optimistic
 UI means user actions are executed and displayed locally to the user
 immediately without waiting for the server to respond.</p>
-<p>The starting point for Wave was the paper &quot;High-latency, low-bandwidth
+<p>The starting point for Wave OT was the paper &quot;High-latency, low-bandwidth
 windowing in the Jupiter collaboration system&quot;. Like the Jupiter system
-described by the paper, Wave also implements a client and server based OT
+described by the paper, Google Wave also implements a client and server based OT
 system. The reader is again encouraged to read this paper for background.</p>
-<p>In the Wave system, there are number of important objects. A Wave is a
-collection of Wavelets. A Wavelet is a collection of documents. A document
-consists of an XML document and some annotations. A Wavelet is where concurrent
-modification takes place. A Wavelet is the object on which OT is applied.</p>
-<p>This document will detail the extensions Wave made to the basic theory of OT
-and how Wave operations support rich text documents. Most importantly, this
-document details how we have designed Wave operations to transform large
-numbers of operations efficiently and how they allow efficient look up into any
-point of a Wavelet's history.</p>
+<p>This document describes the extensions Google Wave made to the basic theory of OT.</p>
 </div>
-<div class="section" id="wave-extensions-to-operational-transformation">
-<h1>Wave Extensions to Operational Transformation</h1>
-<div class="section" id="clients-wait-for-acknowledgement-from-server-before-sending-more-operations">
-<h2>Clients wait for acknowledgement from server before sending more operations</h2>
+<div class="section">
+<h1><a id="wave-extensions-to-operational-transformation" name="wave-extensions-to-operational-transformation">Wave Extensions to Operational Transformation</a></h1>
+<p>A wave is a collection of wavelets. A wavelet contains a collection of documents.
+A document consists of a structured, XML-like document and some annotations.
+A wavelet is where concurrent modification takes place.
+A wavelet is the object on which OT is applied.</p>
+<div class="section">
+<h2><a id="clients-wait-for-acknowledgement-from-server-before-sending-more-operations" name="clients-wait-for-acknowledgement-from-server-before-sending-more-operations">Clients wait for acknowledgement from server before sending more operations</a></h2>
 <p>To recap, under the basic theory of OT, a client can send operations
 sequentially to the server as quickly as it can. The server can do the same.
 This means the client and server can traverse through the state space via
-different OT paths to the same convergent state depending on when they receive
-the other parties operations. See diagram below.</p>
+different OT paths to the same convergent state, depending on when they receive
+the other parties' operations. See diagram below.</p>
 <img alt="img/ot-paths.png" src="img/ot-paths.png" />
 <p>When you have multiple clients connected to the server, every client and server
-pair have their own state space. One short coming of this is the server needs
-to carry a state space for every connected client which can be
+pair have their own state space. One shortcoming of this is the server needs
+to carry a state space for every connected client, which can be
 memory-intensive. In addition, this complicates the server algorithm by
 requiring it to convert clients' operations between state spaces.</p>
-<p>Having a simple and efficient server is important in making Wave reliable and
+<p>Having a simple and efficient server is important in making waves reliable and
 scalable. With this goal, Wave OT modifies the basic theory of OT by requiring
 the client to wait for acknowledgement from the server before sending more
 operations. When a server acknowledges a client's operation, it means the
 server has transformed the client's operation, applied it to the server's copy
-of the Wavelet and broadcasted the transformed operation to all other connected
+of the wavelet and broadcast the transformed operation to all other connected
 clients. Whilst the client is waiting for the acknowledgement, it caches
 operations produced locally and sends them in bulk later.</p>
 <p>With the addition of acknowledgements, a client can infer the server's OT path.
-We call this inferred server path. By having this, the client can send
+We call this the inferred server path. By having this, the client can send
 operations to the server that are always on the server's OT path.</p>
 <p>This has the important benefit that the server only needs to have a single
 state space, which is the history of operations it has applied. When it
 receives a client's operation, it only needs to transform the operation against
 the operation history, apply the transformed operation, and then broadcast it.</p>
 <img alt="img/david_ot3.png" src="img/david_ot3.png" />
-<p>One trade off of this change is that a client will see chunks of operations
+<p>One trade-off of this simplification is that a client will see chunks of operations
 from another client in intervals of approximately one round trip time to the
-other client. However, we believe the benefits obtained from the change make
-this a worthwhile trade off.</p>
+other client. We believe the server-side benefits make this a worthwhile trade-off.</p>
 </div>
 </div>
-<div class="section" id="recovery">
-<h1>Recovery</h1>
-<p>On top of OT, Wave also has the ability to recover from communication failure
-and server crash. This is particularly important in a large scale system
-environment.</p>
-<div class="section" id="checksums">
-<h2>Checksums</h2>
-<p>OT assumes all the clients and the server are able to transform and execute the
-operations in the same way. As an added guarantee that the resultant XML
-documents are the same, Wave OT also communicates the checksums of the XML
-documents with operations and acknowledgements. This allows a client to quickly
-detect errors and recover from it by replacing corrupted contents with fresh
-copies from the server.</p>
-</div>
-</div>
-<div class="section" id="wave-operations">
-<h1>Wave Operations</h1>
-<p>Wave operations consists of a document operation, for modifying XML documents
-and other non document operations. Non document operations are for tasks such
-as adding or removing a participant to a Wavelet. We'll focus on document
-operations here as they are the most central to Wave.</p>
-<p>It's worth noting that an XML document in Wave can be regarded as a single
-document operation that can be applied to the empty document.</p>
-<p>This section will also cover how Wave operations are particularly efficient
-even in the face of a large number of transforms.</p>
-<div class="section" id="xml-document-support">
-<h2>XML Document Support</h2>
-<p>Wave uses a streaming interface for document operations. This is similar to an
+<div class="section">
+<h1><a id="wavelet-operations" name="wavelet-operations">Wavelet Operations</a></h1>
+<p>Wavelet operations consist of document operations, for modifying documents,
+and non-document operations, for tasks such
+as adding or removing a wavelet participant. We'll focus on document
+operations here.</p>
+<div class="section">
+<h2><a id="document-support" name="document-support">Document Support</a></h2>
+<p>A document operation has a streaming interface, similar to an
 XMLStreamWriter or a SAX handler. The document operation consists of a sequence
 of ordered document mutations. The mutations are applied in sequence as you
 traverse the document linearly.</p>
-<p>Designing document operations in this manner makes it easier to write
+<p>Designing document operations in this manner makes it easier to write the
 transformation function and composition function described later.</p>
-<p>In Wave, every 16-bit Unicode code unit (as used in javascript, JSON, and Java
-strings), start tag or end tag in an XML document is called an item. Gaps
+<p>A wave document can be regarded as a single
+document operation that can be applied to the empty document.</p>
+<p>In Google Wave, every character, start tag or end tag in a document is called an item. Gaps
 between items are called positions. Position 0 is before the first item. A
 document operation can contain mutations that reference positions. For example,
-a &quot;Skip&quot; mutation specifies how many positions to skip ahead in the XML
+a &quot;Retain&quot; mutation specifies how many positions to skip ahead in the
 document before applying the next mutation.</p>
 <img alt="img/doc-items.png" src="img/doc-items.png" />
 <p>Wave document operations also support annotations. An annotation is some
-meta-data associated with an item range, i.e. a start position and an end
+meta-data associated with an item range, i.e., a start position and an end
 position. This is particularly useful for describing text formatting and
-spelling suggestions, as it does not unecessarily complicate the underlying XML
+spelling suggestions, as it does not unecessarily complicate the underlying structured
 document format.</p>
 <img alt="img/annotations.png" src="img/annotations.png" />
 <p>Wave document operations consist of the following mutation components:</p>
 <ul class="simple">
-<li>skip</li>
+<li>retain</li>
 <li>insert characters</li>
 <li>insert element start</li>
 <li>insert element end</li>
-<li>insert anti-element start</li>
-<li>insert anti-element end</li>
 <li>delete characters</li>
 <li>delete element start</li>
 <li>delete element end</li>
-<li>delete anti-element start</li>
-<li>delete anti-element end</li>
-<li>set attributes</li>
+<li>replace attributes</li>
 <li>update attributes</li>
-<li>commence annotation</li>
-<li>conclude annotation</li>
+<li>annotation boundary</li>
 </ul>
 <p>The following is a more complex example document operation.:</p>
 <pre class="literal-block">
-skip 3
+retain 3
 insert element start with tag &quot;p&quot; and no attributes
 insert characters &quot;Hi there!&quot;
 insert element end
-skip 5
+retain 5
 delete characters 4
+retain 2
 </pre>
-<p>From this, one could see how an entire XML document can be represented as a
+<p>From this, one can see how an entire document can be represented as a
 single document operation.</p>
 </div>
-<div class="section" id="transformation-function">
-<h2>Transformation Function</h2>
+<div class="section">
+<h2><a id="transformation-function" name="transformation-function">Transformation Function</a></h2>
 <p>Representing document operations using a stream interface has the benefit that
 it makes processing operations in a linear fashion easy.</p>
 <img alt="img/transformation.png" src="img/transformation.png" />
@@ -481,61 +455,25 @@ simultaneously processing the two operations in a linear fashion, and
 outputting two streaming operations. This stream-style processing ensures that
 transforming a pair of very large operations is efficient.</p>
 </div>
-<div class="section" id="composition-transforming-large-number-of-operations">
-<h2>Composition - Transforming large number of operations</h2>
+<div class="section">
+<h2><a id="composition" name="composition">Composition</a></h2>
 <p>The document operations have been engineered so that they can be composed
 together and the composition of any two document operations that can be
 composed together is itself a single document operation.</p>
 <p>Furthermore, the composition algorithm processes operations as linear streams,
 so the composition algorithm is efficient.</p>
 <img alt="img/composition.png" src="img/composition.png" />
-<p>The composition operation has been designed to fulfil some requirements.</p>
-<p>Firstly, the composition B∙A has the property that (B∙A)(d) = B(A(d))
-for all documents on which A can be applied. This is the requirement from
-the definition of composition.</p>
-<p>The second requirement is that:</p>
-<pre class="literal-block">
-transform(A,X) = (A',X')
-</pre>
-<p>and:</p>
-<pre class="literal-block">
-transform(B,X') = (B',X'')
-</pre>
-<p>implies:</p>
-<pre class="literal-block">
-transform(B∙A,X) = (B'∙A', X'')
-</pre>
-<p>and that:</p>
-<pre class="literal-block">
-transform(X,A) = (X',A')
-</pre>
-<p>and:</p>
-<pre class="literal-block">
-transform(X',B) = (X'',B')
-</pre>
-<p>implies:</p>
-<pre class="literal-block">
-transform(X,B∙A) = (X'',B∙A')
-</pre>
-<p>In traditional operational transformation frameworks, if the server and client
-have gone far out of sync and have each accumulated a lot of concurrent
-unacknowledged operations, transformation can be expensive.  If n is the number
-of client operations the server has not yet acknowledged and m is the number of
-server operations the client has not yet acknowledged, then nm transformations
-are required to resolve the concurrency issue in a traditional operational
-transformation framework.</p>
-<p>Transforming many client operations with many server operations can be made
-efficient if both composition is efficient and transformation of operations
-resulting from composition is efficient.</p>
-<p>We can design composition to be efficient enough that we can cut the
-transformation running time to O(n log n + m log m), where n is the total size
-of the client operations and m is the total size of the server operations.</p>
+<p>The composition B∙A has the property that (B∙A)(d) = B(A(d))
+for all documents d on which A can be applied.</p>
+<p>While a Wave client awaits server acknowledgement, it composes all its
+pending operations. This reduces the number of operations to transform
+and send.</p>
 </div>
 </div>
-<div class="section" id="references">
-<h1>References</h1>
-<p>&quot;Operational transformation&quot;. In Wikipedia, the free encyclopedia, May 28, 2009. <a class="reference external" href="http://en.wikipedia.org/wiki/Operational_transformation">http://en.wikipedia.org/wiki/Operational_transformation</a></p>
-<p>David A. Nichols, Pavel Curtis, Michael Dixon, and John Lamping: <a class="reference external" href="http://doi.acm.org/10.1145/215585.215706">High-latency, low-bandwidth windowing in the Jupiter collaboration system</a>, UIST '95: Proceedings of the 8th annual ACM symposium on User interface and software technology, pp.111-120. ACM, 1995.</p>
+<div class="section">
+<h1><a id="references" name="references">References</a></h1>
+<p>&quot;Operational transformation&quot;. In Wikipedia, the free encyclopedia, May 28, 2009. <a class="reference" href="http://en.wikipedia.org/wiki/Operational_transformation">http://en.wikipedia.org/wiki/Operational_transformation</a></p>
+<p>David A. Nichols, Pavel Curtis, Michael Dixon, and John Lamping: <a class="reference" href="http://doi.acm.org/10.1145/215585.215706">High-latency, low-bandwidth windowing in the Jupiter collaboration system</a>, UIST '95: Proceedings of the 8th annual ACM symposium on User interface and software technology, pp.111-120. ACM, 1995.</p>
 </div>
 </div>
 </body>
