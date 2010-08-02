@@ -1,5 +1,5 @@
-URL: http://mortbay.org/
-Version: 6.1.22 (for Probey agent), 7.0.1 (for websocket) [TODO: migrate probey to 7.0.1]
+URL: http://www.eclipse.org/jetty/downloads.php
+Version: 7.0.2 (for websocket)
 License: Apache 2.0
 
 License File: COPYING

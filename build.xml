@@ -318,8 +318,8 @@
         <include name="javax/inject/**/*" />
         <include name="javax/servlet/**/*" />
         <include name="org/apache/commons/codec/**/*" />
+      	<include name="org/eclipse/jetty/**/*" />
         <include name="org/waveprotocol/**/*" />
-        <include name="org/mortbay/**/*" />
       </fileset>
       <manifest>
         <!-- Application entry point -->

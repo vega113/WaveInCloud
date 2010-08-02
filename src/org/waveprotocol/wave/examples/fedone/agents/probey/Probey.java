@@ -18,15 +18,23 @@
 package org.waveprotocol.wave.examples.fedone.agents.probey;
 
 import com.google.common.collect.ImmutableList;
-import org.mortbay.jetty.Handler;
-import org.mortbay.jetty.Request;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.handler.AbstractHandler;
-import org.mortbay.jetty.security.*;
+
+import org.eclipse.jetty.http.security.Constraint;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AbstractAgent;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentConnection;
 import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
@@ -34,6 +42,8 @@ import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -46,12 +56,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * The probey agent provides a web interface for remote applications to trigger operations against a
- * fedone waveserver. It allows easy testing of Federation.
- *
+ * The probey agent provides a web interface for remote applications to trigger
+ * operations against a fedone waveserver. It allows easy testing of
+ * Federation.
+ * 
  * @author arb@google.com (Anthony Baxter)
  */
 public class Probey extends AbstractAgent {
@@ -68,7 +81,7 @@ public class Probey extends AbstractAgent {
    */
   private Probey(AgentConnection connection, String userAtDomain) {
     super(connection);
-    this.userId = new ParticipantId(userAtDomain);
+    this.userId = ParticipantId.ofUnsafe(userAtDomain);
   }
 
   /**
@@ -98,7 +111,7 @@ public class Probey extends AbstractAgent {
    * @param name   the user to add to the wave
    */
   public void addUser(String waveId, String name) {
-    ParticipantId addId = new ParticipantId(name);
+    ParticipantId addId = ParticipantId.ofUnsafe(name);
     ClientWaveView wave = getWave(WaveId.deserialise(waveId));
     if (wave == null) {
       throw new IllegalArgumentException("NOT FOUND");
@@ -236,12 +249,18 @@ public class Probey extends AbstractAgent {
           throw new IllegalArgumentException("username must be in form user@domain");
         }
 
-        Probey probey = new Probey(AgentConnection.newConnection(args[0],
-                                                                 args[1],
-                                                                 port),
-                                   args[0]);
-        Handler handler = new WebHandler(probey);
+        Probey probey = new Probey(
+            AgentConnection.newConnection(args[0], args[1], port), args[0]);
+
         Server server = new Server(httpport);
+
+        LoginService loginService = 
+          new HashLoginService("probey","./etc/probey/realm.properties");
+        //Lifecycle object that will now be started/stopped w/ server
+        server.addBean(loginService); 
+
+        ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
+        server.setHandler(securityHandler);
 
         Constraint constraint = new Constraint();
         constraint.setName(Constraint.__BASIC_AUTH);
@@ -252,16 +271,28 @@ public class Probey extends AbstractAgent {
         constraintMapping.setConstraint(constraint);
         constraintMapping.setPathSpec("/*");
 
-        HashUserRealm userRealm = new HashUserRealm();
-        userRealm.setName("Probey");
-        userRealm.setConfig("./etc/probey/realm.properties");
-        SecurityHandler securityHandler = new SecurityHandler();
-        securityHandler.setUserRealm(userRealm);
-        securityHandler.setConstraintMappings(new ConstraintMapping[]{constraintMapping});
+        Set<String> knownRoles = Collections.singleton("probey");
+        
+        securityHandler.setAuthenticator(new BasicAuthenticator());
+        securityHandler.setLoginService(loginService);
+        securityHandler.setStrict(false);
+        securityHandler.setConstraintMappings(new ConstraintMapping[]{constraintMapping}, 
+            knownRoles);
+        
+        ContextHandlerCollection contexts = new ContextHandlerCollection();
 
-        server.setUserRealms(new UserRealm[]{userRealm});
-        server.setHandlers(new Handler[]{securityHandler, handler});
-
+        ContextHandler context = new ContextHandler();
+        context.setContextPath("/");
+        context.setResourceBase(".");
+        context.setClassLoader(Thread.currentThread().getContextClassLoader());
+        context.setHandler(new WebHandler(probey));
+        contexts.addHandler(context);
+        
+        securityHandler.setHandler(contexts);
+        
+        server.setGracefulShutdown(1000);
+        server.setStopAtShutdown(true);
+        
         server.start();  // spawns a new thread.
         probey.run();
       } else {
@@ -279,13 +310,16 @@ public class Probey extends AbstractAgent {
   static class WebHandler extends AbstractHandler {
 
     private Probey probey;
+    private final URIEncoderDecoder uriCodec;
 
     public WebHandler(Probey probey) {
       this.probey = probey;
+      this.uriCodec = new URIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
     }
 
     @Override
-    public void handle(String s, HttpServletRequest request, HttpServletResponse response, int i)
+    public void handle(String target, Request baseRequest, HttpServletRequest request, 
+        HttpServletResponse response)
         throws IOException, ServletException {
       response.setContentType("text/plain");
       response.setStatus(HttpServletResponse.SC_OK);
@@ -309,7 +343,7 @@ public class Probey extends AbstractAgent {
           writer.println("OK");
 
         } else if (url.startsWith("/addblip/")) {
-          String[] parts = url.split("/");
+          String[] parts = uriCodec.decode(url).split("/");
           if (parts.length != 4) {
             throw new IllegalArgumentException("bad request");
           }
@@ -317,7 +351,7 @@ public class Probey extends AbstractAgent {
           writer.println(probey.addBlip(parts[2], parts[3]));
 
         } else if (url.startsWith("/getblips/")) {
-          String[] parts = url.split("/");
+          String[] parts = uriCodec.decode(url).split("/");
           if (parts.length != 3) {
             throw new IllegalArgumentException("bad request");
           }
@@ -330,6 +364,9 @@ public class Probey extends AbstractAgent {
         }
       } catch (IllegalArgumentException e) {
         writer.println(e.getMessage());
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      }  catch (EncodingException e) {
+        writer.println("Invalid Encoding: " + e.getMessage());
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       }
       ((Request) request).setHandled(true);
