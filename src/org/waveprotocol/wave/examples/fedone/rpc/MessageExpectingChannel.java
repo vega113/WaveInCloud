@@ -20,8 +20,6 @@ package org.waveprotocol.wave.examples.fedone.rpc;
 import com.google.common.collect.Maps;
 import com.google.protobuf.Message;
 
-import org.waveprotocol.wave.examples.fedone.util.Log;
-
 import java.util.Map;
 
 /**

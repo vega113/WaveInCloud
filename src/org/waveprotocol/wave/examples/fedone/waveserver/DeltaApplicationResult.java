@@ -35,7 +35,7 @@ public class DeltaApplicationResult {
   /**
    * @param appliedDelta result of application, untransformed
    * @param transformedDelta result of application, transformed
-   * @param hashedVersionAfterApplication
+   * @param hashedVersionAfterApplication the version after the wavelet is applied
    */
   public DeltaApplicationResult(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,

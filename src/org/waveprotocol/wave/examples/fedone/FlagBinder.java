@@ -16,7 +16,6 @@
 
 package org.waveprotocol.wave.examples.fedone;
 
-import com.google.protobuf.RpcCallback;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
@@ -24,20 +23,11 @@ import com.google.inject.name.Names;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.federation.Proto;
-import org.waveprotocol.wave.waveserver.SubmitResultListener;
-import org.waveprotocol.wave.waveserver.WaveletFederationListener;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
-import org.xmpp.packet.Message;
-
 import java.lang.reflect.Field;
-import java.util.logging.Logger;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -96,9 +86,10 @@ public class FlagBinder {
       }
 
       Flag flag = field.getAnnotation(Flag.class);
-      final OptionBuilder option = OptionBuilder.withLongOpt(flag.name())
-          .hasArg()
-          .withArgName(flag.name().toUpperCase());
+      OptionBuilder.withLongOpt(flag.name());
+      OptionBuilder
+          .hasArg();
+      final OptionBuilder option = OptionBuilder.withArgName(flag.name().toUpperCase());
       if (flag.defaultValue().isEmpty()) {
         OptionBuilder.withDescription(flag.description());
       } else {

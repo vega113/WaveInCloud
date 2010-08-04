@@ -21,9 +21,9 @@ import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
-import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -60,68 +60,68 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
    * Should updates by the passed author onto the given wavelet be ignored by
    * agents.
    */
-  private boolean isIgnored(String author, WaveletData wavelet) {
+  private boolean isIgnored(String author, CoreWaveletData wavelet) {
     return wavelet.getWaveletName().waveId.equals(CommonConstants.INDEX_WAVE_ID);
   }
 
   /**
    * Returns true if this was an event originated by the agent itself.
    */
-  private boolean isSelfEvent(String author, WaveletData wavelet) {
+  private boolean isSelfEvent(String author, CoreWaveletData wavelet) {
     // TODO: in the coming agent framework refactor, change author to be
     // a participantId throughout.
     return new ParticipantId(author).equals(connection.getParticipantId());
   }
 
   @Override
-  public void noOp(String author, WaveletData wavelet) {}
+  public void noOp(String author, CoreWaveletData wavelet) {}
 
   @Override
-  public void onDeltaSequenceEnd(WaveletData wavelet) {}
+  public void onDeltaSequenceEnd(CoreWaveletData wavelet) {}
 
   @Override
-  public void onDeltaSequenceStart(WaveletData wavelet) {}
+  public void onDeltaSequenceStart(CoreWaveletData wavelet) {}
 
   @Override
-  public void onCommitNotice(WaveletData wavelet, HashedVersion version) {}
+  public void onCommitNotice(CoreWaveletData wavelet, HashedVersion version) {}
 
   @Override
-  public void onDocumentChanged(WaveletData wavelet, WaveletDocumentOperation documentOperation) {
+  public void onDocumentChanged(CoreWaveletData wavelet, CoreWaveletDocumentOperation documentOperation) {
     for (AgentEventListener l : listeners) {
       l.onDocumentChanged(wavelet, documentOperation);
     }
   }
 
   @Override
-  public void onParticipantAdded(WaveletData wavelet, ParticipantId participant) {
+  public void onParticipantAdded(CoreWaveletData wavelet, ParticipantId participant) {
     for (AgentEventListener l : listeners) {
       l.onParticipantAdded(wavelet, participant);
     }
   }
 
   @Override
-  public void onParticipantRemoved(WaveletData wavelet, ParticipantId participant) {
+  public void onParticipantRemoved(CoreWaveletData wavelet, ParticipantId participant) {
     for (AgentEventListener l : listeners) {
       l.onParticipantRemoved(wavelet, participant);
     }
   }
 
   @Override
-  public void onSelfAdded(WaveletData wavelet) {
+  public void onSelfAdded(CoreWaveletData wavelet) {
     for (AgentEventListener l : listeners) {
       l.onSelfAdded(wavelet);
     }
   }
 
   @Override
-  public void onSelfRemoved(WaveletData wavelet) {
+  public void onSelfRemoved(CoreWaveletData wavelet) {
     for (AgentEventListener l : listeners) {
       l.onSelfRemoved(wavelet);
     }
   }
 
   @Override
-  public void participantAdded(String author, WaveletData wavelet, ParticipantId participantId) {
+  public void participantAdded(String author, CoreWaveletData wavelet, ParticipantId participantId) {
     if (isIgnored(author, wavelet)) {
       return;
     }
@@ -134,7 +134,7 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
   }
 
   @Override
-  public void participantRemoved(String author, WaveletData wavelet, ParticipantId participantId) {
+  public void participantRemoved(String author, CoreWaveletData wavelet, ParticipantId participantId) {
     if (isIgnored(author, wavelet)) {
       return;
     }
@@ -162,7 +162,7 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
   }
 
   @Override
-  public void waveletDocumentUpdated(String author, WaveletData wavelet, WaveletDocumentOperation operation) {
+  public void waveletDocumentUpdated(String author, CoreWaveletData wavelet, CoreWaveletDocumentOperation operation) {
     if (isIgnored(author, wavelet) || isSelfEvent(author, wavelet)) {
       return;
     }

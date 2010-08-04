@@ -23,9 +23,10 @@ import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
+
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
@@ -36,11 +37,11 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.wave.AddParticipant;
-import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collections;
@@ -73,9 +74,9 @@ public class WaveletContainerTest extends TestCase {
       .setSignatureAlgorithm(ProtocolSignature.SignatureAlgorithm.SHA1_RSA)
       .build();
 
-  private List<WaveletOperation> addParticipantOps;
-  private List<WaveletOperation> removeParticipantOps;
-  private List<WaveletOperation> doubleRemoveParticipantOps;
+  private List<CoreWaveletOperation> addParticipantOps;
+  private List<CoreWaveletOperation> removeParticipantOps;
+  private List<CoreWaveletOperation> doubleRemoveParticipantOps;
 
   private ProtocolWaveletDelta addParticipantDelta;
   private ProtocolWaveletDelta removeParticipantDelta;
@@ -94,20 +95,21 @@ public class WaveletContainerTest extends TestCase {
     removeParticipantOps = Lists.newArrayList();
 
     for (ParticipantId p : participants) {
-      addParticipantOps.add(new AddParticipant(p));
-      removeParticipantOps.add(new RemoveParticipant(p));
+      addParticipantOps.add(new CoreAddParticipant(p));
+      removeParticipantOps.add(new CoreRemoveParticipant(p));
     }
 
     Collections.reverse(removeParticipantOps);
     doubleRemoveParticipantOps = Lists.newArrayList(removeParticipantOps);
     doubleRemoveParticipantOps.addAll(removeParticipantOps);
 
-    addParticipantDelta = WaveletOperationSerializer.serialize(
-        new WaveletDelta(author, addParticipantOps), version0);
-    removeParticipantDelta = WaveletOperationSerializer.serialize(
-        new WaveletDelta(author, removeParticipantOps), version0);
-    doubleRemoveParticipantDelta = WaveletOperationSerializer.serialize(
-        new WaveletDelta(author, doubleRemoveParticipantOps), version0);
+
+    addParticipantDelta = CoreWaveletOperationSerializer.serialize(
+        new CoreWaveletDelta(author, addParticipantOps), version0, null);
+    removeParticipantDelta = CoreWaveletOperationSerializer.serialize(
+        new CoreWaveletDelta(author, removeParticipantOps), version0, null);
+    doubleRemoveParticipantDelta = CoreWaveletOperationSerializer.serialize(
+        new CoreWaveletDelta(author, doubleRemoveParticipantOps), version0, null);
   }
 
   // Tests
@@ -229,13 +231,13 @@ public class WaveletContainerTest extends TestCase {
     String docId = "b+somedoc";
     BufferedDocOp docOp1 = new DocOpBuilder().characters("hi").build();
     BufferedDocOp docOp2 = new DocOpBuilder().characters("bye").build();
-    localWavelet.applyWaveletOperations(ImmutableList.<WaveletOperation> of(
-        new WaveletDocumentOperation(docId, docOp1)));
+    localWavelet.applyWaveletOperations(ImmutableList.<CoreWaveletOperation> of(
+        new CoreWaveletDocumentOperation(docId, docOp1)));
     try {
       // Version will still be 0 (applyWaveletOperations doesn't affect it) so "hi" and "bye"
       // won't compose properly.
-      localWavelet.applyWaveletOperations(ImmutableList.<WaveletOperation> of(
-          new WaveletDocumentOperation(docId, docOp2)));
+      localWavelet.applyWaveletOperations(ImmutableList.<CoreWaveletOperation> of(
+          new CoreWaveletDocumentOperation(docId, docOp2)));
       fail("Composition of \"hi\" and \"bye\" did not throw OperationException");
     } catch (OperationException expected) {
       // Correct

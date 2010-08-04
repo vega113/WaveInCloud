@@ -14,30 +14,64 @@
  * limitations under the License.
  *
  */
- 
+
 package org.waveprotocol.wave.examples.fedone.rpc;
 
-import java.io.IOException;
-
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.protobuf.JsonFormat;
 import com.google.protobuf.Message;
 
-import org.waveprotocol.wave.examples.fedone.util.Log;
+import com.dyuproject.protostuff.json.ReflectionNumericJSON;
 
-import org.eclipse.jetty.websocket.WebSocket;
+import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.waveserver.MessageWrapper;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
+import org.waveprotocol.wave.federation.Proto;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * A channel abstraction for websocket, for sending and receiving strings.
  */
 public abstract class WebSocketChannel extends MessageExpectingChannel {
   private static final Log LOG = Log.get(WebSocketChannel.class);
-  private static final int VERSION = 0;
+  private static final int VERSION = 1;
 
   private final ProtoCallback callback;
   private Gson gson = new Gson();
-  
+  private final ReflectionNumericJSON jsonConverter;
+  @SuppressWarnings("unchecked")
+  private static final Class<? extends Message>[] MODULE_CLASSES = new Class[]{
+      WaveClientRpc.ProtocolOpenRequest.class,
+      WaveClientRpc.ProtocolSubmitRequest.class,
+      WaveClientRpc.ProtocolSubmitResponse.class,
+      WaveClientRpc.ProtocolWaveClientRpc.class,
+      WaveClientRpc.ProtocolWaveletUpdate.class,
+      WaveClientRpc.WaveletSnapshot.class,
+      Proto.ProtocolAppliedWaveletDelta.class,
+      Proto.ProtocolDocumentOperation.class,
+      Proto.ProtocolDocumentOperation.Component.class,
+      Proto.ProtocolDocumentOperation.Component.KeyValuePair.class,
+      Proto.ProtocolDocumentOperation.Component.KeyValueUpdate.class,
+      Proto.ProtocolDocumentOperation.Component.ElementStart.class,
+      Proto.ProtocolDocumentOperation.Component.ReplaceAttributes.class,
+      Proto.ProtocolDocumentOperation.Component.UpdateAttributes.class,
+      Proto.ProtocolDocumentOperation.Component.AnnotationBoundary.class,
+      Proto.ProtocolHashedVersion.class,
+      Proto.ProtocolSignature.class,
+      Proto.ProtocolSignedDelta.class,
+      Proto.ProtocolSignerInfo.class,
+      Proto.ProtocolWaveletDelta.class,
+      Proto.ProtocolWaveletOperation.class,
+      Proto.ProtocolWaveletOperation.MutateDocument.class,
+      Rpc.CancelRpc.class,
+      Rpc.RpcFinished.class,
+  };
+  private Map<String, Class<? extends Message>> protosByName;
+
   /**
    * Constructs a new WebSocketChannel, using the callback to handle any
    * incoming messages.
@@ -47,84 +81,55 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
    */
   public WebSocketChannel(ProtoCallback callback) {
     this.callback = callback;
-  }
-  
-  /**
-   * A simple message wrapper that bundles a json string with a version,
-   * sequence number, and type information.
-   */
-  private static class MessageWrapper {
-    private int version;
-    private long sequenceNumber;
-    private String messageType;
-    private String messageJson;
-    
-    MessageWrapper() {
-      // no-args constructor
-    }
-    MessageWrapper(int version, long sequenceNumber, String messageType, 
-        String messageJson) {
-      this.version = version;
-      this.sequenceNumber = sequenceNumber;
-      this.messageType = messageType;
-      this.messageJson = messageJson;
+    jsonConverter = new ReflectionNumericJSON(MODULE_CLASSES);
+    protosByName = Maps.newHashMap();
+    for (Class<? extends Message> class_ : MODULE_CLASSES) {
+      protosByName.put(shortName(class_.getName()), class_);
     }
   }
-  
-  /**
-   * Convert the given string into a Message object and pass it to the proto 
-   * callback.
-   *
-   * @param data A json-encoded MessageWrapper object.
-   */
+
+  private String shortName(final String className) {
+    String[] pieces = className.split("[\\.\\$]");
+    return pieces[pieces.length-1];
+  }
+
   public void handleMessageString(String data) {
-    MessageWrapper wrapper = null;
+    LOG.info("received JSON message " + data);
+    MessageWrapper wrapper = gson.fromJson(data, MessageWrapper.class);
+    Message m;
+    Class<? extends Message> protoClass = protosByName.get(wrapper.messageType);
     try {
-      wrapper = gson.fromJson(data, MessageWrapper.class);
-    } catch (JsonParseException jpe) {
-      LOG.info("Unable to parse JSON: " + jpe.getMessage());
-      throw new IllegalArgumentException(jpe);
+      m = jsonConverter
+          .parseFrom(new ByteArrayInputStream(wrapper.messageJson.getBytes()),
+              protoClass);
+    } catch (IOException e) {
+      e.printStackTrace();
+      return;
     }
-    
-    if (wrapper.version != VERSION) {
-      LOG.info("Bad message version number: " + wrapper.version);
-      throw new IllegalArgumentException("Bad version number: " + wrapper.version);
-    }
-    
-    Message prototype = getMessagePrototype(wrapper.messageType);
-    if (prototype == null) {
-      LOG.info("Received misunderstood message (??? " + wrapper.messageType + " ???, seq "
-          + wrapper.sequenceNumber + ") from: " + this);
-      callback.unknown(wrapper.sequenceNumber, wrapper.messageType, wrapper.messageJson);
-    } else {
-      Message.Builder builder = prototype.newBuilderForType();
-      try {
-        JsonFormat.merge(wrapper.messageJson, builder);
-        callback.message(wrapper.sequenceNumber, builder.build());        
-      } catch (JsonFormat.ParseException pe) {
-        LOG.info("Unable to parse message (" + wrapper.messageType + ", seq "
-          + wrapper.sequenceNumber + ") from: " + this + " -- " + wrapper.messageJson);
-        callback.unknown(wrapper.sequenceNumber, wrapper.messageType, wrapper.messageJson);
-      }
-    }
+    LOG.info("message was " + m.getDescriptorForType().getName());
+    callback.message(wrapper.sequenceNumber, m);
   }
-  
+
   /**
    * Send the given data String
    *
    * @param data
    */
   protected abstract void sendMessageString(String data);
-  
-  /**
-   * Send the given message across the connection along with the sequence number.
-   * 
-   * @param sequenceNo
-   * @param message
-   */
+
+  @Override
   public void sendMessage(long sequenceNo, Message message) {
-    sendMessageString(gson.toJson(new MessageWrapper(
-      VERSION, sequenceNo, message.getDescriptorForType().getFullName(),
-      JsonFormat.printToString(message))));      
+    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    try {
+      jsonConverter.writeTo(outputStream, message);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    String json = outputStream.toString();
+
+    MessageWrapper wrapper = new MessageWrapper(VERSION, sequenceNo,
+        message.getDescriptorForType().getName(), json);
+    sendMessageString(gson.toJson(wrapper));
+    LOG.info("sent JSON message over websocket, sequence number " + sequenceNo + ", message " + message.toString());
   }
 }

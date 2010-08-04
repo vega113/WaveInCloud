@@ -46,8 +46,8 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider.DeltaSignerInfoResponseListener;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider.DeltaSignerInfoResponseListener;
 
 import java.util.List;
 import java.util.Map;

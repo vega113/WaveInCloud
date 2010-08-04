@@ -19,14 +19,15 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.internal.Nullable;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest;
@@ -43,13 +44,13 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.waveserver.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Collections;
 
 /**
  * Tests {@link WaveClientRpcImpl}.
@@ -104,12 +105,13 @@ public class WaveClientRpcImplTest extends TestCase {
     @Override
     public void openRequest(ParticipantId participant, WaveId waveId,
         Set<String> waveletIdPrefixes, int maximumInitialWavelets, boolean snapshotsEnabled,
-        OpenListener openListener) {
+        final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
       openListeners.put(waveId, openListener);
     }
 
     @Override
     public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
+        @Nullable String channelId,
         SubmitResultListener listener) {
       submitRecords.put(waveletName, new SubmitRecord(delta.getOperationCount(), listener));
     }
@@ -119,16 +121,17 @@ public class WaveClientRpcImplTest extends TestCase {
       OpenListener listener = openListeners.get(waveletName.waveId);
       if (listener != null) {
         final List<ProtocolWaveletDelta> emptyList = Collections.emptyList();
-        listener.onUpdate(waveletName, null, emptyList, null, HASHED_VERSION);
+        listener.onUpdate(waveletName, null, emptyList, null, HASHED_VERSION, false, null);
       }
     }
 
     @Override
     public void waveletUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> newDeltas,
-        ProtocolHashedVersion resultingVersion, Map<String, BufferedDocOp> documentState) {
+        ProtocolHashedVersion resultingVersion, Map<String, BufferedDocOp> documentState,
+        @Nullable String channelId) {
       OpenListener listener = openListeners.get(waveletName.waveId);
       if (listener != null) {
-        listener.onUpdate(waveletName, null, newDeltas, resultingVersion, null);
+        listener.onUpdate(waveletName, null, newDeltas, resultingVersion, null, false, null);
       }
     }
   }
@@ -136,7 +139,7 @@ public class WaveClientRpcImplTest extends TestCase {
   private static final String FAIL_MESSAGE = "Failed";
 
   private static final ProtocolHashedVersion HASHED_VERSION =
-    WaveletOperationSerializer.serialize(HashedVersion.unsigned(101L));
+    CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(101L));
 
   private static final ParticipantId USER = new ParticipantId("user@host.com");
 
@@ -154,7 +157,7 @@ public class WaveClientRpcImplTest extends TestCase {
   private static final ImmutableList<ProtocolWaveletDelta> DELTAS = ImmutableList.of(DELTA);
 
   private static final ProtocolHashedVersion RESULTING_VERSION =
-    WaveletOperationSerializer.serialize(HashedVersion.unsigned(102L));
+    CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(102L));
 
   /** RpcController that just handles error text and failure condition. */
   private final RpcController controller = new RpcController() {
@@ -232,6 +235,8 @@ public class WaveClientRpcImplTest extends TestCase {
     rpcImpl = new WaveClientRpcImpl(frontend);
   }
 
+  // TODO(arb): test with channelIds.
+  
   /**
    * Tests that an open results in a proper wavelet commit update.
    */
@@ -295,7 +300,8 @@ public class WaveClientRpcImplTest extends TestCase {
       }
     });
     Map<String, BufferedDocOp> documentState = ImmutableMap.of();
-    frontend.waveletUpdate(WAVELET_NAME, DELTAS, RESULTING_VERSION, documentState);
+    frontend.waveletUpdate(WAVELET_NAME, DELTAS, RESULTING_VERSION, documentState,
+                           null /* channelId */);
     assertEquals(1, counter);
     assertFalse(controller.failed());
   }

@@ -31,6 +31,7 @@ public final class Rpc {
       return org.waveprotocol.wave.examples.fedone.rpc.Rpc.internal_static_rpc_CancelRpc_descriptor;
     }
     
+    @Override
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return org.waveprotocol.wave.examples.fedone.rpc.Rpc.internal_static_rpc_CancelRpc_fieldAccessorTable;
@@ -38,10 +39,12 @@ public final class Rpc {
     
     private void initFields() {
     }
+    @Override
     public final boolean isInitialized() {
       return true;
     }
     
+    @Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
@@ -49,6 +52,7 @@ public final class Rpc {
     }
     
     private int memoizedSerializedSize = -1;
+    @Override
     public int getSerializedSize() {
       int size = memoizedSerializedSize;
       if (size != -1) return size;
@@ -146,10 +150,12 @@ public final class Rpc {
         return builder;
       }
       
+      @Override
       protected org.waveprotocol.wave.examples.fedone.rpc.Rpc.CancelRpc internalGetResult() {
         return result;
       }
       
+      @Override
       public Builder clear() {
         if (result == null) {
           throw new IllegalStateException(
@@ -159,10 +165,12 @@ public final class Rpc {
         return this;
       }
       
+      @Override
       public Builder clone() {
         return create().mergeFrom(result);
       }
       
+      @Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return org.waveprotocol.wave.examples.fedone.rpc.Rpc.CancelRpc.getDescriptor();
@@ -172,6 +180,7 @@ public final class Rpc {
         return org.waveprotocol.wave.examples.fedone.rpc.Rpc.CancelRpc.getDefaultInstance();
       }
       
+      @Override
       public boolean isInitialized() {
         return result.isInitialized();
       }
@@ -201,6 +210,7 @@ public final class Rpc {
         return returnMe;
       }
       
+      @Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.waveprotocol.wave.examples.fedone.rpc.Rpc.CancelRpc) {
           return mergeFrom((org.waveprotocol.wave.examples.fedone.rpc.Rpc.CancelRpc)other);
@@ -216,6 +226,7 @@ public final class Rpc {
         return this;
       }
       
+      @Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -276,6 +287,7 @@ public final class Rpc {
       return org.waveprotocol.wave.examples.fedone.rpc.Rpc.internal_static_rpc_RpcFinished_descriptor;
     }
     
+    @Override
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return org.waveprotocol.wave.examples.fedone.rpc.Rpc.internal_static_rpc_RpcFinished_fieldAccessorTable;
@@ -297,11 +309,13 @@ public final class Rpc {
     
     private void initFields() {
     }
+    @Override
     public final boolean isInitialized() {
       if (!hasFailed) return false;
       return true;
     }
     
+    @Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
@@ -315,6 +329,7 @@ public final class Rpc {
     }
     
     private int memoizedSerializedSize = -1;
+    @Override
     public int getSerializedSize() {
       int size = memoizedSerializedSize;
       if (size != -1) return size;
@@ -420,10 +435,12 @@ public final class Rpc {
         return builder;
       }
       
+      @Override
       protected org.waveprotocol.wave.examples.fedone.rpc.Rpc.RpcFinished internalGetResult() {
         return result;
       }
       
+      @Override
       public Builder clear() {
         if (result == null) {
           throw new IllegalStateException(
@@ -433,10 +450,12 @@ public final class Rpc {
         return this;
       }
       
+      @Override
       public Builder clone() {
         return create().mergeFrom(result);
       }
       
+      @Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return org.waveprotocol.wave.examples.fedone.rpc.Rpc.RpcFinished.getDescriptor();
@@ -446,6 +465,7 @@ public final class Rpc {
         return org.waveprotocol.wave.examples.fedone.rpc.Rpc.RpcFinished.getDefaultInstance();
       }
       
+      @Override
       public boolean isInitialized() {
         return result.isInitialized();
       }
@@ -475,6 +495,7 @@ public final class Rpc {
         return returnMe;
       }
       
+      @Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.waveprotocol.wave.examples.fedone.rpc.Rpc.RpcFinished) {
           return mergeFrom((org.waveprotocol.wave.examples.fedone.rpc.Rpc.RpcFinished)other);
@@ -496,6 +517,7 @@ public final class Rpc {
         return this;
       }
       
+      @Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)

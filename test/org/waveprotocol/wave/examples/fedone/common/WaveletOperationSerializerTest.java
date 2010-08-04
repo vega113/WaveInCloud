@@ -30,13 +30,12 @@ import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMap
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
-import org.waveprotocol.wave.model.operation.OpComparators;
-import org.waveprotocol.wave.model.operation.wave.AddParticipant;
-import org.waveprotocol.wave.model.operation.wave.NoOp;
-import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreNoOp;
+import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -44,22 +43,18 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Tests {@link WaveletOperationSerializer}.
+ * Tests {@link CoreWaveletOperationSerializer}.
  *
  *
  */
 public class WaveletOperationSerializerTest extends TestCase {
 
-  private static void assertDeepEquals(WaveletOperation a, WaveletOperation b) {
-    assertTrue(OpComparators.SYNTACTIC_IDENTITY.equal(a, b));
-  }
-
-  private static void assertDeepEquals(WaveletDelta a, WaveletDelta b) {
+  private static void assertDeepEquals(CoreWaveletDelta a, CoreWaveletDelta b) {
     assertEquals(a.getAuthor(), b.getAuthor());
     assertEquals(a.getOperations().size(), b.getOperations().size());
     int n = a.getOperations().size();
     for (int i = 0; i < n; i++) {
-      assertDeepEquals(a.getOperations().get(i), b.getOperations().get(i));
+      assertEquals(a.getOperations().get(i), b.getOperations().get(i));
     }
   }
 
@@ -68,17 +63,17 @@ public class WaveletOperationSerializerTest extends TestCase {
    *
    * @param op operation to check
    */
-  private static void assertReversible(WaveletOperation op) {
+  private static void assertReversible(CoreWaveletOperation op) {
     // Test both (de)serialising a single operation...
-    assertDeepEquals(op, WaveletOperationSerializer.deserialize(
-        WaveletOperationSerializer.serialize(op)));
+    assertEquals(op, CoreWaveletOperationSerializer.deserialize(
+        CoreWaveletOperationSerializer.serialize(op)));
 
-    List<WaveletOperation> ops = ImmutableList.of(op, op, op);
+    List<CoreWaveletOperation> ops = ImmutableList.of(op, op, op);
     ParticipantId author = new ParticipantId("kalman@google.com");
     HashedVersion hashedVersion = HashedVersion.UNSIGNED_VERSION_0;
-    WaveletDelta delta = new WaveletDelta(author, ops);
-    ProtocolWaveletDelta serialized = WaveletOperationSerializer.serialize(delta, hashedVersion);
-    Pair<WaveletDelta, HashedVersion> deserialized = WaveletOperationSerializer.deserialize(
+    CoreWaveletDelta delta = new CoreWaveletDelta(author, ops);
+    ProtocolWaveletDelta serialized = CoreWaveletOperationSerializer.serialize(delta, hashedVersion, null);
+    Pair<CoreWaveletDelta, HashedVersion> deserialized = CoreWaveletOperationSerializer.deserialize(
         serialized);
     assertEquals(hashedVersion.getVersion(), serialized.getHashedVersion().getVersion());
     assertTrue(Arrays.equals(hashedVersion.getHistoryHash(),
@@ -87,19 +82,19 @@ public class WaveletOperationSerializerTest extends TestCase {
   }
 
   public void testNoOp() {
-    assertReversible(NoOp.INSTANCE);
+    assertReversible(CoreNoOp.INSTANCE);
   }
 
   public void testAddParticipant() {
-    assertReversible(new AddParticipant(new ParticipantId("kalman@google.com")));
+    assertReversible(new CoreAddParticipant(new ParticipantId("kalman@google.com")));
   }
 
   public void testRemoveParticipant() {
-    assertReversible(new RemoveParticipant(new ParticipantId("kalman@google.com")));
+    assertReversible(new CoreRemoveParticipant(new ParticipantId("kalman@google.com")));
   }
 
   public void testEmptyDocumentMutation() {
-    assertReversible(new WaveletDocumentOperation("empty", ClientUtils.createEmptyDocument()));
+    assertReversible(new CoreWaveletDocumentOperation("empty", ClientUtils.createEmptyDocument()));
   }
 
   public void testSingleCharacters() {
@@ -107,7 +102,7 @@ public class WaveletOperationSerializerTest extends TestCase {
 
     m.characters("hello");
 
-    assertReversible(new WaveletDocumentOperation("single", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("single", m.build()));
   }
 
   public void testManyCharacters() {
@@ -118,7 +113,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.characters("foo");
     m.characters("bar");
 
-    assertReversible(new WaveletDocumentOperation("many", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("many", m.build()));
   }
 
   public void testRetain() {
@@ -133,7 +128,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.characters("bar");
     m.retain(16);
 
-    assertReversible(new WaveletDocumentOperation("retain", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("retain", m.build()));
   }
 
   public void testDeleteCharacters() {
@@ -146,7 +141,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.retain(2);
     m.deleteCharacters("cd");
 
-    assertReversible(new WaveletDocumentOperation("deleteCharacters", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("deleteCharacters", m.build()));
   }
 
   public void testElements() {
@@ -163,7 +158,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.elementEnd();
     m.elementEnd();
 
-    assertReversible(new WaveletDocumentOperation("elements", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("elements", m.build()));
   }
 
   public void testCharactersAndElements() {
@@ -183,7 +178,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.elementEnd();
     m.elementEnd();
 
-    assertReversible(new WaveletDocumentOperation("charactersAndElements", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("charactersAndElements", m.build()));
   }
 
   public void testDeleteElements() {
@@ -200,7 +195,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.deleteElementEnd();
     m.deleteElementEnd();
 
-    assertReversible(new WaveletDocumentOperation("deleteElements", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("deleteElements", m.build()));
   }
 
   public void testDeleteCharactersAndElements() {
@@ -220,9 +215,9 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.deleteElementEnd();
     m.deleteElementEnd();
 
-    assertReversible(new WaveletDocumentOperation("deleteCharactersAndElements", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("deleteCharactersAndElements", m.build()));
   }
-  
+
   public void testAnnotationBoundary() {
     DocOpBuilder m = new DocOpBuilder();
 
@@ -241,9 +236,9 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.annotationBoundary(mapC);
     m.elementEnd();
 
-    assertReversible(new WaveletDocumentOperation("annotationBoundary", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("annotationBoundary", m.build()));
   }
-  
+
   public void testEmptyAnnotationBoundary() {
     DocOpBuilder m = new DocOpBuilder();
 
@@ -254,9 +249,9 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.annotationBoundary(AnnotationBoundaryMapImpl.EMPTY_MAP);
     m.elementEnd();
 
-    assertReversible(new WaveletDocumentOperation("emptyAnnotationBoundary", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("emptyAnnotationBoundary", m.build()));
   }
-  
+
   public void testReplaceAttributes() {
     DocOpBuilder m = new DocOpBuilder();
 
@@ -267,9 +262,9 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.replaceAttributes(oldA, newA);
     m.retain(4);
 
-    assertReversible(new WaveletDocumentOperation("replaceAttributes", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("replaceAttributes", m.build()));
   }
-  
+
   public void testEmptyReplaceAttributes() {
     DocOpBuilder m = new DocOpBuilder();
 
@@ -277,28 +272,28 @@ public class WaveletOperationSerializerTest extends TestCase {
     m.replaceAttributes(AttributesImpl.EMPTY_MAP, AttributesImpl.EMPTY_MAP);
     m.retain(4);
 
-    assertReversible(new WaveletDocumentOperation("emptyReplaceAttributes", m.build()));
+    assertReversible(new CoreWaveletDocumentOperation("emptyReplaceAttributes", m.build()));
   }
-  
+
   public void testUpdateAttributes() {
     DocOpBuilder m = new DocOpBuilder();
 
     AttributesUpdate u = new AttributesUpdateImpl(new String[]{"a", null, "2", "b", "1", null});
-    
+
     m.retain(4);
     m.updateAttributes(u);
     m.retain(4);
-    
-    assertReversible(new WaveletDocumentOperation("updateAttributes", m.build()));
+
+    assertReversible(new CoreWaveletDocumentOperation("updateAttributes", m.build()));
   }
-  
+
   public void testEmptyUpdateAttributes() {
     DocOpBuilder m = new DocOpBuilder();
 
     m.retain(4);
     m.updateAttributes(AttributesUpdateImpl.EMPTY_MAP);
     m.retain(4);
-    
-    assertReversible(new WaveletDocumentOperation("emptyUpdateAttributes", m.build()));
+
+    assertReversible(new CoreWaveletDocumentOperation("emptyUpdateAttributes", m.build()));
   }
 }

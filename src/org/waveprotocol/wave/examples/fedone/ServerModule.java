@@ -31,10 +31,10 @@ import org.waveprotocol.wave.federation.xmpp.XmppFederationHost;
 import org.waveprotocol.wave.federation.xmpp.XmppFederationRemote;
 import org.waveprotocol.wave.federation.xmpp.XmppManager;
 import org.waveprotocol.wave.federation.xmpp.XmppDisco;
-import org.waveprotocol.wave.waveserver.FederationHostBridge;
-import org.waveprotocol.wave.waveserver.FederationRemoteBridge;
-import org.waveprotocol.wave.waveserver.WaveletFederationListener;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
+import org.waveprotocol.wave.waveserver.federation.FederationRemoteBridge;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
 import java.util.Arrays;
 import java.util.List;

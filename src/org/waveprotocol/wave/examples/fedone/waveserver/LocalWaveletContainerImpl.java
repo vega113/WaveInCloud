@@ -23,9 +23,10 @@ import com.google.common.collect.Multimap;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
+
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -34,11 +35,8 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.util.Pair;
-
-import java.util.List;
 
 /**
  * A local wavelet may be updated by submits. The local wavelet will perform
@@ -94,14 +92,14 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
         ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
-    Pair<WaveletDelta, HashedVersion> deltaAndVersion =
-      WaveletOperationSerializer.deserialize(protocolDelta.getMessage());
+    Pair<CoreWaveletDelta, HashedVersion> deltaAndVersion =
+      CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
     if (deltaAndVersion.first.getOperations().isEmpty()) {
       LOG.warning("No operations to apply at version " + deltaAndVersion.second);
       throw new EmptyDeltaException();
     }
-    
+
     VersionedWaveletDelta transformed =
         maybeTransformSubmittedDelta(deltaAndVersion.first, deltaAndVersion.second);
 
@@ -112,8 +110,9 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       // applyWaveletOperations(), because that will throw EmptyDeltaException, or
       // commitAppliedDelta(), because empty deltas cannot be part of the delta history.
       return new DeltaApplicationResult(buildAppliedDelta(signedDelta, transformed),
-          WaveletOperationSerializer.serialize(transformed.delta, transformed.version),
-          WaveletOperationSerializer.serialize(transformed.version));
+          CoreWaveletOperationSerializer.serialize(transformed.delta, transformed.version,
+              transformed.version),
+          CoreWaveletOperationSerializer.serialize(transformed.version));
     }
 
     if (!transformed.version.equals(currentVersion)) {
@@ -128,8 +127,9 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       HashedVersion hashedVersionAfterApplication = HASHED_HISTORY_VERSION_FACTORY.create(
         appliedDelta.getByteArray(), transformed.version, transformed.delta.getOperations().size());
       return new DeltaApplicationResult(appliedDelta,
-          WaveletOperationSerializer.serialize(transformed.delta, transformed.version),
-          WaveletOperationSerializer.serialize(hashedVersionAfterApplication));
+          CoreWaveletOperationSerializer.serialize(transformed.delta, transformed.version,
+              hashedVersionAfterApplication),
+          CoreWaveletOperationSerializer.serialize(hashedVersionAfterApplication));
     }
 
     // If any of the operations fail to apply, the wavelet data will be returned to its original
@@ -165,7 +165,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       // This is set to indicate the head version of the wavelet was different to the intended
       // version of the wavelet (so the hash will have changed)
       appliedDeltaBuilder.setHashedVersionAppliedAt(
-          WaveletOperationSerializer.serialize(transformed.version));
+          CoreWaveletOperationSerializer.serialize(transformed.version));
     }
 
     return ByteStringMessage.fromMessage(appliedDeltaBuilder.build());

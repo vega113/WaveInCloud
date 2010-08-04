@@ -38,7 +38,7 @@ import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.waveserver.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.HashSet;
 import java.util.List;
@@ -87,7 +87,9 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
     }
 
     frontend.openRequest(id, waveId, prefixes, request.getMaximumWavelets(),
-        false, new OpenListener() {
+        request.getSnapshots(),
+        request.getKnownWaveletsCount() > 0 ? request.getKnownWaveletsList() : null,
+        new OpenListener() {
 
           @Override
           public void onFailure(String errorMessage) {
@@ -99,8 +101,13 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
           public void onUpdate(WaveletName waveletName,
               @Nullable WaveletSnapshotAndVersions snapshot,
               List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
-              @Nullable ProtocolHashedVersion committedVersion) {
+              @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
+              final String channel_id) {
             ProtocolWaveletUpdate.Builder builder = ProtocolWaveletUpdate.newBuilder();
+            builder.setMarker(hasMarker);
+            if (channel_id != null) {
+              builder.setChannelId(channel_id);
+            }
             try {
               builder.setWaveletName(uriCodec.waveletNameToURI(waveletName));
               builder.addAllAppliedDelta(deltas);
@@ -111,6 +118,9 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
                 }
                 if (snapshot.committedVersion != null) {
                   builder.setCommitNotice(snapshot.committedVersion);
+                } else {
+                  // TODO(arb): HACK. lastCommittedVersion isn't ever set in the waveserver!?
+                  builder.setCommitNotice(snapshot.currentVersion);
                 }
               } else {
                 if (endVersion != null) {
@@ -137,23 +147,30 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
     String errorMessage = null;
     try {
       waveletName = uriCodec.uriToWaveletName(request.getWaveletName());
-      frontend.submitRequest(waveletName, request.getDelta(), new SubmitResultListener() {
-        @Override
-        public void onFailure(FederationError error) {
-          done.run(ProtocolSubmitResponse.newBuilder()
-              .setOperationsApplied(0).setErrorMessage(error.getErrorMessage()).build());
-        }
+      String channelId;
+      if (request.hasChannelId()) {
+        channelId = request.getChannelId();
+      } else {
+        channelId = null;
+      }
+      frontend.submitRequest(waveletName, request.getDelta(), channelId,
+          new SubmitResultListener() {
+            @Override
+            public void onFailure(FederationError error) {
+              done.run(ProtocolSubmitResponse.newBuilder()
+                  .setOperationsApplied(0).setErrorMessage(error.getErrorMessage()).build());
+            }
 
-        @Override
-        public void onSuccess(int operationsApplied,
-            ProtocolHashedVersion hashedVersionAfterApplication,
-            long applicationTimestamp) {
-          done.run(ProtocolSubmitResponse.newBuilder()
-              .setOperationsApplied(operationsApplied)
-              .setHashedVersionAfterApplication(hashedVersionAfterApplication).build());
-          // TODO(arb): applicationTimestamp??
-        }
-      });
+            @Override
+            public void onSuccess(int operationsApplied,
+                ProtocolHashedVersion hashedVersionAfterApplication,
+                long applicationTimestamp) {
+              done.run(ProtocolSubmitResponse.newBuilder()
+                  .setOperationsApplied(operationsApplied)
+                  .setHashedVersionAfterApplication(hashedVersionAfterApplication).build());
+              // TODO(arb): applicationTimestamp??
+            }
+          });
     } catch (EncodingException e) {
       errorMessage = e.getMessage();
     }

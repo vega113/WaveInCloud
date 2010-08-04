@@ -18,9 +18,9 @@
 package org.waveprotocol.wave.examples.fedone.waveclient.common;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 /**
  * Notification interface for wavelet operations, with an additional two methods defined with
@@ -37,7 +37,8 @@ public interface WaveletOperationListener {
    * @param wavelet the wavelet operated on
    * @param docOp performed on the wavelet
    */
-  public void waveletDocumentUpdated(String author, WaveletData wavelet, WaveletDocumentOperation docOp);
+  public void waveletDocumentUpdated(String author, CoreWaveletData wavelet,
+      CoreWaveletDocumentOperation docOp);
 
   /**
    * Invoked when a participant has been added to a wavelet.
@@ -46,7 +47,7 @@ public interface WaveletOperationListener {
    * @param wavelet the wavelet operated on
    * @param participantId the id of the participant added
    */
-  public void participantAdded(String author, WaveletData wavelet, ParticipantId participantId);
+  public void participantAdded(String author, CoreWaveletData wavelet, ParticipantId participantId);
 
   /**
    * Invoked when a participant has been removed from a wavelet.
@@ -55,7 +56,7 @@ public interface WaveletOperationListener {
    * @param wavelet the wavelet operated on
    * @param participantId the id of the participant removed
    */
-  public void participantRemoved(String author, WaveletData wavelet, ParticipantId participantId);
+  public void participantRemoved(String author, CoreWaveletData wavelet, ParticipantId participantId);
 
   /**
    * Invoked on a wavelet NoOp.
@@ -63,20 +64,20 @@ public interface WaveletOperationListener {
    * @param author the author of the event
    * @param wavelet the wavelet (not) operated on
    */
-  public void noOp(String author, WaveletData wavelet);
+  public void noOp(String author, CoreWaveletData wavelet);
 
   /**
    * Invoked before a sequence of deltas is applied.
    * TODO: remove this.
    */
-  public void onDeltaSequenceStart(WaveletData wavelet);
+  public void onDeltaSequenceStart(CoreWaveletData wavelet);
 
   /**
    * Invoked after a sequence of deltas has been applied.  It will probably be most appropriate to
    * do any rendering for wavelet changes in this method.
    * TODO: remove this, replace with a better rendering optimisation.
    */
-  public void onDeltaSequenceEnd(WaveletData wavelet);
+  public void onDeltaSequenceEnd(CoreWaveletData wavelet);
 
   /**
    * Invoked when a commit notice is received.
@@ -84,5 +85,5 @@ public interface WaveletOperationListener {
    * @param wavelet the wavelet that was committed
    * @param version the latest version the server has committed to disk.
    */
-  public void onCommitNotice(WaveletData wavelet, HashedVersion version);
+  public void onCommitNotice(CoreWaveletData wavelet, HashedVersion version);
 }

@@ -45,20 +45,21 @@ import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorA
 import org.waveprotocol.wave.model.id.URIEncoderDecoder;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.operation.wave.AddParticipant;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * The probey agent provides a web interface for remote applications to trigger
@@ -96,10 +97,10 @@ public class Probey extends AbstractAgent {
     if (wave == null) {
       throw new IllegalArgumentException("NOT FOUND");
     }
-    WaveletData convRoot = ClientUtils.getConversationRoot(wave);
+    CoreWaveletData convRoot = ClientUtils.getConversationRoot(wave);
     BufferedDocOp manifest = convRoot.getDocuments().get(DocumentConstants.MANIFEST_DOCUMENT_ID);
     String newDocId = getNewDocumentId();
-    WaveletDelta delta = ClientUtils.createAppendBlipDelta(manifest, userId, newDocId, blipText);
+    CoreWaveletDelta delta = ClientUtils.createAppendBlipDelta(manifest, userId, newDocId, blipText);
     sendAndAwaitWaveletDelta(convRoot.getWaveletName(), delta);
     return newDocId;
   }
@@ -116,9 +117,9 @@ public class Probey extends AbstractAgent {
     if (wave == null) {
       throw new IllegalArgumentException("NOT FOUND");
     }
-    WaveletData convRoot = ClientUtils.getConversationRoot(wave);
-    AddParticipant addUserOp = new AddParticipant(addId);
-    sendAndAwaitWaveletDelta(convRoot.getWaveletName(), new WaveletDelta(userId,
+    CoreWaveletData convRoot = ClientUtils.getConversationRoot(wave);
+    CoreAddParticipant addUserOp = new CoreAddParticipant(addId);
+    sendAndAwaitWaveletDelta(convRoot.getWaveletName(), new CoreWaveletDelta(userId,
                                                                          ImmutableList.of(
                                                                              addUserOp)));
   }
@@ -144,7 +145,7 @@ public class Probey extends AbstractAgent {
     if (wave == null) {
       throw new IllegalArgumentException("NOT FOUND");
     }
-    WaveletData convRoot = ClientUtils.getConversationRoot(wave);
+    CoreWaveletData convRoot = ClientUtils.getConversationRoot(wave);
     BufferedDocOp manifest = convRoot.getDocuments()
         .get(DocumentConstants.MANIFEST_DOCUMENT_ID);
     final Map<String, BufferedDocOp> documentMap =
@@ -153,7 +154,7 @@ public class Probey extends AbstractAgent {
       throw new IllegalArgumentException("MANIFEST MISSING");
     }
     final StringBuilder builder = new StringBuilder();
-    manifest.apply(new InitializationCursorAdapter((
+    manifest.apply(InitializationCursorAdapter.adapt((
         new DocInitializationCursor() {
 
           @Override
@@ -168,7 +169,7 @@ public class Probey extends AbstractAgent {
                   builder.append("Blip: ");
                   builder.append(attrs.get(DocumentConstants.BLIP_ID));
                   builder.append("\nContent: ");
-                  document.apply(new InitializationCursorAdapter(new DocInitializationCursor() {
+                  document.apply(InitializationCursorAdapter.adapt(new DocInitializationCursor() {
 
                     @Override
                     public void characters(String chars) {
@@ -209,26 +210,26 @@ public class Probey extends AbstractAgent {
   }
 
   @Override
-  public void onDocumentChanged(WaveletData wavelet,
-                                WaveletDocumentOperation documentOperation) {
+  public void onDocumentChanged(CoreWaveletData wavelet,
+      CoreWaveletDocumentOperation documentOperation) {
   }
 
   @Override
-  public void onParticipantAdded(WaveletData wavelet,
+  public void onParticipantAdded(CoreWaveletData wavelet,
                                  ParticipantId participant) {
   }
 
   @Override
-  public void onParticipantRemoved(WaveletData wavelet,
+  public void onParticipantRemoved(CoreWaveletData wavelet,
                                    ParticipantId participant) {
   }
 
   @Override
-  public void onSelfAdded(WaveletData wavelet) {
+  public void onSelfAdded(CoreWaveletData wavelet) {
   }
 
   @Override
-  public void onSelfRemoved(WaveletData wavelet) {
+  public void onSelfRemoved(CoreWaveletData wavelet) {
   }
 
   public static void main(String[] args) {
@@ -320,7 +321,7 @@ public class Probey extends AbstractAgent {
     @Override
     public void handle(String target, Request baseRequest, HttpServletRequest request, 
         HttpServletResponse response)
-        throws IOException, ServletException {
+        throws IOException {
       response.setContentType("text/plain");
       response.setStatus(HttpServletResponse.SC_OK);
 

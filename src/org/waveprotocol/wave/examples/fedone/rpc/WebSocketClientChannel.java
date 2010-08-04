@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
- 
+
 package org.waveprotocol.wave.examples.fedone.rpc;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * The client side of a WebSocketChannel. 
+ * The client side of a WebSocketChannel.
  */
 class WebSocketClientChannel extends WebSocketChannel {
   private static final Log LOG = Log.get(WebSocketClientChannel.class);
@@ -39,7 +39,7 @@ class WebSocketClientChannel extends WebSocketChannel {
   private final WebSocket websocket;
 
   /**
-   * Creates a WebSocketClientChannel with a default thread executor. See 
+   * Creates a WebSocketClientChannel with a default thread executor. See
    * {@link #WebSocketClientChannel(String, Integer, ProtoCallback, ExecutorService)}
    */
   public WebSocketClientChannel(String host, Integer port, ProtoCallback callback) {
@@ -55,19 +55,19 @@ class WebSocketClientChannel extends WebSocketChannel {
    * @param callback ProtoCallback handler for incoming messages
    * @param threadPool threadpool for thread that performs async read.
    */
-  public WebSocketClientChannel(String host, Integer port, 
+  public WebSocketClientChannel(String host, Integer port,
       ProtoCallback callback, ExecutorService threadPool) {
     super(callback);
     this.threadPool = threadPool;
     URI uri;
     try {
-      uri = new URI("ws", null, host, port, "/", null, null);      
+      uri = new URI("ws", null, host, port, "/socket", null, null);      
     } catch (URISyntaxException use) {
       LOG.severe("Unable to create ws:// uri from given host ("
         + host + ") and port (" + port + ")", use);
       throw new IllegalStateException(use);
     }
-    
+
     websocket = new WebSocket(uri);
     try {
       websocket.connect();
@@ -75,7 +75,7 @@ class WebSocketClientChannel extends WebSocketChannel {
       LOG.severe("WebSocket unable to connect.", e);
       throw new IllegalStateException(e);
     }
-    
+
     this.asyncRead = new Runnable() {
       @Override
       public void run() {
@@ -91,7 +91,7 @@ class WebSocketClientChannel extends WebSocketChannel {
       }
     };
   }
-  
+
   /**
    * Start reading asynchronously from the websocket client.
    */
@@ -101,9 +101,9 @@ class WebSocketClientChannel extends WebSocketChannel {
       throw new IllegalStateException("This websocket is already reading asynchronously.");
     }
     threadPool.execute(asyncRead);
-    isReading = true; 
+    isReading = true;
   }
-  
+
   /**
    * Propagate a String message to the websocket client.
    */

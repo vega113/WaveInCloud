@@ -25,9 +25,10 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.jivesoftware.util.Base64;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.deserialize;
+
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.deserialize;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
@@ -39,12 +40,11 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.util.Pair;
 
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider.HistoryResponseListener;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider.HistoryResponseListener;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -173,7 +173,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       assertStateOkOrLoading();
       List<ProtocolWaveletDelta> result = new LinkedList<ProtocolWaveletDelta>();
       ProtocolHashedVersion expectedVersion =
-          WaveletOperationSerializer.serialize(currentVersion);
+          CoreWaveletOperationSerializer.serialize(currentVersion);
       boolean haveRequestedHistory = false;
 
       // Verify signatures of all deltas
@@ -313,7 +313,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           }
 
           // TODO: does waveletData update?
-          expectedVersion = WaveletOperationSerializer.serialize(currentVersion);
+          expectedVersion = CoreWaveletOperationSerializer.serialize(currentVersion);
         } else {
           LOG.warning("Got delta from the past: " + appliedDelta);
         }
@@ -363,8 +363,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
         ProtocolWaveletDelta.getDefaultInstance(),
         appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
-    Pair<WaveletDelta, HashedVersion> deltaAndVersion =
-      WaveletOperationSerializer.deserialize(protocolDelta.getMessage());
+    Pair<CoreWaveletDelta, HashedVersion> deltaAndVersion =
+      CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
     // Transform operations against earlier deltas, if necessary
     VersionedWaveletDelta transformed =

@@ -24,7 +24,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.waveserver.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.List;
 import java.util.Set;
@@ -51,9 +51,10 @@ public interface ClientFrontend extends WaveletListener {
    *
    * @param waveletName name of wavelet.
    * @param delta the wavelet delta to submit.
+   * @param channelId the client's channel ID
    * @param listener callback for the result.
    */
-  void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
+  void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta, String channelId,
       SubmitResultListener listener);
 
   /**
@@ -64,18 +65,22 @@ public interface ClientFrontend extends WaveletListener {
    * @param waveId the wave id.
    * @param waveletIdPrefixes set containing restricts on the wavelet id's.
    * @param maximumInitialWavelets limit on the number of wavelets to
-   * @param snapshotsEnabled
+   * @param snapshotsEnabled true if the client understands snapshots
+   * @param knownWavelets a list of (waveletid, waveletversion pairs).
+   *                      the server will send deltas to update the client to current.
    * @param openListener callback for updates.
    */
 
   void openRequest(ParticipantId participant, WaveId waveId, Set<String> waveletIdPrefixes,
-      int maximumInitialWavelets, boolean snapshotsEnabled, OpenListener openListener);
+      int maximumInitialWavelets, boolean snapshotsEnabled,
+      final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener);
 
   interface OpenListener {
     void onUpdate(WaveletName waveletName,
         @Nullable WaveletSnapshotAndVersions snapshot,
         List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
-        @Nullable ProtocolHashedVersion committedVersion);
+        @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
+        final String channel_id);
     void onFailure(String errorMessage);
   }
 }

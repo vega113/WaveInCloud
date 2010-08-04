@@ -22,7 +22,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 import java.util.List;
 import java.util.NavigableSet;
@@ -49,7 +49,7 @@ abstract interface WaveletContainer {
 
   void setState(State state);
 
-  WaveletData getWaveletData();
+  CoreWaveletData getWaveletData();
 
   <T> T getSnapshot(WaveletSnapshotBuilder<T> builder);
 

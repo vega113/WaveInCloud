@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2010 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@ import java.io.IOException;
 public class WebSocketRpcTest extends RpcTest {
 
   @Override
-  protected void startServer() throws IOException {
+  protected void startServer() {
     server = new ServerRpcProvider(null, "localhost", 0);
     server.startWebSocketServer();
   }

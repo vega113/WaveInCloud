@@ -17,9 +17,9 @@
 
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
-import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 /**
  * Handles agent events.
@@ -31,7 +31,7 @@ interface AgentEventListener {
    * @param wavelet
    * @param documentOperation
    */
-  void onDocumentChanged(WaveletData wavelet, WaveletDocumentOperation documentOperation);
+  void onDocumentChanged(CoreWaveletData wavelet, CoreWaveletDocumentOperation documentOperation);
 
   /**
    * Invoked when a participant is added to the wavelet.
@@ -39,7 +39,7 @@ interface AgentEventListener {
    * @param wavelet
    * @param participant
    */
-  void onParticipantAdded(WaveletData wavelet, ParticipantId participant);
+  void onParticipantAdded(CoreWaveletData wavelet, ParticipantId participant);
 
   /**
    * Invoked when a participant is removed from the wavelet.
@@ -47,19 +47,19 @@ interface AgentEventListener {
    * @param wavelet
    * @param participant
    */
-  void onParticipantRemoved(WaveletData wavelet, ParticipantId participant);
+  void onParticipantRemoved(CoreWaveletData wavelet, ParticipantId participant);
 
   /**
    * Invoked when this agent is added.
    *
    * @param wavelet
    */
-  void onSelfAdded(WaveletData wavelet);
+  void onSelfAdded(CoreWaveletData wavelet);
 
   /**
    * Invoked when this agent is removed.
    *
    * @param wavelet
    */
-  void onSelfRemoved(WaveletData wavelet);
+  void onSelfRemoved(CoreWaveletData wavelet);
 }

@@ -22,6 +22,7 @@ package org.waveprotocol.wave.examples.fedone;
  *
  */
 // TODO - add descriptions to all flags.
+@SuppressWarnings("unused") // We inject them by the name of their flag
 public class FlagSettings {
   @Flag(name="xmpp_server_hostname")
   private static String xmppServerHostname;
@@ -47,11 +48,11 @@ public class FlagSettings {
   @Flag(name="client_frontend_port")
   private static String clientFrontEndPort;
 
-  @Flag(name="websocket_frontend_hostname", defaultValue="localhost")
-  private static String websocketFrontendHost;
+  @Flag(name="http_frontend_hostname", defaultValue="localhost")
+  private static String httpFrontendHost;
 
-  @Flag(name="websocket_frontend_port", defaultValue="9898")
-  private static int websocketFrontEndPort;
+  @Flag(name="http_frontend_port", defaultValue="9898")
+  private static int httpFrontEndPort;
 
   @Flag(name="certificate_private_key")
   private static String certificatePrivKey;
@@ -70,6 +71,14 @@ public class FlagSettings {
 
   @Flag(name="xmpp_server_description")
   private static String xmppServerDescription;
+
+  // default value is 5 minutes
+  @Flag(name="xmpp_disco_failed_expiry_secs", defaultValue="300")
+  private static int xmppDiscoFailedExpirySecs;
+
+  // default value is 2 hours
+  @Flag(name="xmpp_disco_successful_expiry_secs", defaultValue="7200")
+  private static int xmppDiscoSuccessfulExpirySecs;
 
   @Flag(name="xmpp_jid")
   private static String xmppJid;

@@ -16,6 +16,28 @@
  */
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNotNull;
+import static org.mockito.Matchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
+import static org.waveprotocol.wave.examples.fedone.common.HashedVersion.unsigned;
+import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_AUTHOR;
+import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_DOCUMENT_ID;
+import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.createUnsignedDeltas;
+import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.indexWaveletNameFor;
+import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.waveletNameForIndexWavelet;
+import static org.waveprotocol.wave.model.id.IdConstants.CONVERSATION_ROOT_WAVELET;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -24,41 +46,31 @@ import com.google.inject.internal.Nullable;
 
 import junit.framework.TestCase;
 
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
-import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
+import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import static org.waveprotocol.wave.examples.fedone.common.HashedVersion.unsigned;
-import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_AUTHOR;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_DOCUMENT_ID;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.createUnsignedDeltas;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.indexWaveletNameFor;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.waveletNameForIndexWavelet;
+import org.waveprotocol.wave.examples.fedone.waveserver.UserManager.Subscription;
 import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.Proto;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
-import static org.waveprotocol.wave.model.id.IdConstants.CONVERSATION_ROOT_WAVELET;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.wave.AddParticipant;
-import org.waveprotocol.wave.model.operation.wave.NoOp;
-import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreNoOp;
+import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.waveserver.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -78,8 +90,10 @@ public class ClientFrontendImplTest extends TestCase {
   // waveletIdPrefixes to use when subscribing to all wavelets
   private static final Set<String> ALL_WAVELETS = ImmutableSet.of("");
   private static final HashedVersion VERSION_0 = HashedVersion.versionZero(WAVELET_NAME);
+  private static final HashedVersion VERSION_1 = HashedVersion.unsigned(1L);
   private static final ProtocolWaveletDelta DELTA =
-    serialize(new WaveletDelta(USER, ImmutableList.of(new AddParticipant(USER))), VERSION_0);
+    serialize(new CoreWaveletDelta(USER, ImmutableList.of(new CoreAddParticipant(USER))), VERSION_0,
+        VERSION_1);
   private static final DeltaSequence DELTAS =
     new DeltaSequence(ImmutableList.of(DELTA), serialize(HashedVersion.unsigned(1L)));
   private static final Map<String, BufferedDocOp> DOCUMENT_STATE = ImmutableMap.of();
@@ -136,12 +150,22 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testInitialOpenRequestYieldsNothing() {
     OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, listener);
-    verifyZeroInteractions(listener);
+    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, null, listener);
+    UserManager manager = clientFrontend.perUser.get(USER);
+
+    WaveletName dummyWaveletName = ClientFrontendImpl.createDummyWaveletName(WAVE_ID);
+    List<Subscription> subscriptions = manager.matchSubscriptions(dummyWaveletName);
+    assertEquals(1, subscriptions.size());
+
+    verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, subscriptions.get(0).getChannelId());
+
     clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false,
-        listener);
-    // we don't expect any invocations on the listener
-    verifyZeroInteractions(listener);
+        null, listener);
+    WaveletName indexDummyWaveletName = ClientFrontendImpl.createDummyWaveletName(INDEX_WAVE_ID);
+    List<Subscription> indexSubscriptions = manager.matchSubscriptions(indexDummyWaveletName);
+    assertEquals(1, indexSubscriptions.size());
+    verifyIfChannelIdAndMarkerSent(listener, indexDummyWaveletName,
+        indexSubscriptions.get(0).getChannelId());
   }
 
   /**
@@ -151,10 +175,21 @@ public class ClientFrontendImplTest extends TestCase {
   public void testDeltasArentPropagatedIfNotSubscribedToWavelet() {
     OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, WAVE_ID, ImmutableSet.of("nonexisting-wavelet"),
-        Integer.MAX_VALUE, false, listener);
+        Integer.MAX_VALUE, false, null, listener);
+
+    UserManager manager = clientFrontend.perUser.get(USER);
+
+    WaveletName dummyWaveletName = ClientFrontendImpl.createDummyWaveletName(WAVE_ID);
+    List<Subscription> subscriptions = manager.matchSubscriptions(dummyWaveletName);
+    assertEquals(0, subscriptions.size());
+    verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, null);
+
     clientFrontend.waveletUpdate(
-        WAVELET_NAME, DELTAS, DELTAS.getEndVersion(), DOCUMENT_STATE);
-    verifyZeroInteractions(listener);
+        WAVELET_NAME, DELTAS, DELTAS.getEndVersion(), DOCUMENT_STATE, null /* channelid */);
+    verify(listener, Mockito.never()).onUpdate(eq(WAVELET_NAME),
+        any(WaveletSnapshotAndVersions.class), anyListOf(ProtocolWaveletDelta.class),
+        any(Proto.ProtocolHashedVersion.class), any(Proto.ProtocolHashedVersion.class),
+        anyBoolean(), anyString());
   }
 
   /**
@@ -163,9 +198,9 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testSubmitGetsForwardedToWaveletProvider() {
     SubmitResultListener listener = mock(SubmitResultListener.class);
-    clientFrontend.submitRequest(WAVELET_NAME, DELTA, listener);
+    clientFrontend.submitRequest(WAVELET_NAME, DELTA, null /* channelid */, listener);
     verify(waveletProvider).submitRequest(
-        eq(WAVELET_NAME), eq(DELTA), (SubmitResultListener) isNotNull());
+        eq(WAVELET_NAME), eq(DELTA), (String) isNull(), (SubmitResultListener) isNotNull());
     verifyZeroInteractions(listener);
   }
 
@@ -176,9 +211,9 @@ public class ClientFrontendImplTest extends TestCase {
   public void testCannotSubmitToIndexWave() {
     SubmitResultListener listener = mock(SubmitResultListener.class);
 
-    clientFrontend.submitRequest(INDEX_WAVELET_NAME, DELTA, listener);
+    clientFrontend.submitRequest(INDEX_WAVELET_NAME, DELTA, null /* channelid */, listener);
     verify(listener).onFailure(FederationErrors.badRequest("Wavelet " + INDEX_WAVELET_NAME
-                                                           + " is readonly"));
+        + " is readonly"));
   }
 
   /**
@@ -187,9 +222,10 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenThenSendDeltas() {
     OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, listener);
-    clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "");
-    verify(listener).onUpdate(WAVELET_NAME, null, DELTAS, DELTAS.getEndVersion(), null);
+    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, null, listener);
+    clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "",
+        null /* channelid */);
+    verify(listener).onUpdate(WAVELET_NAME, null, DELTAS, DELTAS.getEndVersion(), null, false, null);
 
   }
 
@@ -201,14 +237,34 @@ public class ClientFrontendImplTest extends TestCase {
   public void testOpenIndexThenSendDeltasNotOfInterest() {
     OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false,
-        listener);
-    List<? extends WaveletOperation> ops = ImmutableList.of(NoOp.INSTANCE);
-    WaveletDelta delta = new WaveletDelta(USER, ops);
+        null, listener);
+    UserManager manager = clientFrontend.perUser.get(USER);
+
+    WaveletName dummyWaveletName = ClientFrontendImpl.createDummyWaveletName(INDEX_WAVE_ID);
+    List<Subscription> subscriptions = manager.matchSubscriptions(dummyWaveletName);
+    assertEquals(1, subscriptions.size());
+    verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, subscriptions.get(0).getChannelId());
+
+    List<? extends CoreWaveletOperation> ops = ImmutableList.of(CoreNoOp.INSTANCE);
+    CoreWaveletDelta delta = new CoreWaveletDelta(USER, ops);
     DeltaSequence deltas = new DeltaSequence(
-        ImmutableList.of(serialize(delta, VERSION_0)),
+        ImmutableList.of(serialize(delta, VERSION_0, VERSION_1)),
         serialize(HashedVersion.unsigned(1L)));
-    clientFrontend.participantUpdate(WAVELET_NAME, USER, deltas, true, false, "", "");
-    verifyZeroInteractions(listener);
+    clientFrontend.participantUpdate(WAVELET_NAME, USER, deltas, true, false, "", "",
+        null /* channelid */);
+
+    verify(listener, Mockito.never()).onUpdate(eq(dummyWaveletName),
+        any(WaveletSnapshotAndVersions.class), argThat(new IsNonEmptyList<ProtocolWaveletDelta>()),
+        any(Proto.ProtocolHashedVersion.class), any(Proto.ProtocolHashedVersion.class),
+        anyBoolean(), anyString());
+  }
+
+  private static class IsNonEmptyList<T> extends ArgumentMatcher<List<T>> {
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean matches(Object list) {
+      return list != null && ((List<T>)list).size() > 0;
+    }
   }
 
   /**
@@ -230,7 +286,14 @@ public class ClientFrontendImplTest extends TestCase {
         @Nullable WaveletSnapshotAndVersions snapshot,
         List<ProtocolWaveletDelta> newDeltas,
         @Nullable ProtocolHashedVersion endVersion,
-        @Nullable ProtocolHashedVersion committedVersion) {
+        @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
+        @Nullable final String channelId) {
+
+      if(endVersion == null){
+        // Ignore marker updates
+        return;
+      }
+
       assertNull(snapshot);
       assertNull(this.waveletName); // make sure we're not called twice
       assertNotNull(endVersion);
@@ -248,33 +311,6 @@ public class ClientFrontendImplTest extends TestCase {
     }
   }
 
-  private ProtocolWaveletDelta makeDelta(ParticipantId author, HashedVersion startVersion,
-      WaveletOperation...operations) {
-    WaveletDelta delta = new WaveletDelta(author, ImmutableList.of(operations));
-    return serialize(delta, startVersion);
-  }
-
-  private void waveletUpdate(HashedVersion startVersion, Map<String, BufferedDocOp> documentState,
-      WaveletOperation... operations) {
-    ProtocolWaveletDelta delta = makeDelta(USER, startVersion, operations);
-    DeltaSequence deltas = createUnsignedDeltas(ImmutableList.of(delta));
-    clientFrontend.waveletUpdate(
-        WAVELET_NAME, deltas, deltas.getEndVersion(), documentState);
-  }
-
-  private BufferedDocOp makeAppend(int retain, String text) {
-    DocOpBuilder builder = new DocOpBuilder();
-    if (retain > 0) {
-      builder.retain(retain);
-    }
-    builder.characters(text);
-    return builder.build();
-  }
-
-  private WaveletDocumentOperation makeAppendOp(String documentId, int retain, String text) {
-    return new WaveletDocumentOperation(documentId, makeAppend(retain, text));
-  }
-
   /**
    * Tests that a delta involving an addParticipant and a characters op
    * gets pushed through to the index wave as deltas that just summarise
@@ -284,22 +320,22 @@ public class ClientFrontendImplTest extends TestCase {
   public void testOpenIndexThenSendInterestingDeltas() {
     UpdateListener listener = new UpdateListener();
     clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false,
-        listener);
+        null, listener);
 
-    waveletUpdate(VERSION_0,
+    waveletUpdate(VERSION_0, HashedVersion.unsigned(2L),
         ImmutableMap.of("default", makeAppend(0, "Hello, world\nignored text")),
-        new AddParticipant(USER),
-        NoOp.INSTANCE
-        );
+        new CoreAddParticipant(USER),
+        CoreNoOp.INSTANCE
+    );
 
     assertEquals(INDEX_WAVELET_NAME, listener.waveletName);
 
-    WaveletOperation helloWorldOp =
+    CoreWaveletOperation helloWorldOp =
       makeAppendOp(DIGEST_DOCUMENT_ID, 0, "Hello, world");
 
     DeltaSequence expectedDeltas = createUnsignedDeltas(ImmutableList.of(
-        makeDelta(DIGEST_AUTHOR, unsigned(0), helloWorldOp),
-        makeDelta(USER, unsigned(1L), new AddParticipant(USER))));
+        makeDelta(DIGEST_AUTHOR, unsigned(0), unsigned(1), helloWorldOp),
+        makeDelta(USER, unsigned(1L), unsigned(2), new CoreAddParticipant(USER))));
     assertEquals(expectedDeltas, listener.deltas);
   }
 
@@ -310,12 +346,13 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenAfterVersionZero() {
     UpdateListener oldListener = new UpdateListener();
-    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, oldListener);
+    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, null,
+        oldListener);
     Map<String, BufferedDocOp> documentState = Maps.newHashMap();
 
     BufferedDocOp addTextOp = makeAppend(0, "Hello, world");
-    waveletUpdate(VERSION_0, documentState, new AddParticipant(USER),
-        new WaveletDocumentOperation("docId", addTextOp));
+    waveletUpdate(VERSION_0, VERSION_1, documentState, new CoreAddParticipant(USER),
+        new CoreWaveletDocumentOperation("docId", addTextOp));
     documentState.put("docId", addTextOp);
 
     assertTrue(!oldListener.deltas.isEmpty());
@@ -329,24 +366,66 @@ public class ClientFrontendImplTest extends TestCase {
         oldListener.endVersion)).thenReturn(expectedDeltas);
 
     UpdateListener newListener = new UpdateListener();
-    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, newListener);
+    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, null,
+        newListener);
     // Upon subscription, newListener immediately got all the previous deltas
     assertEquals(oldListener.deltas, newListener.deltas);
     assertEquals(oldListener.endVersion, newListener.endVersion);
 
     when(waveletProvider.getHistory(WAVELET_NAME,
         serialize(HashedVersion.versionZero(WAVELET_NAME)), oldListener.endVersion)).thenReturn(
-        expectedDeltas
+            expectedDeltas
         );
-    HashedVersion version = WaveletOperationSerializer.deserialize(oldListener.endVersion);
+    HashedVersion version = CoreWaveletOperationSerializer.deserialize(oldListener.endVersion);
     oldListener.clear();
     newListener.clear();
-    waveletUpdate(version, documentState,
-        new AddParticipant(new ParticipantId("another-user")), NoOp.INSTANCE,
-        new RemoveParticipant(USER));
+    waveletUpdate(version, unsigned(version.getVersion() + 3), documentState,
+        new CoreAddParticipant(new ParticipantId("another-user")), CoreNoOp.INSTANCE,
+        new CoreRemoveParticipant(USER));
 
     // Subsequent deltas go to both listeners
     assertEquals(oldListener.deltas, newListener.deltas);
     assertEquals(oldListener.endVersion, newListener.endVersion);
+  }
+
+  private ProtocolWaveletDelta makeDelta(ParticipantId author, HashedVersion startVersion,
+      HashedVersion endVersion,
+      CoreWaveletOperation...operations) {
+    CoreWaveletDelta delta = new CoreWaveletDelta(author, ImmutableList.copyOf(operations));
+    return serialize(delta, startVersion, endVersion);
+  }
+
+  private void waveletUpdate(HashedVersion startVersion, HashedVersion endVersion,
+      Map<String, BufferedDocOp> documentState,
+      CoreWaveletOperation... operations) {
+    ProtocolWaveletDelta delta = makeDelta(USER, startVersion, endVersion, operations);
+    DeltaSequence deltas = createUnsignedDeltas(ImmutableList.of(delta));
+    clientFrontend.waveletUpdate(
+        WAVELET_NAME, deltas, deltas.getEndVersion(), documentState, null /* channelid */);
+  }
+
+  private BufferedDocOp makeAppend(int retain, String text) {
+    DocOpBuilder builder = new DocOpBuilder();
+    if (retain > 0) {
+      builder.retain(retain);
+    }
+    builder.characters(text);
+    return builder.build();
+  }
+
+  private CoreWaveletDocumentOperation makeAppendOp(String documentId, int retain, String text) {
+    return new CoreWaveletDocumentOperation(documentId, makeAppend(retain, text));
+  }
+
+  private void verifyIfChannelIdAndMarkerSent(
+      OpenListener listener, WaveletName dummyWaveletName, String channelId){
+    // First the channel id
+    verify(listener).onUpdate(eq(dummyWaveletName), (WaveletSnapshotAndVersions) isNull(),
+        eq(new ArrayList<ProtocolWaveletDelta>()), (Proto.ProtocolHashedVersion) isNull(),
+        (Proto.ProtocolHashedVersion) isNull(), eq(false),
+        channelId == null ? anyString() : eq(channelId));
+    // Secondly get the marker
+    verify(listener).onUpdate(dummyWaveletName, null, new ArrayList<ProtocolWaveletDelta>(), null,
+        null, true, null);
   }
 }

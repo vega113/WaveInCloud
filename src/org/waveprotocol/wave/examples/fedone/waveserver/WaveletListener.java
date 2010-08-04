@@ -45,7 +45,8 @@ public interface WaveletListener {
    *                      wavelet after the deltas have been applied.
    */
   void waveletUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> newDeltas,
-      ProtocolHashedVersion resultingVersion, Map<String, BufferedDocOp> documentState);
+      ProtocolHashedVersion resultingVersion, Map<String, BufferedDocOp> documentState,
+      String channelId);
 
   /**
    * Called when a wavelet is committed to disk at a specific version. This notifies
@@ -55,6 +56,7 @@ public interface WaveletListener {
    * @param waveletName name of wavelet.
    * @param version the version and hash of the wavelet as it was committed by
    *                the hosting provider.
+   * TODO(arb): do we need channelId here?
    */
   void waveletCommitted(WaveletName waveletName, ProtocolHashedVersion version);
 }

@@ -54,7 +54,7 @@ public class WebSocketClientRpcChannel extends ClientRpcChannel {
    */
   @Override
   protected MessageExpectingChannel startChannel(SocketAddress serverAddress, 
-      ExecutorService threadPool, ProtoCallback callback) throws IOException {
+      ExecutorService threadPool, ProtoCallback callback) {
     Preconditions.checkArgument(serverAddress != null);
 
     InetSocketAddress inetAddress = (InetSocketAddress) serverAddress;

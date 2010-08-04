@@ -189,7 +189,7 @@ public class ConsoleUtils {
     final DocOpBuilder lineDeletion = new DocOpBuilder();
     final AtomicInteger currentLine = new AtomicInteger(-1);
 
-    doc.apply(new InitializationCursorAdapter(new DocInitializationCursor() {
+    doc.apply(InitializationCursorAdapter.adapt(new DocInitializationCursor() {
       @Override public void characters(String s) {
         if (currentLine.get() == lineNumber) {
           lineDeletion.deleteCharacters(s);

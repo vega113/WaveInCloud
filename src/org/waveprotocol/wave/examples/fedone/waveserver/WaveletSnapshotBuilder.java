@@ -17,14 +17,14 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 /**
  * A builder class. Passed in to WaveletProvider.getSnapshot to allow the snapshot and versions
  * to be retrieved atomicly.
- * 
+ *
  * @author arb@google.com (Anthony Baxter)
  * @param <T> The type that the builder creates.
  */
@@ -33,6 +33,6 @@ public interface WaveletSnapshotBuilder<T> {
   /**
    * Build a snapshot.
    */
-  T build(WaveletData waveletData, HashedVersion currentVersion,
+  T build(CoreWaveletData waveletData, HashedVersion currentVersion,
       ProtocolHashedVersion committedVersion);
 }

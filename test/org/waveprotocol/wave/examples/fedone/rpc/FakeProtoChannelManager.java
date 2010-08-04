@@ -57,7 +57,7 @@ public class FakeProtoChannelManager {
 
     @Override
     public boolean equals(Object thatObject) {
-      if (!(thatObject instanceof SequencedObject)) {
+      if (!(thatObject instanceof SequencedObject<?>)) {
         return false;
       } else {
         SequencedObject<?> that = (SequencedObject<?>) thatObject;

@@ -20,7 +20,7 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.waveserver.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.NavigableSet;
 
@@ -44,7 +44,7 @@ public interface WaveletProvider {
    * @param delta to be submitted to the server.
    * @param listener callback which will return the result of the submission.
    */
-  void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
+  void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta, String channelId,
       SubmitResultListener listener);
 
   /**

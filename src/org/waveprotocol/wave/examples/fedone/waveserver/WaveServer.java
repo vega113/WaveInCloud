@@ -17,8 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
-import org.waveprotocol.wave.waveserver.WaveletFederationListener;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
 
 /**
  * The Wave Server interface unifies the provider interfaces.

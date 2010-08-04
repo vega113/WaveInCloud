@@ -22,14 +22,14 @@ import com.google.protobuf.ByteString;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.AddParticipant;
-import org.waveprotocol.wave.model.operation.wave.NoOp;
-import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreNoOp;
+import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.List;
@@ -45,7 +45,7 @@ public class DeltaSequenceTest extends TestCase {
     serialize(HashedVersion.unsigned(START_VERSION));
   private static final ParticipantId USER = new ParticipantId("user@host.com");
 
-  private List<WaveletOperation> ops;
+  private List<CoreWaveletOperation> ops;
   private List<ProtocolWaveletDelta> protoDeltas;
   private ProtocolHashedVersion protoEndVersion;
 
@@ -53,14 +53,16 @@ public class DeltaSequenceTest extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     ops = ImmutableList.of(
-        NoOp.INSTANCE, NoOp.INSTANCE, new AddParticipant(USER), NoOp.INSTANCE, 
-        new RemoveParticipant(USER));
+        CoreNoOp.INSTANCE, CoreNoOp.INSTANCE, new CoreAddParticipant(USER), CoreNoOp.INSTANCE,
+        new CoreRemoveParticipant(USER));
 
-    WaveletDelta delta = new WaveletDelta(USER, ops);
-    WaveletDelta delta2 = new WaveletDelta(USER, ops);
+    CoreWaveletDelta delta = new CoreWaveletDelta(USER, ops);
+    CoreWaveletDelta delta2 = new CoreWaveletDelta(USER, ops);
     protoDeltas = ImmutableList.of(
-        serialize(delta, HashedVersion.unsigned(START_VERSION)),
-        serialize(delta, HashedVersion.unsigned(START_VERSION + ops.size())));
+        serialize(delta, HashedVersion.unsigned(START_VERSION),
+                  HashedVersion.unsigned(START_VERSION + ops.size())),
+        serialize(delta, HashedVersion.unsigned(START_VERSION + ops.size()),
+                  HashedVersion.unsigned(START_VERSION + ops.size() + ops.size())));
     protoEndVersion = serialize(HashedVersion.unsigned(START_VERSION + 2 * ops.size()));
   }
 

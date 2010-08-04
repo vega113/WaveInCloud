@@ -104,7 +104,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
 
   private void renderDocument(BufferedDocOp document, final int width, final List<String> lines,
       final StringBuilder currentLine, final String padding) {
-    document.apply(new InitializationCursorAdapter(
+    document.apply(InitializationCursorAdapter.adapt(
         new DocInitializationCursor() {
           final Deque<String> elemStack = new LinkedList<String>();
 
@@ -195,7 +195,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
       renderDocument(document, width, lines, currentLine, "");
     }
 
-    document.apply(new InitializationCursorAdapter(
+    document.apply(InitializationCursorAdapter.adapt(
         new DocInitializationCursor() {
           final Deque<String> elemStack = new LinkedList<String>();
           private int threadDepth;

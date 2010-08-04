@@ -25,12 +25,12 @@ import org.waveprotocol.wave.examples.fedone.waveserver.ByteStringMessage;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 
 import java.util.Arrays;
 
 /**
- * A {@link WaveletDelta}'s version along with a hash of the preceding history.
+ * A {@link CoreWaveletDelta}'s version along with a hash of the preceding history.
  * For fake deltas that do not contain the correct hash, use
  * {@link #unsigned(long)}.
  *
@@ -84,13 +84,13 @@ public final class HashedVersion {
   public static HashedVersion getHashedVersionAppliedAt(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta) {
     if (appliedDelta.getMessage().hasHashedVersionAppliedAt()) {
-      return WaveletOperationSerializer.deserialize(appliedDelta.getMessage()
+      return CoreWaveletOperationSerializer.deserialize(appliedDelta.getMessage()
           .getHashedVersionAppliedAt());
     } else {
       try {
         ProtocolWaveletDelta innerDelta = ProtocolWaveletDelta.parseFrom(
             appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
-        return WaveletOperationSerializer.deserialize(innerDelta.getHashedVersion());
+        return CoreWaveletOperationSerializer.deserialize(innerDelta.getHashedVersion());
       } catch (InvalidProtocolBufferException e) {
         throw new IllegalArgumentException(e);
       }

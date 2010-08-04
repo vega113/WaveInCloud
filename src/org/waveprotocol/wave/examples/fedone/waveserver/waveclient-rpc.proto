@@ -54,6 +54,22 @@ message ProtocolOpenRequest {
   optional int32 maximum_wavelets = 4;
   // Set to true if client understands snapshots.
   optional bool snapshots = 5 [default=false];
+  // Sent in a reconnect to tell the server about the client's current state
+  // TODO(arb): this is currently disabled, see the TODO in ClientFrontendImpl.
+  repeated WaveletVersion known_wavelets = 6;
+}
+
+// A pair of (wavelet id, wavelet version)
+message WaveletVersion {
+  required string wavelet_id = 1;
+  required federation.ProtocolHashedVersion hashed_version = 2;
+}
+
+// A pair of (document_id, document)
+message DocumentSnapshot {
+  required string document_id = 1;
+  // This is a document operation that takes the document from zero to its current state.
+  required federation.ProtocolDocumentOperation document_operation = 2;
 }
 
 /**
@@ -64,12 +80,6 @@ message WaveletSnapshot {
   // The list of participants of this wavelet.
   repeated string participant_id = 1;
 
-  // A pair of (document_id, document)
-  message DocumentSnapshot {
-    required string document_id = 1;
-    // This is a document operation that takes the document from zero to its current state.
-    required federation.ProtocolDocumentOperation document_operation = 2;
-  }
 
   // For each document in the wavelet, there is one of these. Another way to think of this is
   // that it's a map of document_id to documents.
@@ -88,18 +98,26 @@ message ProtocolWaveletUpdate {
   // If snapshot is set, there should be zero deltas.
   // TODO(soren): consider using this in the snapshot case for uncommitted deltas.
   repeated federation.ProtocolWaveletDelta applied_delta = 2;
-  
+
   // Indicates that the host server has committed the wavelet to disk at the
-  // given version.
+  // given version. Mandatory for snapshots.
   optional federation.ProtocolHashedVersion commit_notice = 3;
 
   // Resulting version of the wavelet after all deltas have been applied
   // May only be missing if there are no appliedDeltas
-  // If snapshot is set, this is the version number of the snapshot.
+  // If snapshot is set, this is the version number of the snapshot, and is
+  // mandatory.
   optional federation.ProtocolHashedVersion resulting_version = 4;
 
   // An optional snapshot of the wavelet
   optional WaveletSnapshot snapshot = 5;
+
+  // Marker. Means we have sent all data and are up to date.
+  optional bool marker = 6 [default=false];
+
+  // Channel ID. Sent in the first update to a given client, the client includes it in submits
+  // TODO(arb): make non-optional.
+  optional string channel_id = 7;
 }
 
 /**
@@ -108,6 +126,7 @@ message ProtocolWaveletUpdate {
 message ProtocolSubmitRequest {
   required string wavelet_name = 1;
   required federation.ProtocolWaveletDelta delta = 2;
+  optional string channel_id = 3;
 }
 
 /**

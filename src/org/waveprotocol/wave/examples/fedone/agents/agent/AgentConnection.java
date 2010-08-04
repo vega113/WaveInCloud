@@ -17,18 +17,17 @@
 
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
+import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
-import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
@@ -107,7 +106,7 @@ public class AgentConnection {
    * @return a new random document id
    */
   String getNewDocumentId() {
-    return backend.getIdGenerator().newDocumentId();
+    return backend.getIdGenerator().newBlipId();
   }
 
   /**
@@ -138,7 +137,7 @@ public class AgentConnection {
    * @param operation the operation to apply to the wavelet.
    * @param callback the callback that will be invoked
    */
-  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation,
+  public void sendWaveletOperation(WaveletName waveletName, CoreWaveletOperation operation,
       SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
@@ -152,7 +151,7 @@ public class AgentConnection {
    * @param waveletName of the wavelet to operate on.
    * @param operation the operation to apply to the wavelet.
    */
-  public void sendAndAwaitWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
+  public void sendAndAwaitWaveletOperation(WaveletName waveletName, CoreWaveletOperation operation) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
     }
@@ -166,7 +165,7 @@ public class AgentConnection {
    * @param waveletDelta to submit.
    * @param callback callback to be invoked on response.
    */
-  public void sendWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta,
+  public void sendWaveletDelta(WaveletName waveletName, CoreWaveletDelta waveletDelta,
       SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
@@ -179,9 +178,8 @@ public class AgentConnection {
    *
    * @param waveletName of the wavelet to operate on.
    * @param waveletDelta to submit.
-   * @param callback callback to be invoked on response.
    */
-  public void sendAndAwaitWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta) {
+  public void sendAndAwaitWaveletDelta(WaveletName waveletName, CoreWaveletDelta waveletDelta) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
     }

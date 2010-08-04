@@ -23,8 +23,8 @@ import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
@@ -114,7 +114,7 @@ public abstract class AbstractAgent implements AgentEventListener {
    * @param operation the operation to apply.
    * @param callback completion callback
    */
-  public void sendWaveletOperation(WaveletName waveletName, WaveletOperation operation,
+  public void sendWaveletOperation(WaveletName waveletName, CoreWaveletOperation operation,
       SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String> callback) {
     connection.sendWaveletOperation(waveletName, operation, callback);
   }
@@ -124,9 +124,8 @@ public abstract class AbstractAgent implements AgentEventListener {
    *
    * @param waveletName of the wavelet to apply the operation to.
    * @param operation the operation to apply.
-   * @param callback completion callback
    */
-  public void sendAndAwaitWaveletOperation(WaveletName waveletName, WaveletOperation operation) {
+  public void sendAndAwaitWaveletOperation(WaveletName waveletName, CoreWaveletOperation operation) {
     connection.sendAndAwaitWaveletOperation(waveletName, operation);
   }
 
@@ -137,7 +136,7 @@ public abstract class AbstractAgent implements AgentEventListener {
    * @param waveletDelta to send
    * @param callback completion callback
    */
-  public void sendWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta,
+  public void sendWaveletDelta(WaveletName waveletName, CoreWaveletDelta waveletDelta,
       SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String> callback) {
     connection.sendWaveletDelta(waveletName, waveletDelta, callback);
   }
@@ -148,7 +147,7 @@ public abstract class AbstractAgent implements AgentEventListener {
    * @param waveletName of the wavelet to apply the operation to
    * @param waveletDelta to send
    */
-  public void sendAndAwaitWaveletDelta(WaveletName waveletName, WaveletDelta waveletDelta) {
+  public void sendAndAwaitWaveletDelta(WaveletName waveletName, CoreWaveletDelta waveletDelta) {
     connection.sendAndAwaitWaveletDelta(waveletName, waveletDelta);
   }
 }

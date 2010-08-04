@@ -33,7 +33,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import static org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer.serialize;
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
@@ -50,12 +50,12 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.waveserver.FederationHostBridge;
-import org.waveprotocol.wave.waveserver.FederationRemoteBridge;
-import org.waveprotocol.wave.waveserver.SubmitResultListener;
-import org.waveprotocol.wave.waveserver.WaveletFederationListener;
-import org.waveprotocol.wave.waveserver.WaveletFederationListener.Factory;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
+import org.waveprotocol.wave.waveserver.federation.FederationRemoteBridge;
+import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener.Factory;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -166,7 +166,7 @@ public class WaveServerImpl implements WaveServer {
                     Map<String, BufferedDocOp> documentState =
                         getWavelet(waveletName).getWaveletData().getDocuments();
                     clientListener.waveletUpdate(waveletName, result, result.getEndVersion(),
-                        documentState);
+                        documentState, null);
                   } else {
                     LOG.warning("Got valid deltaSequence for " + waveletName
                         + ", clientListener is null");
@@ -255,7 +255,7 @@ public class WaveServerImpl implements WaveServer {
     try {
       checkWaveletHosting(true, waveletName);
       certificateManager.verifyDelta(signedDelta);
-      submitDelta(waveletName, signedDelta, listener);
+      submitDelta(waveletName, signedDelta, null, listener);
     } catch (HostingException e) {
       LOG.warning("Remote tried to submit to local wavelet", e);
       listener.onFailure(FederationErrors.badRequest("Local wavelet update"));
@@ -409,12 +409,12 @@ public class WaveServerImpl implements WaveServer {
   }
 
   @Override
-  public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
-      SubmitResultListener listner) {
+  public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta, String channelId,
+      SubmitResultListener listener) {
     // The serialised version of this delta happens now.  This should be the only place, ever!
     ProtocolSignedDelta signedDelta = certificateManager.signDelta(
         ByteStringMessage.fromMessage(delta));
-    submitDelta(waveletName, signedDelta, listner);
+    submitDelta(waveletName, signedDelta, channelId, listener);
   }
 
   // -------------------------------------------------------------------------------------------
@@ -563,7 +563,7 @@ public class WaveServerImpl implements WaveServer {
    *               federated groups, that test should be removed.
    */
   private void submitDelta(final WaveletName waveletName, final ProtocolSignedDelta delta,
-      final SubmitResultListener resultListener) {
+      String channelId, final SubmitResultListener resultListener) {
     ByteStringMessage<ProtocolWaveletDelta> waveletDelta;
     try {
       waveletDelta = ByteStringMessage.from(
@@ -613,7 +613,7 @@ public class WaveServerImpl implements WaveServer {
                 getWavelet(waveletName).getWaveletData().getDocuments();
             LOG.info("Sending update to client listener: " + submitResult.getDelta());
             clientListener.waveletUpdate(waveletName, ImmutableList.of(submitResult.getDelta()),
-                submitResult.getHashedVersionAfterApplication(), documentState);
+                submitResult.getHashedVersionAfterApplication(), documentState, channelId);
           }
 
           // Capture any new domains from addParticipant operations.

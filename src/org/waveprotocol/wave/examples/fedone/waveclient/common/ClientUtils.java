@@ -27,6 +27,7 @@ import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
@@ -35,12 +36,14 @@ import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorA
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -66,7 +69,7 @@ public class ClientUtils {
   public static String render(Iterable<BufferedDocOp> documentStates) {
     final StringBuilder resultBuilder = new StringBuilder();
     for (BufferedDocOp documentState : documentStates) {
-      documentState.apply(new InitializationCursorAdapter(
+      documentState.apply(InitializationCursorAdapter.adapt(
           new DocOpCursor() {
             @Override
             public void characters(String s) {
@@ -98,7 +101,7 @@ public class ClientUtils {
    */
   public static String renderDocuments(ClientWaveView wave) {
     final StringBuilder doc = new StringBuilder();
-    for (WaveletData wavelet : wave.getWavelets()) {
+    for (CoreWaveletData wavelet : wave.getWavelets()) {
       doc.append(render(wavelet.getDocuments().values()));
     }
     return doc.toString();
@@ -140,7 +143,7 @@ public class ClientUtils {
    * @param newBlipId
    * @param text to place in the new blip
    */
-  public static WaveletDelta createAppendBlipDelta(BufferedDocOp manifestDocument,
+  public static CoreWaveletDelta createAppendBlipDelta(BufferedDocOp manifestDocument,
       ParticipantId author, String newBlipId, String text) {
     if (text.length() == 0) {
       throw new IllegalArgumentException("Cannot append a empty String");
@@ -158,18 +161,18 @@ public class ClientUtils {
       BufferedDocOp emptyNewBlipOp = new DocOpBuilder().build();
 
       // Send the operation.
-      ImmutableList<WaveletDocumentOperation> operations = ImmutableList.of(
-          new WaveletDocumentOperation(newBlipId, emptyNewBlipOp),
-          new WaveletDocumentOperation(newBlipId, newBlipOp),
+      ImmutableList<CoreWaveletDocumentOperation> operations = ImmutableList.of(
+          new CoreWaveletDocumentOperation(newBlipId, emptyNewBlipOp),
+          new CoreWaveletDocumentOperation(newBlipId, newBlipOp),
           appendToManifest(manifestDocument, newBlipId));
-      return new WaveletDelta(author, operations);
+      return new CoreWaveletDelta(author, operations);
     }
   }
 
   /**
    * Add record of a blip to the end of the manifest.
    */
-  public static WaveletDocumentOperation appendToManifest(BufferedDocOp manifestDocument,
+  public static CoreWaveletDocumentOperation appendToManifest(BufferedDocOp manifestDocument,
       String blipId) {
     BufferedDocOp manifestUpdateOp = new DocOpBuilder()
         .retain(findDocumentSize(manifestDocument) - 1)
@@ -178,7 +181,8 @@ public class ClientUtils {
         .elementEnd() // </blip>
         .retain(1) // retain </conversation>
         .build();
-    return new WaveletDocumentOperation(DocumentConstants.MANIFEST_DOCUMENT_ID, manifestUpdateOp);
+    return new CoreWaveletDocumentOperation(DocumentConstants.MANIFEST_DOCUMENT_ID,
+        manifestUpdateOp);
   }
 
   /**
@@ -190,7 +194,7 @@ public class ClientUtils {
   public static int findDocumentSize(DocOp doc) {
     final AtomicInteger size = new AtomicInteger(0);
 
-    doc.apply(new InitializationCursorAdapter(new DocOpCursor() {
+    doc.apply(InitializationCursorAdapter.adapt(new DocOpCursor() {
       @Override public void characters(String s) {
         size.getAndAdd(s.length());
       }
@@ -235,7 +239,7 @@ public class ClientUtils {
 
     List<IndexEntry> indexEntries = Lists.newArrayList();
 
-    for (WaveletData wavelet : indexWave.getWavelets()) {
+    for (CoreWaveletData wavelet : indexWave.getWavelets()) {
       // The wave id is encoded as the wavelet id
       WaveId waveId = WaveId.deserialise(wavelet.getWaveletName().waveletId.serialise());
       String digest = ClientUtils.render(wavelet.getDocuments().values());
@@ -251,7 +255,7 @@ public class ClientUtils {
    * @param wave to get conversation root of
    * @return conversation root wavelet of the wave
    */
-  public static WaveletData getConversationRoot(ClientWaveView wave) {
+  public static CoreWaveletData getConversationRoot(ClientWaveView wave) {
     return wave.getWavelet(getConversationRootId(wave));
   }
 
@@ -267,5 +271,58 @@ public class ClientUtils {
    */
   public static WaveletId getConversationRootId(WaveId waveId) {
     return new WaveletId(waveId.getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET);
+  }
+
+  /**
+   * Returns a snippet or null.
+   */
+  public static String renderSnippet(final Map<String, BufferedDocOp> documents,
+      final int maxSnippetLength) {
+    if (documents == null) {
+      return null;
+    }
+    BufferedDocOp bufferedDocOp = documents.get(DocumentConstants.CONVERSATION);
+    if (bufferedDocOp == null) {
+      // Render whatever data we have and hope its good enough
+      return render(documents.values());
+    }
+
+    final StringBuilder sb = new StringBuilder();
+    bufferedDocOp.apply(InitializationCursorAdapter.adapt(
+        new DocInitializationCursor() {
+          @Override
+          public void annotationBoundary(AnnotationBoundaryMap map) {
+          }
+
+          @Override
+          public void characters(String chars) {
+            // No chars in the conversation manifest
+          }
+
+          @Override
+          public void elementEnd() {
+          }
+
+          @Override
+          public void elementStart(String type, Attributes attrs) {
+            if (sb.length() >= maxSnippetLength) {
+              return;
+            }
+
+            if (DocumentConstants.BLIP.equals(type)) {
+              String blipId = attrs.get(DocumentConstants.BLIP_ID);
+              if (blipId != null) {
+                BufferedDocOp document = documents.get(blipId);
+                if (document == null) {
+                  // We see this when a blip has been deleted
+                  return;
+                }
+                sb.append(render(Arrays.asList(document)));
+                sb.append(" ");
+              }
+            }
+          }
+        }));
+    return sb.toString();
   }
 }

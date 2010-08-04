@@ -47,8 +47,8 @@ import org.waveprotocol.wave.crypto.WaveCertPathValidator;
 import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
 import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.crypto.WaveSignerFactory;
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
@@ -62,8 +62,8 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.HashAlgorithm;
-import org.waveprotocol.wave.waveserver.SubmitResultListener;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -466,7 +466,7 @@ public class CertificateManagerImplTest extends TestCase {
   }
 
   private ProtocolHashedVersion getHashedVersion() {
-    return WaveletOperationSerializer.serialize(HashedVersion.unsigned(3L));
+    return CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(3L));
   }
 
   private WaveSignatureVerifier getRealVerifier(CertPathStore store) throws Exception {

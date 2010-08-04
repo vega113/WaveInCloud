@@ -20,7 +20,7 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.waveserver.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
 import java.util.List;
 

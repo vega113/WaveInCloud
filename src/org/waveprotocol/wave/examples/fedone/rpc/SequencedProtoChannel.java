@@ -17,10 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.rpc;
 
-import com.google.common.collect.Maps;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
-import com.google.protobuf.JsonFormat;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.UnknownFieldSet;
@@ -28,10 +26,10 @@ import com.google.protobuf.UnknownFieldSet;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -42,6 +40,9 @@ import java.util.concurrent.Executors;
  *
  */
 public class SequencedProtoChannel extends MessageExpectingChannel {
+  // The default ProtoBuffer message size limit.
+  private static final int MAX_MESSAGE_SIZE = 64 << 20; //64MB
+
   private static final Log LOG = Log.get(SequencedProtoChannel.class);
   private final CodedOutputStream outputStream;
   private final ByteChannel channel;
@@ -49,28 +50,6 @@ public class SequencedProtoChannel extends MessageExpectingChannel {
   private final Runnable asyncRead;
   private boolean isReading = false;
   
-  /**
-   * Internal helper method to remove and return the specified number of bytes
-   * from the beginning of the specified ByteBuffer.
-   * 
-   * @param buffer the ByteBuffer instance to remove data from
-   * @param size the number of bytes requested
-   * @return an array of length exactly equal to size, the bytes at the start of
-   *         the buffer which have now been removed - or null if the buffer
-   *         contained less than this number of bytes
-   */
-  private static byte[] popFromBuffer(ByteBuffer buffer, int size) {
-    if (buffer.position() < size) {
-      return null;
-    } else {
-      byte[] result = new byte[size];
-      buffer.flip();
-      buffer.get(result);
-      buffer.compact();
-      return result;
-    }
-  }
-
   /**
    * Instantiate a new SequencedProtoChannel. Requires the backing SocketChannel
    * as well as the ProtoCallback to be notified on incoming messages.
@@ -84,66 +63,122 @@ public class SequencedProtoChannel extends MessageExpectingChannel {
     this.channel = channel;
     this.threadPool = threadPool;
 
+    /*
+     * This class wraps {@code channel} and provides an InputStream interface that can be used
+     * by {@link CodedInputStream}.
+     */
+    class CustomInputStream extends InputStream {
+      int totalRemaining = 0;
+
+      public void setLimit(int limit) {
+        totalRemaining = limit;
+      }
+      /*
+       * Keep calling channel.read until all requested bytes are returned or EOF is reached.
+       * If channel.read throws an exception and some bytes have already been read, then the
+       * number of bytes read will be returned, otherwise the exception will be re-thrown.
+       */
+      private int readAll(ByteBuffer b) throws IOException {
+        int total = 0;
+        int nread = 0;
+        while (b.remaining() > 0) {
+          nread = 0;
+          
+          try {
+            nread = channel.read(b);
+
+            if (nread == 0) {
+              nread = -1;
+            }
+          } catch (IOException e) {
+            // If there are no bytes to return re-throw the exception
+            if (total == 0) {
+              throw e;
+            } else {
+              nread = -1;
+            }
+          }
+
+          if (nread != -1) {
+            total += nread;
+          } else {
+            break;
+          }
+        }
+
+        totalRemaining -= total;
+        
+        return nread != -1 ? total : -1;
+      }
+      
+      @Override
+      public int read() throws IOException {
+        if (totalRemaining <= 0) return -1;
+
+        ByteBuffer b = ByteBuffer.allocate(1);
+        if (channel.read(b) != 1) {
+          return -1;
+        }
+
+        return b.get();
+      }
+
+      @Override
+      public int read(byte[] b, int off, int len) throws IOException {
+        if (totalRemaining <= 0) return -1;
+        return readAll(ByteBuffer.wrap(b, off, len < totalRemaining ? len : totalRemaining));
+      }
+
+      @Override
+      public int read(byte[] b) throws IOException {
+        if (totalRemaining <= 0) return -1;
+        return readAll(ByteBuffer.wrap(b, 0,
+            b.length < totalRemaining ? b.length : totalRemaining));
+      }
+    }
+    
+    final CustomInputStream inputStream = new CustomInputStream();
+    final CodedInputStream codedInputStream = CodedInputStream.newInstance(inputStream);
+    
+
     this.asyncRead = new Runnable() {
       @Override
       public void run() {
-        final int bufferSize = 8192 * 4;
-        ByteBuffer inputBuffer = ByteBuffer.allocate(bufferSize);
         int requiredSize = -1;
         try {
-          // we don't have enough data - read from buffer
-          while (-1 != channel.read(inputBuffer)) {
-            
-            // While there's still data available, try to process it.
-            while (inputBuffer.position() > 0) {
-
-              // Grab our requiredSize if we still need it, popping a 32-bit int.
-              if (requiredSize == -1) {
-                byte[] buffer = popFromBuffer(inputBuffer, CodedOutputStream.LITTLE_ENDIAN_32_SIZE);
-                if (buffer != null) {
-                  requiredSize = CodedInputStream.newInstance(buffer).readRawLittleEndian32();
-                } else {
-                  // not enough data - fall out
-                  break;
-                }
-              }
-  
-              // Try to grab the whole payload.
-              if (requiredSize > bufferSize) {
-                throw new IllegalStateException(String.format("Payload (%d bytes) too large for" +
-                		" buffer (%d bytes)", requiredSize, bufferSize));
-              } else if (requiredSize > -1) {
-                byte[] buffer = popFromBuffer(inputBuffer, requiredSize);
-                if (buffer != null) {
-                  CodedInputStream inputStream = CodedInputStream.newInstance(buffer);
-                  long incomingSequenceNo = inputStream.readInt64();
-                  String messageType = inputStream.readString();
+          while(true) {
+            inputStream.setLimit(CodedOutputStream.LITTLE_ENDIAN_32_SIZE);
+            codedInputStream.resetSizeCounter();
+            codedInputStream.setSizeLimit(CodedOutputStream.LITTLE_ENDIAN_32_SIZE);
+            requiredSize = codedInputStream.readRawLittleEndian32();
+            if (requiredSize > MAX_MESSAGE_SIZE) {
+              throw new IllegalStateException(String.format("Reported payload size (%d bytes) " +
+                  " exeeds the limit (%d bytes)", requiredSize, MAX_MESSAGE_SIZE));
+            }
+            if (requiredSize > 0) {
+              inputStream.setLimit(requiredSize);
+              codedInputStream.resetSizeCounter();
+              codedInputStream.setSizeLimit(requiredSize);
+              long incomingSequenceNo = codedInputStream.readInt64();
+              String messageType = codedInputStream.readString();
                   Message prototype = getMessagePrototype(messageType);
-                  if (prototype == null) {
-                    LOG.info("Received misunderstood message (??? " + messageType + " ???, seq "
-                        + incomingSequenceNo + ") from: " + channel);
-                    // We have to emulate some of the semantics of reading a
-                    // whole message here, including reading its encoded length.
-                    final int length = inputStream.readRawVarint32();
-                    final int oldLimit = inputStream.pushLimit(length);
-                    UnknownFieldSet unknownFieldSet = UnknownFieldSet.parseFrom(inputStream);
-                    inputStream.popLimit(oldLimit);
-                    callback.unknown(incomingSequenceNo, messageType, unknownFieldSet);
-                  } else {
-                    // TODO: change to LOG.debug
-                    LOG.fine("Received message (" + messageType + ", seq "
-                        + incomingSequenceNo + ") from: " + channel);
-                    Message.Builder builder = prototype.newBuilderForType();
-                    inputStream.readMessage(builder, null);
-                    callback.message(incomingSequenceNo, builder.build());
-                  }
-  
-                  // Reset the required size for the next invocation of this loop.
-                  requiredSize = -1;
-                } else {
-                  // not enough data - fall out
-                  break;
-                }
+              if (prototype == null) {
+                LOG.info("Received misunderstood message (??? " + messageType + " ???, seq "
+                    + incomingSequenceNo + ") from: " + channel);
+                // We have to emulate some of the semantics of reading a
+                // whole message here, including reading its encoded length.
+                final int length = codedInputStream.readRawVarint32();
+                final int oldLimit = codedInputStream.pushLimit(length);
+                UnknownFieldSet unknownFieldSet = UnknownFieldSet.parseFrom(codedInputStream);
+                codedInputStream.popLimit(oldLimit);
+                callback.unknown(incomingSequenceNo, messageType, unknownFieldSet);
+              } else {
+                // TODO: change to LOG.debug
+                LOG.fine("Received message (" + messageType + ", seq "
+                    + incomingSequenceNo + ") from: " + channel);
+                Message.Builder builder = prototype.newBuilderForType();
+                codedInputStream.readMessage(builder, null);
+                callback.message(incomingSequenceNo, builder.build());
               }
             }
           }
@@ -199,12 +234,12 @@ public class SequencedProtoChannel extends MessageExpectingChannel {
    * @param sequenceNo
    * @param message
    */
+  @Override
   public void sendMessage(long sequenceNo, Message message) {
     internalSendMessage(sequenceNo, message, message.getDescriptorForType().getFullName());
   }
 
   private void internalSendMessage(long sequenceNo, MessageLite message, String messageType) {
-    int messageSize = message.getSerializedSize();
     int size = CodedOutputStream.computeInt64SizeNoTag(sequenceNo)
              + CodedOutputStream.computeStringSizeNoTag(messageType)
              + CodedOutputStream.computeMessageSizeNoTag(message);

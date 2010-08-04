@@ -18,11 +18,8 @@
 package org.waveprotocol.wave.examples.fedone;
 
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.name.Named;
-
 import org.apache.commons.cli.ParseException;
 import org.waveprotocol.wave.examples.fedone.rpc.ServerRpcProvider;
 import org.waveprotocol.wave.examples.fedone.util.Log;
@@ -31,7 +28,6 @@ import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
 import org.xmpp.component.ComponentException;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 
 /**

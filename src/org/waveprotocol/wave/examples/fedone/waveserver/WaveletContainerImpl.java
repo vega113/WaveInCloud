@@ -23,7 +23,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
-import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
@@ -33,13 +33,13 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.OperationPair;
-import org.waveprotocol.wave.model.operation.Transform;
 import org.waveprotocol.wave.model.operation.TransformException;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.core.CoreTransform;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
-import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveletDataImpl;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -59,10 +59,10 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * A wavelet delta with a target hashed version.
    */
   protected static final class VersionedWaveletDelta {
-    public final WaveletDelta delta;
+    public final CoreWaveletDelta delta;
     public final HashedVersion version;
 
-    public VersionedWaveletDelta(WaveletDelta delta, HashedVersion version) {
+    public VersionedWaveletDelta(CoreWaveletDelta delta, HashedVersion version) {
       this.delta = delta;
       this.version = version;
     }
@@ -79,7 +79,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   private final Lock readLock;
   private final Lock writeLock;
   protected WaveletName waveletName;
-  protected WaveletData waveletData;
+  protected CoreWaveletData waveletData;
   protected HashedVersion currentVersion;
   protected ProtocolHashedVersion lastCommittedVersion;
   protected State state;
@@ -87,7 +87,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   /** Constructor. */
   public WaveletContainerImpl(WaveletName waveletName) {
     this.waveletName = waveletName;
-    waveletData = new WaveletDataImpl(waveletName.waveId, waveletName.waveletId);
+    waveletData = new CoreWaveletDataImpl(waveletName.waveId, waveletName.waveletId);
     currentVersion = HASHED_HISTORY_VERSION_FACTORY.createVersionZero(waveletName);
     lastCommittedVersion = null;
 
@@ -146,7 +146,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   private static ProtocolWaveletDelta emptyDeltaAtVersion(final long version) {
     return ProtocolWaveletDelta.newBuilder()
         .setAuthor("dummy")
-        .setHashedVersion(WaveletOperationSerializer.serialize(HashedVersion.unsigned(version)))
+        .setHashedVersion(CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(version)))
         .build();
   }
 
@@ -271,7 +271,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public WaveletData getWaveletData() {
+  public CoreWaveletData getWaveletData() {
     return waveletData;
   }
 
@@ -298,7 +298,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * @throws InvalidHashException if submitting against same version but different hash
    * @throws OperationException if transformation fails
    */
-  protected VersionedWaveletDelta maybeTransformSubmittedDelta(WaveletDelta delta,
+  protected VersionedWaveletDelta maybeTransformSubmittedDelta(CoreWaveletDelta delta,
       HashedVersion appliedVersion) throws InvalidHashException, OperationException {
     if (appliedVersion.equals(currentVersion)) {
       // Applied version is the same, we're submitting against head, don't need to do OT
@@ -321,18 +321,18 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    *
    * @param ops to apply
    */
-  protected void applyWaveletOperations(List<WaveletOperation> ops) throws OperationException,
+  protected void applyWaveletOperations(List<CoreWaveletOperation> ops) throws OperationException,
       EmptyDeltaException {
     if (ops.isEmpty()) {
       LOG.warning("No operations to apply at version " + currentVersion);
       throw new EmptyDeltaException();
     }
 
-    WaveletOperation lastOp = null;
+    CoreWaveletOperation lastOp = null;
     int opsApplied = 0;
 
     try {
-      for (WaveletOperation op : ops) {
+      for (CoreWaveletOperation op : ops) {
         lastOp = op;
         op.apply(waveletData);
         opsApplied++;
@@ -352,7 +352,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    *
    * @param ops to roll back
    */
-  private void rollbackWaveletOperations(List<WaveletOperation> ops) {
+  private void rollbackWaveletOperations(List<CoreWaveletOperation> ops) {
     for (int i = ops.size() - 1; i >= 0; i--) {
       try {
         ops.get(i).getInverse().apply(waveletData);
@@ -367,7 +367,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * Finds range of server deltas needed to transform against, then transforms all client
    * ops against the server ops.
    */
-  private VersionedWaveletDelta transformSubmittedDelta(WaveletDelta submittedDelta,
+  private VersionedWaveletDelta transformSubmittedDelta(CoreWaveletDelta submittedDelta,
       HashedVersion appliedVersion) throws OperationException, InvalidHashException {
 
     NavigableSet<VersionedWaveletDelta> serverDeltas = deserializedTransformedDeltas.tailSet(
@@ -389,22 +389,22 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     }
 
     ParticipantId clientAuthor = submittedDelta.getAuthor();
-    List<WaveletOperation> clientOps = submittedDelta.getOperations();
+    List<CoreWaveletOperation> clientOps = submittedDelta.getOperations();
     for (VersionedWaveletDelta d : serverDeltas) {
       // If the client delta transforms to nothing before we've traversed all the server
       // deltas, return the version at which the delta was obliterated (rather than the
       // current version) to ensure that delta submission is idempotent.
       if (clientOps.isEmpty()) {
-        return new VersionedWaveletDelta(new WaveletDelta(clientAuthor, clientOps), d.version);
+        return new VersionedWaveletDelta(new CoreWaveletDelta(clientAuthor, clientOps), d.version);
       }
       ParticipantId serverAuthor = d.delta.getAuthor();
-      List<WaveletOperation> serverOps = d.delta.getOperations();
+      List<CoreWaveletOperation> serverOps = d.delta.getOperations();
       if (clientAuthor.equals(serverAuthor) && clientOps.equals(serverOps)) {
         return d;
       }
       clientOps = transformOps(clientOps, clientAuthor, serverOps, serverAuthor);
     }
-    return new VersionedWaveletDelta(new WaveletDelta(clientAuthor, clientOps), currentVersion);
+    return new VersionedWaveletDelta(new CoreWaveletDelta(clientAuthor, clientOps), currentVersion);
   }
 
   /**
@@ -417,16 +417,17 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * @param serverAuthor
    * @return The transformed client ops
    */
-  private List<WaveletOperation> transformOps(
-      List<WaveletOperation> clientOps, ParticipantId clientAuthor,
-      List<WaveletOperation> serverOps, ParticipantId serverAuthor) throws OperationException {
-    List<WaveletOperation> transformedClientOps = new ArrayList<WaveletOperation>();
+  private List<CoreWaveletOperation> transformOps(
+      List<CoreWaveletOperation> clientOps, ParticipantId clientAuthor,
+      List<CoreWaveletOperation> serverOps, ParticipantId serverAuthor) throws OperationException {
+    List<CoreWaveletOperation> transformedClientOps = new ArrayList<CoreWaveletOperation>();
 
-    for (WaveletOperation c : clientOps) {
-      for (WaveletOperation s : serverOps) {
-        OperationPair<WaveletOperation> pair;
+    for (CoreWaveletOperation c : clientOps) {
+      for (CoreWaveletOperation s : serverOps) {
+        OperationPair<CoreWaveletOperation> pair;
         try {
-          pair = Transform.transform(c, clientAuthor, s, serverAuthor);
+
+          pair = CoreTransform.transform(c, clientAuthor, s, serverAuthor);
         } catch (TransformException e) {
           throw new OperationException(e);
         }
@@ -446,20 +447,20 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    */
   protected DeltaApplicationResult commitAppliedDelta(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
-      WaveletDelta transformedDelta) {
+      CoreWaveletDelta transformedDelta) {
+    HashedVersion newVersion = HASHED_HISTORY_VERSION_FACTORY.create(
+        appliedDelta.getByteArray(), currentVersion, transformedDelta.getOperations().size());
 
     ProtocolWaveletDelta transformedProtocolDelta =
-      WaveletOperationSerializer.serialize(transformedDelta, currentVersion);
+      CoreWaveletOperationSerializer.serialize(transformedDelta, currentVersion, newVersion);
     transformedDeltas.add(transformedProtocolDelta);
     deserializedTransformedDeltas.add(new VersionedWaveletDelta(transformedDelta, currentVersion));
     appliedDeltas.add(appliedDelta);
 
-    HashedVersion newVersion = HASHED_HISTORY_VERSION_FACTORY.create(
-        appliedDelta.getByteArray(), currentVersion, transformedDelta.getOperations().size());
     currentVersion = newVersion;
 
     return new DeltaApplicationResult(appliedDelta, transformedProtocolDelta,
-        WaveletOperationSerializer.serialize(newVersion));
+        CoreWaveletOperationSerializer.serialize(newVersion));
   }
 
   /**

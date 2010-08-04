@@ -22,26 +22,24 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.Service;
 import com.google.protobuf.UnknownFieldSet;
-import com.google.protobuf.Descriptors.MethodDescriptor;
-
-import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
+import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -63,7 +61,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class ServerRpcProvider {
   private static final Log LOG = Log.get(ServerRpcProvider.class);
-  
+
   private final SocketAddress rpcHostingAddress;
   private final String websocketHost;
   private final Integer websocketPort;
@@ -72,7 +70,7 @@ public class ServerRpcProvider {
   private ServerSocketChannel rpcServer = null;
   private Server websocketServer = null;
   private Future<?> acceptorThread = null;
-  
+
   // Mapping from incoming protocol buffer type -> specific handler.
   private final Map<Descriptors.Descriptor, RegisteredServiceMethod> registeredServices =
       Maps.newHashMap();
@@ -97,7 +95,7 @@ public class ServerRpcProvider {
     SequencedProtoChannelConnection(SocketChannel channel) {
       this.channel = channel;
       LOG.info("New Connection set up from " + this.channel);
-      
+
       // Set up protoChannel, let it know to expect messages of all the
       // registered service/method types.
       // TODO: dynamic lookup for these types instead
@@ -105,12 +103,13 @@ public class ServerRpcProvider {
       expectMessages(protoChannel);
       protoChannel.startAsyncRead();
     }
-    
+
+    @Override
     protected void sendMessage(long sequenceNo, Message message) {
       protoChannel.sendMessage(sequenceNo, message);
     }
   }
-  
+
   class WebSocketConnection extends Connection {
     private WebSocketServerChannel socketChannel;
 
@@ -119,11 +118,12 @@ public class ServerRpcProvider {
       LOG.info("New websocket connection set up.");
       expectMessages(socketChannel);
     }
-    
+
+    @Override
     protected void sendMessage(long sequenceNo, Message message) {
       socketChannel.sendMessage(sequenceNo, message);
     }
-    
+
     public WebSocketServerChannel getWebSocketServerChannel() {
       return socketChannel;
     }
@@ -142,7 +142,7 @@ public class ServerRpcProvider {
       }
       channel.expectMessage(Rpc.CancelRpc.getDefaultInstance());
     }
-    
+
     protected abstract void sendMessage(long sequenceNo, Message message);
 
     @Override
@@ -156,38 +156,38 @@ public class ServerRpcProvider {
           controller.cancel();
         }
       } else if (registeredServices.containsKey(message.getDescriptorForType())) {
-          if (activeRpcs.containsKey(sequenceNo)) {
-            throw new IllegalStateException(
-              "Can't invoke a new RPC with a sequence number already in use.");
-          } else {
-            final RegisteredServiceMethod serviceMethod =
-              registeredServices.get(message.getDescriptorForType());
+        if (activeRpcs.containsKey(sequenceNo)) {
+          throw new IllegalStateException(
+          "Can't invoke a new RPC with a sequence number already in use.");
+        } else {
+          final RegisteredServiceMethod serviceMethod =
+            registeredServices.get(message.getDescriptorForType());
 
-            // Create the internal ServerRpcController used to invoke the call.
-            final ServerRpcController controller =
-              new ServerRpcController(message, serviceMethod.service, serviceMethod.method,
-                  new RpcCallback<Message>() {
-                    @Override
-                    synchronized public void run(Message message) {
-                      if (message instanceof Rpc.RpcFinished
-                          || !serviceMethod.method.getOptions().getExtension(Rpc.isStreamingRpc)) {
-                        // This RPC is over - remove it from the map.
-                        boolean failed = message instanceof Rpc.RpcFinished
-                            ? ((Rpc.RpcFinished) message).getFailed() : false;
-                        LOG.fine("RPC " + sequenceNo + " is now finished, failed = " + failed);
-                        if (failed) {
-                          LOG.info("error = " + ((Rpc.RpcFinished) message).getErrorText());
-                        }
-                        activeRpcs.remove(sequenceNo);
-                      }
-                      sendMessage(sequenceNo, message);
-                    }
-                  });
+          // Create the internal ServerRpcController used to invoke the call.
+          final ServerRpcController controller =
+            new ServerRpcController(message, serviceMethod.service, serviceMethod.method,
+                new RpcCallback<Message>() {
+              @Override
+              synchronized public void run(Message message) {
+                if (message instanceof Rpc.RpcFinished
+                    || !serviceMethod.method.getOptions().getExtension(Rpc.isStreamingRpc)) {
+                  // This RPC is over - remove it from the map.
+                  boolean failed = message instanceof Rpc.RpcFinished
+                  ? ((Rpc.RpcFinished) message).getFailed() : false;
+                  LOG.fine("RPC " + sequenceNo + " is now finished, failed = " + failed);
+                  if (failed) {
+                    LOG.info("error = " + ((Rpc.RpcFinished) message).getErrorText());
+                  }
+                  activeRpcs.remove(sequenceNo);
+                }
+                sendMessage(sequenceNo, message);
+              }
+            });
 
-            // Kick off a new thread specific to this RPC.
-            activeRpcs.put(sequenceNo, controller);
-            threadPool.execute(controller);
-          }
+          // Kick off a new thread specific to this RPC.
+          activeRpcs.put(sequenceNo, controller);
+          threadPool.execute(controller);
+        }
       } else {
         // Sent a message type we understand, but don't expect - erronous case!
         throw new IllegalStateException("Got expected but unknown message  (" + message
@@ -236,14 +236,14 @@ public class ServerRpcProvider {
       String websocketHost, Integer websocketPort) {
     this(rpcHost, websocketHost, websocketPort, Executors.newCachedThreadPool());
   }
-  
+
   @Inject
   public ServerRpcProvider(@Named("client_frontend_hostname") String rpcHost,
-        @Named("client_frontend_port") Integer rpcPort,
-        @Named("websocket_frontend_hostname") String websocketHost,
-        @Named("websocket_frontend_port") Integer websocketPort) {
+      @Named("client_frontend_port") Integer rpcPort,
+      @Named("http_frontend_hostname") String websocketHost,
+      @Named("http_frontend_port") Integer websocketPort) {
     this(new InetSocketAddress(rpcHost, rpcPort),
-         websocketHost, websocketPort);
+        websocketHost, websocketPort);
   }
 
   /**
@@ -274,23 +274,23 @@ public class ServerRpcProvider {
       }
     });
   }
-  
+
   public void startWebSocketServer() {
     websocketServer = new Server();
     Connector c = new SelectChannelConnector();
     c.setHost(websocketHost);
     c.setPort(websocketPort);
-    
+
     websocketServer.addConnector(c);
     ServletContextHandler context = new ServletContextHandler();
     context.setContextPath("/");
     websocketServer.setHandler(context);
-    
+
     ServletHolder holder = new ServletHolder(new WaveWebSocketServlet());
     holder.setInitParameter("bufferSize", ""+1024*1024); // 1M buffer. TODO(zamfi): fix to let messages span frames.
     holder.setInitParameter("maxIdleTime", "-1");
     context.addServlet(holder, "/");
-    
+
     try {
       websocketServer.start();      
     } catch (Exception e) { // yes, .start() throws "Exception"
@@ -301,6 +301,7 @@ public class ServerRpcProvider {
   }
 
   public class WaveWebSocketServlet extends WebSocketServlet {
+    @Override
     protected WebSocket doWebSocketConnect(HttpServletRequest request, String protocol)
     {
       WebSocketConnection connection = new WebSocketConnection();
@@ -314,7 +315,7 @@ public class ServerRpcProvider {
   public SocketAddress getBoundAddress() {
     return rpcServer != null ? rpcServer.socket().getLocalSocketAddress() : null;
   }
-  
+
   /**
    * Returns the socket the WebSocket server is listening on.
    */
@@ -334,10 +335,12 @@ public class ServerRpcProvider {
     if (rpcServer != null) {
       rpcServer.close();
     }
-    try {
-      websocketServer.stop(); // yes, .stop() throws "Exception"
-    } catch (Exception e) {
-      LOG.warning("Fatal error stopping websocket server.", e);
+    if(websocketServer != null){
+      try {
+        websocketServer.stop(); // yes, .stop() throws "Exception"
+      } catch (Exception e) {
+        LOG.warning("Fatal error stopping websocket server.", e);
+      }
     }
     if (acceptorThread != null) {
       try {
