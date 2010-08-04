@@ -121,10 +121,6 @@
       </fileset>
     </copy>
 
-    <taskdef resource="emma_ant.properties">
-      <classpath refid="fedone.test.classpath"/>
-    </taskdef>
-
     <copy todir="${instr.classes}">
       <fileset dir="${core.classes}" includes="**/*"/>
     </copy>
@@ -132,16 +128,6 @@
     <path id="fedone.instr.classpath" >
       <pathelement location="${instr.classes}" />
     </path>
-
-    <!-- instrument built classfiles for code coverage -->
-    <emma enabled="false">
-      <instr instrpathref="fedone.instr.classpath"
-          destdir="${instr.classes}"
-          metadatafile="${build}/metadata.emma"
-          merge="false"
-          mode="overwrite"
-      />
-    </emma>
 
     <taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
       <classpath refid="fedone.test.classpath"/>
@@ -154,20 +140,12 @@
         <pathelement location="${instr.classes}"/>
         <pathelement location="${test.classes}"/>
       </classpath>
+      <formatter type="xml"/>
       <batchtest todir="${dir.testout}">
         <fileset dir="${test}">
           <include name="**/*Test.java"/>
-          <exclude name="org/waveprotocol/wave/model/document/AnnotationCursorTest.java"/>
-          <exclude name="org/waveprotocol/wave/model/document/RangedAnnotationIterableTest.java"/>
-          <exclude name="org/waveprotocol/wave/model/document/operation/AbstractModifiableDocumentTest.java"/>
-          <exclude name="org/waveprotocol/wave/model/document/util/AnnotationIntervalIterableTest.java"/>
-          <exclude name="org/waveprotocol/wave/model/document/indexed/AnnotationTreePerformanceTest.java"/>
         </fileset>
       </batchtest>
-      <formatter type="xml"/>
-<!--      <formatter type="brief" usefile="false" /> -->
-      <jvmarg value="-Demma.coverage.out.file=${build}/coverage.emma" />
-      <jvmarg value="-Demma.coverage.out.merge=false" />
     </junit>
 
     <junitreport todir="${dir.testout}">
@@ -179,15 +157,6 @@
     
     <fail message="Tests failed. Check log and/or reports."
       if="test.failed" />
-
-    <emma enabled="false">
-      <report sourcepath="${src}" >
-        <fileset dir="${build}" >
-          <include name="*.emma" />
-        </fileset>
-        <html outfile="test_coverage.html"/>
-      </report>
-    </emma>
 
   </target>
 
