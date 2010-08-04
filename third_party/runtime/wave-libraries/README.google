@@ -1,0 +1,11 @@
+URL: http://code.google.com/p/wave-protocol/source/checkout?repo=libraries
+Version: 2010-08-04
+License: Apache 2.0
+
+License File: COPYING
+
+Description:
+This library contains the core modules upon which a Wave system is built, including the model, editor and communication protocols.
+
+Local Modifications:
+No modifications.
