@@ -1,0 +1,12 @@
+URL: http://code.google.com/p/protostuff
+Version: 1.0.0.M3
+License: Apache 2.0
+
+License File: COPYING
+
+Description:
+A library for generating GWT-happy JSON-backed protobuf classes.
+
+Local Modifications:
+Patch gwt_overlay.stg.diff - patch published to protostuff bugtracker.
+

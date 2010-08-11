@@ -204,6 +204,7 @@
     <jar destfile="${jar.outfile-server}">
       <fileset dir="${staging}">
         <include name="META-INF/services/*" />
+        <include name="com/dyuproject/protostuff/**/*" />
         <include name="com/google/common/**/*" />
         <include name="com/google/gson/**/*" />
         <include name="com/google/inject/**/*" />
@@ -215,6 +216,7 @@
         <include name="org/aopalliance/**/*" />
         <include name="org/apache/commons/cli/**/*" />
         <include name="org/apache/commons/codec/**/*" />
+        <include name="org/codehaus/jackson/**/*" />
         <include name="org/dom4j/**/*" />
         <include name="org/eclipse/**/*" />
         <include name="org/jivesoftware/**/*" />
