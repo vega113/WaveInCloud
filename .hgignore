@@ -14,3 +14,4 @@ run-config\.sh
 \.classpath
 \.project
 out
+*~
