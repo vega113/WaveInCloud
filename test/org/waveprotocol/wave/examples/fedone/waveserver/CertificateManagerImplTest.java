@@ -19,8 +19,8 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.waveprotocol.wave.examples.fedone.waveserver.Ticker.EASY_TICKS;
 
 import com.google.common.collect.ImmutableList;
@@ -30,7 +30,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import junit.framework.TestCase;
 
 import org.apache.commons.codec.binary.Base64;
-
 import org.waveprotocol.wave.crypto.CachedCertPathValidator;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.DefaultCacheImpl;
@@ -52,16 +51,16 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
-import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.HashAlgorithm;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
+import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
@@ -504,13 +503,14 @@ public class CertificateManagerImplTest extends TestCase {
     };
   }
 
-  private WaveSigner getSigner() throws Exception {
+  private SigningSignatureHandler getSigner() throws Exception {
     InputStream keyStream = new ByteArrayInputStream(PRIVATE_KEY.getBytes());
     InputStream certStream = new ByteArrayInputStream(CERTIFICATE.getBytes());
     List<InputStream> certStreams = ImmutableList.of(certStream);
 
     WaveSignerFactory factory = new WaveSignerFactory();
-    return factory.getSigner(keyStream, certStreams, DOMAIN);
+    WaveSigner signer = factory.getSigner(keyStream, certStreams, DOMAIN);
+    return new SigningSignatureHandler(signer);
   }
 
   private SignerInfo getRealSignerInfo() throws Exception {

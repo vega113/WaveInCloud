@@ -34,14 +34,14 @@ import java.io.FileNotFoundException;
 import java.util.Arrays;
 
 /**
- * Guice provider of WaveSigners.
+ * Guice provider of SignatureHandlers.
  */
 @Singleton
-public class WaveSignerProvider implements Provider<WaveSigner> {
+public class SignatureHandlerProvider implements Provider<SignatureHandler> {
 
   private static final FileOpener FILE_OPENER = new FileOpener();
 
-  private final WaveSigner signer;
+  private final SignatureHandler signer;
 
   /**
    * Public constructor.
@@ -53,31 +53,36 @@ public class WaveSignerProvider implements Provider<WaveSigner> {
    * @param factory A {@link WaveSignerFactory}.
    */
   @Inject
-  public WaveSignerProvider(
+  public SignatureHandlerProvider(
+      @Named("enable_federation") boolean enableFederation,
       @Named("certificate_private_key") String privateKey,
       @Named("certificate_files") String certs,
       @Named("certificate_domain") String domain,
       WaveSignerFactory factory) {
+    if (enableFederation) {
+      FileInputStream privateKeyStream;
+      try {
+        privateKeyStream = new FileInputStream(privateKey);
+      } catch (FileNotFoundException e) {
+        throw new ProvisionException("could not read private key", e);
+      }
 
-    FileInputStream privateKeyStream;
-    try {
-      privateKeyStream = new FileInputStream(privateKey);
-    } catch (FileNotFoundException e) {
-      throw new ProvisionException("could not read private key", e);
-    }
+      Iterable<FileInputStream> certStreams =
+          Iterables.transform(Arrays.asList(certs.split(",")), FILE_OPENER);
 
-    Iterable<FileInputStream> certStreams =
-        Iterables.transform(Arrays.asList(certs.split(",")), FILE_OPENER);
-
-    try {
-      signer = factory.getSigner(privateKeyStream, certStreams, domain);
-    } catch (SignatureException e) {
-      throw new ProvisionException("could not make wave signer", e);
+      try {
+        WaveSigner inner = factory.getSigner(privateKeyStream, certStreams, domain);
+        signer = new SigningSignatureHandler(inner);
+      } catch (SignatureException e) {
+        throw new ProvisionException("could not make wave signer", e);
+      }
+    } else {
+      signer = new NonSigningSignatureHandler(domain);
     }
   }
 
   @Override
-  public WaveSigner get() {
+  public SignatureHandler get() {
     return signer;
   }
 

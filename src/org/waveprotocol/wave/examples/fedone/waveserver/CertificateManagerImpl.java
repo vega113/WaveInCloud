@@ -35,7 +35,6 @@ import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
-import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
@@ -60,7 +59,7 @@ public class CertificateManagerImpl implements CertificateManager {
 
   private static final Log LOG = Log.get(CertificateManagerImpl.class);
 
-  private final WaveSigner waveSigner;
+  private final SignatureHandler waveSigner;
   private final WaveSignatureVerifier verifier;
   private final CertPathStore certPathStore;
   private final boolean disableVerfication;
@@ -76,7 +75,7 @@ public class CertificateManagerImpl implements CertificateManager {
   @Inject
   public CertificateManagerImpl(
       @Named("waveserver_disable_verification") boolean disableVerfication,
-      WaveSigner signer, WaveSignatureVerifier verifier, CertPathStore certPathStore) {
+      SignatureHandler signer, WaveSignatureVerifier verifier, CertPathStore certPathStore) {
     this.disableVerfication = disableVerfication;
     this.waveSigner = signer;
     this.verifier = verifier;
@@ -93,11 +92,11 @@ public class CertificateManagerImpl implements CertificateManager {
   public Set<String> getLocalDomains() {
 
     // TODO: for now, we just support a single signer
-    return ImmutableSet.of(waveSigner.getSignerInfo().getDomain());
+    return ImmutableSet.of(waveSigner.getDomain());
   }
 
   @Override
-  public WaveSigner getLocalSigner() {
+  public SignatureHandler getLocalSigner() {
     return waveSigner;
   }
 
@@ -111,8 +110,7 @@ public class CertificateManagerImpl implements CertificateManager {
     ProtocolSignedDelta.Builder signedDelta = ProtocolSignedDelta.newBuilder();
 
     signedDelta.setDelta(delta.getByteString());
-    signedDelta.addAllSignature(ImmutableList.of(waveSigner.sign(
-        delta.getByteString().toByteArray())));
+    signedDelta.addAllSignature(waveSigner.sign(delta));
     return signedDelta.build();
   }
 

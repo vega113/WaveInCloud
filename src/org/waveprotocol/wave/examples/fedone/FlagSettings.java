@@ -69,6 +69,9 @@ public class FlagSettings {
   @Flag(name="waveserver_disable_signer_verification")
   private static boolean waveserverDisableSignerVerification;
 
+  @Flag(name="enable_federation", defaultValue="true")
+  private static boolean enableFederation;
+
   @Flag(name="xmpp_server_description")
   private static String xmppServerDescription;
 

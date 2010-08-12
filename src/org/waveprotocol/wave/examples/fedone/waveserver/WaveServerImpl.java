@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
+
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -31,9 +33,9 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.crypto.SignatureException;
+import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
@@ -449,11 +451,13 @@ public class WaveServerImpl implements WaveServer {
         + certificateManager.getLocalDomains().toString());
 
     // Preemptively add our own signer info to the certificate manager
-    try {
-      certificateManager.storeSignerInfo(
-          certificateManager.getLocalSigner().getSignerInfo().toProtoBuf());
-    } catch (SignatureException e) {
-      LOG.severe("Failed to add our own signer info to the certificate store", e);
+    SignerInfo signerInfo = certificateManager.getLocalSigner().getSignerInfo();
+    if (signerInfo != null) {
+      try {
+        certificateManager.storeSignerInfo(signerInfo.toProtoBuf());
+      } catch (SignatureException e) {
+        LOG.severe("Failed to add our own signer info to the certificate store", e);
+      }
     }
   }
 

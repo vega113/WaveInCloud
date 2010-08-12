@@ -22,7 +22,6 @@ import com.google.protobuf.ByteString;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
-import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
@@ -45,7 +44,7 @@ public interface CertificateManager {
   /**
    * @return the signer info for the local wave signer.
    */
-  WaveSigner getLocalSigner();
+  SignatureHandler getLocalSigner();
 
   /**
    * Verify the signature in the Signed Delta. Use the local WSP's certificate

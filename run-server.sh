@@ -4,12 +4,16 @@
 #
 
 if [ -f run-config.sh ] ; then
+  ENABLE_FEDERATION=true
   . run-config.sh
 else
-  echo "You need to copy run-config.sh.example to run-config.sh and configure" ; exit 1
+  ENABLE_FEDERATION=false
+  . run-nofed-config.sh
 fi
 
-exec java -Dorg.eclipse.jetty.util.log.DEBUG=true -jar dist/fedone-server-$FEDONE_VERSION.jar \
+. process-script-args.sh
+
+exec java $DEBUG_FLAGS -Dorg.eclipse.jetty.util.log.DEBUG=true -jar dist/fedone-server-$FEDONE_VERSION.jar \
   --client_frontend_hostname=$WAVE_SERVER_HOSTNAME \
   --client_frontend_port=$WAVE_SERVER_PORT \
   --xmpp_component_name=wave \
@@ -26,4 +30,5 @@ exec java -Dorg.eclipse.jetty.util.log.DEBUG=true -jar dist/fedone-server-$FEDON
   --waveserver_disable_verification=$WAVESERVER_DISABLE_VERIFICATION \
   --waveserver_disable_signer_verification=$WAVESERVER_DISABLE_SIGNER_VERIFICATION \
   --http_frontend_hostname=$WEBSOCKET_SERVER_HOSTNAME \
-  --http_frontend_port=$WEBSOCKET_SERVER_PORT
+  --http_frontend_port=$WEBSOCKET_SERVER_PORT \
+  --enable_federation=$ENABLE_FEDERATION

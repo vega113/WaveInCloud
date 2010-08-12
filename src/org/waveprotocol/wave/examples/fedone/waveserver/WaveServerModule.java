@@ -34,7 +34,6 @@ import org.waveprotocol.wave.crypto.TrustRootsProvider;
 import org.waveprotocol.wave.crypto.VerifiedCertChainCache;
 import org.waveprotocol.wave.crypto.WaveCertPathValidator;
 import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
-import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveletName;
 
@@ -63,7 +62,7 @@ public class WaveServerModule extends AbstractModule {
   protected void configure() {
     bind(CertPathStore.class).to(DefaultCertPathStore.class).in(Singleton.class);
     bind(TimeSource.class).to(DefaultTimeSource.class).in(Singleton.class);
-    bind(WaveSigner.class).toProvider(WaveSignerProvider.class);
+    bind(SignatureHandler.class).toProvider(SignatureHandlerProvider.class);
 
     try {
       bind(WaveSignatureVerifier.class).toConstructor(WaveSignatureVerifier.class.getConstructor(
