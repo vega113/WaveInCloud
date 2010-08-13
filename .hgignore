@@ -15,3 +15,4 @@ run-config\.sh
 \.project
 out
 *~
+war/webclient
