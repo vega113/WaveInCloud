@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.common;
 
+import com.google.common.annotations.GwtCompatible;
+
 import org.waveprotocol.wave.model.id.WaveId;
 
 /**
@@ -24,6 +26,7 @@ import org.waveprotocol.wave.model.id.WaveId;
  *
  *
  */
+@GwtCompatible
 public class IndexEntry {
   private final WaveId waveId;
   private final String digest;
