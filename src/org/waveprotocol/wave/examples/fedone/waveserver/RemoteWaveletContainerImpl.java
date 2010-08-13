@@ -26,6 +26,7 @@ import org.jivesoftware.util.Base64;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 
 import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.deserialize;

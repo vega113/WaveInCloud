@@ -17,13 +17,13 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
-import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.TransformedDeltaComparator;
 import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
@@ -92,7 +92,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     lastCommittedVersion = null;
 
     appliedDeltas = Sets.newTreeSet(appliedDeltaComparator);
-    transformedDeltas = Sets.newTreeSet(transformedDeltaComparator);
+    transformedDeltas = Sets.newTreeSet(TransformedDeltaComparator.INSTANCE);
     deserializedTransformedDeltas = Sets.newTreeSet(deserializedDeltaComparator);
 
     // Configure the locks used by this Wavelet.
@@ -204,20 +204,6 @@ abstract class WaveletContainerImpl implements WaveletContainer {
           if (first != null && second == null) { return 1; }
           if (first == null && second == null) { return 0; }
           return Long.valueOf(first.version.getVersion()).compareTo(second.version.getVersion());
-        }
-      };
-
-  /** A comparator to be used in a TreeSet for transformed deltas. */
-  @VisibleForTesting
-  static final Comparator<ProtocolWaveletDelta> transformedDeltaComparator =
-      new Comparator<ProtocolWaveletDelta>() {
-        @Override
-        public int compare(ProtocolWaveletDelta first, ProtocolWaveletDelta second) {
-          if (first == null && second != null) { return -1; }
-          if (first != null && second == null) { return 1; }
-          if (first == null && second == null) { return 0; }
-          return Long.valueOf(first.getHashedVersion().getVersion()).compareTo(
-              second.getHashedVersion().getVersion());
         }
       };
 

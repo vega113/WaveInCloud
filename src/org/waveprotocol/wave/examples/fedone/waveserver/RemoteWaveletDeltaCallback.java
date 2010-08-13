@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
+
 /**
  * Notification interface for when remote wavelet deltas are ready to be processed.
  *

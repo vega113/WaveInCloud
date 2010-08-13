@@ -34,6 +34,9 @@ import org.waveprotocol.wave.crypto.TrustRootsProvider;
 import org.waveprotocol.wave.crypto.VerifiedCertChainCache;
 import org.waveprotocol.wave.crypto.WaveCertPathValidator;
 import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
+import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend;
+import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl;
+import org.waveprotocol.wave.examples.fedone.frontend.WaveClientRpcImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveletName;
 

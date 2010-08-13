@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.examples.fedone.waveserver;
+package org.waveprotocol.wave.examples.fedone.frontend;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -31,11 +31,11 @@ import static org.mockito.Mockito.when;
 import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
 import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
 import static org.waveprotocol.wave.examples.fedone.common.HashedVersion.unsigned;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_AUTHOR;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.DIGEST_DOCUMENT_ID;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.createUnsignedDeltas;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.indexWaveletNameFor;
-import static org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontendImpl.waveletNameForIndexWavelet;
+import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.DIGEST_AUTHOR;
+import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.DIGEST_DOCUMENT_ID;
+import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.createUnsignedDeltas;
+import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.indexWaveletNameFor;
+import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.waveletNameForIndexWavelet;
 import static org.waveprotocol.wave.model.id.IdConstants.CONVERSATION_ROOT_WAVELET;
 
 import com.google.common.collect.ImmutableList;
@@ -49,9 +49,13 @@ import junit.framework.TestCase;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
-import org.waveprotocol.wave.examples.fedone.waveserver.UserManager.Subscription;
+import org.waveprotocol.wave.examples.fedone.common.TransformedDeltaComparator;
+import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
+import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletListener;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -78,7 +82,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- *
+ * Tests for {@link ClientFrontendImpl}.
  */
 public class ClientFrontendImplTest extends TestCase {
   private static final WaveId WAVE_ID = new WaveId("domain", "waveId");
@@ -359,7 +363,7 @@ public class ClientFrontendImplTest extends TestCase {
 
     // TODO(tobiast): Let getHistory() return a DeltaSequence, and simplify this test
     NavigableSet<ProtocolWaveletDelta> expectedDeltas = new TreeSet<ProtocolWaveletDelta>(
-        WaveletContainerImpl.transformedDeltaComparator);
+        TransformedDeltaComparator.INSTANCE);
     expectedDeltas.addAll(ImmutableList.copyOf(oldListener.deltas));
     ProtocolHashedVersion startVersion = serialize(HashedVersion.versionZero(WAVELET_NAME));
     when(waveletProvider.getHistory(WAVELET_NAME, startVersion,

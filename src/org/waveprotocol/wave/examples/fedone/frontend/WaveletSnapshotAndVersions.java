@@ -15,24 +15,24 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.waveserver;
+package org.waveprotocol.wave.examples.fedone.frontend;
 
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 
 /**
- * A POJO for transporting a wavelet snapshot and associated versions.
+ * A wavelet snapshot with current and committed versions.
  *
  * @author arb@google.com (Anthony Baxter)
 */
-class WaveletSnapshotAndVersions {
-  final WaveletSnapshot snapshot;
-  final ProtocolHashedVersion currentVersion;
-  final ProtocolHashedVersion committedVersion;
+public final class WaveletSnapshotAndVersions {
+  public final WaveletSnapshot snapshot;
+  public final ProtocolHashedVersion currentVersion;
+  public final ProtocolHashedVersion committedVersion;
 
-  WaveletSnapshotAndVersions(WaveletSnapshot snapshot, HashedVersion currentVersion,
+  public WaveletSnapshotAndVersions(WaveletSnapshot snapshot, HashedVersion currentVersion,
       ProtocolHashedVersion committedVersion) {
     this.snapshot = snapshot;
     this.currentVersion = CoreWaveletOperationSerializer.serialize(currentVersion);

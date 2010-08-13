@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.waveserver;
+package org.waveprotocol.wave.examples.fedone.frontend;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -23,11 +23,14 @@ import com.google.inject.internal.Nullable;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.frontend.UserManager;
+import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
+import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
+
 import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
-import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
-import org.waveprotocol.wave.examples.fedone.waveserver.UserManager.Subscription;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
@@ -44,8 +47,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Tests {@link UserManager}.
- *
- *
  */
 public class UserManagerTest extends TestCase {
   private static final WaveId W1 = new WaveId("waveId", "1");

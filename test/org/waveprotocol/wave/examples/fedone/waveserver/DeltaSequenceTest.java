@@ -16,13 +16,15 @@
  */
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
+
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
@@ -36,8 +38,6 @@ import java.util.List;
 
 /**
  * Tests {@link DeltaSequence}.
- *
- *
  */
 public class DeltaSequenceTest extends TestCase {
   private static final long START_VERSION = 23;

@@ -15,10 +15,12 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.waveserver;
+package org.waveprotocol.wave.examples.fedone.frontend;
 
 import com.google.inject.internal.Nullable;
 
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -31,21 +33,31 @@ import java.util.Set;
 
 
 /**
- * The client frontend handles requests from the client, and updates from the
- * waveserver.
- *
- * It receives updates for all wavelets from the waveserver.
- *
- * Sends updates for those wavelets that a client has "opened" (matching waveIds
- * optionally wavelet prefix match, only for wavelets that the participant has access to).
- * When a wavelet is added and it's not at version 0, buffer updates until a
- * request for the wavelet's history has completed.
- *
- *
- *
+ * The client front-end handles requests from clients and directs them to
+ * appropriate back-ends.
+ * 
+ * Provides updates for wavelets that a client has opened and access to.
  */
 public interface ClientFrontend extends WaveletListener {
 
+  /**
+   * Listener provided to open requests.
+   */
+  interface OpenListener {
+    /**
+     * Called when an update is received.
+     */
+    void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersions snapshot,
+        List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
+        @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
+        final String channel_id);
+
+    /**
+     * Called when the stream fails. No further updates will be received.
+     */
+    void onFailure(String errorMessage);
+  }
+  
   /**
    * Request submission of a delta.
    *
@@ -74,13 +86,4 @@ public interface ClientFrontend extends WaveletListener {
   void openRequest(ParticipantId participant, WaveId waveId, Set<String> waveletIdPrefixes,
       int maximumInitialWavelets, boolean snapshotsEnabled,
       final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener);
-
-  interface OpenListener {
-    void onUpdate(WaveletName waveletName,
-        @Nullable WaveletSnapshotAndVersions snapshot,
-        List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
-        @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
-        final String channel_id);
-    void onFailure(String errorMessage);
-  }
 }

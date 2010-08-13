@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.waveserver;
+package org.waveprotocol.wave.examples.fedone.frontend;
 
 import com.google.inject.Inject;
 import com.google.inject.internal.Nullable;
@@ -24,7 +24,6 @@ import com.google.protobuf.RpcController;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
@@ -34,9 +33,9 @@ import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
@@ -89,7 +88,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
     frontend.openRequest(id, waveId, prefixes, request.getMaximumWavelets(),
         request.getSnapshots(),
         request.getKnownWaveletsCount() > 0 ? request.getKnownWaveletsList() : null,
-        new OpenListener() {
+        new ClientFrontend.OpenListener() {
 
           @Override
           public void onFailure(String errorMessage) {

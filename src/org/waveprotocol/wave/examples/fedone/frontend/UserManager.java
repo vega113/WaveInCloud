@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.waveserver;
+package org.waveprotocol.wave.examples.fedone.frontend;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -29,14 +29,13 @@ import com.google.common.collect.Sets;
 import com.google.inject.internal.Nullable;
 
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.waveserver.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.util.Pair;
 
 import java.util.Collections;
 import java.util.List;
@@ -58,18 +57,19 @@ import java.util.Set;
 final class UserManager {
 
   /**
-   * Result of a {@link #subscribe(WaveId, Set, String, OpenListener)} request.
-   * Stores a set of waveletIdPrefixes, channel_id and the listener to inform of changes
-   * to any wavelet matching one of the prefixes.
-   *
-   * Each subscription belongs to a particular waveId (the waveId is not
-   * stored as part of the subscription).
+   * Result of a
+   * {@link #subscribe(WaveId, Set, String, ClientFrontend.OpenListener)}
+   * request. Stores a set of waveletIdPrefixes, channel_id and the listener to
+   * inform of changes to any wavelet matching one of the prefixes.
+   * 
+   * Each subscription belongs to a particular waveId (the waveId is not stored
+   * as part of the subscription).
    */
   @VisibleForTesting
   static class Subscription {
 
     private final List<String> waveletIdPrefixes;
-    private final OpenListener openListener;
+    private final ClientFrontend.OpenListener openListener;
     private String channelId;
     // Successfully submitted versions for which we haven't yet seen the update
     private final HashMultimap<WaveletName, Long> submittedVersions = HashMultimap.create();
@@ -79,7 +79,7 @@ final class UserManager {
     private final Set<WaveletName> outstandingSubmits = Sets.newHashSet();
 
     public Subscription(Set<String> waveletIdPrefixes, String channelId,
-        OpenListener openListener) {
+        ClientFrontend.OpenListener openListener) {
       Preconditions.checkNotNull(waveletIdPrefixes);
       Preconditions.checkNotNull(openListener);
       Preconditions.checkNotNull(channelId);
@@ -99,7 +99,7 @@ final class UserManager {
     /**
      * @return the openListener
      */
-    public OpenListener getOpenListener() {
+    public ClientFrontend.OpenListener getOpenListener() {
       return openListener;
     }
 
@@ -214,7 +214,7 @@ final class UserManager {
      */
     boolean matches(WaveletId waveletId) {
       // TODO: Could be made more efficient with a trie
-      List<OpenListener> result = Lists.newArrayList();
+      List<ClientFrontend.OpenListener> result = Lists.newArrayList();
       String waveletIdStr = waveletId.serialise();
 
       for (String prefix : waveletIdPrefixes) {
@@ -239,13 +239,6 @@ final class UserManager {
    * the deltas up to this version.
    */
   private final Map<WaveletName, ProtocolHashedVersion> currentVersion;
-
-  /**
-   * Tracks versions of wavelets submitted by client, in order to suppress the wavelet
-   * updates for that client. The key is channelId, wavelet name.
-   */
-  private final Set<Pair<String, WaveletName>> outstandingSubmits = Sets.newHashSet();
-  private final Map<Pair<String, WaveletName>, Set<Long>> submittedVersions = Maps.newHashMap();
 
   UserManager() {
     this.subscriptions = LinkedListMultimap.create();
@@ -358,7 +351,7 @@ final class UserManager {
    *         to all listeners.
    */
   synchronized Set<WaveletId> subscribe(
-      WaveId waveId, Set<String> waveletIdPrefixes, String channelId, OpenListener listener) {
+      WaveId waveId, Set<String> waveletIdPrefixes, String channelId, ClientFrontend.OpenListener listener) {
     Preconditions.checkNotNull(waveId);
     Subscription subscription = new Subscription(waveletIdPrefixes, channelId, listener);
     subscriptions.put(waveId, subscription);

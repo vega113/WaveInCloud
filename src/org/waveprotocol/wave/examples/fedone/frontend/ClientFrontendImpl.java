@@ -15,7 +15,9 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.waveserver;
+package org.waveprotocol.wave.examples.fedone.frontend;
+
+import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -29,17 +31,18 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
-
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
@@ -71,16 +74,16 @@ import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
- * Implements the Client Frontend.
+ * Implements the client front-end.
  *
  * This class maintains a list of wavelets accessible by local participants by
  * inspecting all updates it receives (there is no need to inspect historic
- * deltas as they would have been received as updates had there been an addParticipant).
- * Updates are aggregated in a special Index Wave which it stores with the
- * WaveServer.
+ * deltas as they would have been received as updates had there been an
+ * addParticipant). Updates are aggregated in a special index Wave which is
+ * stored with the WaveServer.
  *
- *
- *
+ * When a wavelet is added and it's not at version 0, buffer updates until a
+ * request for the wavelet's history has completed.
  */
 public class ClientFrontendImpl implements ClientFrontend {
   private static final Log LOG = Log.get(ClientFrontendImpl.class);
