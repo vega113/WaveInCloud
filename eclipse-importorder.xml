@@ -1,0 +1,11 @@
+#Organize Import Order
+#Fri Aug 13 11:42:38 EST 2010
+8=javax
+7=java
+6=org
+5=net
+4=junit
+3=freemarker
+2=edu
+1=com
+0=com.google
