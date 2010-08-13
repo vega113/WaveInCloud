@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 Google Inc.
+ * Copyright 2010 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,12 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.common;
+package org.waveprotocol.wave.examples.webclient.common.communication.callback;
 
-import com.google.common.annotations.GwtCompatible;
-
-import org.waveprotocol.wave.model.id.WaveId;
-
-/**
- * Constants common to the example client and server.
- *
- *
- */
-@GwtCompatible
-public final class CommonConstants {
-
-  private CommonConstants() {
-  }
-
-  /** The wave id of the index wave (not federated, so fake domain). */
-  public static final WaveId INDEX_WAVE_ID = new WaveId("indexwave", "indexwave");
-
+public interface ExceptionHandlingStreamingRemoteCallback<R, U, E extends Exception>
+    extends StreamingRemoteCallback<R, U> {
+  /**
+   * Called when an exception occurs in processing before the callback is called.
+   */
+  void onException(E e);
 }

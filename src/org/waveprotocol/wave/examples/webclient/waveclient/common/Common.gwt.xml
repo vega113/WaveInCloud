@@ -1,0 +1,19 @@
+<module>
+    <inherits name="com.google.common.util.Util"/>
+    <inherits name="com.google.gwt.user.User"/>
+    <inherits name="com.google.gwt.user.ClippedImage"/>
+    <inherits name="org.waveprotocol.wave.concurrencycontrol.Client"/>
+    <inherits name="org.waveprotocol.wave.concurrencycontrol.Common"/>
+    <inherits name="org.waveprotocol.wave.concurrencycontrol.Channel"/>
+    <inherits name="org.waveprotocol.wave.concurrencycontrol.Sinks"/>
+    <inherits name="org.waveprotocol.wave.concurrencycontrol.Wave"/>
+    <inherits name="org.waveprotocol.wave.common.logging.Logging"/>
+    <inherits name="org.waveprotocol.wave.examples.fedone.common.CommonConstants"/>
+    <inherits name="org.waveprotocol.wave.examples.webclient.common.Common"/>
+    <inherits name="org.waveprotocol.wave.examples.webclient.util.Util"/>
+    <inherits name="org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc"/>
+    <inherits name="org.waveprotocol.wave.federation.Federation"/>
+    <inherits name="org.waveprotocol.wave.model.Model"/>
+
+    <source path=""/>
+</module>

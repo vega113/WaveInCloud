@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 Google Inc.
+ * Copyright 2010 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,27 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.common;
-
-import com.google.common.annotations.GwtCompatible;
+package org.waveprotocol.wave.examples.webclient.client.events;
 
 import org.waveprotocol.wave.model.id.WaveId;
 
-/**
- * Constants common to the example client and server.
- *
- *
- */
-@GwtCompatible
-public final class CommonConstants {
+import com.google.gwt.event.shared.GwtEvent;
 
-  private CommonConstants() {
+public class WaveOpenEvent extends GwtEvent<WaveOpenEventHandler> {
+  public static final GwtEvent.Type<WaveOpenEventHandler> TYPE = new GwtEvent.Type<WaveOpenEventHandler>();
+  private final WaveId id;
+
+  public WaveOpenEvent(WaveId id) {
+    this.id = id;
   }
 
-  /** The wave id of the index wave (not federated, so fake domain). */
-  public static final WaveId INDEX_WAVE_ID = new WaveId("indexwave", "indexwave");
+  @Override
+  public Type<WaveOpenEventHandler> getAssociatedType() {
+    return TYPE;
+  }
 
+  @Override
+  protected void dispatch(WaveOpenEventHandler handler) {
+    handler.onOpen(id);
+  }  
 }

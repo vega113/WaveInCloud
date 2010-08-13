@@ -1,0 +1,7 @@
+<module>
+    <inherits name="org.waveprotocol.wave.model.Model"/>
+    <source path="">
+      <include name="CommonConstants.java"/>
+      <include name="DocumentConstants.java"/>
+    </source>
+</module>

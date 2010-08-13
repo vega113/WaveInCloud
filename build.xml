@@ -42,6 +42,8 @@
     </fileset>
   </path>
 
+  <property name="gwt.args" value=""/>
+
   <target name="clean" description="Cleans up the build artifacts and temporary directories">
     <delete dir="${build}"/>
   </target>
@@ -60,10 +62,6 @@
     <javac sourcepath="" srcdir="proto_src" destdir="${core.classes}" debug="on"
         target="1.5">
       <include name="**/*.java"/>
-
-      <!-- example sources exclude rule, applies after includes -->
-      <!-- <exclude name="com/google/sitebricks/example/**"/> -->
-
       <classpath refid="fedone.classpath"/>
     </javac>
   </target>
@@ -72,11 +70,10 @@
     <javac sourcepath="" srcdir="${src}" destdir="${core.classes}" debug="on"
         target="1.5">
       <include name="**/*.java"/>
-
-      <!-- example sources exclude rule, applies after includes -->
-      <!-- <exclude name="com/google/sitebricks/example/**"/> -->
-
-      <classpath refid="fedone.classpath"/>
+    	<classpath>
+        <pathelement location="proto_gwt_src"/>
+        <path refid="fedone.classpath"/>
+    	</classpath>
     </javac>
 
     <!-- copy non binary resources in src tree to output classpath -->
@@ -86,9 +83,6 @@
         <include name="**/*.html"/>
         <include name="**/*.properties"/>
         <include name="**/*.proto"/>
-
-        <!-- example sources exclude rule, applies after includes -->
-        <!-- <exclude name="com/google/sitebricks/example/**"/> -->
       </fileset>
     </copy>
   </target>
@@ -97,10 +91,6 @@
     <javac sourcepath="" srcdir="${test}" destdir="${test.classes}" debug="on"
         target="1.5">
       <include name="**/*.java"/>
-
-      <!-- example sources exclude rule, applies after includes -->
-      <!-- <exclude name="com/google/sitebricks/example/**"/> -->
-
       <classpath>
         <path refid="fedone.classpath"/>
         <path refid="fedone.test.classpath"/>
@@ -114,10 +104,6 @@
         <include name="**/*.xml"/>
         <include name="**/*.html"/>
         <include name="**/*.properties"/>
-        <include name="**/*.proto"/>
-
-        <!-- example sources exclude rule, applies after includes -->
-        <!-- <exclude name="com/google/sitebricks/example/**"/> -->
       </fileset>
     </copy>
 
@@ -158,6 +144,46 @@
     <fail message="Tests failed. Check log and/or reports."
       if="test.failed" />
 
+  </target>
+
+  <!-- compiles pre-generated gwt proto sources; does NOT generate protos -->
+  <target name="proto_gwt_compile" depends="init">
+    <javac sourcepath="" srcdir="proto_gwt_src" destdir="${core.classes}" debug="on"
+        target="1.6">
+      <include name="**/*.java"/>
+      <classpath refid="fedone.classpath"/>
+    </javac>
+  </target>
+
+  <target name="compile_gwt" depends="compile,proto_gwt_compile" description="GWT compile to JavaScript">
+    <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
+      <classpath>
+        <pathelement location="proto_gwt_src"/>
+        <pathelement location="src"/>
+        <path refid="fedone.classpath"/>
+        <path refid="fedone.test.classpath"/>
+      </classpath>
+      <jvmarg value="-Xmx256M"/>
+      <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+      <arg line="-style PRETTY"/>
+      <arg line="${gwt.args}"/>
+      <arg value="org.waveprotocol.wave.examples.webclient.WebClient"/>
+    </java>
+  </target>
+
+  <target name="hosted_gwt" depends="compile,proto_gwt_compile" description="GWT compile to JavaScript">
+    <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
+      <classpath>
+        <pathelement location="proto_gwt_src"/>
+        <pathelement location="src"/>
+        <path refid="fedone.classpath"/>
+      </classpath>
+      <jvmarg value="-Xmx512M"/>
+      <jvmarg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8001"/>
+      <arg value="-noserver" />
+      <arg line="${gwt.args}"/>
+      <arg value="org.waveprotocol.wave.examples.webclient.WebClient"/>
+    </java>
   </target>
 
   <target name="stage" depends="compile" description="Copy classes and runtime depenencies to the staging directory">

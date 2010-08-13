@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 Google Inc.
+ * Copyright 2010 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,10 @@
  * limitations under the License.
  *
  */
+package com.google.gwt.websockets.client;
 
-package org.waveprotocol.wave.examples.fedone.common;
-
-import com.google.common.annotations.GwtCompatible;
-
-import org.waveprotocol.wave.model.id.WaveId;
-
-/**
- * Constants common to the example client and server.
- *
- *
- */
-@GwtCompatible
-public final class CommonConstants {
-
-  private CommonConstants() {
-  }
-
-  /** The wave id of the index wave (not federated, so fake domain). */
-  public static final WaveId INDEX_WAVE_ID = new WaveId("indexwave", "indexwave");
-
+public interface WebSocketCallback {
+    void onConnect();
+    void onDisconnect();
+    void onMessage(String message);
 }
