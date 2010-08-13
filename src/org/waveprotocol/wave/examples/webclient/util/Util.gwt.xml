@@ -1,0 +1,8 @@
+<module>
+    <inherits name="com.google.gwt.user.User" />
+    <inherits name="org.waveprotocol.wave.examples.webclient.WebClient"/>
+    <source path="">
+        <exclude name="BlockingSuccessFailCallback.java"/>
+        <exclude name="RandomBase64Generator.java"/>
+    </source>
+</module>
