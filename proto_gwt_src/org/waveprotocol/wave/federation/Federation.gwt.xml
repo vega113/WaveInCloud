@@ -1,0 +1,13 @@
+<module>
+  <inherits name="com.google.gwt.user.User" /> 
+  <source path="">
+    <include name="ProtocolAppliedWaveletDelta.java"/>
+    <include name="ProtocolDocumentOperation.java"/>
+    <include name="ProtocolHashedVersion.java"/>
+    <include name="ProtocolSignature.java"/>
+    <include name="ProtocolSignedDelta.java"/>
+    <include name="ProtocolSignerInfo.java"/>
+    <include name="ProtocolWaveletDelta.java"/>
+    <include name="ProtocolWaveletOperation.java"/>
+  </source>
+</module>
