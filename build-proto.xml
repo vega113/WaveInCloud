@@ -7,12 +7,6 @@
   <target name="compile" >
     <exec executable="protoc">
       <arg value="--proto_path=src/"/>
-      <arg value="--java_out=proto_src"/>
-      <arg value="${src}/org/waveprotocol/wave/federation/federation.protodevel"/>
-    </exec>
-
-    <exec executable="protoc">
-      <arg value="--proto_path=src/"/>
       <arg value="--proto_path=${protoc_dist}/src/"/>
       <arg value="--java_out=proto_src"/>
       <arg value="${src}/org/waveprotocol/wave/examples/fedone/rpc/rpc.proto"/>
@@ -22,15 +16,7 @@
       <arg value="--proto_path=src/"/>
       <arg value="--proto_path=${protoc_dist}/src"/>
       <arg value="--java_out=proto_src"/>
-      <arg value="${src}/org/waveprotocol/wave/examples/fedone/frontend/waveclient-rpc.proto"/>
-    </exec>
-
-    <exec executable="protoc">
-      <arg value="--proto_path=src/"/>
-      <arg value="--proto_path=${protoc_dist}/src"/>
-      <arg value="--java_out=proto_src"/>
-      <arg
-        value="${src}/org/waveprotocol/wave/federation/federation_error.protodevel"/>
+      <arg value="${src}/org/waveprotocol/wave/examples/fedone/waveserver/waveclient-rpc.proto"/>
     </exec>
   </target>
 
