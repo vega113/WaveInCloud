@@ -28,8 +28,6 @@ import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-
-import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.deserialize;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
@@ -355,7 +353,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
 
     // The serialised hashed version should actually match the currentVersion at this point, since
     // the caller of transformAndApply delta will have made sure the applied deltas are ordered
-    HashedVersion hashedVersion = deserialize(getVersionAppliedAt(appliedDelta.getMessage()));
+    HashedVersion hashedVersion =
+        CoreWaveletOperationSerializer.deserialize(getVersionAppliedAt(appliedDelta.getMessage()));
     if (!hashedVersion.equals(currentVersion)) {
       throw new IllegalStateException("Applied delta does not apply at current version");
     }
@@ -365,7 +364,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         ProtocolWaveletDelta.getDefaultInstance(),
         appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
     Pair<CoreWaveletDelta, HashedVersion> deltaAndVersion =
-      CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
+        CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
     // Transform operations against earlier deltas, if necessary
     VersionedWaveletDelta transformed =

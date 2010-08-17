@@ -49,7 +49,7 @@ public final class DeltaSequence extends AbstractList<ProtocolWaveletDelta> {
     this.deltas = ImmutableList.copyOf(deltas);
     this.endVersion = endVersion;
     Preconditions.checkArgument(endVersion.getVersion() >= 0,
-        "Expected endVersion >= 0, got " + endVersion.getVersion());
+        "Expected endVersion >= 0, got %s", endVersion.getVersion());
     checkDeltaVersions();
   }
 
@@ -62,12 +62,11 @@ public final class DeltaSequence extends AbstractList<ProtocolWaveletDelta> {
       ProtocolWaveletDelta delta = deltas.get(i);
       long deltaEndVersion = delta.getHashedVersion().getVersion() + delta.getOperationCount();
       long nextVersion =
-        ((i + 1 < deltas.size()) ? deltas.get(i + 1).getHashedVersion() : endVersion).getVersion();
-      if (deltaEndVersion != nextVersion) {
-        throw new IllegalArgumentException(
-            String.format("Delta %d / %d ends at version %d, expected %d",
-                i + 1, deltas.size(), deltaEndVersion, nextVersion));
-      }
+          ((i + 1 < deltas.size()) ? deltas.get(i + 1).getHashedVersion() : endVersion)
+          .getVersion();
+      Preconditions.checkArgument(deltaEndVersion == nextVersion,
+          "Delta %s / %s ends at version %s, expected %s",
+          i + 1, deltas.size(), deltaEndVersion, nextVersion);
     }
   }
 

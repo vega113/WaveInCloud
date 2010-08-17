@@ -29,8 +29,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.deserialize;
 import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
-import static org.waveprotocol.wave.examples.fedone.common.HashedVersion.unsigned;
 import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.DIGEST_AUTHOR;
 import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.DIGEST_DOCUMENT_ID;
 import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.createUnsignedDeltas;
@@ -48,7 +48,6 @@ import junit.framework.TestCase;
 
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
-import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.TransformedDeltaComparator;
@@ -293,7 +292,7 @@ public class ClientFrontendImplTest extends TestCase {
         @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
         @Nullable final String channelId) {
 
-      if(endVersion == null){
+      if (endVersion == null) {
         // Ignore marker updates
         return;
       }
@@ -338,8 +337,10 @@ public class ClientFrontendImplTest extends TestCase {
       makeAppendOp(DIGEST_DOCUMENT_ID, 0, "Hello, world");
 
     DeltaSequence expectedDeltas = createUnsignedDeltas(ImmutableList.of(
-        makeDelta(DIGEST_AUTHOR, unsigned(0), unsigned(1), helloWorldOp),
-        makeDelta(USER, unsigned(1L), unsigned(2), new CoreAddParticipant(USER))));
+        makeDelta(DIGEST_AUTHOR, HashedVersion.unsigned(0), HashedVersion.unsigned(1),
+            helloWorldOp),
+        makeDelta(USER, HashedVersion.unsigned(1L), HashedVersion.unsigned(2),
+            new CoreAddParticipant(USER))));
     assertEquals(expectedDeltas, listener.deltas);
   }
 
@@ -380,10 +381,10 @@ public class ClientFrontendImplTest extends TestCase {
         serialize(HashedVersion.versionZero(WAVELET_NAME)), oldListener.endVersion)).thenReturn(
             expectedDeltas
         );
-    HashedVersion version = CoreWaveletOperationSerializer.deserialize(oldListener.endVersion);
+    HashedVersion version = deserialize(oldListener.endVersion);
     oldListener.clear();
     newListener.clear();
-    waveletUpdate(version, unsigned(version.getVersion() + 3), documentState,
+    waveletUpdate(version, HashedVersion.unsigned(version.getVersion() + 3), documentState,
         new CoreAddParticipant(new ParticipantId("another-user")), CoreNoOp.INSTANCE,
         new CoreRemoveParticipant(USER));
 
@@ -422,7 +423,7 @@ public class ClientFrontendImplTest extends TestCase {
   }
 
   private void verifyIfChannelIdAndMarkerSent(
-      OpenListener listener, WaveletName dummyWaveletName, String channelId){
+      OpenListener listener, WaveletName dummyWaveletName, String channelId) {
     // First the channel id
     verify(listener).onUpdate(eq(dummyWaveletName), (WaveletSnapshotAndVersions) isNull(),
         eq(new ArrayList<ProtocolWaveletDelta>()), (Proto.ProtocolHashedVersion) isNull(),

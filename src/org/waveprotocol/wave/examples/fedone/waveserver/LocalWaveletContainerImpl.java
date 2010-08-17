@@ -25,8 +25,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-
-import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -145,7 +143,9 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
     // Associate this hashed version with its signers.
     for (ProtocolSignature signature : signedDelta.getSignatureList()) {
-      deltaSigners.put(serialize(HashedVersion.getHashedVersionAfter(appliedDelta)),
+      deltaSigners.put(
+          CoreWaveletOperationSerializer.serialize(
+              HashedVersion.getHashedVersionAfter(appliedDelta)),
           signature.getSignerId());
     }
 

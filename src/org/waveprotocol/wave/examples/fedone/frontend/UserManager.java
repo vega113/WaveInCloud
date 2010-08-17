@@ -61,7 +61,7 @@ final class UserManager {
    * {@link #subscribe(WaveId, Set, String, ClientFrontend.OpenListener)}
    * request. Stores a set of waveletIdPrefixes, channel_id and the listener to
    * inform of changes to any wavelet matching one of the prefixes.
-   * 
+   *
    * Each subscription belongs to a particular waveId (the waveId is not stored
    * as part of the subscription).
    */
@@ -226,10 +226,10 @@ final class UserManager {
     }
   }
 
-  private final ListMultimap<WaveId, Subscription> subscriptions;
+  private final ListMultimap<WaveId, Subscription> subscriptions = LinkedListMultimap.create();
 
   /** Wavelets that this user is a participant of. */
-  private final HashMultimap<WaveId, WaveletId> waveletIds;
+  private final HashMultimap<WaveId, WaveletId> waveletIds = HashMultimap.create();
 
   /**
    * The current version of the specified wavelet, as per the deltas received
@@ -238,13 +238,7 @@ final class UserManager {
    * onUpdate(), the listeners from all active subscriptions have received
    * the deltas up to this version.
    */
-  private final Map<WaveletName, ProtocolHashedVersion> currentVersion;
-
-  UserManager() {
-    this.subscriptions = LinkedListMultimap.create();
-    this.waveletIds = HashMultimap.create();
-    this.currentVersion = Maps.newHashMap();
-  }
+  private final Map<WaveletName, ProtocolHashedVersion> currentVersion = Maps.newHashMap();
 
   /** Whether this user is a participant on the specified wavelet. */
   synchronized boolean isParticipant(WaveletName waveletName) {
@@ -278,7 +272,7 @@ final class UserManager {
   }
 
   synchronized ProtocolHashedVersion getWaveletVersion(WaveletName waveletName) {
-    Preconditions.checkArgument(isParticipant(waveletName), "Not a participant of " + waveletName);
+    Preconditions.checkArgument(isParticipant(waveletName), "Not a participant of %s", waveletName);
     return currentVersion.get(waveletName);
   }
 
@@ -294,16 +288,14 @@ final class UserManager {
    */
   synchronized void onUpdate(WaveletName waveletName, DeltaSequence deltas, String channelId) {
     Preconditions.checkNotNull(waveletName);
+    Preconditions.checkState(isParticipant(waveletName), "Not a participant of %s", waveletName);
     if (deltas.isEmpty()) {
       return;
-    }
-    if (!isParticipant(waveletName)) {
-      throw new IllegalStateException("Not a participant of wavelet " + waveletName);
     }
     long version = deltas.getStartVersion().getVersion();
     long expectedVersion = currentVersion.get(waveletName).getVersion();
     Preconditions.checkArgument(expectedVersion == version,
-        "Expected startVersion " + expectedVersion + ", got " + version);
+        "Expected startVersion %s, got %s", expectedVersion, version);
     currentVersion.put(waveletName, deltas.getEndVersion());
 
     List<Subscription> subscriptions = matchSubscriptions(waveletName);
@@ -327,9 +319,7 @@ final class UserManager {
   void onCommit(WaveletName waveletName, ProtocolHashedVersion version, String channelId) {
     Preconditions.checkNotNull(waveletName);
     Preconditions.checkNotNull(version);
-    if (!isParticipant(waveletName)) {
-      throw new IllegalStateException("Not a participant of wavelet " + waveletName);
-    }
+    Preconditions.checkState(isParticipant(waveletName), "Not a participant of %s", waveletName);
     List<ProtocolWaveletDelta> emptyList = Collections.emptyList();
     // TODO(arb): do we send commits back to the original client??
     List<Subscription> listeners = matchSubscriptions(waveletName);
@@ -402,9 +392,8 @@ final class UserManager {
    * Notifies that the user has been added to the specified wavelet.
    */
   synchronized void addWavelet(WaveletName waveletName) {
-    if (isParticipant(waveletName)) {
-      throw new IllegalStateException("Already a participant of " + waveletName);
-    }
+    Preconditions.checkState(!isParticipant(waveletName),
+        "Already a participant of %s", waveletName);
     waveletIds.get(waveletName.waveId).add(waveletName.waveletId);
     currentVersion.put(waveletName,
         CoreWaveletOperationSerializer.serialize(HashedVersion.versionZero(waveletName)));
@@ -415,9 +404,7 @@ final class UserManager {
    * @param waveletName we were removed from
    */
   synchronized void removeWavelet(WaveletName waveletName) {
-    if (!isParticipant(waveletName)) {
-      throw new IllegalStateException("Not a participant of " + waveletName);
-    }
+    Preconditions.checkState(isParticipant(waveletName), "Not a participant of %s", waveletName);
     waveletIds.get(waveletName.waveId).remove(waveletName.waveletId);
     currentVersion.remove(waveletName);
   }

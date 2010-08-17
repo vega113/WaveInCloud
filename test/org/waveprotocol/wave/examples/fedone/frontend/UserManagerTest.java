@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.frontend;
 
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.internal.Nullable;
@@ -25,12 +27,9 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
-
-import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
@@ -248,8 +247,7 @@ public class UserManagerTest extends TestCase {
 
     ProtocolWaveletOperation noOp = serialize(CoreNoOp.INSTANCE);
 
-    ProtocolHashedVersion v2 =
-        CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(2));
+    ProtocolHashedVersion v2 = serialize(HashedVersion.unsigned(2));
 
     ProtocolWaveletDelta delta2 = ProtocolWaveletDelta.newBuilder().setAuthor(
         USER.getAddress()).addOperation(noOp).setHashedVersion(v2).build();

@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
-
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -35,6 +33,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.util.Log;
@@ -183,7 +182,7 @@ public class WaveServerImpl implements WaveServer {
                 }
               });
           // TODO: when we support federated groups, forward to federationHosts too.
-        } catch(WaveletStateException e) {
+        } catch (WaveletStateException e) {
           // HACK(jochen): TODO: fix the case of the missing history! ###
           LOG.severe("DANGER WILL ROBINSON, WAVELET HISTORY IS INCOMPLETE!!!", e);
           error = e.getMessage();
@@ -607,7 +606,8 @@ public class WaveServerImpl implements WaveServer {
 
           // return result to caller.
           ProtocolHashedVersion resultingVersion =
-              serialize(HashedVersion.getHashedVersionAfter(appliedDelta));
+              CoreWaveletOperationSerializer.serialize(
+                  HashedVersion.getHashedVersionAfter(appliedDelta));
           LOG.info("## WS: Submit result: " + waveletName + " appliedDelta: " + appliedDelta);
           resultListener.onSuccess(appliedDelta.getMessage().getOperationsApplied(),
               resultingVersion, appliedDelta.getMessage().getApplicationTimestamp());
@@ -676,7 +676,8 @@ public class WaveServerImpl implements WaveServer {
         return;
       } catch (EmptyDeltaException e) {
         // This is okay, just succeed silently.  Use an empty timestamp since nothing was applied.
-        resultListener.onSuccess(0, serialize(wc.getCurrentVersion()), 0);
+        resultListener.onSuccess(
+            0, CoreWaveletOperationSerializer.serialize(wc.getCurrentVersion()), 0);
       }
     } else {
       // For remote wavelets post required signatures to the authorative server then send delta

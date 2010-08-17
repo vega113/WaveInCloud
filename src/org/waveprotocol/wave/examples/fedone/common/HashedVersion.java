@@ -17,6 +17,7 @@
 package org.waveprotocol.wave.examples.fedone.common;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.commons.codec.binary.Hex;
@@ -52,12 +53,9 @@ public final class HashedVersion {
    * Constructs a hashed version with the specified version and historyHash.
    */
   public HashedVersion(long version, byte[] historyHash) {
-    if (historyHash == null) {
-      throw new NullPointerException("null historyHash");
-    } else {
-      this.version = version;
-      this.historyHash = historyHash;
-    }
+    Preconditions.checkNotNull(historyHash, "null historyHash");
+    this.version = version;
+    this.historyHash = historyHash;
   }
 
   /**

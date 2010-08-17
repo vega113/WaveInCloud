@@ -12,7 +12,7 @@ else
 fi
 
 if [ $WAVESERVER_DISABLE_VERIFICATION != "false" ]; then
-  echo "ERROR: WAVESERVER_DISBLE_VERIFICATION should be set to false" 
+  echo "ERROR: WAVESERVER_DISABLE_VERIFICATION should be set to false" 
   exit 1
 fi
 

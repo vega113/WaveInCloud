@@ -131,17 +131,12 @@ public class ClientFrontendImpl implements ClientFrontend {
    */
   @VisibleForTesting
   static WaveletName indexWaveletNameFor(WaveletName waveletName) {
-    if (!isConversationRootWavelet(waveletName)) {
-      throw new IllegalArgumentException("Not a conversation root wavelet: " + waveletName);
-    } else {
-      WaveId waveId = waveletName.waveId;
-      if (waveId.equals(INDEX_WAVE_ID)) { // throws NPE if waveId is null
-        throw new IllegalArgumentException(
-            "There is no index wave wavelet for the index wave itself: " + waveId);
-      } else {
-        return WaveletName.of(INDEX_WAVE_ID, WaveletId.deserialise(waveId.serialise()));
-      }
-    }
+    Preconditions.checkArgument(isConversationRootWavelet(waveletName),
+        "Not a conversation root wavelet: %s", waveletName);
+    WaveId waveId = waveletName.waveId;
+    Preconditions.checkArgument(!waveId.equals(INDEX_WAVE_ID),
+        "There is no index wave wavelet for the index wave itself: %s", waveId);
+    return WaveletName.of(INDEX_WAVE_ID, WaveletId.deserialise(waveId.serialise()));
   }
 
   private static boolean isConversationRootWavelet(WaveletName waveletName) {
@@ -191,7 +186,7 @@ public class ClientFrontendImpl implements ClientFrontend {
     }
     final boolean isIndexWave = waveId.equals(INDEX_WAVE_ID);
     UserManager userManager = perUser.get(participant);
-    synchronized(userManager) {
+    synchronized (userManager) {
       Set<WaveletId> waveletIds = userManager.subscribe(waveId, waveletIdPrefixes, channel_id,
           openListener);
       // Send this listener all deltas on relevant wavelets that we've already
@@ -468,7 +463,7 @@ public class ClientFrontendImpl implements ClientFrontend {
     final String oldDigest;
     final Set<ParticipantId> remainingParticipants;
 
-    synchronized(waveletInfo) {
+    synchronized (waveletInfo) {
       expectedVersion = waveletInfo.getCurrentVersion();
       oldDigest = waveletInfo.digest;
       remainingParticipants = Sets.newHashSet(waveletInfo.participants);
@@ -476,11 +471,10 @@ public class ClientFrontendImpl implements ClientFrontend {
 
     DeltaSequence deltaSequence = new DeltaSequence(newDeltas, endVersion);
 
-    if (!expectedVersion.equals(deltaSequence.getStartVersion())) {
-      throw new IllegalStateException("Expected deltas starting at version " +
-          expectedVersion + ", got " +
-          deltaSequence.getStartVersion().getVersion());
-    }
+    Preconditions.checkState(expectedVersion.equals(deltaSequence.getStartVersion()),
+        "Expected deltas starting at version %s, got %s",
+        expectedVersion, deltaSequence.getStartVersion().getVersion());
+
     String newDigest = digest(ClientUtils.renderSnippet(documentState, 80));
 
     // Participants added during the course of newDeltas
@@ -513,7 +507,7 @@ public class ClientFrontendImpl implements ClientFrontend {
           channelId);
     }
 
-    synchronized(waveletInfo) {
+    synchronized (waveletInfo) {
       waveletInfo.setCurrentVersion(deltaSequence.getEndVersion());
       waveletInfo.digest = newDigest;
     }
