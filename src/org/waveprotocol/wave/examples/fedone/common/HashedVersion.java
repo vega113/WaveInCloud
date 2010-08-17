@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.commons.codec.binary.Hex;
-import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.ByteStringMessage;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;

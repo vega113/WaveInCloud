@@ -15,10 +15,8 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.model.util;
+package org.waveprotocol.wave.examples.fedone.common;
 
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;

@@ -17,17 +17,16 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-
-import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
-import org.waveprotocol.wave.examples.fedone.model.util.HashedVersionZeroFactoryImpl;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -104,12 +103,12 @@ public class WaveletContainerTest extends TestCase {
     doubleRemoveParticipantOps.addAll(removeParticipantOps);
 
 
-    addParticipantDelta = CoreWaveletOperationSerializer.serialize(
-        new CoreWaveletDelta(author, addParticipantOps), version0, null);
-    removeParticipantDelta = CoreWaveletOperationSerializer.serialize(
-        new CoreWaveletDelta(author, removeParticipantOps), version0, null);
-    doubleRemoveParticipantDelta = CoreWaveletOperationSerializer.serialize(
-        new CoreWaveletDelta(author, doubleRemoveParticipantOps), version0, null);
+    addParticipantDelta =
+        serialize(new CoreWaveletDelta(author, addParticipantOps), version0, null);
+    removeParticipantDelta =
+        serialize(new CoreWaveletDelta(author, removeParticipantOps), version0, null);
+    doubleRemoveParticipantDelta =
+        serialize(new CoreWaveletDelta(author, doubleRemoveParticipantOps), version0, null);
   }
 
   // Tests

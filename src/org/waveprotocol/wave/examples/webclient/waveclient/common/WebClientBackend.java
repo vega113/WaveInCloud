@@ -31,8 +31,8 @@ import org.waveprotocol.wave.examples.webclient.client.events.NetworkStatusEvent
 import org.waveprotocol.wave.examples.webclient.client.events.NetworkStatusEventHandler;
 import org.waveprotocol.wave.examples.webclient.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.webclient.common.HashedVersion;
+import org.waveprotocol.wave.examples.webclient.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.webclient.common.WaveletOperationSerializer;
-import org.waveprotocol.wave.examples.webclient.model.util.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.webclient.util.Log;
 import org.waveprotocol.wave.examples.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;

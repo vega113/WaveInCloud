@@ -15,14 +15,12 @@
  *
  */
 
-package org.waveprotocol.wave.examples.webclient.model.util;
+package org.waveprotocol.wave.examples.webclient.common;
 
-import org.waveprotocol.wave.examples.webclient.common.HashedVersion;
-import org.waveprotocol.wave.examples.webclient.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 
 
 /**

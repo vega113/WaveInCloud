@@ -15,11 +15,9 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.model.util;
+package org.waveprotocol.wave.examples.fedone.common;
 
 import com.google.common.annotations.VisibleForTesting;
-
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
