@@ -42,9 +42,6 @@ public final class HashedVersion {
   /** Same as unsigned(0). */
   public static final HashedVersion UNSIGNED_VERSION_0 = unsigned(0);
 
-  private static final HashedVersionFactory HASHED_HISTORY_VERSION_FACTORY =
-    new HashedVersionFactoryImpl();
-
   private final long version;
   private final byte[] historyHash;
 
@@ -55,14 +52,6 @@ public final class HashedVersion {
     Preconditions.checkNotNull(historyHash, "null historyHash");
     this.version = version;
     this.historyHash = historyHash;
-  }
-
-  /**
-   * Constructs a HashedVersion representing version 0 of the specified wavelet.
-   */
-  public static HashedVersion versionZero(WaveletName waveletName) {
-    // TODO: Why not inline that method here and get rid of the class?
-    return HASHED_HISTORY_VERSION_FACTORY.createVersionZero(waveletName);
   }
 
   /**

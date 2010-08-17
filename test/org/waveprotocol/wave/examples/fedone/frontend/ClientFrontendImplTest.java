@@ -50,6 +50,8 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.TransformedDeltaComparator;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
@@ -88,15 +90,16 @@ public class ClientFrontendImplTest extends TestCase {
   private static final WaveletId WAVELET_ID = new WaveletId("domain", CONVERSATION_ROOT_WAVELET);
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final WaveletName INDEX_WAVELET_NAME =
-    WaveletName.of(INDEX_WAVE_ID, new WaveletId("domain", "waveId"));
+      WaveletName.of(INDEX_WAVE_ID, new WaveletId("domain", "waveId"));
   private static final ParticipantId USER = new ParticipantId("user@host.com");
   // waveletIdPrefixes to use when subscribing to all wavelets
   private static final Set<String> ALL_WAVELETS = ImmutableSet.of("");
-  private static final HashedVersion VERSION_0 = HashedVersion.versionZero(WAVELET_NAME);
+  private static final HashedVersion VERSION_0 =
+      new HashedVersionZeroFactoryImpl().createVersionZero(WAVELET_NAME);
   private static final HashedVersion VERSION_1 = HashedVersion.unsigned(1L);
   private static final ProtocolWaveletDelta DELTA =
-    serialize(new CoreWaveletDelta(USER, ImmutableList.of(new CoreAddParticipant(USER))), VERSION_0,
-        VERSION_1);
+      serialize(new CoreWaveletDelta(USER, ImmutableList.of(new CoreAddParticipant(USER))),
+          VERSION_0, VERSION_1);
   private static final DeltaSequence DELTAS =
     new DeltaSequence(ImmutableList.of(DELTA), serialize(HashedVersion.unsigned(1L)));
   private static final Map<String, BufferedDocOp> DOCUMENT_STATE = ImmutableMap.of();
@@ -108,7 +111,7 @@ public class ClientFrontendImplTest extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     waveletProvider = mock(WaveletProvider.class);
-    this.clientFrontend = new ClientFrontendImpl(waveletProvider);
+    this.clientFrontend = new ClientFrontendImpl(new HashedVersionFactoryImpl(), waveletProvider);
     verify(waveletProvider).setListener((WaveletListener) isNotNull());
   }
 
@@ -366,7 +369,7 @@ public class ClientFrontendImplTest extends TestCase {
     NavigableSet<ProtocolWaveletDelta> expectedDeltas = new TreeSet<ProtocolWaveletDelta>(
         TransformedDeltaComparator.INSTANCE);
     expectedDeltas.addAll(ImmutableList.copyOf(oldListener.deltas));
-    ProtocolHashedVersion startVersion = serialize(HashedVersion.versionZero(WAVELET_NAME));
+    ProtocolHashedVersion startVersion = serialize(VERSION_0);
     when(waveletProvider.getHistory(WAVELET_NAME, startVersion,
         oldListener.endVersion)).thenReturn(expectedDeltas);
 
@@ -377,10 +380,8 @@ public class ClientFrontendImplTest extends TestCase {
     assertEquals(oldListener.deltas, newListener.deltas);
     assertEquals(oldListener.endVersion, newListener.endVersion);
 
-    when(waveletProvider.getHistory(WAVELET_NAME,
-        serialize(HashedVersion.versionZero(WAVELET_NAME)), oldListener.endVersion)).thenReturn(
-            expectedDeltas
-        );
+    when(waveletProvider.getHistory(WAVELET_NAME, serialize(VERSION_0), oldListener.endVersion))
+        .thenReturn(expectedDeltas);
     HashedVersion version = deserialize(oldListener.endVersion);
     oldListener.clear();
     newListener.clear();

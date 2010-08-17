@@ -34,6 +34,7 @@ import com.google.inject.Inject;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
@@ -103,10 +104,10 @@ public class ClientFrontendImpl implements ClientFrontend {
     private ProtocolHashedVersion currentVersion;
     private String digest;
 
-    PerWavelet(WaveletName waveletName) {
+    PerWavelet(WaveletName waveletName, HashedVersion hashedVersionZero) {
       this.participants = Collections.synchronizedSet(Sets.<ParticipantId>newHashSet());
       this.timestamp = new AtomicLong(0);
-      this.version0 = CoreWaveletOperationSerializer.serialize(HashedVersion.versionZero(waveletName));
+      this.version0 = CoreWaveletOperationSerializer.serialize(hashedVersionZero);
       this.currentVersion = version0;
       this.digest = "";
     }
@@ -160,16 +161,23 @@ public class ClientFrontendImpl implements ClientFrontend {
   private final WaveletProvider waveletProvider;
 
   @Inject
-  public ClientFrontendImpl(WaveletProvider waveletProvider) {
+  public ClientFrontendImpl(final HashedVersionFactory hashedVersionFactory,
+      WaveletProvider waveletProvider) {
     this.waveletProvider = waveletProvider;
     waveletProvider.setListener(this);
     MapMaker mapMaker = new MapMaker();
     perWavelet = mapMaker.makeComputingMap(new Function<WaveletName, PerWavelet>() {
-      @Override public PerWavelet apply(WaveletName wn) { return new PerWavelet(wn); }
+      @Override
+      public PerWavelet apply(WaveletName wn) {
+        return new PerWavelet(wn, hashedVersionFactory.createVersionZero(wn));
+      }
     });
 
     perUser = mapMaker.makeComputingMap(new Function<ParticipantId, UserManager>() {
-      @Override public UserManager apply(ParticipantId from) { return new UserManager(); }
+      @Override
+      public UserManager apply(ParticipantId from) {
+        return new UserManager(hashedVersionFactory);
+      }
     });
   }
 
