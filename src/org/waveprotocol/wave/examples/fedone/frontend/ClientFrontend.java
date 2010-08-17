@@ -35,7 +35,7 @@ import java.util.Set;
 /**
  * The client front-end handles requests from clients and directs them to
  * appropriate back-ends.
- * 
+ *
  * Provides updates for wavelets that a client has opened and access to.
  */
 public interface ClientFrontend extends WaveletListener {
@@ -49,15 +49,14 @@ public interface ClientFrontend extends WaveletListener {
      */
     void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersions snapshot,
         List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
-        @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
-        final String channel_id);
+        @Nullable ProtocolHashedVersion committedVersion, boolean hasMarker, String channel_id);
 
     /**
      * Called when the stream fails. No further updates will be received.
      */
     void onFailure(String errorMessage);
   }
-  
+
   /**
    * Request submission of a delta.
    *

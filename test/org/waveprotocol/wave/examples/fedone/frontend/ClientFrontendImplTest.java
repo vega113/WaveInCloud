@@ -31,11 +31,7 @@ import static org.mockito.Mockito.when;
 import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
 import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.deserialize;
 import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
-import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.DIGEST_AUTHOR;
-import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.DIGEST_DOCUMENT_ID;
 import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.createUnsignedDeltas;
-import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.indexWaveletNameFor;
-import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.waveletNameForIndexWavelet;
 import static org.waveprotocol.wave.model.id.IdConstants.CONVERSATION_ROOT_WAVELET;
 
 import com.google.common.collect.ImmutableList;
@@ -118,29 +114,11 @@ public class ClientFrontendImplTest extends TestCase {
    * and the wavelet's ID is CONVERSATION_ROOT_WAVELET.
    */
   public void testIndexWaveletNameConversion() {
-    assertEquals(INDEX_WAVELET_NAME, indexWaveletNameFor(WAVELET_NAME));
-    assertEquals(WAVELET_NAME, waveletNameForIndexWavelet(INDEX_WAVELET_NAME));
+    assertEquals(INDEX_WAVELET_NAME, IndexWave.indexWaveletNameFor(WAVE_ID));
+    assertEquals(WAVE_ID, IndexWave.indexWaveletWaveId(INDEX_WAVELET_NAME));
 
-    WaveletName invalid =
-      WaveletName.of(WAVE_ID, new WaveletId("otherdomain", CONVERSATION_ROOT_WAVELET));
     try {
-      indexWaveletNameFor(invalid);
-      fail("Should have thrown IllegalArgumentException");
-    } catch (IllegalArgumentException expected) {
-      //pass
-    }
-    invalid = WaveletName.of(WAVE_ID, new WaveletId("domain", "otherId"));
-    try {
-      indexWaveletNameFor(invalid);
-      fail("Should have thrown IllegalArgumentException");
-    } catch (IllegalArgumentException expected) {
-      //pass
-    }
-
-    invalid = WaveletName.of(INDEX_WAVE_ID,
-        new WaveletId(INDEX_WAVE_ID.getDomain(), "other-wavelet-id"));
-    try {
-      indexWaveletNameFor(invalid);
+      IndexWave.indexWaveletNameFor(INDEX_WAVE_ID);
       fail("index wave wavelets shouldn't be convertable to index wave");
     } catch (IllegalArgumentException expected) {
       // pass
@@ -334,10 +312,10 @@ public class ClientFrontendImplTest extends TestCase {
     assertEquals(INDEX_WAVELET_NAME, listener.waveletName);
 
     CoreWaveletOperation helloWorldOp =
-      makeAppendOp(DIGEST_DOCUMENT_ID, 0, "Hello, world");
+      makeAppendOp(IndexWave.DIGEST_DOCUMENT_ID, 0, "Hello, world");
 
     DeltaSequence expectedDeltas = createUnsignedDeltas(ImmutableList.of(
-        makeDelta(DIGEST_AUTHOR, HashedVersion.unsigned(0), HashedVersion.unsigned(1),
+        makeDelta(IndexWave.DIGEST_AUTHOR, HashedVersion.unsigned(0), HashedVersion.unsigned(1),
             helloWorldOp),
         makeDelta(USER, HashedVersion.unsigned(1L), HashedVersion.unsigned(2),
             new CoreAddParticipant(USER))));

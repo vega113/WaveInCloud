@@ -22,10 +22,8 @@ import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -47,18 +45,11 @@ import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
-import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
@@ -90,11 +81,6 @@ public class ClientFrontendImpl implements ClientFrontend {
 
   private final static AtomicInteger channel_counter = new AtomicInteger(0);
 
-  @VisibleForTesting
-  static final ParticipantId DIGEST_AUTHOR = new ParticipantId("digest-author");
-  @VisibleForTesting
-  static final String DIGEST_DOCUMENT_ID = "digest";
-
   /** Information we hold in memory for each wavelet, including index wavelets. */
   private static class PerWavelet {
     private final Set<ParticipantId> participants;
@@ -120,38 +106,9 @@ public class ClientFrontendImpl implements ClientFrontend {
     }
   }
 
-  /**
-   * Constructs the name of the index wave wavelet that refers to the
-   * specified conversation root wavelet.
-   *
-   * @param waveletName to refer to
-   * @return WaveletName of the index wave wavelet referring to waveId
-   * @throws IllegalArgumentException if waveId is the WaveId of the index wave
-   * @throws NullPointerException if waveId is null
-   */
-  @VisibleForTesting
-  static WaveletName indexWaveletNameFor(WaveletName waveletName) {
-    Preconditions.checkArgument(isConversationRootWavelet(waveletName),
-        "Not a conversation root wavelet: %s", waveletName);
-    WaveId waveId = waveletName.waveId;
-    Preconditions.checkArgument(!waveId.equals(INDEX_WAVE_ID),
-        "There is no index wave wavelet for the index wave itself: %s", waveId);
-    return WaveletName.of(INDEX_WAVE_ID, WaveletId.deserialise(waveId.serialise()));
-  }
-
   private static boolean isConversationRootWavelet(WaveletName waveletName) {
     return waveletName.waveId.getDomain().equals(waveletName.waveletId.getDomain())
-    && IdUtil.isConversationRootWaveletId(waveletName.waveletId);
-  }
-
-  @VisibleForTesting
-  static WaveletName waveletNameForIndexWavelet(WaveletName indexWaveletName) {
-    WaveId waveId = indexWaveletName.waveId;
-    Preconditions.checkArgument(
-        waveId.equals(INDEX_WAVE_ID), "Expected " + INDEX_WAVE_ID + ", got " + waveId);
-    WaveletId waveletId = indexWaveletName.waveletId;
-    return WaveletName.of(WaveId.deserialise(waveletId.serialise()),
-        new WaveletId(waveletId.getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET));
+        && IdUtil.isConversationRootWaveletId(waveletName.waveletId);
   }
 
   /** Maps wavelets to the participants currently on that wavelet */
@@ -209,8 +166,13 @@ public class ClientFrontendImpl implements ClientFrontend {
         WaveletName waveletName = WaveletName.of(waveId, waveletId);
 
         // The WaveletName by which the waveletProvider knows the relevant deltas
-        WaveletName sourceWaveletName =
-          (isIndexWave ? waveletNameForIndexWavelet(waveletName) : waveletName);
+        WaveletName sourceWaveletName;
+        if (isIndexWave) {
+          sourceWaveletName = WaveletName.of(IndexWave.indexWaveletWaveId(waveletName),
+              new WaveletId(waveId.getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET));
+        } else {
+          sourceWaveletName = waveletName;
+        }
         ProtocolHashedVersion startVersion;
         if (knownWaveletVersions.containsKey(waveletName)) { // Commented out for now.
           startVersion = knownWaveletVersions.get(waveletName);
@@ -225,7 +187,6 @@ public class ClientFrontendImpl implements ClientFrontend {
         List<ProtocolWaveletDelta> deltaList;
         WaveletSnapshotAndVersions snapshot;
 
-        // TODO(arb): can I snapshot the indexWave?
         if (isIndexWave || !snapshotsEnabled) {
           DeltaSequence deltaSequence = new DeltaSequence(
               waveletProvider.getHistory(sourceWaveletName, startVersion, endVersion),
@@ -237,7 +198,8 @@ public class ClientFrontendImpl implements ClientFrontend {
               LOG.warning("resetting index wave version from: " + startVersion);
             }
             startVersion = perWavelet.get(sourceWaveletName).version0;
-            deltaSequence = createIndexDeltas(startVersion, deltaSequence, "", newDigest);
+            deltaSequence =
+              IndexWave.createIndexDeltas(startVersion.getVersion(), deltaSequence, "", newDigest);
           }
           deltaList = deltaSequence;
           endVersion = deltaSequence.getEndVersion();
@@ -376,12 +338,12 @@ public class ClientFrontendImpl implements ClientFrontend {
     }
   }
 
-  private void onAdd(WaveletName waveletName, ParticipantId participant) {
+  private void participantAddedToWavelet(WaveletName waveletName, ParticipantId participant) {
     perWavelet.get(waveletName).participants.add(participant);
     perUser.get(participant).addWavelet(waveletName);
   }
 
-  private void onRemove(WaveletName waveletName, ParticipantId participant) {
+  private void participantRemovedFromWavelet(WaveletName waveletName, ParticipantId participant) {
     perWavelet.get(waveletName).participants.remove(participant);
     perUser.get(participant).removeWavelet(waveletName);
   }
@@ -418,29 +380,29 @@ public class ClientFrontendImpl implements ClientFrontend {
       deltasToSend = newDeltas;
     }
     if (add) {
-      onAdd(waveletName, participant);
+      participantAddedToWavelet(waveletName, participant);
     }
     perUser.get(participant).onUpdate(waveletName, deltasToSend, channelId);
     if (remove) {
-      onRemove(waveletName, participant);
+      participantRemovedFromWavelet(waveletName, participant);
     }
 
     // Construct and publish fake index wave deltas
     if (isConversationRootWavelet(waveletName)) {
-      WaveletName indexWaveletName = indexWaveletNameFor(waveletName);
+      WaveletName indexWaveletName = IndexWave.indexWaveletNameFor(waveletName.waveId);
       if (add) {
-        onAdd(indexWaveletName, participant);
+        participantAddedToWavelet(indexWaveletName, participant);
       }
       ProtocolHashedVersion indexVersion =
-        perUser.get(participant).getWaveletVersion(indexWaveletName);
+          perUser.get(participant).getWaveletVersion(indexWaveletName);
 
-      DeltaSequence indexDeltas = createIndexDeltas(indexVersion, deltasToSend,
-          oldDigest, newDigest);
+      DeltaSequence indexDeltas = IndexWave.createIndexDeltas(indexVersion.getVersion(),
+          deltasToSend, oldDigest, newDigest);
       if (!indexDeltas.isEmpty()) {
         perUser.get(participant).onUpdate(indexWaveletName, indexDeltas, channelId);
       }
       if (remove) {
-        onRemove(indexWaveletName, participant);
+        participantRemovedFromWavelet(indexWaveletName, participant);
       }
     }
   }
@@ -513,24 +475,6 @@ public class ClientFrontendImpl implements ClientFrontend {
     }
   }
 
-  /**
-   * Determines the length (in number of characters) of the longest common
-   * prefix of the specified two CharSequences. E.g. ("", "foo") -> 0.
-   * ("foo", "bar) -> 0. ("foo", "foobar") -> 3. ("bar", "baz") -> 2.
-   *
-   * (Does this utility method already exist anywhere?)
-   *
-   * @throws NullPointerException if a or b is null
-   */
-  private static int lengthOfCommonPrefix(CharSequence a, CharSequence b) {
-    int result = 0;
-    int minLength = Math.min(a.length(), b.length());
-    while (result < minLength && a.charAt(result) == b.charAt(result)) {
-      result++;
-    }
-    return result;
-  }
-
   /** Constructs a digest of the specified String. */
   private static String digest(String text) {
     int digestEndPos = text.indexOf('\n');
@@ -548,95 +492,6 @@ public class ClientFrontendImpl implements ClientFrontend {
     long endVersion = lastDelta.getHashedVersion().getVersion() + lastDelta.getOperationCount();
     return new DeltaSequence(deltas,
         CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(endVersion)));
-  }
-
-  private static DeltaSequence participantDeltasOnly(long version,
-      Iterable<ProtocolWaveletDelta> deltas) {
-    List<ProtocolWaveletDelta> result = Lists.newArrayList();
-
-    // Filter out operations that are of interest to the index wave wavelet
-    // (add/remove participant operations):
-    for (ProtocolWaveletDelta protoDelta : deltas) {
-      Pair<CoreWaveletDelta, HashedVersion> deltaAndVersion =
-        CoreWaveletOperationSerializer.deserialize(protoDelta);
-      CoreWaveletDelta delta = deltaAndVersion.first;
-      List<CoreWaveletOperation> indexOps = Lists.newArrayList();
-      for (CoreWaveletOperation op : delta.getOperations()) {
-        if (op instanceof CoreAddParticipant || op instanceof CoreRemoveParticipant) {
-          indexOps.add(op);
-        }
-      }
-      if (!indexOps.isEmpty()) {
-        CoreWaveletDelta indexDelta = new CoreWaveletDelta(delta.getAuthor(), indexOps);
-        result.add(CoreWaveletOperationSerializer.serialize(indexDelta,
-            HashedVersion.unsigned(version),
-            HashedVersion.unsigned(version + indexDelta.getOperations().size())));
-        version += indexDelta.getOperations().size();
-      }
-    }
-    return new DeltaSequence(result,
-        CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(version)));
-  }
-
-  /** Constructs a BufferedDocOp that transforms source into target. */
-  private static BufferedDocOp createEditOp(String source, String target) {
-    int commonPrefixLength = lengthOfCommonPrefix(source, target);
-    DocOpBuilder builder = new DocOpBuilder();
-    if (commonPrefixLength > 0) {
-      builder.retain(commonPrefixLength);
-    }
-    if (source.length() > commonPrefixLength) {
-      builder.deleteCharacters(source.substring(commonPrefixLength));
-    }
-    if (target.length() > commonPrefixLength) {
-      builder.characters(target.substring(commonPrefixLength));
-    }
-    return builder.build();
-  }
-
-  @VisibleForTesting
-  static ProtocolWaveletDelta createDigestDelta(HashedVersion version,
-      String oldDigest, String newDigest) {
-    if (oldDigest.equals(newDigest)) {
-      return null;
-    } else {
-      CoreWaveletOperation op = new CoreWaveletDocumentOperation(DIGEST_DOCUMENT_ID,
-          createEditOp(oldDigest, newDigest));
-      CoreWaveletDelta indexDelta = new CoreWaveletDelta(DIGEST_AUTHOR, ImmutableList.of(op));
-      return CoreWaveletOperationSerializer.serialize(indexDelta, version,
-          HashedVersion.unsigned(version.getVersion() + 1));
-    }
-  }
-
-  /**
-   * Constructs the deltas that should be passed on to the index wave wavelet,
-   * when the corresponding target wavelet receives the specified deltas
-   * and the original wave's digest has changed as specified.
-   *
-   * The returned deltas will have the same effect on the participants as
-   * the original deltas. The effect of the returned deltas on the document's
-   * digest are purely a function of oldDigest and newDigest, which should
-   * represent the change implied by deltas.
-   *
-   * @param indexVersion the returned deltas should start at
-   * @param deltas The deltas whose effect on the participants to determine
-   * @return deltas to apply to the index wavelet to achieve the same change
-   *         in participants, and the specified change in digest text
-   */
-  private static DeltaSequence createIndexDeltas(ProtocolHashedVersion indexVersion,
-      DeltaSequence deltas, String oldDigest, String newDigest) {
-    long version = indexVersion.getVersion();
-    ProtocolWaveletDelta digestDelta =
-      createDigestDelta(HashedVersion.unsigned(version), oldDigest, newDigest);
-    if (digestDelta != null) {
-      version += digestDelta.getOperationCount();
-    }
-    DeltaSequence participantDeltas = participantDeltasOnly(version, deltas);
-    if (digestDelta == null) {
-      return participantDeltas;
-    } else {
-      return participantDeltas.prepend(ImmutableList.of(digestDelta));
-    }
   }
 
   @VisibleForTesting
