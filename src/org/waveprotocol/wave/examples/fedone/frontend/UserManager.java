@@ -31,6 +31,7 @@ import com.google.inject.internal.Nullable;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -240,6 +241,12 @@ final class UserManager {
    */
   private final Map<WaveletName, ProtocolHashedVersion> currentVersion = Maps.newHashMap();
 
+  private final HashedVersionFactory hashedVersionFactory;
+
+  UserManager(HashedVersionFactory hashedVersionFactory) {
+    this.hashedVersionFactory = hashedVersionFactory;
+  }
+
   /** Whether this user is a participant on the specified wavelet. */
   synchronized boolean isParticipant(WaveletName waveletName) {
     return currentVersion.containsKey(waveletName);
@@ -396,7 +403,8 @@ final class UserManager {
         "Already a participant of %s", waveletName);
     waveletIds.get(waveletName.waveId).add(waveletName.waveletId);
     currentVersion.put(waveletName,
-        CoreWaveletOperationSerializer.serialize(HashedVersion.versionZero(waveletName)));
+        CoreWaveletOperationSerializer.serialize(
+            hashedVersionFactory.createVersionZero(waveletName)));
   }
 
   /**

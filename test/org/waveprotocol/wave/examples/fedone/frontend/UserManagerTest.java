@@ -27,6 +27,7 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
@@ -74,7 +75,7 @@ public class UserManagerTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    m = new UserManager();
+    m = new UserManager(new HashedVersionFactoryImpl());
   }
 
   /** Tests that adding an existing participant throws an exception. */

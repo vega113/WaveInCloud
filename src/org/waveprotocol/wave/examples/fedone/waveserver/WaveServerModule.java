@@ -34,6 +34,8 @@ import org.waveprotocol.wave.crypto.TrustRootsProvider;
 import org.waveprotocol.wave.crypto.VerifiedCertChainCache;
 import org.waveprotocol.wave.crypto.WaveCertPathValidator;
 import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveClientRpcImpl;
@@ -81,6 +83,7 @@ public class WaveServerModule extends AbstractModule {
     bind(CertificateManager.class).to(CertificateManagerImpl.class).in(Singleton.class);
     bind(WaveletProvider.class).to(WaveServer.class);
     bind(WaveServer.class).to(WaveServerImpl.class).in(Singleton.class);
+    bind(HashedVersionFactory.class).to(HashedVersionFactoryImpl.class).in(Singleton.class);
     bind(ClientFrontend.class).to(ClientFrontendImpl.class).in(Singleton.class);
     bind(ProtocolWaveClientRpc.Interface.class).to(WaveClientRpcImpl.class).in(Singleton.class);
     bind(LocalWaveletContainer.Factory.class).to(LocalWaveletContainerFactory.class)

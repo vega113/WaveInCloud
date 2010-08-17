@@ -20,6 +20,7 @@ import com.google.protobuf.ByteString;
 import junit.framework.TestCase;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
@@ -47,7 +48,7 @@ public class LocalWaveletContainerImplTest extends TestCase {
   private static final String AUTHOR = "kermit@muppetshow.com";
 
   private static final HashedVersion HASHED_VERSION_ZERO =
-      HashedVersion.versionZero(WAVELET_NAME);
+      new HashedVersionZeroFactoryImpl().createVersionZero(WAVELET_NAME);
   private ProtocolWaveletOperation addParticipantOp;
   private static final String BLIP_ID = "b+muppet";
   private ProtocolWaveletOperation addBlipOp;
