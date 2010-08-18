@@ -21,10 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.commons.codec.binary.Hex;
-import org.waveprotocol.wave.examples.fedone.waveserver.ByteStringMessage;
-import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 
 import java.util.Arrays;
@@ -62,36 +58,6 @@ public final class HashedVersion {
   @VisibleForTesting
   public static HashedVersion unsigned(long version) {
     return new HashedVersion(version, new byte[0]);
-  }
-
-  /**
-   * Get the hashed version an applied delta was applied at.
-   */
-  public static HashedVersion getHashedVersionAppliedAt(
-      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta) {
-    if (appliedDelta.getMessage().hasHashedVersionAppliedAt()) {
-      return CoreWaveletOperationSerializer.deserialize(appliedDelta.getMessage()
-          .getHashedVersionAppliedAt());
-    } else {
-      try {
-        ProtocolWaveletDelta innerDelta = ProtocolWaveletDelta.parseFrom(
-            appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
-        return CoreWaveletOperationSerializer.deserialize(innerDelta.getHashedVersion());
-      } catch (InvalidProtocolBufferException e) {
-        throw new IllegalArgumentException(e);
-      }
-    }
-  }
-
-  /**
-   * Get the hashed version after an applied delta is applied.
-   */
-  public static HashedVersion getHashedVersionAfter(
-      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta) {
-    int opsApplied = appliedDelta.getMessage().getOperationsApplied();
-    HashedVersion versionAppliedAt = getHashedVersionAppliedAt(appliedDelta);
-    return new HashedVersionFactoryImpl().create(
-        appliedDelta.getByteArray(), versionAppliedAt, opsApplied);
   }
 
   /** The number of ops that lead to this version. */

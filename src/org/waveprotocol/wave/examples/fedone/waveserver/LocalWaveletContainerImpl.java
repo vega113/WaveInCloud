@@ -138,14 +138,12 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
         buildAppliedDelta(signedDelta, transformed);
 
-    DeltaApplicationResult applicationResult = commitAppliedDelta(appliedDelta,
-        transformed.delta);
+    DeltaApplicationResult applicationResult = commitAppliedDelta(appliedDelta, transformed.delta);
 
     // Associate this hashed version with its signers.
     for (ProtocolSignature signature : signedDelta.getSignatureList()) {
       deltaSigners.put(
-          CoreWaveletOperationSerializer.serialize(
-              HashedVersion.getHashedVersionAfter(appliedDelta)),
+          applicationResult.getHashedVersionAfterApplication(),
           signature.getSignerId());
     }
 

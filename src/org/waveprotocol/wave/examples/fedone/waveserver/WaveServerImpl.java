@@ -577,8 +577,6 @@ public class WaveServerImpl implements WaveServer {
     }
 
     if (isLocalWavelet(waveletName)) {
-      DeltaApplicationResult submitResult;
-      final ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta;
       LocalWaveletContainer wc = null;
 
       try {
@@ -601,13 +599,13 @@ public class WaveServerImpl implements WaveServer {
           // Get the host domains before applying the delta in case
           // the delta contains a removeParticipant operation.
           Set<String> hostDomains = Sets.newHashSet(getParticipantDomains(wc));
-          submitResult = wc.submitRequest(waveletName, delta);
-          appliedDelta = submitResult.getAppliedDelta();
+          DeltaApplicationResult submitResult = wc.submitRequest(waveletName, delta);
+          ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
+              submitResult.getAppliedDelta();
 
           // return result to caller.
           ProtocolHashedVersion resultingVersion =
-              CoreWaveletOperationSerializer.serialize(
-                  HashedVersion.getHashedVersionAfter(appliedDelta));
+              submitResult.getHashedVersionAfterApplication();
           LOG.info("## WS: Submit result: " + waveletName + " appliedDelta: " + appliedDelta);
           resultListener.onSuccess(appliedDelta.getMessage().getOperationsApplied(),
               resultingVersion, appliedDelta.getMessage().getApplicationTimestamp());
@@ -618,7 +616,7 @@ public class WaveServerImpl implements WaveServer {
                 getWavelet(waveletName).getWaveletData().getDocuments();
             LOG.info("Sending update to client listener: " + submitResult.getDelta());
             clientListener.waveletUpdate(waveletName, ImmutableList.of(submitResult.getDelta()),
-                submitResult.getHashedVersionAfterApplication(), documentState, channelId);
+                resultingVersion, documentState, channelId);
           }
 
           // Capture any new domains from addParticipant operations.
