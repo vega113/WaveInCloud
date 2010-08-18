@@ -19,6 +19,9 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -28,31 +31,54 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
  */
 public class AppliedDeltaUtil {
 
-  private AppliedDeltaUtil() {
-  }
+  private static final HashedVersionFactory HASHED_HISTORY_VERSION_FACTORY =
+      new HashedVersionFactoryImpl();
   
   /**
-   * Inspect the given applied delta to determine the {@code ProtocolHashedVersion} it was
+   * Inspects the given applied delta to determine the {@code ProtocolHashedVersion} it was
    * applied at.  This may require looking at the contained {@code ProtocolWaveletDelta}.
    * 
    * @param appliedDelta to inspect
    * @return hashed version the delta was applied at
-   * @throws IllegalArgumentException if the contained {@code ProtocolWaveletDelta} is invalid
+   * @throws InvalidProtocolBufferException if the contained {@code ProtocolWaveletDelta} is invalid
    *         (may not be inspected if the applied delta has the hashed version set)
    */
   public static ProtocolHashedVersion getHashedVersionAppliedAt(
-      ProtocolAppliedWaveletDelta appliedDelta) {
-    if (appliedDelta.hasHashedVersionAppliedAt()) {
-      return appliedDelta.getHashedVersionAppliedAt();
+      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta)
+      throws InvalidProtocolBufferException {
+    if (appliedDelta.getMessage().hasHashedVersionAppliedAt()) {
+      return appliedDelta.getMessage().getHashedVersionAppliedAt();
     } else {
       // Delta wasn't transformed, hashed version applied at comes from the contained delta
-      try {
-        ProtocolWaveletDelta delta =
-          ProtocolWaveletDelta.parseFrom(appliedDelta.getSignedOriginalDelta().getDelta());
-        return delta.getHashedVersion();
-      } catch (InvalidProtocolBufferException e) {
-        throw new IllegalArgumentException(e);
-      }
+      return ProtocolWaveletDelta
+          .parseFrom(appliedDelta.getMessage().getSignedOriginalDelta().getDelta())
+          .getHashedVersion();
     }
   }
+
+  /**
+   * Calculates the hashed version after an applied delta is applied.
+   */
+  public static ProtocolHashedVersion calculateHashedVersionAfter(
+      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta)
+      throws InvalidProtocolBufferException {
+    return createHashedVersion(
+        appliedDelta.getByteArray(),
+        getHashedVersionAppliedAt(appliedDelta),
+        appliedDelta.getMessage().getOperationsApplied());
+  }
+
+  /**
+   * Wraps call to {@link HashedVersionFactory#create()} with (de)serialisation
+   * to make it operate on {@link ProtocolHashedVersion}s.
+   */
+  private static ProtocolHashedVersion createHashedVersion(byte[] appliedDeltaBytes,
+      ProtocolHashedVersion hashedVersionAppliedAt, int operationsApplied) {
+    return CoreWaveletOperationSerializer.serialize(HASHED_HISTORY_VERSION_FACTORY.create(
+        appliedDeltaBytes,
+        CoreWaveletOperationSerializer.deserialize(hashedVersionAppliedAt),
+        operationsApplied));
+  }
+
+  private AppliedDeltaUtil() { } // prevent instantiation
 }

@@ -135,13 +135,19 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
 
     for (ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta : appliedDeltas) {
       ProtocolSignedDelta toVerify = appliedDelta.getMessage().getSignedOriginalDelta();
+      ProtocolHashedVersion deltaEndVersion;
+      try {
+        deltaEndVersion = AppliedDeltaUtil.calculateHashedVersionAfter(appliedDelta);
+      } catch (InvalidProtocolBufferException e) {
+        LOG.warning("Skipping illformed applied delta " + appliedDelta, e);
+        continue;
+      }
       for (ProtocolSignature sig : toVerify.getSignatureList()) {
         if (certificateManager.retrieveSignerInfo(sig.getSignerId()) == null) {
           LOG.info("Fetching signer info " + Base64.encodeBytes(sig.getSignerId().toByteArray()));
           numSignerInfoPrefetched.incrementAndGet();
           certificateManager.prefetchDeltaSignerInfo(federationProvider, sig.getSignerId(),
-              waveletName, AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta.getMessage()),
-              prefetchListener);
+              waveletName, deltaEndVersion, prefetchListener);
         }
       }
     }
@@ -207,7 +213,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = pendingDeltas.first();
         ProtocolHashedVersion appliedAt;
         try {
-          appliedAt = getVersionAppliedAt(appliedDelta.getMessage());
+          appliedAt = AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
         } catch (InvalidProtocolBufferException e) {
           setState(State.CORRUPTED);
           throw new WaveServerException(
@@ -354,7 +360,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     // The serialised hashed version should actually match the currentVersion at this point, since
     // the caller of transformAndApply delta will have made sure the applied deltas are ordered
     HashedVersion hashedVersion =
-        CoreWaveletOperationSerializer.deserialize(getVersionAppliedAt(appliedDelta.getMessage()));
+        CoreWaveletOperationSerializer.deserialize(
+            AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta));
     if (!hashedVersion.equals(currentVersion)) {
       throw new IllegalStateException("Applied delta does not apply at current version");
     }

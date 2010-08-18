@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -128,8 +129,9 @@ abstract class WaveletContainerImpl implements WaveletContainer {
           if (first != null && second == null) { return 1; }
           if (first == null && second == null) { return 0; }
           try {
-            return Long.valueOf(getVersionAppliedAt(first.getMessage()).getVersion()).compareTo(
-                getVersionAppliedAt(second.getMessage()).getVersion());
+            Long v1 = AppliedDeltaUtil.getHashedVersionAppliedAt(first).getVersion();
+            Long v2 = AppliedDeltaUtil.getHashedVersionAppliedAt(second).getVersion();
+            return v1.compareTo(v2);
           } catch (InvalidProtocolBufferException e) {
             throw new IllegalStateException("Invalid applied delta added to history", e);
           }
@@ -163,25 +165,6 @@ abstract class WaveletContainerImpl implements WaveletContainer {
              .setDelta(emptyDeltaAtVersion(version).toByteString())
         ).build();
     return ByteStringMessage.fromMessage(delta);
-  }
-
-  /**
-   * Returns the version that the passed delta was actually applied at. Simply
-   * resolves to the hashed version stored on the applied delta if it exists, or
-   * defaults to the hashed version stored on the original immutable delta.
-   *
-   * @param appliedDelta the delta to examine
-   * @return the hashed version applied at
-   */
-  protected static ProtocolHashedVersion getVersionAppliedAt(
-      final ProtocolAppliedWaveletDelta appliedDelta) throws InvalidProtocolBufferException {
-    if (appliedDelta.hasHashedVersionAppliedAt()) {
-      return appliedDelta.getHashedVersionAppliedAt();
-    } else {
-      ProtocolSignedDelta signedDelta = appliedDelta.getSignedOriginalDelta();
-      ProtocolWaveletDelta delta = ProtocolWaveletDelta.parseFrom(signedDelta.getDelta());
-      return delta.getHashedVersion();
-    }
   }
 
   /**
@@ -434,11 +417,15 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   protected DeltaApplicationResult commitAppliedDelta(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
       CoreWaveletDelta transformedDelta) {
+    int operationsApplied = appliedDelta.getMessage().getOperationsApplied();
+    // Sanity check.
+    Preconditions.checkArgument(operationsApplied == transformedDelta.getOperations().size());
+
     HashedVersion newVersion = HASHED_HISTORY_VERSION_FACTORY.create(
-        appliedDelta.getByteArray(), currentVersion, transformedDelta.getOperations().size());
+        appliedDelta.getByteArray(), currentVersion, operationsApplied);
 
     ProtocolWaveletDelta transformedProtocolDelta =
-      CoreWaveletOperationSerializer.serialize(transformedDelta, currentVersion, newVersion);
+        CoreWaveletOperationSerializer.serialize(transformedDelta, currentVersion, newVersion);
     transformedDeltas.add(transformedProtocolDelta);
     deserializedTransformedDeltas.add(new VersionedWaveletDelta(transformedDelta, currentVersion));
     appliedDeltas.add(appliedDelta);
