@@ -174,7 +174,7 @@
       <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
       <arg line="-style PRETTY"/>
       <arg line="${gwt.args}"/>
-      <arg value="org.waveprotocol.wave.examples.webclient.WebClient"/>
+      <arg value="org.waveprotocol.wave.examples.client.webclient.WebClient"/>
     </java>
   </target>
 
@@ -189,7 +189,7 @@
       <jvmarg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8001"/>
       <arg value="-noserver" />
       <arg line="${gwt.args}"/>
-      <arg value="org.waveprotocol.wave.examples.webclient.WebClient"/>
+      <arg value="org.waveprotocol.wave.examples.client.webclient.WebClient"/>
     </java>
   </target>
 
@@ -284,7 +284,7 @@
       <manifest>
         <!-- Application entry point -->
         <attribute name="Main-Class"
-          value="org.waveprotocol.wave.examples.fedone.waveclient.console.ConsoleClient"/>
+          value="org.waveprotocol.wave.examples.client.console.ConsoleClient"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
         <attribute name="Implementation-Title" value="Google Wave FedOne Console Client"/>
         <attribute name="Implementation-Version" value="${fedone.version}"/>

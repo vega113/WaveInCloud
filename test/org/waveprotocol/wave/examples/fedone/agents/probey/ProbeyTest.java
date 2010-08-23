@@ -30,10 +30,10 @@ import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.Aliase
 import org.eclipse.jetty.server.Request;
 import org.mockito.ArgumentCaptor;
 
+import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentConnection;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentTestBase;
 import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.id.WaveId;

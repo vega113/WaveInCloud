@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableMap;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
+import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;

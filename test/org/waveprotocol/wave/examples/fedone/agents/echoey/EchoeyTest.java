@@ -36,12 +36,12 @@ import com.google.common.collect.Lists;
 
 import org.mockito.ArgumentCaptor;
 
+import org.waveprotocol.wave.examples.client.common.ClientUtils;
+import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentConnection;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentTestBase;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.operation.OpComparators;

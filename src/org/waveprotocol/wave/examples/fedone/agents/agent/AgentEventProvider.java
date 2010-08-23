@@ -19,10 +19,10 @@ package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.waveprotocol.wave.examples.client.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 import org.waveprotocol.wave.examples.fedone.util.Log;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;

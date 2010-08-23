@@ -19,12 +19,12 @@ package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.waveprotocol.wave.examples.client.common.ClientBackend;
+import org.waveprotocol.wave.examples.client.common.ClientWaveView;
+import org.waveprotocol.wave.examples.client.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;

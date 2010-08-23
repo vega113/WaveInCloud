@@ -23,11 +23,11 @@ import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.contai
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.examples.client.common.ClientBackend;
+import org.waveprotocol.wave.examples.client.common.testing.ClientTestingUtil;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.testing.ExceptionLogHandler;
 import org.waveprotocol.wave.examples.fedone.util.testing.TestingConstants;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.testing.ClientTestingUtil;
 
 import java.util.logging.Level;
 

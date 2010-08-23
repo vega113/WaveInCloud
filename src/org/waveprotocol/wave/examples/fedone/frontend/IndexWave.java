@@ -23,12 +23,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import org.waveprotocol.wave.examples.client.common.ClientUtils;
+import org.waveprotocol.wave.examples.client.common.ClientWaveView;
+import org.waveprotocol.wave.examples.client.common.IndexEntry;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexEntry;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;

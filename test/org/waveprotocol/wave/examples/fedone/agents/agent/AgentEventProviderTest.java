@@ -24,8 +24,8 @@ import static org.mockito.Mockito.when;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.examples.fedone.util.testing.TestingConstants;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
