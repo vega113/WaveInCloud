@@ -17,16 +17,13 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.console;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 import jline.ANSIBuffer;
 import jline.Completor;
 import jline.ConsoleReader;
 import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.IndexWave;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
@@ -36,7 +33,6 @@ import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationL
 import org.waveprotocol.wave.examples.fedone.waveclient.console.ScrollableWaveView.RenderMode;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
@@ -56,16 +52,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * User interface for the console client using the JLine library.
  */
 public class ConsoleClient implements WaveletOperationListener {
-  /** Interface for any class that can render the console client */
-  public interface Renderer {
-    /**
-     * Renders the console client.
-     *
-     * @param client to render.
-     */
-    void render(ConsoleClient client);
-  }
-
 
   /**
    * Single active client-server interface, or null when not connected to a
@@ -74,19 +60,9 @@ public class ConsoleClient implements WaveletOperationListener {
   private ClientBackend backend = null;
 
   /**
-   * A factory used to construct the client backend instance.
-   */
-  private final ClientBackend.Factory backendFactory;
-
-  /**
    * Single active console reader.
    */
   private final ConsoleReader reader;
-
-  /**
-   * The renderer for this client.
-   */
-  private final Renderer renderer;
 
   /**
    * Currently open wave.
@@ -101,7 +77,7 @@ public class ConsoleClient implements WaveletOperationListener {
   /**
    * Number of lines to scroll by with { and }.
    */
-  private AtomicInteger scrollLines = new AtomicInteger(1);
+  private static AtomicInteger scrollLines = new AtomicInteger(1);
 
   /**
    * PrintStream to use for output.  We don't use ConsoleReader's functionality
@@ -134,7 +110,6 @@ public class ConsoleClient implements WaveletOperationListener {
       new Command("add", "user@domain", "add a user to a wave"),
       new Command("remove", "user@domain", "remove a user from a wave"),
       new Command("read", "", "set all waves as read"),
-// Temporarily disabled:
 //      new Command("undo", "[user@domain]",
 //                  "undo last line by a user, defaulting to current user"),
       new Command("scroll", "lines",
@@ -147,114 +122,13 @@ public class ConsoleClient implements WaveletOperationListener {
       new Command("quit", "", "quit the client"));
 
   /**
-   * The default console client renderer
-   */
-  public static class DefaultRenderer implements Renderer {
-    @Override
-    public void render(ConsoleClient client) {
-      final ConsoleReader reader = client.reader;
-      final ScrollableInbox inbox = client.inbox;
-      final ScrollableWaveView openWave = client.openWave;
-      final int canvasWidth = getCanvasWidth(reader);
-      final int canvasHeight = getCanvasHeight(reader);
-      final StringBuilder buf = new StringBuilder();
-
-      // Clear screen.
-      buf.append(ANSIBuffer.ANSICodes.save());
-      buf.append(ANSIBuffer.ANSICodes.gotoxy(1, 1));
-      buf.append(((char) 27) + "[J");
-
-      // Render inbox and wave size by side.
-      List<String> inboxRender;
-      List<String> waveRender;
-
-      if (inbox != null) {
-        inbox.setOpenWave((openWave == null) ? null : openWave.getWave());
-        inboxRender = inbox.render(canvasWidth, canvasHeight);
-      } else {
-        inboxRender = Lists.newArrayList();
-        ConsoleUtils.ensureHeight(canvasWidth, canvasHeight, inboxRender);
-      }
-
-      if (openWave != null) {
-        waveRender = openWave.render(canvasWidth, canvasHeight);
-      } else {
-        waveRender = Lists.newArrayList();
-        ConsoleUtils.ensureHeight(canvasWidth, canvasHeight, waveRender);
-      }
-
-      buf.append(renderSideBySide(inboxRender, waveRender));
-
-      // Draw what the user was typing at the time of rendering.
-      buf.append(ANSIBuffer.ANSICodes.gotoxy(reader.getTermheight(), 1));
-      buf.append(reader.getDefaultPrompt());
-      buf.append(reader.getCursorBuffer());
-
-      // Restore cursor.
-      buf.append(ANSIBuffer.ANSICodes.restore());
-
-      System.out.print(buf);
-      System.out.flush();
-    }
-
-    /**
-    * @return the width of the "canvas", how wide a single rendering panel is
-    */
-    private int getCanvasWidth(ConsoleReader reader) {
-      return (reader.getTermwidth() / 2) - 2; // There are 2 panels, then leave some space.
-    }
-
-    /**
-    * @return the height of the "canvas", how high a single rendering panel is
-    */
-    private int getCanvasHeight(ConsoleReader reader) {
-      return reader.getTermheight() - 1; // Subtract a line for the input.
-    }
-
-    /**
-    * Render two list of Strings (lines) side by side.
-    *
-    * @param left  column
-    * @param right column
-    * @return rendered columns
-    */
-    private String renderSideBySide(List<String> left, List<String> right) {
-      StringBuilder rendered = new StringBuilder();
-
-      if (left.size() != right.size()) {
-        throw new IllegalArgumentException("Left and right are different heights");
-      }
-
-      for (int i = 0; i < left.size(); i++) {
-        rendered.append(left.get(i));
-        rendered.append(" | ");
-        rendered.append(right.get(i));
-        rendered.append("\n");
-      }
-
-      return rendered.toString();
-    }
-  }
-
-  /**
-   * Create new console client with the default backend factory and renderer.
+   * Create new console client.
    */
   public ConsoleClient() throws IOException {
-    this(new ClientBackend.DefaultFactory(), new DefaultRenderer());
-  }
-
-  /**
-   * Create new console client with the given backend factory and renderer.
-   */
-  @Inject
-  public ConsoleClient(ClientBackend.Factory backendFactory, Renderer renderer)
-      throws IOException {
     reader = new ConsoleReader();
-    this.backendFactory = backendFactory;
-    this.renderer = renderer;
 
     // Set up scrolling -- these are the opposite to how you would expect because of the way that
-    // the waves are scrolled (where the bottom is treated as the top).
+    // the waves are scrolled (where the bottom is treated as the top)
     reader.addTriggeredAction('}', new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -275,7 +149,7 @@ public class ConsoleClient implements WaveletOperationListener {
       }
     });
 
-    // And tab completion.
+    // And tab completion
     reader.addCompletor(new Completor() {
       @SuppressWarnings("unchecked")
       @Override
@@ -302,43 +176,39 @@ public class ConsoleClient implements WaveletOperationListener {
    * @param args command line arguments
    */
   public void run(String[] args) throws IOException {
-    // Initialise screen and move cursor to bottom left corner.
+    // Initialise screen and move cursor to bottom left corner
     reader.clearScreen();
     reader.setDefaultPrompt("(not connected) ");
     out.println(ANSIBuffer.ANSICodes.gotoxy(reader.getTermheight(), 1));
 
-    // Immediately establish connection if desired, otherwise the user will need to use "/connect".
+    // Immediately establish connection if desired, otherwise the user will need to use "/connect"
     if (args.length == 3) {
       connect(args[0], args[1], args[2]);
     } else if (args.length != 0) {
       System.out.println("Usage: java ConsoleClient [user@domain server port]");
-      shutdown(1);
+      System.exit(1);
     }
 
-    for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-      processLine(line);
-    }
-
-    shutdown(0);
-  }
-
-  /**
-   * Processes the given command line and performs the appropriate action
-   *
-   * @param line command line string
-   */
-  @VisibleForTesting
-  void processLine(String line) {
-    if (line.startsWith("/")) {
-      doCommand(extractCmd(line), extractArgs(line));
-    } else if (line.length() > 0) {
-      sendAppendBlipDelta(line);
-    } else {
-      if (isWaveOpen()) {
-        openWave.scrollToTop();
+    for (String line = reader.readLine(); line != null;
+         line = reader.readLine()) {
+      if (line.startsWith("/")) {
+        doCommand(extractCmd(line), extractArgs(line));
+      } else if (line.length() > 0) {
+        sendAppendBlipDelta(line);
+      } else {
+        if (isWaveOpen()) {
+          openWave.scrollToTop();
+        }
+        render();
       }
-      render();
     }
+
+    if (isConnected()) {
+      backend.shutdown();
+    }
+
+    // And yet there still seem to be threads hanging around
+    System.exit(0);
   }
 
   /**
@@ -424,7 +294,6 @@ public class ConsoleClient implements WaveletOperationListener {
       }
     } else if (cmd.equals("read")) {
       readAllWaves();
-// "Undo" temporarily disabled.
 //    } else if (cmd.equals("undo")) {
 //      if (args.size() == 1) {
 //        undo(args.get(0));
@@ -454,7 +323,7 @@ public class ConsoleClient implements WaveletOperationListener {
     } else if (cmd.equals("clearlog")) {
       ClientBackend.clearLog();
     } else if (cmd.equals("quit")) {
-      shutdown(0);
+      System.exit(0);
     } else {
       printHelp();
     }
@@ -515,10 +384,13 @@ public class ConsoleClient implements WaveletOperationListener {
    * Register a user and server with a new {@link ClientBackend}.
    */
   private void connect(String userAtDomain, String server, String portString) {
-    // We can only connect to one server at a time (at least, in this simple UI).
+    // We can only connect to one server at a time (at least, in this simple UI)
     if (isConnected()) {
-      out.println("Warning: already connected. Disconnecting.");
-      disconnect();
+      out.println("Warning: already connected");
+      backend.shutdown();
+      backend = null;
+      openWave = null;
+      inbox = null;
     }
 
     int port;
@@ -530,94 +402,18 @@ public class ConsoleClient implements WaveletOperationListener {
     }
 
     try {
-      backend = backendFactory.create(userAtDomain, server, port);
-      backend.addWaveletOperationListener(this);
+      backend = new ClientBackend(userAtDomain, server, port);
     } catch (IOException e) {
       out.println("Error: failed to connect, " + e.getMessage());
       return;
     }
 
+    backend.addWaveletOperationListener(this);
     reader.setDefaultPrompt(
         ConsoleUtils.ansiWrap(ConsoleUtils.ANSI_RED_FG, userAtDomain + "> "));
     inbox = new ScrollableInbox(backend, backend.getIndexWave());
 
     render();
-  }
-
-  /**
-   * Disconnects the client
-   */
-  @VisibleForTesting
-  void disconnect() {
-    if (backend != null) {
-      backend.shutdown();
-      backend = null;
-      openWave = null;
-      inbox = null;
-    }
-  }
-
-  /**
-   * @return the client backend.
-   */
-  @VisibleForTesting
-  ClientBackend getBackend() {
-    return backend;
-  }
-
-  /**
-   * @return the wave ID of the currently open wave.
-   */
-  @VisibleForTesting
-  WaveId getOpenWaveId() {
-    // Throw NPE if no wave is open.
-    return openWave.getWave().getWaveId();
-  }
-
-  /**
-   * @return the wave ID of the currently open wave.
-   */
-  @VisibleForTesting
-  ScrollableWaveView.RenderMode getRenderingMode() {
-    // Throw NPE if no wave is open.
-    return openWave.getRenderingMode();
-  }
-
-  /**
-   * @return the current number of lines to scroll by with { and }.
-   */
-  @VisibleForTesting
-  int getScrollLines() {
-    return scrollLines.get();
-  }
-
-  /**
-   * @return true if the inbox is open.
-   */
-  @VisibleForTesting
-  boolean isInboxOpen() {
-    return (inbox != null);
-  }
-
-  /**
-   * Checks if the specified wave has been read.
-   *
-   * @param wave to check. 
-   * @return true if the wave was read.
-   */
-  @VisibleForTesting
-  boolean isRead(ClientWaveView wave) {
-    return (isInboxOpen()) && inbox.isRead(wave);
-  }
-
-  /**
-   * Shut down the client and exits
-   *
-   * @param exitStatus to quit with
-   */
-  private void shutdown(int exitStatus) {
-    disconnect();
-    System.exit(exitStatus);
   }
 
   /**
@@ -637,18 +433,19 @@ public class ConsoleClient implements WaveletOperationListener {
   }
 
   /**
+   * @return the open wavelet of the open wave, or null if no wave is open
+   */
+  private CoreWaveletData getOpenWavelet() {
+    return (openWave == null) ? null : ClientUtils
+        .getConversationRoot(openWave.getWave());
+  }
+
+  /**
    * @return open document, or null if no wave is open or main document doesn't exist
    */
   private BufferedDocOp getManifestDocument() {
     return getOpenWavelet() == null ? null : getOpenWavelet().getDocuments().get(
         DocumentConstants.MANIFEST_DOCUMENT_ID);
-  }
-
-  /**
-   * @return the open wavelet of the open wave, or null if no wave is open
-   */
-  private CoreWaveletData getOpenWavelet() {
-    return isWaveOpen() ? ClientUtils.getConversationRoot(openWave.getWave()) : null;
   }
 
   /**
@@ -658,7 +455,7 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void doOpenWave(int entry) {
     if (isConnected()) {
-      List<IndexEntry> index = IndexWave.getIndexEntries(backend.getIndexWave());
+      List<IndexEntry> index = ClientUtils.getIndexEntries(backend.getIndexWave());
 
       if (entry >= index.size()) {
         out.print("Error: entry is out of range, ");
@@ -790,14 +587,12 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void readAllWaves() {
     if (isConnected()) {
-      inbox.markAllAsRead();
+      inbox.updateHashedVersions();
       render();
     } else {
       errorNotConnected();
     }
   }
-
-// "Undo" temporarily disabled.
 
 //  /**
 //   * Undo last line (line elements and text) sent by a user.
@@ -902,24 +697,97 @@ public class ConsoleClient implements WaveletOperationListener {
   /**
    * @return whether the client is connected to any server
    */
-  @VisibleForTesting
-  boolean isConnected() {
+  private boolean isConnected() {
     return backend != null;
   }
 
   /**
-   * @return whether the client has a wave open (and displayed in the UI)
+   * @return whether the client has a wave open
    */
-  @VisibleForTesting
-  boolean isWaveOpen() {
-    return (openWave != null);
+  private boolean isWaveOpen() {
+    return isConnected() && openWave != null;
   }
 
   /**
    * Render everything (inbox, open wave, input).
    */
   private void render() {
-    renderer.render(this);
+    StringBuilder buf = new StringBuilder();
+
+    // Clear screen
+    buf.append(ANSIBuffer.ANSICodes.save());
+    buf.append(ANSIBuffer.ANSICodes.gotoxy(1, 1));
+    buf.append(((char) 27) + "[J");
+
+    // Render inbox and wave size by side
+    List<String> inboxRender;
+    List<String> waveRender;
+
+    if (isConnected() && backend.getIndexWave() != null) {
+      inbox.setOpenWave(openWave == null ? null : openWave.getWave());
+      inboxRender = inbox.render(getCanvassWidth(), getCanvassHeight());
+    } else {
+      inboxRender = Lists.newArrayList();
+      ConsoleUtils.ensureHeight(getCanvassWidth(), getCanvassHeight(), inboxRender);
+    }
+
+    if (isWaveOpen()) {
+      waveRender = openWave.render(getCanvassWidth(), getCanvassHeight());
+    } else {
+      waveRender = Lists.newArrayList();
+      ConsoleUtils.ensureHeight(getCanvassWidth(), getCanvassHeight(), waveRender);
+    }
+
+    buf.append(renderSideBySide(inboxRender, waveRender));
+
+    // Draw what the user was typing at the time of rendering
+    buf.append(ANSIBuffer.ANSICodes.gotoxy(reader.getTermheight(), 1));
+    buf.append(reader.getDefaultPrompt());
+    buf.append(reader.getCursorBuffer());
+
+    // Restore cursor
+    buf.append(ANSIBuffer.ANSICodes.restore());
+
+    out.print(buf);
+    out.flush();
+  }
+
+  /**
+   * @return the width of the "canvass", how wide a single rendering panel is
+   */
+  private int getCanvassWidth() {
+    return (reader.getTermwidth() / 2) - 2; // there are 2 panels, then leave some space
+  }
+
+  /**
+   * @return the height of the "canvass", how high a single rendering panel is
+   */
+  private int getCanvassHeight() {
+    return reader.getTermheight() - 1; // subtract a line for the input
+  }
+
+  /**
+   * Render two list of Strings (lines) side by side.
+   *
+   * @param left  column
+   * @param right column
+   * @return rendered columns
+   */
+  private String renderSideBySide(List<String> left, List<String> right) {
+    StringBuilder rendered = new StringBuilder();
+
+    if (left.size() != right.size()) {
+      throw new IllegalArgumentException("Left and right are different heights");
+    }
+
+    for (int i = 0; i < left.size(); i++) {
+      rendered.append(left.get(i));
+      rendered.append(" | ");
+      rendered.append(right.get(i));
+      rendered.append("\n");
+    }
+
+    return rendered.toString();
   }
 
   @Override

@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.frontend;
 
+import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -31,7 +33,6 @@ import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializ
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
-import org.waveprotocol.wave.examples.fedone.common.IndexWave;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
@@ -46,6 +47,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.IdConstants;
+import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -105,6 +107,11 @@ public class ClientFrontendImpl implements ClientFrontend {
     }
   }
 
+  private static boolean isConversationRootWavelet(WaveletName waveletName) {
+    return waveletName.waveId.getDomain().equals(waveletName.waveletId.getDomain())
+        && IdUtil.isConversationRootWaveletId(waveletName.waveletId);
+  }
+
   /** Maps wavelets to the participants currently on that wavelet */
   @VisibleForTesting final Map<ParticipantId, UserManager> perUser;
   private final Map<WaveletName, PerWavelet> perWavelet;
@@ -118,8 +125,8 @@ public class ClientFrontendImpl implements ClientFrontend {
     MapMaker mapMaker = new MapMaker();
     perWavelet = mapMaker.makeComputingMap(new Function<WaveletName, PerWavelet>() {
       @Override
-      public PerWavelet apply(WaveletName waveletName) {
-        return new PerWavelet(waveletName, hashedVersionFactory.createVersionZero(waveletName));
+      public PerWavelet apply(WaveletName wn) {
+        return new PerWavelet(wn, hashedVersionFactory.createVersionZero(wn));
       }
     });
 
@@ -142,7 +149,7 @@ public class ClientFrontendImpl implements ClientFrontend {
     if (waveletIdPrefixes == null || waveletIdPrefixes.isEmpty()) {
       waveletIdPrefixes = ImmutableSet.of("");
     }
-    final boolean isIndexWave = IndexWave.isIndexWave(waveId);
+    final boolean isIndexWave = waveId.equals(INDEX_WAVE_ID);
     UserManager userManager = perUser.get(participant);
     synchronized (userManager) {
       Set<WaveletId> waveletIds = userManager.subscribe(waveId, waveletIdPrefixes, channel_id,
@@ -169,7 +176,7 @@ public class ClientFrontendImpl implements ClientFrontend {
         // The WaveletName by which the waveletProvider knows the relevant deltas
         WaveletName sourceWaveletName;
         if (isIndexWave) {
-          sourceWaveletName = WaveletName.of(IndexWave.waveIdFromIndexWavelet(waveletName),
+          sourceWaveletName = WaveletName.of(IndexWave.indexWaveletWaveId(waveletName),
               new WaveletId(waveId.getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET));
         } else {
           sourceWaveletName = waveletName;
@@ -199,8 +206,8 @@ public class ClientFrontendImpl implements ClientFrontend {
               LOG.warning("resetting index wave version from: " + startVersion);
             }
             startVersion = perWavelet.get(sourceWaveletName).version0;
-            deltaSequence = IndexWave.createIndexDeltas(startVersion.getVersion(), deltaSequence,
-                "", newDigest);
+            deltaSequence =
+              IndexWave.createIndexDeltas(startVersion.getVersion(), deltaSequence, "", newDigest);
           }
           deltaList = deltaSequence;
           endVersion = deltaSequence.getEndVersion();
@@ -209,14 +216,14 @@ public class ClientFrontendImpl implements ClientFrontend {
           // TODO(arb): when we have uncommitted deltas, look them up here.
           deltaList = Collections.emptyList();
           WaveletSnapshotBuilder<WaveletSnapshotAndVersions> snapshotBuilder =
-              new WaveletSnapshotBuilder<WaveletSnapshotAndVersions>() {
-                @Override
-                public WaveletSnapshotAndVersions build(CoreWaveletData waveletData,
-                    HashedVersion currentVersion, ProtocolHashedVersion committedVersion) {
-                  return new WaveletSnapshotAndVersions(serializeSnapshot(waveletData),
-                      currentVersion, committedVersion);
-                }
-              };
+            new WaveletSnapshotBuilder<WaveletSnapshotAndVersions>() {
+            @Override
+            public WaveletSnapshotAndVersions build(CoreWaveletData waveletData,
+                HashedVersion currentVersion, ProtocolHashedVersion committedVersion) {
+              return new WaveletSnapshotAndVersions(serializeSnapshot(waveletData),
+                  currentVersion, committedVersion);
+            }
+          };
           snapshot = waveletProvider.getSnapshot(sourceWaveletName, snapshotBuilder);
         }
 
@@ -299,7 +306,7 @@ public class ClientFrontendImpl implements ClientFrontend {
   }
 
   private boolean isWaveletWritable(WaveletName waveletName) {
-    return !IndexWave.isIndexWave(waveletName.waveId);
+    return !waveletName.waveId.equals(INDEX_WAVE_ID);
   }
 
   @Override
@@ -389,7 +396,7 @@ public class ClientFrontendImpl implements ClientFrontend {
     }
 
     // Construct and publish fake index wave deltas
-    if (IndexWave.canBeIndexed(waveletName)) {
+    if (isConversationRootWavelet(waveletName)) {
       WaveletName indexWaveletName = IndexWave.indexWaveletNameFor(waveletName.waveId);
       if (add) {
         participantAddedToWavelet(indexWaveletName, participant);

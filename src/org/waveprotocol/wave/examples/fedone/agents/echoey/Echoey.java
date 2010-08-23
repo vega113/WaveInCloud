@@ -17,11 +17,9 @@
 
 package org.waveprotocol.wave.examples.fedone.agents.echoey;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
-import com.google.inject.Inject;
 import com.google.inject.internal.Sets;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AbstractAgent;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentConnection;
@@ -45,8 +43,6 @@ import java.util.Set;
  * Example agent that echoes back operations.
  */
 public class Echoey extends AbstractAgent {
-  static final String FAREWELL = "Goodbye.";
-  static final String GREETING = "I'm listening.";
 
   private static final Log LOG = Log.get(Echoey.class);
 
@@ -61,33 +57,8 @@ public class Echoey extends AbstractAgent {
   /**
    * @return the suffix that Echoey adds to each document it is editing
    */
-  @VisibleForTesting
-  String getEchoeyDocumentSuffix() {
+  private String getEchoeyDocumentSuffix() {
     return IdConstants.TOKEN_SEPARATOR + getParticipantId().getAddress();
-  }
-
-  /**
-   * Returns a notification message for when a participant is added to a wavelet that Echoey
-   * participates in.
-   *
-   * @param participant id of the participant that was added
-   * @return the message to be sent
-   */
-  @VisibleForTesting
-  String getParticipantAddedMessage(ParticipantId participant) {
-    return participant.getAddress() + " was added to this wavelet.";
-  }
-
-  /**
-   * Returns a notification message for when a participant is removed from a wavelet that Echoey
-   * participates in.
-   *
-   * @param participant id of the participant that was removed
-   * @return the message to be sent
-   */
-  @VisibleForTesting
-  String getParticipantRemovedMessage(ParticipantId participant) {
-    return participant.getAddress() + " was removed from this wavelet.";
   }
 
   /**
@@ -105,7 +76,7 @@ public class Echoey extends AbstractAgent {
           throw new IllegalArgumentException("Must provide valid port.");
         }
 
-        Echoey agent = new Echoey(AgentConnection.newConnection(args[0], args[1], port));
+        Echoey agent = new Echoey(args[0], args[1], port);
         agent.run();
       } else {
         System.out.println("usage: java Echoey <username> <hostname> <port>");
@@ -118,20 +89,12 @@ public class Echoey extends AbstractAgent {
     System.exit(0);
   }
 
-  /**
-   * Constructor.
-   *
-   * @param connection the agent's connection to the server.
-   */
-  @Inject
-  @VisibleForTesting
-  Echoey(AgentConnection connection) {
-    super(connection);
+  private Echoey(String username, String hostname, int port) {
+    super(AgentConnection.newConnection(username, hostname, port));
   }
 
   @Override
-  public void onDocumentChanged(CoreWaveletData wavelet,
-      CoreWaveletDocumentOperation documentOperation) {
+  public void onDocumentChanged(CoreWaveletData wavelet, CoreWaveletDocumentOperation documentOperation) {
     final String docId = documentOperation.getDocumentId();
     LOG.info("onDocumentChanged: " + wavelet.getWaveletName() + ", " + docId);
 
@@ -152,8 +115,7 @@ public class Echoey extends AbstractAgent {
         ops.add(ClientUtils.appendToManifest(manifest, echoDocId));
       }
 
-      sendAndAwaitWaveletDelta(wavelet.getWaveletName(),
-          new CoreWaveletDelta(getParticipantId(), ops));
+      sendAndAwaitWaveletDelta(wavelet.getWaveletName(), new CoreWaveletDelta(getParticipantId(), ops));
     }
   }
 
@@ -170,24 +132,24 @@ public class Echoey extends AbstractAgent {
   @Override
   public void onParticipantAdded(CoreWaveletData wavelet, ParticipantId participant) {
     LOG.info("onParticipantAdded: " + participant.getAddress());
-    appendText(wavelet, getParticipantAddedMessage(participant));
+    appendText(wavelet, participant.getAddress() + " was added to this wavelet.");
   }
 
   @Override
   public void onParticipantRemoved(CoreWaveletData wavelet, ParticipantId participant) {
     LOG.info("onParticipantRemoved: " + participant.getAddress());
-    appendText(wavelet, getParticipantRemovedMessage(participant));
+    appendText(wavelet, participant.getAddress() + " was removed from this wavelet.");
   }
 
   @Override
   public void onSelfAdded(CoreWaveletData wavelet) {
     LOG.info("onSelfAdded: " + wavelet.getWaveletName());
-    appendText(wavelet, GREETING);
+    appendText(wavelet, "I'm listening.");
   }
 
   @Override
   public void onSelfRemoved(CoreWaveletData wavelet) {
     LOG.info("onSelfRemoved: " + wavelet.getWaveletName());
-    appendText(wavelet, FAREWELL);
+    appendText(wavelet, "Goodbye.");
   }
 }

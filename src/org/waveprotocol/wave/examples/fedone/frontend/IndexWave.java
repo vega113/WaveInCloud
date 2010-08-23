@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.waveprotocol.wave.examples.fedone.common;
+package org.waveprotocol.wave.examples.fedone.frontend;
 
 import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
 
@@ -23,13 +23,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
-import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexEntry;
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
-import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -40,7 +39,6 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 import java.util.List;
 
@@ -52,31 +50,35 @@ import java.util.List;
  * TODO(anorth): replace this with a more canonical use of the wave model.
  *
  * @author anorth@google.com (Alex North)
- * @author mk.mateng@gmail.com (Michael Kuntzman)
  */
-final public class IndexWave {
+final class IndexWave {
 
   @VisibleForTesting
-  public static final ParticipantId DIGEST_AUTHOR = new ParticipantId("digest-author");
+  static final ParticipantId DIGEST_AUTHOR = new ParticipantId("digest-author");
   @VisibleForTesting
-  public static final String DIGEST_DOCUMENT_ID = "digest";
+  static final String DIGEST_DOCUMENT_ID = "digest";
 
   /**
-   * @return true if the specified wave can be indexed in an index wave.
+   * Constructs the name of the index wave wavelet that refers to the specified
+   * wave.
+   *
+   * @param waveId referent wave id
+   * @return WaveletName of the index wave wavelet referring to waveId
+   * @throws IllegalArgumentException if waveId is the WaveId of the index wave
    */
-  public static boolean canBeIndexed(WaveId waveId) {
-    return !isIndexWave(waveId);
+  static WaveletName indexWaveletNameFor(WaveId waveId) {
+    Preconditions.checkArgument(!waveId.equals(INDEX_WAVE_ID),
+        "There is no index wave wavelet for the index wave itself: %s", waveId);
+    return WaveletName.of(INDEX_WAVE_ID, WaveletId.deserialise(waveId.serialise()));
   }
 
   /**
-   * @return true if the specified wavelet name can be encoded into an index wave.
+   * Extracts the wave id referred to by an index wavelet name.
    */
-  public static boolean canBeIndexed(WaveletName waveletName) {
-    WaveId waveId = waveletName.waveId;
-    WaveletId waveletId = waveletName.waveletId;
-
-    return canBeIndexed(waveId) && waveId.getDomain().equals(waveletId.getDomain())
-        && IdUtil.isConversationRootWaveletId(waveletId);
+  static WaveId indexWaveletWaveId(WaveletName indexWaveletName) {
+    Preconditions.checkArgument(indexWaveletName.waveId.equals(INDEX_WAVE_ID), "Expected wave id "
+        + INDEX_WAVE_ID + ", got " + indexWaveletName.waveId);
+    return WaveId.deserialise(indexWaveletName.waveletId.serialise());
   }
 
   /**
@@ -93,7 +95,7 @@ final public class IndexWave {
    * @return deltas to apply to the index wavelet to achieve the same change in
    *         participants, and the specified change in digest text
    */
-  public static DeltaSequence createIndexDeltas(long targetVersion,
+  static DeltaSequence createIndexDeltas(long targetVersion,
       DeltaSequence deltas, String oldDigest, String newDigest) {
     ProtocolWaveletDelta digestDelta =
       createDigestDelta(targetVersion, oldDigest, newDigest);
@@ -106,75 +108,6 @@ final public class IndexWave {
     } else {
       return participantDeltas.prepend(ImmutableList.of(digestDelta));
     }
-  }
-
-  /**
-   * Retrieve a list of index entries from an index wave.
-   *
-   * @param indexWave the wave to retrieve the index from.
-   * @return list of index entries.
-   */
-  public static List<IndexEntry> getIndexEntries(ClientWaveView indexWave) {
-    List<IndexEntry> indexEntries = Lists.newArrayList();
-
-    for (CoreWaveletData wavelet : indexWave.getWavelets()) {
-      WaveId waveId = waveIdFromIndexWavelet(wavelet);
-      String digest = ClientUtils.collateText(wavelet.getDocuments().values());
-      indexEntries.add(new IndexEntry(waveId, digest));
-    }
-
-    return indexEntries;
-  }
-
-  /**
-   * Constructs the name of the index wave wavelet that refers to the specified
-   * wave.
-   *
-   * @param waveId referent wave id
-   * @return WaveletName of the index wave wavelet referring to waveId
-   * @throws IllegalArgumentException if the wave cannot be indexed
-   */
-  public static WaveletName indexWaveletNameFor(WaveId waveId) {
-    Preconditions.checkArgument(canBeIndexed(waveId), "Wave %s cannot be indexed", waveId);
-    return WaveletName.of(INDEX_WAVE_ID, WaveletId.deserialise(waveId.serialise()));
-  }
-
-  /**
-   * @return true if the specified wave is an index wave.
-   */
-  public static boolean isIndexWave(ClientWaveView wave) {
-    return isIndexWave(wave.getWaveId());
-  }
-
-  /**
-   * @return true if the specified wave ID is an index wave ID.
-   */
-  public static boolean isIndexWave(WaveId waveId) {
-    return waveId.equals(INDEX_WAVE_ID);
-  }
-
-  /**
-   * Extracts the wave id referred to by an index wavelet's wavelet name.
-   *
-   * @param indexWavelet the index wavelet.
-   * @return the wave id.
-   * @throws IllegalArgumentException if the wavelet is not from an index wave.
-   */
-  public static WaveId waveIdFromIndexWavelet(CoreWaveletData indexWavelet) {
-    return waveIdFromIndexWavelet(indexWavelet.getWaveletName());
-  }
-
-  /**
-   * Extracts the wave id referred to by an index wavelet name.
-   *
-   * @param indexWaveletName of the index wavelet.
-   * @return the wave id.
-   * @throws IllegalArgumentException if the wavelet is not from an index wave.
-   */
-  public static WaveId waveIdFromIndexWavelet(WaveletName indexWaveletName) {
-    WaveId waveId = indexWaveletName.waveId;
-    Preconditions.checkArgument(isIndexWave(waveId), waveId + " is not an index wave");
-    return WaveId.deserialise(indexWaveletName.waveletId.serialise());
   }
 
   /**

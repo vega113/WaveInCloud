@@ -48,7 +48,6 @@ import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
-import org.waveprotocol.wave.examples.fedone.common.IndexWave;
 import org.waveprotocol.wave.examples.fedone.common.TransformedDeltaComparator;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
@@ -96,9 +95,9 @@ public class ClientFrontendImplTest extends TestCase {
   private static final HashedVersion VERSION_1 = HashedVersion.unsigned(1L);
   private static final ProtocolWaveletDelta DELTA =
       serialize(new CoreWaveletDelta(USER, ImmutableList.of(new CoreAddParticipant(USER))),
-      VERSION_0, VERSION_1);
+          VERSION_0, VERSION_1);
   private static final DeltaSequence DELTAS =
-      new DeltaSequence(ImmutableList.of(DELTA), serialize(HashedVersion.unsigned(1L)));
+    new DeltaSequence(ImmutableList.of(DELTA), serialize(HashedVersion.unsigned(1L)));
   private static final Map<String, BufferedDocOp> DOCUMENT_STATE = ImmutableMap.of();
 
   private ClientFrontendImpl clientFrontend;
@@ -110,6 +109,23 @@ public class ClientFrontendImplTest extends TestCase {
     waveletProvider = mock(WaveletProvider.class);
     this.clientFrontend = new ClientFrontendImpl(new HashedVersionFactoryImpl(), waveletProvider);
     verify(waveletProvider).setListener((WaveletListener) isNotNull());
+  }
+
+  /**
+   * Test that a wavelet name can be converted to the corresponding index
+   * wavelet name if and only if the wavelet's domain equals the wave's domain
+   * and the wavelet's ID is CONVERSATION_ROOT_WAVELET.
+   */
+  public void testIndexWaveletNameConversion() {
+    assertEquals(INDEX_WAVELET_NAME, IndexWave.indexWaveletNameFor(WAVE_ID));
+    assertEquals(WAVE_ID, IndexWave.indexWaveletWaveId(INDEX_WAVELET_NAME));
+
+    try {
+      IndexWave.indexWaveletNameFor(INDEX_WAVE_ID);
+      fail("index wave wavelets shouldn't be convertable to index wave");
+    } catch (IllegalArgumentException expected) {
+      // pass
+    }
   }
 
   /**
@@ -292,7 +308,9 @@ public class ClientFrontendImplTest extends TestCase {
 
     waveletUpdate(VERSION_0, HashedVersion.unsigned(2L),
         ImmutableMap.of("default", makeAppend(0, "Hello, world\nignored text")),
-        new CoreAddParticipant(USER), CoreNoOp.INSTANCE);
+        new CoreAddParticipant(USER),
+        CoreNoOp.INSTANCE
+    );
 
     assertEquals(INDEX_WAVELET_NAME, listener.waveletName);
 

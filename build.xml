@@ -31,13 +31,8 @@
     <fileset dir="${lib.codegen}">
       <include name="*/*.jar"/>
     </fileset>
-    <!-- Hamcrest, JUnit, and Mockito included for some of the classes in src/**/testing/ . Maybe these shouldn't be in src after all? -->
-    <fileset dir="${lib.test}">
-      <include name="hamcrest/*.jar"/>
-      <include name="junit/*.jar"/>
-      <include name="mockito/*.jar"/>
-    </fileset>
   </path>
+  
 
   <!-- Classpath for testing only -->
   <path id="fedone.test.classpath">
@@ -75,10 +70,10 @@
     <javac sourcepath="" srcdir="${src}" destdir="${core.classes}" debug="on"
         target="1.5">
       <include name="**/*.java"/>
-      <classpath>
+    	<classpath>
         <pathelement location="proto_gwt_src"/>
         <path refid="fedone.classpath"/>
-      </classpath>
+    	</classpath>
     </javac>
 
     <!-- copy non binary resources in src tree to output classpath -->
@@ -92,7 +87,7 @@
     </copy>
   </target>
 
-  <target name="compile_tests" depends="compile" description="Compiles all the unit tests in the project">
+  <target name="test" depends="compile" description="Runs all the unit tests in the project">
     <javac sourcepath="" srcdir="${test}" destdir="${test.classes}" debug="on"
         target="1.5">
       <include name="**/*.java"/>
@@ -111,9 +106,7 @@
         <include name="**/*.properties"/>
       </fileset>
     </copy>
-  </target>
 
-  <target name="test" depends="compile_tests" description="Runs all the unit tests in the project">
     <copy todir="${instr.classes}">
       <fileset dir="${core.classes}" includes="**/*"/>
     </copy>
@@ -147,7 +140,7 @@
       </fileset> 
       <report format="frames" todir="${dir.testout}"/> 
     </junitreport>
-
+    
     <fail message="Tests failed. Check log and/or reports."
       if="test.failed" />
 
@@ -322,7 +315,7 @@
         <include name="javax/inject/**/*" />
         <include name="javax/servlet/**/*" />
         <include name="org/apache/commons/codec/**/*" />
-        <include name="org/eclipse/jetty/**/*" />
+      	<include name="org/eclipse/jetty/**/*" />
         <include name="org/waveprotocol/**/*" />
       </fileset>
       <manifest>
@@ -361,7 +354,7 @@
   <target name="doc" depends="stage" description="Builds the Java documentation for the mode, protocol, and FedOne">
     <javadoc sourcepath="${src}" destdir="${dir.docs}" linksource="yes">
       <classpath>
-        <pathelement location="${staging}" />
+	<pathelement location="${staging}" />
       </classpath>
     </javadoc>
   </target>

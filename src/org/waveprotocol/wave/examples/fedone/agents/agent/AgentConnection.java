@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
@@ -50,37 +48,15 @@ public class AgentConnection {
    * @return an agent connection.
    */
   public static AgentConnection newConnection(String participantId, String hostname, int port) {
-    return new AgentConnection(participantId, hostname, port, new ClientBackend.DefaultFactory());
+    return new AgentConnection(participantId, hostname, port);
   }
 
-  /**
-   * A factory used to construct the client backend instance.
-   */
-  private final ClientBackend.Factory backendFactory;
-
+  private ClientBackend backend = null;
   private final String hostname;
   private final String participantId;
   private final int port;
 
-  /**
-   * The client backend used for this connection. This is set in
-   * {@link #connect} and set to null in {@link #disconnect}.
-   */
-  private ClientBackend backend = null;
-
-  /**
-   * Default constructor.
-   *
-   * @param participantId the participant address (user@domain) of the agent.
-   * @param hostname of the server.
-   * @param port number of the server.
-   * @param backendFactory the factory to use to create a backend for this
-   * connection.
-   */
-  @VisibleForTesting
-  AgentConnection(String participantId, String hostname, int port,
-      ClientBackend.Factory backendFactory) {
-    this.backendFactory = backendFactory;
+  private AgentConnection(String participantId, String hostname, int port) {
     this.participantId = participantId;
     this.hostname = hostname;
     this.port = port;
@@ -103,7 +79,7 @@ public class AgentConnection {
    * @throws IOException if a connection error occurred.
    */
   void connect() throws IOException {
-    backend = backendFactory.create(participantId, hostname, port);
+    backend = new ClientBackend(participantId, hostname, port);
   }
 
   /**
@@ -115,14 +91,6 @@ public class AgentConnection {
       backend.shutdown();
       backend = null;
     }
-  }
-
-  /**
-   * @return the agent's backend.
-   */
-  @VisibleForTesting
-  ClientBackend getBackend() {
-    return backend;
   }
 
   /**
@@ -178,14 +146,12 @@ public class AgentConnection {
   }
 
   /**
-   * Submits a wavelet operation to the backend and waits for it to be applied locally (round
-   * trip).
+   * Submits a wavelet operation to the backend and waits for it to be applied locally (round trip).
    *
    * @param waveletName of the wavelet to operate on.
    * @param operation the operation to apply to the wavelet.
    */
-  public void sendAndAwaitWaveletOperation(WaveletName waveletName,
-      CoreWaveletOperation operation) {
+  public void sendAndAwaitWaveletOperation(WaveletName waveletName, CoreWaveletOperation operation) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
     }
