@@ -19,9 +19,8 @@ package org.waveprotocol.wave.examples.fedone.waveclient.common;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
-import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
 import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
@@ -42,8 +41,9 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -60,13 +60,13 @@ public class ClientUtils {
   }
 
   /**
-   * Renders and concatenates all of the specified documents into a single
-   * String in the order in which they appear in documentStates.
+   * Concatenates all of the text of the specified documents into a single String in the order in
+   * which they appear in documentStates.
    *
-   * @param documentStates the documents to render
-   * @return A String containing the characters from all documents, in order
+   * @param documentStates the documents to concatenate.
+   * @return A String containing the characters from all documents, in order.
    */
-  public static String render(Iterable<BufferedDocOp> documentStates) {
+  public static String collateText(Iterable<BufferedDocOp> documentStates) {
     final StringBuilder resultBuilder = new StringBuilder();
     for (BufferedDocOp documentState : documentStates) {
       documentState.apply(InitializationCursorAdapter.adapt(
@@ -91,18 +91,18 @@ public class ClientUtils {
   }
 
   /**
-   * Render all of the documents in a wave as a single String, in the order
-   * in which they are listed by wavelet.getDocumentIds().
+   * Collect the text of all of the documents in a wave into a single String, in the order in which
+   * the documents are listed by wavelet.getDocuments().
    *
    * TODO: move this to the console package (...console.ConsoleUtils)
    *
-   * @param wave wave to render
-   * @return rendered wave
+   * @param wave to collect the text from.
+   * @return the collected text from the wave.
    */
-  public static String renderDocuments(ClientWaveView wave) {
+  public static String collateText(ClientWaveView wave) {
     final StringBuilder doc = new StringBuilder();
     for (CoreWaveletData wavelet : wave.getWavelets()) {
-      doc.append(render(wavelet.getDocuments().values()));
+      doc.append(ClientUtils.collateText(wavelet.getDocuments().values()));
     }
     return doc.toString();
   }
@@ -186,6 +186,23 @@ public class ClientUtils {
   }
 
   /**
+   * @return an empty document
+   */
+  public static BufferedDocOp createEmptyDocument() {
+    return new DocOpBuilder().build();
+  }
+
+  /**
+   * Creates an empty manifest document.
+   *
+   * @return the manifest document.
+   */
+  public static BufferedDocOp createManifest() {
+    return new DocOpBuilder().elementStart(DocumentConstants.CONVERSATION, Attributes.EMPTY_MAP)
+        .elementEnd().build();
+  }
+
+  /**
    * Find the size of a document in number of characters and tags.
    *
    * @param doc document mutation to find the size
@@ -220,33 +237,32 @@ public class ClientUtils {
   }
 
   /**
-   * @return a empty document
+   * Returns all documents in the wave, aggregated from all the wavelets.
+   *
+   * @param wave to get the documents from.
+   * @return map of all documents in the wave, aggregated from all the wavelets, and keyed by their
+   * IDs.
    */
-  public static BufferedDocOp createEmptyDocument() {
-    return new DocOpBuilder().build();
+  public static Map<String, BufferedDocOp> getAllDocuments(ClientWaveView wave) {
+    final Map<String, BufferedDocOp> documents = Maps.newHashMap();
+    for (CoreWaveletData wavelet : wave.getWavelets()) {
+      documents.putAll(wavelet.getDocuments());
+    }
+    return documents;
   }
 
   /**
-   * Retrieve a list of index entries from an index wave.
+   * Returns all participants in the wave, aggregated from all the wavelets.
    *
-   * @param indexWave the wave to retrieve the index from
-   * @return list of index entries
+   * @param wave to get the participants from.
+   * @return all participants in the wave, aggregated from all the wavelets.
    */
-  public static List<IndexEntry> getIndexEntries(ClientWaveView indexWave) {
-    if (!indexWave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
-      throw new IllegalArgumentException(indexWave + " is not the index wave");
+  public static Set<ParticipantId> getAllParticipants(ClientWaveView wave) {
+    final Set<ParticipantId> participants = new HashSet<ParticipantId>();
+    for (CoreWaveletData wavelet : wave.getWavelets()) {
+      participants.addAll(wavelet.getParticipants());
     }
-
-    List<IndexEntry> indexEntries = Lists.newArrayList();
-
-    for (CoreWaveletData wavelet : indexWave.getWavelets()) {
-      // The wave id is encoded as the wavelet id
-      WaveId waveId = WaveId.deserialise(wavelet.getWaveletName().waveletId.serialise());
-      String digest = ClientUtils.render(wavelet.getDocuments().values());
-      indexEntries.add(new IndexEntry(waveId, digest));
-    }
-
-    return indexEntries;
+    return participants;
   }
 
   /**
@@ -284,7 +300,7 @@ public class ClientUtils {
     BufferedDocOp bufferedDocOp = documents.get(DocumentConstants.CONVERSATION);
     if (bufferedDocOp == null) {
       // Render whatever data we have and hope its good enough
-      return render(documents.values());
+      return ClientUtils.collateText(documents.values());
     }
 
     final StringBuilder sb = new StringBuilder();
@@ -317,7 +333,7 @@ public class ClientUtils {
                   // We see this when a blip has been deleted
                   return;
                 }
-                sb.append(render(Arrays.asList(document)));
+                sb.append(ClientUtils.collateText(Arrays.asList(document)));
                 sb.append(" ");
               }
             }

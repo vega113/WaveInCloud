@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Test case for ClientRpcChannel and ServerRpcProvider.
+ * Test case for ClientRpcChannelImpl and ServerRpcProvider.
  * 
  *
  */
@@ -47,9 +47,9 @@ public class RpcTest extends TestCase {
   protected ClientRpcChannel client = null;
 
   protected ClientRpcChannel newClient() throws IOException {
-     return new ClientRpcChannel(server.getBoundAddress());
+     return new ClientRpcChannelImpl(server.getBoundAddress());
   }
-    
+
   protected void startServer() throws IOException {
     server = new ServerRpcProvider(null, null, null);
     server.startRpcServer();
@@ -124,7 +124,7 @@ public class RpcTest extends TestCase {
 
     // Create a client connection to the server, *after* it has registered services.
     client = newClient();
-    
+
     // Create a client-side stub for talking to the server.
     WaveClientRpc.ProtocolWaveClientRpc.Stub stub =
         WaveClientRpc.ProtocolWaveClientRpc.newStub(client);
@@ -254,7 +254,7 @@ public class RpcTest extends TestCase {
     // Create a client-side stub for talking to the server.
     WaveClientRpc.ProtocolWaveClientRpc.Stub stub =
         WaveClientRpc.ProtocolWaveClientRpc.newStub(client);
-    
+
     // Create a controller, set up request, wait for responses.
     RpcController controller = client.newRpcController();
     ProtocolOpenRequest request =

@@ -17,8 +17,11 @@
 
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -36,6 +39,7 @@ public abstract class AbstractAgent implements AgentEventListener {
   private static final Log LOG = Log.get(AbstractAgent.class);
 
   private final AgentConnection connection;
+  private AgentEventProvider eventProvider;
 
   /**
    * Constructor.
@@ -46,23 +50,51 @@ public abstract class AbstractAgent implements AgentEventListener {
     this.connection = connection;
   }
 
-  private void connect() {
+  @VisibleForTesting
+  void connect() {
     try {
       connection.connect();
+      // These must be done after we connect, so that we have a backend available to register for
+      // events:
+      eventProvider = new AgentEventProvider(connection);
+      eventProvider.addAgentEventListener(this);
     } catch (IOException e) {
       throw new RuntimeException("Failed to connect.", e);
     }
     LOG.info("Connected as " + connection.getParticipantId());
   }
 
-  private void disconnect() {
+  @VisibleForTesting
+  void disconnect() {
     connection.disconnect();
   }
 
+  /**
+   * @return the agent's backend.
+   */
+  @VisibleForTesting
+  ClientBackend getBackend() {
+    return connection.getBackend();
+  }
+
+  /**
+   * @return the agent's event provider.
+   */
+  @VisibleForTesting
+  AgentEventProvider getEventProvider() {
+    return eventProvider;
+  }
+
+  /**
+   * @return true if the agent is connected to a server.
+   */
+  @VisibleForTesting
+  public boolean isConnected() {
+    return connection.isConnected();
+  }
+
   private void listen() {
-    AgentEventProvider provider = new AgentEventProvider(connection);
-    provider.addAgentEventListener(this);
-    provider.startListening();
+    eventProvider.startListening();
   }
 
   /**
@@ -72,13 +104,6 @@ public abstract class AbstractAgent implements AgentEventListener {
     connect();
     listen();
     disconnect();
-  }
-
-  /**
-   * Return the participant ID for this agent.
-   */
-  protected final ParticipantId getParticipantId() {
-    return connection.getParticipantId();
   }
 
   /**
@@ -108,6 +133,13 @@ public abstract class AbstractAgent implements AgentEventListener {
   }
 
   /**
+   * Return the participant ID for this agent.
+   */
+  public final ParticipantId getParticipantId() {
+    return connection.getParticipantId();
+  }
+
+  /**
    * Sends an operation to server.
    *
    * @param waveletName of the wavelet to apply the operation to.
@@ -125,7 +157,8 @@ public abstract class AbstractAgent implements AgentEventListener {
    * @param waveletName of the wavelet to apply the operation to.
    * @param operation the operation to apply.
    */
-  public void sendAndAwaitWaveletOperation(WaveletName waveletName, CoreWaveletOperation operation) {
+  public void sendAndAwaitWaveletOperation(WaveletName waveletName,
+      CoreWaveletOperation operation) {
     connection.sendAndAwaitWaveletOperation(waveletName, operation);
   }
 

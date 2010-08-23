@@ -17,7 +17,9 @@
 
 package org.waveprotocol.wave.examples.fedone.agents.probey;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 
 import org.eclipse.jetty.http.security.Constraint;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -57,7 +59,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -72,17 +73,15 @@ public class Probey extends AbstractAgent {
 
   private static final Log LOG = Log.get(Probey.class);
 
-  private ParticipantId userId;
-
   /**
    * Constructor.
    *
-   * @param connection   the agent's connection to the server.
-   * @param userAtDomain the user@domain name of the robot
+   * @param connection the agent's connection to the server.
    */
-  private Probey(AgentConnection connection, String userAtDomain) {
+  @Inject
+  @VisibleForTesting
+  Probey(AgentConnection connection) {
     super(connection);
-    this.userId = ParticipantId.ofUnsafe(userAtDomain);
   }
 
   /**
@@ -100,7 +99,8 @@ public class Probey extends AbstractAgent {
     CoreWaveletData convRoot = ClientUtils.getConversationRoot(wave);
     BufferedDocOp manifest = convRoot.getDocuments().get(DocumentConstants.MANIFEST_DOCUMENT_ID);
     String newDocId = getNewDocumentId();
-    CoreWaveletDelta delta = ClientUtils.createAppendBlipDelta(manifest, userId, newDocId, blipText);
+    CoreWaveletDelta delta = ClientUtils.createAppendBlipDelta(manifest, getParticipantId(),
+        newDocId, blipText);
     sendAndAwaitWaveletDelta(convRoot.getWaveletName(), delta);
     return newDocId;
   }
@@ -119,9 +119,8 @@ public class Probey extends AbstractAgent {
     }
     CoreWaveletData convRoot = ClientUtils.getConversationRoot(wave);
     CoreAddParticipant addUserOp = new CoreAddParticipant(addId);
-    sendAndAwaitWaveletDelta(convRoot.getWaveletName(), new CoreWaveletDelta(userId,
-                                                                         ImmutableList.of(
-                                                                             addUserOp)));
+    sendAndAwaitWaveletDelta(convRoot.getWaveletName(), new CoreWaveletDelta(getParticipantId(),
+        ImmutableList.of(addUserOp)));
   }
 
   /**
@@ -215,13 +214,11 @@ public class Probey extends AbstractAgent {
   }
 
   @Override
-  public void onParticipantAdded(CoreWaveletData wavelet,
-                                 ParticipantId participant) {
+  public void onParticipantAdded(CoreWaveletData wavelet, ParticipantId participant) {
   }
 
   @Override
-  public void onParticipantRemoved(CoreWaveletData wavelet,
-                                   ParticipantId participant) {
+  public void onParticipantRemoved(CoreWaveletData wavelet, ParticipantId participant) {
   }
 
   @Override
@@ -250,13 +247,10 @@ public class Probey extends AbstractAgent {
           throw new IllegalArgumentException("username must be in form user@domain");
         }
 
-        Probey probey = new Probey(
-            AgentConnection.newConnection(args[0], args[1], port), args[0]);
-
+        Probey probey = new Probey(AgentConnection.newConnection(args[0], args[1], port));
         Server server = new Server(httpport);
 
-        LoginService loginService = 
-          new HashLoginService("probey","./etc/probey/realm.properties");
+        LoginService loginService = new HashLoginService("probey","./etc/probey/realm.properties");
         //Lifecycle object that will now be started/stopped w/ server
         server.addBean(loginService); 
 
@@ -273,13 +267,13 @@ public class Probey extends AbstractAgent {
         constraintMapping.setPathSpec("/*");
 
         Set<String> knownRoles = Collections.singleton("probey");
-        
+
         securityHandler.setAuthenticator(new BasicAuthenticator());
         securityHandler.setLoginService(loginService);
         securityHandler.setStrict(false);
         securityHandler.setConstraintMappings(new ConstraintMapping[]{constraintMapping}, 
             knownRoles);
-        
+
         ContextHandlerCollection contexts = new ContextHandlerCollection();
 
         ContextHandler context = new ContextHandler();
@@ -288,18 +282,17 @@ public class Probey extends AbstractAgent {
         context.setClassLoader(Thread.currentThread().getContextClassLoader());
         context.setHandler(new WebHandler(probey));
         contexts.addHandler(context);
-        
+
         securityHandler.setHandler(contexts);
-        
+
         server.setGracefulShutdown(1000);
         server.setStopAtShutdown(true);
-        
+
         server.start();  // spawns a new thread.
         probey.run();
       } else {
-        System.out
-            .println("usage: java Probey <username@domain> <fedone hostname>"
-                     + " <fedone port> <http port>");
+        System.out.println("usage: java Probey <username@domain> <fedone hostname> <fedone port>"
+            + " <http port>");
       }
     } catch (Exception e) {
       LOG.severe("Catastrophic failure", e);
@@ -310,7 +303,7 @@ public class Probey extends AbstractAgent {
 
   static class WebHandler extends AbstractHandler {
 
-    private Probey probey;
+    private final Probey probey;
     private final URIEncoderDecoder uriCodec;
 
     public WebHandler(Probey probey) {
@@ -319,9 +312,8 @@ public class Probey extends AbstractAgent {
     }
 
     @Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request, 
-        HttpServletResponse response)
-        throws IOException {
+    public void handle(String target, Request baseRequest, HttpServletRequest request,
+        HttpServletResponse response) throws IOException {
       response.setContentType("text/plain");
       response.setStatus(HttpServletResponse.SC_OK);
 
@@ -366,7 +358,7 @@ public class Probey extends AbstractAgent {
       } catch (IllegalArgumentException e) {
         writer.println(e.getMessage());
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      }  catch (EncodingException e) {
+      } catch (EncodingException e) {
         writer.println("Invalid Encoding: " + e.getMessage());
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       }

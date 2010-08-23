@@ -92,7 +92,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
       header.remove(header.size() - 1);
     }
 
-    // In this case, actually want to scroll from the bottom
+    // In this case, we actually want to scroll from the bottom.
     Collections.reverse(lines);
     List<String> reverseScroll = scroll(height - header.size(), lines);
     Collections.reverse(reverseScroll);
@@ -131,7 +131,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
                   displayAuthor(attrs.get(DocumentConstants.CONTRIBUTOR_NAME));
                 }
               } else if (type.equals(DocumentConstants.BODY)) {
-                // ignore
+                // Ignore.
               } else {
                 LOG.warning("Unsupported element type while rendering document: " + type);
               }
@@ -191,7 +191,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
     if (renderMode.equals(RenderMode.XML)) {
       // Only render the manifest XML itself if we are rendering the XML.
       // TODO: refactor the XML rendering code to not share these methods (it should just iterate
-      // through all documents and render the XML, ignoring the conversation model)
+      // through all documents and render the XML, ignoring the conversation model).
       renderDocument(document, width, lines, currentLine, "");
     }
 
@@ -202,7 +202,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
 
           @Override
           public void characters(String s) {
-            // ignore characters in a manifest.
+            // Ignore characters in a manifest.
           }
 
           @Override
@@ -316,7 +316,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
       }
     }
 
-    // Render as lines
+    // Render as lines.
     wrapAndClose(lines, width, participantLineBuilder);
 
     for (int i = 0; i < lines.size(); i++) {
@@ -357,6 +357,13 @@ public class ScrollableWaveView extends ConsoleScrollable {
       lines.add(ConsoleUtils.ensureWidth(width, line.toString()));
       line.delete(0, line.length());
     }
+  }
+
+  /**
+   * @return the current rendering mode
+   */
+  public RenderMode getRenderingMode() {
+    return renderMode;
   }
 
   /**
