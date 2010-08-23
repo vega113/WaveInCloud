@@ -17,14 +17,17 @@
 
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
-import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
+import com.google.common.annotations.VisibleForTesting;
+
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.WaveletOperationListener;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -57,19 +60,33 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
   }
 
   /**
+   * @return the list of currently registered agent event listeners
+   */
+  @VisibleForTesting
+  Set<AgentEventListener> getListeners() {
+    return Collections.unmodifiableSet(listeners);
+  }
+
+  /**
    * Should updates by the passed author onto the given wavelet be ignored by
    * agents.
    */
   private boolean isIgnored(String author, CoreWaveletData wavelet) {
-    return wavelet.getWaveletName().waveId.equals(CommonConstants.INDEX_WAVE_ID);
+    // If we receive events from a separate thread, we might receive them after
+    // disconnecting.
+    if (!connection.isConnected()) {
+      return true;
+    }
+    return IndexWave.isIndexWave(wavelet.getWaveletName().waveId);
   }
 
   /**
    * Returns true if this was an event originated by the agent itself.
    */
-  private boolean isSelfEvent(String author, CoreWaveletData wavelet) {
+  @VisibleForTesting
+  boolean isSelfGeneratedEvent(String author, CoreWaveletData wavelet) {
     // TODO: in the coming agent framework refactor, change author to be
-    // a participantId throughout.
+    // a ParticipantId throughout.
     return new ParticipantId(author).equals(connection.getParticipantId());
   }
 
@@ -86,7 +103,8 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
   public void onCommitNotice(CoreWaveletData wavelet, HashedVersion version) {}
 
   @Override
-  public void onDocumentChanged(CoreWaveletData wavelet, CoreWaveletDocumentOperation documentOperation) {
+  public void onDocumentChanged(CoreWaveletData wavelet,
+      CoreWaveletDocumentOperation documentOperation) {
     for (AgentEventListener l : listeners) {
       l.onDocumentChanged(wavelet, documentOperation);
     }
@@ -121,7 +139,8 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
   }
 
   @Override
-  public void participantAdded(String author, CoreWaveletData wavelet, ParticipantId participantId) {
+  public void participantAdded(String author, CoreWaveletData wavelet,
+      ParticipantId participantId) {
     if (isIgnored(author, wavelet)) {
       return;
     }
@@ -134,7 +153,8 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
   }
 
   @Override
-  public void participantRemoved(String author, CoreWaveletData wavelet, ParticipantId participantId) {
+  public void participantRemoved(String author, CoreWaveletData wavelet,
+      ParticipantId participantId) {
     if (isIgnored(author, wavelet)) {
       return;
     }
@@ -162,8 +182,9 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
   }
 
   @Override
-  public void waveletDocumentUpdated(String author, CoreWaveletData wavelet, CoreWaveletDocumentOperation operation) {
-    if (isIgnored(author, wavelet) || isSelfEvent(author, wavelet)) {
+  public void waveletDocumentUpdated(String author, CoreWaveletData wavelet,
+      CoreWaveletDocumentOperation operation) {
+    if (isIgnored(author, wavelet) || isSelfGeneratedEvent(author, wavelet)) {
       return;
     }
     onDocumentChanged(wavelet, operation);

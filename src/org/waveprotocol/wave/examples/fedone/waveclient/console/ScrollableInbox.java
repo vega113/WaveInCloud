@@ -17,11 +17,12 @@
 
 package org.waveprotocol.wave.examples.fedone.waveclient.console;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientBackend;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
 import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
@@ -55,17 +56,54 @@ public class ScrollableInbox extends ConsoleScrollable {
    * @param indexWave to render
    */
   public ScrollableInbox(ClientBackend backend, ClientWaveView indexWave) {
-    if (!indexWave.getWaveId().equals(CommonConstants.INDEX_WAVE_ID)) {
-      throw new IllegalArgumentException(indexWave + " is not an index wave");
-    }
+    Preconditions.checkArgument(IndexWave.isIndexWave(indexWave), indexWave +
+        " is not an index wave");
 
     this.indexWave = indexWave;
     this.backend = backend;
   }
 
+  /**
+   * Check if a particular wave has been read.
+   *
+   * @param wave to check
+   * @return true if all latest changes to the wave have bee seen.
+   */
+  public boolean isRead(ClientWaveView wave) {
+    if ((wave != null) && (ClientUtils.getConversationRoot(wave) != null)) {
+      HashedVersion version = wave.getWaveletVersion(ClientUtils.getConversationRootId(wave));
+      return version.equals(lastSeenVersions.get(wave));
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Mark a particular wave as read.
+   *
+   * @param wave to mark
+   */
+  // TODO: use a wavelet to store unread status.
+  public void markAsRead(ClientWaveView wave) {
+    if ((wave != null) && (ClientUtils.getConversationRoot(wave) != null)) {
+      HashedVersion version = wave.getWaveletVersion(ClientUtils.getConversationRootId(wave));
+      lastSeenVersions.put(wave, version);
+    }
+  }
+
+  /**
+   * Mark all waves as read.
+   */
+  public void markAllAsRead() {
+    for (IndexEntry indexEntry : IndexWave.getIndexEntries(indexWave)) {
+      ClientWaveView wave = backend.getWave(indexEntry.getWaveId());
+      markAsRead(wave);
+    }
+  }
+
   @Override
   public List<String> render(int width, int height) {
-    List<IndexEntry> indexEntries = ClientUtils.getIndexEntries(indexWave);
+    List<IndexEntry> indexEntries = IndexWave.getIndexEntries(indexWave);
     List<String> lines = Lists.newArrayList();
 
     for (int i = 0; i < indexEntries.size(); i++) {
@@ -76,8 +114,6 @@ public class ScrollableInbox extends ConsoleScrollable {
       if ((wave == null) || (ClientUtils.getConversationRoot(wave) == null)) {
         line.append("...");
       } else {
-        HashedVersion version = wave.getWaveletVersion(ClientUtils.getConversationRootId(wave));
-
         line.append(String.format("%4d) ", i));
         line.append(String.format("(%s) ", wave.getWaveId().getId()));
         line.append(ConsoleUtils.renderNice(indexEntries.get(i).getDigest()));
@@ -85,8 +121,8 @@ public class ScrollableInbox extends ConsoleScrollable {
         if (wave == openWave) {
           ansiCodes.add(ConsoleUtils.ANSI_BLUE_BG);
           ansiCodes.add(ConsoleUtils.ANSI_WHITE_FG);
-          lastSeenVersions.put(wave, version);
-        } else if (!version.equals(lastSeenVersions.get(wave))) {
+          markAsRead(wave);
+        } else if (!isRead(wave)) {
           ansiCodes.add(ConsoleUtils.ANSI_BOLD);
         }
       }
@@ -107,19 +143,5 @@ public class ScrollableInbox extends ConsoleScrollable {
    */
   public void setOpenWave(ClientWaveView openWave) {
     this.openWave = openWave;
-  }
-
-  /**
-   * Update the hashed versions for all waves.
-   *
-   * TODO: use a wavelet to store unread status
-   */
-  public void updateHashedVersions() {
-    for (IndexEntry indexEntry : ClientUtils.getIndexEntries(indexWave)) {
-      ClientWaveView wave = backend.getWave(indexEntry.getWaveId());
-      if ((wave != null) && (ClientUtils.getConversationRoot(wave) != null)) {
-        lastSeenVersions.put(wave, wave.getWaveletVersion(ClientUtils.getConversationRootId(wave)));
-      }
-    }
   }
 }

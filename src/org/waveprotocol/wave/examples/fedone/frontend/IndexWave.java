@@ -26,9 +26,13 @@ import com.google.common.collect.Lists;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientUtils;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.ClientWaveView;
+import org.waveprotocol.wave.examples.fedone.waveclient.common.IndexEntry;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
+import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -39,6 +43,7 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 import java.util.List;
 
@@ -50,8 +55,9 @@ import java.util.List;
  * TODO(anorth): replace this with a more canonical use of the wave model.
  *
  * @author anorth@google.com (Alex North)
+ * @author mk.mateng@gmail.com (Michael Kuntzman)
  */
-final class IndexWave {
+public final class IndexWave {
 
   @VisibleForTesting
   static final ParticipantId DIGEST_AUTHOR = new ParticipantId("digest-author");
@@ -59,33 +65,29 @@ final class IndexWave {
   static final String DIGEST_DOCUMENT_ID = "digest";
 
   /**
-   * Constructs the name of the index wave wavelet that refers to the specified
-   * wave.
-   *
-   * @param waveId referent wave id
-   * @return WaveletName of the index wave wavelet referring to waveId
-   * @throws IllegalArgumentException if waveId is the WaveId of the index wave
+   * @return true if the specified wave can be indexed in an index wave.
    */
-  static WaveletName indexWaveletNameFor(WaveId waveId) {
-    Preconditions.checkArgument(!waveId.equals(INDEX_WAVE_ID),
-        "There is no index wave wavelet for the index wave itself: %s", waveId);
-    return WaveletName.of(INDEX_WAVE_ID, WaveletId.deserialise(waveId.serialise()));
+  static boolean canBeIndexed(WaveId waveId) {
+    return !isIndexWave(waveId);
   }
 
   /**
-   * Extracts the wave id referred to by an index wavelet name.
+   * @return true if the specified wavelet name can be encoded into an index
+   *         wave.
    */
-  static WaveId indexWaveletWaveId(WaveletName indexWaveletName) {
-    Preconditions.checkArgument(indexWaveletName.waveId.equals(INDEX_WAVE_ID), "Expected wave id "
-        + INDEX_WAVE_ID + ", got " + indexWaveletName.waveId);
-    return WaveId.deserialise(indexWaveletName.waveletId.serialise());
+  public static boolean canBeIndexed(WaveletName waveletName) {
+    WaveId waveId = waveletName.waveId;
+    WaveletId waveletId = waveletName.waveletId;
+
+    return canBeIndexed(waveId) && waveId.getDomain().equals(waveletId.getDomain())
+        && IdUtil.isConversationRootWaveletId(waveletId);
   }
 
   /**
    * Constructs the deltas that should be applied to and index wave wavelet when
    * the corresponding original wavelet receives deltas digest changes.
    *
-   * The returned deltas will have the same effect on the participants as the
+   *  The returned deltas will have the same effect on the participants as the
    * original deltas. The effect of the returned deltas on the document's digest
    * are purely a function of oldDigest and newDigest, which should represent
    * the change implied by deltas.
@@ -95,10 +97,9 @@ final class IndexWave {
    * @return deltas to apply to the index wavelet to achieve the same change in
    *         participants, and the specified change in digest text
    */
-  static DeltaSequence createIndexDeltas(long targetVersion,
-      DeltaSequence deltas, String oldDigest, String newDigest) {
-    ProtocolWaveletDelta digestDelta =
-      createDigestDelta(targetVersion, oldDigest, newDigest);
+  static DeltaSequence createIndexDeltas(
+      long targetVersion, DeltaSequence deltas, String oldDigest, String newDigest) {
+    ProtocolWaveletDelta digestDelta = createDigestDelta(targetVersion, oldDigest, newDigest);
     if (digestDelta != null) {
       targetVersion += digestDelta.getOperationCount();
     }
@@ -111,18 +112,87 @@ final class IndexWave {
   }
 
   /**
-   * Constructs a delta with one op which transforms the digest document from one digest
-   * string to another.
+   * Retrieve a list of index entries from an index wave.
+   *
+   * @param indexWave the wave to retrieve the index from.
+   * @return list of index entries.
+   */
+  public static List<IndexEntry> getIndexEntries(ClientWaveView indexWave) {
+    List<IndexEntry> indexEntries = Lists.newArrayList();
+
+    for (CoreWaveletData wavelet : indexWave.getWavelets()) {
+      WaveId waveId = waveIdFromIndexWavelet(wavelet);
+      String digest = ClientUtils.collateText(wavelet.getDocuments().values());
+      indexEntries.add(new IndexEntry(waveId, digest));
+    }
+
+    return indexEntries;
+  }
+
+  /**
+   * Constructs the name of the index wave wavelet that refers to the specified
+   * wave.
+   *
+   * @param waveId referent wave id
+   * @return WaveletName of the index wave wavelet referring to waveId
+   * @throws IllegalArgumentException if the wave cannot be indexed
+   */
+  public static WaveletName indexWaveletNameFor(WaveId waveId) {
+    Preconditions.checkArgument(canBeIndexed(waveId), "Wave %s cannot be indexed", waveId);
+    return WaveletName.of(INDEX_WAVE_ID, WaveletId.deserialise(waveId.serialise()));
+  }
+
+  /**
+   * @return true if the specified wave is an index wave.
+   */
+  public static boolean isIndexWave(ClientWaveView wave) {
+    return isIndexWave(wave.getWaveId());
+  }
+
+  /**
+   * @return true if the specified wave ID is an index wave ID.
+   */
+  public static boolean isIndexWave(WaveId waveId) {
+    return waveId.equals(INDEX_WAVE_ID);
+  }
+
+  /**
+   * Extracts the wave id referred to by an index wavelet's wavelet name.
+   *
+   * @param indexWavelet the index wavelet.
+   * @return the wave id.
+   * @throws IllegalArgumentException if the wavelet is not from an index wave.
+   */
+  static WaveId waveIdFromIndexWavelet(CoreWaveletData indexWavelet) {
+    return waveIdFromIndexWavelet(indexWavelet.getWaveletName());
+  }
+
+  /**
+   * Extracts the wave id referred to by an index wavelet name.
+   *
+   * @param indexWaveletName of the index wavelet.
+   * @return the wave id.
+   * @throws IllegalArgumentException if the wavelet is not from an index wave.
+   */
+  static WaveId waveIdFromIndexWavelet(WaveletName indexWaveletName) {
+    WaveId waveId = indexWaveletName.waveId;
+    Preconditions.checkArgument(isIndexWave(waveId), waveId + " is not an index wave");
+    return WaveId.deserialise(indexWaveletName.waveletId.serialise());
+  }
+
+  /**
+   * Constructs a delta with one op which transforms the digest document from
+   * one digest string to another.
    *
    * @return a delta, or null if no op is required
    */
-  private static ProtocolWaveletDelta createDigestDelta(long targetVersion, String oldDigest,
-      String newDigest) {
+  private static ProtocolWaveletDelta createDigestDelta(
+      long targetVersion, String oldDigest, String newDigest) {
     if (oldDigest.equals(newDigest)) {
       return null;
     } else {
-      CoreWaveletOperation op = new CoreWaveletDocumentOperation(DIGEST_DOCUMENT_ID,
-          createEditOp(oldDigest, newDigest));
+      CoreWaveletOperation op =
+          new CoreWaveletDocumentOperation(DIGEST_DOCUMENT_ID, createEditOp(oldDigest, newDigest));
       CoreWaveletDelta indexDelta = new CoreWaveletDelta(DIGEST_AUTHOR, ImmutableList.of(op));
       return CoreWaveletOperationSerializer.serialize(indexDelta,
           HashedVersion.unsigned(targetVersion), HashedVersion.unsigned(targetVersion + 1));
@@ -146,12 +216,12 @@ final class IndexWave {
   }
 
   /** Extracts participant change operations from a delta sequence. */
-  private static DeltaSequence createParticipantDeltas(long version,
-      Iterable<ProtocolWaveletDelta> deltas) {
+  private static DeltaSequence createParticipantDeltas(
+      long version, Iterable<ProtocolWaveletDelta> deltas) {
     List<ProtocolWaveletDelta> participantDeltas = Lists.newArrayList();
     for (ProtocolWaveletDelta protoDelta : deltas) {
       Pair<CoreWaveletDelta, HashedVersion> deltaAndVersion =
-        CoreWaveletOperationSerializer.deserialize(protoDelta);
+          CoreWaveletOperationSerializer.deserialize(protoDelta);
       CoreWaveletDelta delta = deltaAndVersion.first;
       List<CoreWaveletOperation> participantOps = Lists.newArrayList();
       for (CoreWaveletOperation op : delta.getOperations()) {
@@ -161,9 +231,9 @@ final class IndexWave {
       }
       if (!participantOps.isEmpty()) {
         CoreWaveletDelta indexDelta = new CoreWaveletDelta(delta.getAuthor(), participantOps);
-        participantDeltas.add(CoreWaveletOperationSerializer.serialize(indexDelta,
-            HashedVersion.unsigned(version),
-            HashedVersion.unsigned(version + indexDelta.getOperations().size())));
+        participantDeltas.add(
+            CoreWaveletOperationSerializer.serialize(indexDelta, HashedVersion.unsigned(version),
+                HashedVersion.unsigned(version + indexDelta.getOperations().size())));
         version += indexDelta.getOperations().size();
       }
     }
@@ -173,8 +243,8 @@ final class IndexWave {
 
   /**
    * Determines the length (in number of characters) of the longest common
-   * prefix of the specified two CharSequences. E.g. ("", "foo") -> 0.
-   * ("foo", "bar) -> 0. ("foo", "foobar") -> 3. ("bar", "baz") -> 2.
+   * prefix of the specified two CharSequences. E.g. ("", "foo") -> 0. ("foo",
+   * "bar) -> 0. ("foo", "foobar") -> 3. ("bar", "baz") -> 2.
    *
    * (Does this utility method already exist anywhere?)
    *

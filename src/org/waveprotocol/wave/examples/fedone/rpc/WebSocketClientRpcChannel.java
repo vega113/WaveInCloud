@@ -29,9 +29,9 @@ import java.util.concurrent.ExecutorService;
 /**
  * WebSocketClientRpcChannel starts a WebSocketClientChannel and returns it.
  */
-public class WebSocketClientRpcChannel extends ClientRpcChannel {
+public class WebSocketClientRpcChannel extends ClientRpcChannelImpl {
   private static final Log LOG = Log.get(ClientRpcChannel.class);
-  
+
   public WebSocketClientRpcChannel(SocketAddress serverAddress, ExecutorService threadPool) 
       throws IOException {
     super(serverAddress, threadPool);
@@ -41,17 +41,7 @@ public class WebSocketClientRpcChannel extends ClientRpcChannel {
       throws IOException {
     super(serverAddress);
   }
-  
-  /**
-   * Creates, starts, and returns a new WebSocketClientChannel connected to the given 
-   * address, reading in the given thread pool, with incoming messages handled by the
-   * given callback.
-   * 
-   * @param serverAddress Which websocket server to connect to.
-   * @param threadPool The thread pool to create a thread to read on.
-   * @param callback The callback to handle incoming messages.
-   * @return a WebSocketClientChannel already reading
-   */
+
   @Override
   protected MessageExpectingChannel startChannel(SocketAddress serverAddress, 
       ExecutorService threadPool, ProtoCallback callback) {
