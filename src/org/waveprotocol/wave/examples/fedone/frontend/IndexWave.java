@@ -41,7 +41,6 @@ import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
-import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
@@ -220,9 +219,7 @@ public final class IndexWave {
       long version, Iterable<ProtocolWaveletDelta> deltas) {
     List<ProtocolWaveletDelta> participantDeltas = Lists.newArrayList();
     for (ProtocolWaveletDelta protoDelta : deltas) {
-      Pair<CoreWaveletDelta, HashedVersion> deltaAndVersion =
-          CoreWaveletOperationSerializer.deserialize(protoDelta);
-      CoreWaveletDelta delta = deltaAndVersion.first;
+      CoreWaveletDelta delta = CoreWaveletOperationSerializer.deserialize(protoDelta).delta;
       List<CoreWaveletOperation> participantOps = Lists.newArrayList();
       for (CoreWaveletOperation op : delta.getOperations()) {
         if (op instanceof CoreAddParticipant || op instanceof CoreRemoveParticipant) {

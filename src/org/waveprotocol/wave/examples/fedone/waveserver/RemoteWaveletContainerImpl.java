@@ -28,6 +28,7 @@ import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
@@ -40,7 +41,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.util.Pair;
 
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider.HistoryResponseListener;
@@ -200,10 +200,12 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         LOG.info("Delta incoming: " + appliedDelta);
         ProtocolWaveletDelta actualDelta;
         try {
-          actualDelta = ProtocolWaveletDelta.parseFrom(appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
+          actualDelta = ProtocolWaveletDelta.parseFrom(
+              appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
           LOG.info("actual delta: " + actualDelta);
         } catch (InvalidProtocolBufferException e) {
-          e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+          //To change body of catch statement use File | Settings | File Templates.
+          e.printStackTrace();
         }
         pendingDeltas.add(appliedDelta);
       }
@@ -370,13 +372,12 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
         ProtocolWaveletDelta.getDefaultInstance(),
         appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
-    Pair<CoreWaveletDelta, HashedVersion> deltaAndVersion =
+    VersionedWaveletDelta deltaAndVersion =
         CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
     // Transform operations against earlier deltas, if necessary
-    VersionedWaveletDelta transformed =
-        maybeTransformSubmittedDelta(deltaAndVersion.first, deltaAndVersion.second);
-    if (transformed.version.equals(deltaAndVersion.second)) {
+    VersionedWaveletDelta transformed = maybeTransformSubmittedDelta(deltaAndVersion);
+    if (transformed.version.equals(deltaAndVersion.version)) {
       // No transformation took place.
       // As a sanity check, the hash from the applied delta should NOT be set (an optimisation, but
       // part of the protocol).

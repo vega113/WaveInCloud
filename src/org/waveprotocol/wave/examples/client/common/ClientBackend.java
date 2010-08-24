@@ -615,10 +615,8 @@ public class ClientBackend {
       Preconditions.checkArgument(!waveletUpdate.getAppliedDeltaList().isEmpty());
 
       for (ProtocolWaveletDelta protobufDelta : waveletUpdate.getAppliedDeltaList()) {
-        Pair<CoreWaveletDelta, HashedVersion> deltaAndVersion =
-            CoreWaveletOperationSerializer.deserialize(protobufDelta);
-        List<CoreWaveletOperation> ops = deltaAndVersion.first.getOperations();
-
+        List<CoreWaveletOperation> ops =
+            CoreWaveletOperationSerializer.deserialize(protobufDelta).delta.getOperations();
         for (CoreWaveletOperation op : ops) {
           try {
             op.apply(wavelet);

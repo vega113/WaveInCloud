@@ -36,7 +36,6 @@ import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
-import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Arrays;
@@ -72,13 +71,13 @@ public class WaveletOperationSerializerTest extends TestCase {
     ParticipantId author = new ParticipantId("kalman@google.com");
     HashedVersion hashedVersion = HashedVersion.UNSIGNED_VERSION_0;
     CoreWaveletDelta delta = new CoreWaveletDelta(author, ops);
-    ProtocolWaveletDelta serialized = CoreWaveletOperationSerializer.serialize(delta, hashedVersion, null);
-    Pair<CoreWaveletDelta, HashedVersion> deserialized = CoreWaveletOperationSerializer.deserialize(
-        serialized);
+    ProtocolWaveletDelta serialized =
+        CoreWaveletOperationSerializer.serialize(delta, hashedVersion, null);
+    VersionedWaveletDelta deserialized = CoreWaveletOperationSerializer.deserialize(serialized);
     assertEquals(hashedVersion.getVersion(), serialized.getHashedVersion().getVersion());
     assertTrue(Arrays.equals(hashedVersion.getHistoryHash(),
         serialized.getHashedVersion().getHistoryHash().toByteArray()));
-    assertDeepEquals(delta, deserialized.first);
+    assertDeepEquals(delta, deserialized.delta);
   }
 
   public void testNoOp() {

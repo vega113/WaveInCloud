@@ -48,7 +48,6 @@ import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
-import org.waveprotocol.wave.examples.fedone.common.TransformedDeltaComparator;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletListener;
@@ -74,7 +73,6 @@ import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -189,11 +187,12 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenThenSendDeltas() {
     OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, null, listener);
+    clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, null,
+        listener);
     clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "",
         null /* channelid */);
-    verify(listener).onUpdate(WAVELET_NAME, null, DELTAS, DELTAS.getEndVersion(), null, false, null);
-
+    verify(listener).onUpdate(WAVELET_NAME, null, DELTAS, DELTAS.getEndVersion(), null, false,
+        null);
   }
 
   /**
@@ -325,12 +324,9 @@ public class ClientFrontendImplTest extends TestCase {
     assertTrue(!oldListener.deltas.isEmpty());
 
     // TODO(tobiast): Let getHistory() return a DeltaSequence, and simplify this test
-    NavigableSet<ProtocolWaveletDelta> expectedDeltas = new TreeSet<ProtocolWaveletDelta>(
-        TransformedDeltaComparator.INSTANCE);
-    expectedDeltas.addAll(ImmutableList.copyOf(oldListener.deltas));
     ProtocolHashedVersion startVersion = serialize(VERSION_0);
     when(waveletProvider.getHistory(WAVELET_NAME, startVersion,
-        oldListener.endVersion)).thenReturn(expectedDeltas);
+        oldListener.endVersion)).thenReturn(oldListener.deltas);
 
     UpdateListener newListener = new UpdateListener();
     clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, null,
@@ -340,7 +336,7 @@ public class ClientFrontendImplTest extends TestCase {
     assertEquals(oldListener.endVersion, newListener.endVersion);
 
     when(waveletProvider.getHistory(WAVELET_NAME, serialize(VERSION_0), oldListener.endVersion))
-        .thenReturn(expectedDeltas);
+        .thenReturn(oldListener.deltas);
     HashedVersion version = deserialize(oldListener.endVersion);
     oldListener.clear();
     newListener.clear();

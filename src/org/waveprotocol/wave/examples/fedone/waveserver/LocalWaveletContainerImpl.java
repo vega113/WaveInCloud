@@ -25,6 +25,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -34,7 +35,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.util.Pair;
 
 /**
  * A local wavelet may be updated by submits. The local wavelet will perform
@@ -90,16 +90,15 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
         ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
-    Pair<CoreWaveletDelta, HashedVersion> deltaAndVersion =
+    VersionedWaveletDelta deltaAndVersion =
       CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
-    if (deltaAndVersion.first.getOperations().isEmpty()) {
-      LOG.warning("No operations to apply at version " + deltaAndVersion.second);
+    if (deltaAndVersion.delta.getOperations().isEmpty()) {
+      LOG.warning("No operations to apply at version " + deltaAndVersion.version);
       throw new EmptyDeltaException();
     }
 
-    VersionedWaveletDelta transformed =
-        maybeTransformSubmittedDelta(deltaAndVersion.first, deltaAndVersion.second);
+    VersionedWaveletDelta transformed = maybeTransformSubmittedDelta(deltaAndVersion);
 
     // This is always false right now because the current algorithm doesn't transform ops away.
     if (transformed.delta.getOperations().isEmpty()) {

@@ -34,9 +34,37 @@ import java.util.Arrays;
  *
  *
  */
-public final class HashedVersion {
+public final class HashedVersion implements Comparable<HashedVersion> {
   /** Same as unsigned(0). */
   public static final HashedVersion UNSIGNED_VERSION_0 = unsigned(0);
+
+  /**
+   * Constructs an unhashed (i.e. unsigned) version with only a version number
+   * and some fake hash. This may be used when we don't rely on hashes
+   * for authentication and error checking.
+   */
+  @VisibleForTesting
+  public static HashedVersion unsigned(long version) {
+    return new HashedVersion(version, new byte[0]);
+  }
+
+  /**
+   * Lexicographic comparison of two byte arrays.
+   *
+   * @return -1, 0, or 1
+   */
+  private static int compare(byte[] first, byte[] second) {
+    if (first == second) {
+      return 0; // no need to compare contents
+    }
+    for (int i = 0; i < first.length && i < second.length; i++) {
+      if (first[i] != second[i]) {
+        return Integer.signum(first[i] - second[i]);
+      }
+    }
+    // Bytes are equal up to the length of the shortest array. Then longest is bigger.
+    return Integer.signum(first.length - second.length);
+  }
 
   private final long version;
   private final byte[] historyHash;
@@ -51,13 +79,15 @@ public final class HashedVersion {
   }
 
   /**
-   * Constructs an unhashed (i.e. unsigned) version with only a version number
-   * and some fake hash. This may be used when we don't rely on hashes
-   * for authentication and error checking.
+   * {@inheritDoc}
+   *
+   * Lexicographic comparison of version and historyHash.
    */
-  @VisibleForTesting
-  public static HashedVersion unsigned(long version) {
-    return new HashedVersion(version, new byte[0]);
+  @Override
+  public int compareTo(HashedVersion other) {
+    return version != other.version
+        ? Long.signum(version - other.version)
+        : compare(historyHash, other.historyHash);
   }
 
   /** The number of ops that lead to this version. */

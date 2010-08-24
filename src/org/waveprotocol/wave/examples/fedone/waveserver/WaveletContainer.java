@@ -24,8 +24,8 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.NavigableSet;
 
 /**
  * Interface for a container class for a Wavelet's current state as well as its
@@ -60,10 +60,11 @@ abstract interface WaveletContainer {
    * @param versionStart start version (inclusive), minimum 0.
    * @param versionEnd end version (exclusive).
    * @throws WaveletStateException if the wavelet is in a state unsuitable for retrieving history.
-   * @return serialised {@code ProtocolAppliedWaveletDelta}s in the range as requested. Note that
-   *         if a delta straddles one of the requested version boundaries, it will be included.
+   * @return serialised {@code ProtocolAppliedWaveletDelta}s in the range as
+   *         requested, ordered by applied version. If a delta straddles
+   *         one of the requested version boundaries, it will be included.
    */
-  NavigableSet<ByteStringMessage<ProtocolAppliedWaveletDelta>> requestHistory(
+  Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> requestHistory(
       ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd)
       throws WaveletStateException;
 
@@ -75,10 +76,11 @@ abstract interface WaveletContainer {
    * @param versionEnd end version (exclusive).
    * @throws AccessControlException if the hashedVersion does not match that of the wavelet history.
    * @throws WaveletStateException if the wavelet is in a state unsuitable for retrieving history.
-   * @return deltas in the range as requested, or null if there was an error. Note that
-   *         if a delta straddles one of the requested version boundaries, it will be included.
+   * @return deltas in the range as requested, ordered by applied version,
+   *         or null if there was an error. If a delta straddles
+   *         one of the requested version boundaries, it will be included.
    */
-  NavigableSet<ProtocolWaveletDelta> requestTransformedHistory(ProtocolHashedVersion versionStart,
+  Collection<ProtocolWaveletDelta> requestTransformedHistory(ProtocolHashedVersion versionStart,
       ProtocolHashedVersion versionEnd) throws AccessControlException, WaveletStateException;
 
   /**

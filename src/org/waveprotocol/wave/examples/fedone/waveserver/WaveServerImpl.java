@@ -59,9 +59,9 @@ import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener.Factory;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -291,7 +291,7 @@ public class WaveServerImpl implements WaveServer {
             waveletName);
       } else {
         try {
-          NavigableSet<ByteStringMessage<ProtocolAppliedWaveletDelta>> deltaHistory =
+          Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> deltaHistory =
               wc.requestHistory(startVersion, endVersion);
           List<ByteString> deltaHistoryBytes = Lists.newArrayList();
           for (ByteStringMessage<ProtocolAppliedWaveletDelta> d : deltaHistory) {
@@ -373,14 +373,14 @@ public class WaveServerImpl implements WaveServer {
   // -------------------------------------------------------------------------------------------
 
   @Override
-  public NavigableSet<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
+  public Collection<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
       ProtocolHashedVersion startVersion, ProtocolHashedVersion endVersion) {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
       LOG.info("Client request for history made for non-existent wavelet: " + waveletName);
       return null;
     } else {
-      NavigableSet<ProtocolWaveletDelta> deltaHistory = null;
+      Collection<ProtocolWaveletDelta> deltaHistory = null;
       try {
         deltaHistory = wc.requestTransformedHistory(startVersion, endVersion);
       } catch (AccessControlException e) {

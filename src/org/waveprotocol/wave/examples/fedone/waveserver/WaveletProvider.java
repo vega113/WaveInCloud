@@ -22,7 +22,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
-import java.util.NavigableSet;
+import java.util.Collection;
 
 /**
  * Interface that's used by the WaveView classes to access the waveserver.
@@ -53,10 +53,11 @@ public interface WaveletProvider {
    * @param waveletName name of wavelet.
    * @param versionStart start version (inclusive), minimum 0.
    * @param versionEnd end version (exclusive).
-   * @return deltas in the range as requested, or null if there was an error. Note that
-   *         if a delta straddles one of the requested version boundaries, it will be included.
+   * @return deltas in the range as requested, ordered by applied version,
+   *         or null if there was an error. If a delta straddles
+   *         one of the requested version boundaries, it will be included.
    */
-  NavigableSet<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
+  Collection<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
       ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd);
 
   /**
