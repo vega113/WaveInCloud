@@ -72,6 +72,7 @@
   </target>
 
   <target name="compile" depends="proto_compile">
+    <depend srcdir="${src}" destdir="${core.classes}" closure="yes"/>
     <javac sourcepath="" srcdir="${src}" destdir="${core.classes}" debug="on"
         target="1.5">
       <include name="**/*.java"/>
@@ -93,6 +94,11 @@
   </target>
 
   <target name="compile_tests" depends="compile" description="Compiles all the unit tests in the project">
+    <depend srcdir="${test}" destdir="${test.classes}" closure="yes">
+      <classpath>
+        <pathelement location="${core.classes}"/>
+      </classpath>
+    </depend>
     <javac sourcepath="" srcdir="${test}" destdir="${test.classes}" debug="on"
         target="1.5">
       <include name="**/*.java"/>
