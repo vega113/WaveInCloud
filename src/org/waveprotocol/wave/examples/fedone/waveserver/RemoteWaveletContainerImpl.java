@@ -204,7 +204,6 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
               appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
           LOG.info("actual delta: " + actualDelta);
         } catch (InvalidProtocolBufferException e) {
-          //To change body of catch statement use File | Settings | File Templates.
           e.printStackTrace();
         }
         pendingDeltas.add(appliedDelta);
