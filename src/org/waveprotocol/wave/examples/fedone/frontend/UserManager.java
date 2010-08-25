@@ -194,8 +194,9 @@ final class UserManager {
         Set<Long> mySubmits = submittedVersions.get(waveletName);
 
         for (ProtocolWaveletDelta delta : deltas) {
-          if (mySubmits.contains(delta.getPostHashedVersion().getVersion())) {
-            submittedVersions.remove(waveletName, delta.getPostHashedVersion().getVersion());
+          long deltaEndVersion = delta.getHashedVersion().getVersion() + delta.getOperationCount();
+          if (mySubmits.contains(deltaEndVersion)) {
+            submittedVersions.remove(waveletName, deltaEndVersion);
           } else {
             newDeltas.add(delta);
           }

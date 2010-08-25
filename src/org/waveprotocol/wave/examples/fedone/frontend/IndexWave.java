@@ -194,7 +194,7 @@ public final class IndexWave {
           new CoreWaveletDocumentOperation(DIGEST_DOCUMENT_ID, createEditOp(oldDigest, newDigest));
       CoreWaveletDelta indexDelta = new CoreWaveletDelta(DIGEST_AUTHOR, ImmutableList.of(op));
       return CoreWaveletOperationSerializer.serialize(indexDelta,
-          HashedVersion.unsigned(targetVersion), HashedVersion.unsigned(targetVersion + 1));
+          HashedVersion.unsigned(targetVersion));
     }
   }
 
@@ -229,8 +229,7 @@ public final class IndexWave {
       if (!participantOps.isEmpty()) {
         CoreWaveletDelta indexDelta = new CoreWaveletDelta(delta.getAuthor(), participantOps);
         participantDeltas.add(
-            CoreWaveletOperationSerializer.serialize(indexDelta, HashedVersion.unsigned(version),
-                HashedVersion.unsigned(version + indexDelta.getOperations().size())));
+            CoreWaveletOperationSerializer.serialize(indexDelta, HashedVersion.unsigned(version)));
         version += indexDelta.getOperations().size();
       }
     }

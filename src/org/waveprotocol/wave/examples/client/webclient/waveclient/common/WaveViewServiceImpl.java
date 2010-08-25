@@ -152,7 +152,6 @@ public class WaveViewServiceImpl implements WaveViewService {
     // which the fedone server doesn't support at all.
     waveletFilter = new Pair<IdFilter, OpenCallback>(filter, callback);
 
-
     // knownWavelets is an optimisation in the real ViewServer protocol, not used here.
 
     // TODO(arb): we need to send a wavelet snapshot for any wavelets we already have in cache.
@@ -189,7 +188,8 @@ public class WaveViewServiceImpl implements WaveViewService {
     } else {
       waveletVersion = versionToHistoryHashMap.get(waveletName).get(delta.getVersion());
     }
-    LOG.severe("VERSION IN SUBMIT IS " + waveletVersion.getVersion() + " " + waveletVersion.getHistoryHash());
+    LOG.severe("VERSION IN SUBMIT IS " + waveletVersion.getVersion() + " " +
+        waveletVersion.getHistoryHash());
     ProtocolSubmitRequest submitRequest = ProtocolSubmitRequest.create();
     String waveletNameString;
     try {
@@ -214,7 +214,7 @@ public class WaveViewServiceImpl implements WaveViewService {
       public void run(final ProtocolSubmitResponse response) {
         updateVersionMap(waveletName, response.getHashedVersionAfterApplication());
         callback.onSuccess(
-            DistinctVersion.of((int) response.getHashedVersionAfterApplication().getVersion(),
+            DistinctVersion.of((long) response.getHashedVersionAfterApplication().getVersion(),
                 Random.nextInt()), response.getOperationsApplied(), null, ResponseCode.OK);
       }
     });
@@ -271,21 +271,24 @@ public class WaveViewServiceImpl implements WaveViewService {
       final ProtocolHashedVersion commitNotice, final ProtocolHashedVersion resultingVersion,
       String channelId) {
     final long version = (long) resultingVersion.getVersion();
-    final DistinctVersion signature =
-      DistinctVersion.of(version, Random.nextInt());
-    
+    final DistinctVersion signature = DistinctVersion.of(version, Random.nextInt());
+
     ArrayList<Delta> deltaList = new ArrayList<Delta>();
-    for (ProtocolWaveletDelta protobufDelta : protobufDeltaList) {
-      WaveletOperationContext woc = new WaveletOperationContext(new ParticipantId(protobufDelta.getAuthor()),
-          Constants.NO_TIMESTAMP, 1);
-      updateVersionMap(waveletName, protobufDelta.getPostHashedVersion());
+    for (int i = 0; i < protobufDeltaList.size(); i++) {
+      ProtocolHashedVersion deltaEndVersion = (i < protobufDeltaList.size() - 1)
+          ? protobufDeltaList.get(i + 1).getHashedVersion()
+          : resultingVersion;
+      ProtocolWaveletDelta protobufDelta = protobufDeltaList.get(i);
+      WaveletOperationContext woc =
+          new WaveletOperationContext(new ParticipantId(protobufDelta.getAuthor()),
+              Constants.NO_TIMESTAMP, 1);
       Delta delta =
           WaveletOperationSerializer.deserialize(protobufDelta,
-              WaveletOperationSerializer.deserialize(protobufDelta.getPostHashedVersion()), woc);
+              WaveletOperationSerializer.deserialize(deltaEndVersion), woc);
+      updateVersionMap(waveletName, deltaEndVersion);
       deltaList.add(delta);
     }
     LOG.info("Publishing deltas: "+deltaList.toString());
-
 
     final WebClientWaveViewUpdate deltaUpdate =
       new WebClientWaveViewUpdate().setWaveletId(waveletName.waveletId)
@@ -313,7 +316,6 @@ public class WaveViewServiceImpl implements WaveViewService {
    * @param waveletUpdate the update message
    */
   void publishSnapshot(final WaveletName waveletName, final ProtocolWaveletUpdate waveletUpdate) {
-
     final ObservableWaveletData waveletSnapshot = deserializeSnapshot(waveletName, waveletUpdate);
     LOG.info("publishing snapshot for " + waveletName);
     final long version = (long) waveletUpdate.getResultingVersion().getVersion();
@@ -325,7 +327,7 @@ public class WaveViewServiceImpl implements WaveViewService {
                     Random.nextInt()));
     if (waveletUpdate.hasCommitNotice()) {
       snapshotUpdate.setLastCommittedVersion(
-                DistinctVersion.of((long) waveletUpdate.getCommitNotice().getVersion(),
+          DistinctVersion.of((long) waveletUpdate.getCommitNotice().getVersion(),
                     Random.nextInt()));
     } else {
       LOG.severe("snapshot was missing commit_notice. Things won't work right.");
@@ -345,8 +347,7 @@ public class WaveViewServiceImpl implements WaveViewService {
   private void updateVersionMap(final WaveletName waveletName,
       final ProtocolHashedVersion version) {
     if (!versionToHistoryHashMap.containsKey(waveletName)) {
-      versionToHistoryHashMap.put(waveletName,
-          new HashMap<Long, ProtocolHashedVersion>());
+      versionToHistoryHashMap.put(waveletName, new HashMap<Long, ProtocolHashedVersion>());
     }
     versionToHistoryHashMap.get(waveletName).put((long) version.getVersion(), version);
   }
@@ -401,7 +402,8 @@ public class WaveViewServiceImpl implements WaveViewService {
     clientBackend.sendRequest(openRequest, null);
   }
 
-  private ObservableWaveletData deserializeSnapshot(WaveletName waveletName, ProtocolWaveletUpdate update) {
+  private ObservableWaveletData deserializeSnapshot(WaveletName waveletName,
+      ProtocolWaveletUpdate update) {
     final ParticipantId creator = new ParticipantId(update.getSnapshot().getParticipantId(0));
     long currentTimeMillis = System.currentTimeMillis();
 

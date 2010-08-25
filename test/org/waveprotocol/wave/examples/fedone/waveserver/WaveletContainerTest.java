@@ -104,11 +104,11 @@ public class WaveletContainerTest extends TestCase {
 
 
     addParticipantDelta =
-        serialize(new CoreWaveletDelta(author, addParticipantOps), version0, null);
+        serialize(new CoreWaveletDelta(author, addParticipantOps), version0);
     removeParticipantDelta =
-        serialize(new CoreWaveletDelta(author, removeParticipantOps), version0, null);
+        serialize(new CoreWaveletDelta(author, removeParticipantOps), version0);
     doubleRemoveParticipantDelta =
-        serialize(new CoreWaveletDelta(author, doubleRemoveParticipantOps), version0, null);
+        serialize(new CoreWaveletDelta(author, doubleRemoveParticipantOps), version0);
   }
 
   // Tests
@@ -137,7 +137,7 @@ public class WaveletContainerTest extends TestCase {
     localWavelet.submitRequest(waveletName, addDelta);
     assertEquals(localWavelet.getCurrentVersion().getVersion(), 2);
     assertTrue(localWavelet.isDeltaSigner(
-        serialize(localWavelet.getCurrentVersion()),fakeSigner1));
+        serialize(localWavelet.getCurrentVersion()), fakeSigner1));
     assertFalse(localWavelet.isDeltaSigner(
         serialize(localWavelet.getCurrentVersion()), fakeSigner2));
 

@@ -55,6 +55,7 @@ import java.util.Map;
  *
  */
 public class CoreWaveletOperationSerializer {
+
   private CoreWaveletOperationSerializer() {
   }
 
@@ -64,22 +65,18 @@ public class CoreWaveletOperationSerializer {
    *
    * @param waveletDelta to serialize
    * @param version version at which the delta applies
-   * @param hashedVersionAfterApplication version after the delta is applied
    * @return serialized protocol buffer wavelet delta
    */
-  public static ProtocolWaveletDelta serialize(CoreWaveletDelta waveletDelta, HashedVersion version,
-     HashedVersion hashedVersionAfterApplication) {
+  public static ProtocolWaveletDelta serialize(CoreWaveletDelta waveletDelta,
+      HashedVersion version) {
    ProtocolWaveletDelta.Builder protobufDelta = ProtocolWaveletDelta.newBuilder();
 
    for (CoreWaveletOperation waveletOp : waveletDelta.getOperations()) {
      protobufDelta.addOperation(serialize(waveletOp));
    }
-
    protobufDelta.setAuthor(waveletDelta.getAuthor().getAddress());
    protobufDelta.setHashedVersion(serialize(version));
-   if (hashedVersionAfterApplication != null) {
-     protobufDelta.setPostHashedVersion(serialize(hashedVersionAfterApplication));
-   }
+
    return protobufDelta.build();
   }
 
@@ -113,7 +110,6 @@ public class CoreWaveletOperationSerializer {
 
     return protobufOp.build();
   }
-
 
   /**
    * Serialize a {@link DocOp} as a {@link ProtocolDocumentOperation}.

@@ -59,10 +59,8 @@ public class DeltaSequenceTest extends TestCase {
     CoreWaveletDelta delta = new CoreWaveletDelta(USER, ops);
     CoreWaveletDelta delta2 = new CoreWaveletDelta(USER, ops);
     protoDeltas = ImmutableList.of(
-        serialize(delta, HashedVersion.unsigned(START_VERSION),
-                  HashedVersion.unsigned(START_VERSION + ops.size())),
-        serialize(delta, HashedVersion.unsigned(START_VERSION + ops.size()),
-                  HashedVersion.unsigned(START_VERSION + ops.size() + ops.size())));
+        serialize(delta, HashedVersion.unsigned(START_VERSION)),
+        serialize(delta, HashedVersion.unsigned(START_VERSION + ops.size())));
     protoEndVersion = serialize(HashedVersion.unsigned(START_VERSION + 2 * ops.size()));
   }
 

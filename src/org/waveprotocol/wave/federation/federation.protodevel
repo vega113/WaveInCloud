@@ -65,14 +65,6 @@ message ProtocolWaveletDelta {
    *  delta.addressPath = ["peter@initech-corp.com", "wave-authors@acmewave.com"]
    */
   repeated string address_path = 4;
-
-  /*
-   * The version of the wavelet after this delta is applied. Only used in
-   * client-server protocol.
-   * TODO(arb): not needed in the federation protocol. Consider whether
-   * we want to include it as an optional field for validation purposes?
-   */
-   optional ProtocolHashedVersion post_hashed_version = 5;
 }
 
 /**

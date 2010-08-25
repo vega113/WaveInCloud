@@ -399,7 +399,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
         appliedDelta.getByteArray(), currentVersion, operationsApplied);
 
     ProtocolWaveletDelta transformedProtocolDelta =
-        CoreWaveletOperationSerializer.serialize(transformedDelta, currentVersion, newVersion);
+        CoreWaveletOperationSerializer.serialize(transformedDelta, currentVersion);
     transformedDeltas.put(currentVersion, transformedProtocolDelta);
     deserializedTransformedDeltas.put(currentVersion, transformedDelta);
     appliedDeltas.add(appliedDelta);

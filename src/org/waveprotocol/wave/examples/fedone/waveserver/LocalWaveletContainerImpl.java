@@ -107,8 +107,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       // applyWaveletOperations(), because that will throw EmptyDeltaException, or
       // commitAppliedDelta(), because empty deltas cannot be part of the delta history.
       return new DeltaApplicationResult(buildAppliedDelta(signedDelta, transformed),
-          CoreWaveletOperationSerializer.serialize(transformed.delta, transformed.version,
-              transformed.version),
+          CoreWaveletOperationSerializer.serialize(transformed.delta, transformed.version),
           CoreWaveletOperationSerializer.serialize(transformed.version));
     }
 
@@ -124,8 +123,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       HashedVersion hashedVersionAfterApplication = HASHED_HISTORY_VERSION_FACTORY.create(
         appliedDelta.getByteArray(), transformed.version, transformed.delta.getOperations().size());
       return new DeltaApplicationResult(appliedDelta,
-          CoreWaveletOperationSerializer.serialize(transformed.delta, transformed.version,
-              hashedVersionAfterApplication),
+          CoreWaveletOperationSerializer.serialize(transformed.delta, transformed.version),
           CoreWaveletOperationSerializer.serialize(hashedVersionAfterApplication));
     }
 

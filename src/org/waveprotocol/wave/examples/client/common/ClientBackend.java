@@ -518,7 +518,7 @@ public class ClientBackend {
 
     ClientWaveView wave = waves.get(waveletName.waveId);
     submitRequest.setDelta(CoreWaveletOperationSerializer.serialize(delta,
-        wave.getWaveletVersion(waveletName.waveletId), null));
+        wave.getWaveletVersion(waveletName.waveletId)));
 
     final RpcController rpcController = rpcChannel.newRpcController();
 

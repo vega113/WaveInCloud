@@ -93,7 +93,7 @@ public class ClientFrontendImplTest extends TestCase {
   private static final HashedVersion VERSION_1 = HashedVersion.unsigned(1L);
   private static final ProtocolWaveletDelta DELTA =
       serialize(new CoreWaveletDelta(USER, ImmutableList.of(new CoreAddParticipant(USER))),
-      VERSION_0, VERSION_1);
+      VERSION_0);
   private static final DeltaSequence DELTAS =
       new DeltaSequence(ImmutableList.of(DELTA), serialize(HashedVersion.unsigned(1L)));
   private static final Map<String, BufferedDocOp> DOCUMENT_STATE = ImmutableMap.of();
@@ -214,7 +214,7 @@ public class ClientFrontendImplTest extends TestCase {
     List<? extends CoreWaveletOperation> ops = ImmutableList.of(CoreNoOp.INSTANCE);
     CoreWaveletDelta delta = new CoreWaveletDelta(USER, ops);
     DeltaSequence deltas = new DeltaSequence(
-        ImmutableList.of(serialize(delta, VERSION_0, VERSION_1)),
+        ImmutableList.of(serialize(delta, VERSION_0)),
         serialize(HashedVersion.unsigned(1L)));
     clientFrontend.participantUpdate(WAVELET_NAME, USER, deltas, true, false, "", "",
         null /* channelid */);
@@ -353,7 +353,7 @@ public class ClientFrontendImplTest extends TestCase {
       HashedVersion endVersion,
       CoreWaveletOperation...operations) {
     CoreWaveletDelta delta = new CoreWaveletDelta(author, ImmutableList.copyOf(operations));
-    return serialize(delta, startVersion, endVersion);
+    return serialize(delta, startVersion);
   }
 
   private void waveletUpdate(HashedVersion startVersion, HashedVersion endVersion,

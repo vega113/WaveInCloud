@@ -72,7 +72,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     HashedVersion hashedVersion = HashedVersion.UNSIGNED_VERSION_0;
     CoreWaveletDelta delta = new CoreWaveletDelta(author, ops);
     ProtocolWaveletDelta serialized =
-        CoreWaveletOperationSerializer.serialize(delta, hashedVersion, null);
+        CoreWaveletOperationSerializer.serialize(delta, hashedVersion);
     VersionedWaveletDelta deserialized = CoreWaveletOperationSerializer.deserialize(serialized);
     assertEquals(hashedVersion.getVersion(), serialized.getHashedVersion().getVersion());
     assertTrue(Arrays.equals(hashedVersion.getHistoryHash(),
