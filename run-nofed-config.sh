@@ -11,7 +11,7 @@ WAVE_SERVER_HOSTNAME=localhost
 WAVE_SERVER_PORT=9876
 
 # Host name and port the wave server's websocket frontend listens on
-WEBSOCKET_SERVER_HOSTNAME=localhost
+WEBSOCKET_SERVER_HOSTNAME=`hostname`
 WEBSOCKET_SERVER_PORT=9898
 
 # The version of FedOne, extracted from the build.properties file
