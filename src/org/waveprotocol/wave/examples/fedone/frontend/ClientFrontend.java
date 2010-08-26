@@ -20,7 +20,6 @@ package org.waveprotocol.wave.examples.fedone.frontend;
 import com.google.inject.internal.Nullable;
 
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -38,7 +37,7 @@ import java.util.Set;
  *
  * Provides updates for wavelets that a client has opened and access to.
  */
-public interface ClientFrontend extends WaveletListener {
+public interface ClientFrontend {
 
   /**
    * Listener provided to open requests.

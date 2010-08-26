@@ -50,7 +50,7 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletListener;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto;
@@ -74,7 +74,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Tests for {@link ClientFrontendImpl}.
@@ -105,8 +104,10 @@ public class ClientFrontendImplTest extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     waveletProvider = mock(WaveletProvider.class);
-    this.clientFrontend = new ClientFrontendImpl(new HashedVersionFactoryImpl(), waveletProvider);
-    verify(waveletProvider).setListener((WaveletListener) isNotNull());
+    WaveBus waveBus = mock(WaveBus.class);
+    this.clientFrontend = new ClientFrontendImpl(new HashedVersionFactoryImpl(), waveletProvider,
+        waveBus);
+    verify(waveBus).subscribe((WaveBus.Subscriber) isNotNull());
   }
 
   /**
@@ -150,7 +151,7 @@ public class ClientFrontendImplTest extends TestCase {
     verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, null);
 
     clientFrontend.waveletUpdate(
-        WAVELET_NAME, DELTAS, DELTAS.getEndVersion(), DOCUMENT_STATE, null /* channelid */);
+        WAVELET_NAME, DELTAS, DELTAS.getEndVersion(), DOCUMENT_STATE);
     verify(listener, Mockito.never()).onUpdate(eq(WAVELET_NAME),
         any(WaveletSnapshotAndVersions.class), anyListOf(ProtocolWaveletDelta.class),
         any(Proto.ProtocolHashedVersion.class), any(Proto.ProtocolHashedVersion.class),
@@ -165,7 +166,7 @@ public class ClientFrontendImplTest extends TestCase {
     SubmitResultListener listener = mock(SubmitResultListener.class);
     clientFrontend.submitRequest(WAVELET_NAME, DELTA, null /* channelid */, listener);
     verify(waveletProvider).submitRequest(
-        eq(WAVELET_NAME), eq(DELTA), (String) isNull(), (SubmitResultListener) isNotNull());
+        eq(WAVELET_NAME), eq(DELTA), (SubmitResultListener) isNotNull());
     verifyZeroInteractions(listener);
   }
 
@@ -189,8 +190,7 @@ public class ClientFrontendImplTest extends TestCase {
     OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, null,
         listener);
-    clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "",
-        null /* channelid */);
+    clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "");
     verify(listener).onUpdate(WAVELET_NAME, null, DELTAS, DELTAS.getEndVersion(), null, false,
         null);
   }
@@ -216,8 +216,7 @@ public class ClientFrontendImplTest extends TestCase {
     DeltaSequence deltas = new DeltaSequence(
         ImmutableList.of(serialize(delta, VERSION_0)),
         serialize(HashedVersion.unsigned(1L)));
-    clientFrontend.participantUpdate(WAVELET_NAME, USER, deltas, true, false, "", "",
-        null /* channelid */);
+    clientFrontend.participantUpdate(WAVELET_NAME, USER, deltas, true, false, "", "");
 
     verify(listener, Mockito.never()).onUpdate(eq(dummyWaveletName),
         any(WaveletSnapshotAndVersions.class), argThat(new IsNonEmptyList<ProtocolWaveletDelta>()),
@@ -361,8 +360,7 @@ public class ClientFrontendImplTest extends TestCase {
       CoreWaveletOperation... operations) {
     ProtocolWaveletDelta delta = makeDelta(USER, startVersion, endVersion, operations);
     DeltaSequence deltas = createUnsignedDeltas(ImmutableList.of(delta));
-    clientFrontend.waveletUpdate(
-        WAVELET_NAME, deltas, deltas.getEndVersion(), documentState, null /* channelid */);
+    clientFrontend.waveletUpdate(WAVELET_NAME, deltas, deltas.getEndVersion(), documentState);
   }
 
   private BufferedDocOp makeAppend(int retain, String text) {

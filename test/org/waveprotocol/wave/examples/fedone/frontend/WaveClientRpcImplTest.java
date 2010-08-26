@@ -39,11 +39,8 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
-import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 
 import java.util.Map;
 
@@ -168,8 +165,7 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
       }
     });
     Map<String, BufferedDocOp> documentState = ImmutableMap.of();
-    frontend.waveletUpdate(WAVELET_NAME, DELTAS, RESULTING_VERSION, documentState,
-        null /* channelId */);
+    frontend.waveletUpdate(WAVELET_NAME, DELTAS, RESULTING_VERSION, documentState);
     assertEquals(1, counter);
     assertFalse(controller.failed());
   }

@@ -21,15 +21,15 @@ import com.google.inject.internal.Nullable;
 import com.google.protobuf.ByteString;
 
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend;
-import org.waveprotocol.wave.examples.fedone.frontend.WaveClientRpcImpl;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.federation.FederationErrors;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.Collections;
@@ -42,7 +42,7 @@ import java.util.Set;
   * Implementation of a ClientFrontend which only records requests and will make callbacks when it
   * receives wavelet listener events.
   */
-public class FakeClientFrontend implements ClientFrontend {
+public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
   private static class SubmitRecord {
     final SubmitResultListener listener;
     final int operations;
@@ -111,8 +111,7 @@ public class FakeClientFrontend implements ClientFrontend {
 
   @Override
   public void waveletUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> newDeltas,
-      ProtocolHashedVersion resultingVersion, Map<String, BufferedDocOp> documentState,
-      @Nullable String channelId) {
+      ProtocolHashedVersion resultingVersion, Map<String, BufferedDocOp> documentState) {
     OpenListener listener = openListeners.get(waveletName.waveId);
     if (listener != null) {
       listener.onUpdate(waveletName, null, newDeltas, resultingVersion, null, false, null);

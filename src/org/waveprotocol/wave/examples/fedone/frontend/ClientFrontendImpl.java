@@ -33,6 +33,7 @@ import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
@@ -74,7 +75,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * When a wavelet is added and it's not at version 0, buffer updates until a
  * request for the wavelet's history has completed.
  */
-public class ClientFrontendImpl implements ClientFrontend {
+public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   private static final Log LOG = Log.get(ClientFrontendImpl.class);
 
   private final static AtomicInteger channel_counter = new AtomicInteger(0);
@@ -111,9 +112,9 @@ public class ClientFrontendImpl implements ClientFrontend {
 
   @Inject
   public ClientFrontendImpl(final HashedVersionFactory hashedVersionFactory,
-      WaveletProvider waveletProvider) {
+      WaveletProvider waveletProvider, WaveBus wavebus) {
     this.waveletProvider = waveletProvider;
-    waveletProvider.setListener(this);
+    wavebus.subscribe(this);
     MapMaker mapMaker = new MapMaker();
     perWavelet = mapMaker.makeComputingMap(new Function<WaveletName, PerWavelet>() {
       @Override
@@ -309,7 +310,7 @@ public class ClientFrontendImpl implements ClientFrontend {
       listener.onFailure(FederationErrors.badRequest("Wavelet " + waveletName + " is readonly"));
     } else {
       perUser.get(author).submitRequest(channelId, waveletName);
-      waveletProvider.submitRequest(waveletName, delta, channelId,
+      waveletProvider.submitRequest(waveletName, delta,
           new SubmitResultListenerAdapter(listener) {
         @Override
         public void onSuccess(int operationsApplied,
@@ -363,12 +364,10 @@ public class ClientFrontendImpl implements ClientFrontend {
    * @param oldDigest The digest text of the wavelet before the deltas are
    *                  applied (but including all changes from preceding deltas)
    * @param newDigest The digest text of the wavelet after the deltas are applied
-   * @param channelId The channel ID of this client (or null if not supported by the client)
    */
   @VisibleForTesting
   void participantUpdate(WaveletName waveletName, ParticipantId participant,
-      DeltaSequence newDeltas, boolean add, boolean remove, String oldDigest, String newDigest,
-      String channelId) {
+      DeltaSequence newDeltas, boolean add, boolean remove, String oldDigest, String newDigest) {
     final DeltaSequence deltasToSend;
     if (add && newDeltas.getStartVersion().getVersion() > 0) {
       ProtocolHashedVersion version0 = perWavelet.get(waveletName).version0;
@@ -382,7 +381,7 @@ public class ClientFrontendImpl implements ClientFrontend {
     if (add) {
       participantAddedToWavelet(waveletName, participant);
     }
-    perUser.get(participant).onUpdate(waveletName, deltasToSend, channelId);
+    perUser.get(participant).onUpdate(waveletName, deltasToSend);
     if (remove) {
       participantRemovedFromWavelet(waveletName, participant);
     }
@@ -399,7 +398,7 @@ public class ClientFrontendImpl implements ClientFrontend {
       DeltaSequence indexDeltas = IndexWave.createIndexDeltas(indexVersion.getVersion(),
           deltasToSend, oldDigest, newDigest);
       if (!indexDeltas.isEmpty()) {
-        perUser.get(participant).onUpdate(indexWaveletName, indexDeltas, channelId);
+        perUser.get(participant).onUpdate(indexWaveletName, indexDeltas);
       }
       if (remove) {
         participantRemovedFromWavelet(indexWaveletName, participant);
@@ -414,8 +413,7 @@ public class ClientFrontendImpl implements ClientFrontend {
    */
   @Override
   public void waveletUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> newDeltas,
-      ProtocolHashedVersion endVersion, Map<String, BufferedDocOp> documentState,
-      String channelId) {
+      ProtocolHashedVersion endVersion, Map<String, BufferedDocOp> documentState) {
     if (newDeltas.isEmpty()) {
       return;
     }
@@ -455,8 +453,7 @@ public class ClientFrontendImpl implements ClientFrontend {
           ParticipantId p = new ParticipantId(op.getRemoveParticipant());
           remainingParticipants.remove(p);
           participantUpdate(waveletName, p,
-              deltaSequence.subList(0, i + 1), newParticipants.remove(p), true, oldDigest, "",
-              channelId);
+              deltaSequence.subList(0, i + 1), newParticipants.remove(p), true, oldDigest, "");
         }
       }
     }
@@ -465,8 +462,7 @@ public class ClientFrontendImpl implements ClientFrontend {
     // (either because they already were, or because they were added).
     for (ParticipantId p : remainingParticipants) {
       boolean isNew = newParticipants.contains(p);
-      participantUpdate(waveletName, p, deltaSequence, isNew, false, oldDigest, newDigest,
-          channelId);
+      participantUpdate(waveletName, p, deltaSequence, isNew, false, oldDigest, newDigest);
     }
 
     synchronized (waveletInfo) {

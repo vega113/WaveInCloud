@@ -31,20 +31,13 @@ import java.util.Collection;
  */
 public interface WaveletProvider {
   /**
-   * Sets the wavelet listener for this provider.
-   *
-   * @param listener the wavelet listener to use for this provider.
-   */
-  void setListener(WaveletListener listener);
-
-  /**
    * Request that a given delta is submitted to the wavelet.
    *
    * @param waveletName name of wavelet.
    * @param delta to be submitted to the server.
    * @param listener callback which will return the result of the submission.
    */
-  void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta, String channelId,
+  void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
       SubmitResultListener listener);
 
   /**

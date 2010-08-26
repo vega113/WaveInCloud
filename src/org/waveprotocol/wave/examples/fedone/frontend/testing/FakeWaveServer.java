@@ -92,7 +92,7 @@ public class FakeWaveServer extends FakeClientFrontend {
     // TODO(Michael): Can we use the knownWavelets here, and drop the wavelets collection?
     for (WaveletName waveletName : wavelets.get(waveId)) {
       waveletUpdate(waveletName, deltas.get(waveletName), versions.get(waveletName),
-          EMPTY_DOCUMENT_STATE, null);
+          EMPTY_DOCUMENT_STATE);
     }
   }
 
@@ -116,10 +116,9 @@ public class FakeWaveServer extends FakeClientFrontend {
     // Confirm submit success.
     doSubmitSuccess(waveletName, resultingVersion, APP_TIMESTAMP);
     // Send an update echoing the submitted delta. Note: the document state is ignored.
-    waveletUpdate(waveletName, Lists.newArrayList(delta), resultingVersion, EMPTY_DOCUMENT_STATE,
-        channelId);
+    waveletUpdate(waveletName, Lists.newArrayList(delta), resultingVersion, EMPTY_DOCUMENT_STATE);
     // Send a corresponding update of the index wave.
-    doIndexUpdate(waveletName, delta, channelId);
+    doIndexUpdate(waveletName, delta);
   }
 
   /**
@@ -127,10 +126,8 @@ public class FakeWaveServer extends FakeClientFrontend {
    *
    * @param waveletName name of wavelet where a change has been made.
    * @param delta the delta on the wavelet.
-   * @param channelId the client's channel ID.
    */
-  private void doIndexUpdate(WaveletName waveletName, ProtocolWaveletDelta delta,
-      @Nullable String channelId) {
+  private void doIndexUpdate(WaveletName waveletName, ProtocolWaveletDelta delta) {
     // If the wavelet cannot be indexed, then the delta doesn't affect the index wave.
     if (!IndexWave.canBeIndexed(waveletName)) {
       return;
@@ -168,7 +165,7 @@ public class FakeWaveServer extends FakeClientFrontend {
     indexDelta.setAuthor(delta.getAuthor());
     indexDelta.setHashedVersion(resultingVersion);
     waveletUpdate(indexWaveletName, Lists.newArrayList(indexDelta.build()), resultingVersion,
-        EMPTY_DOCUMENT_STATE, channelId);
+        EMPTY_DOCUMENT_STATE);
   }
 
   /**

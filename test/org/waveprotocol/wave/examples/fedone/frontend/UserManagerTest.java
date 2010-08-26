@@ -28,7 +28,6 @@ import junit.framework.TestCase;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
-import org.waveprotocol.wave.examples.fedone.frontend.UserManager;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -212,7 +211,7 @@ public class UserManagerTest extends TestCase {
   /** Tests onUpdate() for a wavelet we're not a participant of. */
   public void testOnUpdateForUnknownWavelet() {
     try {
-      m.onUpdate(W1A, DELTAS, null /* no channelId */);
+      m.onUpdate(W1A, DELTAS);
       fail("Should have thrown IllegalStateException");
     } catch (IllegalStateException expected) {
       // pass
@@ -235,7 +234,7 @@ public class UserManagerTest extends TestCase {
    */
   public void testUpdateSingleDeltaVersion() {
     m.addWavelet(W1A);
-    m.onUpdate(W1A, DELTAS, null /* no channelId */); // pass
+    m.onUpdate(W1A, DELTAS); // pass
   }
 
   /**
@@ -255,14 +254,12 @@ public class UserManagerTest extends TestCase {
 
     m.addWavelet(W1A);
     ProtocolHashedVersion endVersion2 = serialize(HashedVersion.unsigned(3));
-    m.onUpdate(W1A, new DeltaSequence(ImmutableList.of(DELTA, delta2), endVersion2),
-               null /* no channelId */); // success
+    m.onUpdate(W1A, new DeltaSequence(ImmutableList.of(DELTA, delta2), endVersion2)); // success
 
     // Also succeeds when sending the two deltas via separate onUpdates()
     m.addWavelet(W2A);
-    m.onUpdate(W2A, DELTAS, null /* no channelId */); // success
-    m.onUpdate(W2A, new DeltaSequence(ImmutableList.of(delta2), endVersion2),
-               null /* no channelId */); // success
+    m.onUpdate(W2A, DELTAS); // success
+    m.onUpdate(W2A, new DeltaSequence(ImmutableList.of(delta2), endVersion2)); // success
   }
 
   /**
@@ -283,12 +280,12 @@ public class UserManagerTest extends TestCase {
       }
     };
     String channelId = "";
-    
+
     m.addWavelet(W1A);
     m.subscribe(W1, ImmutableSet.of(""), channelId, listener);
-    m.onUpdate(W1A, DeltaSequence.empty(serialize(HashedVersion.UNSIGNED_VERSION_0)), channelId);
+    m.onUpdate(W1A, DeltaSequence.empty(serialize(HashedVersion.UNSIGNED_VERSION_0)));
     assertEquals(0, updates.get());
-    m.onUpdate(W1A, DELTAS, channelId);
+    m.onUpdate(W1A, DELTAS);
     assertEquals(1, updates.get());
   }
 }

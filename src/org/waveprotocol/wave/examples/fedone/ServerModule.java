@@ -22,15 +22,15 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveServer;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerModule;
 import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
 import org.waveprotocol.wave.federation.xmpp.IncomingPacketHandler;
 import org.waveprotocol.wave.federation.xmpp.OutgoingPacketTransport;
+import org.waveprotocol.wave.federation.xmpp.XmppDisco;
 import org.waveprotocol.wave.federation.xmpp.XmppFederationHost;
 import org.waveprotocol.wave.federation.xmpp.XmppFederationRemote;
 import org.waveprotocol.wave.federation.xmpp.XmppManager;
-import org.waveprotocol.wave.federation.xmpp.XmppDisco;
 import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
 import org.waveprotocol.wave.waveserver.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
@@ -50,7 +50,7 @@ public class ServerModule extends AbstractModule {
   protected void configure() {
     // Receive updates from the outside world, and push them into our local Wave Server.
     bind(WaveletFederationListener.Factory.class).annotatedWith(FederationRemoteBridge.class)
-        .to(WaveServer.class);
+        .to(WaveServerImpl.class);
 
     // Request history and submit deltas to the outside world *from* our local
     // Wave Server.
@@ -63,7 +63,7 @@ public class ServerModule extends AbstractModule {
 
     // Provide history and respond to submits about our own local waves.
     bind(WaveletFederationProvider.class).annotatedWith(FederationHostBridge.class)
-        .to(WaveServer.class);
+        .to(WaveServerImpl.class);
 
     bind(XmppDisco.class).in(Singleton.class);
     bind(XmppFederationRemote.class).in(Singleton.class);

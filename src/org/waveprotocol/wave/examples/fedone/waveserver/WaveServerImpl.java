@@ -35,11 +35,10 @@ import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletContainer.State;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -56,8 +55,8 @@ import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
 import org.waveprotocol.wave.waveserver.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
-import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener.Factory;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
+import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener.Factory;
 
 import java.util.Collection;
 import java.util.List;
@@ -71,27 +70,21 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  */
 @Singleton
-public class WaveServerImpl implements WaveServer {
+public class WaveServerImpl implements WaveBus, WaveletProvider,
+    WaveletFederationProvider, WaveletFederationListener.Factory {
 
   private static final Log LOG = Log.get(WaveServerImpl.class);
 
   protected static final long HISTORY_REQUEST_LENGTH_LIMIT_BYTES = 1024 * 1024;
-
-  // -------------------------------------------------------------------------------------------
-  // PRIVATES INITIALIZED IN CONSTRUCTOR.
-  // -------------------------------------------------------------------------------------------
 
   private final CertificateManager certificateManager;
   private final Factory federationHostFactory;
   private final RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
   private final LocalWaveletContainer.Factory localWaveletContainerFactory;
   private final WaveletFederationProvider federationRemote;
-  private WaveletListener clientListener = null;
+  private final WaveBusDispatcher dispatcher = new WaveBusDispatcher();
 
-  // -------------------------------------------------------------------------------------------
-  // MAPS FOR WAVES AND FEDERATION HOSTS.
-  // -------------------------------------------------------------------------------------------
-
+  /** Wavelet states */
   private final Map<WaveId, Map<WaveletId, WaveletContainer>> waveMap =
     new MapMaker().makeComputingMap(
         new Function<WaveId, Map<WaveletId, WaveletContainer>>() {
@@ -113,9 +106,9 @@ public class WaveServerImpl implements WaveServer {
         }
       );
 
-  // -------------------------------------------------------------------------------------------
-  // IMPLEMENTATION OF THE WAVELET-FEDERATION-LISTENER.FACTORY INTERFACE USED BY THE FED HOST.
-  // -------------------------------------------------------------------------------------------
+  //
+  // WaveletFederationListener.Factory implementation.
+  //
 
   /**
    * Listener for notifications coming from the Federation Remote. For now we accept updates
@@ -157,22 +150,17 @@ public class WaveServerImpl implements WaveServer {
         try {
           final RemoteWaveletContainer remoteWavelet = getOrCreateRemoteWavelet(waveletName);
 
-          // Update this remote wavelet with the immediately incoming delta, providing a callback
-          // so that incoming historic deltas (as well as this delta) can be given to the
-          // clientListener at a later point
+          // Update this remote wavelet with the immediately incoming delta,
+          // providing a callback so that incoming historic deltas (as well as
+          // this delta) can be provided to the wave bus.
           remoteWavelet.update(appliedDeltas, domain, federationRemote, certificateManager,
               new RemoteWaveletDeltaCallback() {
                 @Override
                 public void onSuccess(DeltaSequence result) {
-                  if (clientListener != null) {
-                    Map<String, BufferedDocOp> documentState =
-                        getWavelet(waveletName).getWaveletData().getDocuments();
-                    clientListener.waveletUpdate(waveletName, result, result.getEndVersion(),
-                        documentState, null);
-                  } else {
-                    LOG.warning("Got valid deltaSequence for " + waveletName
-                        + ", clientListener is null");
-                  }
+                  Map<String, BufferedDocOp> documentState =
+                      getWavelet(waveletName).getWaveletData().getDocuments();
+                  dispatcher.waveletUpdate(waveletName, result, result.getEndVersion(),
+                      documentState);
                 }
 
                 @Override
@@ -205,11 +193,7 @@ public class WaveServerImpl implements WaveServer {
       public void waveletCommitUpdate(WaveletName waveletName,
           ProtocolHashedVersion committedVersion, WaveletUpdateCallback callback) {
         Preconditions.checkNotNull(committedVersion);
-        if (clientListener != null) {
-          clientListener.waveletCommitted(waveletName, committedVersion);
-        } else {
-          LOG.warning("Client listener is null");
-        }
+        dispatcher.waveletCommitted(waveletName, committedVersion);
         // Pretend we've committed it, there is no persistence
         LOG.fine("Responding with success to wavelet commit on " + waveletName);
         callback.onSuccess();
@@ -228,14 +212,9 @@ public class WaveServerImpl implements WaveServer {
     }
   }
 
-  // -------------------------------------------------------------------------------------------
-  // METHODS IMPLEMENTING THE WAVELET-FEDERATION-PROVIDER INTERFACE USED BY THE FED REMOTE.
-  // -------------------------------------------------------------------------------------------
-
-  @Override
-  public void setListener(WaveletListener listener) {
-    clientListener = listener;
-  }
+  //
+  // WaveletFederationProvider implementation.
+  //
 
   @Override
   public void submitRequest(WaveletName waveletName, ProtocolSignedDelta signedDelta,
@@ -257,7 +236,7 @@ public class WaveServerImpl implements WaveServer {
     try {
       checkWaveletHosting(true, waveletName);
       certificateManager.verifyDelta(signedDelta);
-      submitDelta(waveletName, signedDelta, null, listener);
+      submitDelta(waveletName, signedDelta, listener);
     } catch (HostingException e) {
       LOG.warning("Remote tried to submit to local wavelet", e);
       listener.onFailure(FederationErrors.badRequest("Local wavelet update"));
@@ -368,9 +347,9 @@ public class WaveServerImpl implements WaveServer {
     listener.onSuccess();
   }
 
-  // -------------------------------------------------------------------------------------------
-  // METHODS IMPLEMENTING THE WAVELET-PROVIDER INTERFACE USED BY THE CLIENT FRONTEND.
-  // -------------------------------------------------------------------------------------------
+  //
+  // WaveletProvider implementation.
+  //
 
   @Override
   public Collection<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
@@ -411,17 +390,31 @@ public class WaveServerImpl implements WaveServer {
   }
 
   @Override
-  public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta, String channelId,
+  public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
       SubmitResultListener listener) {
     // The serialised version of this delta happens now.  This should be the only place, ever!
     ProtocolSignedDelta signedDelta = certificateManager.signDelta(
         ByteStringMessage.fromMessage(delta));
-    submitDelta(waveletName, signedDelta, channelId, listener);
+    submitDelta(waveletName, signedDelta, listener);
   }
 
-  // -------------------------------------------------------------------------------------------
-  //  CONSTRUCTOR AND PRIVATE UTILITY METHODS.
-  // -------------------------------------------------------------------------------------------
+  //
+  // WaveBus implementation.
+  //
+
+  @Override
+  public void subscribe(Subscriber s) {
+    dispatcher.subscribe(s);
+  }
+
+  @Override
+  public void unsubscribe(Subscriber s) {
+    dispatcher.unsubscribe(s);
+  }
+
+  //
+  // Constructor and privates.
+  //
 
   /**
    * Constructor.
@@ -567,7 +560,7 @@ public class WaveServerImpl implements WaveServer {
    *               federated groups, that test should be removed.
    */
   private void submitDelta(final WaveletName waveletName, final ProtocolSignedDelta delta,
-      String channelId, final SubmitResultListener resultListener) {
+      final SubmitResultListener resultListener) {
     ByteStringMessage<ProtocolWaveletDelta> waveletDelta;
     try {
       waveletDelta = ByteStringMessage.from(
@@ -610,14 +603,12 @@ public class WaveServerImpl implements WaveServer {
           resultListener.onSuccess(appliedDelta.getMessage().getOperationsApplied(),
               resultingVersion, appliedDelta.getMessage().getApplicationTimestamp());
 
-          // Send the results to the client frontend
-          if (clientListener != null) {
-            Map<String, BufferedDocOp> documentState =
-                getWavelet(waveletName).getWaveletData().getDocuments();
-            LOG.info("Sending update to client listener: " + submitResult.getDelta());
-            clientListener.waveletUpdate(waveletName, ImmutableList.of(submitResult.getDelta()),
-                resultingVersion, documentState, channelId);
-          }
+          // Send the results to subscribers.
+          Map<String, BufferedDocOp> documentState =
+              getWavelet(waveletName).getWaveletData().getDocuments();
+          LOG.info("Sending update to client listener: " + submitResult.getDelta());
+          dispatcher.waveletUpdate(waveletName, ImmutableList.of(submitResult.getDelta()),
+              resultingVersion, documentState);
 
           // Capture any new domains from addParticipant operations.
           hostDomains.addAll(getParticipantDomains(wc));

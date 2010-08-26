@@ -30,7 +30,6 @@ import com.google.inject.internal.Nullable;
 
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -71,7 +70,7 @@ final class UserManager {
 
     private final List<String> waveletIdPrefixes;
     private final ClientFrontend.OpenListener openListener;
-    private String channelId;
+    private final String channelId;
     // Successfully submitted versions for which we haven't yet seen the update
     private final HashMultimap<WaveletName, Long> submittedVersions = HashMultimap.create();
     // While there are outstanding submits, this contains the list of updates that are blocked.
@@ -294,7 +293,7 @@ final class UserManager {
    *         not properly contiguous from another or from deltas we previously
    *         received for this delta.
    */
-  synchronized void onUpdate(WaveletName waveletName, DeltaSequence deltas, String channelId) {
+  synchronized void onUpdate(WaveletName waveletName, DeltaSequence deltas) {
     Preconditions.checkNotNull(waveletName);
     Preconditions.checkState(isParticipant(waveletName), "Not a participant of %s", waveletName);
     if (deltas.isEmpty()) {
