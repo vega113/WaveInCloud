@@ -38,13 +38,13 @@ public interface TestingConstants {
 
   public static final String MESSAGE3 = "There is no spoon";
 
-  public static final String OTHER_USER = "other@host.com";
+  public static final String DOMAIN = "host.com";
+
+  public static final String OTHER_USER = "other@" + DOMAIN;
 
   public static final ParticipantId OTHER_PARTICIPANT = new ParticipantId(OTHER_USER);
 
   public static final int PORT = 9876;
-
-  public static final String DOMAIN = "host.com";
 
   /**
    * Timeout, in milliseconds, for tests that may fail through abnormal

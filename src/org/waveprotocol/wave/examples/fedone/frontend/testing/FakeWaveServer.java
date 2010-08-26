@@ -21,6 +21,7 @@ import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationS
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -120,7 +121,7 @@ public class FakeWaveServer extends FakeClientFrontend {
     // Confirm submit success.
     doSubmitSuccess(waveletName, resultingVersion, APP_TIMESTAMP);
     // Send an update echoing the submitted delta. Note: the document state is ignored.
-    waveletUpdate(wavelet, resultingVersion, Lists.newArrayList(delta));
+    waveletUpdate(wavelet, resultingVersion, ImmutableList.of(delta));
     // Send a corresponding update of the index wave.
     doIndexUpdate(wavelet, delta);
   }
