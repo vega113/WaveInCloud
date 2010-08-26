@@ -4,11 +4,10 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Provides a subscription service for changes to wavelets.
@@ -23,16 +22,15 @@ public interface WaveBus {
     /**
      * Notifies the subscriber of a wavelet update.
      *
-     * TODO(anorth): replace documentState map with the wavelet data
+     * TODO(anorth): replace CoreWaveletData with a read-only wavelet data.
      *
-     * @param waveletName wavelet to which deltas apply
-     * @param deltas deltas applied to the wavelet
+     * @param wavelet the state of the wavelet wavelet after the deltas have
+     *        been applied.
      * @param resultingVersion version of the wavelet after deltas
-     * @param documentState the state of each document (by documentId) in the
-     *        wavelet after the deltas have been applied.
+     * @param deltas deltas applied to the wavelet
      */
-    void waveletUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> deltas,
-        ProtocolHashedVersion resultingVersion, Map<String, BufferedDocOp> documentState);
+    void waveletUpdate(CoreWaveletData wavelet, ProtocolHashedVersion resultingVersion,
+        List<ProtocolWaveletDelta> deltas);
 
     /**
      * Notifies the subscriber that a wavelet has been committed to persistent

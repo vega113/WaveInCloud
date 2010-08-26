@@ -44,7 +44,7 @@ public interface TestingConstants {
 
   public static final int PORT = 9876;
 
-  public static final String SERVER = "host.com";
+  public static final String DOMAIN = "host.com";
 
   /**
    * Timeout, in milliseconds, for tests that may fail through abnormal
@@ -53,13 +53,13 @@ public interface TestingConstants {
    */
   public static final long TEST_TIMEOUT = 5000;
 
-  public static final String USER = "user@host.com";
+  public static final String USER = "user@" + DOMAIN;
 
   public static final ParticipantId PARTICIPANT = new ParticipantId(USER);
 
-  public static final WaveId WAVE_ID = new WaveId("waveId", "1");
+  public static final WaveId WAVE_ID = new WaveId(DOMAIN, "w+wave");
 
-  public static final WaveletId WAVELET_ID = new WaveletId("waveletId", "A");
+  public static final WaveletId WAVELET_ID = new WaveletId(DOMAIN, "wavelet");
 
   public static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
 }

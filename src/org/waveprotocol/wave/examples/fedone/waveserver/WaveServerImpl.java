@@ -45,7 +45,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -157,10 +156,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
               new RemoteWaveletDeltaCallback() {
                 @Override
                 public void onSuccess(DeltaSequence result) {
-                  Map<String, BufferedDocOp> documentState =
-                      getWavelet(waveletName).getWaveletData().getDocuments();
-                  dispatcher.waveletUpdate(waveletName, result, result.getEndVersion(),
-                      documentState);
+                  dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(),
+                      result.getEndVersion(), result);
                 }
 
                 @Override
@@ -604,11 +601,9 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
               resultingVersion, appliedDelta.getMessage().getApplicationTimestamp());
 
           // Send the results to subscribers.
-          Map<String, BufferedDocOp> documentState =
-              getWavelet(waveletName).getWaveletData().getDocuments();
           LOG.info("Sending update to client listener: " + submitResult.getDelta());
-          dispatcher.waveletUpdate(waveletName, ImmutableList.of(submitResult.getDelta()),
-              resultingVersion, documentState);
+          dispatcher.waveletUpdate( getWavelet(waveletName).getWaveletData(), resultingVersion,
+              ImmutableList.of(submitResult.getDelta()));
 
           // Capture any new domains from addParticipant operations.
           hostDomains.addAll(getParticipantDomains(wc));

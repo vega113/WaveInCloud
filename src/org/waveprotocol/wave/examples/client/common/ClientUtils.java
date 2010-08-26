@@ -292,15 +292,11 @@ public class ClientUtils {
   /**
    * Returns a snippet or null.
    */
-  public static String renderSnippet(final Map<String, BufferedDocOp> documents,
-      final int maxSnippetLength) {
-    if (documents == null) {
-      return null;
-    }
-    BufferedDocOp bufferedDocOp = documents.get(DocumentConstants.CONVERSATION);
+  public static String renderSnippet(final CoreWaveletData wavelet, final int maxSnippetLength) {
+    BufferedDocOp bufferedDocOp = wavelet.getDocuments().get(DocumentConstants.CONVERSATION);
     if (bufferedDocOp == null) {
       // Render whatever data we have and hope its good enough
-      return ClientUtils.collateText(documents.values());
+      return ClientUtils.collateText(wavelet.getDocuments().values());
     }
 
     final StringBuilder sb = new StringBuilder();
@@ -328,7 +324,7 @@ public class ClientUtils {
             if (DocumentConstants.BLIP.equals(type)) {
               String blipId = attrs.get(DocumentConstants.BLIP_ID);
               if (blipId != null) {
-                BufferedDocOp document = documents.get(blipId);
+                BufferedDocOp document = wavelet.getDocuments().get(blipId);
                 if (document == null) {
                   // We see this when a blip has been deleted
                   return;

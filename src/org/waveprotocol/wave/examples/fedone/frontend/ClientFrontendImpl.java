@@ -412,16 +412,17 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
    * corresponding index wave wavelets on to the UserManagers.
    */
   @Override
-  public void waveletUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> newDeltas,
-      ProtocolHashedVersion endVersion, Map<String, BufferedDocOp> documentState) {
+  public void waveletUpdate(CoreWaveletData wavelet, ProtocolHashedVersion endVersion,
+      List<ProtocolWaveletDelta> newDeltas) {
     if (newDeltas.isEmpty()) {
       return;
     }
 
-    final PerWavelet waveletInfo = perWavelet.get(waveletName);
-    final ProtocolHashedVersion expectedVersion;
-    final String oldDigest;
-    final Set<ParticipantId> remainingParticipants;
+    WaveletName waveletName = wavelet.getWaveletName();
+    PerWavelet waveletInfo = perWavelet.get(waveletName);
+    ProtocolHashedVersion expectedVersion;
+    String oldDigest;
+    Set<ParticipantId> remainingParticipants;
 
     synchronized (waveletInfo) {
       expectedVersion = waveletInfo.getCurrentVersion();
@@ -435,7 +436,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         "Expected deltas starting at version %s, got %s",
         expectedVersion, deltaSequence.getStartVersion().getVersion());
 
-    String newDigest = digest(ClientUtils.renderSnippet(documentState, 80));
+    String newDigest = digest(ClientUtils.renderSnippet(wavelet, 80));
 
     // Participants added during the course of newDeltas
     Set<ParticipantId> newParticipants = Sets.newHashSet();

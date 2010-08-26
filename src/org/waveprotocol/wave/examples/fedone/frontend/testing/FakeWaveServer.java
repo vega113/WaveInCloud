@@ -21,9 +21,9 @@ import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationS
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.internal.Nullable;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
@@ -32,10 +32,12 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveletDataImpl;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.HashMap;
@@ -44,8 +46,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A fake single-user wave server which only echoes back submitted deltas and corresponding index
- * wave deltas.
+ * A fake single-user wave server which only echoes back submitted deltas and
+ * corresponding index wave deltas.
  *
  * @author mk.mateng@gmail.com (Michael Kuntzman)
  */
@@ -53,15 +55,8 @@ public class FakeWaveServer extends FakeClientFrontend {
   /** Fake application timestamp for confirming a successful submit. */
   private static final long APP_TIMESTAMP = 0;
 
-  /** Fake document state for sending updates. */
-  private static final ImmutableMap<String, BufferedDocOp> EMPTY_DOCUMENT_STATE = ImmutableMap.of();
-
-  /**
-   * A registry of the known wavelets, not including index wavelets. We use a list multimap to
-   * preserve the wavelet order. When opening a wave, we want to send the conversation root deltas
-   * first.
-   */
-  private final ListMultimap<WaveId, WaveletName> wavelets = ArrayListMultimap.create();
+  /** Known wavelet states, excluding index wavelets. */
+  private final Map<WaveId, Map<WaveletId, CoreWaveletData>> waves = Maps.newHashMap();
 
   /** A history of submitted deltas, per wavelet. Does not store generated index deltas. */
   private final ListMultimap<WaveletName, ProtocolWaveletDelta> deltas = ArrayListMultimap.create();
@@ -87,12 +82,14 @@ public class FakeWaveServer extends FakeClientFrontend {
     super.openRequest(participant, waveId, waveletIdPrefixes, maximumInitialWavelets,
         snapshotsEnabled, knownWavelets, openListener);
 
-    // Send any deltas we have in this wave to the client, in the order we got them.
-    // Note: the document state is ignored.
-    // TODO(Michael): Can we use the knownWavelets here, and drop the wavelets collection?
-    for (WaveletName waveletName : wavelets.get(waveId)) {
-      waveletUpdate(waveletName, deltas.get(waveletName), versions.get(waveletName),
-          EMPTY_DOCUMENT_STATE);
+    Map<WaveletId, CoreWaveletData> wavelets = waves.get(waveId);
+    if (wavelets != null) {
+      // Send any deltas we have in this wave to the client, in the order we got
+      // them.
+      for (CoreWaveletData wavelet : wavelets.values()) {
+        WaveletName name = wavelet.getWaveletName();
+        waveletUpdate(wavelet, versions.get(name), deltas.get(name));
+      }
     }
   }
 
@@ -101,13 +98,20 @@ public class FakeWaveServer extends FakeClientFrontend {
       @Nullable String channelId, SubmitResultListener listener) {
     Preconditions.checkArgument(!IndexWave.isIndexWave(waveletName.waveId),
         "Cannot modify index wave");
-
     super.submitRequest(waveletName, delta, channelId, listener);
 
-    // If this is a new wavelet, add it to the registry.
-    if (!versions.containsKey(waveletName)) {
-      wavelets.put(waveletName.waveId, waveletName);
+    Map<WaveletId, CoreWaveletData> wavelets = waves.get(waveletName.waveId);
+    if (wavelets == null) {
+      wavelets = Maps.newHashMap();
+      waves.put(waveletName.waveId, wavelets);
     }
+
+    CoreWaveletData wavelet = wavelets.get(waveletName.waveletId);
+    if (wavelet == null) {
+      wavelet = new CoreWaveletDataImpl(waveletName.waveId, waveletName.waveletId);
+      wavelets.put(waveletName.waveletId, wavelet);
+    }
+
     // Add the delta to the history and update the wavelet's version.
     deltas.put(waveletName, delta);
     final ProtocolHashedVersion resultingVersion = updateAndGetVersion(waveletName,
@@ -116,20 +120,20 @@ public class FakeWaveServer extends FakeClientFrontend {
     // Confirm submit success.
     doSubmitSuccess(waveletName, resultingVersion, APP_TIMESTAMP);
     // Send an update echoing the submitted delta. Note: the document state is ignored.
-    waveletUpdate(waveletName, Lists.newArrayList(delta), resultingVersion, EMPTY_DOCUMENT_STATE);
+    waveletUpdate(wavelet, resultingVersion, Lists.newArrayList(delta));
     // Send a corresponding update of the index wave.
-    doIndexUpdate(waveletName, delta);
+    doIndexUpdate(wavelet, delta);
   }
 
   /**
    * Generate and send an update of the user's index wave based on the specified delta.
    *
-   * @param waveletName name of wavelet where a change has been made.
-   * @param delta the delta on the wavelet.
+   * @param wavelet wavelet being changed
+   * @param delta the delta on the wavelet
    */
-  private void doIndexUpdate(WaveletName waveletName, ProtocolWaveletDelta delta) {
+  private void doIndexUpdate(CoreWaveletData wavelet, ProtocolWaveletDelta delta) {
     // If the wavelet cannot be indexed, then the delta doesn't affect the index wave.
-    if (!IndexWave.canBeIndexed(waveletName)) {
+    if (!IndexWave.canBeIndexed(wavelet.getWaveletName())) {
       return;
     }
 
@@ -157,15 +161,16 @@ public class FakeWaveServer extends FakeClientFrontend {
     }
 
     // Find the index wavelet name and version. Update the version.
-    WaveletName indexWaveletName = IndexWave.indexWaveletNameFor(waveletName.waveId);
+    WaveletName indexWaveletName = IndexWave.indexWaveletNameFor(wavelet.getWaveletName().waveId);
     ProtocolHashedVersion resultingVersion = updateAndGetVersion(indexWaveletName,
         indexDelta.getOperationCount());
 
     // Finish constructing the index wavelet delta and send it to the client.
     indexDelta.setAuthor(delta.getAuthor());
     indexDelta.setHashedVersion(resultingVersion);
-    waveletUpdate(indexWaveletName, Lists.newArrayList(indexDelta.build()), resultingVersion,
-        EMPTY_DOCUMENT_STATE);
+    CoreWaveletData fakeIndexWavelet =
+        new CoreWaveletDataImpl(indexWaveletName.waveId, indexWaveletName.waveletId);
+    waveletUpdate(fakeIndexWavelet, resultingVersion, Lists.newArrayList(indexDelta.build()));
   }
 
   /**

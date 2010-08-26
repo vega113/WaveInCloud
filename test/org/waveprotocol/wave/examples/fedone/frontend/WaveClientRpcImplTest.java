@@ -18,7 +18,6 @@
 package org.waveprotocol.wave.examples.fedone.frontend;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
@@ -37,12 +36,11 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWa
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
-
-import java.util.Map;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveletDataImpl;
 
 /**
  * Tests for the {@link WaveClientRpcImpl}.
@@ -164,8 +162,8 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
         assertFalse(update.hasCommitNotice());
       }
     });
-    Map<String, BufferedDocOp> documentState = ImmutableMap.of();
-    frontend.waveletUpdate(WAVELET_NAME, DELTAS, RESULTING_VERSION, documentState);
+    CoreWaveletData wavelet = new CoreWaveletDataImpl(WAVE_ID, WAVELET_ID);
+    frontend.waveletUpdate(wavelet, RESULTING_VERSION, DELTAS);
     assertEquals(1, counter);
     assertFalse(controller.failed());
   }

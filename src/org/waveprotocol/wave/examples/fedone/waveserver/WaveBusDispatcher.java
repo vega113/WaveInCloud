@@ -4,12 +4,11 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Dispatches messages to a collection of wave bus subscribers.
@@ -31,10 +30,10 @@ public final class WaveBusDispatcher implements WaveBus, WaveBus.Subscriber {
   }
 
   @Override
-  public void waveletUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> newDeltas,
-      ProtocolHashedVersion resultingVersion, Map<String, BufferedDocOp> documentState) {
+  public void waveletUpdate(CoreWaveletData wavelet, ProtocolHashedVersion resultingVersion,
+      List<ProtocolWaveletDelta> deltas) {
     for (WaveBus.Subscriber s : subscribers) {
-      s.waveletUpdate(waveletName, newDeltas, resultingVersion, documentState);
+      s.waveletUpdate(wavelet, resultingVersion, deltas);
     }
   }
 

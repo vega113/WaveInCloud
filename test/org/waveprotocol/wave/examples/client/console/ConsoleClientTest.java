@@ -91,7 +91,7 @@ public class ConsoleClientTest extends TestCase implements TestingConstants {
 
     assertTrue(client.isConnected());
     assertEquals(USER, backend.getUserId().getAddress());
-    assertEquals(SERVER, backend.getServer());
+    assertEquals(DOMAIN, backend.getServer());
     assertEquals(PORT, backend.getPort());
   }
 
@@ -413,7 +413,7 @@ public class ConsoleClientTest extends TestCase implements TestingConstants {
   /** Connect the client (run the "/connect" command) */
   private void connect() {
     assertFalse(client.isConnected());
-    client.processLine(String.format("/connect %s %s %d", USER, SERVER, PORT));
+    client.processLine(String.format("/connect %s %s %d", USER, DOMAIN, PORT));
     client.getBackend().waitForAccumulatedEventsToProcess();
 
     // We can now use the client backend and testing utility for the rest of the test:

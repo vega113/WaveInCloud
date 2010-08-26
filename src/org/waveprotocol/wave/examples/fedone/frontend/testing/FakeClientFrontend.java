@@ -26,10 +26,10 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.Collections;
@@ -110,11 +110,12 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
   }
 
   @Override
-  public void waveletUpdate(WaveletName waveletName, List<ProtocolWaveletDelta> newDeltas,
-      ProtocolHashedVersion resultingVersion, Map<String, BufferedDocOp> documentState) {
-    OpenListener listener = openListeners.get(waveletName.waveId);
+  public void waveletUpdate(CoreWaveletData wavelet, ProtocolHashedVersion resultingVersion,
+      List<ProtocolWaveletDelta> newDeltas) {
+    OpenListener listener = openListeners.get(wavelet.getWaveletName().waveId);
     if (listener != null) {
-      listener.onUpdate(waveletName, null, newDeltas, resultingVersion, null, false, null);
+      listener.onUpdate(wavelet.getWaveletName(), null, newDeltas, resultingVersion, null, false,
+          null);
     }
   }
 }
