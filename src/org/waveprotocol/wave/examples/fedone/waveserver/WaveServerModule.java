@@ -25,7 +25,6 @@ import com.google.inject.name.Named;
 import org.waveprotocol.wave.crypto.CachedCertPathValidator;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.DefaultCacheImpl;
-import org.waveprotocol.wave.crypto.DefaultCertPathStore;
 import org.waveprotocol.wave.crypto.DefaultTimeSource;
 import org.waveprotocol.wave.crypto.DefaultTrustRootsProvider;
 import org.waveprotocol.wave.crypto.DisabledCertPathValidator;
@@ -44,7 +43,6 @@ import org.waveprotocol.wave.model.id.WaveletName;
 
 /**
  * Guice Module for the prototype Server.
- *
  *
  */
 public class WaveServerModule extends AbstractModule {
@@ -65,7 +63,6 @@ public class WaveServerModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(CertPathStore.class).to(DefaultCertPathStore.class).in(Singleton.class);
     bind(TimeSource.class).to(DefaultTimeSource.class).in(Singleton.class);
     bind(SignatureHandler.class).toProvider(SignatureHandlerProvider.class);
 
@@ -86,10 +83,10 @@ public class WaveServerModule extends AbstractModule {
     bind(HashedVersionFactory.class).to(HashedVersionFactoryImpl.class).in(Singleton.class);
     bind(ClientFrontend.class).to(ClientFrontendImpl.class).in(Singleton.class);
     bind(ProtocolWaveClientRpc.Interface.class).to(WaveClientRpcImpl.class).in(Singleton.class);
-    bind(LocalWaveletContainer.Factory.class).to(LocalWaveletContainerFactory.class)
-        .in(Singleton.class);
-    bind(RemoteWaveletContainer.Factory.class).to(RemoteWaveletContainerFactory.class)
-        .in(Singleton.class);
+    bind(LocalWaveletContainer.Factory.class).to(LocalWaveletContainerFactory.class).in(
+        Singleton.class);
+    bind(RemoteWaveletContainer.Factory.class).to(RemoteWaveletContainerFactory.class).in(
+        Singleton.class);
   }
 
   /**

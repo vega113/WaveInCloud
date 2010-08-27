@@ -31,4 +31,5 @@ exec java $DEBUG_FLAGS -Dorg.eclipse.jetty.util.log.DEBUG=true -jar dist/fedone-
   --waveserver_disable_signer_verification=$WAVESERVER_DISABLE_SIGNER_VERIFICATION \
   --http_frontend_hostname=$WEBSOCKET_SERVER_HOSTNAME \
   --http_frontend_port=$WEBSOCKET_SERVER_PORT \
-  --enable_federation=$ENABLE_FEDERATION
+  --enable_federation=$ENABLE_FEDERATION \
+  --cert_path_store_type=$CERT_PATH_STORE_TYPE

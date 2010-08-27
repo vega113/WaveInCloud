@@ -119,30 +119,26 @@
     </copy>
   </target>
 
-  <target name="test" depends="compile_tests" description="Runs all the unit tests in the project">
-    <copy todir="${instr.classes}">
-      <fileset dir="${core.classes}" includes="**/*"/>
-    </copy>
-
-    <path id="fedone.instr.classpath" >
-      <pathelement location="${instr.classes}" />
-    </path>
-
-    <taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
-      <classpath refid="fedone.test.classpath"/>
-    </taskdef>
+  <target name="test" depends="compile_tests" description=
+    "Runs all the unit tests in the project excluding external persistence">
 
     <junit fork="yes" showoutput="no" failureProperty="test.failed">
       <classpath>
         <path refid="fedone.classpath"/>
         <path refid="fedone.test.classpath"/>
-        <pathelement location="${instr.classes}"/>
+        <pathelement location="${core.classes}"/>
         <pathelement location="${test.classes}"/>
       </classpath>
       <formatter type="xml"/>
       <batchtest todir="${dir.testout}">
         <fileset dir="${test}">
           <include name="**/*Test.java"/>
+          <!-- Exclude all persistence tests -->
+          <include name="${persistence.test.include}"/>
+        </fileset>
+        <fileset dir="${test}">
+          <!-- Include the in-memory persistence tests -->
+          <include name="**/fedone/persistence/memory/*Test.java"/>
         </fileset>
       </batchtest>
     </junit>
@@ -156,8 +152,38 @@
 
     <fail message="Tests failed. Check log and/or reports."
       if="test.failed" />
-
   </target>
+
+  <!-- =================================
+          target: test_mongodb
+         ================================= -->
+    <target name="test_mongodb" depends="compile_tests" description="Runs the MongoDb tests">
+      <junit fork="yes" showoutput="no" failureProperty="test.failed">
+        <classpath>
+          <path refid="fedone.classpath"/>
+          <path refid="fedone.test.classpath"/>
+          <pathelement location="${core.classes}"/>
+          <pathelement location="${test.classes}"/>
+        </classpath>
+        <formatter type="xml"/>
+        <batchtest todir="${dir.testout}">
+          <fileset dir="${test}">
+            <!-- Include the mongoDb tests -->
+            <include name="**/fedone/persistence/mongodb/**/*Test.java"/>
+          </fileset>
+        </batchtest>
+      </junit>
+
+      <junitreport todir="${dir.testout}">
+        <fileset dir="${dir.testout}"> 
+          <include name="TEST-*.xml"/> 
+        </fileset> 
+        <report format="frames" todir="${dir.testout}"/> 
+      </junitreport>
+
+      <fail message="Tests failed. Check log and/or reports."
+        if="test.failed" />
+    </target>
 
   <!-- compiles pre-generated gwt proto sources; does NOT generate protos -->
   <target name="proto_gwt_compile" depends="init">
@@ -244,6 +270,7 @@
       <fileset dir="${staging}">
         <include name="META-INF/services/*" />
         <include name="com/dyuproject/protostuff/**/*" />
+        <include name="com/mongodb/**/*" />
         <include name="com/google/common/**/*" />
         <include name="com/google/gson/**/*" />
         <include name="com/google/inject/**/*" />
@@ -255,9 +282,11 @@
         <include name="org/aopalliance/**/*" />
         <include name="org/apache/commons/cli/**/*" />
         <include name="org/apache/commons/codec/**/*" />
+        <include name="org/bson/**/*" />
         <include name="org/codehaus/jackson/**/*" />
         <include name="org/dom4j/**/*" />
         <include name="org/eclipse/**/*" />
+        <include name="org/joda/time/**/*" />
         <include name="org/jivesoftware/**/*" />
         <include name="org/waveprotocol/**/*" />
         <include name="org/xmlpull/**/*" />
