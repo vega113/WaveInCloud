@@ -134,7 +134,7 @@
         <fileset dir="${test}">
           <include name="**/*Test.java"/>
           <!-- Exclude all persistence tests -->
-          <include name="${persistence.test.include}"/>
+          <exclude name="**/fedone/persistence/**"/>
         </fileset>
         <fileset dir="${test}">
           <!-- Include the in-memory persistence tests -->
