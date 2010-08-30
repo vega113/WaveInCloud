@@ -195,12 +195,12 @@ public class CertificateManagerImpl implements CertificateManager {
   public synchronized void storeSignerInfo(ProtocolSignerInfo signerInfo)
       throws SignatureException {
     verifier.verifySignerInfo(new SignerInfo(signerInfo));
-    certPathStore.put(signerInfo);
+    certPathStore.putSignerInfo(signerInfo);
   }
 
   @Override
   public synchronized ProtocolSignerInfo retrieveSignerInfo(ByteString signerId) {
-    SignerInfo signerInfo = certPathStore.get(signerId.toByteArray());
+    SignerInfo signerInfo = certPathStore.getSignerInfo(signerId.toByteArray());
     // null is acceptable for retrieveSignerInfo.  The user of the certificate manager should call
     // prefetchDeltaSignerInfo for the mechanism to actually populate the certificate manager.
     return signerInfo == null ? null : signerInfo.toProtoBuf();

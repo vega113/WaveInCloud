@@ -56,7 +56,7 @@ public final class MongoDbStore implements CertPathStore {
   }
 
   @Override
-  public SignerInfo get(byte[] signerId) {
+  public SignerInfo getSignerInfo(byte[] signerId) {
     DBObject query = getDBObjectForSignerId(signerId);
     DBCollection signerInfoCollection = getSignerInfoCollection();
     DBObject signerInfoDBObject = signerInfoCollection.findOne(query);
@@ -78,7 +78,7 @@ public final class MongoDbStore implements CertPathStore {
   }
 
   @Override
-  public void put(ProtocolSignerInfo protocolSignerInfo) throws SignatureException {
+  public void putSignerInfo(ProtocolSignerInfo protocolSignerInfo) throws SignatureException {
     SignerInfo signerInfo = new SignerInfo(protocolSignerInfo);
     byte[] signerId = signerInfo.getSignerId();
 

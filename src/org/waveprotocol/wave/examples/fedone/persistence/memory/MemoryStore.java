@@ -42,12 +42,12 @@ public class MemoryStore implements CertPathStore {
   }
 
   @Override
-  public SignerInfo get(byte[] signerId) {
-    return certPathStore.get(signerId);
+  public SignerInfo getSignerInfo(byte[] signerId) {
+    return certPathStore.getSignerInfo(signerId);
   }
 
   @Override
-  public void put(ProtocolSignerInfo protobuff) throws SignatureException {
-    certPathStore.put(protobuff);
+  public void putSignerInfo(ProtocolSignerInfo protobuff) throws SignatureException {
+    certPathStore.putSignerInfo(protobuff);
   }
 }

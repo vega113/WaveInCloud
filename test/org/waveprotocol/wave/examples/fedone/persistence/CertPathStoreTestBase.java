@@ -55,17 +55,18 @@ public abstract class CertPathStoreTestBase extends TestCase {
     CertPathStore certPathStore = newCertPathStore();
 
     ProtocolSignerInfo realSignerInfoProto = realSignerInfo.toProtoBuf();
-    certPathStore.put(realSignerInfoProto);
+    certPathStore.putSignerInfo(realSignerInfoProto);
 
     ProtocolSignerInfo exampleSignerInfoProto = exampleSignerInfo.toProtoBuf();
-    certPathStore.put(exampleSignerInfoProto);
+    certPathStore.putSignerInfo(exampleSignerInfoProto);
 
     checkCertificateExists(realSignerInfo, certPathStore);
     checkCertificateExists(exampleSignerInfo, certPathStore);
   }
 
   public void testNotExistingSignerIdGivesNull() {
-    assertNull("Expected Null for a non-existing Signer Id", newCertPathStore().get(new byte[1]));
+    assertNull("Expected Null for a non-existing Signer Id",
+        newCertPathStore().getSignerInfo(new byte[1]));
   }
 
   /**
@@ -79,7 +80,7 @@ public abstract class CertPathStoreTestBase extends TestCase {
    */
   private void checkCertificateExists(SignerInfo signerInfo, CertPathStore certPathStore) {
     List<X509Certificate> retrievedCerts =
-        certPathStore.get(signerInfo.getSignerId()).getCertificates();
+        certPathStore.getSignerInfo(signerInfo.getSignerId()).getCertificates();
     assertEquals(signerInfo.getCertificates(), retrievedCerts);
   }
 }
