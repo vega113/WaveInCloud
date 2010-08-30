@@ -29,9 +29,9 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
@@ -39,27 +39,23 @@ import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStat
 import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEvent;
 
 public class LoginPanel extends Composite {
-  interface Binder extends UiBinder<DockLayoutPanel, LoginPanel> {
+  interface Binder extends UiBinder<Widget, LoginPanel> {
   }
 
   interface Style extends CssResource {
     String bad();
-
     String good();
-
     String neutral();
   }
 
   private static final Binder BINDER = GWT.create(Binder.class);
 
-  @UiField
-  Label connectionStatus;
-  @UiField
-  TextBox nameField;
-  @UiField
-  Button sendButton;
-  @UiField
-  Style style;
+  private static final String INITIAL_NAME_FIELD_TEXT = "FedOne User Name";
+
+  @UiField Label connectionStatus;
+  @UiField TextBox nameField;
+  @UiField Button sendButton;
+  @UiField Style style;
 
   public LoginPanel() {
     initWidget(BINDER.createAndBindUi(this));
@@ -71,15 +67,23 @@ public class LoginPanel extends Composite {
           }
         });
     setConnectionStatus(ConnectionStatus.NEVER_CONNECTED);
+    nameField.setText(INITIAL_NAME_FIELD_TEXT);
   }
 
   @UiHandler("sendButton")
-  public void handleClick(ClickEvent e) {
+  void handleSendButtonClick(ClickEvent e) {
     doLogin();
   }
 
   @UiHandler("nameField")
-  public void handleKeyPress(KeyPressEvent e) {
+  void handleNameFieldClick(ClickEvent e) {
+    if (nameField.getText().equals(INITIAL_NAME_FIELD_TEXT)) {
+      nameField.setText("");
+    }
+  }
+
+  @UiHandler("nameField")
+  void handleKeyPress(KeyPressEvent e) {
     if (e.getCharCode() == '\n' || e.getCharCode() == '\r') {
       doLogin();
       e.preventDefault();
