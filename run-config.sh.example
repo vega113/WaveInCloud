@@ -55,3 +55,6 @@ WAVESERVER_DISABLE_VERIFICATION=false
 
 # Set true to disable the verification of signers (certificates)
 WAVESERVER_DISABLE_SIGNER_VERIFICATION=true
+
+# Settings for the different persistence stores
+CERT_PATH_STORE_TYPE=memory
