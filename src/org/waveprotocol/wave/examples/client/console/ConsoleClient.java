@@ -684,9 +684,10 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void setOpenWave(ClientWaveView wave) {
     if (ClientUtils.getConversationRoot(wave) == null) {
-      wave.createWavelet(ClientUtils.getConversationRootId(wave));
+      openWave = null;
+    } else {
+      openWave = new ScrollableWaveView(wave);
     }
-    openWave = new ScrollableWaveView(wave);
     render();
   }
 

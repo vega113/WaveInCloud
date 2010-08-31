@@ -52,6 +52,7 @@ import org.waveprotocol.wave.model.id.IdGeneratorImpl;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
@@ -437,8 +438,7 @@ public class ClientBackend {
   private ClientWaveView createConversationWave(WaveId newWaveId,
       SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
     ClientWaveView waveView = createWave(newWaveId);
-    CoreWaveletData convRoot = waveView.createWavelet(
-        getIdGenerator().newConversationRootWaveletId());
+    WaveletId waveletId = getIdGenerator().newConversationRootWaveletId();
 
     // Add ourselves in the first operation.
     CoreAddParticipant addUserOp = new CoreAddParticipant(getUserId());
@@ -447,7 +447,7 @@ public class ClientBackend {
     CoreWaveletDocumentOperation addManifestOp = new CoreWaveletDocumentOperation(
         DocumentConstants.MANIFEST_DOCUMENT_ID, ClientUtils.createManifest());
 
-    sendWaveletDelta(convRoot.getWaveletName(),
+    sendWaveletDelta(WaveletName.of(newWaveId, waveletId),
         new CoreWaveletDelta(getUserId(), ImmutableList.of(addUserOp, addManifestOp)), callback);
 
     return waveView;

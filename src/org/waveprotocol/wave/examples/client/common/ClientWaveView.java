@@ -101,7 +101,8 @@ public class ClientWaveView {
   }
 
   /**
-   * Gets the last known version for a wavelet.
+   * Gets the last known version for a wavelet. Returns version 0 for unknown
+   * wavelets.
    *
    * @param waveletId of the wavelet
    * @return last known version for wavelet
@@ -111,7 +112,7 @@ public class ClientWaveView {
     try {
       HashedVersion version = currentVersions.get(waveletId);
       if (version == null) {
-        throw new IllegalArgumentException(waveletId + " is not a wavelet of " + data.getWaveId());
+        return hashedVersionFactory.createVersionZero(WaveletName.of(data.getWaveId(), waveletId));
       } else {
         return version;
       }
