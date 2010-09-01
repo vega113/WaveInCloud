@@ -31,7 +31,7 @@ point to the unpacked source distribution of the protocol buffers release.
 Then, after updating a proto file, run
 
 <code>
-  ant -f build-proto.xml
+  ant -f build-proto.xml compile compile_json
 </code>
 
 Note: this generates files into proto_src. If files here exist without 

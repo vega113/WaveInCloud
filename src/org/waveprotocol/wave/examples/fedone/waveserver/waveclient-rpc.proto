@@ -79,19 +79,26 @@ message DocumentSnapshot {
 message WaveletSnapshot {
   // The list of participants of this wavelet.
   repeated string participant_id = 1;
-
-
   // For each document in the wavelet, there is one of these. Another way to think of this is
   // that it's a map of document_id to documents.
   repeated DocumentSnapshot document = 2;
 }
 
 /**
- * Update for a wavelet.
+ * Update message for a wave view.
+ * Contains either:
+ * - a channel id (only)
+ * - a marker (only)
+ * - a wavelet name, snapshot, version, and commit version
+ * - a wavelet name, deltas, version
  * Must contain either one or more applied deltas or a commit notice.
+ *
+ * TODO(anorth): rename to reflect that this is a view update, not wavelet
  */
 message ProtocolWaveletUpdate {
   // Specifies the wavelet name in the URI netpath notation.
+  // Set only if there are deltas
+  // TODO(anorth) make optional for channel id, marker updates
   required string wavelet_name = 1;
 
   // Zero or more deltas for this wavelet, streamed in order.
@@ -112,11 +119,11 @@ message ProtocolWaveletUpdate {
   // An optional snapshot of the wavelet
   optional WaveletSnapshot snapshot = 5;
 
-  // Marker. Means we have sent all data and are up to date.
+  // View open marker, signifies all current snapshots have been sent.
   optional bool marker = 6 [default=false];
 
-  // Channel ID. Sent in the first update to a given client, the client includes it in submits
-  // TODO(arb): make non-optional.
+  // Channel id, set only in the first update to a client.
+  // The client includes it in submits.
   optional string channel_id = 7;
 }
 
