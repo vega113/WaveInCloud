@@ -3,5 +3,6 @@
     <source path="">
       <include name="CommonConstants.java"/>
       <include name="DocumentConstants.java"/>
+      <include name="SessionConstants.java"/>
     </source>
 </module>

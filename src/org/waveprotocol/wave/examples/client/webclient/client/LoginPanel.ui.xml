@@ -5,6 +5,10 @@
       float: left;
     }
 
+    .sendButton {
+      margin-left: 8px;
+    }
+
     .bad, .good, .neutral {
       float: right;
       padding: 0 4px;

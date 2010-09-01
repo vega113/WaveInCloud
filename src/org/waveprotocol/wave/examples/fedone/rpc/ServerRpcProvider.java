@@ -22,26 +22,25 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.Service;
 import com.google.protobuf.UnknownFieldSet;
-import com.google.protobuf.Descriptors.MethodDescriptor;
-
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
+import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -114,7 +113,7 @@ public class ServerRpcProvider {
   }
 
   class WebSocketConnection extends Connection {
-    private WebSocketServerChannel socketChannel;
+    private final WebSocketServerChannel socketChannel;
 
     WebSocketConnection() {
       socketChannel = new WebSocketServerChannel(this);
@@ -285,16 +284,21 @@ public class ServerRpcProvider {
 
     ServletContextHandler context = new ServletContextHandler();
     context.setResourceBase("./war");
-    context.setWelcomeFiles(new String[] {"webclient.html"});
 
+    // webclient_redirect.html will redirect to the wave servlet.
+    // TODO(kalman): Do this without a webclient_redirect file?
+    context.setWelcomeFiles(new String[] {"webclient_redirect.html"});
+
+    // Servlet where the client is served from.
+    context.addServlet(new ServletHolder(WaveClientServlet.create(httpHost)), "/wave");
+
+    // Servlet where the websocket connection is served from.
     ServletHolder holder = new ServletHolder(new WaveWebSocketServlet());
     context.addServlet(holder, "/socket");
     // TODO(zamfi): fix to let messages span frames.
     holder.setInitParameter("bufferSize", "" + 1024 * 1024); // 1M buffer
 
-    final DefaultServlet defaultServlet = new DefaultServlet();
-    context.addServlet(new ServletHolder(defaultServlet), "/*");
-
+    context.addServlet(new ServletHolder(new DefaultServlet()), "/*");
     httpServer.setHandler(context);
 
     try {
