@@ -1,18 +1,18 @@
 /**
  * Copyright 2010 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  */
 
 package org.waveprotocol.wave.examples.client.webclient.client;
@@ -39,15 +39,9 @@ import org.waveprotocol.wave.examples.client.webclient.client.events.WaveIndexUp
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveIndexUpdatedEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveSelectionEventHandler;
-import org.waveprotocol.wave.examples.client.webclient.client.events.WaveUpdatedEvent;
-import org.waveprotocol.wave.examples.client.webclient.client.events.WaveUpdatedEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.util.Log;
-import org.waveprotocol.wave.examples.client.webclient.waveclient.common.WebClientUtils;
-import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
 import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class WaveList extends Composite {
@@ -56,28 +50,21 @@ public class WaveList extends Composite {
 
   interface Style extends CssResource {
     String entry();
-
     String selected();
-
     String updated();
   }
 
   private static final Binder BINDER = GWT.create(Binder.class);
-  static final Log LOG = Log.get(WaveList.class);
+  private static final Log LOG = Log.get(WaveList.class);
   private static final int MAX_SNIPPET_LENGTH = 64;
   private static final String WAVE_ID_PREFIX = "Wave_";
 
   private Element currentSelection;
   private WaveId pendingSelectionId;
 
-  @UiField
-  HTMLPanel panel;
-
-  @UiField
-  Style style;
-
-  @UiField
-  Button newWaveButton;
+  @UiField HTMLPanel panel;
+  @UiField Style style;
+  @UiField Button newWaveButton;
 
   public WaveList() {
     initWidget(BINDER.createAndBindUi(this));
@@ -109,35 +96,12 @@ public class WaveList extends Composite {
             select(id);
           }
         });
-
-    // Update snippets as waves change
-    ClientEvents.get().addWaveUpdatedEventHandler(
-        new WaveUpdatedEventHandler() {
-          @Override
-          public void onWaveUpdate(WaveUpdatedEvent event) {
-            WaveId id = event.getId();
-            if (id.equals(CommonConstants.INDEX_WAVE_ID)) {
-              // Ignore index wave
-              return;
-            }
-            CoreWaveletData conversationRoot = WebClientUtils.getConversationRoot(event.getWaveViewService());
-            if (conversationRoot == null) {
-              // Not a real wave?
-              return;
-            }
-            String data = WebClientUtils.renderSnippet(conversationRoot,
-                MAX_SNIPPET_LENGTH);
-            IndexEntry entry = new IndexEntry(id, data);
-            update(Arrays.asList(entry), false);
-          }
-        });
-
     ClientEvents.get().addWaveIndexUpdatedEventHandler(
         new WaveIndexUpdatedEventHandler() {
           @Override
           public void onWaveIndexUpdate(WaveIndexUpdatedEvent event) {
             LOG.info("WaveList refreshing due to index update");
-            update(event.getEntries(), true);
+            update(event.getEntries());
           }
         });
     ClientEvents.get().addUserLoginEventHandler(new UserLoginEventHandler() {
@@ -170,16 +134,11 @@ public class WaveList extends Composite {
     }
   }
 
-  private void update(List<IndexEntry> entries, boolean isIndexUpdate) {
+  private void update(List<IndexEntry> entries) {
     for (IndexEntry entry : entries) {
       String serializedId = entry.getWaveId().serialise();
       String eltId = WAVE_ID_PREFIX + serializedId;
       Element elt = panel.getElementById(eltId);
-
-      if (isIndexUpdate && currentSelection != null && elt == currentSelection) {
-        // We have better data from locally-generated updates
-        continue;
-      }
 
       if (elt != null) {
         elt.addClassName(style.updated());
@@ -191,12 +150,13 @@ public class WaveList extends Composite {
       }
 
       String digest = entry.getDigest();
-      if (digest == null || digest.length() == 0) {
-        digest = "<Empty Wave>";
+      if (digest.trim().isEmpty()) {
+        digest = "(empty)";
       }
+
       elt.setInnerText(digest.substring(0, Math.min(digest.length(),
           MAX_SNIPPET_LENGTH)));
-      
+
       if (entry.getWaveId().equals(pendingSelectionId)) {
         select(entry.getWaveId());
       }

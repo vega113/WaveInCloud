@@ -3,27 +3,30 @@
   <ui:style
     type="org.waveprotocol.wave.examples.client.webclient.client.WaveList.Style">
       .controls {
-        padding: 5px; border-bottom: thin solid gray;
+        padding: 5px;
+        border-bottom: thin solid gray;
       }
-      
+
       .entry {
-        border-bottom: thin solid gray; padding: 2px; cursor: pointer;
+        border-bottom: thin solid gray;
+        padding: 2px;
+        cursor: pointer;
         color: #555;
       }
-      
+
       .hasOverflow {
         overflow-x: hidden;
         overflow-y: auto;
       }
-      
+
       .newWaveButton {
         hight: 25px;
       }
-      
+
       .selected {
         background: #cec;
       }
-      
+
       .updated {
         color: black;
       }
