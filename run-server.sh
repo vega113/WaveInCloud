@@ -16,6 +16,7 @@ fi
 exec java $DEBUG_FLAGS -Dorg.eclipse.jetty.util.log.DEBUG=true -jar dist/fedone-server-$FEDONE_VERSION.jar \
   --client_frontend_hostname=$WAVE_SERVER_HOSTNAME \
   --client_frontend_port=$WAVE_SERVER_PORT \
+  --wave_server_domain=$WAVE_SERVER_DOMAIN_NAME \
   --xmpp_component_name=wave \
   --xmpp_jid=wave.${WAVE_SERVER_DOMAIN_NAME} \
   --xmpp_server_description="FedOne" \

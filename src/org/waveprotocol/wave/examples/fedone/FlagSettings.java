@@ -41,6 +41,9 @@ public class FlagSettings {
   @Flag(name = "xmpp_server_ping")
   private static String xmppServerPing;
 
+  @Flag(name = "wave_server_domain")
+  private static String waveServerDomain;
+
   @Flag(name = "client_frontend_hostname")
   private static String clientFrontendHost;
 

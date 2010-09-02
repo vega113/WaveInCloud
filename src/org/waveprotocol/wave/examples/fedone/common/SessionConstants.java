@@ -25,7 +25,7 @@ package org.waveprotocol.wave.examples.fedone.common;
 public interface SessionConstants {
 
   /**
-   * The hostname.
+   * The domain the wave server serves waves for.
    */
-  public final static String HOSTNAME = "hostname";
+  public final static String DOMAIN = "domain";
 }

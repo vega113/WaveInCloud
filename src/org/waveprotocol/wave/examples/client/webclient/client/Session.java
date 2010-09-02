@@ -51,9 +51,9 @@ public abstract class Session implements SessionConstants {
   }
 
   /**
-   * @return the hostname
+   * @return the domain the wave server serves waves for
    */
-  public abstract String getHostname();
+  public abstract String getDomain();
 
   /**
    * A {@link Session} which gets its data from the __session JS variable.
@@ -67,8 +67,8 @@ public abstract class Session implements SessionConstants {
     }-*/;
 
     @Override
-    public String getHostname() {
-      return getFieldAsString(HOSTNAME);
+    public String getDomain() {
+      return getFieldAsString(DOMAIN);
     }
 
     private native String getFieldAsString(String s) /*-{
@@ -81,8 +81,8 @@ public abstract class Session implements SessionConstants {
    */
   private static final class StubSession extends Session {
     @Override
-    public String getHostname() {
-      return HOSTNAME;
+    public String getDomain() {
+      return DOMAIN;
     }
   }
 }

@@ -67,7 +67,7 @@ public class LoginPanel extends Composite {
           }
         });
     setConnectionStatus(ConnectionStatus.NEVER_CONNECTED);
-    nameField.setText(INITIAL_NAME_FIELD_TEXT + "@" + Session.get().getHostname());
+    nameField.setText(INITIAL_NAME_FIELD_TEXT + "@" + Session.get().getDomain());
   }
 
   @UiHandler("sendButton")

@@ -98,18 +98,18 @@ public class WaveClientServlet extends HttpServlet {
 
   private static final Log LOG = Log.get(WaveClientServlet.class);
 
-  private final String hostname;
+  private final String domain;
   private final CachedStaticHtml cachedStaticHtml;
 
-  private WaveClientServlet(String hostname, CachedStaticHtml cachedStaticHtml) {
-    this.hostname = hostname;
+  private WaveClientServlet(String domain, CachedStaticHtml cachedStaticHtml) {
+    this.domain = domain;
     this.cachedStaticHtml = cachedStaticHtml;
   }
 
   /**
    * Creates a servlet and preloads the static HTML.
    */
-  public static WaveClientServlet create(String hostname) {
+  public static WaveClientServlet create(String domain) {
     CachedStaticHtml cachedStaticHtml = null;
     try {
       String staticHtmlFilename = "war/webclient.html.raw";
@@ -119,7 +119,7 @@ public class WaveClientServlet extends HttpServlet {
       throw new RuntimeException("Couldn't load static HTML", e);
     }
 
-    return new WaveClientServlet(hostname, cachedStaticHtml);
+    return new WaveClientServlet(domain, cachedStaticHtml);
   }
 
   @Override
@@ -137,7 +137,7 @@ public class WaveClientServlet extends HttpServlet {
    * @return the extra data to insert into the served static HTML
    */
   private String getServerData() throws IOException {
-    return "var __session = " + mapToJson(ImmutableMap.of(SessionConstants.HOSTNAME, hostname))
+    return "var __session = " + mapToJson(ImmutableMap.of(SessionConstants.DOMAIN, domain))
         + ";";
   }
 
