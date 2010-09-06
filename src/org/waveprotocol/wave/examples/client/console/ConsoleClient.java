@@ -36,14 +36,15 @@ import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -58,6 +59,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * User interface for the console client using the JLine library.
  */
 public class ConsoleClient implements WaveletOperationListener {
+
   /** Interface for any class that can render the console client */
   public interface Renderer {
     /**
@@ -67,7 +69,6 @@ public class ConsoleClient implements WaveletOperationListener {
      */
     void render(ConsoleClient client);
   }
-
 
   /**
    * Single active client-server interface, or null when not connected to a
@@ -630,7 +631,7 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void sendAppendBlipDelta(String text) {
     if (isWaveOpen()) {
-      backend.sendAndAwaitWaveletDelta(getOpenWavelet().getWaveletName(),
+      backend.sendAndAwaitWaveletDelta(WaveletDataUtil.waveletNameOf(getOpenWavelet()),
           ClientUtils.createAppendBlipDelta(getManifestDocument(), backend.getUserId(),
               backend.getIdGenerator().newBlipId(), text), 1, TimeUnit.MINUTES);
     } else {
@@ -639,17 +640,18 @@ public class ConsoleClient implements WaveletOperationListener {
   }
 
   /**
-   * @return open document, or null if no wave is open or main document doesn't exist
+   * @return open document, or null if no wave is open or main document doesn't
+   *         exist
    */
-  private BufferedDocOp getManifestDocument() {
-    return getOpenWavelet() == null ? null : getOpenWavelet().getDocuments().get(
+  private BlipData getManifestDocument() {
+    return getOpenWavelet() == null ? null : getOpenWavelet().getDocument(
         DocumentConstants.MANIFEST_DOCUMENT_ID);
   }
 
   /**
    * @return the open wavelet of the open wave, or null if no wave is open
    */
-  private CoreWaveletData getOpenWavelet() {
+  private WaveletData getOpenWavelet() {
     return isWaveOpen() ? ClientUtils.getConversationRoot(openWave.getWave()) : null;
   }
 
@@ -718,7 +720,7 @@ public class ConsoleClient implements WaveletOperationListener {
       // Don't send an invalid op, although the server should be robust enough
       // to deal with it
       if (!getOpenWavelet().getParticipants().contains(addId)) {
-        backend.sendAndAwaitWaveletOperation(getOpenWavelet().getWaveletName(),
+        backend.sendAndAwaitWaveletOperation(WaveletDataUtil.waveletNameOf(getOpenWavelet()),
             new CoreAddParticipant(addId), 1, TimeUnit.MINUTES);
       } else {
         out.println("Error: " + name + " is already a participant on this wave");
@@ -739,7 +741,7 @@ public class ConsoleClient implements WaveletOperationListener {
       ParticipantId removeId = ParticipantId.ofUnsafe(name);
 
       if (getOpenWavelet().getParticipants().contains(removeId)) {
-        backend.sendAndAwaitWaveletOperation(getOpenWavelet().getWaveletName(),
+        backend.sendAndAwaitWaveletOperation(WaveletDataUtil.waveletNameOf(getOpenWavelet()),
             new CoreRemoveParticipant(removeId), 1, TimeUnit.MINUTES);
       } else {
         out.println("Error: " + name + " is not a participant on this wave");
@@ -926,40 +928,40 @@ public class ConsoleClient implements WaveletOperationListener {
   }
 
   @Override
-  public void waveletDocumentUpdated(String author, CoreWaveletData wavelet,
-      CoreWaveletDocumentOperation docOp) {
+  public void waveletDocumentUpdated(String author, WaveletData wavelet, String docId,
+      BufferedDocOp docOp) {
     // TODO(arb): record the author??
   }
 
   @Override
-  public void participantAdded(String author, CoreWaveletData wavelet, ParticipantId participantId) {
+  public void participantAdded(String author, WaveletData wavelet, ParticipantId participantId) {
   }
 
   @Override
-  public void participantRemoved(String author, CoreWaveletData wavelet, ParticipantId participantId) {
+  public void participantRemoved(String author, WaveletData wavelet, ParticipantId participantId) {
     if (isWaveOpen() && participantId.equals(backend.getUserId())) {
       // We might have been removed from our open wave (an impressively verbose check...)
-      if (wavelet.getWaveletName().waveId.equals(openWave.getWave().getWaveId())) {
+      if (wavelet.getWaveId().equals(openWave.getWave().getWaveId())) {
         openWave = null;
       }
     }
   }
 
   @Override
-  public void noOp(String author, CoreWaveletData wavelet) {
+  public void noOp(String author, WaveletData wavelet) {
   }
 
   @Override
-  public void onDeltaSequenceStart(CoreWaveletData wavelet) {
+  public void onDeltaSequenceStart(WaveletData wavelet) {
   }
 
   @Override
-  public void onDeltaSequenceEnd(CoreWaveletData wavelet) {
+  public void onDeltaSequenceEnd(WaveletData wavelet) {
     render();
   }
 
   @Override
-  public void onCommitNotice(CoreWaveletData wavelet, HashedVersion version) {
+  public void onCommitNotice(WaveletData wavelet, HashedVersion version) {
   }
 
   public static void main(String[] args) {

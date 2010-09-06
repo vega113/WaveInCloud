@@ -26,6 +26,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
+import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -34,7 +35,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 
 /**
  * A local wavelet may be updated by submits. The local wavelet will perform
@@ -61,7 +61,6 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
   public DeltaApplicationResult submitRequest(WaveletName waveletName,
       ProtocolSignedDelta signedDelta) throws OperationException,
       InvalidProtocolBufferException, InvalidHashException, EmptyDeltaException {
-
     acquireWriteLock();
     try {
       return transformAndApplyLocalDelta(signedDelta);
@@ -87,7 +86,6 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
   private DeltaApplicationResult transformAndApplyLocalDelta(ProtocolSignedDelta signedDelta)
       throws OperationException, InvalidProtocolBufferException, EmptyDeltaException,
       InvalidHashException {
-
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
         ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
     VersionedWaveletDelta deltaAndVersion =
@@ -100,13 +98,19 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
     VersionedWaveletDelta transformed = maybeTransformSubmittedDelta(deltaAndVersion);
 
+    // TODO(ljvderijk): a Clock needs to be injected here (Issue 104)
+    long applicationTimeStamp = System.currentTimeMillis();
+
     // This is always false right now because the current algorithm doesn't transform ops away.
     if (transformed.delta.getOperations().isEmpty()) {
+      Preconditions.checkState(currentVersion.getVersion() != 0,
+          "currentVersion can not be 0 if delta was transformed");
       Preconditions.checkState(transformed.version.getVersion() <= currentVersion.getVersion());
       // The delta was transformed away. That's OK but we don't call either
       // applyWaveletOperations(), because that will throw EmptyDeltaException, or
       // commitAppliedDelta(), because empty deltas cannot be part of the delta history.
-      return new DeltaApplicationResult(buildAppliedDelta(signedDelta, transformed),
+      return new DeltaApplicationResult(buildAppliedDelta(signedDelta, transformed,
+          applicationTimeStamp),
           CoreWaveletOperationSerializer.serialize(transformed.delta, transformed.version),
           CoreWaveletOperationSerializer.serialize(transformed.version));
     }
@@ -127,13 +131,11 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
           CoreWaveletOperationSerializer.serialize(hashedVersionAfterApplication));
     }
 
-    // If any of the operations fail to apply, the wavelet data will be returned to its original
-    // state and an OperationException thrown
-    applyWaveletOperations(transformed.delta.getOperations());
+    applyWaveletOperations(transformed.delta, applicationTimeStamp);
 
     // Build the applied delta to commit
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
-        buildAppliedDelta(signedDelta, transformed);
+        buildAppliedDelta(signedDelta, transformed, applicationTimeStamp);
 
     DeltaApplicationResult applicationResult = commitAppliedDelta(appliedDelta, transformed.delta);
 
@@ -148,21 +150,21 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
   }
 
   private static ByteStringMessage<ProtocolAppliedWaveletDelta> buildAppliedDelta(
-      ProtocolSignedDelta signedDelta, VersionedWaveletDelta transformed) {
-    ProtocolAppliedWaveletDelta.Builder appliedDeltaBuilder =
-        ProtocolAppliedWaveletDelta.newBuilder()
-            .setSignedOriginalDelta(signedDelta)
-            .setOperationsApplied(transformed.delta.getOperations().size())
-            .setApplicationTimestamp(System.currentTimeMillis());
-
+      ProtocolSignedDelta signedDelta, VersionedWaveletDelta transformed,
+      long applicationTimeStamp) {
+    ProtocolAppliedWaveletDelta.Builder appliedDeltaBuilder = ProtocolAppliedWaveletDelta
+        .newBuilder()
+        .setSignedOriginalDelta(signedDelta)
+        .setOperationsApplied(transformed.delta.getOperations().size())
+        .setApplicationTimestamp(applicationTimeStamp);
     // TODO: re-enable this condition for version 0.3 of the spec
-    if (/*opsWereTransformed*/ true) {
-      // This is set to indicate the head version of the wavelet was different to the intended
+    if (/* opsWereTransformed */true) {
+      // This is set to indicate the head version of the wavelet was different
+      // to the intended
       // version of the wavelet (so the hash will have changed)
       appliedDeltaBuilder.setHashedVersionAppliedAt(
           CoreWaveletOperationSerializer.serialize(transformed.version));
     }
-
     return ByteStringMessage.fromMessage(appliedDeltaBuilder.build());
   }
 

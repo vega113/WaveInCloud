@@ -19,7 +19,7 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 /**
  * A builder class. Passed in to WaveletProvider.getSnapshot to allow the snapshot and versions
@@ -33,6 +33,6 @@ public interface WaveletSnapshotBuilder<T> {
   /**
    * Build a snapshot.
    */
-  T build(CoreWaveletData waveletData, HashedVersion currentVersion,
+  T build(WaveletData waveletData, HashedVersion currentVersion,
       ProtocolHashedVersion committedVersion);
 }

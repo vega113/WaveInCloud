@@ -22,10 +22,10 @@ import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 /**
  * Interface for a container class for a Wavelet's current state as well as its
@@ -49,7 +49,7 @@ abstract interface WaveletContainer {
 
   void setState(State state);
 
-  CoreWaveletData getWaveletData();
+  WaveletData getWaveletData();
 
   <T> T getSnapshot(WaveletSnapshotBuilder<T> builder);
 
@@ -96,8 +96,8 @@ abstract interface WaveletContainer {
    */
   ProtocolHashedVersion getLastCommittedVersion() throws WaveletStateException;
 
-  /** A list of participants currently on the wave */
-  List<ParticipantId> getParticipants();
+  /** A set of participants currently on the wave */
+  Set<ParticipantId> getParticipants();
 
   /** @return the current version of the wavelet. */
   HashedVersion getCurrentVersion();

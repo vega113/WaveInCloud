@@ -13,22 +13,28 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.waveserver;
+package org.waveprotocol.wave.examples.fedone.util;
 
 /**
- * Indicates a submitted delta contained no operations. This should not a fatal error (for example,
- * OT could transform a non-empty delta to an empty one), although hosts should not federate empty
- * deltas -- so for sanity checking remote servers should pay attention.
- *
- *
+ * Indicates a submitted delta contained no operations. This should not a fatal
+ * error (for example, OT could transform a non-empty delta to an empty one),
+ * although hosts should not federate empty deltas -- so for sanity checking
+ * remote servers should pay attention.
  */
 public class EmptyDeltaException extends Exception {
   public EmptyDeltaException() {
     super();
   }
 
+  public EmptyDeltaException(String message) {
+    super(message);
+  }
+
+  public EmptyDeltaException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
   public EmptyDeltaException(Throwable cause) {
     super(cause);
   }
 }
-

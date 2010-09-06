@@ -35,6 +35,7 @@ import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
+import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.federation.FederationErrors;
@@ -452,10 +453,10 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   }
 
   private boolean isLocalWavelet(WaveletName waveletName) {
-    LOG.info("### WS is local? " + waveletName + " = " + certificateManager.getLocalDomains().
-        contains(waveletName.waveletId.getDomain()));
-
-    return certificateManager.getLocalDomains().contains(waveletName.waveletId.getDomain());
+    boolean isLocal = certificateManager.getLocalDomains().
+        contains(waveletName.waveletId.getDomain());
+    LOG.info("### WS is local? " + waveletName + " = " + isLocal);
+    return isLocal;
   }
 
   private boolean checkWaveletHosting(boolean isLocal, WaveletName waveletName)
@@ -517,6 +518,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       if (wc == null) {
         wc = localWaveletContainerFactory.create(waveletName);
         // TODO: HACK(Jochen): do we need a namespace policer here ??? ###
+        // TODO(ljvderijk): Do we want to put in a wavelet wich has not been sumbitted yet?
         wave.put(waveletName.waveletId, wc);
       } else {
         if (!wc.checkAccessPermission(participantId)) {
@@ -602,7 +604,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
 
           // Send the results to subscribers.
           LOG.info("Sending update to client listener: " + submitResult.getDelta());
-          dispatcher.waveletUpdate( getWavelet(waveletName).getWaveletData(), resultingVersion,
+          dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(), resultingVersion,
               ImmutableList.of(submitResult.getDelta()));
 
           // Capture any new domains from addParticipant operations.

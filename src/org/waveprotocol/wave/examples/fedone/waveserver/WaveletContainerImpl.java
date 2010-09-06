@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -27,7 +28,9 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
+import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
@@ -39,10 +42,11 @@ import org.waveprotocol.wave.model.operation.TransformException;
 import org.waveprotocol.wave.model.operation.core.CoreTransform;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
-import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveletDataImpl;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -63,6 +67,8 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   private static final Log LOG = Log.get(WaveletContainerImpl.class);
 
+  private static final SecureRandom RANDOM_GENERATOR = new SecureRandom();
+
   protected static final HashedVersionFactory HASHED_HISTORY_VERSION_FACTORY =
       new HashedVersionFactoryImpl();
 
@@ -73,16 +79,21 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       Maps.newTreeMap();
   private final Lock readLock;
   private final Lock writeLock;
+  private WaveletData waveletData;
   protected WaveletName waveletName;
-  protected CoreWaveletData waveletData;
   protected HashedVersion currentVersion;
   protected ProtocolHashedVersion lastCommittedVersion;
   protected State state;
 
-  /** Constructor. */
+  /**
+   * Constructs an empty WaveletContainer for a wavelet with the given name.
+   * waveletData is not set until a delta has been applied.
+   *
+   * @param waveletName the name of the wavelet.
+   */
   public WaveletContainerImpl(WaveletName waveletName) {
     this.waveletName = waveletName;
-    waveletData = new CoreWaveletDataImpl(waveletName.waveId, waveletName.waveletId);
+    waveletData = null;
     currentVersion = HASHED_HISTORY_VERSION_FACTORY.createVersionZero(waveletName);
     lastCommittedVersion = null;
 
@@ -210,7 +221,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public CoreWaveletData getWaveletData() {
+  public WaveletData getWaveletData() {
     return waveletData;
   }
 
@@ -256,50 +267,27 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   /**
-   * Apply a list of operations from a single delta to the wavelet container.
+   * Apply the operations from a single delta to the wavelet container.
    *
-   * @param ops to apply
+   * @param delta {@link CoreWaveletDelta} to apply.
+   * @param applicationTimeStamp timestamp of the application.
    */
-  protected void applyWaveletOperations(List<CoreWaveletOperation> ops) throws OperationException,
-      EmptyDeltaException {
-    if (ops.isEmpty()) {
-      LOG.warning("No operations to apply at version " + currentVersion);
-      throw new EmptyDeltaException();
+  protected void applyWaveletOperations(CoreWaveletDelta delta, long applicationTimeStamp)
+      throws OperationException, EmptyDeltaException {
+    if (delta.getOperations().isEmpty()) {
+      throw new EmptyDeltaException(
+          "No operations to apply at version " + currentVersion.getVersion());
     }
 
-    CoreWaveletOperation lastOp = null;
-    int opsApplied = 0;
-
-    try {
-      for (CoreWaveletOperation op : ops) {
-        lastOp = op;
-        op.apply(waveletData);
-        opsApplied++;
-      }
-    } catch (OperationException e) {
-      LOG.warning("Only applied " + opsApplied + " of " + ops.size() + " operations at version "
-          + currentVersion + ", rolling back, failed op was " + lastOp, e);
-      // Deltas are atomic, so roll back all operations that were successful
-      rollbackWaveletOperations(ops.subList(0, opsApplied));
-      throw new OperationException("Failed to apply all operations, none were applied", e);
+    if (waveletData == null) {
+      Preconditions.checkState(currentVersion.getVersion() == 0L, "CurrentVersion must be 0");
+      waveletData =
+          WaveletDataUtil.createEmptyWavelet(waveletName, delta.getAuthor(), applicationTimeStamp);
     }
-  }
 
-  /**
-   * Like applyWaveletOperations, but applies the inverse of the given operations (in reverse), and
-   * no operations are permitted to fail.
-   *
-   * @param ops to roll back
-   */
-  private void rollbackWaveletOperations(List<CoreWaveletOperation> ops) {
-    for (int i = ops.size() - 1; i >= 0; i--) {
-      try {
-        ops.get(i).getInverse().apply(waveletData);
-      } catch (OperationException e) {
-        throw new IllegalArgumentException("Failed to roll back " + ops.get(i) + " with inverse "
-            + ops.get(i).getInverse(), e);
-      }
-    }
+    DistinctVersion endVersion = DistinctVersion.of(
+        waveletData.getVersion() + delta.getOperations().size(), RANDOM_GENERATOR.nextInt());
+    WaveletDataUtil.applyWaveletDelta(delta, waveletData, endVersion, applicationTimeStamp);
   }
 
   /**
@@ -462,10 +450,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public List<ParticipantId> getParticipants() {
+  public Set<ParticipantId> getParticipants() {
     acquireReadLock();
     try {
-      return (waveletData != null ? waveletData.getParticipants() : null);
+      return (waveletData != null ? waveletData.getParticipants() : ImmutableSet.<
+          ParticipantId>of());
     } finally {
       releaseReadLock();
     }

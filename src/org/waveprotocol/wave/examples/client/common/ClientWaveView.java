@@ -24,10 +24,12 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveViewData;
-import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveViewDataImpl;
+import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveViewData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -42,7 +44,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class ClientWaveView {
   /** Wave this is the view of. */
-  private final CoreWaveViewData data;
+  private final WaveViewData data;
 
   /** Last known version of each wavelet. */
   private final Map<WaveletId, HashedVersion> currentVersions;
@@ -74,7 +76,7 @@ public class ClientWaveView {
    */
   public ClientWaveView(HashedVersionFactory hashedVersionFactory, WaveId waveId) {
     this.hashedVersionFactory = hashedVersionFactory;
-    this.data = new CoreWaveViewDataImpl(waveId);
+    this.data = new WaveViewDataImpl(waveId, new ArrayList<ObservableWaveletData>());
     this.currentVersions = Maps.newHashMap();
     ReadWriteLock versionReadWriteLock = new ReentrantReadWriteLock();
     versionReadLock = versionReadWriteLock.readLock();
@@ -96,7 +98,7 @@ public class ClientWaveView {
    *
    * @return wavelets in this wave view.
    */
-  public Iterable<? extends CoreWaveletData> getWavelets() {
+  public Iterable<? extends WaveletData> getWavelets() {
     return data.getWavelets();
   }
 
@@ -172,21 +174,18 @@ public class ClientWaveView {
    *
    * @return the requested wavelet, or null if it is not in view.
    */
-  public CoreWaveletData getWavelet(WaveletId waveletId) {
+  public ObservableWaveletData getWavelet(WaveletId waveletId) {
     return data.getWavelet(waveletId);
   }
 
   /**
-   * Create a wavelet in the wave.
-   *
-   * @param waveletId of new wavelet, which must be unique within the wave
-   * @return wavelet created
+   * Adds a wavelet to this view.
+   * @param wavelet the wavelet to add
+   * @param version the version of the wavelet
    */
-  public CoreWaveletData createWavelet(WaveletId waveletId) {
-    WaveletName name = WaveletName.of(data.getWaveId(), waveletId);
-    CoreWaveletData wavelet = data.createWavelet(waveletId);
-    currentVersions.put(waveletId, hashedVersionFactory.createVersionZero(name));
-    return wavelet;
+  public void addWavelet(ObservableWaveletData wavelet, HashedVersion version) {
+    data.addWavelet(wavelet);
+    currentVersions.put(wavelet.getWaveletId(), version);
   }
 
   /**

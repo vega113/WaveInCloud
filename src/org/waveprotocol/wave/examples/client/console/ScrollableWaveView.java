@@ -26,16 +26,19 @@ import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.Collections;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * A {@link ClientWaveView} wrapper that can be rendered and scrolled for the
@@ -79,11 +82,9 @@ public class ScrollableWaveView extends ConsoleScrollable {
   @Override
   public synchronized List<String> render(final int width, final int height) {
     List<String> lines = Lists.newArrayList();
-    Map<String, BufferedDocOp> documentMap = ClientUtils.getConversationRoot(wave).getDocuments();
-    BufferedDocOp manifest = documentMap.get("conversation");
-    Preconditions.checkArgument(manifest != null);
+    WaveletData convRoot = ClientUtils.getConversationRoot(wave);
 
-    renderManifest(manifest, documentMap, width, lines);
+    renderManifest(convRoot, width, lines);
 
     // Also render a header, not too big...
     List<String> header = renderHeader(width);
@@ -102,9 +103,10 @@ public class ScrollableWaveView extends ConsoleScrollable {
     return header;
   }
 
-  private void renderDocument(BufferedDocOp document, final int width, final List<String> lines,
+  private void renderDocument(BlipData document, final int width, final List<String> lines,
       final StringBuilder currentLine, final String padding) {
-    document.apply(InitializationCursorAdapter.adapt(
+    DocOp docOp = document.getContent().asOperation();
+    docOp.apply(InitializationCursorAdapter.adapt(
         new DocInitializationCursor() {
           final Deque<String> elemStack = new LinkedList<String>();
 
@@ -184,18 +186,21 @@ public class ScrollableWaveView extends ConsoleScrollable {
         }));
   }
 
-  private void renderManifest(BufferedDocOp document, final Map<String, BufferedDocOp> documentMap,
-      final int width, final List<String> lines) {
+  private void renderManifest(final WaveletData waveletData, final int width,
+      final List<String> lines) {
+    BlipData manifest = waveletData.getDocument("conversation");
+    Preconditions.checkArgument(manifest != null);
+
     final StringBuilder currentLine = new StringBuilder();
 
     if (renderMode.equals(RenderMode.XML)) {
       // Only render the manifest XML itself if we are rendering the XML.
       // TODO: refactor the XML rendering code to not share these methods (it should just iterate
       // through all documents and render the XML, ignoring the conversation model).
-      renderDocument(document, width, lines, currentLine, "");
+      renderDocument(manifest, width, lines, currentLine, "");
     }
-
-    document.apply(InitializationCursorAdapter.adapt(
+    DocOp docOp = manifest.getContent().asOperation();
+    docOp.apply(InitializationCursorAdapter.adapt(
         new DocInitializationCursor() {
           final Deque<String> elemStack = new LinkedList<String>();
           private int threadDepth;
@@ -212,8 +217,8 @@ public class ScrollableWaveView extends ConsoleScrollable {
             if (renderMode.equals(RenderMode.NORMAL)) {
               if (type.equals(DocumentConstants.BLIP)) {
                 if (attrs.containsKey(DocumentConstants.BLIP_ID)) {
-                  BufferedDocOp document =
-                      documentMap.get(attrs.get(DocumentConstants.BLIP_ID));
+                  BlipData document =
+                      waveletData.getDocument(attrs.get(DocumentConstants.BLIP_ID));
                   if (document == null) {
                     // A nonexistent document is indistinguishable from the empty document, so this
                     // is not necessarily an error.
@@ -241,7 +246,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
                   lines.add(ConsoleUtils.ansiWrap(
                       ConsoleUtils.ANSI_BLUE_FG,
                       "<!-- document named: " + attrs.get(DocumentConstants.BLIP_ID) + " -->"));
-                  BufferedDocOp document = documentMap.get(attrs.get(DocumentConstants.BLIP_ID));
+                  BlipData document = waveletData.getDocument(attrs.get(DocumentConstants.BLIP_ID));
                   if (document == null) {
                     // A nonexistent document is indistinguishable from the empty document, so this
                     // is not necessarily an error.
@@ -293,7 +298,7 @@ public class ScrollableWaveView extends ConsoleScrollable {
    */
   private List<String> renderHeader(int width) {
     List<String> lines = Lists.newArrayList();
-    List<ParticipantId> participants = ClientUtils.getConversationRoot(wave).getParticipants();
+    Set<ParticipantId> participants = ClientUtils.getConversationRoot(wave).getParticipants();
 
     // HashedVersion
     StringBuilder versionLineBuilder = new StringBuilder();
@@ -307,12 +312,13 @@ public class ScrollableWaveView extends ConsoleScrollable {
     if (participants.isEmpty()) {
       participantLineBuilder.append("No participants!?");
     } else {
+      Iterator<ParticipantId> it = participants.iterator();
       participantLineBuilder.append("With ");
-      participantLineBuilder.append(participants.get(0));
+      participantLineBuilder.append(it.next());
 
-      for (int i = 1; i < participants.size(); i++) {
+      while(it.hasNext()){
         participantLineBuilder.append(", ");
-        participantLineBuilder.append(participants.get(i));
+        participantLineBuilder.append(it.next());
       }
     }
 

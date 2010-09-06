@@ -32,7 +32,9 @@ import com.google.protobuf.RpcController;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 import org.waveprotocol.wave.examples.fedone.rpc.ClientRpcChannel;
 import org.waveprotocol.wave.examples.fedone.rpc.ClientRpcChannelImpl;
@@ -40,6 +42,7 @@ import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
@@ -47,6 +50,8 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWa
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
@@ -59,11 +64,15 @@ import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreNoOp;
 import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
+import org.waveprotocol.wave.model.version.DistinctVersion;
+import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -81,17 +90,18 @@ import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
 
 /**
- * The "backend" of a basic wave client, designed for user interfaces to interact with.
- *
- *
+ * The "backend" of a basic wave client, designed for user interfaces to
+ * interact with.
  */
 public class ClientBackend {
+
   /**
    * Factory to create a client backend.
    */
   public interface Factory {
     /**
-     * Creates a ClientBacked tied permanently and connected to a given server and user.
+     * Creates a ClientBacked tied permanently and connected to a given server
+     * and user.
      *
      * @param userAtDomain the user and their domain (for example, foo@bar.org).
      * @param server to connect to (for example, acmewave.com).
@@ -99,7 +109,8 @@ public class ClientBackend {
      * @throws IOException if the client backend can't connect to the server.
      * @return the new ClientBackend.
      */
-    public ClientBackend create(final String userAtDomain, String server, int port) throws IOException;
+    public ClientBackend create(final String userAtDomain, String server, int port)
+        throws IOException;
   }
 
   /**
@@ -107,12 +118,14 @@ public class ClientBackend {
    */
   public interface RpcObjectFactory {
     /**
-     * @return a {@code ClientRpcChannel} connected to the given server and port.
+     * @return a {@code ClientRpcChannel} connected to the given server and
+     *         port.
      */
     public ClientRpcChannel createClientChannel(String server, int port) throws IOException;
 
     /**
-     * @return an RPC server interface backed by the given {@code ClientRpcChannel}.
+     * @return an RPC server interface backed by the given {@code
+     *         ClientRpcChannel}.
      */
     public ProtocolWaveClientRpc.Interface createServerInterface(ClientRpcChannel channel);
   }
@@ -122,7 +135,8 @@ public class ClientBackend {
    */
   public static class DefaultFactory implements Factory {
     @Override
-    public ClientBackend create(final String userAtDomain, String server, int port) throws IOException {
+    public ClientBackend create(final String userAtDomain, String server, int port)
+        throws IOException {
       return new ClientBackend(userAtDomain, server, port);
     }
   }
@@ -134,7 +148,7 @@ public class ClientBackend {
 
     private final String author;
     private final HashedVersion hashedVersion;
-    private final CoreWaveletData waveletData;
+    private final WaveletData waveletData;
     private final CoreWaveletOperation waveletOperation;
     // Hack to mark whether this is actually the "end of a delta sequence", in which case the
     // above data is irrelevant.
@@ -146,7 +160,7 @@ public class ClientBackend {
     /**
      * Standard constructor.
      */
-    WaveletEventData(String author, CoreWaveletData waveletData,
+    WaveletEventData(String author, WaveletData waveletData,
         CoreWaveletOperation waveletOperation) {
       this.author = author;
       this.hashedVersion = null;
@@ -159,7 +173,7 @@ public class ClientBackend {
     /**
      * Constructor to set this to a delta sequence end marker.
      */
-    WaveletEventData(CoreWaveletData waveletData) {
+    WaveletEventData(WaveletData waveletData) {
       this.author = null;
       this.hashedVersion = null;
       this.waveletData = waveletData;
@@ -171,7 +185,7 @@ public class ClientBackend {
     /**
      * Constructor for commit notice events.
      */
-    WaveletEventData(CoreWaveletData waveletData, HashedVersion hashedVersion) {
+    WaveletEventData(WaveletData waveletData, HashedVersion hashedVersion) {
       this.author = null;
       this.hashedVersion = hashedVersion;
       this.waveletData = waveletData;
@@ -188,7 +202,7 @@ public class ClientBackend {
       return hashedVersion;
     }
 
-    CoreWaveletData getWaveletData() {
+    WaveletData getWaveletData() {
       return waveletData;
     }
 
@@ -206,14 +220,16 @@ public class ClientBackend {
   }
 
   private static final Log LOG = Log.get(ClientBackend.class);
+
   private static final ByteArrayOutputStream logOutput = new ByteArrayOutputStream();
   static {
     LOG.getLogger().addHandler(new StreamHandler(logOutput, new SimpleFormatter()));
     LOG.getLogger().setUseParentHandlers(false);
   }
 
-  /** The factory used to create RPC objects. */
-  private final RpcObjectFactory rpcObjectFactory;
+  /** Id URI encoder and decoder. */
+  private static final IdURIEncoderDecoder URI_CODEC = new IdURIEncoderDecoder(
+      new URLEncoderDecoderBasedPercentEncoderDecoder());
 
   /** User id of the user of the backend (encapsulating both user and server). */
   private final ParticipantId userId;
@@ -236,9 +252,6 @@ public class ClientBackend {
   /** The server address that this backend should connect to */
   private final String server;
 
-  /** Id URI encoder and decoder. */
-  private final IdURIEncoderDecoder uriCodec;
-
   /** RPC interface for communicating with server. */
   private final ProtocolWaveClientRpc.Interface rpcServer;
 
@@ -248,6 +261,12 @@ public class ClientBackend {
   /** Producer/consumer event queue. */
   private final BlockingQueue<WaveletEventData> eventQueue =
       new LinkedBlockingQueue<WaveletEventData>();
+
+  /** 
+   * HashedVersionFactory for creating version 0 hash only, used only when client creates a 
+   * wavelet.
+   */
+  private final HashedVersionFactory hashedVersionFactory;
 
   /**
    * Create new client backend tied permanently to a given server and user, using a default
@@ -271,12 +290,12 @@ public class ClientBackend {
           public ProtocolWaveClientRpc.Interface createServerInterface(ClientRpcChannel channel) {
             return ProtocolWaveClientRpc.newStub(channel);
           }
-        });
+        }, new HashedVersionZeroFactoryImpl());
   }
 
   /**
-   * Create new client backend tied permanently to a given server and user, open that client's
-   * index, and begin managing waves it has access to.
+   * Create new client backend tied permanently to a given server and user, open
+   * that client's index, and begin managing waves it has access to.
    *
    * @param userAtDomain the user and their domain (for example, foo@bar.org).
    * @param server to connect to (for example, acmewave.com).
@@ -286,7 +305,8 @@ public class ClientBackend {
    */
   @Inject
   public ClientBackend(final String userAtDomain, String server, int port,
-      RpcObjectFactory rpcObjectFactory) throws IOException {
+      RpcObjectFactory rpcObjectFactory, HashedVersionFactory hashedVersionFactory)
+      throws IOException {
     Preconditions.checkNotNull(server, "Server not specified");
     Preconditions.checkArgument(port >= 0, "Port number must be greater than 0");
 
@@ -302,8 +322,7 @@ public class ClientBackend {
       }
 
     });
-    this.uriCodec = new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
-    this.rpcObjectFactory = rpcObjectFactory;
+    this.hashedVersionFactory = hashedVersionFactory;
 
     // Start pushing events to listeners in a separate thread.
     new Thread() {
@@ -511,7 +530,7 @@ public class ClientBackend {
     ProtocolSubmitRequest.Builder submitRequest = ProtocolSubmitRequest.newBuilder();
 
     try {
-      submitRequest.setWaveletName(uriCodec.waveletNameToURI(waveletName));
+      submitRequest.setWaveletName(URI_CODEC.waveletNameToURI(waveletName));
     } catch (EncodingException e) {
       throw new IllegalArgumentException(e);
     }
@@ -574,87 +593,165 @@ public class ClientBackend {
   public void receiveWaveletUpdate(ProtocolWaveletUpdate waveletUpdate) {
     LOG.info("Received update " + waveletUpdate);
 
-    WaveletName waveletName;
-    try {
-      waveletName = uriCodec.uriToWaveletName(waveletUpdate.getWaveletName());
-    } catch (EncodingException e) {
-      throw new IllegalArgumentException(e);
-    }
-
-    ClientWaveView wave = waves.get(waveletName.waveId);
-    if (wave == null) {
-      // The wave view should always be present, since openWave adds them immediately.
-      throw new AssertionError("Received update on absent waveId " + waveletName.waveId);
-    }
-
-    CoreWaveletData wavelet = wave.getWavelet(waveletName.waveletId);
-    if (wavelet == null) {
-      wavelet = wave.createWavelet(waveletName.waveletId);
-    }
+    WaveletName waveletName = getWaveletName(waveletUpdate);
 
     // Apply operations to the wavelet.
-    List<Pair<String, CoreWaveletOperation>> successfulOps = Lists.newArrayList();
-    if (waveletUpdate.hasSnapshot()) {
-      Preconditions.checkArgument(waveletUpdate.hasResultingVersion());
-      final WaveletSnapshot snapshot = waveletUpdate.getSnapshot();
-      // Kinda bogus - we need something better here.
-      // TODO(arb): talk to soren about this - what should we do about contributors?
-      final String creator = snapshot.getParticipantId(0);
-      for (CoreWaveletOperation op : CoreWaveletOperationSerializer.deserialize(snapshot)) {
-        try {
-          op.apply(wavelet);
-          successfulOps.add(Pair.of(creator, op));
-        } catch (OperationException e) {
-          // It should be okay (if cheeky) for the client to just ignore failed ops.  In any case,
-          // this should never happen if our server is behaving correctly.
-          LOG.severe("OperationException when applying snapshot " + op + " to " + wavelet, e);
-        }
-      }
-    } else if (!waveletUpdate.getAppliedDeltaList().isEmpty()) {
-      Preconditions.checkArgument(waveletUpdate.hasResultingVersion());
-      Preconditions.checkArgument(!waveletUpdate.getAppliedDeltaList().isEmpty());
+    List<WaveletEventData> events = Lists.newArrayList();
 
-      for (ProtocolWaveletDelta protobufDelta : waveletUpdate.getAppliedDeltaList()) {
-        List<CoreWaveletOperation> ops =
-            CoreWaveletOperationSerializer.deserialize(protobufDelta).delta.getOperations();
-        for (CoreWaveletOperation op : ops) {
-          try {
-            op.apply(wavelet);
-            successfulOps.add(Pair.of(protobufDelta.getAuthor(), op));
-          } catch (OperationException e) {
-            // It should be okay (if cheeky) for the client to just ignore failed ops.  In any case,
-            // this should never happen if our server is behaving correctly.
-            LOG.severe("OperationException when applying " + op + " to " + wavelet, e);
-          }
-        }
-      }
+    ObservableWaveletData wavelet;
+    if (waveletUpdate.hasSnapshot()) {
+      List<WaveletEventData> snapshotEvents = Lists.newArrayList();
+      wavelet = receiveSnapshot(waveletUpdate, snapshotEvents);
+      events.addAll(snapshotEvents);
+    } else if (!waveletUpdate.getAppliedDeltaList().isEmpty()) {
+      List<WaveletEventData> deltaEvents = Lists.newArrayList();
+      wavelet = receiveDeltas(waveletUpdate, events);
+      events.addAll(deltaEvents);
+    } else if (waveletUpdate.hasMarker()) {
+      // Don't do anything at the moment.
+      return;
+    } else {
+      // TODO(ljvderijk): Might be simplified, might be removed when protocol
+      // update is complete.
+      ClientWaveView wave = getExistingWaveView(waveletName);
+      wavelet = wave.getWavelet(waveletName.waveletId);
     }
+
+    ClientWaveView wave = getExistingWaveView(waveletName);
 
     if (waveletUpdate.hasResultingVersion()) {
-      wave.setWaveletVersion(waveletName.waveletId, CoreWaveletOperationSerializer
-          .deserialize(waveletUpdate.getResultingVersion()));
+      wave.setWaveletVersion(waveletName.waveletId,
+          CoreWaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()));
     }
-    // If we have been removed from this wavelet then remove the data too, since if we're re-added
-    // then we will get a fresh snapshot or deltas from version 0, not the latest version we've
-    // seen.
+
+    // If we have been removed from this wavelet then remove the data too,
+    // since if we're re-added then we will get a fresh snapshot or deltas
+    // from version 0, not the latest version we've seen.
     if (!wavelet.getParticipants().contains(getUserId())) {
       wave.removeWavelet(waveletName.waveletId);
     }
 
-    // If it was an update to the index wave, might need to open/close some more waves.
+    // If it was an update to the index wave, might need to open/close some
+    // more waves.
     if (IndexWave.isIndexWave(wave)) {
       syncWithIndexWave(wave);
     }
 
-    // Push the events to the event queue.
-    for (Pair<String, CoreWaveletOperation> authorAndOp : successfulOps) {
-      eventQueue.offer(new WaveletEventData(authorAndOp.first, wavelet, authorAndOp.second));
-    }
     if (waveletUpdate.hasCommitNotice()) {
-      eventQueue.offer(new WaveletEventData(wavelet,
-          CoreWaveletOperationSerializer.deserialize(waveletUpdate.getCommitNotice())));
+      events.add(new WaveletEventData(
+          wavelet, CoreWaveletOperationSerializer.deserialize(waveletUpdate.getCommitNotice())));
     }
-    eventQueue.offer(new WaveletEventData(wavelet));
+
+    events.add(new WaveletEventData(wavelet));
+
+    // Push all events to the eventQueue.
+    for (WaveletEventData waveletEventData : events) {
+      eventQueue.offer(waveletEventData);
+    }
+  }
+
+  /**
+   * Handles the receiving of a snapshot contained in a
+   * {@link ProtocolWaveletUpdate}.
+   *
+   * The wavelet must not exist yet in the {@link ClientWaveView}.
+   *
+   * @param waveletUpdate the update proto to handle.
+   * @param events the list where this method keeps track of the events it has
+   *        triggered.
+   * @return the deserialized {@link ObservableWaveletData} stored in the
+   *         snapshot.
+   */
+  private ObservableWaveletData receiveSnapshot(
+      ProtocolWaveletUpdate waveletUpdate, List<WaveletEventData> events) {
+    Preconditions.checkArgument(waveletUpdate.hasResultingVersion());
+
+    WaveletName waveletName = getWaveletName(waveletUpdate);
+
+    ClientWaveView wave = getExistingWaveView(waveletName);
+    ObservableWaveletData wavelet = wave.getWavelet(waveletName.waveletId);
+    Preconditions.checkState(wavelet == null, "Wavelet must be null");
+
+    final WaveletSnapshot snapshot = waveletUpdate.getSnapshot();
+    try {
+      wavelet = CoreWaveletOperationSerializer.deserializeSnapshot(
+          snapshot, waveletUpdate.getResultingVersion(), waveletName);
+      wave.addWavelet(
+          wavelet, CoreWaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()));
+
+      // Push the snapshot as operations to the event list
+      for (ParticipantId participant : wavelet.getParticipants()) {
+        events.add(new WaveletEventData(
+            wavelet.getCreator().getAddress(), wavelet, new CoreAddParticipant(participant)));
+      }
+      for (String documentId : wavelet.getDocumentIds()) {
+        BlipData doc = wavelet.getDocument(documentId);
+        BufferedDocOp docOp = DocOpUtil.buffer(doc.getContent().asOperation());
+        events.add(
+            new WaveletEventData(wavelet.getCreator().getAddress(), wavelet,
+                new CoreWaveletDocumentOperation(documentId, docOp)));
+      }
+    } catch (OperationException e) {
+      // It should be okay (if cheeky) for the client to just ignore failed
+      // ops. In any case, this should never happen if our server is
+      // behaving correctly.
+      LOG.severe("OperationException when creating snapshot ", e);
+    }
+    return wavelet;
+  }
+
+  /**
+   * Handles the deltas contained in a {@link ProtocolWaveletUpdate}.
+   *
+   * @param waveletUpdate the update proto to handle.
+   * @param events the list where this method keeps track of the events it has
+   *        triggered.
+   * @return the {@link ObservableWaveletData} updated with the deltas present
+   *         in the {@link ProtocolWaveletUpdate}.
+   */
+  private ObservableWaveletData receiveDeltas(
+      ProtocolWaveletUpdate waveletUpdate, List<WaveletEventData> events) {
+    Preconditions.checkArgument(waveletUpdate.hasResultingVersion());
+    Preconditions.checkArgument(!waveletUpdate.getAppliedDeltaList().isEmpty());
+
+    WaveletName waveletName = getWaveletName(waveletUpdate);
+    ClientWaveView wave = getExistingWaveView(waveletName);
+    ObservableWaveletData wavelet = wave.getWavelet(waveletName.waveletId);
+
+    // TODO(ljvderijk): enable when protocol is fixed so that we always get a
+    // snapshot first.
+    // Preconditions.checkState(wavelet != null, "Wavelet must be present!");
+
+    for (ProtocolWaveletDelta protobufDelta : waveletUpdate.getAppliedDeltaList()) {
+      VersionedWaveletDelta versionedWaveletDelta =
+          CoreWaveletOperationSerializer.deserialize(protobufDelta);
+      CoreWaveletDelta delta = versionedWaveletDelta.delta;
+
+      long dummyTimestamp = Constants.NO_TIMESTAMP;
+
+      if (wavelet == null) {
+        // TODO(ljvderijk): This should never happen, but it currently does.
+        // Snapshot should be received first.
+        // Instantiate a new wavelet
+        wavelet =
+            WaveletDataUtil.createEmptyWavelet(waveletName, delta.getAuthor(), dummyTimestamp);
+        wave.addWavelet(wavelet, hashedVersionFactory.createVersionZero(waveletName));
+      }
+
+      DistinctVersion dummyVersion =
+          DistinctVersion.of(wavelet.getVersion() + delta.getOperations().size(), 0);
+      try {
+        WaveletDataUtil.applyWaveletDelta(delta, wavelet, dummyVersion, dummyTimestamp);
+      } catch (OperationException e) {
+        LOG.severe("Operations failed to apply", e);
+      }
+
+      // All operations were successful so put them in the list of events.
+      for (CoreWaveletOperation op : delta.getOperations()) {
+        events.add(new WaveletEventData(delta.getAuthor().getAddress(), wavelet, op));
+      }
+    }
+    return wavelet;
   }
 
   /**
@@ -663,16 +760,50 @@ public class ClientBackend {
    * @return the new wave's {@code ClientWaveView}
    */
   private ClientWaveView createWave(WaveId waveId) {
-    ClientWaveView wave = new ClientWaveView(new HashedVersionZeroFactoryImpl(), waveId);
+    ClientWaveView wave = new ClientWaveView(hashedVersionFactory, waveId);
     waves.put(waveId, wave);
     return wave;
   }
 
   /**
-   * Synchronise with the index wave by opening any waves that appear in the index but that we
+   * Returns the {@link WaveletName} stored in the
+   * {@link ProtocolWaveletUpdate}.
+   *
+   * @param waveletUpdate the update containing the name
+   * @throws IllegalArgumentException if the data in the
+   *         {@link ProtocolWaveletUpdate} could not be decoded.
+   */
+  private WaveletName getWaveletName(ProtocolWaveletUpdate waveletUpdate) {
+    WaveletName waveletName;
+    try {
+      waveletName = URI_CODEC.uriToWaveletName(waveletUpdate.getWaveletName());
+    } catch (EncodingException e) {
+      throw new IllegalArgumentException(e);
+    }
+    return waveletName;
+  }
+
+  /**
+   * Returns a {@link ClientWaveView} for the given {@link WaveletName}. The
+   * {@link ClientWaveView} for this wave must already exist.
+   *
+   * @param waveletName contains the waveId of the {@link ClientWaveView} to be
+   *        returned.
+   * @throws IllegalArgumentException if the {@link ClientWaveView} does not
+   *         exist.
+   */
+  private ClientWaveView getExistingWaveView(WaveletName waveletName) {
+    ClientWaveView wave = waves.get(waveletName.waveId);
+    Preconditions.checkArgument(
+        wave != null, "Request for ClientWaveView with absent waveId " + waveletName.waveId);
+    return wave;
+  }
+
+  /**
+   * Synchronize with the index wave by opening any waves that appear in the index but that we
    * don't have an RPC open request to.
    *
-   * @param indexWave to synchronise with
+   * @param indexWave to synchronize with
    */
   private void syncWithIndexWave(ClientWaveView indexWave) {
     List<IndexEntry> indexEntries = IndexWave.getIndexEntries(indexWave);
@@ -692,12 +823,14 @@ public class ClientBackend {
    * @param wavelet operated on
    * @param op the operation
    */
-  private void notifyWaveletOperationListeners(String author, CoreWaveletData wavelet,
+  private void notifyWaveletOperationListeners(String author, WaveletData wavelet,
       CoreWaveletOperation op) {
     for (WaveletOperationListener listener : waveletOperationListeners) {
       try {
         if (op instanceof CoreWaveletDocumentOperation) {
-          listener.waveletDocumentUpdated(author, wavelet, (CoreWaveletDocumentOperation) op);
+          CoreWaveletDocumentOperation waveletDocOp = (CoreWaveletDocumentOperation) op;
+          listener.waveletDocumentUpdated(author, wavelet, waveletDocOp.getDocumentId(),
+              waveletDocOp.getOperation());
         } else if (op instanceof CoreAddParticipant) {
           listener.participantAdded(author, wavelet, ((CoreAddParticipant) op).getParticipantId());
         } else if (op instanceof CoreRemoveParticipant) {

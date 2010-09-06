@@ -19,6 +19,7 @@ package org.waveprotocol.wave.examples.fedone.agents.probey;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.eclipse.jetty.http.security.Constraint;
@@ -39,6 +40,7 @@ import org.waveprotocol.wave.examples.fedone.agents.agent.AgentConnection;
 import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
@@ -49,14 +51,13 @@ import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -96,12 +97,12 @@ public class Probey extends AbstractAgent {
     if (wave == null) {
       throw new IllegalArgumentException("NOT FOUND");
     }
-    CoreWaveletData convRoot = ClientUtils.getConversationRoot(wave);
-    BufferedDocOp manifest = convRoot.getDocuments().get(DocumentConstants.MANIFEST_DOCUMENT_ID);
+    WaveletData convRoot = ClientUtils.getConversationRoot(wave);
+    BlipData manifest = convRoot.getDocument(DocumentConstants.MANIFEST_DOCUMENT_ID);
     String newDocId = getNewDocumentId();
     CoreWaveletDelta delta = ClientUtils.createAppendBlipDelta(manifest, getParticipantId(),
         newDocId, blipText);
-    sendAndAwaitWaveletDelta(convRoot.getWaveletName(), delta);
+    sendAndAwaitWaveletDelta(WaveletDataUtil.waveletNameOf(convRoot), delta);
     return newDocId;
   }
 
@@ -117,10 +118,10 @@ public class Probey extends AbstractAgent {
     if (wave == null) {
       throw new IllegalArgumentException("NOT FOUND");
     }
-    CoreWaveletData convRoot = ClientUtils.getConversationRoot(wave);
+    WaveletData convRoot = ClientUtils.getConversationRoot(wave);
     CoreAddParticipant addUserOp = new CoreAddParticipant(addId);
-    sendAndAwaitWaveletDelta(convRoot.getWaveletName(), new CoreWaveletDelta(getParticipantId(),
-        ImmutableList.of(addUserOp)));
+    sendAndAwaitWaveletDelta(WaveletDataUtil.waveletNameOf(convRoot),
+        new CoreWaveletDelta(getParticipantId(), ImmutableList.of(addUserOp)));
   }
 
   /**
@@ -144,49 +145,46 @@ public class Probey extends AbstractAgent {
     if (wave == null) {
       throw new IllegalArgumentException("NOT FOUND");
     }
-    CoreWaveletData convRoot = ClientUtils.getConversationRoot(wave);
-    BufferedDocOp manifest = convRoot.getDocuments()
-        .get(DocumentConstants.MANIFEST_DOCUMENT_ID);
-    final Map<String, BufferedDocOp> documentMap =
-        ClientUtils.getConversationRoot(wave).getDocuments();
+    final WaveletData convRoot = ClientUtils.getConversationRoot(wave);
+    BlipData manifest = convRoot.getDocument(DocumentConstants.MANIFEST_DOCUMENT_ID);
     if (manifest == null) {
       throw new IllegalArgumentException("MANIFEST MISSING");
     }
     final StringBuilder builder = new StringBuilder();
-    manifest.apply(InitializationCursorAdapter.adapt((
+    manifest.getContent().asOperation().apply(InitializationCursorAdapter.adapt((
         new DocInitializationCursor() {
 
           @Override
           public void elementStart(String type, Attributes attrs) {
             if (type.equals(DocumentConstants.BLIP)) {
               if (attrs.containsKey(DocumentConstants.BLIP_ID)) {
-                BufferedDocOp document =
-                    documentMap.get(attrs.get(DocumentConstants.BLIP_ID));
+                BlipData document =
+                    convRoot.getDocument(attrs.get(DocumentConstants.BLIP_ID));
                 if (document != null) {
                   // A nonexistent document is indistinguishable from
                   // the empty document, so document == null is not necessarily an error.
                   builder.append("Blip: ");
                   builder.append(attrs.get(DocumentConstants.BLIP_ID));
                   builder.append("\nContent: ");
-                  document.apply(InitializationCursorAdapter.adapt(new DocInitializationCursor() {
+                  document.getContent().asOperation().apply(
+                      InitializationCursorAdapter.adapt(new DocInitializationCursor() {
+                        @Override
+                        public void characters(String chars) {
+                          builder.append(chars);
+                        }
 
-                    @Override
-                    public void characters(String chars) {
-                      builder.append(chars);
-                    }
+                        @Override
+                        public void annotationBoundary(AnnotationBoundaryMap map) {
+                        }
 
-                    @Override
-                    public void annotationBoundary(AnnotationBoundaryMap map) {
-                    }
+                        @Override
+                        public void elementStart(String type, Attributes attrs) {
+                        }
 
-                    @Override
-                    public void elementStart(String type, Attributes attrs) {
-                    }
-
-                    @Override
-                    public void elementEnd() {
-                    }
-                  }));
+                        @Override
+                        public void elementEnd() {
+                        }
+                      }));
                   builder.append("\n");
                 }
               }
@@ -209,24 +207,23 @@ public class Probey extends AbstractAgent {
   }
 
   @Override
-  public void onDocumentChanged(CoreWaveletData wavelet,
-      CoreWaveletDocumentOperation documentOperation) {
+  public void onDocumentChanged(WaveletData wavelet, String docId, BufferedDocOp docOp) {
   }
 
   @Override
-  public void onParticipantAdded(CoreWaveletData wavelet, ParticipantId participant) {
+  public void onParticipantAdded(WaveletData wavelet, ParticipantId participant) {
   }
 
   @Override
-  public void onParticipantRemoved(CoreWaveletData wavelet, ParticipantId participant) {
+  public void onParticipantRemoved(WaveletData wavelet, ParticipantId participant) {
   }
 
   @Override
-  public void onSelfAdded(CoreWaveletData wavelet) {
+  public void onSelfAdded(WaveletData wavelet) {
   }
 
   @Override
-  public void onSelfRemoved(CoreWaveletData wavelet) {
+  public void onSelfRemoved(WaveletData wavelet) {
   }
 
   public static void main(String[] args) {
@@ -271,7 +268,7 @@ public class Probey extends AbstractAgent {
         securityHandler.setAuthenticator(new BasicAuthenticator());
         securityHandler.setLoginService(loginService);
         securityHandler.setStrict(false);
-        securityHandler.setConstraintMappings(new ConstraintMapping[]{constraintMapping}, 
+        securityHandler.setConstraintMappings(Lists.newArrayList(constraintMapping), 
             knownRoles);
 
         ContextHandlerCollection contexts = new ContextHandlerCollection();

@@ -53,7 +53,7 @@ public class ConsoleClientTest extends TestCase implements TestingConstants {
       super("Exit with status " + status);
       this.status = status;
     }
-  };
+  }
 
   /** The client under test */
   private ConsoleClient client;

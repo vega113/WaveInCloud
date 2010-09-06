@@ -20,14 +20,13 @@ package org.waveprotocol.wave.examples.fedone.agents.echoey;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.mockito.Mockito.any;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atMost;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
-
 import static org.waveprotocol.wave.examples.fedone.common.DocumentConstants.MANIFEST_DOCUMENT_ID;
 import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.Aliases.contains;
 import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.Aliases.matches;
@@ -35,27 +34,23 @@ import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.Aliase
 import com.google.common.collect.Lists;
 
 import org.mockito.ArgumentCaptor;
-
 import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentConnection;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentTestBase;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.operation.OpComparators;
+import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
-import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.List;
 
@@ -72,13 +67,13 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     // We're assuming that Echoey is connected, as tested in AgentTestBase.
     // Otherwise it may ignore changes for the wrong reason.
 
-    CoreWaveletData wavelet = util.createWavelet();
-    BufferedDocOp manifest = wavelet.getDocuments().get(MANIFEST_DOCUMENT_ID);
+    WaveletData wavelet = util.createWavelet();
+    BlipData manifest = wavelet.getDocument(MANIFEST_DOCUMENT_ID);
     CoreWaveletDocumentOperation docOp = ClientUtils.appendToManifest(manifest, BLIP_ID);
 
     // Forget "connect" interactions from setUp.
     reset(backend);
-    agent.onDocumentChanged(wavelet, docOp);
+    agent.onDocumentChanged(wavelet, docOp.getDocumentId(), docOp.getOperation());
 
     verifyZeroInteractions(backend);
   }
@@ -94,7 +89,7 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
 
     // Forget "connect" interactions from setUp.
     reset(backend);
-    agent.onDocumentChanged(util.createWavelet(), docOp);
+    agent.onDocumentChanged(util.createWavelet(), docOp.getDocumentId(), docOp.getOperation());
 
     // Should be at most 1 call to getUserId to identify own changes, and no other calls on the
     // backend.
@@ -103,20 +98,21 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
   }
 
   /** Should exactly mirror incoming changes in a separate blip. */
-  public void testMirrorsChangesInSeparateBlip() throws OperationException {
+  public void testMirrorsChangesInSeparateBlip() {
     // Create the wavelet in the backend, otherwise Echoey can't send the delta.
-    CoreWaveletData wavelet = util.createWaveletInBackend();
-    CoreWaveletDocumentOperation docOp = new CoreWaveletDocumentOperation(BLIP_ID,
-        ClientUtils.createTextInsertion(MESSAGE, 0, 0));
+    WaveletData wavelet = util.createWaveletInBackend();
+    CoreWaveletDocumentOperation docOp =
+        new CoreWaveletDocumentOperation(BLIP_ID, ClientUtils.createTextInsertion(MESSAGE, 0, 0));
     String echoeyDocId = BLIP_ID + agent.getEchoeyDocumentSuffix();
 
     // Forget interactions from creating the wavelet.
     reset(backend);
-    agent.onDocumentChanged(wavelet, docOp);
+    agent.onDocumentChanged(wavelet, docOp.getDocumentId(), docOp.getOperation());
 
-    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet.getWaveletName());
+    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet);
 
-    // The sent opration should have the same changes as we injected, but in echoey's own blip.
+    // The sent opration should have the same changes as we injected, but in
+    // echoey's own blip.
     CoreWaveletDocumentOperation sentOp = ops.get(0);
     assertEquals(echoeyDocId, sentOp.getDocumentId());
     assertEquals(docOp.getOperation(), sentOp.getOperation());
@@ -125,14 +121,14 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
   /** Should create a notification blip when a participant is added. */
   public void testNotifiesParticipantAdded() {
     // Create the wavelet in the backend, otherwise Echoey can't send the delta.
-    CoreWaveletData wavelet = util.createWaveletInBackend();
+    WaveletData wavelet = util.createWaveletInBackend();
     String addedMessage = agent.getParticipantAddedMessage(OTHER_PARTICIPANT);
 
     // Forget interactions from creating the wavelet.
     reset(backend);
     agent.onParticipantAdded(wavelet, OTHER_PARTICIPANT);
 
-    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet.getWaveletName());
+    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet);
     String resultingContent = util.getText(ops);
 
     assertEquals(addedMessage, resultingContent);
@@ -141,14 +137,14 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
   /** Should create a notification blip when a participant is removed. */
   public void testNotifiesParticipantRemoved() {
     // Create the wavelet in the backend, otherwise Echoey can't send the delta.
-    CoreWaveletData wavelet = util.createWaveletInBackend();
+    WaveletData wavelet = util.createWaveletInBackend();
     String removedMessage = agent.getParticipantRemovedMessage(OTHER_PARTICIPANT);
 
     // Forget interactions from creating the wavelet.
     reset(backend);
     agent.onParticipantRemoved(wavelet, OTHER_PARTICIPANT);
 
-    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet.getWaveletName());
+    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet);
     String resultingContent = util.getText(ops);
 
     assertEquals(removedMessage, resultingContent);
@@ -157,31 +153,31 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
   /** Should say hello when added to a wavelet. */
   public void testGreetsWhenAdded() {
     // Create the wavelet in the backend, otherwise Echoey can't send the delta.
-    CoreWaveletData wavelet = util.createWaveletInBackend();
+    WaveletData wavelet = util.createWaveletInBackend();
 
     // Forget interactions from creating the wavelet.
     reset(backend);
     agent.onSelfAdded(wavelet);
 
-    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet.getWaveletName());
+    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet);
     String resultingContent = util.getText(ops);
 
-    assertEquals(agent.GREETING, resultingContent);
+    assertEquals(Echoey.GREETING, resultingContent);
   }
 
   /** Should say goodbye when removed from a wavelet. */
   public void testSaysByeWhenRemoved() {
     // Create the wavelet in the backend, otherwise Echoey can't send the delta.
-    CoreWaveletData wavelet = util.createWaveletInBackend();
+    WaveletData wavelet = util.createWaveletInBackend();
 
     // Forget interactions from creating the wavelet.
     reset(backend);
     agent.onSelfRemoved(wavelet);
 
-    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet.getWaveletName());
+    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet);
     String resultingContent = util.getText(ops);
 
-    assertEquals(agent.FAREWELL, resultingContent);
+    assertEquals(Echoey.FAREWELL, resultingContent);
   }
 
   /**
@@ -199,8 +195,8 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     util.assertOperationComplete(callback);
 
     // Get the wave details.
-    CoreWaveletData convRoot = ClientUtils.getConversationRoot(wave);
-    WaveletName waveletName = convRoot.getWaveletName();
+    WaveletData convRoot = ClientUtils.getConversationRoot(wave);
+    WaveletName waveletName = WaveletDataUtil.waveletNameOf(convRoot);
 
     // Add another participant.
     callback = BlockingSuccessFailCallback.create();
@@ -209,7 +205,7 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     util.assertOperationComplete(callback);
 
     // Append a blip by the other participant.
-    BufferedDocOp manifest = convRoot.getDocuments().get(MANIFEST_DOCUMENT_ID);
+    BlipData manifest = convRoot.getDocument(MANIFEST_DOCUMENT_ID);
     callback = BlockingSuccessFailCallback.create();
     backend.sendWaveletDelta(waveletName, ClientUtils.createAppendBlipDelta(manifest,
         OTHER_PARTICIPANT, BLIP_ID, MESSAGE), callback);
@@ -224,7 +220,7 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     // Check for the standard Echoey responses to make sure we really did the complete round-trips.
     // We don't get the blips text in-order, so we don't check the order of messages.
     String waveContent = util.getText(wave);
-    assertThat(waveContent, contains(agent.GREETING));
+    assertThat(waveContent, contains(Echoey.GREETING));
     assertThat(waveContent, contains(agent.getParticipantAddedMessage(OTHER_PARTICIPANT)));
     assertThat(waveContent, contains(agent.getParticipantRemovedMessage(OTHER_PARTICIPANT)));
     // There should be one message copy from the other participant and another copy from Echoey.
@@ -242,13 +238,14 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
    * Verifies that sendWaveletDelta has been called and that the delta contains only
    * {@code WaveletDocumentOperation}s.
    *
-   * @param waveletName of the wavelet on which we expect a delta.
+   * @param wavelet the wavelet on which we expect a delta.
    * @return the list of operations in the delta.
    */
   @SuppressWarnings("unchecked")
-  private List<CoreWaveletDocumentOperation> verifySendDelta(WaveletName waveletName) {
+  private List<CoreWaveletDocumentOperation> verifySendDelta(WaveletData wavelet) {
     ArgumentCaptor<CoreWaveletDelta> delta = ArgumentCaptor.forClass(CoreWaveletDelta.class);
 
+    WaveletName waveletName = WaveletDataUtil.waveletNameOf(wavelet);
     verify(backend).sendWaveletDelta(eq(waveletName), delta.capture(),
         any(SuccessFailCallback.class)); // This results in an "unchecked operation" warning. Is there a better way?
 

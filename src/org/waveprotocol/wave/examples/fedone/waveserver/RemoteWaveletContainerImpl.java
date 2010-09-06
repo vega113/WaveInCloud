@@ -29,6 +29,7 @@ import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializ
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
+import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
@@ -40,8 +41,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider.HistoryResponseListener;
 
@@ -389,7 +388,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
 
     // Apply operations.  These shouldn't fail since they're the authoritative versions, so if they
     // do then the wavelet is corrupted (and the caller of this method will sort it out).
-    applyWaveletOperations(transformed.delta.getOperations());
+    applyWaveletOperations(transformed.delta, appliedDelta.getMessage().getApplicationTimestamp());
 
     return commitAppliedDelta(appliedDelta, transformed.delta);
   }

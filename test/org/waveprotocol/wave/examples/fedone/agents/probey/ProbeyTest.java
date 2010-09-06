@@ -22,28 +22,28 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.contains;
 import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.doesNotContain;
 import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.Aliases.contains;
 
 import org.eclipse.jetty.server.Request;
 import org.mockito.ArgumentCaptor;
-
 import org.waveprotocol.wave.examples.client.common.ClientWaveView;
+import org.waveprotocol.wave.examples.client.common.testing.ClientTestingUtil;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentConnection;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentTestBase;
 import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.BlipData;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import javax.servlet.http.HttpServletRequest;
+
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -210,9 +210,9 @@ public class ProbeyTest extends AgentTestBase<Probey> {
     // The output should equal the blip ID exactly (give or take surrounding whitespace), otherwise
     // Probey would be less useful for automated testing.
     String blipId = output.trim();
-    BufferedDocOp blip = util.getAllDocuments(waveId).get(blipId);
+    BlipData blip = util.getAllDocuments(waveId).get(blipId);
     assertNotNull(blip);
-    String blipContent = util.getText(blip);
+    String blipContent = ClientTestingUtil.getText(blip);
     assertEquals(MESSAGE, blipContent);
   }
 
@@ -252,10 +252,10 @@ public class ProbeyTest extends AgentTestBase<Probey> {
 
     // Probey should report all blips from the requested wave. It should not report the manifest
     // document (which is not a blip).
-    Map<String, BufferedDocOp> docs = util.getAllDocuments(targetWaveId);
-    for (Map.Entry<String, BufferedDocOp> entry : docs.entrySet()) {
+    Map<String, BlipData> docs = util.getAllDocuments(targetWaveId);
+    for (Entry<String, BlipData> entry : docs.entrySet()) {
       String docId = entry.getKey();
-      String docText = util.getText(entry.getValue());
+      String docText = ClientTestingUtil.getText(entry.getValue());
 
       if (docId.equals(DocumentConstants.MANIFEST_DOCUMENT_ID)) {
         assertThat(output, doesNotContain(docId));
@@ -268,9 +268,9 @@ public class ProbeyTest extends AgentTestBase<Probey> {
 
     // Probey should not report any blips from other waves.
     docs = util.getAllDocuments(otherWaveId);
-    for (Map.Entry<String, BufferedDocOp> entry : docs.entrySet()) {
+    for (Entry<String, BlipData> entry : docs.entrySet()) {
       String docId = entry.getKey();
-      String docText = util.getText(entry.getValue());
+      String docText = ClientTestingUtil.getText(entry.getValue());
 
       assertThat(output, doesNotContain(docId));
       // The manifest text should be empty, so we can't check that the output doesn't contain it.

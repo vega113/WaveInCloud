@@ -35,22 +35,21 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
-import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.ArrayList;
@@ -58,7 +57,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -211,7 +209,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
           WaveletSnapshotBuilder<WaveletSnapshotAndVersions> snapshotBuilder =
               new WaveletSnapshotBuilder<WaveletSnapshotAndVersions>() {
                 @Override
-                public WaveletSnapshotAndVersions build(CoreWaveletData waveletData,
+                public WaveletSnapshotAndVersions build(WaveletData waveletData,
                     HashedVersion currentVersion, ProtocolHashedVersion committedVersion) {
                   return new WaveletSnapshotAndVersions(serializeSnapshot(waveletData),
                       currentVersion, committedVersion);
@@ -262,14 +260,14 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
    * @param snapshot the snapshot
    * @return the new protobuffer
    */
-  private WaveletSnapshot serializeSnapshot(CoreWaveletData snapshot) {
+  private WaveletSnapshot serializeSnapshot(WaveletData snapshot) {
     WaveletSnapshot.Builder snapshotBuilder = WaveletSnapshot.newBuilder();
-    Map<String, BufferedDocOp> documentMap = snapshot.getDocuments();
-    for (Entry<String,BufferedDocOp> document : documentMap.entrySet()) {
+    Set<String> documentIds = snapshot.getDocumentIds();
+    for (String documentId : documentIds) {
       DocumentSnapshot.Builder documentBuilder = DocumentSnapshot.newBuilder();
-      documentBuilder.setDocumentId(document.getKey());
-      documentBuilder.setDocumentOperation(
-          CoreWaveletOperationSerializer.serialize(document.getValue()));
+      documentBuilder.setDocumentId(documentId);
+      documentBuilder.setDocumentOperation(CoreWaveletOperationSerializer.serialize(
+          snapshot.getDocument(documentId).getContent().asOperation()));
       snapshotBuilder.addDocument(documentBuilder.build());
     }
     for (ParticipantId participant : snapshot.getParticipants()) {
@@ -412,13 +410,13 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
    * corresponding index wave wavelets on to the UserManagers.
    */
   @Override
-  public void waveletUpdate(CoreWaveletData wavelet, ProtocolHashedVersion endVersion,
+  public void waveletUpdate(WaveletData wavelet, ProtocolHashedVersion endVersion,
       List<ProtocolWaveletDelta> newDeltas) {
     if (newDeltas.isEmpty()) {
       return;
     }
 
-    WaveletName waveletName = wavelet.getWaveletName();
+    WaveletName waveletName = WaveletName.of(wavelet.getWaveId(), wavelet.getWaveletId());
     PerWavelet waveletInfo = perWavelet.get(waveletName);
     ProtocolHashedVersion expectedVersion;
     String oldDigest;

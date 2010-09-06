@@ -29,6 +29,7 @@ import com.google.inject.internal.Nullable;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -37,8 +38,7 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
-import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveletDataImpl;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.HashMap;
@@ -57,7 +57,7 @@ public class FakeWaveServer extends FakeClientFrontend {
   private static final long APP_TIMESTAMP = 0;
 
   /** Known wavelet states, excluding index wavelets. */
-  private final Map<WaveId, Map<WaveletId, CoreWaveletData>> waves = Maps.newHashMap();
+  private final Map<WaveId, Map<WaveletId, WaveletData>> waves = Maps.newHashMap();
 
   /** A history of submitted deltas, per wavelet. Does not store generated index deltas. */
   private final ListMultimap<WaveletName, ProtocolWaveletDelta> deltas = ArrayListMultimap.create();
@@ -83,12 +83,12 @@ public class FakeWaveServer extends FakeClientFrontend {
     super.openRequest(participant, waveId, waveletIdPrefixes, maximumInitialWavelets,
         snapshotsEnabled, knownWavelets, openListener);
 
-    Map<WaveletId, CoreWaveletData> wavelets = waves.get(waveId);
+    Map<WaveletId, WaveletData> wavelets = waves.get(waveId);
     if (wavelets != null) {
       // Send any deltas we have in this wave to the client, in the order we got
       // them.
-      for (CoreWaveletData wavelet : wavelets.values()) {
-        WaveletName name = wavelet.getWaveletName();
+      for (WaveletData wavelet : wavelets.values()) {
+        WaveletName name = WaveletName.of(wavelet.getWaveId(), wavelet.getWaveletId());
         waveletUpdate(wavelet, versions.get(name), deltas.get(name));
       }
     }
@@ -97,30 +97,33 @@ public class FakeWaveServer extends FakeClientFrontend {
   @Override
   public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
       @Nullable String channelId, SubmitResultListener listener) {
-    Preconditions.checkArgument(!IndexWave.isIndexWave(waveletName.waveId),
-        "Cannot modify index wave");
+    Preconditions.checkArgument(
+        !IndexWave.isIndexWave(waveletName.waveId), "Cannot modify index wave");
     super.submitRequest(waveletName, delta, channelId, listener);
 
-    Map<WaveletId, CoreWaveletData> wavelets = waves.get(waveletName.waveId);
+    Map<WaveletId, WaveletData> wavelets = waves.get(waveletName.waveId);
     if (wavelets == null) {
       wavelets = Maps.newHashMap();
       waves.put(waveletName.waveId, wavelets);
     }
 
-    CoreWaveletData wavelet = wavelets.get(waveletName.waveletId);
+    WaveletData wavelet = wavelets.get(waveletName.waveletId);
     if (wavelet == null) {
-      wavelet = new CoreWaveletDataImpl(waveletName.waveId, waveletName.waveletId);
+      long dummyCreationTime = System.currentTimeMillis();
+      wavelet = WaveletDataUtil.createEmptyWavelet(
+          waveletName, ParticipantId.ofUnsafe(delta.getAuthor()), dummyCreationTime);
       wavelets.put(waveletName.waveletId, wavelet);
     }
 
     // Add the delta to the history and update the wavelet's version.
     deltas.put(waveletName, delta);
-    final ProtocolHashedVersion resultingVersion = updateAndGetVersion(waveletName,
-        delta.getOperationCount());
+    final ProtocolHashedVersion resultingVersion =
+        updateAndGetVersion(waveletName, delta.getOperationCount());
 
     // Confirm submit success.
     doSubmitSuccess(waveletName, resultingVersion, APP_TIMESTAMP);
-    // Send an update echoing the submitted delta. Note: the document state is ignored.
+    // Send an update echoing the submitted delta. Note: the document state is
+    // ignored.
     waveletUpdate(wavelet, resultingVersion, ImmutableList.of(delta));
     // Send a corresponding update of the index wave.
     doIndexUpdate(wavelet, delta);
@@ -132,9 +135,10 @@ public class FakeWaveServer extends FakeClientFrontend {
    * @param wavelet wavelet being changed
    * @param delta the delta on the wavelet
    */
-  private void doIndexUpdate(CoreWaveletData wavelet, ProtocolWaveletDelta delta) {
+  private void doIndexUpdate(WaveletData wavelet, ProtocolWaveletDelta delta) {
     // If the wavelet cannot be indexed, then the delta doesn't affect the index wave.
-    if (!IndexWave.canBeIndexed(wavelet.getWaveletName())) {
+    WaveletName waveletName = WaveletName.of(wavelet.getWaveId(), wavelet.getWaveletId());
+    if (!IndexWave.canBeIndexed(waveletName)) {
       return;
     }
 
@@ -162,15 +166,16 @@ public class FakeWaveServer extends FakeClientFrontend {
     }
 
     // Find the index wavelet name and version. Update the version.
-    WaveletName indexWaveletName = IndexWave.indexWaveletNameFor(wavelet.getWaveletName().waveId);
-    ProtocolHashedVersion resultingVersion = updateAndGetVersion(indexWaveletName,
-        indexDelta.getOperationCount());
+    WaveletName indexWaveletName = IndexWave.indexWaveletNameFor(wavelet.getWaveId());
+    ProtocolHashedVersion resultingVersion =
+        updateAndGetVersion(indexWaveletName, indexDelta.getOperationCount());
 
     // Finish constructing the index wavelet delta and send it to the client.
     indexDelta.setAuthor(delta.getAuthor());
     indexDelta.setHashedVersion(resultingVersion);
-    CoreWaveletData fakeIndexWavelet =
-        new CoreWaveletDataImpl(indexWaveletName.waveId, indexWaveletName.waveletId);
+    long dummyCreationTime = System.currentTimeMillis();
+    WaveletData fakeIndexWavelet = WaveletDataUtil.createEmptyWavelet(
+        indexWaveletName, ParticipantId.ofUnsafe(delta.getAuthor()), dummyCreationTime);
     waveletUpdate(fakeIndexWavelet, resultingVersion, Lists.newArrayList(indexDelta.build()));
   }
 

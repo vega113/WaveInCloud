@@ -6,7 +6,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.List;
 
@@ -30,7 +30,7 @@ public final class WaveBusDispatcher implements WaveBus, WaveBus.Subscriber {
   }
 
   @Override
-  public void waveletUpdate(CoreWaveletData wavelet, ProtocolHashedVersion resultingVersion,
+  public void waveletUpdate(WaveletData wavelet, ProtocolHashedVersion resultingVersion,
       List<ProtocolWaveletDelta> deltas) {
     for (WaveBus.Subscriber s : subscribers) {
       s.waveletUpdate(wavelet, resultingVersion, deltas);

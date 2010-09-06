@@ -26,12 +26,9 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.examples.fedone.util.testing.TestingConstants;
-import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 /**
  * Tests for the {@code AgentEventProvider}.
@@ -56,7 +53,7 @@ public class AgentEventProviderTest extends TestCase implements TestingConstants
   private AgentEventProvider provider;
 
   /** A stubbed wavelet */
-  private CoreWaveletData wavelet;
+  private WaveletData wavelet;
 
   @Override
   public void setUp() {
@@ -69,8 +66,9 @@ public class AgentEventProviderTest extends TestCase implements TestingConstants
     provider = new AgentEventProvider(connection);
     provider.addAgentEventListener(listener);
 
-    wavelet = mock(CoreWaveletData.class);
-    when(wavelet.getWaveletName()).thenReturn(WAVELET_NAME);
+    wavelet = mock(WaveletData.class);
+    when(wavelet.getWaveId()).thenReturn(WAVE_ID);
+    when(wavelet.getWaveletId()).thenReturn(WAVELET_ID);
   }
 
   // Tests
@@ -143,8 +141,10 @@ public class AgentEventProviderTest extends TestCase implements TestingConstants
 
   /** Should forward DocumentUpdated events. */
   public void testForwardsDocumentUpdated() {
-    provider.waveletDocumentUpdated(OTHER_USER, wavelet, OPERATION);
-    verify(listener).onDocumentChanged(wavelet, OPERATION);
+    provider.waveletDocumentUpdated(OTHER_USER, wavelet, OPERATION.getDocumentId(),
+        OPERATION.getOperation());
+    verify(listener).onDocumentChanged(wavelet, OPERATION.getDocumentId(),
+        OPERATION.getOperation());
   }
 
   /**
@@ -155,7 +155,8 @@ public class AgentEventProviderTest extends TestCase implements TestingConstants
    */
   public void testIgnoresDocumentUpdatedWhenNotConnected() {
     when(connection.isConnected()).thenReturn(false);
-    provider.waveletDocumentUpdated(OTHER_USER, wavelet, OPERATION);
+    provider.waveletDocumentUpdated(OTHER_USER, wavelet, OPERATION.getDocumentId(),
+        OPERATION.getOperation());
     verifyZeroInteractions(listener);
   }
 }

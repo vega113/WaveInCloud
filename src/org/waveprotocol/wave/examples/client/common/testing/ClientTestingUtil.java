@@ -20,7 +20,6 @@ package org.waveprotocol.wave.examples.client.common.testing;
 import static junit.framework.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-
 import static org.waveprotocol.wave.examples.fedone.common.DocumentConstants.MANIFEST_DOCUMENT_ID;
 import static org.waveprotocol.wave.examples.fedone.util.testing.TestingConstants.TEST_TIMEOUT;
 import static org.waveprotocol.wave.examples.fedone.util.testing.TestingConstants.WAVELET_NAME;
@@ -31,17 +30,19 @@ import org.waveprotocol.wave.examples.client.common.ClientBackend;
 import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.client.console.ConsoleClient;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
-import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveletDataImpl;
+import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.io.IOException;
 import java.util.List;
@@ -63,7 +64,8 @@ public class ClientTestingUtil {
       @Override
       public ClientBackend create(String userAtDomain, String server, int port)
           throws IOException {
-        return spy(new ClientBackend(userAtDomain, server, port, new FakeRpcObjectFactory()));
+        return spy(new ClientBackend(userAtDomain, server, port, new FakeRpcObjectFactory(),
+            new HashedVersionZeroFactoryImpl()));
       }
     };
 
@@ -77,10 +79,11 @@ public class ClientTestingUtil {
     return mock(ConsoleClient.Renderer.class);
   }
 
-
   /** The client backend on which this util instance acts. */
   private final ClientBackend backend;
 
+  /** The user stored in the backend */
+  private ParticipantId userId;
 
   /**
    * Constructs a {@code ClientTestingUtil} that acts on the given client backend.
@@ -91,6 +94,7 @@ public class ClientTestingUtil {
   // on that base class rather than on the backend.
   public ClientTestingUtil(ClientBackend backend) {
     this.backend = backend;
+    userId = backend.getUserId();
   }
 
   /**
@@ -119,20 +123,26 @@ public class ClientTestingUtil {
    *
    * @return the new wavelet
    */
-  public CoreWaveletData createWavelet() throws OperationException {
-    return createWavelet(WAVELET_NAME);
+  public WaveletData createWavelet() throws OperationException {
+    return createWavelet(WAVELET_NAME, userId);
   }
 
   /**
-   * Creates a new empty wavelet with an empty manifest document and the specified wavelet name.
-   * The wavelet is not part of a {@code ClientWaveView} and not stored in the client backend.
+   * Creates a new empty wavelet with an empty manifest document and the
+   * specified wavelet name. The wavelet is not part of a {@code ClientWaveView}
+   * and not stored in the client backend.
    *
    * @param waveletName of the new wavelet.
+   * @param creator the id of the wavelet creator
    * @return the new wavelet
    */
-  public CoreWaveletData createWavelet(WaveletName waveletName) throws OperationException {
-    CoreWaveletData wavelet = new CoreWaveletDataImpl(waveletName.waveId, waveletName.waveletId);
-    wavelet.modifyDocument(MANIFEST_DOCUMENT_ID, ClientUtils.createManifest());
+  public WaveletData createWavelet(WaveletName waveletName, ParticipantId creator)
+      throws OperationException {
+    long dummyCreationTime = System.currentTimeMillis();
+    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(waveletName, creator,
+        dummyCreationTime);
+    BlipData manifest = WaveletDataUtil.addEmptyBlip(wavelet, MANIFEST_DOCUMENT_ID, creator, 0L);
+    manifest.getContent().consume(ClientUtils.createManifest());
     return wavelet;
   }
 
@@ -141,10 +151,10 @@ public class ClientTestingUtil {
    *
    * @return the new wave's conversation root wavelet.
    */
-  public CoreWaveletData createWaveletInBackend() {
+  public WaveletData createWaveletInBackend() {
     BlockingSuccessFailCallback<ProtocolSubmitResponse, String> callback =
         BlockingSuccessFailCallback.create();
-    CoreWaveletData wavelet = ClientUtils.getConversationRoot(backend.createConversationWave(
+    WaveletData wavelet = ClientUtils.getConversationRoot(backend.createConversationWave(
         callback));
     // Make sure the wavelet creation completes successfully before returning the wavelet.
     assertOperationComplete(callback);
@@ -158,7 +168,7 @@ public class ClientTestingUtil {
    * @return map of all documents in the wave, aggregated from all the wavelets, and keyed by their
    * IDs.
    */
-  public Map<String, BufferedDocOp> getAllDocuments(ClientWaveView wave) {
+  public Map<String, BlipData> getAllDocuments(ClientWaveView wave) {
     return ClientUtils.getAllDocuments(wave);
   }
 
@@ -170,7 +180,7 @@ public class ClientTestingUtil {
    * @return map of all documents in the wave, aggregated from all the wavelets, and keyed by their
    * IDs.
    */
-  public Map<String, BufferedDocOp> getAllDocuments(WaveId waveId) {
+  public Map<String, BlipData> getAllDocuments(WaveId waveId) {
     return getAllDocuments(backend.getWave(waveId));
   }
 
@@ -255,8 +265,8 @@ public class ClientTestingUtil {
    * @param blip document to collect the text from.
    * @return A string containing the characters from the blip.
    */
-  public static String getText(BufferedDocOp blip) {
-    return ClientUtils.collateText(Lists.newArrayList(blip));
+  public static String getText(BlipData blip) {
+    return ClientUtils.collateTextForDocuments(Lists.newArrayList(blip));
   }
 
   /**
@@ -267,15 +277,15 @@ public class ClientTestingUtil {
    * @return the resulting text content.
    */
   public String getText(List<CoreWaveletDocumentOperation> ops) {
-    List<BufferedDocOp> docs = Lists.newArrayList();
+    List<DocOp> docOps = Lists.newArrayList();
     for (CoreWaveletDocumentOperation op : ops) {
       // Skip changes to the manifest document since they may contain "retain" and other components
       // that can't be collated by ClientUtils, and we don't really care about the manifest anyway.
       if (!op.getDocumentId().equals(MANIFEST_DOCUMENT_ID)) {
-        docs.add(op.getOperation());
+        docOps.add(op.getOperation());
       }
     }
-    return ClientUtils.collateText(docs);
+    return ClientUtils.collateTextForOps(docOps);
   }
 
   /**

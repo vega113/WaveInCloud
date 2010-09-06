@@ -5,7 +5,7 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.List;
 
@@ -22,14 +22,14 @@ public interface WaveBus {
     /**
      * Notifies the subscriber of a wavelet update.
      *
-     * TODO(anorth): replace CoreWaveletData with a read-only wavelet data.
+     * TODO(anorth): replace WaveletData with a read-only wavelet data.
      *
      * @param wavelet the state of the wavelet wavelet after the deltas have
      *        been applied.
      * @param resultingVersion version of the wavelet after deltas
      * @param deltas deltas applied to the wavelet
      */
-    void waveletUpdate(CoreWaveletData wavelet, ProtocolHashedVersion resultingVersion,
+    void waveletUpdate(WaveletData wavelet, ProtocolHashedVersion resultingVersion,
         List<ProtocolWaveletDelta> deltas);
 
     /**

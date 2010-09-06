@@ -26,6 +26,7 @@ import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
@@ -38,8 +39,10 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -60,39 +63,92 @@ public class ClientUtils {
   }
 
   /**
-   * Concatenates all of the text of the specified documents into a single String in the order in
-   * which they appear in documentStates.
+   * Concatenates all of the text for the given documents in
+   * {@link WaveletData}.
    *
-   * @param documentStates the documents to concatenate.
-   * @return A String containing the characters from all documents, in order.
+   * @param wavelet the wavelet for which to concatenate the documents.
+   * @return A String containing the characters from all documents.
    */
-  public static String collateText(Iterable<BufferedDocOp> documentStates) {
+  public static String collateTextForWavelet(WaveletData wavelet) {
+    ArrayList<BlipData> documents = new ArrayList<BlipData>();
+
+    for (String documentId : wavelet.getDocumentIds()) {
+      documents.add(wavelet.getDocument(documentId));
+    }
+    return collateTextForDocuments(documents);
+  }
+
+  /**
+   * Concatenates all of the text of the specified blips into a single String.
+   *
+   * @param documents the documents to concatenate.
+   * @return A String containing the characters from all documents.
+   */
+  public static String collateTextForDocuments(Iterable<BlipData> documents) {
+    ArrayList<DocOp> docOps = new ArrayList<DocOp>();
+    for (BlipData blipData : documents) {
+      docOps.add(blipData.getContent().asOperation());
+    }
+    return collateTextForOps(docOps);
+  }
+
+  /**
+   * Concatenates all of the text of the specified docops into a single String.
+   *
+   * @param documentops the document operations to concatenate.
+   * @return A String containing the characters from the operations.
+   */
+  public static String collateTextForOps(Iterable<DocOp> documentops) {
     final StringBuilder resultBuilder = new StringBuilder();
-    for (BufferedDocOp documentState : documentStates) {
-      documentState.apply(InitializationCursorAdapter.adapt(
-          new DocOpCursor() {
-            @Override
-            public void characters(String s) {
-              resultBuilder.append(s);
-            }
-            @Override public void annotationBoundary(AnnotationBoundaryMap map) {}
-            @Override public void elementStart(String type, Attributes attrs) {}
-            @Override public void elementEnd() {}
-            @Override public void retain(int itemCount) {}
-            @Override public void deleteCharacters(String chars) {}
-            @Override public void deleteElementStart(String type, Attributes attrs) {}
-            @Override public void deleteElementEnd() {}
-            @Override public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {}
-            @Override public void updateAttributes(AttributesUpdate attrUpdate) {}
-          }
-      ));
+    for (DocOp docOp : documentops) {
+      docOp.apply(InitializationCursorAdapter.adapt(new DocOpCursor() {
+        @Override
+        public void characters(String s) {
+          resultBuilder.append(s);
+        }
+
+        @Override
+        public void annotationBoundary(AnnotationBoundaryMap map) {
+        }
+
+        @Override
+        public void elementStart(String type, Attributes attrs) {
+        }
+
+        @Override
+        public void elementEnd() {
+        }
+
+        @Override
+        public void retain(int itemCount) {
+        }
+
+        @Override
+        public void deleteCharacters(String chars) {
+        }
+
+        @Override
+        public void deleteElementStart(String type, Attributes attrs) {
+        }
+
+        @Override
+        public void deleteElementEnd() {
+        }
+
+        @Override
+        public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
+        }
+
+        @Override
+        public void updateAttributes(AttributesUpdate attrUpdate) {
+        }
+      }));
     }
     return resultBuilder.toString();
   }
 
   /**
-   * Collect the text of all of the documents in a wave into a single String, in the order in which
-   * the documents are listed by wavelet.getDocuments().
+   * Collect the text of all of the documents in a wave into a single String.
    *
    * TODO: move this to the console package (...console.ConsoleUtils)
    *
@@ -101,21 +157,24 @@ public class ClientUtils {
    */
   public static String collateText(ClientWaveView wave) {
     final StringBuilder doc = new StringBuilder();
-    for (CoreWaveletData wavelet : wave.getWavelets()) {
-      doc.append(ClientUtils.collateText(wavelet.getDocuments().values()));
+    for (WaveletData wavelet : wave.getWavelets()) {
+      Set<String> documentIds = wavelet.getDocumentIds();
+      for (String documentId : documentIds) {
+        doc.append(ClientUtils.collateTextForDocuments(Arrays.asList(wavelet.getDocument(documentId))));
+      }
     }
     return doc.toString();
   }
 
   /**
-   * Create a document operation for the insertion of text, inserting at a given index.
+   * Create a document operation for the insertion of text, inserting at a given
+   * index.
    *
    * @param text text to insert
    * @param index index to insert at
    * @return document operation which inserts text at a given index
    */
-  public static BufferedDocOp createTextInsertion(String text,
-      int index, int previousTotalLength) {
+  public static BufferedDocOp createTextInsertion(String text, int index, int previousTotalLength) {
     DocOpBuilder builder = new DocOpBuilder();
 
     if (index > 0) {
@@ -135,16 +194,17 @@ public class ClientUtils {
 
 
   /**
-   * Create a mutation that creates a new blip containing the given text, places it in a new
-   * blip, then adds a reference to the blip in the document manifest.
+   * Create a mutation that creates a new blip containing the given text, places
+   * it in a new blip, then adds a reference to the blip in the document
+   * manifest.
    *
    * @param manifestDocument document containing the manifest
    * @param author of the delta
    * @param newBlipId
    * @param text to place in the new blip
    */
-  public static CoreWaveletDelta createAppendBlipDelta(BufferedDocOp manifestDocument,
-      ParticipantId author, String newBlipId, String text) {
+  public static CoreWaveletDelta createAppendBlipDelta(
+      BlipData manifestDocument, ParticipantId author, String newBlipId, String text) {
     if (text.length() == 0) {
       throw new IllegalArgumentException("Cannot append a empty String");
     } else {
@@ -161,10 +221,10 @@ public class ClientUtils {
       BufferedDocOp emptyNewBlipOp = new DocOpBuilder().build();
 
       // Send the operation.
-      ImmutableList<CoreWaveletDocumentOperation> operations = ImmutableList.of(
-          new CoreWaveletDocumentOperation(newBlipId, emptyNewBlipOp),
-          new CoreWaveletDocumentOperation(newBlipId, newBlipOp),
-          appendToManifest(manifestDocument, newBlipId));
+      ImmutableList<CoreWaveletDocumentOperation> operations =
+          ImmutableList.of(new CoreWaveletDocumentOperation(newBlipId, emptyNewBlipOp),
+              new CoreWaveletDocumentOperation(newBlipId, newBlipOp),
+              appendToManifest(manifestDocument, newBlipId));
       return new CoreWaveletDelta(author, operations);
     }
   }
@@ -172,17 +232,19 @@ public class ClientUtils {
   /**
    * Add record of a blip to the end of the manifest.
    */
-  public static CoreWaveletDocumentOperation appendToManifest(BufferedDocOp manifestDocument,
-      String blipId) {
-    BufferedDocOp manifestUpdateOp = new DocOpBuilder()
-        .retain(findDocumentSize(manifestDocument) - 1)
-        .elementStart(DocumentConstants.BLIP,
-            new AttributesImpl(ImmutableMap.of(DocumentConstants.BLIP_ID, blipId)))
-        .elementEnd() // </blip>
-        .retain(1) // retain </conversation>
-        .build();
-    return new CoreWaveletDocumentOperation(DocumentConstants.MANIFEST_DOCUMENT_ID,
-        manifestUpdateOp);
+  public static CoreWaveletDocumentOperation appendToManifest(
+      BlipData manifestDocument, String blipId) {
+    DocInitialization manifestDocOp = manifestDocument.getContent().asOperation();
+    BufferedDocOp manifestUpdateOp =
+        new DocOpBuilder()
+            .retain(findDocumentSize(manifestDocOp) - 1)
+            .elementStart(DocumentConstants.BLIP,
+                new AttributesImpl(ImmutableMap.of(DocumentConstants.BLIP_ID, blipId)))
+            .elementEnd() // </blip>
+            .retain(1) // retain </conversation>
+            .build();
+    return new CoreWaveletDocumentOperation(
+        DocumentConstants.MANIFEST_DOCUMENT_ID, manifestUpdateOp);
   }
 
   /**
@@ -198,8 +260,8 @@ public class ClientUtils {
    * @return the manifest document.
    */
   public static BufferedDocOp createManifest() {
-    return new DocOpBuilder().elementStart(DocumentConstants.CONVERSATION, Attributes.EMPTY_MAP)
-        .elementEnd().build();
+    return new DocOpBuilder()
+        .elementStart(DocumentConstants.CONVERSATION, Attributes.EMPTY_MAP).elementEnd().build();
   }
 
   /**
@@ -212,15 +274,18 @@ public class ClientUtils {
     final AtomicInteger size = new AtomicInteger(0);
 
     doc.apply(InitializationCursorAdapter.adapt(new DocOpCursor() {
-      @Override public void characters(String s) {
+      @Override
+      public void characters(String s) {
         size.getAndAdd(s.length());
       }
 
-      @Override public void elementStart(String key, Attributes attrs) {
+      @Override
+      public void elementStart(String key, Attributes attrs) {
         size.incrementAndGet();
       }
 
-      @Override public void elementEnd() {
+      @Override
+      public void elementEnd() {
         size.incrementAndGet();
       }
 
@@ -240,13 +305,15 @@ public class ClientUtils {
    * Returns all documents in the wave, aggregated from all the wavelets.
    *
    * @param wave to get the documents from.
-   * @return map of all documents in the wave, aggregated from all the wavelets, and keyed by their
-   * IDs.
+   * @return map of all documents in the wave, aggregated from all the wavelets,
+   *         and keyed by their IDs.
    */
-  public static Map<String, BufferedDocOp> getAllDocuments(ClientWaveView wave) {
-    final Map<String, BufferedDocOp> documents = Maps.newHashMap();
-    for (CoreWaveletData wavelet : wave.getWavelets()) {
-      documents.putAll(wavelet.getDocuments());
+  public static Map<String, BlipData> getAllDocuments(ClientWaveView wave) {
+    final Map<String, BlipData> documents = Maps.newHashMap();
+    for (WaveletData wavelet : wave.getWavelets()) {
+      for (String documentId : wavelet.getDocumentIds()) {
+        documents.put(documentId, wavelet.getDocument(documentId));
+      }
     }
     return documents;
   }
@@ -259,7 +326,7 @@ public class ClientUtils {
    */
   public static Set<ParticipantId> getAllParticipants(ClientWaveView wave) {
     final Set<ParticipantId> participants = new HashSet<ParticipantId>();
-    for (CoreWaveletData wavelet : wave.getWavelets()) {
+    for (WaveletData wavelet : wave.getWavelets()) {
       participants.addAll(wavelet.getParticipants());
     }
     return participants;
@@ -271,7 +338,7 @@ public class ClientUtils {
    * @param wave to get conversation root of
    * @return conversation root wavelet of the wave
    */
-  public static CoreWaveletData getConversationRoot(ClientWaveView wave) {
+  public static WaveletData getConversationRoot(ClientWaveView wave) {
     return wave.getWavelet(getConversationRootId(wave));
   }
 
@@ -292,49 +359,49 @@ public class ClientUtils {
   /**
    * Returns a snippet or null.
    */
-  public static String renderSnippet(final CoreWaveletData wavelet, final int maxSnippetLength) {
-    BufferedDocOp bufferedDocOp = wavelet.getDocuments().get(DocumentConstants.CONVERSATION);
-    if (bufferedDocOp == null) {
+  public static String renderSnippet(final WaveletData wavelet, final int maxSnippetLength) {
+    BlipData blip = wavelet.getDocument(DocumentConstants.CONVERSATION);
+    if (blip == null) {
       // Render whatever data we have and hope its good enough
-      return ClientUtils.collateText(wavelet.getDocuments().values());
+      return ClientUtils.collateTextForWavelet(wavelet);
     }
 
+    DocOp docOp = blip.getContent().asOperation();
     final StringBuilder sb = new StringBuilder();
-    bufferedDocOp.apply(InitializationCursorAdapter.adapt(
-        new DocInitializationCursor() {
-          @Override
-          public void annotationBoundary(AnnotationBoundaryMap map) {
-          }
+    docOp.apply(InitializationCursorAdapter.adapt(new DocInitializationCursor() {
+      @Override
+      public void annotationBoundary(AnnotationBoundaryMap map) {
+      }
 
-          @Override
-          public void characters(String chars) {
-            // No chars in the conversation manifest
-          }
+      @Override
+      public void characters(String chars) {
+        // No chars in the conversation manifest
+      }
 
-          @Override
-          public void elementEnd() {
-          }
+      @Override
+      public void elementEnd() {
+      }
 
-          @Override
-          public void elementStart(String type, Attributes attrs) {
-            if (sb.length() >= maxSnippetLength) {
+      @Override
+      public void elementStart(String type, Attributes attrs) {
+        if (sb.length() >= maxSnippetLength) {
+          return;
+        }
+
+        if (DocumentConstants.BLIP.equals(type)) {
+          String blipId = attrs.get(DocumentConstants.BLIP_ID);
+          if (blipId != null) {
+            BlipData document = wavelet.getDocument(blipId);
+            if (document == null) {
+              // We see this when a blip has been deleted
               return;
             }
-
-            if (DocumentConstants.BLIP.equals(type)) {
-              String blipId = attrs.get(DocumentConstants.BLIP_ID);
-              if (blipId != null) {
-                BufferedDocOp document = wavelet.getDocuments().get(blipId);
-                if (document == null) {
-                  // We see this when a blip has been deleted
-                  return;
-                }
-                sb.append(ClientUtils.collateText(Arrays.asList(document)));
-                sb.append(" ");
-              }
-            }
+            sb.append(ClientUtils.collateTextForDocuments(Arrays.asList(document)));
+            sb.append(" ");
           }
-        }));
+        }
+      }
+    }));
     return sb.toString();
   }
 }

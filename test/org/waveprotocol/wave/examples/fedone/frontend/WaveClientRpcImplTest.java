@@ -28,6 +28,7 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.frontend.testing.FakeClientFrontend;
 import org.waveprotocol.wave.examples.fedone.rpc.testing.FakeRpcController;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.util.testing.TestingConstants;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest;
@@ -37,10 +38,9 @@ import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
-import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveletDataImpl;
+import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 /**
  * Tests for the {@link WaveClientRpcImpl}.
@@ -162,7 +162,9 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
         assertFalse(update.hasCommitNotice());
       }
     });
-    CoreWaveletData wavelet = new CoreWaveletDataImpl(WAVE_ID, WAVELET_ID);
+    long dummyCreationTime = System.currentTimeMillis();
+    WaveletData wavelet =
+        WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, PARTICIPANT, dummyCreationTime);
     frontend.waveletUpdate(wavelet, RESULTING_VERSION, DELTAS);
     assertEquals(1, counter);
     assertFalse(controller.failed());

@@ -29,6 +29,7 @@ import org.waveprotocol.wave.examples.fedone.agents.agent.AbstractAgent;
 import org.waveprotocol.wave.examples.fedone.agents.agent.AgentConnection;
 import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -36,7 +37,8 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.List;
 import java.util.Map;
@@ -131,10 +133,9 @@ public class Echoey extends AbstractAgent {
   }
 
   @Override
-  public void onDocumentChanged(CoreWaveletData wavelet,
-      CoreWaveletDocumentOperation documentOperation) {
-    final String docId = documentOperation.getDocumentId();
-    LOG.info("onDocumentChanged: " + wavelet.getWaveletName() + ", " + docId);
+  public void onDocumentChanged(WaveletData wavelet, String docId, BufferedDocOp docOp) {
+    WaveletName waveletName = WaveletDataUtil.waveletNameOf(wavelet);
+    LOG.info("onDocumentChanged: " + waveletName + ", " + docId);
 
     if (docId.equals(DocumentConstants.MANIFEST_DOCUMENT_ID)) {
       // Don't echo anything on the manifest document
@@ -145,50 +146,52 @@ public class Echoey extends AbstractAgent {
       List<CoreWaveletOperation> ops = Lists.newArrayList();
 
       // Echo the change to the other document
-      ops.add(new CoreWaveletDocumentOperation(echoDocId, documentOperation.getOperation()));
+      //documentOperation.
+      ops.add(new CoreWaveletDocumentOperation(echoDocId, docOp));
 
       // Write the document into the manifest if it isn't already there
-      if (documentsSeen.get(wavelet.getWaveletName()).add(docId)) {
-        BufferedDocOp manifest = wavelet.getDocuments().get(DocumentConstants.MANIFEST_DOCUMENT_ID);
+      if (documentsSeen.get(waveletName).add(docId)) {
+        BlipData manifest = wavelet.getDocument(DocumentConstants.MANIFEST_DOCUMENT_ID);
         ops.add(ClientUtils.appendToManifest(manifest, echoDocId));
       }
 
-      sendAndAwaitWaveletDelta(wavelet.getWaveletName(),
-          new CoreWaveletDelta(getParticipantId(), ops));
+      sendAndAwaitWaveletDelta(waveletName, new CoreWaveletDelta(getParticipantId(), ops));
     }
   }
 
   /**
    * Append a new blip to a wavelet with the given contents.
    */
-  private void appendText(CoreWaveletData wavelet, String text) {
+  private void appendText(WaveletData wavelet, String text) {
     String docId = getNewDocumentId() + getEchoeyDocumentSuffix();
-    CoreWaveletDelta delta = ClientUtils.createAppendBlipDelta(wavelet.getDocuments().get(
-        DocumentConstants.MANIFEST_DOCUMENT_ID), getParticipantId(), docId, text);
-    sendAndAwaitWaveletDelta(wavelet.getWaveletName(), delta);
+    CoreWaveletDelta delta =
+        ClientUtils.createAppendBlipDelta(
+            wavelet.getDocument(DocumentConstants.MANIFEST_DOCUMENT_ID), getParticipantId(), docId,
+            text);
+    sendAndAwaitWaveletDelta(WaveletDataUtil.waveletNameOf(wavelet), delta);
   }
 
   @Override
-  public void onParticipantAdded(CoreWaveletData wavelet, ParticipantId participant) {
+  public void onParticipantAdded(WaveletData wavelet, ParticipantId participant) {
     LOG.info("onParticipantAdded: " + participant.getAddress());
     appendText(wavelet, getParticipantAddedMessage(participant));
   }
 
   @Override
-  public void onParticipantRemoved(CoreWaveletData wavelet, ParticipantId participant) {
+  public void onParticipantRemoved(WaveletData wavelet, ParticipantId participant) {
     LOG.info("onParticipantRemoved: " + participant.getAddress());
     appendText(wavelet, getParticipantRemovedMessage(participant));
   }
 
   @Override
-  public void onSelfAdded(CoreWaveletData wavelet) {
-    LOG.info("onSelfAdded: " + wavelet.getWaveletName());
+  public void onSelfAdded(WaveletData wavelet) {
+    LOG.info("onSelfAdded: " + WaveletDataUtil.waveletNameOf(wavelet));
     appendText(wavelet, GREETING);
   }
 
   @Override
-  public void onSelfRemoved(CoreWaveletData wavelet) {
-    LOG.info("onSelfRemoved: " + wavelet.getWaveletName());
+  public void onSelfRemoved(WaveletData wavelet) {
+    LOG.info("onSelfRemoved: " + WaveletDataUtil.waveletNameOf(wavelet));
     appendText(wavelet, FAREWELL);
   }
 }

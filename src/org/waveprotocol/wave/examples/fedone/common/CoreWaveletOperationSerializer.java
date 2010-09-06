@@ -17,9 +17,14 @@
 
 package org.waveprotocol.wave.examples.fedone.common;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
+
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -34,6 +39,8 @@ import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMap
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
+import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreNoOp;
 import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
@@ -41,9 +48,16 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.schema.SchemaCollection;
+import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
+import org.waveprotocol.wave.model.wave.data.DocumentFactory;
+import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveletDataImpl;
+import org.waveprotocol.wave.model.wave.data.impl.DataUtil;
+import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
+import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.List;
 import java.util.Map;
@@ -55,6 +69,9 @@ import java.util.Map;
  *
  */
 public class CoreWaveletOperationSerializer {
+
+  private static DocumentFactory<?> DOCUMENT_FACTORY =
+      ObservablePluggableMutableDocument.createFactory(SchemaCollection.empty());
 
   private CoreWaveletOperationSerializer() {
   }
@@ -81,7 +98,7 @@ public class CoreWaveletOperationSerializer {
   }
 
   /**
-   * Serialize a {@link WaveletOperation} as a {@link ProtocolWaveletOperation}.
+   * Serialize a {@link CoreWaveletOperation} as a {@link ProtocolWaveletOperation}.
    *
    * @param waveletOp wavelet operation to serialize
    * @return serialized protocol buffer wavelet operation
@@ -297,24 +314,25 @@ public class CoreWaveletOperationSerializer {
   }
 
   /**
-   * Deserialize a {@link WaveletSnapshot} into a list of {@link WaveletOperation}s.
+   * Deserialize a {@link WaveletSnapshot} into a list of
+   * {@link WaveletOperation}s.
    *
    * @param snapshot snapshot protocol buffer to deserialize
    * @return a list of operations
    */
-   public static List<CoreWaveletOperation> deserialize(WaveletSnapshot snapshot) {
-     List<CoreWaveletOperation> ops = Lists.newArrayList();
-     for (String participant : snapshot.getParticipantIdList()) {
-       CoreAddParticipant addOp = new CoreAddParticipant(new ParticipantId(participant));
-       ops.add(addOp);
-     }
-     for (DocumentSnapshot document : snapshot.getDocumentList()) {
-       CoreWaveletDocumentOperation docOp = new CoreWaveletDocumentOperation(document.getDocumentId(),
-           deserialize(document.getDocumentOperation()));
-       ops.add(docOp);
-     }
-     return ops;
-   }
+  public static List<CoreWaveletOperation> deserialize(WaveletSnapshot snapshot) {
+    List<CoreWaveletOperation> ops = Lists.newArrayList();
+    for (String participant : snapshot.getParticipantIdList()) {
+      CoreAddParticipant addOp = new CoreAddParticipant(new ParticipantId(participant));
+      ops.add(addOp);
+    }
+    for (DocumentSnapshot document : snapshot.getDocumentList()) {
+      CoreWaveletDocumentOperation docOp = new CoreWaveletDocumentOperation(
+          document.getDocumentId(), deserialize(document.getDocumentOperation()));
+      ops.add(docOp);
+    }
+    return ops;
+  }
 
   /**
    * Deserialize a {@link ProtocolDocumentOperation} into a {@link DocOp}.
@@ -410,4 +428,56 @@ public class CoreWaveletOperationSerializer {
 
     return output.build();
   }
+
+  /**
+   * Deserializes the snapshot contained in the {@link ProtocolWaveletUpdate}
+   * into a {@link ObservableWaveletData}.
+   *
+   * @param snapshot the {@link WaveletSnapshot} to deserialize.
+   * @param version the version of the wavelet after all deltas have been
+   *        applied.
+   * @param waveletName the name of the wavelet contained in the update.
+   * @throws OperationException if the ops in the snapshot can not be applied.
+   */
+  public static ObservableWaveletData deserializeSnapshot(
+      WaveletSnapshot snapshot, ProtocolHashedVersion version, WaveletName waveletName)
+      throws OperationException {
+    // TODO(ljvderijk): This method does too many steps to get to the
+    // ObservableWaveletData.
+    // We need something simpler when operations and the protocol have been
+    // edited.
+
+    // TODO(ljvderijk): should be sent along in the new protocol
+    DistinctVersion distinctVersion = DistinctVersion.of(version.getVersion(), 0);
+
+    // Creating a CoreWaveletData because the current protocol lacks the
+    // meta-data required to construct an ObservableWaveletData directly.
+    // But this results in unnecessary object creation and copies.
+    CoreWaveletData coreWavelet =
+        new CoreWaveletDataImpl(waveletName.waveId, waveletName.waveletId);
+
+    Preconditions.checkArgument(snapshot.getParticipantIdCount() > 0);
+    // Have to add a single participant for the copying to complete without a
+    // NPE.
+    coreWavelet.addParticipant(ParticipantId.ofUnsafe(snapshot.getParticipantId(0)));
+
+    for (DocumentSnapshot document : snapshot.getDocumentList()) {
+      BufferedDocOp op =
+          CoreWaveletOperationSerializer.deserialize(document.getDocumentOperation());
+      coreWavelet.modifyDocument(document.getDocumentId(), op);
+    }
+
+    ObservableWaveletData immutableWaveletData =
+        DataUtil.fromCoreWaveletData(coreWavelet, distinctVersion, SchemaCollection.empty());
+
+    ObservableWaveletData wavelet =
+        WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(immutableWaveletData);
+
+    for (String participant : snapshot.getParticipantIdList()) {
+      wavelet.addParticipant(new ParticipantId(participant));
+    }
+
+    return wavelet;
+  }
+
 }

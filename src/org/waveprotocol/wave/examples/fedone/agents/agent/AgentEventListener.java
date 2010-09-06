@@ -17,9 +17,9 @@
 
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
+import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 /**
  * Handles agent events.
@@ -28,38 +28,39 @@ interface AgentEventListener {
   /**
    * Invoked when the wavelet document changes.
    *
-   * @param wavelet
-   * @param documentOperation
+   * @param wavelet The wavelet that changes.
+   * @param docId the id of the document in the wavelet that changed.
+   * @param docOp the operation that caused the change.
    */
-  void onDocumentChanged(CoreWaveletData wavelet, CoreWaveletDocumentOperation documentOperation);
+  void onDocumentChanged(WaveletData wavelet, String docId, BufferedDocOp docOp);
 
   /**
    * Invoked when a participant is added to the wavelet.
    *
-   * @param wavelet
-   * @param participant
+   * @param wavelet the wavelet to which a participant is added.
+   * @param participant the participant that has been added.
    */
-  void onParticipantAdded(CoreWaveletData wavelet, ParticipantId participant);
+  void onParticipantAdded(WaveletData wavelet, ParticipantId participant);
 
   /**
    * Invoked when a participant is removed from the wavelet.
    *
-   * @param wavelet
-   * @param participant
+   * @param wavelet the wavelet for which a participant is removed.
+   * @param participant the participant that has been removed.
    */
-  void onParticipantRemoved(CoreWaveletData wavelet, ParticipantId participant);
+  void onParticipantRemoved(WaveletData wavelet, ParticipantId participant);
 
   /**
    * Invoked when this agent is added.
    *
-   * @param wavelet
+   * @param wavelet the wavelet to which we have been added.
    */
-  void onSelfAdded(CoreWaveletData wavelet);
+  void onSelfAdded(WaveletData wavelet);
 
   /**
    * Invoked when this agent is removed.
    *
-   * @param wavelet
+   * @param wavelet the wavelet from which we have been removed.
    */
-  void onSelfRemoved(CoreWaveletData wavelet);
+  void onSelfRemoved(WaveletData wavelet);
 }

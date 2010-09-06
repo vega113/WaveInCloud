@@ -48,6 +48,7 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.FederationErrors;
@@ -67,8 +68,8 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
-import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveletDataImpl;
+import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.ArrayList;
@@ -149,7 +150,7 @@ public class ClientFrontendImplTest extends TestCase {
     assertEquals(0, subscriptions.size());
     verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, null);
 
-    CoreWaveletData wavelet = new CoreWaveletDataImpl(WAVE_ID, WAVELET_ID);
+    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, 0L);
     clientFrontend.waveletUpdate(wavelet, DELTAS.getEndVersion(), DELTAS);
     verify(listener, Mockito.never()).onUpdate(eq(WAVELET_NAME),
         any(WaveletSnapshotAndVersions.class), anyListOf(ProtocolWaveletDelta.class),
@@ -286,8 +287,10 @@ public class ClientFrontendImplTest extends TestCase {
     clientFrontend.openRequest(USER, INDEX_WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false,
         null, listener);
 
-    CoreWaveletData wavelet = new CoreWaveletDataImpl(WAVE_ID, WAVELET_ID);
-    wavelet.modifyDocument("default", makeAppend(0, "Hello, world\nignored text"));
+    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, 0L);
+    BlipData blip = WaveletDataUtil.addEmptyBlip(wavelet, "default", USER, 0L);
+    blip.getContent().consume(makeAppend(0, "Hello, world\nignored text"));
+
     waveletUpdate(VERSION_0, HashedVersion.unsigned(2L), wavelet, new CoreAddParticipant(USER),
         CoreNoOp.INSTANCE);
 
@@ -314,11 +317,13 @@ public class ClientFrontendImplTest extends TestCase {
     clientFrontend.openRequest(USER, WAVE_ID, ALL_WAVELETS, Integer.MAX_VALUE, false, null,
         oldListener);
 
-    CoreWaveletData wavelet = new CoreWaveletDataImpl(WAVE_ID, WAVELET_ID);
+    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, 0L);
     BufferedDocOp addTextOp = makeAppend(0, "Hello, world");
     waveletUpdate(VERSION_0, VERSION_1, wavelet, new CoreAddParticipant(USER),
         new CoreWaveletDocumentOperation("docId", addTextOp));
-    wavelet.modifyDocument("docId", addTextOp);
+
+    BlipData blip = WaveletDataUtil.addEmptyBlip(wavelet, "docId", USER, 0L);
+    blip.getContent().consume(addTextOp);
 
     assertTrue(!oldListener.deltas.isEmpty());
 
@@ -356,7 +361,7 @@ public class ClientFrontendImplTest extends TestCase {
   }
 
   private void waveletUpdate(HashedVersion startVersion, HashedVersion endVersion,
-      CoreWaveletData wavelet, CoreWaveletOperation... operations) {
+      WaveletData wavelet, CoreWaveletOperation... operations) {
     ProtocolWaveletDelta delta = makeDelta(USER, startVersion, endVersion, operations);
     DeltaSequence deltas = createUnsignedDeltas(ImmutableList.of(delta));
     clientFrontend.waveletUpdate(wavelet, deltas.getEndVersion(), deltas);

@@ -42,7 +42,7 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.List;
 
@@ -119,9 +119,9 @@ public final class IndexWave {
   public static List<IndexEntry> getIndexEntries(ClientWaveView indexWave) {
     List<IndexEntry> indexEntries = Lists.newArrayList();
 
-    for (CoreWaveletData wavelet : indexWave.getWavelets()) {
+    for (WaveletData wavelet : indexWave.getWavelets()) {
       WaveId waveId = waveIdFromIndexWavelet(wavelet);
-      String digest = ClientUtils.collateText(wavelet.getDocuments().values());
+      String digest = ClientUtils.collateTextForWavelet(wavelet);
       indexEntries.add(new IndexEntry(waveId, digest));
     }
 
@@ -162,8 +162,9 @@ public final class IndexWave {
    * @return the wave id.
    * @throws IllegalArgumentException if the wavelet is not from an index wave.
    */
-  static WaveId waveIdFromIndexWavelet(CoreWaveletData indexWavelet) {
-    return waveIdFromIndexWavelet(indexWavelet.getWaveletName());
+  static WaveId waveIdFromIndexWavelet(WaveletData indexWavelet) {
+    return waveIdFromIndexWavelet(
+        WaveletName.of(indexWavelet.getWaveId(), indexWavelet.getWaveletId()));
   }
 
   /**
