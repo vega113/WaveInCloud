@@ -290,20 +290,21 @@ public class ServerRpcProvider {
     ServletContextHandler context = new ServletContextHandler();
     context.setResourceBase("./war");
 
-    // webclient_redirect.html will redirect to the wave servlet.
-    // TODO(kalman): Do this without a webclient_redirect file?
-    context.setWelcomeFiles(new String[] {"webclient_redirect.html"});
-
-    // Servlet where the client is served from.
-    context.addServlet(new ServletHolder(WaveClientServlet.create(domain)), "/wave");
-
     // Servlet where the websocket connection is served from.
     ServletHolder holder = new ServletHolder(new WaveWebSocketServlet());
     context.addServlet(holder, "/socket");
     // TODO(zamfi): fix to let messages span frames.
     holder.setInitParameter("bufferSize", "" + 1024 * 1024); // 1M buffer
 
-    context.addServlet(new ServletHolder(new DefaultServlet()), "/*");
+    // Serve the static content and GWT web client with the default servlet
+    // (acts like a standard file-based web server).
+    ServletHolder defaultServlet = new ServletHolder(new DefaultServlet());
+    context.addServlet(defaultServlet, "/static/*");
+    context.addServlet(defaultServlet, "/webclient/*");
+
+    // Serve the client (i.e. server generated landing page) on the root path.
+    context.addServlet(new ServletHolder(WaveClientServlet.create(domain)), "/");
+
     httpServer.setHandler(context);
 
     try {
