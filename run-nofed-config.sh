@@ -31,3 +31,11 @@ WAVESERVER_DISABLE_SIGNER_VERIFICATION=true
 
 # Settings for the different persistence stores
 CERT_PATH_STORE_TYPE=memory
+
+# Currently supported attachment types: mongodb, disk
+ATTACHMENT_STORE_TYPE=disk
+
+# The location where attachments are stored on disk. This should be changed.
+# Note: This is only used when using the disk attachment store. It is ignored
+# for other data store types.
+ATTACHMENT_STORE_DIRECTORY=_attachments

@@ -23,12 +23,21 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.MongoException;
+import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSDBFile;
+import com.mongodb.gridfs.GridFSInputFile;
 
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
+import org.waveprotocol.wave.examples.fedone.persistence.AttachmentStore;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,9 +52,10 @@ import java.util.logging.Logger;
  * <p>
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
+ * @author josephg@gmail.com (Joseph Gentle)
  *
  */
-public final class MongoDbStore implements CertPathStore {
+public final class MongoDbStore implements CertPathStore, AttachmentStore {
 
   private static final Logger LOG = Logger.getLogger(MongoDbStore.class.getName());
 
@@ -109,4 +119,79 @@ public final class MongoDbStore implements CertPathStore {
     query.put("_id", signerId);
     return query;
   }
+
+  // *********** Attachments.
+  
+  private GridFS attachmentGrid;
+  private GridFS getAttachmentGrid() {
+    if (attachmentGrid == null) {
+      attachmentGrid = new GridFS(database, "attachments");
+    }
+    
+    return attachmentGrid;
+  }
+
+  @Override
+  public AttachmentData getAttachment(String id) {
+    final GridFSDBFile attachment = getAttachmentGrid().findOne(id);
+    
+    if (attachment == null) {
+      return null;
+    } else {
+      return new AttachmentData() {
+        @Override
+        public void writeDataTo(OutputStream out) throws IOException {
+          attachment.writeTo(out);
+        }
+        
+        @Override
+        public Date getLastModifiedDate() {
+          return attachment.getUploadDate();
+        }
+        
+        @Override
+        public long getContentSize() {
+          return attachment.getLength();
+        }
+
+        @Override
+        public InputStream getInputStream() {
+          return attachment.getInputStream();
+        }
+      };
+    }
+  }
+
+  @Override
+  public boolean storeAttachment(String id, InputStream data) throws IOException {
+    // This method returns false if the attachment is already in the database.
+    // Unfortunately, as far as I can tell the only way to do this is to perform
+    // a second database query.
+    if (getAttachment(id) != null) { 
+      return false;
+    } else {
+      GridFSInputFile file = getAttachmentGrid().createFile(data, id);
+
+      try {
+        file.save();
+      } catch (MongoException e) {
+        // Unfortunately, file.save() wraps any IOException thrown in a
+        // 'MongoException'. Since the interface explicitly throws IOExceptions,
+        // we unwrap any IOExceptions thrown.
+        Throwable innerException = e.getCause();
+        if (innerException instanceof IOException) {
+          throw (IOException) innerException;
+        } else {
+          throw e;
+        }
+      }
+      return true;
+    }
+  }
+
+  @Override
+  public void deleteAttachment(String id) {
+    getAttachmentGrid().remove(id);
+  }
+
 }

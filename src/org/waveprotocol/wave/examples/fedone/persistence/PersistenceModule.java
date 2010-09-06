@@ -17,7 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.persistence;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,54 +26,34 @@ import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.examples.fedone.persistence.memory.MemoryStore;
 import org.waveprotocol.wave.examples.fedone.persistence.mongodb.MongoDbProvider;
 
-import java.util.HashMap;
-
 /**
  * Module for setting up the different persistence stores.
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  *
+ * The valid names for the cert store are
+ * 'memory' and 'mongodb'
+ * 
+ * The valid names for the attachment store are
+ * 'disk' and 'mongodb'
+ *
  */
 public class PersistenceModule extends AbstractModule {
-
-  /**
-   * Persistence types that are valid in the properties file.
-   */
-  public static enum PersistenceType {
-    MEMORY("memory"), MONGO_DB("mongodb");
-
-    private static HashMap<String, PersistenceType> reverseLookupMap =
-        new HashMap<String, PersistenceType>();
-
-    static {
-      for (PersistenceType type : PersistenceType.values()) {
-        reverseLookupMap.put(type.name, type);
-      }
-    }
-
-    private final String name;
-
-    private PersistenceType(String name) {
-      this.name = name;
-    }
-
-    public static PersistenceType getTypeForName(String name) {
-      Preconditions.checkArgument(
-          reverseLookupMap.containsKey(name), name + " isn't a valid PersistenceType name");
-      return reverseLookupMap.get(name);
-    }
-  }
-
   /**
    * Type of persistence to use for the {@link CertPathStore}.
    */
   private final String certPathStoreType;
+  
+  private final String attachmentStoreType;
 
   private MongoDbProvider mongoDbProvider;
 
   @Inject
-  public PersistenceModule(@Named("cert_path_store_type") String certPathStoreType) {
+  public PersistenceModule(
+      @Named("cert_path_store_type") String certPathStoreType,
+      @Named("attachment_store_type") String attachmentStoreType) {
     this.certPathStoreType = certPathStoreType;
+    this.attachmentStoreType = attachmentStoreType;
   }
 
   /**
@@ -90,6 +69,7 @@ public class PersistenceModule extends AbstractModule {
   @Override
   protected void configure() {
     bindCertPathStore();
+    bindAttachmentStore();
   }
 
   /**
@@ -97,18 +77,24 @@ public class PersistenceModule extends AbstractModule {
    * properties.
    */
   private void bindCertPathStore() {
-    PersistenceModule.PersistenceType persistenceType =
-        PersistenceModule.PersistenceType.getTypeForName(certPathStoreType);
-    switch (persistenceType) {
-      case MEMORY:
-        bind(CertPathStore.class).to(MemoryStore.class).in(Singleton.class);
-        break;
-      case MONGO_DB:
-        MongoDbProvider mongoDbProvider = getMongoDbProvider();
-        bind(CertPathStore.class).toInstance(mongoDbProvider.provideMongoDbStore());
-        break;
-      default:
-        break;
+    if (certPathStoreType.equalsIgnoreCase("memory")) {
+      bind(CertPathStore.class).to(MemoryStore.class).in(Singleton.class);
+    } else if (certPathStoreType.equalsIgnoreCase("mongodb")) {
+      MongoDbProvider mongoDbProvider = getMongoDbProvider();
+      bind(CertPathStore.class).toInstance(mongoDbProvider.provideMongoDbStore());
+    } else {
+      throw new RuntimeException("Invalid certificate path type: '" + certPathStoreType + "'");
+    }
+  }
+  
+  private void bindAttachmentStore() {
+    if (attachmentStoreType.equalsIgnoreCase("disk")) {
+      bind(AttachmentStore.class).to(FileBasedAttachmentStore.class).in(Singleton.class);
+    } else if (attachmentStoreType.equalsIgnoreCase("mongodb")) {
+      MongoDbProvider mongoDbProvider = getMongoDbProvider();
+      bind(AttachmentStore.class).toInstance(mongoDbProvider.provideMongoDbStore());
+    } else {
+      throw new RuntimeException("Invalid attachment store type: '" + attachmentStoreType + "'");
     }
   }
 }

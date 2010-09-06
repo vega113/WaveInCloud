@@ -92,4 +92,15 @@ public class FlagSettings {
       description = "Type of persistence to use for the Certificate Storage",
       defaultValue = "memory")
   private static String certPathStoreType;
+  
+  @Flag(name = "attachment_store_type",
+      description = "Type of persistence store to use for attachments",
+      defaultValue = "disk")
+  private static String attachmentStoreType;
+
+  @Flag(name = "attachment_store_directory",
+      description = "Location on disk where the attachment store lives. Must be writeable by the "
+          + "fedone process. Only used by disk-based attachment store.",
+      defaultValue = "_attachments")
+  private static String attachmentStoreDirectory;
 }

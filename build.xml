@@ -137,8 +137,9 @@
           <exclude name="**/fedone/persistence/**"/>
         </fileset>
         <fileset dir="${test}">
-          <!-- Include the in-memory persistence tests -->
+          <!-- Include the persistence tests that aren't run elsewhere -->
           <include name="**/fedone/persistence/memory/*Test.java"/>
+          <include name="**/fedone/persistence/file/*Test.java"/>
         </fileset>
       </batchtest>
     </junit>

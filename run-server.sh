@@ -33,4 +33,6 @@ exec java $DEBUG_FLAGS -Dorg.eclipse.jetty.util.log.DEBUG=true -jar dist/fedone-
   --http_frontend_hostname=$WEBSOCKET_SERVER_HOSTNAME \
   --http_frontend_port=$WEBSOCKET_SERVER_PORT \
   --enable_federation=$ENABLE_FEDERATION \
-  --cert_path_store_type=$CERT_PATH_STORE_TYPE
+  --cert_path_store_type=$CERT_PATH_STORE_TYPE \
+  --attachment_store_type=$ATTACHMENT_STORE_TYPE \
+  --attachment_store_directory=$ATTACHMENT_STORE_DIRECTORY

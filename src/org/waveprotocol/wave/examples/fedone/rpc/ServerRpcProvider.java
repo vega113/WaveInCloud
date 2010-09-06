@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.rpc;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -37,6 +38,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.model.util.Pair;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -44,6 +46,7 @@ import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,6 +55,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -290,6 +294,13 @@ public class ServerRpcProvider {
     ServletContextHandler context = new ServletContextHandler();
     context.setResourceBase("./war");
 
+    // webclient_redirect.html will redirect to the wave servlet.
+    // TODO(kalman): Do this without a webclient_redirect file?
+    context.setWelcomeFiles(new String[] {"webclient_redirect.html"});
+
+    // Servlet where the client is served from.
+    context.addServlet(new ServletHolder(WaveClientServlet.create(domain)), "/wave");
+
     // Servlet where the websocket connection is served from.
     ServletHolder holder = new ServletHolder(new WaveWebSocketServlet());
     context.addServlet(holder, "/socket");
@@ -305,6 +316,10 @@ public class ServerRpcProvider {
     // Serve the client (i.e. server generated landing page) on the root path.
     context.addServlet(new ServletHolder(WaveClientServlet.create(domain)), "/");
 
+    for (Pair<String, HttpServlet> servlet : servletRegistry) {
+      context.addServlet(new ServletHolder(servlet.getSecond()), servlet.getFirst());
+    }
+    
     httpServer.setHandler(context);
 
     try {
@@ -380,5 +395,21 @@ public class ServerRpcProvider {
             new RegisteredServiceMethod(service, methodDescriptor));
       }
     }
+  }
+  
+  /**
+   * Set of servlets
+   */
+  List<Pair<String, HttpServlet> > servletRegistry = Lists.newArrayList();
+  
+  /**
+   * Add a servlet to the servlet registry. This servlet will be attached to the
+   * specified URL pattern when the server is started up.
+   * 
+   * @param urlPattern URL pattern for paths. Eg, '/foo', '/foo/*'
+   * @param servlet The servlet object to bind to the specified paths
+   */
+  public void addServlet(String urlPattern, HttpServlet servlet) {
+    servletRegistry.add(new Pair<String, HttpServlet>(urlPattern, servlet));
   }
 }

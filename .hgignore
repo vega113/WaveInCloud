@@ -12,9 +12,8 @@ bin
 build
 dist
 run-config\.sh
-\.classpath
-\.project
 \.git
 out
 *~
 war/webclient
+_attachments
