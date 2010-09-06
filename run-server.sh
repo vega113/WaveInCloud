@@ -4,10 +4,8 @@
 #
 
 if [ -f run-config.sh ] ; then
-  ENABLE_FEDERATION=true
   . run-config.sh
 else
-  ENABLE_FEDERATION=false
   . run-nofed-config.sh
 fi
 
