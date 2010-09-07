@@ -4,14 +4,14 @@
 # federation support see run-config.sh.example.
 
 # Domain name of the wave server 
-WAVE_SERVER_DOMAIN_NAME=`hostname`
+WAVE_SERVER_DOMAIN_NAME=localhost
 
 # Host name and port the wave server's client frontend listens on
 WAVE_SERVER_HOSTNAME=localhost
 WAVE_SERVER_PORT=9876
 
 # Host name and port the wave server's websocket frontend listens on
-WEBSOCKET_SERVER_HOSTNAME=`hostname`
+WEBSOCKET_SERVER_HOSTNAME=localhost
 WEBSOCKET_SERVER_PORT=9898
 
 # The version of FedOne, extracted from the build.properties file
