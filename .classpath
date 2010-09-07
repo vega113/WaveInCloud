@@ -20,7 +20,7 @@
 	<classpathentry kind="lib" path="third_party/runtime/guava/guava-r06.jar" sourcepath="third_party/runtime/guava/guava-src-r06.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/guice/guice-assistedinject-snapshot.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/guice/guice-snapshot.jar"/>
-  <classpathentry kind="lib" path="third_party/runtime/gxp/gxp-0.2.4-beta.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/gxp/gxp-0.2.4-beta.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/guice/javax.inject.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/jackson/jackson-core-asl-1.5.2.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/jetty/jetty-continuation-7.1.6.v20100715.jar"/>
@@ -70,8 +70,7 @@
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/common-2010-08-30.jar" sourcepath="third_party/runtime/wave-libraries/common-src-2010-08-30.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/concurrency-2010-08-30.jar" sourcepath="third_party/runtime/wave-libraries/concurrency-src-2010-08-30.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/federation-2010-08-30.jar" sourcepath="third_party/runtime/wave-libraries/federation-src-2010-08-30.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/model-2010-08-30.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/model-src-2010-08-30.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/model-2010-08-30.jar" sourcepath="third_party/runtime/wave-libraries/model-src-2010-08-30.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/proto-2010-08-30.jar" sourcepath="third_party/runtime/wave-libraries/proto-src-2010-08-30.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/waveserver-2010-08-30.jar" sourcepath="third_party/runtime/wave-libraries/waveserver-src-2010-08-30.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/mongo-driver/mongo-2.1.jar" sourcepath="third_party/runtime/mongo-driver/mongo-java-driver-r2.1-0-src.zip"/>
