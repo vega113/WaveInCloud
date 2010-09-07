@@ -63,7 +63,9 @@ public class AttachmentStoreTest extends AttachmentStoreTestBase {
       path.delete();
     }
     
-    // This will happen if one of the InputStreams hasn't been closed.
+    // On Linux, it will be impossible to delete the directory until all of the
+    // input streams have been closed. This is annoying, but gives us a nice
+    // check to make sure everyone is behaving themselves.
     assertFalse(path.exists());
   }
 }
