@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="src" path="proto_gwt_src"/>
 	<classpathentry kind="src" path="proto_src"/>
 	<classpathentry kind="src" path="src"/>
@@ -19,6 +20,7 @@
 	<classpathentry kind="lib" path="third_party/runtime/guava/guava-r06.jar" sourcepath="third_party/runtime/guava/guava-src-r06.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/guice/guice-assistedinject-snapshot.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/guice/guice-snapshot.jar"/>
+  <classpathentry kind="lib" path="third_party/runtime/gxp/gxp-0.2.4-beta.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/guice/javax.inject.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/jackson/jackson-core-asl-1.5.2.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/jetty/jetty-continuation-7.1.6.v20100715.jar"/>

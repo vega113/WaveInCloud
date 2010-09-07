@@ -71,10 +71,11 @@
     </javac>
   </target>
 
-  <target name="compile" depends="proto_compile">
+  <target name="compile" depends="proto_compile, gen_gxp">
     <depend srcdir="${src}" destdir="${core.classes}" closure="yes"/>
-    <javac sourcepath="" srcdir="${src}" destdir="${core.classes}" debug="on"
-        target="1.5">
+    <javac sourcepath="" destdir="${core.classes}" debug="on" target="1.5">
+      <src path="${src}" />
+      <src path="${gen}" />
       <include name="**/*.java"/>
       <classpath>
         <pathelement location="proto_gwt_src"/>
@@ -91,6 +92,20 @@
         <include name="**/*.proto"/>
       </fileset>
     </copy>
+  </target>
+
+  <target name="gen_gxp" description="Generates GXP files">
+    <taskdef
+        name="gxpc"
+        classname="com.google.gxp.compiler.ant.GxpcTask"
+        classpath="${lib.runtime}/gxp/gxp-0.2.4-beta.jar" />
+
+    <!-- Generates the java files in a parallel directory under gen/ -->
+    <gxpc
+        srcdir="${src}"
+        srcpaths="${src}"
+        destdir="${gen}"
+        target="org.waveprotocol.wave.examples.fedone.gxp" />
   </target>
 
   <target name="compile_tests" depends="compile" description="Compiles all the unit tests in the project">
@@ -274,6 +289,7 @@
         <include name="com/mongodb/**/*" />
         <include name="com/google/common/**/*" />
         <include name="com/google/gson/**/*" />
+        <include name="com/google/gxp/**/*" />
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
         <include name="gnu/inet/**/*" />
@@ -287,8 +303,9 @@
         <include name="org/codehaus/jackson/**/*" />
         <include name="org/dom4j/**/*" />
         <include name="org/eclipse/**/*" />
-        <include name="org/joda/time/**/*" />
         <include name="org/jivesoftware/**/*" />
+        <include name="org/joda/time/**/*" />
+        <include name="org/json/**/*" />
         <include name="org/waveprotocol/**/*" />
         <include name="org/xmlpull/**/*" />
         <include name="org/xmpp/**/*" />

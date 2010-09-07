@@ -286,10 +286,12 @@ public class ServerRpcProvider {
 
   public void startWebSocketServer() {
     httpServer = new Server();
-    Connector c = new SelectChannelConnector();
-    c.setHost(httpHost);
-    c.setPort(httpPort);
-    httpServer.addConnector(c);
+    
+    // Listen on httpHost and localhost.
+    httpServer.addConnector(createSelectChannelConnector(httpHost, httpPort));
+    if (!httpHost.equals("localhost")) {
+      httpServer.addConnector(createSelectChannelConnector("localhost", httpPort));
+    }
 
     ServletContextHandler context = new ServletContextHandler();
     context.setResourceBase("./war");
@@ -329,6 +331,16 @@ public class ServerRpcProvider {
       return;
     }
     LOG.fine("WebSocket server running.");
+  }
+  
+  /**
+   * @return a {@link SelectChannelConnector} bound to a given host and port
+   */
+  private SelectChannelConnector createSelectChannelConnector(String host, int port) {
+    SelectChannelConnector connector = new SelectChannelConnector();
+    connector.setHost(host);
+    connector.setPort(port);
+    return connector;
   }
 
   public class WaveWebSocketServlet extends WebSocketServlet {
