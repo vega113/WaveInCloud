@@ -82,6 +82,22 @@ message WaveletSnapshot {
   // For each document in the wavelet, there is one of these. Another way to think of this is
   // that it's a map of document_id to documents.
   repeated DocumentSnapshot document = 2;
+
+  // The participant that created the wavelet
+  required string creator = 3;
+}
+
+message WaveletSnapshotAndVersion {
+  required string wavelet_name = 1;
+
+  // The current version of the wavelet
+  required federation.ProtocolHashedVersion version = 2;
+
+  required WaveletSnapshot snapshot = 3;
+}
+
+message WaveSnapshot {
+  repeated WaveletSnapshotAndVersion wavelet = 1;
 }
 
 /**
