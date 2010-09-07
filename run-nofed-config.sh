@@ -4,7 +4,7 @@
 # federation support see run-config.sh.example.
 
 # Domain name of the wave server 
-WAVE_SERVER_DOMAIN_NAME=localhost
+WAVE_SERVER_DOMAIN_NAME=`hostname`
 
 # Host name and port the wave server's client frontend listens on
 WAVE_SERVER_HOSTNAME=`hostname`
