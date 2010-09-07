@@ -62,5 +62,8 @@ public class AttachmentStoreTest extends AttachmentStoreTestBase {
       }
       path.delete();
     }
+    
+    // This will happen if one of the InputStreams hasn't been closed.
+    assertFalse(path.exists());
   }
 }
