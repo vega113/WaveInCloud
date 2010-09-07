@@ -10,7 +10,9 @@ NAME=$1
 
 if [ "$NAME" == '' ]
 then
-  echo "$0 <domain name>" 1>&2
+  echo "Usage: $0 <domain name>" 1>&2
+  echo "See http://code.google.com/p/wave-protocol/wiki/Certificates\
+ for more information" 1>&2
   exit 1
 fi
 
