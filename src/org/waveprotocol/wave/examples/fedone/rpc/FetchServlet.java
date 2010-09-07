@@ -35,17 +35,15 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
 import org.waveprotocol.wave.federation.Proto;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
+import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -94,30 +92,46 @@ public class FetchServlet extends HttpServlet {
   WaveletProvider waveletProvider;
   ReflectionNumericJSON jsonConverter;
   
-  private WaveletSnapshot serializeSnapshot(CoreWaveletData snapshot) {
-    WaveletSnapshot.Builder snapshotBuilder = WaveletSnapshot.newBuilder();
-    Map<String, BufferedDocOp> documentMap = snapshot.getDocuments();
-    for (Entry<String,BufferedDocOp> document : documentMap.entrySet()) {
-      DocumentSnapshot.Builder documentBuilder = DocumentSnapshot.newBuilder();
-      documentBuilder.setDocumentId(document.getKey());
-      documentBuilder.setDocumentOperation(
-          CoreWaveletOperationSerializer.serialize(document.getValue()));
-      snapshotBuilder.addDocument(documentBuilder.build());
+  private static DocumentSnapshot serializeDocument(BlipData document) {
+    DocumentSnapshot.Builder builder = DocumentSnapshot.newBuilder();
+    
+    builder.setDocumentId(document.getId());
+    builder.setDocumentOperation(
+        CoreWaveletOperationSerializer.serialize(document.getContent().asOperation()));
+    builder.setAuthor(document.getAuthor().getAddress());
+    for (ParticipantId participant : document.getContributors()) {
+      builder.addContributor(participant.getAddress());
     }
-    for (ParticipantId participant : snapshot.getParticipants()) {
-      snapshotBuilder.addParticipantId(participant.toString());
+    builder.setLastModifiedTime(document.getLastModifiedTime());
+    builder.setLastModifiedVersion(document.getLastModifiedVersion());
+    
+    return builder.build();
+  }
+  
+  private static WaveletSnapshot serializeWavelet(WaveletData wavelet) {
+    WaveletSnapshot.Builder builder = WaveletSnapshot.newBuilder();
+    
+    for (ParticipantId participant : wavelet.getParticipants()) {
+      builder.addParticipantId(participant.toString());
     }
-    return snapshotBuilder.build();
+    for (String id : wavelet.getDocumentIds()) {
+      BlipData data = wavelet.getDocument(id);
+      builder.addDocument(serializeDocument(data));
+    }
+    builder.setCreator(wavelet.getCreator().getAddress());
+    builder.setCreationTime(wavelet.getCreationTime());
+    
+    return builder.build();
   }
   
   protected WaveletSnapshotAndVersions getSnapshot(WaveletName waveletName) {
     WaveletSnapshotBuilder<WaveletSnapshotAndVersions> snapshotBuilder =
       new WaveletSnapshotBuilder<WaveletSnapshotAndVersions>() {
       @Override
-      public WaveletSnapshotAndVersions build(CoreWaveletData waveletData,
-          HashedVersion currentVersion, ProtocolHashedVersion committedVersion) {
-        return new WaveletSnapshotAndVersions(serializeSnapshot(waveletData),
-            currentVersion, committedVersion);
+      public WaveletSnapshotAndVersions build(WaveletData waveletData, HashedVersion currentVersion,
+          ProtocolHashedVersion committedVersion) {
+        return new WaveletSnapshotAndVersions(
+            serializeWavelet(waveletData), currentVersion, committedVersion);
       }
     };
     return waveletProvider.getSnapshot(waveletName, snapshotBuilder);
@@ -162,7 +176,7 @@ public class FetchServlet extends HttpServlet {
         
         // This is a hack until we move away from core
         WaveletSnapshotAndVersion protoWaveletSnapshot = WaveletSnapshotAndVersion.newBuilder()
-            .setWaveletId(waveletId.serialise())
+            .setWaveletName(waveletId.serialise())
             .setSnapshot(snapshot.snapshot)
             .setVersion(snapshot.currentVersion).build();
         

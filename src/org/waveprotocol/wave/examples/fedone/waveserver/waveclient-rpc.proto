@@ -70,6 +70,13 @@ message DocumentSnapshot {
   required string document_id = 1;
   // This is a document operation that takes the document from zero to its current state.
   required federation.ProtocolDocumentOperation document_operation = 2;
+  // The participant who initially created the document
+  required string author = 3;
+  // All participants who have edited the document
+  repeated string contributor = 4;
+  required int64 last_modified_time = 5;
+  // The wavelet version when the document was last modified
+  required int64 last_modified_version = 6;
 }
 
 /**
@@ -82,9 +89,9 @@ message WaveletSnapshot {
   // For each document in the wavelet, there is one of these. Another way to think of this is
   // that it's a map of document_id to documents.
   repeated DocumentSnapshot document = 2;
-
   // The participant that created the wavelet
   required string creator = 3;
+  required int64 creation_time = 4;
 }
 
 message WaveletSnapshotAndVersion {

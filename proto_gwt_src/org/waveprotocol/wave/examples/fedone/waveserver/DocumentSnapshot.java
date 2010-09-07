@@ -104,6 +104,19 @@ public class DocumentSnapshot extends JavaScriptObject  {
         var _2 = obj["2"];
         if(_2 != null)
             buf.push("\"2\":" + @org.waveprotocol.wave.federation.ProtocolDocumentOperation::stringify(Lorg/waveprotocol/wave/federation/ProtocolDocumentOperation;)(_2));
+        var _3 = obj["3"];
+        if(_3 != null)
+            buf.push("\"3\":\"" + _3 + "\"");
+        var _4 = obj["4"];
+        if(_4 != null && _4.length != 0) {
+            buf.push("\"4\":[\"" + _4.join("\",\"") + "\"]");
+        }
+        var _5 = obj["5"];
+        if(_5 != null)
+            buf.push("\"5\":" + _5);
+        var _6 = obj["6"];
+        if(_6 != null)
+            buf.push("\"6\":" + _6);
 
         return buf.length == 0 ? "{}" : "{" + buf.join(",") + "}";
     }-*/;
@@ -111,7 +124,10 @@ public class DocumentSnapshot extends JavaScriptObject  {
     public static native boolean isInitialized(DocumentSnapshot obj) /*-{
         return 
             obj["1"] != null 
-            && obj["2"] != null;
+            && obj["2"] != null 
+            && obj["3"] != null 
+            && obj["5"] != null 
+            && obj["6"] != null;
     }-*/;
 
     protected DocumentSnapshot() {}
@@ -154,6 +170,108 @@ public class DocumentSnapshot extends JavaScriptObject  {
 
     public final native boolean hasDocumentOperation() /*-{
         return this["2"] != null;
+    }-*/;
+
+    // author
+
+    public final native String getAuthor() /*-{
+        return this["3"] || "";
+    }-*/;
+
+    public final native DocumentSnapshot setAuthor(String author) /*-{
+        this["3"] = author;
+        return this;
+    }-*/;
+
+    public final native void clearAuthor() /*-{
+        delete this["3"];
+    }-*/;
+
+    public final native boolean hasAuthor() /*-{
+        return this["3"] != null;
+    }-*/;
+
+    // contributors
+
+    public final native JsArrayString getContributorsArray() /*-{
+        return this["4"];
+    }-*/;
+
+    public final java.util.List<String> getContributorsList() {
+        JsArrayString array = getContributorsArray();
+        java.util.List<String> list = new java.util.ArrayList<String>();
+        
+        if (array == null) {
+          return null; 
+        }
+        for (int i=0; i < getContributorsCount(); i++) {
+          list.add(array.get(i));
+        }
+        return list;
+    }
+
+    public final native DocumentSnapshot setContributorsArray(JsArrayString contributors) /*-{
+        this["4"] = contributors;
+        return this;
+    }-*/;
+
+    public final native JsArrayString clearContributorsArray() /*-{
+        return (this["4"] = []);
+    }-*/;
+
+    public final String getContributors(int index) {
+        JsArrayString array = getContributorsArray();
+        return array == null ? null : array.get(index);
+    }
+
+    public final int getContributorsCount() {
+        JsArrayString array = getContributorsArray();
+        return array == null ? 0 : array.length();
+    }
+
+    public final void addContributors(String contributors) {
+        JsArrayString array = getContributorsArray();
+        if(array == null)
+            array = clearContributorsArray();
+        array.push(contributors);
+    }
+
+    // lastModifiedTime
+
+    public final native double getLastModifiedTime() /*-{
+        return this["5"] || 0;
+    }-*/;
+
+    public final native DocumentSnapshot setLastModifiedTime(double lastModifiedTime) /*-{
+        this["5"] = lastModifiedTime;
+        return this;
+    }-*/;
+
+    public final native void clearLastModifiedTime() /*-{
+        delete this["5"];
+    }-*/;
+
+    public final native boolean hasLastModifiedTime() /*-{
+        return this["5"] != null;
+    }-*/;
+
+    // lastModifiedVersion
+
+    public final native double getLastModifiedVersion() /*-{
+        return this["6"] || 0;
+    }-*/;
+
+    public final native DocumentSnapshot setLastModifiedVersion(double lastModifiedVersion) /*-{
+        this["6"] = lastModifiedVersion;
+        return this;
+    }-*/;
+
+    public final native void clearLastModifiedVersion() /*-{
+        delete this["6"];
+    }-*/;
+
+    public final native boolean hasLastModifiedVersion() /*-{
+        return this["6"] != null;
     }-*/;
 
 

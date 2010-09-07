@@ -979,12 +979,48 @@ public final class WaveClientRpc {
     public boolean hasDocumentOperation() { return hasDocumentOperation; }
     public org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation getDocumentOperation() { return documentOperation_; }
     
+    // required string author = 3;
+    public static final int AUTHOR_FIELD_NUMBER = 3;
+    private boolean hasAuthor;
+    private java.lang.String author_ = "";
+    public boolean hasAuthor() { return hasAuthor; }
+    public java.lang.String getAuthor() { return author_; }
+    
+    // repeated string contributor = 4;
+    public static final int CONTRIBUTOR_FIELD_NUMBER = 4;
+    private java.util.List<java.lang.String> contributor_ =
+      java.util.Collections.emptyList();
+    public java.util.List<java.lang.String> getContributorList() {
+      return contributor_;
+    }
+    public int getContributorCount() { return contributor_.size(); }
+    public java.lang.String getContributor(int index) {
+      return contributor_.get(index);
+    }
+    
+    // required int64 last_modified_time = 5;
+    public static final int LAST_MODIFIED_TIME_FIELD_NUMBER = 5;
+    private boolean hasLastModifiedTime;
+    private long lastModifiedTime_ = 0L;
+    public boolean hasLastModifiedTime() { return hasLastModifiedTime; }
+    public long getLastModifiedTime() { return lastModifiedTime_; }
+    
+    // required int64 last_modified_version = 6;
+    public static final int LAST_MODIFIED_VERSION_FIELD_NUMBER = 6;
+    private boolean hasLastModifiedVersion;
+    private long lastModifiedVersion_ = 0L;
+    public boolean hasLastModifiedVersion() { return hasLastModifiedVersion; }
+    public long getLastModifiedVersion() { return lastModifiedVersion_; }
+    
     private void initFields() {
       documentOperation_ = org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation.getDefaultInstance();
     }
     public final boolean isInitialized() {
       if (!hasDocumentId) return false;
       if (!hasDocumentOperation) return false;
+      if (!hasAuthor) return false;
+      if (!hasLastModifiedTime) return false;
+      if (!hasLastModifiedVersion) return false;
       if (!getDocumentOperation().isInitialized()) return false;
       return true;
     }
@@ -997,6 +1033,18 @@ public final class WaveClientRpc {
       }
       if (hasDocumentOperation()) {
         output.writeMessage(2, getDocumentOperation());
+      }
+      if (hasAuthor()) {
+        output.writeString(3, getAuthor());
+      }
+      for (java.lang.String element : getContributorList()) {
+        output.writeString(4, element);
+      }
+      if (hasLastModifiedTime()) {
+        output.writeInt64(5, getLastModifiedTime());
+      }
+      if (hasLastModifiedVersion()) {
+        output.writeInt64(6, getLastModifiedVersion());
       }
       getUnknownFields().writeTo(output);
     }
@@ -1014,6 +1062,27 @@ public final class WaveClientRpc {
       if (hasDocumentOperation()) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getDocumentOperation());
+      }
+      if (hasAuthor()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeStringSize(3, getAuthor());
+      }
+      {
+        int dataSize = 0;
+        for (java.lang.String element : getContributorList()) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeStringSizeNoTag(element);
+        }
+        size += dataSize;
+        size += 1 * getContributorList().size();
+      }
+      if (hasLastModifiedTime()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(5, getLastModifiedTime());
+      }
+      if (hasLastModifiedVersion()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(6, getLastModifiedVersion());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1157,6 +1226,10 @@ public final class WaveClientRpc {
           throw new IllegalStateException(
             "build() has already been called on this Builder.");
         }
+        if (result.contributor_ != java.util.Collections.EMPTY_LIST) {
+          result.contributor_ =
+            java.util.Collections.unmodifiableList(result.contributor_);
+        }
         org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot returnMe = result;
         result = null;
         return returnMe;
@@ -1178,6 +1251,21 @@ public final class WaveClientRpc {
         }
         if (other.hasDocumentOperation()) {
           mergeDocumentOperation(other.getDocumentOperation());
+        }
+        if (other.hasAuthor()) {
+          setAuthor(other.getAuthor());
+        }
+        if (!other.contributor_.isEmpty()) {
+          if (result.contributor_.isEmpty()) {
+            result.contributor_ = new java.util.ArrayList<java.lang.String>();
+          }
+          result.contributor_.addAll(other.contributor_);
+        }
+        if (other.hasLastModifiedTime()) {
+          setLastModifiedTime(other.getLastModifiedTime());
+        }
+        if (other.hasLastModifiedVersion()) {
+          setLastModifiedVersion(other.getLastModifiedVersion());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1215,6 +1303,22 @@ public final class WaveClientRpc {
               }
               input.readMessage(subBuilder, extensionRegistry);
               setDocumentOperation(subBuilder.buildPartial());
+              break;
+            }
+            case 26: {
+              setAuthor(input.readString());
+              break;
+            }
+            case 34: {
+              addContributor(input.readString());
+              break;
+            }
+            case 40: {
+              setLastModifiedTime(input.readInt64());
+              break;
+            }
+            case 48: {
+              setLastModifiedVersion(input.readInt64());
               break;
             }
           }
@@ -1277,6 +1381,103 @@ public final class WaveClientRpc {
       public Builder clearDocumentOperation() {
         result.hasDocumentOperation = false;
         result.documentOperation_ = org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation.getDefaultInstance();
+        return this;
+      }
+      
+      // required string author = 3;
+      public boolean hasAuthor() {
+        return result.hasAuthor();
+      }
+      public java.lang.String getAuthor() {
+        return result.getAuthor();
+      }
+      public Builder setAuthor(java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  result.hasAuthor = true;
+        result.author_ = value;
+        return this;
+      }
+      public Builder clearAuthor() {
+        result.hasAuthor = false;
+        result.author_ = getDefaultInstance().getAuthor();
+        return this;
+      }
+      
+      // repeated string contributor = 4;
+      public java.util.List<java.lang.String> getContributorList() {
+        return java.util.Collections.unmodifiableList(result.contributor_);
+      }
+      public int getContributorCount() {
+        return result.getContributorCount();
+      }
+      public java.lang.String getContributor(int index) {
+        return result.getContributor(index);
+      }
+      public Builder setContributor(int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  result.contributor_.set(index, value);
+        return this;
+      }
+      public Builder addContributor(java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  if (result.contributor_.isEmpty()) {
+          result.contributor_ = new java.util.ArrayList<java.lang.String>();
+        }
+        result.contributor_.add(value);
+        return this;
+      }
+      public Builder addAllContributor(
+          java.lang.Iterable<? extends java.lang.String> values) {
+        if (result.contributor_.isEmpty()) {
+          result.contributor_ = new java.util.ArrayList<java.lang.String>();
+        }
+        super.addAll(values, result.contributor_);
+        return this;
+      }
+      public Builder clearContributor() {
+        result.contributor_ = java.util.Collections.emptyList();
+        return this;
+      }
+      
+      // required int64 last_modified_time = 5;
+      public boolean hasLastModifiedTime() {
+        return result.hasLastModifiedTime();
+      }
+      public long getLastModifiedTime() {
+        return result.getLastModifiedTime();
+      }
+      public Builder setLastModifiedTime(long value) {
+        result.hasLastModifiedTime = true;
+        result.lastModifiedTime_ = value;
+        return this;
+      }
+      public Builder clearLastModifiedTime() {
+        result.hasLastModifiedTime = false;
+        result.lastModifiedTime_ = 0L;
+        return this;
+      }
+      
+      // required int64 last_modified_version = 6;
+      public boolean hasLastModifiedVersion() {
+        return result.hasLastModifiedVersion();
+      }
+      public long getLastModifiedVersion() {
+        return result.getLastModifiedVersion();
+      }
+      public Builder setLastModifiedVersion(long value) {
+        result.hasLastModifiedVersion = true;
+        result.lastModifiedVersion_ = value;
+        return this;
+      }
+      public Builder clearLastModifiedVersion() {
+        result.hasLastModifiedVersion = false;
+        result.lastModifiedVersion_ = 0L;
         return this;
       }
       
@@ -1350,10 +1551,18 @@ public final class WaveClientRpc {
     public boolean hasCreator() { return hasCreator; }
     public java.lang.String getCreator() { return creator_; }
     
+    // required int64 creation_time = 4;
+    public static final int CREATION_TIME_FIELD_NUMBER = 4;
+    private boolean hasCreationTime;
+    private long creationTime_ = 0L;
+    public boolean hasCreationTime() { return hasCreationTime; }
+    public long getCreationTime() { return creationTime_; }
+    
     private void initFields() {
     }
     public final boolean isInitialized() {
       if (!hasCreator) return false;
+      if (!hasCreationTime) return false;
       for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot element : getDocumentList()) {
         if (!element.isInitialized()) return false;
       }
@@ -1371,6 +1580,9 @@ public final class WaveClientRpc {
       }
       if (hasCreator()) {
         output.writeString(3, getCreator());
+      }
+      if (hasCreationTime()) {
+        output.writeInt64(4, getCreationTime());
       }
       getUnknownFields().writeTo(output);
     }
@@ -1397,6 +1609,10 @@ public final class WaveClientRpc {
       if (hasCreator()) {
         size += com.google.protobuf.CodedOutputStream
           .computeStringSize(3, getCreator());
+      }
+      if (hasCreationTime()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(4, getCreationTime());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1579,6 +1795,9 @@ public final class WaveClientRpc {
         if (other.hasCreator()) {
           setCreator(other.getCreator());
         }
+        if (other.hasCreationTime()) {
+          setCreationTime(other.getCreationTime());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -1616,6 +1835,10 @@ public final class WaveClientRpc {
             }
             case 26: {
               setCreator(input.readString());
+              break;
+            }
+            case 32: {
+              setCreationTime(input.readInt64());
               break;
             }
           }
@@ -1732,6 +1955,24 @@ public final class WaveClientRpc {
       public Builder clearCreator() {
         result.hasCreator = false;
         result.creator_ = getDefaultInstance().getCreator();
+        return this;
+      }
+      
+      // required int64 creation_time = 4;
+      public boolean hasCreationTime() {
+        return result.hasCreationTime();
+      }
+      public long getCreationTime() {
+        return result.getCreationTime();
+      }
+      public Builder setCreationTime(long value) {
+        result.hasCreationTime = true;
+        result.creationTime_ = value;
+        return this;
+      }
+      public Builder clearCreationTime() {
+        result.hasCreationTime = false;
+        result.creationTime_ = 0L;
         return this;
       }
       
@@ -4302,39 +4543,42 @@ public final class WaveClientRpc {
       "2\032.waveserver.WaveletVersion\"_\n\016WaveletV",
       "ersion\022\022\n\nwavelet_id\030\001 \002(\t\0229\n\016hashed_ver" +
       "sion\030\002 \002(\0132!.federation.ProtocolHashedVe" +
-      "rsion\"j\n\020DocumentSnapshot\022\023\n\013document_id" +
-      "\030\001 \002(\t\022A\n\022document_operation\030\002 \002(\0132%.fed" +
-      "eration.ProtocolDocumentOperation\"j\n\017Wav" +
-      "eletSnapshot\022\026\n\016participant_id\030\001 \003(\t\022.\n\010" +
-      "document\030\002 \003(\0132\034.waveserver.DocumentSnap" +
-      "shot\022\017\n\007creator\030\003 \002(\t\"\224\001\n\031WaveletSnapsho" +
-      "tAndVersion\022\024\n\014wavelet_name\030\001 \002(\t\0222\n\007ver" +
-      "sion\030\002 \002(\0132!.federation.ProtocolHashedVe",
-      "rsion\022-\n\010snapshot\030\003 \002(\0132\033.waveserver.Wav" +
-      "eletSnapshot\"F\n\014WaveSnapshot\0226\n\007wavelet\030" +
-      "\001 \003(\0132%.waveserver.WaveletSnapshotAndVer" +
-      "sion\"\270\002\n\025ProtocolWaveletUpdate\022\024\n\014wavele" +
-      "t_name\030\001 \002(\t\0227\n\rapplied_delta\030\002 \003(\0132 .fe" +
-      "deration.ProtocolWaveletDelta\0228\n\rcommit_" +
-      "notice\030\003 \001(\0132!.federation.ProtocolHashed" +
-      "Version\022<\n\021resulting_version\030\004 \001(\0132!.fed" +
-      "eration.ProtocolHashedVersion\022-\n\010snapsho" +
-      "t\030\005 \001(\0132\033.waveserver.WaveletSnapshot\022\025\n\006",
-      "marker\030\006 \001(\010:\005false\022\022\n\nchannel_id\030\007 \001(\t\"" +
-      "r\n\025ProtocolSubmitRequest\022\024\n\014wavelet_name" +
-      "\030\001 \002(\t\022/\n\005delta\030\002 \002(\0132 .federation.Proto" +
-      "colWaveletDelta\022\022\n\nchannel_id\030\003 \001(\t\"\230\001\n\026" +
-      "ProtocolSubmitResponse\022\032\n\022operations_app" +
-      "lied\030\001 \002(\005\022\025\n\rerror_message\030\002 \001(\t\022K\n has" +
-      "hed_version_after_application\030\003 \001(\0132!.fe" +
-      "deration.ProtocolHashedVersion2\271\001\n\025Proto" +
-      "colWaveClientRpc\022O\n\004Open\022\037.waveserver.Pr" +
-      "otocolOpenRequest\032!.waveserver.ProtocolW",
-      "aveletUpdate\"\003\330>\001\022O\n\006Submit\022!.waveserver" +
-      ".ProtocolSubmitRequest\032\".waveserver.Prot" +
-      "ocolSubmitResponseBA\n0org.waveprotocol.w" +
-      "ave.examples.fedone.waveserverB\rWaveClie" +
-      "ntRpc"
+      "rsion\"\312\001\n\020DocumentSnapshot\022\023\n\013document_i" +
+      "d\030\001 \002(\t\022A\n\022document_operation\030\002 \002(\0132%.fe" +
+      "deration.ProtocolDocumentOperation\022\016\n\006au" +
+      "thor\030\003 \002(\t\022\023\n\013contributor\030\004 \003(\t\022\032\n\022last_" +
+      "modified_time\030\005 \002(\003\022\035\n\025last_modified_ver" +
+      "sion\030\006 \002(\003\"\201\001\n\017WaveletSnapshot\022\026\n\016partic" +
+      "ipant_id\030\001 \003(\t\022.\n\010document\030\002 \003(\0132\034.waves" +
+      "erver.DocumentSnapshot\022\017\n\007creator\030\003 \002(\t\022",
+      "\025\n\rcreation_time\030\004 \002(\003\"\224\001\n\031WaveletSnapsh" +
+      "otAndVersion\022\024\n\014wavelet_name\030\001 \002(\t\0222\n\007ve" +
+      "rsion\030\002 \002(\0132!.federation.ProtocolHashedV" +
+      "ersion\022-\n\010snapshot\030\003 \002(\0132\033.waveserver.Wa" +
+      "veletSnapshot\"F\n\014WaveSnapshot\0226\n\007wavelet" +
+      "\030\001 \003(\0132%.waveserver.WaveletSnapshotAndVe" +
+      "rsion\"\270\002\n\025ProtocolWaveletUpdate\022\024\n\014wavel" +
+      "et_name\030\001 \002(\t\0227\n\rapplied_delta\030\002 \003(\0132 .f" +
+      "ederation.ProtocolWaveletDelta\0228\n\rcommit" +
+      "_notice\030\003 \001(\0132!.federation.ProtocolHashe",
+      "dVersion\022<\n\021resulting_version\030\004 \001(\0132!.fe" +
+      "deration.ProtocolHashedVersion\022-\n\010snapsh" +
+      "ot\030\005 \001(\0132\033.waveserver.WaveletSnapshot\022\025\n" +
+      "\006marker\030\006 \001(\010:\005false\022\022\n\nchannel_id\030\007 \001(\t" +
+      "\"r\n\025ProtocolSubmitRequest\022\024\n\014wavelet_nam" +
+      "e\030\001 \002(\t\022/\n\005delta\030\002 \002(\0132 .federation.Prot" +
+      "ocolWaveletDelta\022\022\n\nchannel_id\030\003 \001(\t\"\230\001\n" +
+      "\026ProtocolSubmitResponse\022\032\n\022operations_ap" +
+      "plied\030\001 \002(\005\022\025\n\rerror_message\030\002 \001(\t\022K\n ha" +
+      "shed_version_after_application\030\003 \001(\0132!.f",
+      "ederation.ProtocolHashedVersion2\271\001\n\025Prot" +
+      "ocolWaveClientRpc\022O\n\004Open\022\037.waveserver.P" +
+      "rotocolOpenRequest\032!.waveserver.Protocol" +
+      "WaveletUpdate\"\003\330>\001\022O\n\006Submit\022!.waveserve" +
+      "r.ProtocolSubmitRequest\032\".waveserver.Pro" +
+      "tocolSubmitResponseBA\n0org.waveprotocol." +
+      "wave.examples.fedone.waveserverB\rWaveCli" +
+      "entRpc"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4362,7 +4606,7 @@ public final class WaveClientRpc {
           internal_static_waveserver_DocumentSnapshot_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_DocumentSnapshot_descriptor,
-              new java.lang.String[] { "DocumentId", "DocumentOperation", },
+              new java.lang.String[] { "DocumentId", "DocumentOperation", "Author", "Contributor", "LastModifiedTime", "LastModifiedVersion", },
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot.class,
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot.Builder.class);
           internal_static_waveserver_WaveletSnapshot_descriptor =
@@ -4370,7 +4614,7 @@ public final class WaveClientRpc {
           internal_static_waveserver_WaveletSnapshot_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_WaveletSnapshot_descriptor,
-              new java.lang.String[] { "ParticipantId", "Document", "Creator", },
+              new java.lang.String[] { "ParticipantId", "Document", "Creator", "CreationTime", },
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.class,
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.Builder.class);
           internal_static_waveserver_WaveletSnapshotAndVersion_descriptor =
