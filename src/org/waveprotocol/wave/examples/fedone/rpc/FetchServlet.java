@@ -24,13 +24,11 @@ import com.dyuproject.protostuff.json.ReflectionNumericJSON;
 import org.waveprotocol.wave.common.util.JavaWaverefEncoder;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersions;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
 import org.waveprotocol.wave.federation.Proto;
@@ -68,7 +66,6 @@ public class FetchServlet extends HttpServlet {
         WaveClientRpc.ProtocolWaveletUpdate.class,
         WaveClientRpc.WaveletSnapshot.class,
         WaveClientRpc.DocumentSnapshot.class,
-        WaveClientRpc.WaveletSnapshotAndVersion.class,
         WaveClientRpc.WaveSnapshot.class,
         Proto.ProtocolAppliedWaveletDelta.class,
         Proto.ProtocolDocumentOperation.class,
@@ -98,19 +95,22 @@ public class FetchServlet extends HttpServlet {
     builder.setDocumentId(document.getId());
     builder.setDocumentOperation(
         CoreWaveletOperationSerializer.serialize(document.getContent().asOperation()));
+    
     builder.setAuthor(document.getAuthor().getAddress());
     for (ParticipantId participant : document.getContributors()) {
       builder.addContributor(participant.getAddress());
     }
-    builder.setLastModifiedTime(document.getLastModifiedTime());
     builder.setLastModifiedVersion(document.getLastModifiedVersion());
+    builder.setLastModifiedTime(document.getLastModifiedTime());
     
     return builder.build();
   }
   
-  private static WaveletSnapshot serializeWavelet(WaveletData wavelet) {
+  private static WaveletSnapshot serializeWavelet(
+      WaveletData wavelet, ProtocolHashedVersion hashedVersion) {
     WaveletSnapshot.Builder builder = WaveletSnapshot.newBuilder();
-    
+
+    builder.setWaveletId(wavelet.getWaveletId().serialise());
     for (ParticipantId participant : wavelet.getParticipants()) {
       builder.addParticipantId(participant.toString());
     }
@@ -118,20 +118,33 @@ public class FetchServlet extends HttpServlet {
       BlipData data = wavelet.getDocument(id);
       builder.addDocument(serializeDocument(data));
     }
+    
+    builder.setVersion(hashedVersion);
+    builder.setLastModifiedTime(wavelet.getLastModifiedTime());
     builder.setCreator(wavelet.getCreator().getAddress());
     builder.setCreationTime(wavelet.getCreationTime());
     
     return builder.build();
   }
   
-  protected WaveletSnapshotAndVersions getSnapshot(WaveletName waveletName) {
-    WaveletSnapshotBuilder<WaveletSnapshotAndVersions> snapshotBuilder =
-      new WaveletSnapshotBuilder<WaveletSnapshotAndVersions>() {
+  protected WaveletSnapshot getSnapshot(WaveletName waveletName) {
+    WaveletSnapshotBuilder<WaveletSnapshot> snapshotBuilder =
+      new WaveletSnapshotBuilder<WaveletSnapshot>() {
       @Override
-      public WaveletSnapshotAndVersions build(WaveletData waveletData, HashedVersion currentVersion,
+      public WaveletSnapshot build(WaveletData waveletData, HashedVersion currentVersion,
           ProtocolHashedVersion committedVersion) {
-        return new WaveletSnapshotAndVersions(
-            serializeWavelet(waveletData), currentVersion, committedVersion);
+        // Until the persistence store is in place, committedVersion will be
+        // null. TODO(josephg): Remove this once the persistence layer works. 
+        if (committedVersion == null) {
+          committedVersion = CoreWaveletOperationSerializer.serialize(currentVersion);
+        }
+        
+        // TODO(josephg): Also add a unit test for this in WaveletProvider.
+        if (waveletData.getVersion() != committedVersion.getVersion()) {
+          throw new RuntimeException("Provided snapshot version doesn't match committed version");
+        }
+        
+        return serializeWavelet(waveletData, committedVersion);
       }
     };
     return waveletProvider.getSnapshot(waveletName, snapshotBuilder);
@@ -166,7 +179,7 @@ public class FetchServlet extends HttpServlet {
     
     WaveletName waveletName = WaveletName.of(waveref.getWaveId(), waveletId);
     LOG.info("Fetching snapshot of wavelet " + waveletName);
-    WaveletSnapshotAndVersions snapshot = getSnapshot(waveletName);
+    WaveletSnapshot snapshot = getSnapshot(waveletName);
     
     if (snapshot != null) {
       if (!waveref.hasDocumentId()) {
@@ -174,17 +187,12 @@ public class FetchServlet extends HttpServlet {
         dest.setContentType("application/json");
         dest.setStatus(HttpServletResponse.SC_OK);
         
-        // This is a hack until we move away from core
-        WaveletSnapshotAndVersion protoWaveletSnapshot = WaveletSnapshotAndVersion.newBuilder()
-            .setWaveletName(waveletId.serialise())
-            .setSnapshot(snapshot.snapshot)
-            .setVersion(snapshot.currentVersion).build();
-        
         if (waveref.hasWaveletId()) {
-          jsonConverter.writeTo(dest.getWriter(), protoWaveletSnapshot);
+          jsonConverter.writeTo(dest.getWriter(), snapshot);
         } else {
           WaveSnapshot waveSnapshot = WaveSnapshot.newBuilder()
-              .addWavelet(protoWaveletSnapshot).build();
+              .setWaveId(waveref.getWaveId().serialise())
+              .addWavelet(snapshot).build();
           
           jsonConverter.writeTo(dest.getWriter(), waveSnapshot);
         }
@@ -192,7 +200,7 @@ public class FetchServlet extends HttpServlet {
         // We have a wavelet id and document id. Find the document in the snapshot
         // and return it.
         DocumentSnapshot docSnapshot = null;
-        for (DocumentSnapshot ds : snapshot.snapshot.getDocumentList()) {
+        for (DocumentSnapshot ds : snapshot.getDocumentList()) {
           if (ds.getDocumentId().equals(waveref.getDocumentId())) {
             docSnapshot = ds;
             break;
