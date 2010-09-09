@@ -31,8 +31,8 @@ import java.util.Collection;
  *
  * @author Joseph Gentle (josephg@gmail.com)
  */
-public class WaveletOperationSerializer {
-  private WaveletOperationSerializer() {
+public class SnapshotSerializer {
+  private SnapshotSerializer() {
   }
 
   /**
@@ -43,7 +43,7 @@ public class WaveletOperationSerializer {
    * @return A Wavelet snapshot that contains all the information in the
    * original wavelet.
    */
-  public static WaveletSnapshot serializeSnapshot(
+  public static WaveletSnapshot serializeWavelet(
       ReadableWaveletData wavelet, ProtocolHashedVersion hashedVersion) {
     WaveletSnapshot.Builder builder = WaveletSnapshot.newBuilder();
 
@@ -53,7 +53,7 @@ public class WaveletOperationSerializer {
     }
     for (String id : wavelet.getDocumentIds()) {
       ReadableBlipData data = wavelet.getDocument(id);
-      builder.addDocument(serializeSnapshot(data));
+      builder.addDocument(serializeDocument(data));
     }
     
     builder.setVersion(hashedVersion);
@@ -65,14 +65,14 @@ public class WaveletOperationSerializer {
   }
   
   /**
-   * Deserializes the snapshot contained in the {@link ProtocolWaveletUpdate}
-   * into a {@link ObservableWaveletData}.
+   * Deserializes the snapshot contained in the {@link WaveletSnapshot}
+   * into a {@link WaveletData}.
    *
    * @param snapshot the {@link WaveletSnapshot} to deserialize.
    * @throws OperationException if the ops in the snapshot can not be applied.
    * @throws InvalidParticipantAddress 
    */
-  public static WaveletData deserializeSnapshot(WaveletSnapshot snapshot, WaveId waveId)
+  public static WaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
       throws OperationException, InvalidParticipantAddress {
     WaveletName name = WaveletName.of(waveId, WaveletId.deserialise(snapshot.getWaveletId()));
     ObservableWaveletData wavelet = WaveletDataUtil.createEmptyWavelet(name,
@@ -99,7 +99,7 @@ public class WaveletOperationSerializer {
    * @param document The document to serialize
    * @return A snapshot of the given document
    */
-  public static DocumentSnapshot serializeSnapshot(ReadableBlipData document) {
+  public static DocumentSnapshot serializeDocument(ReadableBlipData document) {
     DocumentSnapshot.Builder builder = DocumentSnapshot.newBuilder();
     
     builder.setDocumentId(document.getId());

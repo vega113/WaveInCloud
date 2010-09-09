@@ -17,16 +17,17 @@
 
 package org.waveprotocol.wave.examples.fedone.rpc;
 
+import com.google.gwt.dev.util.Preconditions;
 import com.google.inject.Inject;
 import com.google.protobuf.MessageLite;
 
 import org.waveprotocol.wave.common.util.JavaWaverefEncoder;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.WaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
@@ -78,7 +79,7 @@ public class FetchServlet extends HttpServlet {
    * @return A snapshot of the wavelet requested, or null if the wavelet doesn't
    * exist in the waveletProvider.
    */
-  protected WaveletSnapshot getSnapshot(WaveletName waveletName) {
+  private WaveletSnapshot getSnapshot(WaveletName waveletName) {
     WaveletSnapshotBuilder<WaveletSnapshot> snapshotBuilder =
       new WaveletSnapshotBuilder<WaveletSnapshot>() {
       @Override
@@ -91,11 +92,10 @@ public class FetchServlet extends HttpServlet {
         }
         
         // TODO(josephg): Also add a unit test for this in WaveletProvider.
-        if (waveletData.getVersion() != committedVersion.getVersion()) {
-          throw new RuntimeException("Provided snapshot version doesn't match committed version");
-        }
+        Preconditions.checkState(waveletData.getVersion() == committedVersion.getVersion(),
+            "Provided snapshot version doesn't match committed version");
         
-        return WaveletOperationSerializer.serializeSnapshot(waveletData, committedVersion);
+        return SnapshotSerializer.serializeWavelet(waveletData, committedVersion);
       }
     };
     return waveletProvider.getSnapshot(waveletName, snapshotBuilder);
@@ -121,7 +121,7 @@ public class FetchServlet extends HttpServlet {
    * @param dest The servlet response to render the snapshot out to.
    * @throws IOException
    */
-  protected void renderSnapshot(WaveRef waveref, HttpServletResponse dest) throws IOException {
+  private void renderSnapshot(WaveRef waveref, HttpServletResponse dest) throws IOException {
     // TODO(josephg): Its currently impossible to fetch all wavelets inside a
     // wave that are visible to the user. Until this is fixed, if no wavelet is
     // specified we'll just return the conv+root.
@@ -150,7 +150,7 @@ public class FetchServlet extends HttpServlet {
       } else {
         // Wrap the conv+root we fetched earlier in a WaveSnapshot object and
         // send it.
-        WaveSnapshot waveSnapshot = WaveSnapshot.newBuilder()
+        WaveViewSnapshot waveSnapshot = WaveViewSnapshot.newBuilder()
         .setWaveId(waveref.getWaveId().serialise())
         .addWavelet(snapshot).build();
 

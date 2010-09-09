@@ -24,7 +24,7 @@ public class ProtoSerializer extends ReflectionNumericJSON {
     WaveClientRpc.ProtocolWaveletUpdate.class,
     WaveClientRpc.WaveletSnapshot.class,
     WaveClientRpc.DocumentSnapshot.class,
-    WaveClientRpc.WaveSnapshot.class,
+    WaveClientRpc.WaveViewSnapshot.class,
     Proto.ProtocolAppliedWaveletDelta.class,
     Proto.ProtocolDocumentOperation.class,
     Proto.ProtocolDocumentOperation.Component.class,

@@ -2137,31 +2137,31 @@ public final class WaveClientRpc {
     // @@protoc_insertion_point(class_scope:waveserver.WaveletSnapshot)
   }
   
-  public static final class WaveSnapshot extends
+  public static final class WaveViewSnapshot extends
       com.google.protobuf.GeneratedMessage {
-    // Use WaveSnapshot.newBuilder() to construct.
-    private WaveSnapshot() {
+    // Use WaveViewSnapshot.newBuilder() to construct.
+    private WaveViewSnapshot() {
       initFields();
     }
-    private WaveSnapshot(boolean noInit) {}
+    private WaveViewSnapshot(boolean noInit) {}
     
-    private static final WaveSnapshot defaultInstance;
-    public static WaveSnapshot getDefaultInstance() {
+    private static final WaveViewSnapshot defaultInstance;
+    public static WaveViewSnapshot getDefaultInstance() {
       return defaultInstance;
     }
     
-    public WaveSnapshot getDefaultInstanceForType() {
+    public WaveViewSnapshot getDefaultInstanceForType() {
       return defaultInstance;
     }
     
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_WaveSnapshot_descriptor;
+      return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_WaveViewSnapshot_descriptor;
     }
     
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_WaveSnapshot_fieldAccessorTable;
+      return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_WaveViewSnapshot_fieldAccessorTable;
     }
     
     // required string wave_id = 1;
@@ -2224,41 +2224,41 @@ public final class WaveClientRpc {
       return size;
     }
     
-    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return newBuilder().mergeFrom(data).buildParsed();
     }
-    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return newBuilder().mergeFrom(data, extensionRegistry)
                .buildParsed();
     }
-    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(byte[] data)
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return newBuilder().mergeFrom(data).buildParsed();
     }
-    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return newBuilder().mergeFrom(data, extensionRegistry)
                .buildParsed();
     }
-    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(java.io.InputStream input)
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return newBuilder().mergeFrom(input).buildParsed();
     }
-    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return newBuilder().mergeFrom(input, extensionRegistry)
                .buildParsed();
     }
-    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseDelimitedFrom(java.io.InputStream input)
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       Builder builder = newBuilder();
       if (builder.mergeDelimitedFrom(input)) {
@@ -2267,7 +2267,7 @@ public final class WaveClientRpc {
         return null;
       }
     }
-    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseDelimitedFrom(
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -2278,12 +2278,12 @@ public final class WaveClientRpc {
         return null;
       }
     }
-    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return newBuilder().mergeFrom(input).buildParsed();
     }
-    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -2293,25 +2293,25 @@ public final class WaveClientRpc {
     
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot prototype) {
+    public static Builder newBuilder(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
     
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder> {
-      private org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot result;
+      private org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot result;
       
-      // Construct using org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.newBuilder()
+      // Construct using org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot.newBuilder()
       private Builder() {}
       
       private static Builder create() {
         Builder builder = new Builder();
-        builder.result = new org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot();
+        builder.result = new org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot();
         return builder;
       }
       
-      protected org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot internalGetResult() {
+      protected org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot internalGetResult() {
         return result;
       }
       
@@ -2320,7 +2320,7 @@ public final class WaveClientRpc {
           throw new IllegalStateException(
             "Cannot call clear() after build().");
         }
-        result = new org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot();
+        result = new org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot();
         return this;
       }
       
@@ -2330,24 +2330,24 @@ public final class WaveClientRpc {
       
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.getDescriptor();
+        return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot.getDescriptor();
       }
       
-      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot getDefaultInstanceForType() {
-        return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.getDefaultInstance();
+      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot getDefaultInstanceForType() {
+        return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot.getDefaultInstance();
       }
       
       public boolean isInitialized() {
         return result.isInitialized();
       }
-      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot build() {
+      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot build() {
         if (result != null && !isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return buildPartial();
       }
       
-      private org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot buildParsed()
+      private org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot buildParsed()
           throws com.google.protobuf.InvalidProtocolBufferException {
         if (!isInitialized()) {
           throw newUninitializedMessageException(
@@ -2356,7 +2356,7 @@ public final class WaveClientRpc {
         return buildPartial();
       }
       
-      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot buildPartial() {
+      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot buildPartial() {
         if (result == null) {
           throw new IllegalStateException(
             "build() has already been called on this Builder.");
@@ -2365,22 +2365,22 @@ public final class WaveClientRpc {
           result.wavelet_ =
             java.util.Collections.unmodifiableList(result.wavelet_);
         }
-        org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot returnMe = result;
+        org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot returnMe = result;
         result = null;
         return returnMe;
       }
       
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot) {
-          return mergeFrom((org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot)other);
+        if (other instanceof org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot) {
+          return mergeFrom((org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
       
-      public Builder mergeFrom(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot other) {
-        if (other == org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.getDefaultInstance()) return this;
+      public Builder mergeFrom(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot other) {
+        if (other == org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot.getDefaultInstance()) return this;
         if (other.hasWaveId()) {
           setWaveId(other.getWaveId());
         }
@@ -2502,16 +2502,16 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // @@protoc_insertion_point(builder_scope:waveserver.WaveSnapshot)
+      // @@protoc_insertion_point(builder_scope:waveserver.WaveViewSnapshot)
     }
     
     static {
-      defaultInstance = new WaveSnapshot(true);
+      defaultInstance = new WaveViewSnapshot(true);
       org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internalForceInit();
       defaultInstance.initFields();
     }
     
-    // @@protoc_insertion_point(class_scope:waveserver.WaveSnapshot)
+    // @@protoc_insertion_point(class_scope:waveserver.WaveViewSnapshot)
   }
   
   public static final class ProtocolWaveletUpdate extends
@@ -4270,10 +4270,10 @@ public final class WaveClientRpc {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_waveserver_WaveletSnapshot_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_waveserver_WaveSnapshot_descriptor;
+    internal_static_waveserver_WaveViewSnapshot_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_waveserver_WaveSnapshot_fieldAccessorTable;
+      internal_static_waveserver_WaveViewSnapshot_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_waveserver_ProtocolWaveletUpdate_descriptor;
   private static
@@ -4321,30 +4321,30 @@ public final class WaveClientRpc {
       "ot\0222\n\007version\030\004 \002(\0132!.federation.Protoco" +
       "lHashedVersion\022\032\n\022last_modified_time\030\005 \002" +
       "(\003\022\017\n\007creator\030\006 \002(\t\022\025\n\rcreation_time\030\007 \002" +
-      "(\003\"M\n\014WaveSnapshot\022\017\n\007wave_id\030\001 \002(\t\022,\n\007w" +
-      "avelet\030\002 \003(\0132\033.waveserver.WaveletSnapsho" +
-      "t\"\270\002\n\025ProtocolWaveletUpdate\022\024\n\014wavelet_n" +
-      "ame\030\001 \002(\t\0227\n\rapplied_delta\030\002 \003(\0132 .feder" +
-      "ation.ProtocolWaveletDelta\0228\n\rcommit_not" +
-      "ice\030\003 \001(\0132!.federation.ProtocolHashedVer" +
-      "sion\022<\n\021resulting_version\030\004 \001(\0132!.federa",
-      "tion.ProtocolHashedVersion\022-\n\010snapshot\030\005" +
-      " \001(\0132\033.waveserver.WaveletSnapshot\022\025\n\006mar" +
-      "ker\030\006 \001(\010:\005false\022\022\n\nchannel_id\030\007 \001(\t\"r\n\025" +
-      "ProtocolSubmitRequest\022\024\n\014wavelet_name\030\001 " +
-      "\002(\t\022/\n\005delta\030\002 \002(\0132 .federation.Protocol" +
-      "WaveletDelta\022\022\n\nchannel_id\030\003 \001(\t\"\230\001\n\026Pro" +
-      "tocolSubmitResponse\022\032\n\022operations_applie" +
-      "d\030\001 \002(\005\022\025\n\rerror_message\030\002 \001(\t\022K\n hashed" +
-      "_version_after_application\030\003 \001(\0132!.feder" +
-      "ation.ProtocolHashedVersion2\271\001\n\025Protocol",
-      "WaveClientRpc\022O\n\004Open\022\037.waveserver.Proto" +
-      "colOpenRequest\032!.waveserver.ProtocolWave" +
-      "letUpdate\"\003\330>\001\022O\n\006Submit\022!.waveserver.Pr" +
-      "otocolSubmitRequest\032\".waveserver.Protoco" +
-      "lSubmitResponseBA\n0org.waveprotocol.wave" +
-      ".examples.fedone.waveserverB\rWaveClientR" +
-      "pc"
+      "(\003\"Q\n\020WaveViewSnapshot\022\017\n\007wave_id\030\001 \002(\t\022" +
+      ",\n\007wavelet\030\002 \003(\0132\033.waveserver.WaveletSna" +
+      "pshot\"\270\002\n\025ProtocolWaveletUpdate\022\024\n\014wavel" +
+      "et_name\030\001 \002(\t\0227\n\rapplied_delta\030\002 \003(\0132 .f" +
+      "ederation.ProtocolWaveletDelta\0228\n\rcommit" +
+      "_notice\030\003 \001(\0132!.federation.ProtocolHashe" +
+      "dVersion\022<\n\021resulting_version\030\004 \001(\0132!.fe",
+      "deration.ProtocolHashedVersion\022-\n\010snapsh" +
+      "ot\030\005 \001(\0132\033.waveserver.WaveletSnapshot\022\025\n" +
+      "\006marker\030\006 \001(\010:\005false\022\022\n\nchannel_id\030\007 \001(\t" +
+      "\"r\n\025ProtocolSubmitRequest\022\024\n\014wavelet_nam" +
+      "e\030\001 \002(\t\022/\n\005delta\030\002 \002(\0132 .federation.Prot" +
+      "ocolWaveletDelta\022\022\n\nchannel_id\030\003 \001(\t\"\230\001\n" +
+      "\026ProtocolSubmitResponse\022\032\n\022operations_ap" +
+      "plied\030\001 \002(\005\022\025\n\rerror_message\030\002 \001(\t\022K\n ha" +
+      "shed_version_after_application\030\003 \001(\0132!.f" +
+      "ederation.ProtocolHashedVersion2\271\001\n\025Prot",
+      "ocolWaveClientRpc\022O\n\004Open\022\037.waveserver.P" +
+      "rotocolOpenRequest\032!.waveserver.Protocol" +
+      "WaveletUpdate\"\003\330>\001\022O\n\006Submit\022!.waveserve" +
+      "r.ProtocolSubmitRequest\032\".waveserver.Pro" +
+      "tocolSubmitResponseBA\n0org.waveprotocol." +
+      "wave.examples.fedone.waveserverB\rWaveCli" +
+      "entRpc"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4383,14 +4383,14 @@ public final class WaveClientRpc {
               new java.lang.String[] { "WaveletId", "ParticipantId", "Document", "Version", "LastModifiedTime", "Creator", "CreationTime", },
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.class,
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.Builder.class);
-          internal_static_waveserver_WaveSnapshot_descriptor =
+          internal_static_waveserver_WaveViewSnapshot_descriptor =
             getDescriptor().getMessageTypes().get(4);
-          internal_static_waveserver_WaveSnapshot_fieldAccessorTable = new
+          internal_static_waveserver_WaveViewSnapshot_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_waveserver_WaveSnapshot_descriptor,
+              internal_static_waveserver_WaveViewSnapshot_descriptor,
               new java.lang.String[] { "WaveId", "Wavelet", },
-              org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.class,
-              org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.Builder.class);
+              org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot.class,
+              org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot.Builder.class);
           internal_static_waveserver_ProtocolWaveletUpdate_descriptor =
             getDescriptor().getMessageTypes().get(5);
           internal_static_waveserver_ProtocolWaveletUpdate_fieldAccessorTable = new

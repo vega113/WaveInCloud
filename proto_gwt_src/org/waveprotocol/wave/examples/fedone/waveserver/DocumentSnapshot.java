@@ -191,86 +191,86 @@ public class DocumentSnapshot extends JavaScriptObject  {
         return this["3"] != null;
     }-*/;
 
-    // contributors
+    // contributor
 
-    public final native JsArrayString getContributorsArray() /*-{
+    public final native JsArrayString getContributorArray() /*-{
         return this["4"];
     }-*/;
 
-    public final java.util.List<String> getContributorsList() {
-        JsArrayString array = getContributorsArray();
+    public final java.util.List<String> getContributorList() {
+        JsArrayString array = getContributorArray();
         java.util.List<String> list = new java.util.ArrayList<String>();
         
         if (array == null) {
           return null; 
         }
-        for (int i=0; i < getContributorsCount(); i++) {
+        for (int i=0; i < getContributorCount(); i++) {
           list.add(array.get(i));
         }
         return list;
     }
 
-    public final native DocumentSnapshot setContributorsArray(JsArrayString contributors) /*-{
-        this["4"] = contributors;
+    public final native DocumentSnapshot setContributorArray(JsArrayString contributor) /*-{
+        this["4"] = contributor;
         return this;
     }-*/;
 
-    public final native JsArrayString clearContributorsArray() /*-{
+    public final native JsArrayString clearContributorArray() /*-{
         return (this["4"] = []);
     }-*/;
 
-    public final String getContributors(int index) {
-        JsArrayString array = getContributorsArray();
+    public final String getContributor(int index) {
+        JsArrayString array = getContributorArray();
         return array == null ? null : array.get(index);
     }
 
-    public final int getContributorsCount() {
-        JsArrayString array = getContributorsArray();
+    public final int getContributorCount() {
+        JsArrayString array = getContributorArray();
         return array == null ? 0 : array.length();
     }
 
-    public final void addContributors(String contributors) {
-        JsArrayString array = getContributorsArray();
+    public final void addContributor(String contributor) {
+        JsArrayString array = getContributorArray();
         if(array == null)
-            array = clearContributorsArray();
-        array.push(contributors);
+            array = clearContributorArray();
+        array.push(contributor);
     }
-
-    // lastModifiedTime
-
-    public final native double getLastModifiedTime() /*-{
-        return this["5"] || 0;
-    }-*/;
-
-    public final native DocumentSnapshot setLastModifiedTime(double lastModifiedTime) /*-{
-        this["5"] = lastModifiedTime;
-        return this;
-    }-*/;
-
-    public final native void clearLastModifiedTime() /*-{
-        delete this["5"];
-    }-*/;
-
-    public final native boolean hasLastModifiedTime() /*-{
-        return this["5"] != null;
-    }-*/;
 
     // lastModifiedVersion
 
     public final native double getLastModifiedVersion() /*-{
-        return this["6"] || 0;
+        return this["5"] || 0;
     }-*/;
 
     public final native DocumentSnapshot setLastModifiedVersion(double lastModifiedVersion) /*-{
-        this["6"] = lastModifiedVersion;
+        this["5"] = lastModifiedVersion;
         return this;
     }-*/;
 
     public final native void clearLastModifiedVersion() /*-{
-        delete this["6"];
+        delete this["5"];
     }-*/;
 
     public final native boolean hasLastModifiedVersion() /*-{
+        return this["5"] != null;
+    }-*/;
+
+    // lastModifiedTime
+
+    public final native double getLastModifiedTime() /*-{
+        return this["6"] || 0;
+    }-*/;
+
+    public final native DocumentSnapshot setLastModifiedTime(double lastModifiedTime) /*-{
+        this["6"] = lastModifiedTime;
+        return this;
+    }-*/;
+
+    public final native void clearLastModifiedTime() /*-{
+        delete this["6"];
+    }-*/;
+
+    public final native boolean hasLastModifiedTime() /*-{
         return this["6"] != null;
     }-*/;
 

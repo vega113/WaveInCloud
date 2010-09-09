@@ -65,27 +65,23 @@ message WaveletVersion {
   required federation.ProtocolHashedVersion hashed_version = 2;
 }
 
-// A pair of (document_id, document)
+// A document and associated metadata
 message DocumentSnapshot {
   required string document_id = 1;
   // This is a document operation that takes the document from zero to its current state.
   required federation.ProtocolDocumentOperation document_operation = 2;
 
   // ** Metadata
-  // The participant who initially created the document
+  // The participant who submitted the first operation to the document
   required string author = 3;
-  // All participants who have edited the document
+  // All participants who have submitted operations to the document
   repeated string contributor = 4;
   // The wavelet version when the document was last modified
   required int64 last_modified_version = 5;
   required int64 last_modified_time = 6;
 }
 
-/**
- * Snapshot of a wavelet. May be sent at any time, but will typically be sent
- * when the client
- * first views a wavelet.
- */
+// A wavelet and associated metadata.
 message WaveletSnapshot {
   required string wavelet_id = 1;
   // The list of participants of this wavelet.
@@ -102,7 +98,9 @@ message WaveletSnapshot {
   required int64 creation_time = 7;
 }
 
-message WaveSnapshot {
+// A snapshot of a user's view of a wave.
+// Contains snapshots of all the wavelets visible to a user
+message WaveViewSnapshot {
   required string wave_id = 1;
   repeated WaveletSnapshot wavelet = 2;
 }
