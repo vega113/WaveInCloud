@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.rpc;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gwt.dev.util.Preconditions;
 import com.google.inject.Inject;
 import com.google.protobuf.MessageLite;
@@ -104,7 +105,9 @@ public class FetchServlet extends HttpServlet {
   private void serializeObjectToServlet(MessageLite message, HttpServletResponse dest)
         throws IOException {
     if (message == null) {
-      dest.sendError(HttpServletResponse.SC_NOT_FOUND);
+      // Snapshot is null. It would be nice to 404 here, but we can't let
+      // clients guess valid wavelet ids that they're not authorized to access.
+      dest.sendError(HttpServletResponse.SC_FORBIDDEN);
     } else {
       dest.setContentType("application/json");
       dest.setStatus(HttpServletResponse.SC_OK);
@@ -157,8 +160,7 @@ public class FetchServlet extends HttpServlet {
         serializeObjectToServlet(waveSnapshot, dest);
       }
     } else {
-      // Snapshot is null. 404.
-      dest.sendError(HttpServletResponse.SC_NOT_FOUND);
+      dest.sendError(HttpServletResponse.SC_FORBIDDEN);
     }
   }
   
@@ -166,6 +168,7 @@ public class FetchServlet extends HttpServlet {
    * Create an http response to the fetch query. Main entrypoint for this class.
    */
   @Override
+  @VisibleForTesting
   protected void doGet(HttpServletRequest req, HttpServletResponse response)
       throws IOException {
     
@@ -178,8 +181,8 @@ public class FetchServlet extends HttpServlet {
     try {
       waveref = JavaWaverefEncoder.decodeWaveRefFromPath(urlPath);
     } catch (InvalidWaveRefException e) {
-      // The URL contains an invalid waveref.
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+      // The URL contains an invalid waveref. There's no document at this path.
+      response.sendError(HttpServletResponse.SC_NOT_FOUND);
       return;
     }
     
