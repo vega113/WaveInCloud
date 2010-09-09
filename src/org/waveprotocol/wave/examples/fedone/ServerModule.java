@@ -22,6 +22,7 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
+import org.waveprotocol.wave.examples.fedone.rpc.ProtoSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerModule;
 import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
@@ -79,5 +80,7 @@ public class ServerModule extends AbstractModule {
     bind(String.class).annotatedWith(Names.named("domain")).toInstance("");
     TypeLiteral<List<String>> certs = new TypeLiteral<List<String>>() {};
     bind(certs).annotatedWith(Names.named("certs")).toInstance(Arrays.<String> asList());
+    
+    bind(ProtoSerializer.class).in(Singleton.class);
   }
 }

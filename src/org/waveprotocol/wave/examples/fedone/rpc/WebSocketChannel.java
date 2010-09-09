@@ -21,12 +21,8 @@ import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.protobuf.Message;
 
-import com.dyuproject.protostuff.json.ReflectionNumericJSON;
-
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.MessageWrapper;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
-import org.waveprotocol.wave.federation.Proto;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -42,36 +38,9 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
 
   private final ProtoCallback callback;
   private Gson gson = new Gson();
-  private final ReflectionNumericJSON jsonConverter;
-  @SuppressWarnings("unchecked")
-  private static final Class<? extends Message>[] MODULE_CLASSES = new Class[]{
-      WaveClientRpc.ProtocolOpenRequest.class,
-      WaveClientRpc.ProtocolSubmitRequest.class,
-      WaveClientRpc.ProtocolSubmitResponse.class,
-      WaveClientRpc.ProtocolWaveClientRpc.class,
-      WaveClientRpc.ProtocolWaveletUpdate.class,
-      WaveClientRpc.WaveletSnapshot.class,
-      Proto.ProtocolAppliedWaveletDelta.class,
-      Proto.ProtocolDocumentOperation.class,
-      Proto.ProtocolDocumentOperation.Component.class,
-      Proto.ProtocolDocumentOperation.Component.KeyValuePair.class,
-      Proto.ProtocolDocumentOperation.Component.KeyValueUpdate.class,
-      Proto.ProtocolDocumentOperation.Component.ElementStart.class,
-      Proto.ProtocolDocumentOperation.Component.ReplaceAttributes.class,
-      Proto.ProtocolDocumentOperation.Component.UpdateAttributes.class,
-      Proto.ProtocolDocumentOperation.Component.AnnotationBoundary.class,
-      Proto.ProtocolHashedVersion.class,
-      Proto.ProtocolSignature.class,
-      Proto.ProtocolSignedDelta.class,
-      Proto.ProtocolSignerInfo.class,
-      Proto.ProtocolWaveletDelta.class,
-      Proto.ProtocolWaveletOperation.class,
-      Proto.ProtocolWaveletOperation.MutateDocument.class,
-      Rpc.CancelRpc.class,
-      Rpc.RpcFinished.class,
-  };
   private Map<String, Class<? extends Message>> protosByName;
-
+  private ProtoSerializer serializer;
+  
   /**
    * Constructs a new WebSocketChannel, using the callback to handle any
    * incoming messages.
@@ -81,9 +50,11 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
    */
   public WebSocketChannel(ProtoCallback callback) {
     this.callback = callback;
-    jsonConverter = new ReflectionNumericJSON(MODULE_CLASSES);
+    // The ProtoSerializer could really be singleton.
+    // TODO: Figure out a way to inject a singleton instance using Guice
+    this.serializer = new ProtoSerializer();
     protosByName = Maps.newHashMap();
-    for (Class<? extends Message> class_ : MODULE_CLASSES) {
+    for (Class<? extends Message> class_ : ProtoSerializer.MODULE_CLASSES) {
       protosByName.put(shortName(class_.getName()), class_);
     }
   }
@@ -99,7 +70,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
     Message m;
     Class<? extends Message> protoClass = protosByName.get(wrapper.messageType);
     try {
-      m = jsonConverter
+      m = serializer
           .parseFrom(new ByteArrayInputStream(wrapper.messageJson.getBytes()),
               protoClass);
     } catch (IOException e) {
@@ -121,7 +92,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
   public void sendMessage(long sequenceNo, Message message) {
     final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     try {
-      jsonConverter.writeTo(outputStream, message);
+      serializer.writeTo(outputStream, message);
     } catch (IOException e) {
       e.printStackTrace();
     }

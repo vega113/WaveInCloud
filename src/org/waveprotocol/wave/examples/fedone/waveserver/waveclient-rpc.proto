@@ -70,18 +70,41 @@ message DocumentSnapshot {
   required string document_id = 1;
   // This is a document operation that takes the document from zero to its current state.
   required federation.ProtocolDocumentOperation document_operation = 2;
+
+  // ** Metadata
+  // The participant who initially created the document
+  required string author = 3;
+  // All participants who have edited the document
+  repeated string contributor = 4;
+  // The wavelet version when the document was last modified
+  required int64 last_modified_version = 5;
+  required int64 last_modified_time = 6;
 }
 
 /**
- * Snapshot of a wavelet. May be sent at any time, but will typically be sent when the client
+ * Snapshot of a wavelet. May be sent at any time, but will typically be sent
+ * when the client
  * first views a wavelet.
  */
 message WaveletSnapshot {
+  required string wavelet_id = 1;
   // The list of participants of this wavelet.
-  repeated string participant_id = 1;
-  // For each document in the wavelet, there is one of these. Another way to think of this is
-  // that it's a map of document_id to documents.
-  repeated DocumentSnapshot document = 2;
+  repeated string participant_id = 2;
+  // Snapshots of all the documents in the wavelet.
+  repeated DocumentSnapshot document = 3;
+
+  // ** Metadata
+  // The current version of the wavelet
+  required federation.ProtocolHashedVersion version = 4;
+  // The participant that created the wavelet
+  required int64 last_modified_time = 5;
+  required string creator = 6;
+  required int64 creation_time = 7;
+}
+
+message WaveSnapshot {
+  required string wave_id = 1;
+  repeated WaveletSnapshot wavelet = 2;
 }
 
 /**

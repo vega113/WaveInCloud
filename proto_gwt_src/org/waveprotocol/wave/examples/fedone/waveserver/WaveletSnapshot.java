@@ -109,12 +109,16 @@ public class WaveletSnapshot extends JavaScriptObject  {
                 b.push(fn(_2[i]));
             buf.push("\"2\":[" + b.join(",") + "]");
         }
+        var _3 = obj["3"];
+        if(_3 != null)
+            buf.push("\"3\":\"" + _3 + "\"");
 
         return buf.length == 0 ? "{}" : "{" + buf.join(",") + "}";
     }-*/;
     
     public static native boolean isInitialized(WaveletSnapshot obj) /*-{
-        return true;
+        return 
+            obj["3"] != null;
     }-*/;
 
     protected WaveletSnapshot() {}
@@ -210,6 +214,25 @@ public class WaveletSnapshot extends JavaScriptObject  {
             array = clearDocumentArray();
         array.push(document);
     }
+
+    // creator
+
+    public final native String getCreator() /*-{
+        return this["3"] || "";
+    }-*/;
+
+    public final native WaveletSnapshot setCreator(String creator) /*-{
+        this["3"] = creator;
+        return this;
+    }-*/;
+
+    public final native void clearCreator() /*-{
+        delete this["3"];
+    }-*/;
+
+    public final native boolean hasCreator() /*-{
+        return this["3"] != null;
+    }-*/;
 
 
 }

@@ -979,12 +979,48 @@ public final class WaveClientRpc {
     public boolean hasDocumentOperation() { return hasDocumentOperation; }
     public org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation getDocumentOperation() { return documentOperation_; }
     
+    // required string author = 3;
+    public static final int AUTHOR_FIELD_NUMBER = 3;
+    private boolean hasAuthor;
+    private java.lang.String author_ = "";
+    public boolean hasAuthor() { return hasAuthor; }
+    public java.lang.String getAuthor() { return author_; }
+    
+    // repeated string contributor = 4;
+    public static final int CONTRIBUTOR_FIELD_NUMBER = 4;
+    private java.util.List<java.lang.String> contributor_ =
+      java.util.Collections.emptyList();
+    public java.util.List<java.lang.String> getContributorList() {
+      return contributor_;
+    }
+    public int getContributorCount() { return contributor_.size(); }
+    public java.lang.String getContributor(int index) {
+      return contributor_.get(index);
+    }
+    
+    // required int64 last_modified_version = 5;
+    public static final int LAST_MODIFIED_VERSION_FIELD_NUMBER = 5;
+    private boolean hasLastModifiedVersion;
+    private long lastModifiedVersion_ = 0L;
+    public boolean hasLastModifiedVersion() { return hasLastModifiedVersion; }
+    public long getLastModifiedVersion() { return lastModifiedVersion_; }
+    
+    // required int64 last_modified_time = 6;
+    public static final int LAST_MODIFIED_TIME_FIELD_NUMBER = 6;
+    private boolean hasLastModifiedTime;
+    private long lastModifiedTime_ = 0L;
+    public boolean hasLastModifiedTime() { return hasLastModifiedTime; }
+    public long getLastModifiedTime() { return lastModifiedTime_; }
+    
     private void initFields() {
       documentOperation_ = org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation.getDefaultInstance();
     }
     public final boolean isInitialized() {
       if (!hasDocumentId) return false;
       if (!hasDocumentOperation) return false;
+      if (!hasAuthor) return false;
+      if (!hasLastModifiedVersion) return false;
+      if (!hasLastModifiedTime) return false;
       if (!getDocumentOperation().isInitialized()) return false;
       return true;
     }
@@ -997,6 +1033,18 @@ public final class WaveClientRpc {
       }
       if (hasDocumentOperation()) {
         output.writeMessage(2, getDocumentOperation());
+      }
+      if (hasAuthor()) {
+        output.writeString(3, getAuthor());
+      }
+      for (java.lang.String element : getContributorList()) {
+        output.writeString(4, element);
+      }
+      if (hasLastModifiedVersion()) {
+        output.writeInt64(5, getLastModifiedVersion());
+      }
+      if (hasLastModifiedTime()) {
+        output.writeInt64(6, getLastModifiedTime());
       }
       getUnknownFields().writeTo(output);
     }
@@ -1014,6 +1062,27 @@ public final class WaveClientRpc {
       if (hasDocumentOperation()) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getDocumentOperation());
+      }
+      if (hasAuthor()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeStringSize(3, getAuthor());
+      }
+      {
+        int dataSize = 0;
+        for (java.lang.String element : getContributorList()) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeStringSizeNoTag(element);
+        }
+        size += dataSize;
+        size += 1 * getContributorList().size();
+      }
+      if (hasLastModifiedVersion()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(5, getLastModifiedVersion());
+      }
+      if (hasLastModifiedTime()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(6, getLastModifiedTime());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1157,6 +1226,10 @@ public final class WaveClientRpc {
           throw new IllegalStateException(
             "build() has already been called on this Builder.");
         }
+        if (result.contributor_ != java.util.Collections.EMPTY_LIST) {
+          result.contributor_ =
+            java.util.Collections.unmodifiableList(result.contributor_);
+        }
         org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot returnMe = result;
         result = null;
         return returnMe;
@@ -1178,6 +1251,21 @@ public final class WaveClientRpc {
         }
         if (other.hasDocumentOperation()) {
           mergeDocumentOperation(other.getDocumentOperation());
+        }
+        if (other.hasAuthor()) {
+          setAuthor(other.getAuthor());
+        }
+        if (!other.contributor_.isEmpty()) {
+          if (result.contributor_.isEmpty()) {
+            result.contributor_ = new java.util.ArrayList<java.lang.String>();
+          }
+          result.contributor_.addAll(other.contributor_);
+        }
+        if (other.hasLastModifiedVersion()) {
+          setLastModifiedVersion(other.getLastModifiedVersion());
+        }
+        if (other.hasLastModifiedTime()) {
+          setLastModifiedTime(other.getLastModifiedTime());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1215,6 +1303,22 @@ public final class WaveClientRpc {
               }
               input.readMessage(subBuilder, extensionRegistry);
               setDocumentOperation(subBuilder.buildPartial());
+              break;
+            }
+            case 26: {
+              setAuthor(input.readString());
+              break;
+            }
+            case 34: {
+              addContributor(input.readString());
+              break;
+            }
+            case 40: {
+              setLastModifiedVersion(input.readInt64());
+              break;
+            }
+            case 48: {
+              setLastModifiedTime(input.readInt64());
               break;
             }
           }
@@ -1280,6 +1384,103 @@ public final class WaveClientRpc {
         return this;
       }
       
+      // required string author = 3;
+      public boolean hasAuthor() {
+        return result.hasAuthor();
+      }
+      public java.lang.String getAuthor() {
+        return result.getAuthor();
+      }
+      public Builder setAuthor(java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  result.hasAuthor = true;
+        result.author_ = value;
+        return this;
+      }
+      public Builder clearAuthor() {
+        result.hasAuthor = false;
+        result.author_ = getDefaultInstance().getAuthor();
+        return this;
+      }
+      
+      // repeated string contributor = 4;
+      public java.util.List<java.lang.String> getContributorList() {
+        return java.util.Collections.unmodifiableList(result.contributor_);
+      }
+      public int getContributorCount() {
+        return result.getContributorCount();
+      }
+      public java.lang.String getContributor(int index) {
+        return result.getContributor(index);
+      }
+      public Builder setContributor(int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  result.contributor_.set(index, value);
+        return this;
+      }
+      public Builder addContributor(java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  if (result.contributor_.isEmpty()) {
+          result.contributor_ = new java.util.ArrayList<java.lang.String>();
+        }
+        result.contributor_.add(value);
+        return this;
+      }
+      public Builder addAllContributor(
+          java.lang.Iterable<? extends java.lang.String> values) {
+        if (result.contributor_.isEmpty()) {
+          result.contributor_ = new java.util.ArrayList<java.lang.String>();
+        }
+        super.addAll(values, result.contributor_);
+        return this;
+      }
+      public Builder clearContributor() {
+        result.contributor_ = java.util.Collections.emptyList();
+        return this;
+      }
+      
+      // required int64 last_modified_version = 5;
+      public boolean hasLastModifiedVersion() {
+        return result.hasLastModifiedVersion();
+      }
+      public long getLastModifiedVersion() {
+        return result.getLastModifiedVersion();
+      }
+      public Builder setLastModifiedVersion(long value) {
+        result.hasLastModifiedVersion = true;
+        result.lastModifiedVersion_ = value;
+        return this;
+      }
+      public Builder clearLastModifiedVersion() {
+        result.hasLastModifiedVersion = false;
+        result.lastModifiedVersion_ = 0L;
+        return this;
+      }
+      
+      // required int64 last_modified_time = 6;
+      public boolean hasLastModifiedTime() {
+        return result.hasLastModifiedTime();
+      }
+      public long getLastModifiedTime() {
+        return result.getLastModifiedTime();
+      }
+      public Builder setLastModifiedTime(long value) {
+        result.hasLastModifiedTime = true;
+        result.lastModifiedTime_ = value;
+        return this;
+      }
+      public Builder clearLastModifiedTime() {
+        result.hasLastModifiedTime = false;
+        result.lastModifiedTime_ = 0L;
+        return this;
+      }
+      
       // @@protoc_insertion_point(builder_scope:waveserver.DocumentSnapshot)
     }
     
@@ -1319,8 +1520,15 @@ public final class WaveClientRpc {
       return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_WaveletSnapshot_fieldAccessorTable;
     }
     
-    // repeated string participant_id = 1;
-    public static final int PARTICIPANT_ID_FIELD_NUMBER = 1;
+    // required string wavelet_id = 1;
+    public static final int WAVELET_ID_FIELD_NUMBER = 1;
+    private boolean hasWaveletId;
+    private java.lang.String waveletId_ = "";
+    public boolean hasWaveletId() { return hasWaveletId; }
+    public java.lang.String getWaveletId() { return waveletId_; }
+    
+    // repeated string participant_id = 2;
+    public static final int PARTICIPANT_ID_FIELD_NUMBER = 2;
     private java.util.List<java.lang.String> participantId_ =
       java.util.Collections.emptyList();
     public java.util.List<java.lang.String> getParticipantIdList() {
@@ -1331,8 +1539,8 @@ public final class WaveClientRpc {
       return participantId_.get(index);
     }
     
-    // repeated .waveserver.DocumentSnapshot document = 2;
-    public static final int DOCUMENT_FIELD_NUMBER = 2;
+    // repeated .waveserver.DocumentSnapshot document = 3;
+    public static final int DOCUMENT_FIELD_NUMBER = 3;
     private java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot> document_ =
       java.util.Collections.emptyList();
     public java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot> getDocumentList() {
@@ -1343,23 +1551,73 @@ public final class WaveClientRpc {
       return document_.get(index);
     }
     
+    // required .federation.ProtocolHashedVersion version = 4;
+    public static final int VERSION_FIELD_NUMBER = 4;
+    private boolean hasVersion;
+    private org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion version_;
+    public boolean hasVersion() { return hasVersion; }
+    public org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion getVersion() { return version_; }
+    
+    // required int64 last_modified_time = 5;
+    public static final int LAST_MODIFIED_TIME_FIELD_NUMBER = 5;
+    private boolean hasLastModifiedTime;
+    private long lastModifiedTime_ = 0L;
+    public boolean hasLastModifiedTime() { return hasLastModifiedTime; }
+    public long getLastModifiedTime() { return lastModifiedTime_; }
+    
+    // required string creator = 6;
+    public static final int CREATOR_FIELD_NUMBER = 6;
+    private boolean hasCreator;
+    private java.lang.String creator_ = "";
+    public boolean hasCreator() { return hasCreator; }
+    public java.lang.String getCreator() { return creator_; }
+    
+    // required int64 creation_time = 7;
+    public static final int CREATION_TIME_FIELD_NUMBER = 7;
+    private boolean hasCreationTime;
+    private long creationTime_ = 0L;
+    public boolean hasCreationTime() { return hasCreationTime; }
+    public long getCreationTime() { return creationTime_; }
+    
     private void initFields() {
+      version_ = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance();
     }
     public final boolean isInitialized() {
+      if (!hasWaveletId) return false;
+      if (!hasVersion) return false;
+      if (!hasLastModifiedTime) return false;
+      if (!hasCreator) return false;
+      if (!hasCreationTime) return false;
       for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot element : getDocumentList()) {
         if (!element.isInitialized()) return false;
       }
+      if (!getVersion().isInitialized()) return false;
       return true;
     }
     
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
+      if (hasWaveletId()) {
+        output.writeString(1, getWaveletId());
+      }
       for (java.lang.String element : getParticipantIdList()) {
-        output.writeString(1, element);
+        output.writeString(2, element);
       }
       for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot element : getDocumentList()) {
-        output.writeMessage(2, element);
+        output.writeMessage(3, element);
+      }
+      if (hasVersion()) {
+        output.writeMessage(4, getVersion());
+      }
+      if (hasLastModifiedTime()) {
+        output.writeInt64(5, getLastModifiedTime());
+      }
+      if (hasCreator()) {
+        output.writeString(6, getCreator());
+      }
+      if (hasCreationTime()) {
+        output.writeInt64(7, getCreationTime());
       }
       getUnknownFields().writeTo(output);
     }
@@ -1370,6 +1628,10 @@ public final class WaveClientRpc {
       if (size != -1) return size;
     
       size = 0;
+      if (hasWaveletId()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeStringSize(1, getWaveletId());
+      }
       {
         int dataSize = 0;
         for (java.lang.String element : getParticipantIdList()) {
@@ -1381,7 +1643,23 @@ public final class WaveClientRpc {
       }
       for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot element : getDocumentList()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, element);
+          .computeMessageSize(3, element);
+      }
+      if (hasVersion()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, getVersion());
+      }
+      if (hasLastModifiedTime()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(5, getLastModifiedTime());
+      }
+      if (hasCreator()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeStringSize(6, getCreator());
+      }
+      if (hasCreationTime()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(7, getCreationTime());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1549,6 +1827,9 @@ public final class WaveClientRpc {
       
       public Builder mergeFrom(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot other) {
         if (other == org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.getDefaultInstance()) return this;
+        if (other.hasWaveletId()) {
+          setWaveletId(other.getWaveletId());
+        }
         if (!other.participantId_.isEmpty()) {
           if (result.participantId_.isEmpty()) {
             result.participantId_ = new java.util.ArrayList<java.lang.String>();
@@ -1560,6 +1841,18 @@ public final class WaveClientRpc {
             result.document_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot>();
           }
           result.document_.addAll(other.document_);
+        }
+        if (other.hasVersion()) {
+          mergeVersion(other.getVersion());
+        }
+        if (other.hasLastModifiedTime()) {
+          setLastModifiedTime(other.getLastModifiedTime());
+        }
+        if (other.hasCreator()) {
+          setCreator(other.getCreator());
+        }
+        if (other.hasCreationTime()) {
+          setCreationTime(other.getCreationTime());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1587,13 +1880,38 @@ public final class WaveClientRpc {
               break;
             }
             case 10: {
-              addParticipantId(input.readString());
+              setWaveletId(input.readString());
               break;
             }
             case 18: {
+              addParticipantId(input.readString());
+              break;
+            }
+            case 26: {
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot.Builder subBuilder = org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot.newBuilder();
               input.readMessage(subBuilder, extensionRegistry);
               addDocument(subBuilder.buildPartial());
+              break;
+            }
+            case 34: {
+              org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.Builder subBuilder = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.newBuilder();
+              if (hasVersion()) {
+                subBuilder.mergeFrom(getVersion());
+              }
+              input.readMessage(subBuilder, extensionRegistry);
+              setVersion(subBuilder.buildPartial());
+              break;
+            }
+            case 40: {
+              setLastModifiedTime(input.readInt64());
+              break;
+            }
+            case 50: {
+              setCreator(input.readString());
+              break;
+            }
+            case 56: {
+              setCreationTime(input.readInt64());
               break;
             }
           }
@@ -1601,7 +1919,28 @@ public final class WaveClientRpc {
       }
       
       
-      // repeated string participant_id = 1;
+      // required string wavelet_id = 1;
+      public boolean hasWaveletId() {
+        return result.hasWaveletId();
+      }
+      public java.lang.String getWaveletId() {
+        return result.getWaveletId();
+      }
+      public Builder setWaveletId(java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  result.hasWaveletId = true;
+        result.waveletId_ = value;
+        return this;
+      }
+      public Builder clearWaveletId() {
+        result.hasWaveletId = false;
+        result.waveletId_ = getDefaultInstance().getWaveletId();
+        return this;
+      }
+      
+      // repeated string participant_id = 2;
       public java.util.List<java.lang.String> getParticipantIdList() {
         return java.util.Collections.unmodifiableList(result.participantId_);
       }
@@ -1641,7 +1980,7 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // repeated .waveserver.DocumentSnapshot document = 2;
+      // repeated .waveserver.DocumentSnapshot document = 3;
       public java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot> getDocumentList() {
         return java.util.Collections.unmodifiableList(result.document_);
       }
@@ -1692,6 +2031,100 @@ public final class WaveClientRpc {
         return this;
       }
       
+      // required .federation.ProtocolHashedVersion version = 4;
+      public boolean hasVersion() {
+        return result.hasVersion();
+      }
+      public org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion getVersion() {
+        return result.getVersion();
+      }
+      public Builder setVersion(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        result.hasVersion = true;
+        result.version_ = value;
+        return this;
+      }
+      public Builder setVersion(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.Builder builderForValue) {
+        result.hasVersion = true;
+        result.version_ = builderForValue.build();
+        return this;
+      }
+      public Builder mergeVersion(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion value) {
+        if (result.hasVersion() &&
+            result.version_ != org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance()) {
+          result.version_ =
+            org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.newBuilder(result.version_).mergeFrom(value).buildPartial();
+        } else {
+          result.version_ = value;
+        }
+        result.hasVersion = true;
+        return this;
+      }
+      public Builder clearVersion() {
+        result.hasVersion = false;
+        result.version_ = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance();
+        return this;
+      }
+      
+      // required int64 last_modified_time = 5;
+      public boolean hasLastModifiedTime() {
+        return result.hasLastModifiedTime();
+      }
+      public long getLastModifiedTime() {
+        return result.getLastModifiedTime();
+      }
+      public Builder setLastModifiedTime(long value) {
+        result.hasLastModifiedTime = true;
+        result.lastModifiedTime_ = value;
+        return this;
+      }
+      public Builder clearLastModifiedTime() {
+        result.hasLastModifiedTime = false;
+        result.lastModifiedTime_ = 0L;
+        return this;
+      }
+      
+      // required string creator = 6;
+      public boolean hasCreator() {
+        return result.hasCreator();
+      }
+      public java.lang.String getCreator() {
+        return result.getCreator();
+      }
+      public Builder setCreator(java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  result.hasCreator = true;
+        result.creator_ = value;
+        return this;
+      }
+      public Builder clearCreator() {
+        result.hasCreator = false;
+        result.creator_ = getDefaultInstance().getCreator();
+        return this;
+      }
+      
+      // required int64 creation_time = 7;
+      public boolean hasCreationTime() {
+        return result.hasCreationTime();
+      }
+      public long getCreationTime() {
+        return result.getCreationTime();
+      }
+      public Builder setCreationTime(long value) {
+        result.hasCreationTime = true;
+        result.creationTime_ = value;
+        return this;
+      }
+      public Builder clearCreationTime() {
+        result.hasCreationTime = false;
+        result.creationTime_ = 0L;
+        return this;
+      }
+      
       // @@protoc_insertion_point(builder_scope:waveserver.WaveletSnapshot)
     }
     
@@ -1702,6 +2135,383 @@ public final class WaveClientRpc {
     }
     
     // @@protoc_insertion_point(class_scope:waveserver.WaveletSnapshot)
+  }
+  
+  public static final class WaveSnapshot extends
+      com.google.protobuf.GeneratedMessage {
+    // Use WaveSnapshot.newBuilder() to construct.
+    private WaveSnapshot() {
+      initFields();
+    }
+    private WaveSnapshot(boolean noInit) {}
+    
+    private static final WaveSnapshot defaultInstance;
+    public static WaveSnapshot getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public WaveSnapshot getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_WaveSnapshot_descriptor;
+    }
+    
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internal_static_waveserver_WaveSnapshot_fieldAccessorTable;
+    }
+    
+    // required string wave_id = 1;
+    public static final int WAVE_ID_FIELD_NUMBER = 1;
+    private boolean hasWaveId;
+    private java.lang.String waveId_ = "";
+    public boolean hasWaveId() { return hasWaveId; }
+    public java.lang.String getWaveId() { return waveId_; }
+    
+    // repeated .waveserver.WaveletSnapshot wavelet = 2;
+    public static final int WAVELET_FIELD_NUMBER = 2;
+    private java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot> wavelet_ =
+      java.util.Collections.emptyList();
+    public java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot> getWaveletList() {
+      return wavelet_;
+    }
+    public int getWaveletCount() { return wavelet_.size(); }
+    public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot getWavelet(int index) {
+      return wavelet_.get(index);
+    }
+    
+    private void initFields() {
+    }
+    public final boolean isInitialized() {
+      if (!hasWaveId) return false;
+      for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot element : getWaveletList()) {
+        if (!element.isInitialized()) return false;
+      }
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (hasWaveId()) {
+        output.writeString(1, getWaveId());
+      }
+      for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot element : getWaveletList()) {
+        output.writeMessage(2, element);
+      }
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (hasWaveId()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeStringSize(1, getWaveId());
+      }
+      for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot element : getWaveletList()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, element);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> {
+      private org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot result;
+      
+      // Construct using org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.newBuilder()
+      private Builder() {}
+      
+      private static Builder create() {
+        Builder builder = new Builder();
+        builder.result = new org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot();
+        return builder;
+      }
+      
+      protected org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot internalGetResult() {
+        return result;
+      }
+      
+      public Builder clear() {
+        if (result == null) {
+          throw new IllegalStateException(
+            "Cannot call clear() after build().");
+        }
+        result = new org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot();
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(result);
+      }
+      
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.getDescriptor();
+      }
+      
+      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot getDefaultInstanceForType() {
+        return org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.getDefaultInstance();
+      }
+      
+      public boolean isInitialized() {
+        return result.isInitialized();
+      }
+      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot build() {
+        if (result != null && !isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return buildPartial();
+      }
+      
+      private org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        if (!isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return buildPartial();
+      }
+      
+      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot buildPartial() {
+        if (result == null) {
+          throw new IllegalStateException(
+            "build() has already been called on this Builder.");
+        }
+        if (result.wavelet_ != java.util.Collections.EMPTY_LIST) {
+          result.wavelet_ =
+            java.util.Collections.unmodifiableList(result.wavelet_);
+        }
+        org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot returnMe = result;
+        result = null;
+        return returnMe;
+      }
+      
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot) {
+          return mergeFrom((org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot other) {
+        if (other == org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.getDefaultInstance()) return this;
+        if (other.hasWaveId()) {
+          setWaveId(other.getWaveId());
+        }
+        if (!other.wavelet_.isEmpty()) {
+          if (result.wavelet_.isEmpty()) {
+            result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot>();
+          }
+          result.wavelet_.addAll(other.wavelet_);
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              setWaveId(input.readString());
+              break;
+            }
+            case 18: {
+              org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.Builder subBuilder = org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.newBuilder();
+              input.readMessage(subBuilder, extensionRegistry);
+              addWavelet(subBuilder.buildPartial());
+              break;
+            }
+          }
+        }
+      }
+      
+      
+      // required string wave_id = 1;
+      public boolean hasWaveId() {
+        return result.hasWaveId();
+      }
+      public java.lang.String getWaveId() {
+        return result.getWaveId();
+      }
+      public Builder setWaveId(java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  result.hasWaveId = true;
+        result.waveId_ = value;
+        return this;
+      }
+      public Builder clearWaveId() {
+        result.hasWaveId = false;
+        result.waveId_ = getDefaultInstance().getWaveId();
+        return this;
+      }
+      
+      // repeated .waveserver.WaveletSnapshot wavelet = 2;
+      public java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot> getWaveletList() {
+        return java.util.Collections.unmodifiableList(result.wavelet_);
+      }
+      public int getWaveletCount() {
+        return result.getWaveletCount();
+      }
+      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot getWavelet(int index) {
+        return result.getWavelet(index);
+      }
+      public Builder setWavelet(int index, org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        result.wavelet_.set(index, value);
+        return this;
+      }
+      public Builder setWavelet(int index, org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.Builder builderForValue) {
+        result.wavelet_.set(index, builderForValue.build());
+        return this;
+      }
+      public Builder addWavelet(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        if (result.wavelet_.isEmpty()) {
+          result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot>();
+        }
+        result.wavelet_.add(value);
+        return this;
+      }
+      public Builder addWavelet(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.Builder builderForValue) {
+        if (result.wavelet_.isEmpty()) {
+          result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot>();
+        }
+        result.wavelet_.add(builderForValue.build());
+        return this;
+      }
+      public Builder addAllWavelet(
+          java.lang.Iterable<? extends org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot> values) {
+        if (result.wavelet_.isEmpty()) {
+          result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot>();
+        }
+        super.addAll(values, result.wavelet_);
+        return this;
+      }
+      public Builder clearWavelet() {
+        result.wavelet_ = java.util.Collections.emptyList();
+        return this;
+      }
+      
+      // @@protoc_insertion_point(builder_scope:waveserver.WaveSnapshot)
+    }
+    
+    static {
+      defaultInstance = new WaveSnapshot(true);
+      org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.internalForceInit();
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:waveserver.WaveSnapshot)
   }
   
   public static final class ProtocolWaveletUpdate extends
@@ -3460,6 +4270,11 @@ public final class WaveClientRpc {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_waveserver_WaveletSnapshot_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_waveserver_WaveSnapshot_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_waveserver_WaveSnapshot_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_waveserver_ProtocolWaveletUpdate_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -3495,33 +4310,41 @@ public final class WaveClientRpc {
       "2\032.waveserver.WaveletVersion\"_\n\016WaveletV",
       "ersion\022\022\n\nwavelet_id\030\001 \002(\t\0229\n\016hashed_ver" +
       "sion\030\002 \002(\0132!.federation.ProtocolHashedVe" +
-      "rsion\"j\n\020DocumentSnapshot\022\023\n\013document_id" +
-      "\030\001 \002(\t\022A\n\022document_operation\030\002 \002(\0132%.fed" +
-      "eration.ProtocolDocumentOperation\"Y\n\017Wav" +
-      "eletSnapshot\022\026\n\016participant_id\030\001 \003(\t\022.\n\010" +
-      "document\030\002 \003(\0132\034.waveserver.DocumentSnap" +
-      "shot\"\270\002\n\025ProtocolWaveletUpdate\022\024\n\014wavele" +
-      "t_name\030\001 \002(\t\0227\n\rapplied_delta\030\002 \003(\0132 .fe" +
-      "deration.ProtocolWaveletDelta\0228\n\rcommit_",
-      "notice\030\003 \001(\0132!.federation.ProtocolHashed" +
-      "Version\022<\n\021resulting_version\030\004 \001(\0132!.fed" +
-      "eration.ProtocolHashedVersion\022-\n\010snapsho" +
-      "t\030\005 \001(\0132\033.waveserver.WaveletSnapshot\022\025\n\006" +
-      "marker\030\006 \001(\010:\005false\022\022\n\nchannel_id\030\007 \001(\t\"" +
-      "r\n\025ProtocolSubmitRequest\022\024\n\014wavelet_name" +
-      "\030\001 \002(\t\022/\n\005delta\030\002 \002(\0132 .federation.Proto" +
-      "colWaveletDelta\022\022\n\nchannel_id\030\003 \001(\t\"\230\001\n\026" +
-      "ProtocolSubmitResponse\022\032\n\022operations_app" +
-      "lied\030\001 \002(\005\022\025\n\rerror_message\030\002 \001(\t\022K\n has",
-      "hed_version_after_application\030\003 \001(\0132!.fe" +
-      "deration.ProtocolHashedVersion2\271\001\n\025Proto" +
-      "colWaveClientRpc\022O\n\004Open\022\037.waveserver.Pr" +
-      "otocolOpenRequest\032!.waveserver.ProtocolW" +
-      "aveletUpdate\"\003\330>\001\022O\n\006Submit\022!.waveserver" +
-      ".ProtocolSubmitRequest\032\".waveserver.Prot" +
-      "ocolSubmitResponseBA\n0org.waveprotocol.w" +
-      "ave.examples.fedone.waveserverB\rWaveClie" +
-      "ntRpc"
+      "rsion\"\312\001\n\020DocumentSnapshot\022\023\n\013document_i" +
+      "d\030\001 \002(\t\022A\n\022document_operation\030\002 \002(\0132%.fe" +
+      "deration.ProtocolDocumentOperation\022\016\n\006au" +
+      "thor\030\003 \002(\t\022\023\n\013contributor\030\004 \003(\t\022\035\n\025last_" +
+      "modified_version\030\005 \002(\003\022\032\n\022last_modified_" +
+      "time\030\006 \002(\003\"\345\001\n\017WaveletSnapshot\022\022\n\nwavele" +
+      "t_id\030\001 \002(\t\022\026\n\016participant_id\030\002 \003(\t\022.\n\010do" +
+      "cument\030\003 \003(\0132\034.waveserver.DocumentSnapsh",
+      "ot\0222\n\007version\030\004 \002(\0132!.federation.Protoco" +
+      "lHashedVersion\022\032\n\022last_modified_time\030\005 \002" +
+      "(\003\022\017\n\007creator\030\006 \002(\t\022\025\n\rcreation_time\030\007 \002" +
+      "(\003\"M\n\014WaveSnapshot\022\017\n\007wave_id\030\001 \002(\t\022,\n\007w" +
+      "avelet\030\002 \003(\0132\033.waveserver.WaveletSnapsho" +
+      "t\"\270\002\n\025ProtocolWaveletUpdate\022\024\n\014wavelet_n" +
+      "ame\030\001 \002(\t\0227\n\rapplied_delta\030\002 \003(\0132 .feder" +
+      "ation.ProtocolWaveletDelta\0228\n\rcommit_not" +
+      "ice\030\003 \001(\0132!.federation.ProtocolHashedVer" +
+      "sion\022<\n\021resulting_version\030\004 \001(\0132!.federa",
+      "tion.ProtocolHashedVersion\022-\n\010snapshot\030\005" +
+      " \001(\0132\033.waveserver.WaveletSnapshot\022\025\n\006mar" +
+      "ker\030\006 \001(\010:\005false\022\022\n\nchannel_id\030\007 \001(\t\"r\n\025" +
+      "ProtocolSubmitRequest\022\024\n\014wavelet_name\030\001 " +
+      "\002(\t\022/\n\005delta\030\002 \002(\0132 .federation.Protocol" +
+      "WaveletDelta\022\022\n\nchannel_id\030\003 \001(\t\"\230\001\n\026Pro" +
+      "tocolSubmitResponse\022\032\n\022operations_applie" +
+      "d\030\001 \002(\005\022\025\n\rerror_message\030\002 \001(\t\022K\n hashed" +
+      "_version_after_application\030\003 \001(\0132!.feder" +
+      "ation.ProtocolHashedVersion2\271\001\n\025Protocol",
+      "WaveClientRpc\022O\n\004Open\022\037.waveserver.Proto" +
+      "colOpenRequest\032!.waveserver.ProtocolWave" +
+      "letUpdate\"\003\330>\001\022O\n\006Submit\022!.waveserver.Pr" +
+      "otocolSubmitRequest\032\".waveserver.Protoco" +
+      "lSubmitResponseBA\n0org.waveprotocol.wave" +
+      ".examples.fedone.waveserverB\rWaveClientR" +
+      "pc"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3549,7 +4372,7 @@ public final class WaveClientRpc {
           internal_static_waveserver_DocumentSnapshot_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_DocumentSnapshot_descriptor,
-              new java.lang.String[] { "DocumentId", "DocumentOperation", },
+              new java.lang.String[] { "DocumentId", "DocumentOperation", "Author", "Contributor", "LastModifiedVersion", "LastModifiedTime", },
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot.class,
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot.Builder.class);
           internal_static_waveserver_WaveletSnapshot_descriptor =
@@ -3557,11 +4380,19 @@ public final class WaveClientRpc {
           internal_static_waveserver_WaveletSnapshot_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_WaveletSnapshot_descriptor,
-              new java.lang.String[] { "ParticipantId", "Document", },
+              new java.lang.String[] { "WaveletId", "ParticipantId", "Document", "Version", "LastModifiedTime", "Creator", "CreationTime", },
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.class,
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot.Builder.class);
-          internal_static_waveserver_ProtocolWaveletUpdate_descriptor =
+          internal_static_waveserver_WaveSnapshot_descriptor =
             getDescriptor().getMessageTypes().get(4);
+          internal_static_waveserver_WaveSnapshot_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_waveserver_WaveSnapshot_descriptor,
+              new java.lang.String[] { "WaveId", "Wavelet", },
+              org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.class,
+              org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveSnapshot.Builder.class);
+          internal_static_waveserver_ProtocolWaveletUpdate_descriptor =
+            getDescriptor().getMessageTypes().get(5);
           internal_static_waveserver_ProtocolWaveletUpdate_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_ProtocolWaveletUpdate_descriptor,
@@ -3569,7 +4400,7 @@ public final class WaveClientRpc {
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate.class,
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate.Builder.class);
           internal_static_waveserver_ProtocolSubmitRequest_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(6);
           internal_static_waveserver_ProtocolSubmitRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_ProtocolSubmitRequest_descriptor,
@@ -3577,7 +4408,7 @@ public final class WaveClientRpc {
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest.class,
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest.Builder.class);
           internal_static_waveserver_ProtocolSubmitResponse_descriptor =
-            getDescriptor().getMessageTypes().get(6);
+            getDescriptor().getMessageTypes().get(7);
           internal_static_waveserver_ProtocolSubmitResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_ProtocolSubmitResponse_descriptor,
