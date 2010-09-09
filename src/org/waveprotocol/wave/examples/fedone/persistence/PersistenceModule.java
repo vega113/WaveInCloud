@@ -29,31 +29,34 @@ import org.waveprotocol.wave.examples.fedone.persistence.mongodb.MongoDbProvider
 /**
  * Module for setting up the different persistence stores.
  *
+ *<p>
+ * The valid names for the cert store are 'memory' and 'mongodb'
+ *
+ *<p>
+ *The valid names for the attachment store are 'disk' and 'mongodb'
+ *
+ *<p>
+ *The valid names for the account store are 'memory'.
+ *
  * @author ljvderijk@google.com (Lennard de Rijk)
- *
- * The valid names for the cert store are
- * 'memory' and 'mongodb'
- * 
- * The valid names for the attachment store are
- * 'disk' and 'mongodb'
- *
  */
 public class PersistenceModule extends AbstractModule {
-  /**
-   * Type of persistence to use for the {@link CertPathStore}.
-   */
+
   private final String certPathStoreType;
-  
+
   private final String attachmentStoreType;
+
+  private final String accountStoreType;
 
   private MongoDbProvider mongoDbProvider;
 
   @Inject
-  public PersistenceModule(
-      @Named("cert_path_store_type") String certPathStoreType,
-      @Named("attachment_store_type") String attachmentStoreType) {
+  public PersistenceModule(@Named("cert_path_store_type") String certPathStoreType,
+      @Named("attachment_store_type") String attachmentStoreType,
+      @Named("account_store_type") String accountStoreType) {
     this.certPathStoreType = certPathStoreType;
     this.attachmentStoreType = attachmentStoreType;
+    this.accountStoreType = accountStoreType;
   }
 
   /**
@@ -70,6 +73,7 @@ public class PersistenceModule extends AbstractModule {
   protected void configure() {
     bindCertPathStore();
     bindAttachmentStore();
+    bindAccountStore();
   }
 
   /**
@@ -83,10 +87,11 @@ public class PersistenceModule extends AbstractModule {
       MongoDbProvider mongoDbProvider = getMongoDbProvider();
       bind(CertPathStore.class).toInstance(mongoDbProvider.provideMongoDbStore());
     } else {
-      throw new RuntimeException("Invalid certificate path type: '" + certPathStoreType + "'");
+      throw new RuntimeException(
+          "Invalid certificate path store type: '" + certPathStoreType + "'");
     }
   }
-  
+
   private void bindAttachmentStore() {
     if (attachmentStoreType.equalsIgnoreCase("disk")) {
       bind(AttachmentStore.class).to(FileBasedAttachmentStore.class).in(Singleton.class);
@@ -95,6 +100,14 @@ public class PersistenceModule extends AbstractModule {
       bind(AttachmentStore.class).toInstance(mongoDbProvider.provideMongoDbStore());
     } else {
       throw new RuntimeException("Invalid attachment store type: '" + attachmentStoreType + "'");
+    }
+  }
+
+  private void bindAccountStore() {
+    if (accountStoreType.equalsIgnoreCase("memory")) {
+      bind(AccountStore.class).to(MemoryStore.class).in(Singleton.class);
+    } else {
+      throw new RuntimeException("Invalid account store type: '" + accountStoreType + "'");
     }
   }
 }
