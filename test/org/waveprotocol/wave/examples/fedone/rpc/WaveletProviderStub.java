@@ -28,7 +28,6 @@ import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuil
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
@@ -57,23 +56,21 @@ public class WaveletProviderStub implements WaveletProvider {
   }
 
   /**
-   * Create a wavelet data object for testing. Do not depend on the wavelet
-   * returned by this method to remain stable.
+   * Create a wavelet data object for testing.
+   * 
+   * Eventually, this method should randomize the values in the returned
+   * wavelet's fields each time it is called. Do not depend on each call to
+   * createSimpleWaveletData returning a WaveletData object with identical
+   * fields.
    * 
    * @return a simple wavelet.
    */
   public static WaveletData createSimpleWaveletData() {
     WaveletName name = WaveletName.of(new WaveId("example.com", "w+abc123"),
         new WaveletId("example.com", "conv+root"));
-    ParticipantId creator;
+    ParticipantId creator = ParticipantId.ofUnsafe("sam@example.com");
     long time = new Date().getTime();
     
-    try {
-      creator = ParticipantId.of("sam@example.com");
-    } catch (InvalidParticipantAddress e) {
-      throw new RuntimeException(e);
-    }
-        
     WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(name, creator, time);
 
     DocInitialization content = new DocInitializationBuilder().characters("Hello there").build();
@@ -84,10 +81,13 @@ public class WaveletProviderStub implements WaveletProvider {
   
   @Override
   public <T> T getSnapshot(WaveletName waveletName, WaveletSnapshotBuilder<T> builder) {
+    final byte[] JUNK_BYTES = new byte[]{0,1,2,3,4,5,-128,127};
+    
     if (waveletName.waveId.equals(getHostedWavelet().getWaveId())
         && waveletName.waveletId.equals(getHostedWavelet().getWaveletId())) {
-      HashedVersion version = currentVersionOverride != null ? currentVersionOverride
-          : new HashedVersion(getHostedWavelet().getVersion(), new byte[]{0,1,2,3,4,5,-128,127});
+      HashedVersion version = (currentVersionOverride != null)
+          ? currentVersionOverride
+          : new HashedVersion(getHostedWavelet().getVersion(), JUNK_BYTES);
 
       return builder.build(getHostedWavelet(), version, getCommittedVersion());
     } else {
@@ -98,13 +98,13 @@ public class WaveletProviderStub implements WaveletProvider {
   @Override
   public Collection<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
       ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd) {
-    throw new AssertionError("Not implemented");
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public void submitRequest(
       WaveletName waveletName, ProtocolWaveletDelta delta, SubmitResultListener listener) {
-    throw new AssertionError("Not implemented");
+    throw new UnsupportedOperationException();
   }
 
   /**

@@ -61,7 +61,7 @@ import javax.servlet.http.HttpServletResponse;
  * The format of the returned information is the protobuf-JSON format used by
  * the websocket interface. 
  */
-public class FetchServlet extends HttpServlet {
+public final class FetchServlet extends HttpServlet {
   private static final Log LOG = Log.get(FetchServlet.class);
   
   @Inject
@@ -70,37 +70,26 @@ public class FetchServlet extends HttpServlet {
     this.serializer = serializer;
   }
   
-  protected ProtoSerializer serializer;
-  protected WaveletProvider waveletProvider;
+  private final ProtoSerializer serializer;
+  private final WaveletProvider waveletProvider;
 
-  /**
-   * Get a snapshot from the wavelet provider of the given wavelet.
-   * 
-   * @param waveletName The name of the wavelet to fetch
-   * @return A snapshot of the wavelet requested, or null if the wavelet doesn't
-   * exist in the waveletProvider.
-   */
-  private WaveletSnapshot getSnapshot(WaveletName waveletName) {
-    WaveletSnapshotBuilder<WaveletSnapshot> snapshotBuilder =
-      new WaveletSnapshotBuilder<WaveletSnapshot>() {
-      @Override
-      public WaveletSnapshot build(WaveletData waveletData, HashedVersion currentVersion,
-          ProtocolHashedVersion committedVersion) {
-        // Until the persistence store is in place, committedVersion will be
-        // null. TODO(josephg): Remove this once the persistence layer works. 
-        if (committedVersion == null) {
-          committedVersion = CoreWaveletOperationSerializer.serialize(currentVersion);
-        }
-        
-        // TODO(josephg): Also add a unit test for this in WaveletProvider.
-        Preconditions.checkState(waveletData.getVersion() == committedVersion.getVersion(),
-            "Provided snapshot version doesn't match committed version");
-        
-        return SnapshotSerializer.serializeWavelet(waveletData, committedVersion);
+  private final static WaveletSnapshotBuilder<WaveletSnapshot> snapshotBuilder =
+            new WaveletSnapshotBuilder<WaveletSnapshot>() {
+    @Override
+    public WaveletSnapshot build(WaveletData waveletData, HashedVersion currentVersion,
+        ProtocolHashedVersion committedVersion) {
+      // Until the persistence store is in place, committedVersion will be
+      // null. TODO(josephg): Remove this once the persistence layer works. 
+      if (committedVersion == null) {
+        committedVersion = CoreWaveletOperationSerializer.serialize(currentVersion);
       }
-    };
-    return waveletProvider.getSnapshot(waveletName, snapshotBuilder);
-  }
+      
+      Preconditions.checkState(waveletData.getVersion() == committedVersion.getVersion(),
+          "Provided snapshot version doesn't match committed version");
+      
+      return SnapshotSerializer.serializeWavelet(waveletData, committedVersion);
+    }
+  };
   
   private void serializeObjectToServlet(MessageLite message, HttpServletResponse dest)
         throws IOException {
@@ -133,7 +122,7 @@ public class FetchServlet extends HttpServlet {
     
     WaveletName waveletName = WaveletName.of(waveref.getWaveId(), waveletId);
     LOG.info("Fetching snapshot of wavelet " + waveletName);
-    WaveletSnapshot snapshot = getSnapshot(waveletName);
+    WaveletSnapshot snapshot = waveletProvider.getSnapshot(waveletName, snapshotBuilder);
     
     if (snapshot != null) {
       if (waveref.hasDocumentId()) {
@@ -154,8 +143,8 @@ public class FetchServlet extends HttpServlet {
         // Wrap the conv+root we fetched earlier in a WaveSnapshot object and
         // send it.
         WaveViewSnapshot waveSnapshot = WaveViewSnapshot.newBuilder()
-        .setWaveId(waveref.getWaveId().serialise())
-        .addWavelet(snapshot).build();
+            .setWaveId(waveref.getWaveId().serialise())
+            .addWavelet(snapshot).build();
 
         serializeObjectToServlet(waveSnapshot, dest);
       }
@@ -172,7 +161,7 @@ public class FetchServlet extends HttpServlet {
   protected void doGet(HttpServletRequest req, HttpServletResponse response)
       throws IOException {
     
-    // This path will look like "/google.com/w+abc123/foo.com/conv+root
+    // This path will look like "/example.com/w+abc123/foo.com/conv+root
     // Strip off the leading '/'.
     String urlPath = req.getPathInfo().substring(1);
     

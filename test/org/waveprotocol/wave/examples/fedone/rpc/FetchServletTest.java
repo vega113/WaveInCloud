@@ -32,6 +32,7 @@ import org.waveprotocol.wave.common.util.JavaWaverefEncoder;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
+import org.waveprotocol.wave.model.document.util.DocCompare;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
@@ -55,13 +56,12 @@ import javax.servlet.http.HttpServletResponse;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class FetchServletTest extends TestCase {
-  private ProtoSerializer protoSerializer = new ProtoSerializer();
+  private static final ProtoSerializer protoSerializer = new ProtoSerializer();
   private WaveletProviderStub waveletProvider;
   private FetchServlet servlet;
 
   @Override
   protected void setUp() throws Exception {
-    // Its important that we reset the wavelet provider between tests.
     waveletProvider = new WaveletProviderStub();
     servlet = new FetchServlet(waveletProvider, protoSerializer);
   }
@@ -73,24 +73,6 @@ public class FetchServletTest extends TestCase {
     when(request.getPathInfo()).thenReturn("/invalidwaveref");
     servlet.doGet(request, response);
     verify(response, times(1)).sendError(HttpServletResponse.SC_NOT_FOUND);
-  }
-  
-  /**
-   * Fetch the given waveref from the servlet.
-   * @param waveref
-   * @param response
-   * @throws Exception
-   */
-  protected void requestWaveRef(WaveRef waveref, HttpServletResponse response) throws Exception {
-    HttpServletRequest request = mock(HttpServletRequest.class);
-    when(request.getPathInfo()).thenReturn("/" + JavaWaverefEncoder.encodeToUriPathSegment(waveref));
-    servlet.doGet(request, response);
-  }
-  
-  protected void verifyServletReturnsForbiddenForWaveref(WaveRef waveref) throws Exception {
-    HttpServletResponse response = mock(HttpServletResponse.class);
-    requestWaveRef(waveref, response);
-    verify(response).sendError(HttpServletResponse.SC_FORBIDDEN);
   }
   
   public void testGetMissingDataReturnsForbidden() throws Exception {
@@ -105,8 +87,69 @@ public class FetchServletTest extends TestCase {
     WaveRef unknownDocument = WaveRef.of(waveId, waveletId, "madeupdocid");
     verifyServletReturnsForbiddenForWaveref(unknownDocument);
   }
+
+  /**
+   * Round-trip a wavelet and make sure all the fields match.
+   * We only check the fields that WaveletSnapshot serializes.
+   * @throws Exception
+   */
+  public void testGetWavelet() throws Exception {
+    WaveletData wavelet = waveletProvider.getHostedWavelet();
+
+    WaveRef waveref = WaveRef.of(wavelet.getWaveId(), wavelet.getWaveletId());
+    WaveletSnapshot snapshot = fetchWaverRefAndParse(waveref, WaveletSnapshot.class);
+    WaveletData roundtripped = SnapshotSerializer.deserializeWavelet(snapshot, waveref.getWaveId());
+    
+    // We have just round-tripped wavelet through the servlet. wavelet and
+    // roundtripped should be identical in all the fields that get serialized.
+    checkWavelet(wavelet, roundtripped);
+    
+    // TODO(josephg): Enable this test when the persistence store is in place.
+//    assertEquals(snapshot.getVersion(), waveletProvider.getCommittedVersion());
+  }
   
-  public String getFetchResultString(WaveRef waveref) throws Exception {
+  /**
+   * The fetch servlet also exposes document snapshots through a longer url
+   * (/fetch/domain/waveid/domain/waveletid/docid).
+   * 
+   * @throws Exception
+   */
+  public void testGetDocument() throws Exception {
+    WaveletData wavelet = waveletProvider.getHostedWavelet();
+    for (String docId : wavelet.getDocumentIds()) {
+      // We currently have no way to deserialize a document. Instead, we'll
+      // serialize the expected document and compare with what we get from the
+      // fetch servlet.
+      StringWriter writer = new StringWriter();
+      BlipData expectedDoc = wavelet.getBlip(docId);
+      protoSerializer.writeTo(writer, SnapshotSerializer.serializeDocument(expectedDoc));
+      String expectedResult = writer.toString();
+      
+      WaveRef waveref = WaveRef.of(wavelet.getWaveId(), wavelet.getWaveletId(), docId);
+      String actualResult = fetchWaveRef(waveref);
+      
+      assertEquals(expectedResult, actualResult);
+    }
+  }
+  
+  // ** Helper methods
+  
+  /**
+   * Fetch the given waveref from the servlet.
+   */
+  private void requestWaveRef(WaveRef waveref, HttpServletResponse response) throws Exception {
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getPathInfo()).thenReturn("/" + JavaWaverefEncoder.encodeToUriPathSegment(waveref));
+    servlet.doGet(request, response);
+  }
+  
+  private void verifyServletReturnsForbiddenForWaveref(WaveRef waveref) throws Exception {
+    HttpServletResponse response = mock(HttpServletResponse.class);
+    requestWaveRef(waveref, response);
+    verify(response).sendError(HttpServletResponse.SC_FORBIDDEN);
+  }
+
+  private String fetchWaveRef(WaveRef waveref) throws Exception {
     WaveletData wavelet = waveletProvider.getHostedWavelet();
     HttpServletResponse response = mock(HttpServletResponse.class);
     
@@ -121,81 +164,43 @@ public class FetchServletTest extends TestCase {
     return writer.toString();
   }
   
-  public <T extends MessageLite> T getFetchResult(WaveRef waveref, Class<T> klass) throws Exception {
-    String message = getFetchResultString(waveref);
+  private <T extends MessageLite> T fetchWaverRefAndParse(WaveRef waveref, Class<T> klass) throws Exception {
+    String message = fetchWaveRef(waveref);
     StringReader reader = new StringReader(message);
     return protoSerializer.parseFrom(reader, klass);
   }
 
-  private static void checkSerializedDocumentPropertiesMatch(BlipData doc1, BlipData doc2) {
-    assertNotNull(doc1);
-    assertNotNull(doc2);
+  private static void checkDocument(BlipData expected, BlipData actual) {
+    assertNotNull(expected);
+    assertNotNull(actual);
     
-    assertEquals(doc1.getId(), doc2.getId());
-    // XXXXXXXX how do I compare the operations???
+    assertEquals(expected.getId(), actual.getId());
     
-    assertEquals(doc1.getAuthor(), doc2.getAuthor());
-    assertEquals(doc1.getContributors(), doc2.getContributors());
-    assertEquals(doc1.getLastModifiedTime(), doc2.getLastModifiedTime());
-    assertEquals(doc1.getLastModifiedVersion(), doc2.getLastModifiedVersion());
+    assertTrue(DocCompare.equivalent(DocCompare.ALL,
+        expected.getContent().getMutableDocument(),
+        actual.getContent().getMutableDocument()));
+    
+    assertEquals(expected.getAuthor(), actual.getAuthor());
+    assertEquals(expected.getContributors(), actual.getContributors());
+    assertEquals(expected.getLastModifiedTime(), actual.getLastModifiedTime());
+    assertEquals(expected.getLastModifiedVersion(), actual.getLastModifiedVersion());
   }
   
-  private static void checkSerializedWaveletsMatch(WaveletData wavelet1, WaveletData wavelet2) {
-    assertNotNull(wavelet1);
-    assertNotNull(wavelet2);
+  private static void checkWavelet(WaveletData expected, WaveletData actual) {
+    assertNotNull(expected);
+    assertNotNull(actual);
     
-    assertEquals(wavelet1.getWaveId(), wavelet2.getWaveId());
-    assertEquals(wavelet1.getParticipants(), wavelet2.getParticipants());
-    assertEquals(wavelet1.getVersion(), wavelet2.getVersion());
-    assertEquals(wavelet1.getLastModifiedTime(), wavelet2.getLastModifiedTime());
-    assertEquals(wavelet1.getCreator(), wavelet2.getCreator());
-    assertEquals(wavelet1.getCreationTime(), wavelet2.getCreationTime());
+    assertEquals(expected.getWaveId(), actual.getWaveId());
+    assertEquals(expected.getParticipants(), actual.getParticipants());
+    assertEquals(expected.getVersion(), actual.getVersion());
+    assertEquals(expected.getLastModifiedTime(), actual.getLastModifiedTime());
+    assertEquals(expected.getCreator(), actual.getCreator());
+    assertEquals(expected.getCreationTime(), actual.getCreationTime());
     
     // & check that the documents the wavelets contain are also the same.
-    assertEquals(wavelet1.getDocumentIds(), wavelet2.getDocumentIds());
-    for (String docId : wavelet1.getDocumentIds()) {
-      checkSerializedDocumentPropertiesMatch(wavelet1.getBlip(docId), wavelet2.getBlip(docId));
-    }
-  }
-  
-  public void testGetWavelet() throws Exception {
-    // This test round-trips a wavelet and when it gets the response back, it
-    // makes sure all the fields it cares about match up with the wavelet which
-    // was sent.
-    
-    WaveletData wavelet1 = waveletProvider.getHostedWavelet();
-
-    WaveRef waveref = WaveRef.of(wavelet1.getWaveId(), wavelet1.getWaveletId());
-    WaveletSnapshot snapshot = getFetchResult(waveref, WaveletSnapshot.class);
-    WaveletData wavelet2 = SnapshotSerializer.deserializeWavelet(snapshot, waveref.getWaveId());
-    
-    // We have just round-tripped wavelet1 through the servlet to get wavelet2.
-    // They should be pretty much identical in all the fields that get
-    // serialized.
-    checkSerializedWaveletsMatch(wavelet1, wavelet2);
-    
-    // TODO(josephg): Enable this test when the persistence store is in place.
-//    assertEquals(snapshot.getVersion(), waveletProvider.getCommittedVersion());
-  }
-  
-  public void testGetDocument() throws Exception {
-    // The fetch servlet also exposes document snapshots through a longer url
-    // (/fetch/domain/waveid/domain/waveletid/docid). Fedone never uses this
-    // API, but make sure its working.
-    WaveletData wavelet = waveletProvider.getHostedWavelet();
-    for (String docId : wavelet.getDocumentIds()) {
-      // We currently have no way to deserialize a document. Instead, we'll
-      // serialize the expected document and compare with what we get from the
-      // fetch servlet.
-      StringWriter writer = new StringWriter();
-      BlipData expectedDoc = wavelet.getBlip(docId);
-      protoSerializer.writeTo(writer, SnapshotSerializer.serializeDocument(expectedDoc));
-      String expectedResult = writer.toString();
-      
-      WaveRef waveref = WaveRef.of(wavelet.getWaveId(), wavelet.getWaveletId(), docId);
-      String actualResult = getFetchResultString(waveref);
-      
-      assertEquals(expectedResult, actualResult);
+    assertEquals(expected.getDocumentIds(), actual.getDocumentIds());
+    for (String docId : expected.getDocumentIds()) {
+      checkDocument(expected.getBlip(docId), actual.getBlip(docId));
     }
   }
 }
