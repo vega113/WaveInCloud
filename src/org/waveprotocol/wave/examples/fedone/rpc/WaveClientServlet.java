@@ -72,7 +72,7 @@ public class WaveClientServlet extends HttpServlet {
   private JSONObject getSessionJson() {
     try {
       return new JSONObject()
-          .append(SessionConstants.DOMAIN, domain);
+          .put(SessionConstants.DOMAIN, domain);
     } catch (JSONException e) {
       LOG.severe("Failed to create session JSON");
       return new JSONObject();
