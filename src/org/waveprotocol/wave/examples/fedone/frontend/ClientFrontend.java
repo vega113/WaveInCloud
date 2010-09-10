@@ -74,14 +74,12 @@ public interface ClientFrontend {
    * @param participant which is doing the requesting.
    * @param waveId the wave id.
    * @param waveletIdFilter filter over wavelets to open
-   * @param maximumInitialWavelets limit on the number of wavelets to
    * @param snapshotsEnabled true if the client understands snapshots
    * @param knownWavelets a list of (waveletid, waveletversion pairs).
    *                      the server will send deltas to update the client to current.
    * @param openListener callback for updates.
    */
-
   void openRequest(ParticipantId participant, WaveId waveId, IdFilter waveletIdFilter,
-      int maximumInitialWavelets, boolean snapshotsEnabled,
-      final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener);
+      boolean snapshotsEnabled, final List<WaveClientRpc.WaveletVersion> knownWavelets,
+      OpenListener openListener);
 }

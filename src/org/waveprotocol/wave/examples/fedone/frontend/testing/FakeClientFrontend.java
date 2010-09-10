@@ -88,9 +88,9 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
   }
 
   @Override
-  public void openRequest(ParticipantId participant, WaveId waveId,
-      IdFilter waveletIdFilter, int maximumInitialWavelets, boolean snapshotsEnabled,
-      final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
+  public void openRequest(ParticipantId participant, WaveId waveId, IdFilter waveletIdFilter,
+      boolean snapshotsEnabled, final List<WaveClientRpc.WaveletVersion> knownWavelets,
+      OpenListener openListener) {
     openListeners.put(waveId, openListener);
   }
 

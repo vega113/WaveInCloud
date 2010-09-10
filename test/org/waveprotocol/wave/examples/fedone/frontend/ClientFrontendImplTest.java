@@ -114,8 +114,7 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testInitialOpenRequestYieldsNothing() {
     OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, Integer.MAX_VALUE, false, null,
-        listener);
+    clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, false, null, listener);
     UserManager manager = clientFrontend.perUser.get(USER);
 
     WaveletName dummyWaveletName = ClientFrontendImpl.createDummyWaveletName(WAVE_ID);
@@ -124,8 +123,7 @@ public class ClientFrontendImplTest extends TestCase {
 
     verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, subscriptions.get(0).getChannelId());
 
-    clientFrontend.openRequest(USER, INDEX_WAVE_ID, IdFilters.ALL_IDS, Integer.MAX_VALUE, false,
-        null, listener);
+    clientFrontend.openRequest(USER, INDEX_WAVE_ID, IdFilters.ALL_IDS, false, null, listener);
     WaveletName indexDummyWaveletName = ClientFrontendImpl.createDummyWaveletName(INDEX_WAVE_ID);
     List<Subscription> indexSubscriptions = manager.matchSubscriptions(indexDummyWaveletName);
     assertEquals(1, indexSubscriptions.size());
@@ -139,8 +137,8 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testDeltasArentPropagatedIfNotSubscribedToWavelet() {
     OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, WAVE_ID, IdFilter.ofPrefixes("non-existing"),
-        Integer.MAX_VALUE, false, null, listener);
+    clientFrontend.openRequest(USER, WAVE_ID, IdFilter.ofPrefixes("non-existing"), false, null,
+        listener);
 
     UserManager manager = clientFrontend.perUser.get(USER);
 
@@ -187,8 +185,7 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenThenSendDeltas() {
     OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, Integer.MAX_VALUE, false, null,
-        listener);
+    clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, false, null, listener);
     clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "");
     verify(listener).onUpdate(WAVELET_NAME, null, DELTAS, DELTAS.getEndVersion(), null, false,
         null);
@@ -201,8 +198,7 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenIndexThenSendDeltasNotOfInterest() {
     OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, INDEX_WAVE_ID, IdFilters.ALL_IDS, Integer.MAX_VALUE, false,
-        null, listener);
+    clientFrontend.openRequest(USER, INDEX_WAVE_ID, IdFilters.ALL_IDS, false, null, listener);
     UserManager manager = clientFrontend.perUser.get(USER);
 
     WaveletName dummyWaveletName = ClientFrontendImpl.createDummyWaveletName(INDEX_WAVE_ID);
@@ -283,8 +279,7 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenIndexThenSendInterestingDeltas() throws OperationException {
     UpdateListener listener = new UpdateListener();
-    clientFrontend.openRequest(USER, INDEX_WAVE_ID, IdFilters.ALL_IDS, Integer.MAX_VALUE, false,
-        null, listener);
+    clientFrontend.openRequest(USER, INDEX_WAVE_ID, IdFilters.ALL_IDS, false, null, listener);
 
     WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, 0L);
     BlipData blip = WaveletDataUtil.addEmptyBlip(wavelet, "default", USER, 0L);
@@ -313,8 +308,7 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testOpenAfterVersionZero() throws OperationException {
     UpdateListener oldListener = new UpdateListener();
-    clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, Integer.MAX_VALUE, false, null,
-        oldListener);
+    clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, false, null, oldListener);
 
     WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, 0L);
     BufferedDocOp addTextOp = makeAppend(0, "Hello, world");
@@ -332,8 +326,7 @@ public class ClientFrontendImplTest extends TestCase {
         oldListener.endVersion)).thenReturn(oldListener.deltas);
 
     UpdateListener newListener = new UpdateListener();
-    clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, Integer.MAX_VALUE, false, null,
-        newListener);
+    clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, false, null, newListener);
     // Upon subscription, newListener immediately got all the previous deltas
     assertEquals(oldListener.deltas, newListener.deltas);
     assertEquals(oldListener.endVersion, newListener.endVersion);

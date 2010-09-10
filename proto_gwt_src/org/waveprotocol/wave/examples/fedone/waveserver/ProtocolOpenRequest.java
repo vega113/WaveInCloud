@@ -108,9 +108,6 @@ public class ProtocolOpenRequest extends JavaScriptObject  {
         if(_3 != null && _3.length != 0) {
             buf.push("\"3\":[\"" + _3.join("\",\"") + "\"]");
         }
-        var _4 = obj["4"];
-        if(_4 != null)
-            buf.push("\"4\":" + _4);
         var _5 = obj["5"];
         if(_5 != null)
             buf.push("\"5\":" + _5);
@@ -217,25 +214,6 @@ public class ProtocolOpenRequest extends JavaScriptObject  {
             array = clearWaveletIdPrefixArray();
         array.push(waveletIdPrefix);
     }
-
-    // maximumWavelets
-
-    public final native int getMaximumWavelets() /*-{
-        return this["4"] || 0;
-    }-*/;
-
-    public final native ProtocolOpenRequest setMaximumWavelets(int maximumWavelets) /*-{
-        this["4"] = maximumWavelets;
-        return this;
-    }-*/;
-
-    public final native void clearMaximumWavelets() /*-{
-        delete this["4"];
-    }-*/;
-
-    public final native boolean hasMaximumWavelets() /*-{
-        return this["4"] != null;
-    }-*/;
 
     // snapshots
 

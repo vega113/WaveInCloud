@@ -72,7 +72,7 @@ public class FakeWaveServer extends FakeClientFrontend {
 
   @Override
   public void openRequest(ParticipantId participant, WaveId waveId,
-      IdFilter waveletIdFilter, int maximumInitialWavelets, boolean snapshotsEnabled,
+      IdFilter waveletIdFilter, boolean snapshotsEnabled,
       final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
     if (user == null) {
       user = participant;
@@ -80,8 +80,8 @@ public class FakeWaveServer extends FakeClientFrontend {
       Preconditions.checkArgument(participant.equals(user), "Unexpected user");
     }
 
-    super.openRequest(participant, waveId, waveletIdFilter, maximumInitialWavelets,
-        snapshotsEnabled, knownWavelets, openListener);
+    super.openRequest(participant, waveId, waveletIdFilter, snapshotsEnabled, knownWavelets,
+        openListener);
 
     Map<WaveletId, WaveletData> wavelets = waves.get(waveId);
     if (wavelets != null) {

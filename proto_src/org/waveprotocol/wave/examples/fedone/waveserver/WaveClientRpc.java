@@ -61,13 +61,6 @@ public final class WaveClientRpc {
       return waveletIdPrefix_.get(index);
     }
     
-    // optional int32 maximum_wavelets = 4;
-    public static final int MAXIMUM_WAVELETS_FIELD_NUMBER = 4;
-    private boolean hasMaximumWavelets;
-    private int maximumWavelets_ = 0;
-    public boolean hasMaximumWavelets() { return hasMaximumWavelets; }
-    public int getMaximumWavelets() { return maximumWavelets_; }
-    
     // optional bool snapshots = 5 [default = false];
     public static final int SNAPSHOTS_FIELD_NUMBER = 5;
     private boolean hasSnapshots;
@@ -110,9 +103,6 @@ public final class WaveClientRpc {
       for (java.lang.String element : getWaveletIdPrefixList()) {
         output.writeString(3, element);
       }
-      if (hasMaximumWavelets()) {
-        output.writeInt32(4, getMaximumWavelets());
-      }
       if (hasSnapshots()) {
         output.writeBool(5, getSnapshots());
       }
@@ -144,10 +134,6 @@ public final class WaveClientRpc {
         }
         size += dataSize;
         size += 1 * getWaveletIdPrefixList().size();
-      }
-      if (hasMaximumWavelets()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(4, getMaximumWavelets());
       }
       if (hasSnapshots()) {
         size += com.google.protobuf.CodedOutputStream
@@ -335,9 +321,6 @@ public final class WaveClientRpc {
           }
           result.waveletIdPrefix_.addAll(other.waveletIdPrefix_);
         }
-        if (other.hasMaximumWavelets()) {
-          setMaximumWavelets(other.getMaximumWavelets());
-        }
         if (other.hasSnapshots()) {
           setSnapshots(other.getSnapshots());
         }
@@ -382,10 +365,6 @@ public final class WaveClientRpc {
             }
             case 26: {
               addWaveletIdPrefix(input.readString());
-              break;
-            }
-            case 32: {
-              setMaximumWavelets(input.readInt32());
               break;
             }
             case 40: {
@@ -482,24 +461,6 @@ public final class WaveClientRpc {
       }
       public Builder clearWaveletIdPrefix() {
         result.waveletIdPrefix_ = java.util.Collections.emptyList();
-        return this;
-      }
-      
-      // optional int32 maximum_wavelets = 4;
-      public boolean hasMaximumWavelets() {
-        return result.hasMaximumWavelets();
-      }
-      public int getMaximumWavelets() {
-        return result.getMaximumWavelets();
-      }
-      public Builder setMaximumWavelets(int value) {
-        result.hasMaximumWavelets = true;
-        result.maximumWavelets_ = value;
-        return this;
-      }
-      public Builder clearMaximumWavelets() {
-        result.hasMaximumWavelets = false;
-        result.maximumWavelets_ = 0;
         return this;
       }
       
@@ -3487,41 +3448,40 @@ public final class WaveClientRpc {
       "waveserver/waveclient-rpc.proto\022\nwaveser" +
       "ver\0323org/waveprotocol/wave/examples/fedo" +
       "ne/rpc/rpc.proto\0326org/waveprotocol/wave/" +
-      "federation/federation.protodevel\"\301\001\n\023Pro" +
+      "federation/federation.protodevel\"\247\001\n\023Pro" +
       "tocolOpenRequest\022\026\n\016participant_id\030\001 \002(\t" +
       "\022\017\n\007wave_id\030\002 \002(\t\022\031\n\021wavelet_id_prefix\030\003" +
-      " \003(\t\022\030\n\020maximum_wavelets\030\004 \001(\005\022\030\n\tsnapsh" +
-      "ots\030\005 \001(\010:\005false\0222\n\016known_wavelets\030\006 \003(\013" +
-      "2\032.waveserver.WaveletVersion\"_\n\016WaveletV",
-      "ersion\022\022\n\nwavelet_id\030\001 \002(\t\0229\n\016hashed_ver" +
-      "sion\030\002 \002(\0132!.federation.ProtocolHashedVe" +
-      "rsion\"j\n\020DocumentSnapshot\022\023\n\013document_id" +
-      "\030\001 \002(\t\022A\n\022document_operation\030\002 \002(\0132%.fed" +
-      "eration.ProtocolDocumentOperation\"Y\n\017Wav" +
-      "eletSnapshot\022\026\n\016participant_id\030\001 \003(\t\022.\n\010" +
-      "document\030\002 \003(\0132\034.waveserver.DocumentSnap" +
-      "shot\"\270\002\n\025ProtocolWaveletUpdate\022\024\n\014wavele" +
-      "t_name\030\001 \002(\t\0227\n\rapplied_delta\030\002 \003(\0132 .fe" +
-      "deration.ProtocolWaveletDelta\0228\n\rcommit_",
-      "notice\030\003 \001(\0132!.federation.ProtocolHashed" +
-      "Version\022<\n\021resulting_version\030\004 \001(\0132!.fed" +
-      "eration.ProtocolHashedVersion\022-\n\010snapsho" +
-      "t\030\005 \001(\0132\033.waveserver.WaveletSnapshot\022\025\n\006" +
-      "marker\030\006 \001(\010:\005false\022\022\n\nchannel_id\030\007 \001(\t\"" +
-      "r\n\025ProtocolSubmitRequest\022\024\n\014wavelet_name" +
-      "\030\001 \002(\t\022/\n\005delta\030\002 \002(\0132 .federation.Proto" +
-      "colWaveletDelta\022\022\n\nchannel_id\030\003 \001(\t\"\230\001\n\026" +
-      "ProtocolSubmitResponse\022\032\n\022operations_app" +
-      "lied\030\001 \002(\005\022\025\n\rerror_message\030\002 \001(\t\022K\n has",
-      "hed_version_after_application\030\003 \001(\0132!.fe" +
-      "deration.ProtocolHashedVersion2\271\001\n\025Proto" +
-      "colWaveClientRpc\022O\n\004Open\022\037.waveserver.Pr" +
-      "otocolOpenRequest\032!.waveserver.ProtocolW" +
-      "aveletUpdate\"\003\330>\001\022O\n\006Submit\022!.waveserver" +
-      ".ProtocolSubmitRequest\032\".waveserver.Prot" +
-      "ocolSubmitResponseBA\n0org.waveprotocol.w" +
-      "ave.examples.fedone.waveserverB\rWaveClie" +
-      "ntRpc"
+      " \003(\t\022\030\n\tsnapshots\030\005 \001(\010:\005false\0222\n\016known_" +
+      "wavelets\030\006 \003(\0132\032.waveserver.WaveletVersi" +
+      "on\"_\n\016WaveletVersion\022\022\n\nwavelet_id\030\001 \002(\t",
+      "\0229\n\016hashed_version\030\002 \002(\0132!.federation.Pr" +
+      "otocolHashedVersion\"j\n\020DocumentSnapshot\022" +
+      "\023\n\013document_id\030\001 \002(\t\022A\n\022document_operati" +
+      "on\030\002 \002(\0132%.federation.ProtocolDocumentOp" +
+      "eration\"Y\n\017WaveletSnapshot\022\026\n\016participan" +
+      "t_id\030\001 \003(\t\022.\n\010document\030\002 \003(\0132\034.waveserve" +
+      "r.DocumentSnapshot\"\270\002\n\025ProtocolWaveletUp" +
+      "date\022\024\n\014wavelet_name\030\001 \002(\t\0227\n\rapplied_de" +
+      "lta\030\002 \003(\0132 .federation.ProtocolWaveletDe" +
+      "lta\0228\n\rcommit_notice\030\003 \001(\0132!.federation.",
+      "ProtocolHashedVersion\022<\n\021resulting_versi" +
+      "on\030\004 \001(\0132!.federation.ProtocolHashedVers" +
+      "ion\022-\n\010snapshot\030\005 \001(\0132\033.waveserver.Wavel" +
+      "etSnapshot\022\025\n\006marker\030\006 \001(\010:\005false\022\022\n\ncha" +
+      "nnel_id\030\007 \001(\t\"r\n\025ProtocolSubmitRequest\022\024" +
+      "\n\014wavelet_name\030\001 \002(\t\022/\n\005delta\030\002 \002(\0132 .fe" +
+      "deration.ProtocolWaveletDelta\022\022\n\nchannel" +
+      "_id\030\003 \001(\t\"\230\001\n\026ProtocolSubmitResponse\022\032\n\022" +
+      "operations_applied\030\001 \002(\005\022\025\n\rerror_messag" +
+      "e\030\002 \001(\t\022K\n hashed_version_after_applicat",
+      "ion\030\003 \001(\0132!.federation.ProtocolHashedVer" +
+      "sion2\271\001\n\025ProtocolWaveClientRpc\022O\n\004Open\022\037" +
+      ".waveserver.ProtocolOpenRequest\032!.wavese" +
+      "rver.ProtocolWaveletUpdate\"\003\330>\001\022O\n\006Submi" +
+      "t\022!.waveserver.ProtocolSubmitRequest\032\".w" +
+      "aveserver.ProtocolSubmitResponseBA\n0org." +
+      "waveprotocol.wave.examples.fedone.wavese" +
+      "rverB\rWaveClientRpc"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3533,7 +3493,7 @@ public final class WaveClientRpc {
           internal_static_waveserver_ProtocolOpenRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_ProtocolOpenRequest_descriptor,
-              new java.lang.String[] { "ParticipantId", "WaveId", "WaveletIdPrefix", "MaximumWavelets", "Snapshots", "KnownWavelets", },
+              new java.lang.String[] { "ParticipantId", "WaveId", "WaveletIdPrefix", "Snapshots", "KnownWavelets", },
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest.class,
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest.Builder.class);
           internal_static_waveserver_WaveletVersion_descriptor =
