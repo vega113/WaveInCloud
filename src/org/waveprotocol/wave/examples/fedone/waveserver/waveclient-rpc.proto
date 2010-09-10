@@ -15,11 +15,10 @@
  *
  */
 
-// The client-server protocol for the prototype waveserver/client.
-// This protocol is a very simple example of how a client/server protocol may
-// be implemented.
+// The wave view client-server protocol
 //
 // Author: jochen@google.com (Jochen Bekmann)
+// Author: anorth@google.com (Alex North)
 
 syntax = "proto2";
 
@@ -51,7 +50,7 @@ message ProtocolOpenRequest {
   required string participant_id = 1;
   required string wave_id = 2;
   repeated string wavelet_id_prefix = 3;
-  optional int32 maximum_wavelets = 4;
+  // OBSOLETE = 4;
   // Set to true if client understands snapshots.
   optional bool snapshots = 5 [default=false];
   // Sent in a reconnect to tell the server about the client's current state

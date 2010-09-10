@@ -2,7 +2,9 @@ package org.waveprotocol.wave.examples.fedone.rpc;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.UnknownFieldSet;
+
 import junit.framework.TestCase;
+
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 
 /**
@@ -89,7 +91,6 @@ public class WebSocketChannelTest extends TestCase {
   private WaveClientRpc.ProtocolOpenRequest.Builder buildProtocolOpenRequest() {
     WaveClientRpc.ProtocolOpenRequest.Builder sourceBuilder =
         WaveClientRpc.ProtocolOpenRequest.newBuilder();
-    sourceBuilder.setMaximumWavelets(5);
     sourceBuilder.setParticipantId("O HAI");
     sourceBuilder.setSnapshots(true);
     sourceBuilder.setWaveId("lol!cat");

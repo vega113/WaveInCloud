@@ -142,8 +142,8 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
 
   @Override
   public void openRequest(ParticipantId participant, WaveId waveId, IdFilter waveletIdFilter,
-      int maximumInitialWavelets, boolean snapshotsEnabled,
-      final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
+      boolean snapshotsEnabled, final List<WaveClientRpc.WaveletVersion> knownWavelets,
+      OpenListener openListener) {
     String channel_id = generateChannelID();
 
     LOG.info("received openRequest from " + participant + " for waveId " + waveId + " snapshots: "

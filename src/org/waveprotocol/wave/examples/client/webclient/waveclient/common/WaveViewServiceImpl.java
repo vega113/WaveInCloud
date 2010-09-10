@@ -71,10 +71,10 @@ public class WaveViewServiceImpl implements WaveViewService {
   private Pair<IdFilter, OpenCallback> waveletFilter;
   // TODO(arb): remove WebClientWaveView entirely.
   private WebClientWaveView clientWaveView;
-  private WebClientBackend clientBackend;
-  private String waveletIdPrefix;
-  private DocumentFactory<?> documentFactory;
-  private Map<WaveletName, Map<Long, ProtocolHashedVersion>> versionToHistoryHashMap =
+  private final WebClientBackend clientBackend;
+  private final String waveletIdPrefix;
+  private final DocumentFactory<?> documentFactory;
+  private final Map<WaveletName, Map<Long, ProtocolHashedVersion>> versionToHistoryHashMap =
       new HashMap<WaveletName, Map<Long, ProtocolHashedVersion>>();
 
   /**
@@ -381,7 +381,6 @@ public class WaveViewServiceImpl implements WaveViewService {
     } else {
       openRequest.addWaveletIdPrefix("");
     }
-    openRequest.setMaximumWavelets(2000);
     openRequest.setSnapshots(false);
     for (CoreWaveletData wavelet : getWavelets()) {
       HashedVersion waveletVersion = getWaveletVersion(wavelet.getWaveletName().waveletId);

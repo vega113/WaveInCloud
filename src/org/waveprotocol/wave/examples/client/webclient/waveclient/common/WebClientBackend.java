@@ -19,6 +19,7 @@ package org.waveprotocol.wave.examples.client.webclient.waveclient.common;
 
 import com.google.common.util.CharBase64;
 import com.google.gwt.core.client.JavaScriptObject;
+
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.Delta;
 import org.waveprotocol.wave.examples.client.webclient.client.ClientEvents;
@@ -77,7 +78,7 @@ public class WebClientBackend {
   /**
    * A cache of known waves. TODO(arb): think about ways to stop this growing without limit.
    */
-  private Map<WaveId, WaveViewServiceImpl> waveViews = new HashMap<WaveId, WaveViewServiceImpl>();
+  private final Map<WaveId, WaveViewServiceImpl> waveViews = new HashMap<WaveId, WaveViewServiceImpl>();
 
   /**
    * Id URI encoder and decoder.
@@ -95,7 +96,7 @@ public class WebClientBackend {
   private final Map<WaveId, WebClientWaveView> waves = new HashMap<WaveId, WebClientWaveView>();
   final WaveWebSocketClient websocket;
   int sequenceNumber;
-  private IdGenerator idGenerator;
+  private final IdGenerator idGenerator;
 
   public WebClientBackend(final String userId, WaveWebSocketClient websocket) {
     connectionStatus = NetworkStatusEvent.ConnectionStatus.CONNECTED;
@@ -386,14 +387,13 @@ public class WebClientBackend {
     } else {
       openRequest.addWaveletIdPrefix("");
     }
-    openRequest.setMaximumWavelets(2000);
     openRequest.setSnapshots(true);
     LOG.info("Opening wave " + waveId + " for prefix \"" + waveletIdPrefix + '"');
     sendMessage(openRequest, null);
 
     return waveViews.get(waveId);
   }
-  
+
   public void clearWaveView(WaveId waveId) {
     waveViews.remove(waveId);
   }

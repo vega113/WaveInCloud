@@ -83,8 +83,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
     }
     IdFilter waveletIdFilter = IdFilter.of(Collections.<WaveletId>emptySet(), request.getWaveletIdPrefixList());
 
-    frontend.openRequest(id, waveId, waveletIdFilter, request.getMaximumWavelets(),
-        request.getSnapshots(),
+    frontend.openRequest(id, waveId, waveletIdFilter, request.getSnapshots(),
         request.getKnownWaveletsCount() > 0 ? request.getKnownWaveletsList() : null,
         new ClientFrontend.OpenListener() {
 

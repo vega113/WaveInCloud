@@ -1,9 +1,11 @@
-<project name="fedone_proto" default="compile_json">
+<project name="fedone_proto" default="all">
   <description>Generation of Protocol Buffers</description>
 
   <property file="build.properties"/>
   <property file="build-proto.properties"/>
   <property name="protoc" location="${protoc_dist}/src/protoc"/>
+
+  <target name="all" depends="compile, compile_json" />
 
   <target name="compile" description="Compiles Java files from protocol buffers">
     <exec executable="${protoc}">
