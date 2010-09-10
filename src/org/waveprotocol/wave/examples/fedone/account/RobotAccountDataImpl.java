@@ -45,6 +45,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
       String username, String url, String capabilitiesHash, boolean isVerified) {
     Preconditions.checkNotNull(username, "Username can not be null");
     Preconditions.checkNotNull(url, "Url can not be null");
+    Preconditions.checkArgument(!url.endsWith("/"), "Url must not end with /");
 
     this.username = username;
     this.url = url;

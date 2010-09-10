@@ -26,7 +26,8 @@ package org.waveprotocol.wave.examples.fedone.account;
 public interface RobotAccountData extends AccountData {
 
   /**
-   * Returns the URL on which the robot can be located.
+   * Returns the URL on which the robot can be located. The URL must not end
+   * with /.
    */
   String getUrl();
 

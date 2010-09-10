@@ -22,6 +22,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import org.apache.commons.cli.ParseException;
 import org.waveprotocol.wave.examples.fedone.persistence.PersistenceModule;
+import org.waveprotocol.wave.examples.fedone.robots.RobotRegistrationServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.AttachmentServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.FetchServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.ServerRpcProvider;
@@ -63,6 +64,8 @@ public class ServerMain {
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
     
+    server.addServlet("/robot/*", injector.getInstance(RobotRegistrationServlet.class));
+
     ProtocolWaveClientRpc.Interface rpcImpl =
         injector.getInstance(ProtocolWaveClientRpc.Interface.class);
     server.registerService(ProtocolWaveClientRpc.newReflectiveService(rpcImpl));
