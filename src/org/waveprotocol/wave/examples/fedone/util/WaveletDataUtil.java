@@ -26,7 +26,7 @@ import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.schema.SchemaCollection;
+import org.waveprotocol.wave.model.testing.BasicFactories;
 import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
@@ -34,7 +34,6 @@ import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
-import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.ArrayList;
@@ -47,9 +46,7 @@ import java.util.List;
  */
 public final class WaveletDataUtil {
 
-  private static final DocumentFactory<?> DOCUMENT_FACTORY =
-      ObservablePluggableMutableDocument.createFactory(SchemaCollection.empty());
-
+  private static final DocumentFactory<?> DOCUMENT_FACTORY = BasicFactories.muteDocumentFactory();
   private WaveletDataUtil() {
   }
 

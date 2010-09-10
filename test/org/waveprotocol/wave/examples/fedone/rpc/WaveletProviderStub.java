@@ -18,23 +18,16 @@
 package org.waveprotocol.wave.examples.fedone.rpc;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
+import org.waveprotocol.wave.examples.fedone.util.TestDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.document.operation.DocInitialization;
-import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
-import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
 
 /**
  * Stub of {@link WaveletProvider} for testing. It only supports getSnapshot().
@@ -49,36 +42,12 @@ public class WaveletProviderStub implements WaveletProvider {
   private ProtocolHashedVersion committedVersion;
   
   public WaveletProviderStub() {
-    wavelet = createSimpleWaveletData();
+    wavelet = TestDataUtil.createSimpleWaveletData();
 
     // This will be null in practice until the persistence store is in place.
     setCommittedVersion(null);
   }
 
-  /**
-   * Create a wavelet data object for testing.
-   * 
-   * Eventually, this method should randomize the values in the returned
-   * wavelet's fields each time it is called. Do not depend on each call to
-   * createSimpleWaveletData returning a WaveletData object with identical
-   * fields.
-   * 
-   * @return a simple wavelet.
-   */
-  public static WaveletData createSimpleWaveletData() {
-    WaveletName name = WaveletName.of(new WaveId("example.com", "w+abc123"),
-        new WaveletId("example.com", "conv+root"));
-    ParticipantId creator = ParticipantId.ofUnsafe("sam@example.com");
-    long time = new Date().getTime();
-    
-    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(name, creator, time);
-
-    DocInitialization content = new DocInitializationBuilder().characters("Hello there").build();
-    wavelet.createBlip("b+abc123", creator, Collections.<ParticipantId>emptySet(), content, time, 0);
-    
-    return wavelet;
-  }
-  
   @Override
   public <T> T getSnapshot(WaveletName waveletName, WaveletSnapshotBuilder<T> builder) {
     final byte[] JUNK_BYTES = new byte[]{0,1,2,3,4,5,-128,127};

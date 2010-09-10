@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.common.util.JavaWaverefEncoder;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
+import org.waveprotocol.wave.examples.fedone.util.TestDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.model.document.util.DocCompare;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -102,7 +102,7 @@ public class FetchServletTest extends TestCase {
     
     // We have just round-tripped wavelet through the servlet. wavelet and
     // roundtripped should be identical in all the fields that get serialized.
-    checkWavelet(wavelet, roundtripped);
+    TestDataUtil.checkSerializedWavelet(wavelet, roundtripped);
     
     // TODO(josephg): Enable this test when the persistence store is in place.
 //    assertEquals(snapshot.getVersion(), waveletProvider.getCommittedVersion());
@@ -168,39 +168,5 @@ public class FetchServletTest extends TestCase {
     String message = fetchWaveRef(waveref);
     StringReader reader = new StringReader(message);
     return protoSerializer.parseFrom(reader, klass);
-  }
-
-  private static void checkDocument(BlipData expected, BlipData actual) {
-    assertNotNull(expected);
-    assertNotNull(actual);
-    
-    assertEquals(expected.getId(), actual.getId());
-    
-    assertTrue(DocCompare.equivalent(DocCompare.ALL,
-        expected.getContent().getMutableDocument(),
-        actual.getContent().getMutableDocument()));
-    
-    assertEquals(expected.getAuthor(), actual.getAuthor());
-    assertEquals(expected.getContributors(), actual.getContributors());
-    assertEquals(expected.getLastModifiedTime(), actual.getLastModifiedTime());
-    assertEquals(expected.getLastModifiedVersion(), actual.getLastModifiedVersion());
-  }
-  
-  private static void checkWavelet(WaveletData expected, WaveletData actual) {
-    assertNotNull(expected);
-    assertNotNull(actual);
-    
-    assertEquals(expected.getWaveId(), actual.getWaveId());
-    assertEquals(expected.getParticipants(), actual.getParticipants());
-    assertEquals(expected.getVersion(), actual.getVersion());
-    assertEquals(expected.getLastModifiedTime(), actual.getLastModifiedTime());
-    assertEquals(expected.getCreator(), actual.getCreator());
-    assertEquals(expected.getCreationTime(), actual.getCreationTime());
-    
-    // & check that the documents the wavelets contain are also the same.
-    assertEquals(expected.getDocumentIds(), actual.getDocumentIds());
-    for (String docId : expected.getDocumentIds()) {
-      checkDocument(expected.getBlip(docId), actual.getBlip(docId));
-    }
   }
 }
