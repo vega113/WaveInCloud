@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.common;
 
+import junit.framework.TestCase;
+
 import org.waveprotocol.wave.examples.fedone.util.TestDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -27,7 +29,7 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
  * 
  * @author josephg@gmail.com (Joseph Gentle)
  */
-public class SnapshotSerializerTest {
+public class SnapshotSerializerTest extends TestCase {
   public void testWaveletRoundtrip() throws Exception {
     WaveletData expected = TestDataUtil.createSimpleWaveletData();
     WaveletName name = WaveletName.of(expected.getWaveId(), expected.getWaveletId());
