@@ -75,5 +75,6 @@
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/proto-2010-09-08.jar" sourcepath="third_party/runtime/wave-libraries/proto-src-2010-09-08.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/waveserver-2010-09-08.jar" sourcepath="third_party/runtime/wave-libraries/waveserver-src-2010-09-08.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/commons_codec/commons-codec-1.4.jar" sourcepath="third_party/runtime/commons_codec/commons-codec-1.4-sources.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/jdom/jdom.jar" sourcepath="third_party/runtime/jdom/jdom-src.zip"/>
 	<classpathentry kind="output" path="build/test"/>
 </classpath>
