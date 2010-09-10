@@ -32,16 +32,17 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWa
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * RPC interface implementation for the wave server. Adapts incoming and
@@ -80,12 +81,9 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
       controller.setFailed(e.getMessage());
       return;
     }
-    Set<String> prefixes = new HashSet<String>(request.getWaveletIdPrefixCount());
-    for (int i = 0; i < request.getWaveletIdPrefixCount(); ++i) {
-      prefixes.add(request.getWaveletIdPrefix(0));
-    }
+    IdFilter waveletIdFilter = IdFilter.of(Collections.<WaveletId>emptySet(), request.getWaveletIdPrefixList());
 
-    frontend.openRequest(id, waveId, prefixes, request.getMaximumWavelets(),
+    frontend.openRequest(id, waveId, waveletIdFilter, request.getMaximumWavelets(),
         request.getSnapshots(),
         request.getKnownWaveletsCount() > 0 ? request.getKnownWaveletsList() : null,
         new ClientFrontend.OpenListener() {

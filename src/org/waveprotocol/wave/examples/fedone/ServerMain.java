@@ -59,7 +59,7 @@ public class ServerMain {
     Injector injector = flagInjector.createChildInjector(new ServerModule(), persistenceModule);
     ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
-    
+
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
     

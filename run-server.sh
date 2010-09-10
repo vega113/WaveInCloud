@@ -33,4 +33,5 @@ exec java $DEBUG_FLAGS -Dorg.eclipse.jetty.util.log.DEBUG=true -jar dist/fedone-
   --enable_federation=$ENABLE_FEDERATION \
   --cert_path_store_type=$CERT_PATH_STORE_TYPE \
   --attachment_store_type=$ATTACHMENT_STORE_TYPE \
-  --attachment_store_directory=$ATTACHMENT_STORE_DIRECTORY
+  --attachment_store_directory=$ATTACHMENT_STORE_DIRECTORY \
+  --account_store_type=$ACCOUNT_STORE_TYPE
