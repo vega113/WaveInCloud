@@ -32,7 +32,7 @@ XMPP_SERVER_IP=$XMPP_SERVER_HOSTNAME
 WAVESERVER_DISABLE_VERIFICATION=true
 WAVESERVER_DISABLE_SIGNER_VERIFICATION=true
 
-# Settings for the different persistence stores
+# Settings for the different persistence stores. Currently supported: 'memory' and 'mongodb'
 CERT_PATH_STORE_TYPE=memory
 
 # Currently supported attachment types: mongodb, disk
@@ -42,3 +42,6 @@ ATTACHMENT_STORE_TYPE=disk
 # Note: This is only used when using the disk attachment store. It is ignored
 # for other data store types.
 ATTACHMENT_STORE_DIRECTORY=_attachments
+
+# Currently supported Account store types: memory
+ACCOUNT_STORE_TYPE=memory

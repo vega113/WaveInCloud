@@ -21,7 +21,12 @@ import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.DefaultCertPathStore;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
+import org.waveprotocol.wave.examples.fedone.account.AccountData;
+import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * In-memory implementation of persistence.
@@ -30,15 +35,19 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
  * {@link CertPathStore} implementation just forwards to the
  * {@link DefaultCertPathStore}.
  *
+ *<p>
+ *{@link AccountStore} implementation stores {@link AccountData} in a map keyed by username.
+ *
  * @author ljvderijk@google.com (Lennard de Rijk)
  *
  */
-public class MemoryStore implements CertPathStore {
+public class MemoryStore implements CertPathStore, AccountStore {
 
   private final CertPathStore certPathStore;
 
   public MemoryStore() {
     certPathStore = new DefaultCertPathStore();
+    accountStore = new ConcurrentHashMap<String, AccountData>();
   }
 
   @Override
@@ -49,5 +58,27 @@ public class MemoryStore implements CertPathStore {
   @Override
   public void putSignerInfo(ProtocolSignerInfo protobuff) throws SignatureException {
     certPathStore.putSignerInfo(protobuff);
+  }
+
+
+  /*
+   *  AccountStore
+   */
+
+  private final Map<String, AccountData> accountStore;
+
+  @Override
+  public AccountData getAccount(String username) {
+    return accountStore.get(username);
+  }
+
+  @Override
+  public void putAccount(AccountData account) {
+    accountStore.put(account.getUsername(), account);
+  }
+
+  @Override
+  public void removeAccount(String username) {
+    accountStore.remove(username);
   }
 }

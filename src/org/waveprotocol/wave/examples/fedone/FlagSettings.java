@@ -103,4 +103,9 @@ public class FlagSettings {
           + "fedone process. Only used by disk-based attachment store.",
       defaultValue = "_attachments")
   private static String attachmentStoreDirectory;
+
+  @Flag(name = "account_store_type",
+      description = "Type of persistence to use for the Account Storage",
+      defaultValue = "memory")
+  private static String accountStoreType;
 }
