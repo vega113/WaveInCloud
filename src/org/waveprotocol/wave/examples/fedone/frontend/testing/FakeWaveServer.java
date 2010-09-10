@@ -34,6 +34,7 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
+import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -44,7 +45,6 @@ import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A fake single-user wave server which only echoes back submitted deltas and
@@ -72,7 +72,7 @@ public class FakeWaveServer extends FakeClientFrontend {
 
   @Override
   public void openRequest(ParticipantId participant, WaveId waveId,
-      Set<String> waveletIdPrefixes, int maximumInitialWavelets, boolean snapshotsEnabled,
+      IdFilter waveletIdFilter, int maximumInitialWavelets, boolean snapshotsEnabled,
       final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
     if (user == null) {
       user = participant;
@@ -80,7 +80,7 @@ public class FakeWaveServer extends FakeClientFrontend {
       Preconditions.checkArgument(participant.equals(user), "Unexpected user");
     }
 
-    super.openRequest(participant, waveId, waveletIdPrefixes, maximumInitialWavelets,
+    super.openRequest(participant, waveId, waveletIdFilter, maximumInitialWavelets,
         snapshotsEnabled, knownWavelets, openListener);
 
     Map<WaveletId, WaveletData> wavelets = waves.get(waveId);

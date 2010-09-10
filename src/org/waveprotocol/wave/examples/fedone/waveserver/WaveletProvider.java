@@ -25,9 +25,8 @@ import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 import java.util.Collection;
 
 /**
- * Interface that's used by the WaveView classes to access the waveserver.
- *
- *
+ * Provides wavelet snapshots and history, and accepts delta submissions to
+ * wavelets.
  */
 public interface WaveletProvider {
   /**
@@ -60,6 +59,4 @@ public interface WaveletProvider {
    * @return the wavelet as @code{WaveletData} or null if the wavelet doesn't exist
    */
   <T> T getSnapshot(WaveletName waveletName, WaveletSnapshotBuilder<T> builder);
-
-  // TODO(arb): add getLastCommittedVersion
 }

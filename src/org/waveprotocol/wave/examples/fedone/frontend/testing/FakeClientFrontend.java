@@ -26,6 +26,7 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -36,7 +37,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
   * Implementation of a ClientFrontend which only records requests and will make callbacks when it
@@ -89,7 +89,7 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
 
   @Override
   public void openRequest(ParticipantId participant, WaveId waveId,
-      Set<String> waveletIdPrefixes, int maximumInitialWavelets, boolean snapshotsEnabled,
+      IdFilter waveletIdFilter, int maximumInitialWavelets, boolean snapshotsEnabled,
       final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
     openListeners.put(waveId, openListener);
   }

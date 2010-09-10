@@ -33,6 +33,8 @@ import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
+import org.waveprotocol.wave.model.id.IdFilter;
+import org.waveprotocol.wave.model.id.IdFilters;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -48,11 +50,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Tests {@link UserManager}.
  */
 public class UserManagerTest extends TestCase {
-  private static final WaveId W1 = new WaveId("waveId", "1");
-  private static final WaveId W2 = new WaveId("waveId", "2");
+  private static final WaveId W1 = new WaveId("example.com", "111");
+  private static final WaveId W2 = new WaveId("example.com", "222");
 
-  private static final WaveletId WA = new WaveletId("waveletId", "A");
-  private static final WaveletId WB = new WaveletId("waveletId", "B");
+  private static final WaveletId WA = new WaveletId("example.com", "AAA");
+  private static final WaveletId WB = new WaveletId("example.com", "BBB");
 
   private static final WaveletName W1A = WaveletName.of(W1, WA);
   private static final WaveletName W2A = WaveletName.of(W2, WA);
@@ -176,11 +178,11 @@ public class UserManagerTest extends TestCase {
     OpenListener l5 = new MockListener("listener 5");
     String channelId = "";
 
-    m.subscribe(W2, ImmutableSet.of(WA.serialise()), channelId, l1);
-    m.subscribe(W2, ImmutableSet.of(""), channelId, l2);
-    m.subscribe(W1, ImmutableSet.of("", WA.serialise()), channelId, l3);
-    m.subscribe(W2, ImmutableSet.of("nonexisting-prefix"), channelId, l4);
-    m.subscribe(W2, ImmutableSet.of("wav", "waveletId"), channelId, l5);
+    m.subscribe(W2, IdFilter.ofIds(WA), channelId, l1);
+    m.subscribe(W2, IdFilters.ALL_IDS, channelId, l2);
+    m.subscribe(W1, IdFilter.ofPrefixes("", WA.getId()), channelId, l3);
+    m.subscribe(W2, IdFilters.NO_IDS, channelId, l4);
+    m.subscribe(W2, IdFilter.ofPrefixes("A", "B"), channelId, l5);
 
     checkListenersMatchSubscriptions(ImmutableList.of(l1, l2, l5), m.matchSubscriptions(W2A));
     checkListenersMatchSubscriptions(ImmutableList.of(l2, l5), m.matchSubscriptions(W2B));
@@ -191,7 +193,7 @@ public class UserManagerTest extends TestCase {
   }
 
   /**
-   * Method to check wether the given subscriptions contain exactly the expected
+   * Method to check whether the given subscriptions contain exactly the expected
    * {@link OpenListener}s.
    *
    * @param expectedListeners the {@link List} of {@link OpenListener}s we are
@@ -282,7 +284,7 @@ public class UserManagerTest extends TestCase {
     String channelId = "";
 
     m.addWavelet(W1A);
-    m.subscribe(W1, ImmutableSet.of(""), channelId, listener);
+    m.subscribe(W1, IdFilters.ALL_IDS, channelId, listener);
     m.onUpdate(W1A, DeltaSequence.empty(serialize(HashedVersion.UNSIGNED_VERSION_0)));
     assertEquals(0, updates.get());
     m.onUpdate(W1A, DELTAS);

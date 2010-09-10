@@ -22,13 +22,13 @@ import com.google.inject.internal.Nullable;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -73,7 +73,7 @@ public interface ClientFrontend {
    *
    * @param participant which is doing the requesting.
    * @param waveId the wave id.
-   * @param waveletIdPrefixes set containing restricts on the wavelet id's.
+   * @param waveletIdFilter filter over wavelets to open
    * @param maximumInitialWavelets limit on the number of wavelets to
    * @param snapshotsEnabled true if the client understands snapshots
    * @param knownWavelets a list of (waveletid, waveletversion pairs).
@@ -81,7 +81,7 @@ public interface ClientFrontend {
    * @param openListener callback for updates.
    */
 
-  void openRequest(ParticipantId participant, WaveId waveId, Set<String> waveletIdPrefixes,
+  void openRequest(ParticipantId participant, WaveId waveId, IdFilter waveletIdFilter,
       int maximumInitialWavelets, boolean snapshotsEnabled,
       final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener);
 }
