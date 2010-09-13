@@ -17,6 +17,11 @@
 
 package org.waveprotocol.wave.examples.fedone.account;
 
+import com.google.wave.api.event.EventType;
+import com.google.wave.api.robot.Capability;
+
+import java.util.Map;
+
 /**
  * Represents an {@link AccountData} belonging to a Robot.
  *
@@ -31,11 +36,10 @@ public interface RobotAccountData extends AccountData {
    */
   String getUrl();
 
-  // TODO(ljvderijk): Add capabilities
-  // /**
-  // * Returns the capabilities that this Robot has.
-  // */
-  // Map<EventType, Capability> getCapabilities();
+  /**
+   * Returns the capabilities that this Robot has.
+   */
+  Map<EventType, Capability> getCapabilities();
 
   /**
    * Returns the hash generated from the capabilities as indicated by the Robot

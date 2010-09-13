@@ -18,6 +18,11 @@
 package org.waveprotocol.wave.examples.fedone.account;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.wave.api.event.EventType;
+import com.google.wave.api.robot.Capability;
+
+import java.util.Map;
 
 /**
  * Robot Account implementation.
@@ -28,27 +33,41 @@ public final class RobotAccountDataImpl implements RobotAccountData {
 
   private final String username;
   private final String url;
+  private final Map<EventType, Capability> capabilities;
   private final String capabilitiesHash;
   private final boolean isVerified;
 
   /**
    * Creates a new {@link RobotAccountData}.
    *
+   *  If the capabilities map may only be null if the capabilitiesHash is null
+   * and vice versa.
+   *
    * @param username non-null username for this account.
    * @param url non-null Url where the robot can be reached.
+   * @param capabilities mapping events to capabilities for this robot.
    * @param capabilitiesHash the hash of the robot, may be null if not
    *        retrieved.
    * @param isVerified boolean indicating wether this {@link RobotAccountData}
    *        has been verified.
    */
-  public RobotAccountDataImpl(
-      String username, String url, String capabilitiesHash, boolean isVerified) {
+  public RobotAccountDataImpl(String username, String url, Map<EventType, Capability> capabilities,
+      String capabilitiesHash, boolean isVerified) {
     Preconditions.checkNotNull(username, "Username can not be null");
     Preconditions.checkNotNull(url, "Url can not be null");
     Preconditions.checkArgument(!url.endsWith("/"), "Url must not end with /");
+    Preconditions.checkArgument((capabilities == null) == (capabilitiesHash == null),
+        "Capabilities must be set completely or not set at all");
 
     this.username = username;
     this.url = url;
+
+    if (capabilities != null) {
+      this.capabilities = ImmutableMap.copyOf(capabilities);
+    } else {
+      this.capabilities = null;
+    }
+
     this.capabilitiesHash = capabilitiesHash;
     this.isVerified = isVerified;
   }
@@ -84,6 +103,11 @@ public final class RobotAccountDataImpl implements RobotAccountData {
   }
 
   @Override
+  public Map<EventType, Capability> getCapabilities() {
+    return capabilities;
+  }
+
+  @Override
   public String getCapabilitiesHash() {
     return capabilitiesHash;
   }
@@ -97,6 +121,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
+    result = prime * result + ((capabilities == null) ? 0 : capabilities.hashCode());
     result = prime * result + ((capabilitiesHash == null) ? 0 : capabilitiesHash.hashCode());
     result = prime * result + (isVerified ? 1231 : 1237);
     result = prime * result + url.hashCode();
@@ -105,8 +130,8 @@ public final class RobotAccountDataImpl implements RobotAccountData {
   }
 
   /**
-   * Robots are equal if their username, url, capabilitiesHash and verification
-   * are equal.
+   * Robots are equal if their username, url, capbilities, capabilitiesHash and
+   * verification are equal.
    */
   @Override
   public boolean equals(Object obj) {
@@ -116,9 +141,22 @@ public final class RobotAccountDataImpl implements RobotAccountData {
     if (obj == null || !(obj instanceof RobotAccountDataImpl)) {
       return false;
     }
+
     RobotAccountDataImpl other = (RobotAccountDataImpl) obj;
 
+    if (capabilities == null) {
+      if (other.capabilities != null) {
+        return false;
+      }
+    }
+    if (capabilitiesHash == null) {
+      if (other.capabilitiesHash != null) {
+        return false;
+      }
+    }
+
     return username.equals(other.username) && url.equals(other.url)
+        && capabilities.equals(other.capabilities)
         && capabilitiesHash.equals(other.capabilitiesHash) && isVerified == other.isVerified;
   }
 }
