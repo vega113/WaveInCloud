@@ -28,6 +28,7 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
@@ -79,20 +80,20 @@ public class SnapshotSerializer {
 
   /**
    * Deserializes the snapshot contained in the {@link WaveletSnapshot}
-   * into a {@link WaveletData}.
+   * into an {@link ObservableWaveletData}.
    *
    * @param snapshot the {@link WaveletSnapshot} to deserialize.
    * @throws OperationException if the ops in the snapshot can not be applied.
    * @throws InvalidParticipantAddress
    */
-  public static WaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
+  public static ObservableWaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
       throws OperationException, InvalidParticipantAddress {
     WaveletName name = WaveletName.of(waveId, WaveletId.deserialise(snapshot.getWaveletId()));
     ObservableWaveletData wavelet = WaveletDataUtil.createEmptyWavelet(name,
-        ParticipantId.of(snapshot.getCreator()), snapshot.getCreationTime());
+        getParticipantId(snapshot.getCreator()), snapshot.getCreationTime());
 
     for (String participant : snapshot.getParticipantIdList()) {
-      wavelet.addParticipant(ParticipantId.of(participant));
+      wavelet.addParticipant(getParticipantId(participant));
     }
 
     for (DocumentSnapshot document : snapshot.getDocumentList()) {
@@ -129,6 +130,15 @@ public class SnapshotSerializer {
     return builder.build();
   }
 
+  // TODO(ljvderijk): Should be removed once the AbstractWaveletData changes
+  private static ParticipantId getParticipantId(String address) throws InvalidParticipantAddress {
+    if (address.equals(Constants.DATA_AUTHOR.getAddress())) {
+      return Constants.DATA_AUTHOR;
+    } else {
+      return ParticipantId.of(address);
+    }
+  }
+
   private static void addDocumentSnapshotToWavelet(
       DocumentSnapshot snapshot, WaveletData container) throws InvalidParticipantAddress {
     DocOp op = CoreWaveletOperationSerializer.deserialize(snapshot.getDocumentOperation());
@@ -136,11 +146,11 @@ public class SnapshotSerializer {
 
     Collection<ParticipantId> contributors = CollectionUtils.newArrayList();
     for (String p : snapshot.getContributorList()) {
-      contributors.add(ParticipantId.of(p));
+      contributors.add(getParticipantId(p));
     }
     container.createBlip(
         snapshot.getDocumentId(),
-        ParticipantId.of(snapshot.getAuthor()),
+        getParticipantId(snapshot.getAuthor()),
         contributors,
         docInit,
         snapshot.getLastModifiedTime(),
