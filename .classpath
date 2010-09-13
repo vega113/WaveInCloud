@@ -66,19 +66,20 @@
 	<classpathentry kind="lib" path="third_party/test/mockito/mockito-all-1.8.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="third_party/runtime/mongo-driver/mongo-2.1.jar" sourcepath="third_party/runtime/mongo-driver/mongo-java-driver-r2.1-0-src.zip"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/client-2010-09-08.jar" sourcepath="third_party/runtime/wave-libraries/client-src-2010-09-08.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/common-2010-09-08.jar" sourcepath="third_party/runtime/wave-libraries/common-src-2010-09-08.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/concurrency-2010-09-08.jar" sourcepath="third_party/runtime/wave-libraries/concurrency-src-2010-09-08.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/federation-2010-09-08.jar" sourcepath="third_party/runtime/wave-libraries/federation-src-2010-09-08.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/media-2010-09-08.jar" sourcepath="third_party/runtime/wave-libraries/media-src-2010-09-08.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/model-2010-09-08.jar" sourcepath="third_party/runtime/wave-libraries/model-src-2010-09-08.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/proto-2010-09-08.jar" sourcepath="third_party/runtime/wave-libraries/proto-src-2010-09-08.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/waveserver-2010-09-08.jar" sourcepath="third_party/runtime/wave-libraries/waveserver-src-2010-09-08.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/commons_codec/commons-codec-1.4.jar" sourcepath="third_party/runtime/commons_codec/commons-codec-1.4-sources.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/jdom/jdom.jar" sourcepath="third_party/runtime/jdom/jdom-src.zip"/>
 	<classpathentry kind="lib" path="third_party/runtime/oauth/oauth-common.jar" sourcepath="third_party/runtime/oauth/oauth-common-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/oauth/oauth-consumer.jar" sourcepath="third_party/runtime/oauth/oauth-consumer-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/oauth/oauth-provider.jar" sourcepath="third_party/runtime/oauth/oauth-provider-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/wave-robot-java-client/wave-robot-api-20100910.jar" sourcepath="third_party/runtime/wave-robot-java-client/wave-robot-api-20100910-src.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/api-2010-09-13.jar" sourcepath="third_party/runtime/wave-libraries/api-src-2010-09-13.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/client-2010-09-13.jar" sourcepath="third_party/runtime/wave-libraries/client-src-2010-09-13.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/common-2010-09-13.jar" sourcepath="third_party/runtime/wave-libraries/common-src-2010-09-13.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/concurrency-2010-09-13.jar" sourcepath="third_party/runtime/wave-libraries/concurrency-src-2010-09-13.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/federation-2010-09-13.jar" sourcepath="third_party/runtime/wave-libraries/federation-src-2010-09-13.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/media-2010-09-13.jar" sourcepath="third_party/runtime/wave-libraries/media-src-2010-09-13.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/model-2010-09-13.jar" sourcepath="third_party/runtime/wave-libraries/model-src-2010-09-13.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/proto-2010-09-13.jar" sourcepath="third_party/runtime/wave-libraries/proto-src-2010-09-13.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/waveserver-2010-09-13.jar" sourcepath="third_party/runtime/wave-libraries/waveserver-src-2010-09-13.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
