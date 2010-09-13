@@ -40,6 +40,7 @@ import org.waveprotocol.wave.model.schema.impl.ConversationSchemas;
  * A composite containing an editor and debug output.
  */
 class EditorWidget extends Composite {
+  @SuppressWarnings("unused")
   private static final Log LOG = Log.get(Editor.class);
 
   private static final String TOPLEVEL_CONTAINER_TAGNAME = DocumentConstants.BODY;

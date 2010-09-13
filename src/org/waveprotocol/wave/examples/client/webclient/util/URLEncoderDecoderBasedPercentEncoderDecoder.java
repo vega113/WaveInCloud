@@ -17,35 +17,30 @@
 
 package org.waveprotocol.wave.examples.client.webclient.util;
 
-import org.waveprotocol.wave.model.id.URIEncoderDecoder;
 import com.google.gwt.http.client.URL;
+
+import org.waveprotocol.wave.model.id.URIEncoderDecoder;
 
 
 /**
  * Uses standard java URLEncoder and URLDecoder to percent encode.
  *
  * GWT version.
- *
- *
  */
 public class URLEncoderDecoderBasedPercentEncoderDecoder
     implements URIEncoderDecoder.PercentEncoderDecoder {
   @Override
   public String decode(String encodedValue) throws URIEncoderDecoder.EncodingException {
-      // The URL decoder will replace + with space so percent escape it.
-      encodedValue = encodedValue.replace("+", "%2B");
-
-      String ret = URL.decodeComponent(encodedValue);
+      String ret = URL.decodePathSegment(encodedValue);
       if (ret.indexOf(0xFFFD) != -1) {
         throw new URIEncoderDecoder.EncodingException(
             "Unable to decode value " + encodedValue + " it contains invalid UTF-8");
       }
       return ret;
-
   }
 
   @Override
-  public String encode(String decodedValue) throws URIEncoderDecoder.EncodingException {
+  public String encode(String decodedValue) {
       return URL.encode(decodedValue);
   }
 }

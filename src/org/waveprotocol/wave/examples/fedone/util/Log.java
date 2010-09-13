@@ -133,16 +133,6 @@ public class Log {
 
   }
 
-  /**
-   * Exception for reporting a SEVERE or WARNING level message that otherwise
-   * lacks a Throwable.
-   */
-  private static class ServerLogException extends Exception {
-    ServerLogException() {
-      super();
-    }
-  }
-
   /** Per-thread mapped diagnostic context. */
   private static final ThreadLocal<Map<String, String>> context =
       new ThreadLocal<Map<String, String>>() {

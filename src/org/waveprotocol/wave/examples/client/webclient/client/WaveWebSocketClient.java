@@ -47,7 +47,7 @@ public class WaveWebSocketClient {
 
   final int VERSION = 1;
   private final WebSocket client;
-  private Map<Integer, SubmitResponseCallback> submitRequestCallbacks;
+  private final Map<Integer, SubmitResponseCallback> submitRequestCallbacks;
 
   private enum ConnectState {
     CONNECTED, CONNECTING, DISCONNECTED
@@ -84,7 +84,7 @@ public class WaveWebSocketClient {
 
       public void onMessage(final String message) {
         LOG.info("received JSON message " + message);
-        JSONValue json = JSONParser.parse(message);
+        JSONValue json = JSONParser.parseStrict(message);
         // TODO(arb): pull apart the wrapper, extract the message.
         JSONObject wrapper = json.isObject();
         String messageType = wrapper.get("messageType").isString().stringValue();

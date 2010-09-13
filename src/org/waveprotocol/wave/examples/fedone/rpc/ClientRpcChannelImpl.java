@@ -19,12 +19,11 @@ package org.waveprotocol.wave.examples.fedone.rpc;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
-import com.google.protobuf.RpcChannel;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.UnknownFieldSet;
+import com.google.protobuf.Descriptors.MethodDescriptor;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
 
@@ -48,7 +47,7 @@ public class ClientRpcChannelImpl implements ClientRpcChannel {
 
   /**
    * Set up a new ClientRpcChannelImpl pointing at the given server address.
-   * 
+   *
    * @param serverAddress the target server address
    */
   public ClientRpcChannelImpl(SocketAddress serverAddress, ExecutorService threadPool)
@@ -102,16 +101,16 @@ public class ClientRpcChannelImpl implements ClientRpcChannel {
    * Creates, starts, and returns a new {@code MessageExpectingChannel}
    * connected to the given address, reading in the given thread pool, with
    * incoming messages handled by the given callback.
-   * 
+   *
    * @param serverAddress Which server to connect to.
    * @param threadPool The thread pool to create a thread to read on.
    * @param callback The callback to handle incoming messages.
    * @return a MessageExpectingChannel already reading.
    */
-  protected MessageExpectingChannel startChannel(SocketAddress serverAddress, 
+  protected MessageExpectingChannel startChannel(SocketAddress serverAddress,
       ExecutorService threadPool, ProtoCallback callback) throws IOException {
     SocketChannel channel = SocketChannel.open(serverAddress);
-    SequencedProtoChannel protoChannel = 
+    SequencedProtoChannel protoChannel =
       new SequencedProtoChannel(channel, callback, threadPool);
     protoChannel.expectMessage(Rpc.RpcFinished.getDefaultInstance());
     protoChannel.startAsyncRead();

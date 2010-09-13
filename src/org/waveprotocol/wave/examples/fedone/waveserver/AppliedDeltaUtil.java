@@ -33,11 +33,11 @@ public class AppliedDeltaUtil {
 
   private static final HashedVersionFactory HASHED_HISTORY_VERSION_FACTORY =
       new HashedVersionFactoryImpl();
-  
+
   /**
    * Inspects the given applied delta to determine the {@code ProtocolHashedVersion} it was
    * applied at.  This may require looking at the contained {@code ProtocolWaveletDelta}.
-   * 
+   *
    * @param appliedDelta to inspect
    * @return hashed version the delta was applied at
    * @throws InvalidProtocolBufferException if the contained {@code ProtocolWaveletDelta} is invalid
@@ -69,8 +69,7 @@ public class AppliedDeltaUtil {
   }
 
   /**
-   * Wraps call to {@link HashedVersionFactory#create()} with (de)serialisation
-   * to make it operate on {@link ProtocolHashedVersion}s.
+   * Creates a {@link ProtocolHashedVersion};
    */
   private static ProtocolHashedVersion createHashedVersion(byte[] appliedDeltaBytes,
       ProtocolHashedVersion hashedVersionAppliedAt, int operationsApplied) {

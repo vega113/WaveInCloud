@@ -16,19 +16,17 @@
 
 package org.waveprotocol.wave.examples.client.common.testing;
 
-import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
+import com.google.protobuf.Descriptors.MethodDescriptor;
 
 import org.waveprotocol.wave.examples.client.common.ClientBackend;
+import org.waveprotocol.wave.examples.fedone.frontend.WaveClientRpcImpl;
+import org.waveprotocol.wave.examples.fedone.frontend.testing.FakeWaveServer;
 import org.waveprotocol.wave.examples.fedone.rpc.ClientRpcChannel;
 import org.waveprotocol.wave.examples.fedone.rpc.testing.FakeRpcController;
-import org.waveprotocol.wave.examples.fedone.frontend.testing.FakeWaveServer;
-import org.waveprotocol.wave.examples.fedone.frontend.WaveClientRpcImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
-
-import java.io.IOException;
 
 /**
  * A factory of fake RPC objects for the client backend.
@@ -55,7 +53,7 @@ public class FakeRpcObjectFactory implements ClientBackend.RpcObjectFactory {
    * @return a fake {@code ClientRpcChannel} implementation.
    */
   @Override
-  public ClientRpcChannel createClientChannel(String server, int port) throws IOException {
+  public ClientRpcChannel createClientChannel(String server, int port) {
     return new FakeClientRpcChannel();
   }
 

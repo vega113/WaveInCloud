@@ -73,7 +73,8 @@
 
   <target name="compile" depends="proto_compile, gen_gxp">
     <depend srcdir="${src}" destdir="${core.classes}" closure="yes"/>
-    <javac sourcepath="" destdir="${core.classes}" debug="on" target="1.5">
+    <javac sourcepath="" destdir="${core.classes}" debug="on" target="1.5"
+      includeAntRuntime="false">
       <src path="${src}" />
       <src path="${gen}" />
       <include name="**/*.java"/>
@@ -81,6 +82,9 @@
         <pathelement location="proto_gwt_src"/>
         <path refid="fedone.classpath"/>
       </classpath>
+      <compilerarg value="-Werror"/>
+      <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Xlint:-serial"/>
     </javac>
 
     <!-- copy non binary resources in src tree to output classpath -->
@@ -115,13 +119,16 @@
       </classpath>
     </depend>
     <javac sourcepath="" srcdir="${test}" destdir="${test.classes}" debug="on"
-        target="1.5">
+        target="1.5" includeAntRuntime="false">
       <include name="**/*.java"/>
       <classpath>
         <path refid="fedone.classpath"/>
         <path refid="fedone.test.classpath"/>
         <pathelement location="${core.classes}"/>
       </classpath>
+      <compilerarg value="-Werror"/>
+      <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Xlint:-serial"/>
     </javac>
 
     <!-- copy non binary resources in src tree to output classpath -->

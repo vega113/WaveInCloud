@@ -25,7 +25,6 @@ import com.google.gwt.user.client.ui.Widget;
 
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.examples.client.webclient.util.Log;
-import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 
 /**
@@ -36,6 +35,7 @@ class BlipView extends Composite {
   }
 
   static final Binder BINDER = GWT.create(Binder.class);
+  @SuppressWarnings("unused")
   private static Log LOG = Log.get(BlipView.class);
 
   @UiField(provided = true)
@@ -43,16 +43,11 @@ class BlipView extends Composite {
 
 //  @UiField
 //  Label insertReply;
-  
-  private WaveView waveView;
-  private ConversationBlip blip;
 
-  public BlipView(DocInitialization content, WaveView waveView, ConversationBlip blip) {
+  public BlipView(DocInitialization content) {
     editor = new EditorWidget(content);
 
     initWidget(BINDER.createAndBindUi(this));
-    this.waveView = waveView;
-    this.blip = blip;
   }
 
   public Editor getEditor() {

@@ -29,7 +29,7 @@ import java.util.Random;
  */
 public class RandomBase64GeneratorTest extends TestCase {
 
-  private RandomBase64Generator[] generators = {
+  private final RandomBase64Generator[] generators = {
     new RandomBase64Generator(new Random()),
     new RandomBase64Generator(new SecureRandom())
   };
@@ -97,7 +97,7 @@ public class RandomBase64GeneratorTest extends TestCase {
     for (byte b : String.valueOf(RandomBase64Generator.WEB64_ALPHABET).getBytes()) {
       int frequency = histogram[b + 128];
       accumulator += frequency;
-      String msg = "Char " + Character.toChars(b) + ", frequency " + frequency
+      String msg = "Char " + Character.toChars(b).toString() + ", frequency " + frequency
           + ", average " + average + ", count " + count;
       assertTrue(msg, average * (1 - variance) < frequency);
       assertTrue(msg, average * (1 + variance) > frequency);

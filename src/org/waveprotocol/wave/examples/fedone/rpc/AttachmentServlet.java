@@ -24,8 +24,6 @@ import org.waveprotocol.wave.examples.fedone.persistence.AttachmentStore.Attachm
 import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -36,14 +34,14 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class AttachmentServlet extends HttpServlet {
   private static final Log LOG = Log.get(AttachmentServlet.class);
-  
+
   private final AttachmentStore store;
-  
+
   @Inject
   private AttachmentServlet(AttachmentStore store) {
     this.store = store;
   }
-  
+
   /**
    * Get the attachment id from the URL in the request.
    * @param request
@@ -53,43 +51,43 @@ public class AttachmentServlet extends HttpServlet {
     if (request.getPathInfo().length() == 0) {
       return "";
     }
-    
+
     // Discard the leading '/' in the pathinfo. Whats left will be the attachment id.
     return request.getPathInfo().substring(1);
   }
-  
+
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
     // TODO: Authenticate that the user has permission to access the attachment.
-    
+
     String attachmentId = getAttachmentIdFromRequest(request);
     if (attachmentId.length() == 0) {
       response.sendError(HttpServletResponse.SC_NOT_FOUND);
       return;
     }
-    
+
     AttachmentData data = store.getAttachment(attachmentId);
-    
+
     if (data == null) {
       response.sendError(HttpServletResponse.SC_NOT_FOUND);
       return;
     }
-    
+
     response.setContentType("text/html");
     response.setStatus(HttpServletResponse.SC_OK);
     response.setContentLength((int) data.getContentSize());
     response.setDateHeader("Last-Modified", data.getLastModifiedDate().getTime());
     data.writeDataTo(response.getOutputStream());
-    
+
     LOG.info("Fetched attachment with id '" + attachmentId + "'");
   }
-  
+
   @Override
   protected void doPut(final HttpServletRequest request, final HttpServletResponse response)
       throws IOException {
     // TODO: Authenticate the attachment data
-    
+
     String attachmentId = getAttachmentIdFromRequest(request);
     if (attachmentId.length() == 0) {
       response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -97,11 +95,11 @@ public class AttachmentServlet extends HttpServlet {
     }
 
     store.storeAttachment(attachmentId, request.getInputStream());
-    
+
     response.setContentType("text/html");
     response.setStatus(HttpServletResponse.SC_OK);
     response.getWriter().write("<html><body><h1>Data written</h1></body></html>");
-    
+
     LOG.info("Added attachment with id '" + attachmentId + "'");
   }
 }

@@ -17,13 +17,13 @@
 
 package org.waveprotocol.wave.examples.client.webclient.client;
 
-import com.google.gwt.core.client.JavaScriptObject;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolWaveletUpdate;
 
 /**
- * Created by IntelliJ IDEA. User: arb Date: May 13, 2010 Time: 12:14:18 PM To change this template
- * use File | Settings | File Templates.
+ * Callback for a wave websocket.
+ *
+ * @author arb@google.com (Anthony Baxter)
  */
 interface WaveWebSocketCallback {
 

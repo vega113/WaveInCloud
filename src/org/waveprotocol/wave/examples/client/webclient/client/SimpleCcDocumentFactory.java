@@ -59,7 +59,7 @@ public class SimpleCcDocumentFactory implements
       DocInitialization content) {
     if (IdUtil.isBlipId(docId)) {
       // create editor here.
-      BlipView blipView = new BlipView(content, null, null);
+      BlipView blipView = new BlipView(content);
       CcDocument doc = new SimpleCcDocument(blipView);
       blipView.getEditor().setOutputSink(
           new SilentOperationSink<BufferedDocOp>() {

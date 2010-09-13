@@ -18,14 +18,14 @@ package org.waveprotocol.wave.examples.client.webclient.client;
 
 import org.waveprotocol.wave.client.editor.EditorImpl;
 import org.waveprotocol.wave.common.logging.AbstractLogger;
-import org.waveprotocol.wave.common.logging.AbstractLogger.Level;
 import org.waveprotocol.wave.common.logging.LogSink;
 import org.waveprotocol.wave.common.logging.LoggerBundle;
+import org.waveprotocol.wave.common.logging.AbstractLogger.Level;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexer;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexerImpl;
-import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexerImpl.LoggerContext;
 import org.waveprotocol.wave.concurrencycontrol.channel.ViewChannelFactory;
 import org.waveprotocol.wave.concurrencycontrol.channel.ViewChannelImpl;
+import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexerImpl.LoggerContext;
 import org.waveprotocol.wave.concurrencycontrol.common.CorruptionDetail;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWaveView;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWaveViewImpl;
@@ -43,8 +43,8 @@ import org.waveprotocol.wave.model.document.util.MutableDocumentProxy;
 import org.waveprotocol.wave.model.id.IdFilters;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
-import org.waveprotocol.wave.model.id.IdGeneratorImpl.Seed;
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.IdGeneratorImpl.Seed;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
 import org.waveprotocol.wave.model.schema.impl.ConversationSchemas;
@@ -89,6 +89,7 @@ class CcStackManager {
 
     @Override
     public Document getMutableDocument() {
+      @SuppressWarnings("unchecked")
       MutableDocProxy docProxy =
           new MutableDocProxy((MutableDocument) ((EditorImpl) blipView.getEditor()).mutable());
       return docProxy;

@@ -87,11 +87,10 @@ public class AgentEventProviderTest extends TestCase implements TestingConstants
   public void testForwardsParticipantAdded() {
     provider.participantAdded(OTHER_USER, wavelet, OTHER_PARTICIPANT);
     verify(listener).onParticipantAdded(wavelet, OTHER_PARTICIPANT);
-  }  
+  }
 
   /**
    * Should ignore PaticipantAdded events when not connected.
-   * See {@link shouldIgnoreDocumentUpdatedWhenNotConnected} for details.
    */
   public void testIgnoresParticipantAddedWhenNotConnected() {
     when(connection.isConnected()).thenReturn(false);
@@ -119,7 +118,6 @@ public class AgentEventProviderTest extends TestCase implements TestingConstants
 
   /**
    * Should ignore PaticipantRemoved events when not connected.
-   * See {@link shouldIgnoreDocumentUpdatedWhenNotConnected} for details.
    */
   public void testIgnoresParticipantRemovedWhenNotConnected() {
     when(connection.isConnected()).thenReturn(false);
