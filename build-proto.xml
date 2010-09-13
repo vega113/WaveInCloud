@@ -5,7 +5,8 @@
   <property file="build-proto.properties"/>
   <property name="protoc" location="${protoc_dist}/src/protoc"/>
 
-  <target name="all" depends="compile, compile_json" />
+  <target name="all" depends="compile, compile_json" description="Compiles Java
+    and Javascript classes from protocol buffers"/>
 
   <target name="compile" description="Compiles Java files from protocol buffers">
     <exec executable="${protoc}">
