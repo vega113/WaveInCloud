@@ -17,25 +17,25 @@
 
 package org.waveprotocol.wave.examples.fedone.frontend;
 
-import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+
+import com.google.common.base.Preconditions;
+
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 
 /**
- * A wavelet snapshot with current and committed versions.
+ * A wavelet snapshot with committed version.
  *
  * @author arb@google.com (Anthony Baxter)
 */
-public final class WaveletSnapshotAndVersions {
+public final class WaveletSnapshotAndVersion {
   public final WaveletSnapshot snapshot;
-  public final ProtocolHashedVersion currentVersion;
   public final ProtocolHashedVersion committedVersion;
 
-  public WaveletSnapshotAndVersions(WaveletSnapshot snapshot, HashedVersion currentVersion,
+  public WaveletSnapshotAndVersion(WaveletSnapshot snapshot,
       ProtocolHashedVersion committedVersion) {
+    Preconditions.checkNotNull(snapshot);
     this.snapshot = snapshot;
-    this.currentVersion = CoreWaveletOperationSerializer.serialize(currentVersion);
     this.committedVersion = committedVersion;
   }
 }

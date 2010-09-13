@@ -27,7 +27,9 @@ import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializ
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
+import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
+import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
@@ -226,10 +228,18 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public <T> T getSnapshot(WaveletSnapshotBuilder<T> builder) {
+  public WaveletSnapshotAndVersion getSnapshot() {
     acquireWriteLock();
     try {
-      return builder.build(waveletData, currentVersion, lastCommittedVersion);
+      // TODO: enable when we have persistence. Snapshots should only ever
+      // be of committed versions as otherwise they may contain information
+      // that could be lost for ever.
+//      Preconditions.checkState(waveletData.getVersion() == lastCommittedVersion.getVersion(),
+//          "Snapshot version doesn't match committed version");
+      ProtocolHashedVersion committedVersion =
+          CoreWaveletOperationSerializer.serialize(currentVersion);
+      return new WaveletSnapshotAndVersion(SnapshotSerializer.serializeWavelet(waveletData,
+          currentVersion), committedVersion);
     } finally {
       releaseWriteLock();
     }

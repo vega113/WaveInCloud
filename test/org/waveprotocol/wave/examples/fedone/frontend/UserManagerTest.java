@@ -148,7 +148,7 @@ public class UserManagerTest extends TestCase {
 
     @Override
     public void onUpdate(WaveletName waveletName,
-        @Nullable WaveletSnapshotAndVersions snapshot,
+        @Nullable WaveletSnapshotAndVersion snapshot,
         List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
         @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
         @Nullable String channelId) {
@@ -273,7 +273,7 @@ public class UserManagerTest extends TestCase {
     OpenListener listener = new MockListener("1") {
       @Override
       public void onUpdate(WaveletName waveletName,
-          @Nullable WaveletSnapshotAndVersions snapshot,
+          @Nullable WaveletSnapshotAndVersion snapshot,
           List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
           @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
           @Nullable String channelId) {

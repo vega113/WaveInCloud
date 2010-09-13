@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -51,7 +52,7 @@ abstract interface WaveletContainer {
 
   WaveletData getWaveletData();
 
-  <T> T getSnapshot(WaveletSnapshotBuilder<T> builder);
+  WaveletSnapshotAndVersion getSnapshot();
 
   // TODO: decide which to go for depending on common.proto modification. ###
   /**

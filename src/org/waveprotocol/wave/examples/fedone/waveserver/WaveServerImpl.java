@@ -35,6 +35,7 @@ import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
+import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletContainer.State;
@@ -377,13 +378,13 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   }
 
   @Override
-  public <T> T getSnapshot(WaveletName waveletName, WaveletSnapshotBuilder<T> builder) {
+  public WaveletSnapshotAndVersion getSnapshot(WaveletName waveletName) {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
       LOG.info("client requested snapshot for non-existent wavelet: " + waveletName);
       return null;
     } else {
-      return wc.getSnapshot(builder);
+      return wc.getSnapshot();
     }
   }
 

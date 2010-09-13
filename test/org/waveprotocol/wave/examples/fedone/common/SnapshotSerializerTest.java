@@ -26,7 +26,7 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 /**
  * Tests for {@link SnapshotSerializer}
- * 
+ *
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class SnapshotSerializerTest extends TestCase {
@@ -35,11 +35,9 @@ public class SnapshotSerializerTest extends TestCase {
     WaveletName name = WaveletName.of(expected.getWaveId(), expected.getWaveletId());
     HashedVersion version = new HashedVersionZeroFactoryImpl().createVersionZero(name);
 
-    WaveletSnapshot snapshot = SnapshotSerializer.serializeWavelet(expected,
-        CoreWaveletOperationSerializer.serialize(version));
-    
+    WaveletSnapshot snapshot = SnapshotSerializer.serializeWavelet(expected, version);
     WaveletData actual = SnapshotSerializer.deserializeWavelet(snapshot, expected.getWaveId());
-    
+
     TestDataUtil.checkSerializedWavelet(expected, actual);
   }
 }

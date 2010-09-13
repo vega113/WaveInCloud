@@ -163,7 +163,7 @@ final class UserManager {
      * @param channelId
      */
     void onUpdate(final WaveletName waveletName,
-        @Nullable final WaveletSnapshotAndVersions snapshot,
+        @Nullable final WaveletSnapshotAndVersion snapshot,
         final List<ProtocolWaveletDelta> deltas, @Nullable final ProtocolHashedVersion endVersion,
         @Nullable final ProtocolHashedVersion committedVersion, final boolean hasMarker,
         final String channelId) {

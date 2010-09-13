@@ -46,7 +46,7 @@ public interface ClientFrontend {
     /**
      * Called when an update is received.
      */
-    void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersions snapshot,
+    void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
         List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
         @Nullable ProtocolHashedVersion committedVersion, boolean hasMarker, String channel_id);
 

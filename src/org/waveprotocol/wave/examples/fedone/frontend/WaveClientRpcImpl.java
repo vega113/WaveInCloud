@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.frontend;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.internal.Nullable;
 import com.google.protobuf.RpcCallback;
@@ -95,7 +96,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
 
           @Override
           public void onUpdate(WaveletName waveletName,
-              @Nullable WaveletSnapshotAndVersions snapshot,
+              @Nullable WaveletSnapshotAndVersion snapshot,
               List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
               @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
               final String channel_id) {
@@ -108,16 +109,11 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
               builder.setWaveletName(uriCodec.waveletNameToURI(waveletName));
               builder.addAllAppliedDelta(deltas);
               if (snapshot != null) {
+                Preconditions.checkState(committedVersion.equals(snapshot.committedVersion),
+                    "Mismatched commit versions");
                 builder.setSnapshot(snapshot.snapshot);
-                if (snapshot.currentVersion != null) {
-                  builder.setResultingVersion(snapshot.currentVersion);
-                }
-                if (snapshot.committedVersion != null) {
-                  builder.setCommitNotice(snapshot.committedVersion);
-                } else {
-                  // TODO(arb): HACK. lastCommittedVersion isn't ever set in the waveserver!?
-                  builder.setCommitNotice(snapshot.currentVersion);
-                }
+                builder.setResultingVersion(snapshot.snapshot.getVersion());
+                builder.setCommitNotice(snapshot.committedVersion);
               } else {
                 if (endVersion != null) {
                   builder.setResultingVersion(endVersion);
@@ -126,7 +122,6 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
                   builder.setCommitNotice(committedVersion);
                 }
               }
-
               done.run(builder.build());
             } catch (EncodingException e) {
               LOG.warning(e.getMessage());

@@ -24,10 +24,9 @@ import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
-public final class WaveletSnapshot {
+public final class WaveletAndVersion {
 
   private final CoreWaveletData waveletData;
-
   private final HashedVersion hashedVersion;
 
   /**
@@ -38,7 +37,7 @@ public final class WaveletSnapshot {
    * @param hashedVersion the {@link HashedVersion} matching the given Wavelet
    *        data.
    */
-  public WaveletSnapshot(CoreWaveletData waveletData, HashedVersion hashedVersion) {
+  public WaveletAndVersion(CoreWaveletData waveletData, HashedVersion hashedVersion) {
     this.waveletData = waveletData;
     this.hashedVersion = hashedVersion;
   }

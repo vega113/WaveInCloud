@@ -19,7 +19,7 @@ package org.waveprotocol.wave.examples.fedone.persistence;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.waveprotocol.wave.examples.fedone.common.WaveletSnapshot;
+import org.waveprotocol.wave.examples.fedone.common.WaveletAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -58,7 +58,7 @@ public interface WaveStore {
    *         failure is reported as an {@link ExecutionException} wrapping a
    *         {@link WaveStoreException}.
    */
-  public ListenableFuture<?> appendWaveletDeltas(WaveletSnapshot snapshot,
+  public ListenableFuture<?> appendWaveletDeltas(WaveletAndVersion snapshot,
       List<ProtocolWaveletDelta> deltas);
 
   /**
@@ -92,14 +92,14 @@ public interface WaveStore {
    * @return the wavelet as {@link CoreWaveletData} or null if the wavelet
    *         doesn't exist.
    */
-  public ListenableFuture<WaveletSnapshot> getSnapshot(WaveletName waveletName);
+  public ListenableFuture<WaveletAndVersion> getSnapshot(WaveletName waveletName);
 
   /**
    * Returns all wavelets that the user is a participant on.
    *
    * @param participant the participant to get the inbox for.
    */
-  public ListenableFuture<Iterator<WaveletSnapshot>> findWaveletsWithParticipant(
+  public ListenableFuture<Iterator<WaveletAndVersion>> findWaveletsWithParticipant(
       ParticipantId participant);
 
   // TODO(ljvderijk): Define search

@@ -55,10 +55,10 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreNoOp;
@@ -262,8 +262,8 @@ public class ClientBackend {
   private final BlockingQueue<WaveletEventData> eventQueue =
       new LinkedBlockingQueue<WaveletEventData>();
 
-  /** 
-   * HashedVersionFactory for creating version 0 hash only, used only when client creates a 
+  /**
+   * HashedVersionFactory for creating version 0 hash only, used only when client creates a
    * wavelet.
    */
   private final HashedVersionFactory hashedVersionFactory;
@@ -811,7 +811,7 @@ public class ClientBackend {
     for (IndexEntry indexEntry : indexEntries) {
       if (!waveControllers.containsKey(indexEntry.getWaveId())) {
         WaveId waveId = indexEntry.getWaveId();
-        openWave(waveId, ClientUtils.getConversationRootId(waveId).serialise());
+        openWave(waveId, ClientUtils.getConversationRootId(waveId).getId());
       }
     }
   }

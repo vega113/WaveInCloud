@@ -20,7 +20,6 @@ package org.waveprotocol.wave.examples.fedone.common;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
@@ -51,14 +50,14 @@ public class SnapshotSerializer {
 
   /**
    * Serializes a snapshot for a wavelet.
-   * 
-   * @param wavelet The wavelet to snapshot
-   * @param hashedVersion The committed version of the wavelet
-   * @return A Wavelet snapshot that contains all the information in the
-   * original wavelet.
+   *
+   * @param wavelet wavelet to snapshot
+   * @param hashedVersion hashed version of the wavelet
+   * @return a wavelet snapshot that contains all the information in the
+   *         original wavelet.
    */
-  public static WaveletSnapshot serializeWavelet(
-      ReadableWaveletData wavelet, ProtocolHashedVersion hashedVersion) {
+  public static WaveletSnapshot serializeWavelet(ReadableWaveletData wavelet,
+      HashedVersion hashedVersion) {
     WaveletSnapshot.Builder builder = WaveletSnapshot.newBuilder();
 
     builder.setWaveletId(wavelet.getWaveletId().serialise());
@@ -69,22 +68,22 @@ public class SnapshotSerializer {
       ReadableBlipData data = wavelet.getDocument(id);
       builder.addDocument(serializeDocument(data));
     }
-    
-    builder.setVersion(hashedVersion);
+
+    builder.setVersion(CoreWaveletOperationSerializer.serialize(hashedVersion));
     builder.setLastModifiedTime(wavelet.getLastModifiedTime());
     builder.setCreator(wavelet.getCreator().getAddress());
     builder.setCreationTime(wavelet.getCreationTime());
-    
+
     return builder.build();
   }
-  
+
   /**
    * Deserializes the snapshot contained in the {@link WaveletSnapshot}
    * into a {@link WaveletData}.
    *
    * @param snapshot the {@link WaveletSnapshot} to deserialize.
    * @throws OperationException if the ops in the snapshot can not be applied.
-   * @throws InvalidParticipantAddress 
+   * @throws InvalidParticipantAddress
    */
   public static WaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
       throws OperationException, InvalidParticipantAddress {
@@ -95,7 +94,7 @@ public class SnapshotSerializer {
     for (String participant : snapshot.getParticipantIdList()) {
       wavelet.addParticipant(ParticipantId.of(participant));
     }
-    
+
     for (DocumentSnapshot document : snapshot.getDocumentList()) {
       addDocumentSnapshotToWavelet(document, wavelet);
     }
@@ -107,7 +106,7 @@ public class SnapshotSerializer {
 
     return wavelet;
   }
-  
+
   /**
    * Serialize a document to a document snapshot
    * @param document The document to serialize
@@ -115,26 +114,26 @@ public class SnapshotSerializer {
    */
   public static DocumentSnapshot serializeDocument(ReadableBlipData document) {
     DocumentSnapshot.Builder builder = DocumentSnapshot.newBuilder();
-    
+
     builder.setDocumentId(document.getId());
     builder.setDocumentOperation(CoreWaveletOperationSerializer.serialize(
         document.getContent().asOperation()));
-    
+
     builder.setAuthor(document.getAuthor().getAddress());
     for (ParticipantId participant : document.getContributors()) {
       builder.addContributor(participant.getAddress());
     }
     builder.setLastModifiedVersion(document.getLastModifiedVersion());
     builder.setLastModifiedTime(document.getLastModifiedTime());
-    
+
     return builder.build();
   }
-  
+
   private static void addDocumentSnapshotToWavelet(
       DocumentSnapshot snapshot, WaveletData container) throws InvalidParticipantAddress {
     DocOp op = CoreWaveletOperationSerializer.deserialize(snapshot.getDocumentOperation());
     DocInitialization docInit = DocOpUtil.asInitialization(op);
-    
+
     Collection<ParticipantId> contributors = CollectionUtils.newArrayList();
     for (String p : snapshot.getContributorList()) {
       contributors.add(ParticipantId.of(p));

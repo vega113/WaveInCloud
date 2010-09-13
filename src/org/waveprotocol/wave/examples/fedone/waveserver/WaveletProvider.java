@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -56,7 +57,7 @@ public interface WaveletProvider {
    * Request the current state of the wavelet.
    *
    * @param waveletName the name of the wavelet
-   * @return the wavelet as @code{WaveletData} or null if the wavelet doesn't exist
+   * @return the wavelet, or null if the wavelet doesn't exist
    */
-  <T> T getSnapshot(WaveletName waveletName, WaveletSnapshotBuilder<T> builder);
+  WaveletSnapshotAndVersion getSnapshot(WaveletName waveletName);
 }

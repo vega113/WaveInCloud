@@ -18,9 +18,10 @@
 package org.waveprotocol.wave.examples.fedone.rpc;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
+import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.util.TestDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -31,16 +32,16 @@ import java.util.Collection;
 
 /**
  * Stub of {@link WaveletProvider} for testing. It only supports getSnapshot().
- * 
+ *
  * It currently hosts a single wavelet, which contains a single document.
- * 
+ *
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class WaveletProviderStub implements WaveletProvider {
-  private WaveletData wavelet;
+  private final WaveletData wavelet;
   private HashedVersion currentVersionOverride;
   private ProtocolHashedVersion committedVersion;
-  
+
   public WaveletProviderStub() {
     wavelet = TestDataUtil.createSimpleWaveletData();
 
@@ -49,16 +50,16 @@ public class WaveletProviderStub implements WaveletProvider {
   }
 
   @Override
-  public <T> T getSnapshot(WaveletName waveletName, WaveletSnapshotBuilder<T> builder) {
+  public WaveletSnapshotAndVersion getSnapshot(WaveletName waveletName) {
     final byte[] JUNK_BYTES = new byte[]{0,1,2,3,4,5,-128,127};
-    
+
     if (waveletName.waveId.equals(getHostedWavelet().getWaveId())
         && waveletName.waveletId.equals(getHostedWavelet().getWaveletId())) {
       HashedVersion version = (currentVersionOverride != null)
           ? currentVersionOverride
           : new HashedVersion(getHostedWavelet().getVersion(), JUNK_BYTES);
-
-      return builder.build(getHostedWavelet(), version, getCommittedVersion());
+      return new WaveletSnapshotAndVersion(SnapshotSerializer.serializeWavelet(getHostedWavelet(),
+          version), getCommittedVersion());
     } else {
       return null;
     }

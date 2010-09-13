@@ -35,9 +35,6 @@ import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -102,17 +99,6 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
       this.currentVersion = version;
     }
   }
-
-  /** Builds wavelet snapshots from data. */
-  private static final WaveletSnapshotBuilder<WaveletSnapshotAndVersions> SNAPSHOT_BUILDER =
-      new WaveletSnapshotBuilder<WaveletSnapshotAndVersions>() {
-        @Override
-        public WaveletSnapshotAndVersions build(WaveletData waveletData,
-            HashedVersion currentVersion, ProtocolHashedVersion committedVersion) {
-          return new WaveletSnapshotAndVersions(serializeSnapshot(waveletData), currentVersion,
-              committedVersion);
-        }
-      };
 
   /** Maps wavelets to the participants currently on that wavelet */
   @VisibleForTesting final Map<ParticipantId, UserManager> perUser;
@@ -191,7 +177,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         ProtocolHashedVersion endVersion = userManager.getWaveletVersion(sourceWaveletName);
 
         List<ProtocolWaveletDelta> deltasToSend;
-        WaveletSnapshotAndVersions snapshotToSend;
+        WaveletSnapshotAndVersion snapshotToSend;
 
         if (isIndexWave || !snapshotsEnabled) {
           // Send deltas to bring the wavelet up to date
@@ -214,7 +200,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         } else {
           // Send a snapshot of the current state.
           deltasToSend = Collections.emptyList();
-          snapshotToSend = waveletProvider.getSnapshot(sourceWaveletName, SNAPSHOT_BUILDER);
+          snapshotToSend = waveletProvider.getSnapshot(sourceWaveletName);
         }
 
         // TODO: Once we've made sure that all listeners have received the
@@ -252,28 +238,6 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
 
   private String generateChannelID() {
     return "ch" + channel_counter.addAndGet(1);
-  }
-
-  /**
-   * Serializes a WaveletData into a WaveletSnapshot protobuffer.
-   *
-   * @param snapshot the snapshot
-   * @return the new protobuffer
-   */
-  private static WaveletSnapshot serializeSnapshot(WaveletData snapshot) {
-    WaveletSnapshot.Builder snapshotBuilder = WaveletSnapshot.newBuilder();
-    Set<String> documentIds = snapshot.getDocumentIds();
-    for (String documentId : documentIds) {
-      DocumentSnapshot.Builder documentBuilder = DocumentSnapshot.newBuilder();
-      documentBuilder.setDocumentId(documentId);
-      documentBuilder.setDocumentOperation(CoreWaveletOperationSerializer.serialize(
-          snapshot.getDocument(documentId).getContent().asOperation()));
-      snapshotBuilder.addDocument(documentBuilder.build());
-    }
-    for (ParticipantId participant : snapshot.getParticipants()) {
-      snapshotBuilder.addParticipantId(participant.toString());
-    }
-    return snapshotBuilder.build();
   }
 
   private boolean isWaveletWritable(WaveletName waveletName) {

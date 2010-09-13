@@ -18,24 +18,18 @@
 package org.waveprotocol.wave.examples.fedone.rpc;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.gwt.dev.util.Preconditions;
 import com.google.inject.Inject;
 import com.google.protobuf.MessageLite;
 
 import org.waveprotocol.wave.common.util.JavaWaverefEncoder;
-import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
+import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshotBuilder;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 
@@ -49,7 +43,7 @@ import javax.servlet.http.HttpServletResponse;
  * A servlet for static fetching of wave data. Typically, the servlet will be
  * hosted on /fetch/*. A document, a wavelet, or a whole wave can be specified
  * in the URL.
- * 
+ *
  * Valid request formats are:
  * Fetch a wave:
  *  GET /fetch/wavedomain.com/waveid
@@ -57,40 +51,22 @@ import javax.servlet.http.HttpServletResponse;
  *  GET /fetch/wavedomain.com/waveid/waveletdomain.com/waveletid
  * Fetch a document:
  *  GET /fetch/wavedomain.com/waveid/waveletdomain.com/waveletid/b+abc123
- *  
+ *
  * The format of the returned information is the protobuf-JSON format used by
- * the websocket interface. 
+ * the websocket interface.
  */
 public final class FetchServlet extends HttpServlet {
   private static final Log LOG = Log.get(FetchServlet.class);
-  
+
   @Inject
   public FetchServlet(WaveletProvider waveletProvider, ProtoSerializer serializer) {
     this.waveletProvider = waveletProvider;
     this.serializer = serializer;
   }
-  
+
   private final ProtoSerializer serializer;
   private final WaveletProvider waveletProvider;
 
-  private final static WaveletSnapshotBuilder<WaveletSnapshot> snapshotBuilder =
-            new WaveletSnapshotBuilder<WaveletSnapshot>() {
-    @Override
-    public WaveletSnapshot build(WaveletData waveletData, HashedVersion currentVersion,
-        ProtocolHashedVersion committedVersion) {
-      // Until the persistence store is in place, committedVersion will be
-      // null. TODO(josephg): Remove this once the persistence layer works. 
-      if (committedVersion == null) {
-        committedVersion = CoreWaveletOperationSerializer.serialize(currentVersion);
-      }
-      
-      Preconditions.checkState(waveletData.getVersion() == committedVersion.getVersion(),
-          "Provided snapshot version doesn't match committed version");
-      
-      return SnapshotSerializer.serializeWavelet(waveletData, committedVersion);
-    }
-  };
-  
   private void serializeObjectToServlet(MessageLite message, HttpServletResponse dest)
         throws IOException {
     if (message == null) {
@@ -100,14 +76,14 @@ public final class FetchServlet extends HttpServlet {
     } else {
       dest.setContentType("application/json");
       dest.setStatus(HttpServletResponse.SC_OK);
-      
+
       serializer.writeTo(dest.getWriter(), message);
     }
   }
-  
+
   /**
    * Render the requested waveref out to the HttpServletResponse dest.
-   * 
+   *
    * @param waveref The referenced wave. Could be a whole wave, a wavelet or
    * just a document.
    * @param dest The servlet response to render the snapshot out to.
@@ -119,12 +95,13 @@ public final class FetchServlet extends HttpServlet {
     // specified we'll just return the conv+root.
     WaveletId waveletId = waveref.hasWaveletId() ?
         waveref.getWaveletId() : new WaveletId(waveref.getWaveId().getDomain(), "conv+root");
-    
+
     WaveletName waveletName = WaveletName.of(waveref.getWaveId(), waveletId);
     LOG.info("Fetching snapshot of wavelet " + waveletName);
-    WaveletSnapshot snapshot = waveletProvider.getSnapshot(waveletName, snapshotBuilder);
-    
-    if (snapshot != null) {
+    WaveletSnapshotAndVersion snapshotAndV = waveletProvider.getSnapshot(waveletName);
+
+    if (snapshotAndV != null) {
+      WaveletSnapshot snapshot = snapshotAndV.snapshot;
       if (waveref.hasDocumentId()) {
         // We have a wavelet id and document id. Find the document in the snapshot
         // and return it.
@@ -152,7 +129,7 @@ public final class FetchServlet extends HttpServlet {
       dest.sendError(HttpServletResponse.SC_FORBIDDEN);
     }
   }
-  
+
   /**
    * Create an http response to the fetch query. Main entrypoint for this class.
    */
@@ -160,11 +137,11 @@ public final class FetchServlet extends HttpServlet {
   @VisibleForTesting
   protected void doGet(HttpServletRequest req, HttpServletResponse response)
       throws IOException {
-    
+
     // This path will look like "/example.com/w+abc123/foo.com/conv+root
     // Strip off the leading '/'.
     String urlPath = req.getPathInfo().substring(1);
-    
+
     // Extract the name of the wavelet from the URL
     WaveRef waveref;
     try {
@@ -174,7 +151,7 @@ public final class FetchServlet extends HttpServlet {
       response.sendError(HttpServletResponse.SC_NOT_FOUND);
       return;
     }
-    
+
     renderSnapshot(waveref, response);
   }
 }

@@ -150,7 +150,7 @@ public class ClientFrontendImplTest extends TestCase {
     WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, 0L);
     clientFrontend.waveletUpdate(wavelet, DELTAS.getEndVersion(), DELTAS);
     verify(listener, Mockito.never()).onUpdate(eq(WAVELET_NAME),
-        any(WaveletSnapshotAndVersions.class), anyListOf(ProtocolWaveletDelta.class),
+        any(WaveletSnapshotAndVersion.class), anyListOf(ProtocolWaveletDelta.class),
         any(Proto.ProtocolHashedVersion.class), any(Proto.ProtocolHashedVersion.class),
         anyBoolean(), anyString());
   }
@@ -214,7 +214,7 @@ public class ClientFrontendImplTest extends TestCase {
     clientFrontend.participantUpdate(WAVELET_NAME, USER, deltas, true, false, "", "");
 
     verify(listener, Mockito.never()).onUpdate(eq(dummyWaveletName),
-        any(WaveletSnapshotAndVersions.class), argThat(new IsNonEmptyList<ProtocolWaveletDelta>()),
+        any(WaveletSnapshotAndVersion.class), argThat(new IsNonEmptyList<ProtocolWaveletDelta>()),
         any(Proto.ProtocolHashedVersion.class), any(Proto.ProtocolHashedVersion.class),
         anyBoolean(), anyString());
   }
@@ -243,7 +243,7 @@ public class ClientFrontendImplTest extends TestCase {
 
     @Override
     public void onUpdate(WaveletName wn,
-        @Nullable WaveletSnapshotAndVersions snapshot,
+        @Nullable WaveletSnapshotAndVersion snapshot,
         List<ProtocolWaveletDelta> newDeltas,
         @Nullable ProtocolHashedVersion endVersion,
         @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
@@ -375,7 +375,7 @@ public class ClientFrontendImplTest extends TestCase {
   private void verifyIfChannelIdAndMarkerSent(
       OpenListener listener, WaveletName dummyWaveletName, String channelId) {
     // First the channel id
-    verify(listener).onUpdate(eq(dummyWaveletName), (WaveletSnapshotAndVersions) isNull(),
+    verify(listener).onUpdate(eq(dummyWaveletName), (WaveletSnapshotAndVersion) isNull(),
         eq(new ArrayList<ProtocolWaveletDelta>()), (Proto.ProtocolHashedVersion) isNull(),
         (Proto.ProtocolHashedVersion) isNull(), eq(false),
         channelId == null ? anyString() : eq(channelId));
