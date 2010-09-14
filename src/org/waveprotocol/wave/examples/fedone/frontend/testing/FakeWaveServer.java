@@ -42,8 +42,8 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -71,17 +71,15 @@ public class FakeWaveServer extends FakeClientFrontend {
 
 
   @Override
-  public void openRequest(ParticipantId participant, WaveId waveId,
-      IdFilter waveletIdFilter, boolean snapshotsEnabled,
-      final List<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
+  public void openRequest(ParticipantId participant, WaveId waveId, IdFilter waveletIdFilter,
+      Collection<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
     if (user == null) {
       user = participant;
     } else {
       Preconditions.checkArgument(participant.equals(user), "Unexpected user");
     }
 
-    super.openRequest(participant, waveId, waveletIdFilter, snapshotsEnabled, knownWavelets,
-        openListener);
+    super.openRequest(participant, waveId, waveletIdFilter, knownWavelets, openListener);
 
     Map<WaveletId, WaveletData> wavelets = waves.get(waveId);
     if (wavelets != null) {

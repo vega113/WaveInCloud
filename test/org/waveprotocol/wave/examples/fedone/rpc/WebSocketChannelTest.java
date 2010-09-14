@@ -62,12 +62,6 @@ public class WebSocketChannelTest extends TestCase {
     checkRoundtripping(sourceBuilder);
   }
 
-  public void testRoundTrippingJsonOptionalField() throws Exception {
-    WaveClientRpc.ProtocolOpenRequest.Builder sourceBuilder = buildProtocolOpenRequest();
-    sourceBuilder.clearSnapshots();
-    checkRoundtripping(sourceBuilder);
-  }
-
   public void testRoundTrippingJsonRepeatedField() throws Exception {
     WaveClientRpc.ProtocolOpenRequest.Builder sourceBuilder = buildProtocolOpenRequest();
     sourceBuilder.addWaveletIdPrefix("aaa");
@@ -91,9 +85,8 @@ public class WebSocketChannelTest extends TestCase {
   private WaveClientRpc.ProtocolOpenRequest.Builder buildProtocolOpenRequest() {
     WaveClientRpc.ProtocolOpenRequest.Builder sourceBuilder =
         WaveClientRpc.ProtocolOpenRequest.newBuilder();
-    sourceBuilder.setParticipantId("O HAI");
-    sourceBuilder.setSnapshots(true);
-    sourceBuilder.setWaveId("lol!cat");
+    sourceBuilder.setParticipantId("test@example.com");
+    sourceBuilder.setWaveId("example.com!w+test");
     return sourceBuilder;
   }
 }

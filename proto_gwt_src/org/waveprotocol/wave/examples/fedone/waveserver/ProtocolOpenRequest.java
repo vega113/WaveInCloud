@@ -108,15 +108,12 @@ public class ProtocolOpenRequest extends JavaScriptObject  {
         if(_3 != null && _3.length != 0) {
             buf.push("\"3\":[\"" + _3.join("\",\"") + "\"]");
         }
-        var _5 = obj["5"];
-        if(_5 != null)
-            buf.push("\"5\":" + _5);
-        var _6 = obj["6"];
-        if(_6 != null && _6.length != 0) {
+        var _4 = obj["4"];
+        if(_4 != null && _4.length != 0) {
             var b = [], fn = @org.waveprotocol.wave.examples.fedone.waveserver.WaveletVersion::stringify(Lorg/waveprotocol/wave/examples/fedone/waveserver/WaveletVersion;);
-            for(var i=0,l=_6.length; i<l; i++)
-                b.push(fn(_6[i]));
-            buf.push("\"6\":[" + b.join(",") + "]");
+            for(var i=0,l=_4.length; i<l; i++)
+                b.push(fn(_4[i]));
+            buf.push("\"4\":[" + b.join(",") + "]");
         }
 
         return buf.length == 0 ? "{}" : "{" + buf.join(",") + "}";
@@ -215,68 +212,49 @@ public class ProtocolOpenRequest extends JavaScriptObject  {
         array.push(waveletIdPrefix);
     }
 
-    // snapshots
+    // knownWavelet
 
-    public final native boolean getSnapshots() /*-{
-        return this["5"] || false;
+    public final native JsArray<WaveletVersion> getKnownWaveletArray() /*-{
+        return this["4"];
     }-*/;
 
-    public final native ProtocolOpenRequest setSnapshots(boolean snapshots) /*-{
-        this["5"] = snapshots;
-        return this;
-    }-*/;
-
-    public final native void clearSnapshots() /*-{
-        delete this["5"];
-    }-*/;
-
-    public final native boolean hasSnapshots() /*-{
-        return this["5"] != null;
-    }-*/;
-
-    // knownWavelets
-
-    public final native JsArray<WaveletVersion> getKnownWaveletsArray() /*-{
-        return this["6"];
-    }-*/;
-
-    public final java.util.List<WaveletVersion> getKnownWaveletsList() {
-        JsArray<WaveletVersion> array = getKnownWaveletsArray();
+    public final java.util.List<WaveletVersion> getKnownWaveletList() {
+        JsArray<WaveletVersion> array = getKnownWaveletArray();
         java.util.List<WaveletVersion> list = new java.util.ArrayList<WaveletVersion>();
         
         if (array == null) {
           return null; 
         }
-        for (int i=0; i < getKnownWaveletsCount(); i++) {
+        for (int i=0; i < getKnownWaveletCount(); i++) {
           list.add(array.get(i));
         }
         return list;
     }
 
-    public final native ProtocolOpenRequest setKnownWaveletsArray(JsArray<WaveletVersion> knownWavelets) /*-{
-        this["6"] = knownWavelets;
+    public final native ProtocolOpenRequest setKnownWaveletArray(JsArray<WaveletVersion> knownWavelet) /*-{
+        this["4"] = knownWavelet;
         return this;
     }-*/;
 
-    public final native JsArray<WaveletVersion> clearKnownWaveletsArray() /*-{
-        return (this["6"] = []);
+    public final native JsArray<WaveletVersion> clearKnownWaveletArray() /*-{
+        return (this["4"] = []);
     }-*/;
 
-    public final WaveletVersion getKnownWavelets(int index) {
-        JsArray<WaveletVersion> array = getKnownWaveletsArray();
+    public final WaveletVersion getKnownWavelet(int index) {
+        JsArray<WaveletVersion> array = getKnownWaveletArray();
         return array == null ? null : array.get(index);
     }
 
-    public final int getKnownWaveletsCount() {
-        JsArray<WaveletVersion> array = getKnownWaveletsArray();
+    public final int getKnownWaveletCount() {
+        JsArray<WaveletVersion> array = getKnownWaveletArray();
         return array == null ? 0 : array.length();
     }
 
-    public final void addKnownWavelets(WaveletVersion knownWavelets) {
-        JsArray<WaveletVersion> array = getKnownWaveletsArray();
+    public final void addKnownWavelet(WaveletVersion knownWavelet) {
+        JsArray<WaveletVersion> array = getKnownWaveletArray();
         if(array == null)
-            array = clearKnownWaveletsArray();
-        array.push(knownWavelets);
+            array = clearKnownWaveletArray();
+        array.push(knownWavelet);
     }
 
 

@@ -30,6 +30,26 @@ package waveserver;
 option java_package = "org.waveprotocol.wave.examples.fedone.waveserver";
 option java_outer_classname = "WaveClientRpc";
 
+/**
+ * Provides streaming wave views.
+ *
+ * A client requests a possibly filtered view of wavelets in a wave.
+ * The response stream contains first a snapshot for each wavelet
+ * currently in view, and then deltas for those wavelets. The end of
+ * the initial set of snapshots is indicated by a "marker" message.
+ * New wavelets may come into view after the marker, resulting in 
+ * another snapshot.
+ * 
+ * The client may indicate that it already has a snapshot for some wavelets
+ * by providing one or more known versions and signatures. If one matches
+ * the server history the server will not send a snapshot but will instead
+ * begin the stream with an empty delta specifying the resynchronization
+ * version.
+ * 
+ * TODO(anorth):
+ * - make the first response message a channel id only, then no more
+ *   channel ids
+ */
 service ProtocolWaveClientRpc {
   rpc Open (ProtocolOpenRequest) returns (ProtocolWaveletUpdate) {
     option (rpc.is_streaming_rpc) = true;
@@ -38,24 +58,18 @@ service ProtocolWaveClientRpc {
 }
 
 /**
- * A client requests updates for wavelets in the given waveId and accessible to the
- * given participant. All wavelets in the set will be streamed in version order,
- * starting at version 0.
- *
- * The default is that there is no order defined for update ordering by waveletId,
- * however for Index Waves (TODO: define this) these will be streamed
- * in date order, capped by the maximumWavelets parameter.
+ * A request to open a wave view.
  */
 message ProtocolOpenRequest {
+  // User making the request.
+  // TODO(anorth): Remove this, replacing it with the implicit logged-in user.
   required string participant_id = 1;
+  // Wave id to open.
   required string wave_id = 2;
+  // Wavelet id prefixes by which to filter the view, empty means no filter.
   repeated string wavelet_id_prefix = 3;
-  // OBSOLETE = 4;
-  // Set to true if client understands snapshots.
-  optional bool snapshots = 5 [default=false];
-  // Sent in a reconnect to tell the server about the client's current state
-  // TODO(arb): this is currently disabled, see the TODO in ClientFrontendImpl.
-  repeated WaveletVersion known_wavelets = 6;
+  // Known wavelet versions for resynchronization.
+  repeated WaveletVersion known_wavelet = 4;
 }
 
 // A pair of (wavelet id, wavelet version)

@@ -61,23 +61,16 @@ public final class WaveClientRpc {
       return waveletIdPrefix_.get(index);
     }
     
-    // optional bool snapshots = 5 [default = false];
-    public static final int SNAPSHOTS_FIELD_NUMBER = 5;
-    private boolean hasSnapshots;
-    private boolean snapshots_ = false;
-    public boolean hasSnapshots() { return hasSnapshots; }
-    public boolean getSnapshots() { return snapshots_; }
-    
-    // repeated .waveserver.WaveletVersion known_wavelets = 6;
-    public static final int KNOWN_WAVELETS_FIELD_NUMBER = 6;
-    private java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion> knownWavelets_ =
+    // repeated .waveserver.WaveletVersion known_wavelet = 4;
+    public static final int KNOWN_WAVELET_FIELD_NUMBER = 4;
+    private java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion> knownWavelet_ =
       java.util.Collections.emptyList();
-    public java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion> getKnownWaveletsList() {
-      return knownWavelets_;
+    public java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion> getKnownWaveletList() {
+      return knownWavelet_;
     }
-    public int getKnownWaveletsCount() { return knownWavelets_.size(); }
-    public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion getKnownWavelets(int index) {
-      return knownWavelets_.get(index);
+    public int getKnownWaveletCount() { return knownWavelet_.size(); }
+    public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion getKnownWavelet(int index) {
+      return knownWavelet_.get(index);
     }
     
     private void initFields() {
@@ -85,7 +78,7 @@ public final class WaveClientRpc {
     public final boolean isInitialized() {
       if (!hasParticipantId) return false;
       if (!hasWaveId) return false;
-      for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion element : getKnownWaveletsList()) {
+      for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion element : getKnownWaveletList()) {
         if (!element.isInitialized()) return false;
       }
       return true;
@@ -103,11 +96,8 @@ public final class WaveClientRpc {
       for (java.lang.String element : getWaveletIdPrefixList()) {
         output.writeString(3, element);
       }
-      if (hasSnapshots()) {
-        output.writeBool(5, getSnapshots());
-      }
-      for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion element : getKnownWaveletsList()) {
-        output.writeMessage(6, element);
+      for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion element : getKnownWaveletList()) {
+        output.writeMessage(4, element);
       }
       getUnknownFields().writeTo(output);
     }
@@ -135,13 +125,9 @@ public final class WaveClientRpc {
         size += dataSize;
         size += 1 * getWaveletIdPrefixList().size();
       }
-      if (hasSnapshots()) {
+      for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion element : getKnownWaveletList()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(5, getSnapshots());
-      }
-      for (org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion element : getKnownWaveletsList()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(6, element);
+          .computeMessageSize(4, element);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -289,9 +275,9 @@ public final class WaveClientRpc {
           result.waveletIdPrefix_ =
             java.util.Collections.unmodifiableList(result.waveletIdPrefix_);
         }
-        if (result.knownWavelets_ != java.util.Collections.EMPTY_LIST) {
-          result.knownWavelets_ =
-            java.util.Collections.unmodifiableList(result.knownWavelets_);
+        if (result.knownWavelet_ != java.util.Collections.EMPTY_LIST) {
+          result.knownWavelet_ =
+            java.util.Collections.unmodifiableList(result.knownWavelet_);
         }
         org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest returnMe = result;
         result = null;
@@ -321,14 +307,11 @@ public final class WaveClientRpc {
           }
           result.waveletIdPrefix_.addAll(other.waveletIdPrefix_);
         }
-        if (other.hasSnapshots()) {
-          setSnapshots(other.getSnapshots());
-        }
-        if (!other.knownWavelets_.isEmpty()) {
-          if (result.knownWavelets_.isEmpty()) {
-            result.knownWavelets_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion>();
+        if (!other.knownWavelet_.isEmpty()) {
+          if (result.knownWavelet_.isEmpty()) {
+            result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion>();
           }
-          result.knownWavelets_.addAll(other.knownWavelets_);
+          result.knownWavelet_.addAll(other.knownWavelet_);
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -367,14 +350,10 @@ public final class WaveClientRpc {
               addWaveletIdPrefix(input.readString());
               break;
             }
-            case 40: {
-              setSnapshots(input.readBool());
-              break;
-            }
-            case 50: {
+            case 34: {
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion.Builder subBuilder = org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion.newBuilder();
               input.readMessage(subBuilder, extensionRegistry);
-              addKnownWavelets(subBuilder.buildPartial());
+              addKnownWavelet(subBuilder.buildPartial());
               break;
             }
           }
@@ -464,72 +443,54 @@ public final class WaveClientRpc {
         return this;
       }
       
-      // optional bool snapshots = 5 [default = false];
-      public boolean hasSnapshots() {
-        return result.hasSnapshots();
+      // repeated .waveserver.WaveletVersion known_wavelet = 4;
+      public java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion> getKnownWaveletList() {
+        return java.util.Collections.unmodifiableList(result.knownWavelet_);
       }
-      public boolean getSnapshots() {
-        return result.getSnapshots();
+      public int getKnownWaveletCount() {
+        return result.getKnownWaveletCount();
       }
-      public Builder setSnapshots(boolean value) {
-        result.hasSnapshots = true;
-        result.snapshots_ = value;
-        return this;
+      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion getKnownWavelet(int index) {
+        return result.getKnownWavelet(index);
       }
-      public Builder clearSnapshots() {
-        result.hasSnapshots = false;
-        result.snapshots_ = false;
-        return this;
-      }
-      
-      // repeated .waveserver.WaveletVersion known_wavelets = 6;
-      public java.util.List<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion> getKnownWaveletsList() {
-        return java.util.Collections.unmodifiableList(result.knownWavelets_);
-      }
-      public int getKnownWaveletsCount() {
-        return result.getKnownWaveletsCount();
-      }
-      public org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion getKnownWavelets(int index) {
-        return result.getKnownWavelets(index);
-      }
-      public Builder setKnownWavelets(int index, org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion value) {
+      public Builder setKnownWavelet(int index, org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion value) {
         if (value == null) {
           throw new NullPointerException();
         }
-        result.knownWavelets_.set(index, value);
+        result.knownWavelet_.set(index, value);
         return this;
       }
-      public Builder setKnownWavelets(int index, org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion.Builder builderForValue) {
-        result.knownWavelets_.set(index, builderForValue.build());
+      public Builder setKnownWavelet(int index, org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion.Builder builderForValue) {
+        result.knownWavelet_.set(index, builderForValue.build());
         return this;
       }
-      public Builder addKnownWavelets(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion value) {
+      public Builder addKnownWavelet(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion value) {
         if (value == null) {
           throw new NullPointerException();
         }
-        if (result.knownWavelets_.isEmpty()) {
-          result.knownWavelets_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion>();
+        if (result.knownWavelet_.isEmpty()) {
+          result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion>();
         }
-        result.knownWavelets_.add(value);
+        result.knownWavelet_.add(value);
         return this;
       }
-      public Builder addKnownWavelets(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion.Builder builderForValue) {
-        if (result.knownWavelets_.isEmpty()) {
-          result.knownWavelets_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion>();
+      public Builder addKnownWavelet(org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion.Builder builderForValue) {
+        if (result.knownWavelet_.isEmpty()) {
+          result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion>();
         }
-        result.knownWavelets_.add(builderForValue.build());
+        result.knownWavelet_.add(builderForValue.build());
         return this;
       }
-      public Builder addAllKnownWavelets(
+      public Builder addAllKnownWavelet(
           java.lang.Iterable<? extends org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion> values) {
-        if (result.knownWavelets_.isEmpty()) {
-          result.knownWavelets_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion>();
+        if (result.knownWavelet_.isEmpty()) {
+          result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletVersion>();
         }
-        super.addAll(values, result.knownWavelets_);
+        super.addAll(values, result.knownWavelet_);
         return this;
       }
-      public Builder clearKnownWavelets() {
-        result.knownWavelets_ = java.util.Collections.emptyList();
+      public Builder clearKnownWavelet() {
+        result.knownWavelet_ = java.util.Collections.emptyList();
         return this;
       }
       
@@ -4263,48 +4224,47 @@ public final class WaveClientRpc {
       "waveserver/waveclient-rpc.proto\022\nwaveser" +
       "ver\0323org/waveprotocol/wave/examples/fedo" +
       "ne/rpc/rpc.proto\0326org/waveprotocol/wave/" +
-      "federation/federation.protodevel\"\247\001\n\023Pro" +
+      "federation/federation.protodevel\"\214\001\n\023Pro" +
       "tocolOpenRequest\022\026\n\016participant_id\030\001 \002(\t" +
       "\022\017\n\007wave_id\030\002 \002(\t\022\031\n\021wavelet_id_prefix\030\003" +
-      " \003(\t\022\030\n\tsnapshots\030\005 \001(\010:\005false\0222\n\016known_" +
-      "wavelets\030\006 \003(\0132\032.waveserver.WaveletVersi" +
-      "on\"_\n\016WaveletVersion\022\022\n\nwavelet_id\030\001 \002(\t",
-      "\0229\n\016hashed_version\030\002 \002(\0132!.federation.Pr" +
-      "otocolHashedVersion\"\312\001\n\020DocumentSnapshot" +
-      "\022\023\n\013document_id\030\001 \002(\t\022A\n\022document_operat" +
-      "ion\030\002 \002(\0132%.federation.ProtocolDocumentO" +
-      "peration\022\016\n\006author\030\003 \002(\t\022\023\n\013contributor\030" +
-      "\004 \003(\t\022\035\n\025last_modified_version\030\005 \002(\003\022\032\n\022" +
-      "last_modified_time\030\006 \002(\003\"\345\001\n\017WaveletSnap" +
-      "shot\022\022\n\nwavelet_id\030\001 \002(\t\022\026\n\016participant_" +
-      "id\030\002 \003(\t\022.\n\010document\030\003 \003(\0132\034.waveserver." +
-      "DocumentSnapshot\0222\n\007version\030\004 \002(\0132!.fede",
-      "ration.ProtocolHashedVersion\022\032\n\022last_mod" +
-      "ified_time\030\005 \002(\003\022\017\n\007creator\030\006 \002(\t\022\025\n\rcre" +
-      "ation_time\030\007 \002(\003\"Q\n\020WaveViewSnapshot\022\017\n\007" +
-      "wave_id\030\001 \002(\t\022,\n\007wavelet\030\002 \003(\0132\033.waveser" +
-      "ver.WaveletSnapshot\"\270\002\n\025ProtocolWaveletU" +
-      "pdate\022\024\n\014wavelet_name\030\001 \002(\t\0227\n\rapplied_d" +
-      "elta\030\002 \003(\0132 .federation.ProtocolWaveletD" +
-      "elta\0228\n\rcommit_notice\030\003 \001(\0132!.federation" +
-      ".ProtocolHashedVersion\022<\n\021resulting_vers" +
-      "ion\030\004 \001(\0132!.federation.ProtocolHashedVer",
-      "sion\022-\n\010snapshot\030\005 \001(\0132\033.waveserver.Wave" +
-      "letSnapshot\022\025\n\006marker\030\006 \001(\010:\005false\022\022\n\nch" +
-      "annel_id\030\007 \001(\t\"r\n\025ProtocolSubmitRequest\022" +
-      "\024\n\014wavelet_name\030\001 \002(\t\022/\n\005delta\030\002 \002(\0132 .f" +
-      "ederation.ProtocolWaveletDelta\022\022\n\nchanne" +
-      "l_id\030\003 \001(\t\"\230\001\n\026ProtocolSubmitResponse\022\032\n" +
-      "\022operations_applied\030\001 \002(\005\022\025\n\rerror_messa" +
-      "ge\030\002 \001(\t\022K\n hashed_version_after_applica" +
-      "tion\030\003 \001(\0132!.federation.ProtocolHashedVe" +
-      "rsion2\271\001\n\025ProtocolWaveClientRpc\022O\n\004Open\022",
-      "\037.waveserver.ProtocolOpenRequest\032!.waves" +
-      "erver.ProtocolWaveletUpdate\"\003\330>\001\022O\n\006Subm" +
-      "it\022!.waveserver.ProtocolSubmitRequest\032\"." +
-      "waveserver.ProtocolSubmitResponseBA\n0org" +
-      ".waveprotocol.wave.examples.fedone.waves" +
-      "erverB\rWaveClientRpc"
+      " \003(\t\0221\n\rknown_wavelet\030\004 \003(\0132\032.waveserver" +
+      ".WaveletVersion\"_\n\016WaveletVersion\022\022\n\nwav" +
+      "elet_id\030\001 \002(\t\0229\n\016hashed_version\030\002 \002(\0132!.",
+      "federation.ProtocolHashedVersion\"\312\001\n\020Doc" +
+      "umentSnapshot\022\023\n\013document_id\030\001 \002(\t\022A\n\022do" +
+      "cument_operation\030\002 \002(\0132%.federation.Prot" +
+      "ocolDocumentOperation\022\016\n\006author\030\003 \002(\t\022\023\n" +
+      "\013contributor\030\004 \003(\t\022\035\n\025last_modified_vers" +
+      "ion\030\005 \002(\003\022\032\n\022last_modified_time\030\006 \002(\003\"\345\001" +
+      "\n\017WaveletSnapshot\022\022\n\nwavelet_id\030\001 \002(\t\022\026\n" +
+      "\016participant_id\030\002 \003(\t\022.\n\010document\030\003 \003(\0132" +
+      "\034.waveserver.DocumentSnapshot\0222\n\007version" +
+      "\030\004 \002(\0132!.federation.ProtocolHashedVersio",
+      "n\022\032\n\022last_modified_time\030\005 \002(\003\022\017\n\007creator" +
+      "\030\006 \002(\t\022\025\n\rcreation_time\030\007 \002(\003\"Q\n\020WaveVie" +
+      "wSnapshot\022\017\n\007wave_id\030\001 \002(\t\022,\n\007wavelet\030\002 " +
+      "\003(\0132\033.waveserver.WaveletSnapshot\"\270\002\n\025Pro" +
+      "tocolWaveletUpdate\022\024\n\014wavelet_name\030\001 \002(\t" +
+      "\0227\n\rapplied_delta\030\002 \003(\0132 .federation.Pro" +
+      "tocolWaveletDelta\0228\n\rcommit_notice\030\003 \001(\013" +
+      "2!.federation.ProtocolHashedVersion\022<\n\021r" +
+      "esulting_version\030\004 \001(\0132!.federation.Prot" +
+      "ocolHashedVersion\022-\n\010snapshot\030\005 \001(\0132\033.wa",
+      "veserver.WaveletSnapshot\022\025\n\006marker\030\006 \001(\010" +
+      ":\005false\022\022\n\nchannel_id\030\007 \001(\t\"r\n\025ProtocolS" +
+      "ubmitRequest\022\024\n\014wavelet_name\030\001 \002(\t\022/\n\005de" +
+      "lta\030\002 \002(\0132 .federation.ProtocolWaveletDe" +
+      "lta\022\022\n\nchannel_id\030\003 \001(\t\"\230\001\n\026ProtocolSubm" +
+      "itResponse\022\032\n\022operations_applied\030\001 \002(\005\022\025" +
+      "\n\rerror_message\030\002 \001(\t\022K\n hashed_version_" +
+      "after_application\030\003 \001(\0132!.federation.Pro" +
+      "tocolHashedVersion2\271\001\n\025ProtocolWaveClien" +
+      "tRpc\022O\n\004Open\022\037.waveserver.ProtocolOpenRe",
+      "quest\032!.waveserver.ProtocolWaveletUpdate" +
+      "\"\003\330>\001\022O\n\006Submit\022!.waveserver.ProtocolSub" +
+      "mitRequest\032\".waveserver.ProtocolSubmitRe" +
+      "sponseBA\n0org.waveprotocol.wave.examples" +
+      ".fedone.waveserverB\rWaveClientRpc"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4316,7 +4276,7 @@ public final class WaveClientRpc {
           internal_static_waveserver_ProtocolOpenRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_ProtocolOpenRequest_descriptor,
-              new java.lang.String[] { "ParticipantId", "WaveId", "WaveletIdPrefix", "Snapshots", "KnownWavelets", },
+              new java.lang.String[] { "ParticipantId", "WaveId", "WaveletIdPrefix", "KnownWavelet", },
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest.class,
               org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest.Builder.class);
           internal_static_waveserver_WaveletVersion_descriptor =

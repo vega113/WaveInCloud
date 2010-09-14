@@ -84,10 +84,8 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
     }
     IdFilter waveletIdFilter = IdFilter.of(Collections.<WaveletId>emptySet(), request.getWaveletIdPrefixList());
 
-    frontend.openRequest(id, waveId, waveletIdFilter, request.getSnapshots(),
-        request.getKnownWaveletsCount() > 0 ? request.getKnownWaveletsList() : null,
+    frontend.openRequest(id, waveId, waveletIdFilter, request.getKnownWaveletList(),
         new ClientFrontend.OpenListener() {
-
           @Override
           public void onFailure(String errorMessage) {
             LOG.warning("openRequest failure: " + errorMessage);

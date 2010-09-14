@@ -50,6 +50,7 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -104,11 +105,13 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   @VisibleForTesting final Map<ParticipantId, UserManager> perUser;
   private final Map<WaveletName, PerWavelet> perWavelet;
   private final WaveletProvider waveletProvider;
+  private final HashedVersionFactory hashedVersionFactory;
 
   @Inject
   public ClientFrontendImpl(final HashedVersionFactory hashedVersionFactory,
       WaveletProvider waveletProvider, WaveBus wavebus) {
     this.waveletProvider = waveletProvider;
+    this.hashedVersionFactory = hashedVersionFactory;
     wavebus.subscribe(this);
     MapMaker mapMaker = new MapMaker();
     perWavelet = mapMaker.makeComputingMap(new Function<WaveletName, PerWavelet>() {
@@ -121,20 +124,23 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
     perUser = mapMaker.makeComputingMap(new Function<ParticipantId, UserManager>() {
       @Override
       public UserManager apply(ParticipantId from) {
-        return new UserManager(hashedVersionFactory);
+        return new UserManager();
       }
     });
   }
 
   @Override
   public void openRequest(ParticipantId participant, WaveId waveId, IdFilter waveletIdFilter,
-      boolean snapshotsEnabled, final List<WaveClientRpc.WaveletVersion> knownWavelets,
-      OpenListener openListener) {
-    String channel_id = generateChannelID();
+      Collection<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
+    LOG.info("received openRequest from " + participant + " for " + waveId + ", filter "
+        + waveletIdFilter + ", known wavelets: " + knownWavelets);
+    if (!knownWavelets.isEmpty()) {
+      openListener.onFailure("Known wavelets not supported");
+      return;
+    }
 
-    LOG.info("received openRequest from " + participant + " for waveId " + waveId + " snapshots: "
-        + snapshotsEnabled);
-    final boolean isIndexWave = IndexWave.isIndexWave(waveId);
+    String channel_id = generateChannelID();
+    boolean isIndexWave = IndexWave.isIndexWave(waveId);
     UserManager userManager = perUser.get(participant);
     synchronized (userManager) {
       Set<WaveletId> waveletIds = userManager.subscribe(waveId, waveletIdFilter, channel_id,
@@ -166,48 +172,35 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
           sourceWaveletName = waveletName;
         }
 
-        ProtocolHashedVersion startVersion;
-        if (knownWaveletVersions.containsKey(waveletName)) {
-          startVersion = knownWaveletVersions.get(waveletName);
-          // TODO(arb): needs to be startVersion++
-          // Known version is current version. We want current version + 1 to now.
-        } else {
-          startVersion = perWavelet.get(sourceWaveletName).version0;
-        }
-        ProtocolHashedVersion endVersion = userManager.getWaveletVersion(sourceWaveletName);
+        // TODO(anorth): if the client provides known wavelets, calculate
+        // where to start sending deltas from.
 
         List<ProtocolWaveletDelta> deltasToSend;
         WaveletSnapshotAndVersion snapshotToSend;
+        ProtocolHashedVersion endVersion = userManager.getWaveletVersion(sourceWaveletName);
 
-        if (isIndexWave || !snapshotsEnabled) {
+        if (isIndexWave) {
+          ProtocolHashedVersion startVersion = perWavelet.get(sourceWaveletName).version0;
           // Send deltas to bring the wavelet up to date
-          DeltaSequence sourceWaveletDeltas = new DeltaSequence(
-              waveletProvider.getHistory(sourceWaveletName, startVersion, endVersion),
-              endVersion);
-          if (isIndexWave) { // Construct fake index wave deltas from the deltas
-            String newDigest = perWavelet.get(sourceWaveletName).digest;
-            // Nuke the request, and just return new deltas from v0.
-            if (startVersion.getVersion() != 0) {
-              LOG.warning("resetting index wave version from: " + startVersion);
-            }
-            startVersion = perWavelet.get(sourceWaveletName).version0;
-            sourceWaveletDeltas = IndexWave.createIndexDeltas(startVersion.getVersion(), sourceWaveletDeltas,
-                "", newDigest);
-          }
+          DeltaSequence sourceWaveletDeltas =
+              new DeltaSequence(waveletProvider.getHistory(sourceWaveletName, startVersion,
+                  endVersion), endVersion);
+          // Construct fake index wave deltas from the deltas
+          String newDigest = perWavelet.get(sourceWaveletName).digest;
+          sourceWaveletDeltas = IndexWave.createIndexDeltas(startVersion.getVersion(),
+              sourceWaveletDeltas, "", newDigest);
+
           deltasToSend = sourceWaveletDeltas;
           endVersion = sourceWaveletDeltas.getEndVersion();
           snapshotToSend = null;
         } else {
           // Send a snapshot of the current state.
+          // TODO(anorth): calculate resync point if the client already knows
+          // a snapshot.
           deltasToSend = Collections.emptyList();
           snapshotToSend = waveletProvider.getSnapshot(sourceWaveletName);
+          endVersion = snapshotToSend.snapshot.getVersion();
         }
-
-        // TODO: Once we've made sure that all listeners have received the
-        // same number of ops for the index wavelet, enable the following check:
-        //if (!deltaList.getEndVersion().equals(userManager.getWaveletVersion(waveletName))) {
-        //  throw new IllegalStateException(..)
-        // }
 
         LOG.info("snapshot in response is: " + (snapshotToSend == null));
         if (snapshotToSend == null) {
@@ -221,8 +214,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         }
       }
 
-      final WaveletName dummyWaveletName = createDummyWaveletName(waveId);
-
+      WaveletName dummyWaveletName = createDummyWaveletName(waveId);
       if (waveletIds.size() == 0) {
         // Send message with just the channel id.
         LOG.info("sending just a channel id for " + dummyWaveletName);
@@ -280,9 +272,10 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
     }
   }
 
-  private void participantAddedToWavelet(WaveletName waveletName, ParticipantId participant) {
+  private void participantAddedToWavelet(WaveletName waveletName, ParticipantId participant,
+      ProtocolHashedVersion version) {
     perWavelet.get(waveletName).participants.add(participant);
-    perUser.get(participant).addWavelet(waveletName);
+    perUser.get(participant).addWavelet(waveletName, version);
   }
 
   private void participantRemovedFromWavelet(WaveletName waveletName, ParticipantId participant) {
@@ -292,35 +285,26 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
 
   /**
    * Sends new deltas to a particular user on a particular wavelet, and also
-   * generates fake deltas for the index wavelet. If the user was added,
-   * requests missing deltas from the waveletProvider. Updates the participants
-   * of the specified wavelet if the participant was added or removed.
+   * generates fake deltas for the index wavelet. Updates the participants of
+   * the specified wavelet if the participant was added or removed.
    *
    * @param waveletName which the deltas belong to
    * @param participant on the wavelet
-   * @param newDeltas newly arrived deltas of relevance for participant.
-   *        Must not be empty.
+   * @param newDeltas newly arrived deltas of relevance for participant. Must
+   *        not be empty.
    * @param add whether the participant is added by the first delta
    * @param remove whether the participant is removed by the last delta
    * @param oldDigest The digest text of the wavelet before the deltas are
-   *                  applied (but including all changes from preceding deltas)
-   * @param newDigest The digest text of the wavelet after the deltas are applied
+   *        applied (but including all changes from preceding deltas)
+   * @param newDigest The digest text of the wavelet after the deltas are
+   *        applied
    */
   @VisibleForTesting
   void participantUpdate(WaveletName waveletName, ParticipantId participant,
       DeltaSequence newDeltas, boolean add, boolean remove, String oldDigest, String newDigest) {
-    final DeltaSequence deltasToSend;
-    if (add && newDeltas.getStartVersion().getVersion() > 0) {
-      ProtocolHashedVersion version0 = perWavelet.get(waveletName).version0;
-      ProtocolHashedVersion firstKnownDelta = newDeltas.getStartVersion();
-      deltasToSend = newDeltas.prepend(
-          waveletProvider.getHistory(waveletName, version0, firstKnownDelta));
-      oldDigest = "";
-    } else {
-      deltasToSend = newDeltas;
-    }
+    DeltaSequence deltasToSend = newDeltas;
     if (add) {
-      participantAddedToWavelet(waveletName, participant);
+      participantAddedToWavelet(waveletName, participant, newDeltas.getStartVersion());
     }
     perUser.get(participant).onUpdate(waveletName, deltasToSend);
     if (remove) {
@@ -331,7 +315,9 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
     if (IndexWave.canBeIndexed(waveletName)) {
       WaveletName indexWaveletName = IndexWave.indexWaveletNameFor(waveletName.waveId);
       if (add) {
-        participantAddedToWavelet(indexWaveletName, participant);
+        ProtocolHashedVersion v0 = CoreWaveletOperationSerializer.serialize(
+            hashedVersionFactory.createVersionZero(waveletName));
+        participantAddedToWavelet(indexWaveletName, participant, v0);
       }
       ProtocolHashedVersion indexVersion =
           perUser.get(participant).getWaveletVersion(indexWaveletName);

@@ -27,9 +27,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.internal.Nullable;
 
-import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
@@ -229,12 +227,6 @@ final class UserManager {
    */
   private final Map<WaveletName, ProtocolHashedVersion> currentVersion = Maps.newHashMap();
 
-  private final HashedVersionFactory hashedVersionFactory;
-
-  UserManager(HashedVersionFactory hashedVersionFactory) {
-    this.hashedVersionFactory = hashedVersionFactory;
-  }
-
   /** Whether this user is a participant on the specified wavelet. */
   synchronized boolean isParticipant(WaveletName waveletName) {
     return currentVersion.containsKey(waveletName);
@@ -288,10 +280,11 @@ final class UserManager {
     if (deltas.isEmpty()) {
       return;
     }
-    long version = deltas.getStartVersion().getVersion();
+    long deltaVersion = deltas.getStartVersion().getVersion();
     long expectedVersion = currentVersion.get(waveletName).getVersion();
-    Preconditions.checkArgument(expectedVersion == version, "Expected startVersion %s, got %s",
-        expectedVersion, version);
+    Preconditions.checkArgument(expectedVersion == deltaVersion,
+        "Expected delta at version %s, was %s for wavelet %s", expectedVersion, deltaVersion,
+        waveletName);
     currentVersion.put(waveletName, deltas.getEndVersion());
 
     List<Subscription> subscriptions = matchSubscriptions(waveletName);
@@ -387,12 +380,11 @@ final class UserManager {
   /**
    * Notifies that the user has been added to the specified wavelet.
    */
-  synchronized void addWavelet(WaveletName waveletName) {
+  synchronized void addWavelet(WaveletName waveletName, ProtocolHashedVersion version) {
     Preconditions.checkState(!isParticipant(waveletName), "Already a participant of %s",
         waveletName);
     waveletIds.get(waveletName.waveId).add(waveletName.waveletId);
-    currentVersion.put(waveletName, CoreWaveletOperationSerializer.serialize(hashedVersionFactory
-        .createVersionZero(waveletName)));
+    currentVersion.put(waveletName, version);
   }
 
   /**

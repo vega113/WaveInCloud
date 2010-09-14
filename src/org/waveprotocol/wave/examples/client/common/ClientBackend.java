@@ -413,7 +413,6 @@ public class ClientBackend {
     openRequest.setParticipantId(getUserId().getAddress());
     openRequest.setWaveId(waveId.serialise());
     openRequest.addWaveletIdPrefix(waveletIdPrefix);
-    openRequest.setSnapshots(true);
 
     final RpcController rpcController = rpcChannel.newRpcController();
     waveControllers.put(waveId, rpcController);

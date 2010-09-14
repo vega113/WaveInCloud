@@ -33,6 +33,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -89,8 +90,7 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
 
   @Override
   public void openRequest(ParticipantId participant, WaveId waveId, IdFilter waveletIdFilter,
-      boolean snapshotsEnabled, final List<WaveClientRpc.WaveletVersion> knownWavelets,
-      OpenListener openListener) {
+      Collection<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
     openListeners.put(waveId, openListener);
   }
 

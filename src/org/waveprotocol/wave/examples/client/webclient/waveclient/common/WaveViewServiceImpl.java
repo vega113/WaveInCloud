@@ -381,7 +381,6 @@ public class WaveViewServiceImpl implements WaveViewService {
     } else {
       openRequest.addWaveletIdPrefix("");
     }
-    openRequest.setSnapshots(false);
     for (CoreWaveletData wavelet : getWavelets()) {
       HashedVersion waveletVersion = getWaveletVersion(wavelet.getWaveletName().waveletId);
       ProtocolHashedVersion hashedVersion;
@@ -392,12 +391,12 @@ public class WaveViewServiceImpl implements WaveViewService {
       } else {
         hashedVersion = CoreWaveletOperationSerializer.serialize(waveletVersion);
       }
-      openRequest.addKnownWavelets(WaveletVersion.create()
+      openRequest.addKnownWavelet(WaveletVersion.create()
           .setHashedVersion(hashedVersion)
           .setWaveletId(wavelet.getWaveletName().waveletId.serialise()));
     }
     LOG.info("Opening wave " + waveId + " for prefix \"" + waveletIdPrefix
-        + "\" with " + openRequest.getKnownWaveletsCount() + " known wavelets.");
+        + "\" with " + openRequest.getKnownWaveletCount() + " known wavelets.");
     clientBackend.sendRequest(openRequest, null);
   }
 

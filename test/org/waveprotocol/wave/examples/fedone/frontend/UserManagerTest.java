@@ -27,7 +27,6 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -66,6 +65,7 @@ public class UserManagerTest extends TestCase {
     serialize(new CoreWaveletDelta(USER, ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE)),
         HashedVersion.UNSIGNED_VERSION_0);
 
+  private static final ProtocolHashedVersion V0 = serialize(HashedVersion.UNSIGNED_VERSION_0);
   private static final ProtocolHashedVersion END_VERSION = serialize(HashedVersion.unsigned(2));
 
   private static final DeltaSequence DELTAS =
@@ -76,14 +76,14 @@ public class UserManagerTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    m = new UserManager(new HashedVersionFactoryImpl());
+    m = new UserManager();
   }
 
   /** Tests that adding an existing participant throws an exception. */
   public void testAddExistingParticipant() {
-    m.addWavelet(W1A);
+    m.addWavelet(W1A, V0);
     try {
-      m.addWavelet(W1A);
+      m.addWavelet(W1A, V0);
       fail("Should have thrown IllegalStateException");
     } catch (IllegalStateException expected) {
       // pass
@@ -103,9 +103,9 @@ public class UserManagerTest extends TestCase {
   /** Tests that isParticipant() agrees with added and removed wavelets. */
   public void testIsParticipant() {
     assertFalse(m.isParticipant(W1A));
-    m.addWavelet(W2A);
+    m.addWavelet(W2A, V0);
     assertFalse(m.isParticipant(W1A));
-    m.addWavelet(W1A);
+    m.addWavelet(W1A, V0);
     assertTrue(m.isParticipant(W1A));
     m.removeWavelet(W1A);
     assertFalse(m.isParticipant(W1A));
@@ -117,12 +117,12 @@ public class UserManagerTest extends TestCase {
    */
   public void testGetWaveletIds() {
     assertEquals(ImmutableSet.<WaveletId>of(), m.getWaveletIds(W1));
-    m.addWavelet(W1A);
+    m.addWavelet(W1A, V0);
     assertEquals(ImmutableSet.<WaveletId>of(WA), m.getWaveletIds(W1));
-    m.addWavelet(W2A);
+    m.addWavelet(W2A, V0);
     assertEquals(ImmutableSet.<WaveletId>of(WA), m.getWaveletIds(W1));
     assertEquals(ImmutableSet.<WaveletId>of(WA), m.getWaveletIds(W2));
-    m.addWavelet(W2B);
+    m.addWavelet(W2B, V0);
     assertEquals(ImmutableSet.<WaveletId>of(WA, WB), m.getWaveletIds(W2));
     m.removeWavelet(W1A);
     assertEquals(ImmutableSet.<WaveletId>of(), m.getWaveletIds(W1));
@@ -187,7 +187,7 @@ public class UserManagerTest extends TestCase {
     checkListenersMatchSubscriptions(ImmutableList.of(l1, l2, l5), m.matchSubscriptions(W2A));
     checkListenersMatchSubscriptions(ImmutableList.of(l2, l5), m.matchSubscriptions(W2B));
 
-    m.addWavelet(W2B); // Doesn't make any difference
+    m.addWavelet(W2B, V0); // Doesn't make any difference
     checkListenersMatchSubscriptions(ImmutableList.of(l1, l2, l5), m.matchSubscriptions(W2A));
     checkListenersMatchSubscriptions(ImmutableList.of(l2, l5), m.matchSubscriptions(W2B));
   }
@@ -235,7 +235,7 @@ public class UserManagerTest extends TestCase {
    * number 0 to a wavelet we're subscribed to succeeds.
    */
   public void testUpdateSingleDeltaVersion() {
-    m.addWavelet(W1A);
+    m.addWavelet(W1A, V0);
     m.onUpdate(W1A, DELTAS); // pass
   }
 
@@ -254,12 +254,12 @@ public class UserManagerTest extends TestCase {
     ProtocolWaveletDelta delta2 = ProtocolWaveletDelta.newBuilder().setAuthor(
         USER.getAddress()).addOperation(noOp).setHashedVersion(v2).build();
 
-    m.addWavelet(W1A);
+    m.addWavelet(W1A, V0);
     ProtocolHashedVersion endVersion2 = serialize(HashedVersion.unsigned(3));
     m.onUpdate(W1A, new DeltaSequence(ImmutableList.of(DELTA, delta2), endVersion2)); // success
 
     // Also succeeds when sending the two deltas via separate onUpdates()
-    m.addWavelet(W2A);
+    m.addWavelet(W2A, V0);
     m.onUpdate(W2A, DELTAS); // success
     m.onUpdate(W2A, new DeltaSequence(ImmutableList.of(delta2), endVersion2)); // success
   }
@@ -283,7 +283,7 @@ public class UserManagerTest extends TestCase {
     };
     String channelId = "";
 
-    m.addWavelet(W1A);
+    m.addWavelet(W1A, V0);
     m.subscribe(W1, IdFilters.ALL_IDS, channelId, listener);
     m.onUpdate(W1A, DeltaSequence.empty(serialize(HashedVersion.UNSIGNED_VERSION_0)));
     assertEquals(0, updates.get());

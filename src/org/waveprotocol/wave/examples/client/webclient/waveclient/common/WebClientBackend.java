@@ -387,7 +387,6 @@ public class WebClientBackend {
     } else {
       openRequest.addWaveletIdPrefix("");
     }
-    openRequest.setSnapshots(true);
     LOG.info("Opening wave " + waveId + " for prefix \"" + waveletIdPrefix + '"');
     sendMessage(openRequest, null);
 

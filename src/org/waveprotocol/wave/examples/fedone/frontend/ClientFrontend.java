@@ -28,6 +28,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
+import java.util.Collection;
 import java.util.List;
 
 
@@ -68,18 +69,16 @@ public interface ClientFrontend {
       SubmitResultListener listener);
 
   /**
-   * Request to open a Wave. Optional waveletIdPrefixes allows the requestor to
+   * Request to open a Wave. Optional waveletIdPrefixes allows the requester to
    * constrain which wavelets to include in the updates.
    *
    * @param participant which is doing the requesting.
    * @param waveId the wave id.
    * @param waveletIdFilter filter over wavelets to open
-   * @param snapshotsEnabled true if the client understands snapshots
-   * @param knownWavelets a list of (waveletid, waveletversion pairs).
-   *                      the server will send deltas to update the client to current.
+   * @param knownWavelets a collection of wavelet versions the client already
+   *        knows
    * @param openListener callback for updates.
    */
   void openRequest(ParticipantId participant, WaveId waveId, IdFilter waveletIdFilter,
-      boolean snapshotsEnabled, final List<WaveClientRpc.WaveletVersion> knownWavelets,
-      OpenListener openListener);
+      Collection<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener);
 }
