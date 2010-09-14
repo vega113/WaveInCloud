@@ -39,8 +39,12 @@ import java.util.Collection;
 
 
 /**
- * Utility class for serialising/deserialising wavelet operations (and their
+ * Utility class for serialising/deserialising model objects (and their
  * components) to/from their protocol buffer representations.
+ *
+ * NOTE: This class is mirrored in the client. Any changes here should also be
+ * made in
+ * {@link org.waveprotocol.wave.examples.client.webclient.common.SnapshotSerializer}
  *
  * @author Joseph Gentle (josephg@gmail.com)
  */
@@ -85,7 +89,7 @@ public class SnapshotSerializer {
    * @throws OperationException if the ops in the snapshot can not be applied.
    * @throws InvalidParticipantAddress
    */
-  public static WaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
+  public static ObservableWaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
       throws OperationException, InvalidParticipantAddress {
     WaveletName name = WaveletName.of(waveId, WaveletId.deserialise(snapshot.getWaveletId()));
     ObservableWaveletData wavelet = WaveletDataUtil.createEmptyWavelet(name,
@@ -108,7 +112,8 @@ public class SnapshotSerializer {
   }
 
   /**
-   * Serialize a document to a document snapshot
+   * Serializes a document to a document snapshot.
+   * 
    * @param document The document to serialize
    * @return A snapshot of the given document
    */

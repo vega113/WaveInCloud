@@ -23,21 +23,25 @@ import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 
+import org.waveprotocol.wave.client.debug.logger.DomLogger;
+import org.waveprotocol.wave.common.logging.LoggerBundle;
 import org.waveprotocol.wave.common.util.GwtWaverefEncoder;
+import org.waveprotocol.wave.examples.client.webclient.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.client.webclient.common.communication.callback.SimpleCallback;
-import org.waveprotocol.wave.examples.client.webclient.util.Log;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveViewSnapshot;
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
+import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 
 /**
- * Helper class to fetch wavelet snapshots using the static snapshot fetch 
- * service.
+ * Helper class to fetch wavelet snapshots using the snapshot fetch service.
  *
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public final class SnapshotFetcher {
-  private static Log LOG = Log.get(SnapshotFetcher.class);
+  private static final LoggerBundle LOG = new DomLogger("SnapshotFetcher");
   private static final String FETCH_URL_BASE = "/fetch";
   
   private SnapshotFetcher() {}
@@ -48,21 +52,21 @@ public final class SnapshotFetcher {
   }
   
   /**
-   * Fetch a wave view snapshot from the static fetch servlet.
+   * Fetches a wave view snapshot from the static fetch servlet.
    * 
    * @param waveId The wave to fetch
    * @param callback A callback through which the fetched wave will be returned.
    */
-  public static void fetchWave(WaveId waveId,
-      final SimpleCallback<WaveSnapshot, Throwable> callback) {
+  public void fetchWave(WaveId waveId,
+      final SimpleCallback<WaveViewData, Throwable> callback) {
     String url = getUrl(WaveRef.of(waveId));
-    LOG.info("Fetching wavelet " + waveId.toString() + " at " + url);
-    
+    LOG.trace().log("Fetching wavelet ", waveId.toString(), " at ", url);
+
     RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, url);
     requestBuilder.setCallback(new RequestCallback() {
       @Override
       public void onResponseReceived(Request request, Response response) {
-        LOG.info("Snapshot response recieved: " + response.getText());
+        LOG.trace().log("Snapshot response recieved: ", response.getText());
         // Pull the snapshot out of the response object and return it using
         // the provided callback function.
         if (response.getStatusCode() != Response.SC_OK) {
@@ -70,21 +74,25 @@ public final class SnapshotFetcher {
         } else if (!response.getHeader("Content-Type").startsWith("application/json")) {
           callback.onFailure(new RuntimeException("Fetch service did not return json"));
         } else {
-          WaveSnapshot snapshot;
+          WaveViewData waveView;
           try {
-            snapshot = WaveSnapshot.parse(response.getText());
-          } catch (Throwable e) {
+            WaveViewSnapshot snapshot = WaveViewSnapshot.parse(response.getText());
+            waveView = SnapshotSerializer.deserializeWave(snapshot);
+          } catch (OperationException e) {
+            callback.onFailure(e);
+            return;
+          } catch (InvalidParticipantAddress e) {
             callback.onFailure(e);
             return;
           }
           
-          callback.onSuccess(snapshot);
+          callback.onSuccess(waveView);
         }
       }
     
       @Override
       public void onError(Request request, Throwable exception) {
-        LOG.info("Snapshot error: " + exception.toString());
+        LOG.error().log("Snapshot error: ", exception);
         callback.onFailure(exception);
       }
     });
