@@ -15,11 +15,12 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.common;
+package org.waveprotocol.wave.examples.client.webclient.common;
 
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.DocumentSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveViewSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshot;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
@@ -28,13 +29,14 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.util.CollectionUtils;
-import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableBlipData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 
 import java.util.Collection;
 
@@ -43,9 +45,9 @@ import java.util.Collection;
  * Utility class for serialising/deserialising model objects (and their
  * components) to/from their protocol buffer representations.
  *
- * NOTE: This class is mirrored in the client. Any changes here should also be
+ * NOTE: This class is mirrored in the server. Any changes here should also be
  * made in
- * {@link org.waveprotocol.wave.examples.client.webclient.common.SnapshotSerializer}
+ * {@link org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer}
  *
  * @author Joseph Gentle (josephg@gmail.com)
  */
@@ -84,7 +86,7 @@ public class SnapshotSerializer {
 
   /**
    * Deserializes the snapshot contained in the {@link WaveletSnapshot}
-   * into an {@link ObservableWaveletData}.
+   * into a {@link WaveletData}.
    *
    * @param snapshot the {@link WaveletSnapshot} to deserialize.
    * @throws OperationException if the ops in the snapshot can not be applied.
@@ -94,18 +96,18 @@ public class SnapshotSerializer {
       throws OperationException, InvalidParticipantAddress {
     WaveletName name = WaveletName.of(waveId, WaveletId.deserialise(snapshot.getWaveletId()));
     ObservableWaveletData wavelet = WaveletDataUtil.createEmptyWavelet(name,
-        getParticipantId(snapshot.getCreator()), snapshot.getCreationTime());
+        ParticipantId.of(snapshot.getCreator()), (long) snapshot.getCreationTime());
 
     for (String participant : snapshot.getParticipantIdList()) {
-      wavelet.addParticipant(getParticipantId(participant));
+      wavelet.addParticipant(ParticipantId.of(participant));
     }
 
     for (DocumentSnapshot document : snapshot.getDocumentList()) {
       addDocumentSnapshotToWavelet(document, wavelet);
     }
 
-    wavelet.setVersion(snapshot.getVersion().getVersion());
-    wavelet.setLastModifiedTime(snapshot.getLastModifiedTime());
+    wavelet.setVersion((long) snapshot.getVersion().getVersion());
+    wavelet.setLastModifiedTime((long) snapshot.getLastModifiedTime());
     // The creator and creation time are set when the empty wavelet template is
     // created above.
 
@@ -135,15 +137,6 @@ public class SnapshotSerializer {
     return builder.build();
   }
 
-  // TODO(ljvderijk): Should be removed once the AbstractWaveletData changes
-  private static ParticipantId getParticipantId(String address) throws InvalidParticipantAddress {
-    if (address.equals(Constants.DATA_AUTHOR.getAddress())) {
-      return Constants.DATA_AUTHOR;
-    } else {
-      return ParticipantId.of(address);
-    }
-  }
-
   private static void addDocumentSnapshotToWavelet(
       DocumentSnapshot snapshot, WaveletData container) throws InvalidParticipantAddress {
     DocOp op = CoreWaveletOperationSerializer.deserialize(snapshot.getDocumentOperation());
@@ -151,14 +144,33 @@ public class SnapshotSerializer {
 
     Collection<ParticipantId> contributors = CollectionUtils.newArrayList();
     for (String p : snapshot.getContributorList()) {
-      contributors.add(getParticipantId(p));
+      contributors.add(ParticipantId.of(p));
     }
     container.createBlip(
         snapshot.getDocumentId(),
-        getParticipantId(snapshot.getAuthor()),
+        ParticipantId.of(snapshot.getAuthor()),
         contributors,
         docInit,
-        snapshot.getLastModifiedTime(),
-        snapshot.getLastModifiedVersion());
+        (long) snapshot.getLastModifiedTime(),
+        (long) snapshot.getLastModifiedVersion());
+  }
+  
+  /**
+   * Deserialize a wave view snapshot into a WaveViewData object
+   * 
+   * @param snapshot the snapshot to deserialize
+   * @return the deserialized snapshot
+   * @throws OperationException
+   * @throws InvalidParticipantAddress
+   */
+  public static WaveViewData deserializeWave(WaveViewSnapshot snapshot)
+      throws OperationException, InvalidParticipantAddress {
+    WaveId waveId = WaveId.deserialise(snapshot.getWaveId());
+    Collection<ObservableWaveletData> wavelets = CollectionUtils.newArrayList();
+    for (WaveletSnapshot s : snapshot.getWaveletList()) {
+      wavelets.add(deserializeWavelet(s, waveId));
+    }
+    
+    return new WaveViewDataImpl(waveId, wavelets);
   }
 }
