@@ -29,14 +29,17 @@ import org.waveprotocol.wave.examples.client.common.IndexEntry;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
+import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreNoOp;
 import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
@@ -44,6 +47,7 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -83,31 +87,53 @@ public final class IndexWave {
   }
 
   /**
-   * Constructs the deltas that should be applied to and index wave wavelet when
-   * the corresponding original wavelet receives deltas digest changes.
+   * Constructs the deltas for an index wave wavelet in response to deltas on an
+   * original conversation wavelet.
    *
-   *  The returned deltas will have the same effect on the participants as the
-   * original deltas. The effect of the returned deltas on the document's digest
-   * are purely a function of oldDigest and newDigest, which should represent
-   * the change implied by deltas.
+   * The created delta sequence will have the same effect on the participants as
+   * the original deltas and will update the digest as a function of oldDigest
+   * and newDigest. The sequence may contain no-ops to pad it to the same length
+   * as the source deltas.
    *
-   * @param targetVersion version the deltas should start at
-   * @param deltas The deltas whose effect on the participants to determine
+   * @param sourceDeltas conversational deltas to process
+   * @param oldDigest the current index digest
+   * @param newDigest the new digest
    * @return deltas to apply to the index wavelet to achieve the same change in
    *         participants, and the specified change in digest text
    */
-  static DeltaSequence createIndexDeltas(
-      long targetVersion, DeltaSequence deltas, String oldDigest, String newDigest) {
-    ProtocolWaveletDelta digestDelta = createDigestDelta(targetVersion, oldDigest, newDigest);
-    if (digestDelta != null) {
-      targetVersion += digestDelta.getOperationCount();
+  static DeltaSequence createIndexDeltas(long targetVersion, DeltaSequence sourceDeltas,
+      String oldDigest, String newDigest) {
+    long numSourceOps = sourceDeltas.getEndVersion().getVersion() - targetVersion;
+    List<CoreWaveletDelta> indexDeltas = createParticipantDeltas(sourceDeltas);
+    long numIndexOps = numOpsInDeltas(indexDeltas);
+
+    if (numIndexOps < numSourceOps) {
+      indexDeltas.add(createDigestDelta(targetVersion, oldDigest, newDigest));
+      numIndexOps += 1;
     }
-    DeltaSequence participantDeltas = createParticipantDeltas(targetVersion, deltas);
-    if (digestDelta == null) {
-      return participantDeltas;
-    } else {
-      return participantDeltas.prepend(ImmutableList.of(digestDelta));
+
+    if (numIndexOps < numSourceOps) {
+      // Append no-ops.
+      long numNoOps = numSourceOps - numIndexOps;
+      List<CoreWaveletOperation> noOps = Lists.newArrayList();
+      for (long i = 0; i < numNoOps; ++i) {
+        noOps.add(CoreNoOp.INSTANCE);
+      }
+      CoreWaveletDelta noOpDelta = new CoreWaveletDelta(DIGEST_AUTHOR, noOps);
+      indexDeltas.add(noOpDelta);
     }
+
+    ProtocolHashedVersion endVersion = CoreWaveletOperationSerializer.serialize(
+        HashedVersion.unsigned(sourceDeltas.getEndVersion().getVersion()));
+    return new DeltaSequence(asProtoDeltas(indexDeltas, targetVersion), endVersion);
+  }
+
+  private static long numOpsInDeltas(List<CoreWaveletDelta> deltas) {
+    long sum = 0;
+    for (CoreWaveletDelta d : deltas) {
+      sum += d.getOperations().size();
+    }
+    return sum;
   }
 
   /**
@@ -181,22 +207,24 @@ public final class IndexWave {
   }
 
   /**
+   * Extracts a wavelet name referring to the conversational root wavelet in the
+   * wave referred to by an index wavelet name.
+   */
+  static WaveletName waveletNameFromIndexWavelet(WaveletName indexWaveletName) {
+    return WaveletName.of(IndexWave.waveIdFromIndexWavelet(indexWaveletName), new WaveletId(
+        indexWaveletName.waveletId.getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET));
+  }
+
+  /**
    * Constructs a delta with one op which transforms the digest document from
    * one digest string to another.
-   *
-   * @return a delta, or null if no op is required
    */
-  private static ProtocolWaveletDelta createDigestDelta(
-      long targetVersion, String oldDigest, String newDigest) {
-    if (oldDigest.equals(newDigest)) {
-      return null;
-    } else {
-      CoreWaveletOperation op =
-          new CoreWaveletDocumentOperation(DIGEST_DOCUMENT_ID, createEditOp(oldDigest, newDigest));
-      CoreWaveletDelta indexDelta = new CoreWaveletDelta(DIGEST_AUTHOR, ImmutableList.of(op));
-      return CoreWaveletOperationSerializer.serialize(indexDelta,
-          HashedVersion.unsigned(targetVersion));
-    }
+  private static CoreWaveletDelta createDigestDelta(long targetVersion, String oldDigest,
+      String newDigest) {
+    CoreWaveletOperation op =
+        new CoreWaveletDocumentOperation(DIGEST_DOCUMENT_ID, createEditOp(oldDigest, newDigest));
+    CoreWaveletDelta delta = new CoreWaveletDelta(DIGEST_AUTHOR, ImmutableList.of(op));
+    return delta;
   }
 
   /** Constructs a BufferedDocOp that transforms source into target. */
@@ -216,9 +244,9 @@ public final class IndexWave {
   }
 
   /** Extracts participant change operations from a delta sequence. */
-  private static DeltaSequence createParticipantDeltas(
-      long version, Iterable<ProtocolWaveletDelta> deltas) {
-    List<ProtocolWaveletDelta> participantDeltas = Lists.newArrayList();
+  private static List<CoreWaveletDelta> createParticipantDeltas(
+      Iterable<ProtocolWaveletDelta> deltas) {
+    List<CoreWaveletDelta> participantDeltas = Lists.newArrayList();
     for (ProtocolWaveletDelta protoDelta : deltas) {
       CoreWaveletDelta delta = CoreWaveletOperationSerializer.deserialize(protoDelta).delta;
       List<CoreWaveletOperation> participantOps = Lists.newArrayList();
@@ -228,14 +256,10 @@ public final class IndexWave {
         }
       }
       if (!participantOps.isEmpty()) {
-        CoreWaveletDelta indexDelta = new CoreWaveletDelta(delta.getAuthor(), participantOps);
-        participantDeltas.add(
-            CoreWaveletOperationSerializer.serialize(indexDelta, HashedVersion.unsigned(version)));
-        version += indexDelta.getOperations().size();
+        participantDeltas.add(new CoreWaveletDelta(delta.getAuthor(), participantOps));
       }
     }
-    return new DeltaSequence(participantDeltas,
-        CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(version)));
+    return participantDeltas;
   }
 
   /**
@@ -254,5 +278,45 @@ public final class IndexWave {
       result++;
     }
     return result;
+  }
+
+  /**
+   * Adapts CoreWaveletDeltas as ProtocolWaveletDeltas beginning at some target
+   * version.
+   */
+  private static Iterable<ProtocolWaveletDelta> asProtoDeltas(
+      final Iterable<CoreWaveletDelta> deltas, final long targetVersion) {
+    return new Iterable<ProtocolWaveletDelta>() {
+      @Override
+      public Iterator<ProtocolWaveletDelta> iterator() {
+        return new Iterator<ProtocolWaveletDelta>() {
+
+          Iterator<CoreWaveletDelta> inner = deltas.iterator();
+          HashedVersion nextTargetVersion = HashedVersion.unsigned(targetVersion);
+
+          @Override
+          public boolean hasNext() {
+            return inner.hasNext();
+          }
+
+          @Override
+          public ProtocolWaveletDelta next() {
+            CoreWaveletDelta nextCore = inner.next();
+            try {
+              return CoreWaveletOperationSerializer.serialize(nextCore, nextTargetVersion);
+            } finally {
+              nextTargetVersion =
+                  HashedVersion.unsigned(nextTargetVersion.getVersion()
+                      + nextCore.getOperations().size());
+            }
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
   }
 }

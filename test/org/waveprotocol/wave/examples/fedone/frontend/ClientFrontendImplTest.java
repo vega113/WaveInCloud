@@ -23,7 +23,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNotNull;
-import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -47,7 +46,6 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
-import org.waveprotocol.wave.examples.fedone.frontend.UserManager.Subscription;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
@@ -126,14 +124,14 @@ public class ClientFrontendImplTest extends TestCase {
     UserManager manager = clientFrontend.perUser.get(USER);
 
     WaveletName dummyWaveletName = ClientFrontendImpl.createDummyWaveletName(WAVE_ID);
-    List<Subscription> subscriptions = manager.matchSubscriptions(dummyWaveletName);
+    List<WaveViewSubscription> subscriptions = manager.matchSubscriptions(dummyWaveletName);
     assertEquals(1, subscriptions.size());
 
     verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, subscriptions.get(0).getChannelId());
 
     clientFrontend.openRequest(USER, INDEX_WAVE_ID, IdFilters.ALL_IDS, NO_KNOWN_WAVELETS, listener);
     WaveletName indexDummyWaveletName = ClientFrontendImpl.createDummyWaveletName(INDEX_WAVE_ID);
-    List<Subscription> indexSubscriptions = manager.matchSubscriptions(indexDummyWaveletName);
+    List<WaveViewSubscription> indexSubscriptions = manager.matchSubscriptions(indexDummyWaveletName);
     assertEquals(1, indexSubscriptions.size());
     verifyIfChannelIdAndMarkerSent(listener, indexDummyWaveletName,
         indexSubscriptions.get(0).getChannelId());
@@ -151,7 +149,7 @@ public class ClientFrontendImplTest extends TestCase {
     UserManager manager = clientFrontend.perUser.get(USER);
 
     WaveletName dummyWaveletName = ClientFrontendImpl.createDummyWaveletName(WAVE_ID);
-    List<Subscription> subscriptions = manager.matchSubscriptions(dummyWaveletName);
+    List<WaveViewSubscription> subscriptions = manager.matchSubscriptions(dummyWaveletName);
     assertEquals(0, subscriptions.size());
     verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, null);
 
@@ -195,8 +193,8 @@ public class ClientFrontendImplTest extends TestCase {
     OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, NO_KNOWN_WAVELETS, listener);
     clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "");
-    verify(listener).onUpdate(WAVELET_NAME, null, DELTAS, DELTAS.getEndVersion(), null, false,
-        null);
+    verify(listener).onUpdate(eq(WAVELET_NAME), isNullSnapshot(), eq(DELTAS),
+        eq(DELTAS.getEndVersion()), isNullVersion(), eq(false), anyString());
   }
 
   /**
@@ -210,7 +208,7 @@ public class ClientFrontendImplTest extends TestCase {
     UserManager manager = clientFrontend.perUser.get(USER);
 
     WaveletName dummyWaveletName = ClientFrontendImpl.createDummyWaveletName(INDEX_WAVE_ID);
-    List<Subscription> subscriptions = manager.matchSubscriptions(dummyWaveletName);
+    List<WaveViewSubscription> subscriptions = manager.matchSubscriptions(dummyWaveletName);
     assertEquals(1, subscriptions.size());
     verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, subscriptions.get(0).getChannelId());
 
@@ -299,14 +297,15 @@ public class ClientFrontendImplTest extends TestCase {
 
     assertEquals(INDEX_WAVELET_NAME, listener.waveletName);
 
-    CoreWaveletOperation helloWorldOp =
-      makeAppendOp(IndexWave.DIGEST_DOCUMENT_ID, 0, "Hello, world");
+    CoreWaveletOperation expectedDigestOp =
+        makeAppendOp(IndexWave.DIGEST_DOCUMENT_ID, 0, "Hello, world");
 
     DeltaSequence expectedDeltas = createUnsignedDeltas(ImmutableList.of(
-        makeDelta(IndexWave.DIGEST_AUTHOR, HashedVersion.unsigned(0), HashedVersion.unsigned(1),
-            helloWorldOp),
-        makeDelta(USER, HashedVersion.unsigned(1L), HashedVersion.unsigned(2),
-            new CoreAddParticipant(USER))));
+        makeDelta(USER, HashedVersion.unsigned(0), HashedVersion.unsigned(1),
+            new CoreAddParticipant(USER)),
+        makeDelta(IndexWave.DIGEST_AUTHOR, HashedVersion.unsigned(1), HashedVersion.unsigned(2),
+            expectedDigestOp)
+        ));
     assertEquals(expectedDeltas, listener.deltas);
   }
 
@@ -378,12 +377,20 @@ public class ClientFrontendImplTest extends TestCase {
   private void verifyIfChannelIdAndMarkerSent(
       OpenListener listener, WaveletName dummyWaveletName, String channelId) {
     // First the channel id
-    verify(listener).onUpdate(eq(dummyWaveletName), (WaveletSnapshotAndVersion) isNull(),
-        eq(new ArrayList<ProtocolWaveletDelta>()), (Proto.ProtocolHashedVersion) isNull(),
-        (Proto.ProtocolHashedVersion) isNull(), eq(false),
-        channelId == null ? anyString() : eq(channelId));
+    verify(listener).onUpdate(eq(dummyWaveletName), isNullSnapshot(),
+        eq(new ArrayList<ProtocolWaveletDelta>()), isNullVersion(),
+        isNullVersion(), eq(false), channelId == null ? anyString() : eq(channelId));
     // Secondly get the marker
     verify(listener).onUpdate(dummyWaveletName, null, new ArrayList<ProtocolWaveletDelta>(), null,
         null, true, null);
   }
+
+  private static WaveletSnapshotAndVersion isNullSnapshot() {
+    return (WaveletSnapshotAndVersion) Mockito.isNull();
+  }
+
+  private static ProtocolHashedVersion isNullVersion() {
+    return (ProtocolHashedVersion) Mockito.isNull();
+  }
+
 }
