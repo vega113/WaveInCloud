@@ -77,7 +77,7 @@ final class WaveViewSubscription {
   }
 
   /** This client sent a submit request */
-  synchronized void submitRequest(WaveletName waveletName) {
+  public synchronized void submitRequest(WaveletName waveletName) {
     // A given client can only have one outstanding submit per wave.
     outstandingSubmits.add(waveletName.waveletId);
   }
@@ -86,7 +86,7 @@ final class WaveViewSubscription {
    * A submit response for the given wavelet and version has been sent to this
    * client.
    */
-  synchronized void submitResponse(WaveletName waveletName, ProtocolHashedVersion version) {
+  public synchronized void submitResponse(WaveletName waveletName, ProtocolHashedVersion version) {
     WaveletId waveletId = waveletName.waveletId;
     if (version != null) {
       submittedVersions.put(waveletId, version.getVersion());
@@ -106,8 +106,9 @@ final class WaveViewSubscription {
    * from this client, don't send that delta. If there's outstanding submits
    * waiting, just queue the updates.
    */
-  void onUpdate(final WaveletName waveletName, @Nullable final WaveletSnapshotAndVersion snapshot,
-      final DeltaSequence deltas, @Nullable final ProtocolHashedVersion endVersion,
+  public void onUpdate(final WaveletName waveletName,
+      @Nullable final WaveletSnapshotAndVersion snapshot, final DeltaSequence deltas,
+      @Nullable final ProtocolHashedVersion endVersion,
       @Nullable final ProtocolHashedVersion committedVersion, final boolean hasMarker) {
     checkUpdateVersion(waveletName, snapshot, deltas);
     if (deltas.isEmpty()) {
@@ -117,7 +118,6 @@ final class WaveViewSubscription {
     WaveletId waveletId = waveletName.waveletId;
     if (!outstandingSubmits.isEmpty()) {
       queuedUpdates.put(waveletId, new Runnable() {
-
         @Override
         public void run() {
           onUpdate(waveletName, snapshot, deltas, endVersion, committedVersion, hasMarker);
