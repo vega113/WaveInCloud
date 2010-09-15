@@ -299,6 +299,7 @@
         <include name="com/google/gxp/**/*" />
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
+        <include name="com/google/wave/**/*" />
         <include name="gnu/inet/**/*" />
         <include name="javax/inject/**/*" />
         <include name="javax/servlet/**/*" />
