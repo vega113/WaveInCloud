@@ -85,6 +85,9 @@
       <compilerarg value="-Werror"/>
       <compilerarg value="-Xlint:all"/>
       <compilerarg value="-Xlint:-serial"/>
+      <!-- Deprecation warnings are generated for .class files for some
+           compilers, e.g. org.hamcrest.Matcher -> org.hamcrest.BaseMatcher. -->
+      <compilerarg value="-Xlint:-deprecation"/>
     </javac>
 
     <!-- copy non binary resources in src tree to output classpath -->
@@ -129,6 +132,9 @@
       <compilerarg value="-Werror"/>
       <compilerarg value="-Xlint:all"/>
       <compilerarg value="-Xlint:-serial"/>
+      <!-- Deprecation warnings are generated for .class files for some
+           compilers, e.g. org.hamcrest.Matcher -> org.hamcrest.BaseMatcher. -->
+      <compilerarg value="-Xlint:-deprecation"/>
     </javac>
 
     <!-- copy non binary resources in src tree to output classpath -->
