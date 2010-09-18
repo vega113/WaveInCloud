@@ -125,12 +125,12 @@ public final class WaveletDataUtil {
    *
    * @param waveletName the name of the wavelet.
    * @param author the author of the wavelet.
-   * @param applicationTimeStamp the time at which the wavelet is created.
+   * @param creationTimeStamp the time at which the wavelet is created.
    */
   public static ObservableWaveletData createEmptyWavelet(
-      WaveletName waveletName, ParticipantId author, long applicationTimeStamp) {
+      WaveletName waveletName, ParticipantId author, long creationTimeStamp) {
     return WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(new EmptyWaveletSnapshot(
-        waveletName.waveId, waveletName.waveletId, author, applicationTimeStamp));
+        waveletName.waveId, waveletName.waveletId, author, creationTimeStamp));
   }
 
   /**
