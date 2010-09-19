@@ -40,23 +40,20 @@ public interface WaveStore {
   /**
    * Append a list of deltas to the wavelet in storage with the given name and
    * store a new snapshot.
-   *
-   *<p>
+   * <p>
    * This operation must be implemented atomically with respect to calls to
-   * getSnapshot() and getDelas() for the same wavelet.
-   *
-   *<p>
+   * getSnapshot() and getDeltas() for the same wavelet.
+   * <p>
    * The first delta's target history hash MUST match the end hash of the last
    * delta already stored for this wavelet.
-   *
-   *<p>
+   * <p>
    * Data has been persisted when the returned future completes with success.
    *
    * @param snapshot up-to-date snapshot of the wavelet to update with the given
    * @param deltas list of deltas to append.
-   * @return {@link ListenableFuture} which is done when the write succeeds or fails. A
-   *         failure is reported as an {@link ExecutionException} wrapping a
-   *         {@link WaveStoreException}.
+   * @return {@link ListenableFuture} which is done when the write succeeds or
+   *         fails. A failure is reported as an {@link ExecutionException}
+   *         wrapping a {@link WaveStoreException}.
    */
   public ListenableFuture<?> appendWaveletDeltas(WaveletAndVersion snapshot,
       List<ProtocolWaveletDelta> deltas);
@@ -64,23 +61,23 @@ public interface WaveStore {
   /**
    * Retrieve a list of deltas that have been applied to the wavelet with the
    * given name.
-   *
-   *<p>
+   * <p>
    * If the result exceeds the limit on the total size of deltas to return then
    * the implementor must return at most all deltas from versionStart up to but
-   * not including the delta that causes the limit to be exceeded.
+   * not including the delta that causes the limit to be exceeded. Note that if
+   * the first delta exists it needs to be returned regardless of whether it
+   * exceeds the limit.
    *
    * @param waveletName name of wavelet.
-   * @param versionStart start version (inclusive), on delta boundary, minimum
-   *        0.
-   * @param versionEnd end version (exclusive), on delta boundary.
+   * @param versionStart start version (inclusive), on delta boundary.
+   * @param versionEnd end version (exclusive), on delta boundary,
+   *        must be strictly larger than {@code versionStart}.
    * @param maxBytes the maximum amount of bytes to be returned. Note that the
-   *        implementor may set an internal maximum to return that is lower then
-   *        the given maximum.
+   *        implementor may set an internal maximum to return that is lower than
+   *        the given maximum. This must be >= 0.
    * @return deltas in the range as requested, ordered by applied version. If an
-   *         error has occurred the {@link ListenableFuture} will report this as an
-   *         {@link ExecutionException}.
-   *
+   *         error has occurred the {@link ListenableFuture} will report this as
+   *         an {@link ExecutionException}.
    */
   public ListenableFuture<List<ProtocolWaveletDelta>> getDeltas(WaveletName waveletName,
       ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd, long maxBytes);
