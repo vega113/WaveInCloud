@@ -184,7 +184,7 @@ public class SnapshotSerializer {
     for (WaveletSnapshot s : snapshot.getWaveletList()) {
       wavelets.add(deserializeWavelet(s, waveId));
     }
-    
-    return new WaveViewDataImpl(waveId, wavelets);
+
+    return WaveViewDataImpl.create(waveId, wavelets);
   }
 }

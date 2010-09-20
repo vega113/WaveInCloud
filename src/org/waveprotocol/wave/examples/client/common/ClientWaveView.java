@@ -76,7 +76,7 @@ public class ClientWaveView {
    */
   public ClientWaveView(HashedVersionFactory hashedVersionFactory, WaveId waveId) {
     this.hashedVersionFactory = hashedVersionFactory;
-    this.data = new WaveViewDataImpl(waveId, new ArrayList<ObservableWaveletData>());
+    this.data = WaveViewDataImpl.create(waveId);
     this.currentVersions = Maps.newHashMap();
     ReadWriteLock versionReadWriteLock = new ReentrantReadWriteLock();
     versionReadLock = versionReadWriteLock.readLock();
