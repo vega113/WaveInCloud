@@ -39,6 +39,10 @@ public interface HumanAccountData extends AccountData {
   
   /**
    * Reset the user's password to the specified string.
+   * 
+   * After this method is called, the caller must zero the password bytes to
+   * ensure that the user's credentials don't leak.
+   * 
    * @param password The user's new password
    */
   public void setPassword(char[] password);
