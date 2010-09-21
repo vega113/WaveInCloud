@@ -17,17 +17,22 @@
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.protobuf.ByteString;
+
 import junit.framework.TestCase;
+
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
+import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
-import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 
@@ -39,6 +44,10 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
  */
 public class LocalWaveletContainerImplTest extends TestCase {
 
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+  private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
+
   private static final WaveletName WAVELET_NAME = WaveletName.of("a!a", "b!b");
   private static final ProtocolSignature SIGNATURE = ProtocolSignature.newBuilder()
       .setSignatureAlgorithm(SignatureAlgorithm.SHA1_RSA)
@@ -48,7 +57,7 @@ public class LocalWaveletContainerImplTest extends TestCase {
   private static final String AUTHOR = "kermit@muppetshow.com";
 
   private static final HashedVersion HASHED_VERSION_ZERO =
-      new HashedVersionZeroFactoryImpl().createVersionZero(WAVELET_NAME);
+      HASH_FACTORY.createVersionZero(WAVELET_NAME);
   private ProtocolWaveletOperation addParticipantOp;
   private static final String BLIP_ID = "b+muppet";
   private ProtocolWaveletOperation addBlipOp;

@@ -19,8 +19,8 @@ package org.waveprotocol.wave.examples.client.webclient.common;
 
 
 import org.waveprotocol.wave.concurrencycontrol.common.Delta;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;
-import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
@@ -72,7 +72,7 @@ public class WaveletOperationSerializer {
     }
 
     protobufDelta.setAuthor(waveletDelta.get(0).getContext().getCreator().getAddress());
-    protobufDelta.setHashedVersion(serialize(version));
+    protobufDelta.setHashedVersion(CoreWaveletOperationSerializer.serialize(version));
     return protobufDelta.build();
   }
 
@@ -283,31 +283,14 @@ public class WaveletOperationSerializer {
   }
 
   public static DistinctVersion newDistinctVersion(final HashedVersion postVersion) {
-    if (postVersion.getHistoryHash().isEmpty()) {
+    if (postVersion.getHistoryHash().length == 0) {
       return DistinctVersion.NO_DISTINCT_VERSION;
     }
-    char[] hash = postVersion.getHistoryHash().toCharArray();
-    // TODO(arb): This is wrong, because the hash is actually b64(hash). But currently we don't use it anyway.
-    int signature =
-        ((byte) hash[0] << 24) & ((byte) hash[1] << 16) & ((byte) hash[2] << 8) & ((byte) hash[3]);
+    byte[] hash = postVersion.getHistoryHash();
+    // NOTE(arb): The hash is actually b64(hash), but the distinction just
+    // needs to be distinct.
+    int signature = (hash[0] << 24) & (hash[1] << 16) & (hash[2] << 8) & (hash[3]);
     return DistinctVersion.of(postVersion.getVersion(), signature);
-  }
-
-  /**
-   * Deserializes a protobuf to a HashedVersion POJO.
-   */
-  public static HashedVersion deserialize(ProtocolHashedVersion hashedVersion) {
-    final String historyHash = hashedVersion.getHistoryHash();
-    return new HashedVersion((long) hashedVersion.getVersion(),
-        historyHash);
-  }
-
-  /**
-   * Serializes a HashedVersion POJO to a protobuf.
-   */
-  public static ProtocolHashedVersion serialize(HashedVersion hashedVersion) {
-    return ProtocolHashedVersion.newBuilder().setVersion(hashedVersion.getVersion()).
-        setHistoryHash(hashedVersion.getHistoryHash());
   }
 
   /**

@@ -19,7 +19,6 @@ package org.waveprotocol.wave.examples.fedone.common;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
-import org.apache.commons.codec.binary.Hex;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 
 import java.util.Arrays;
@@ -119,6 +118,14 @@ public final class HashedVersion implements Comparable<HashedVersion> {
 
   @Override
   public String toString() {
-    return Long.toString(version) + ":" + new String(Hex.encodeHex(historyHash));
+    return Long.toString(version) + ":" + encodeHex(historyHash);
+  }
+
+  private static String encodeHex(byte[] bytes) {
+    StringBuilder out = new StringBuilder();
+    for (byte b: bytes) {
+      out.append(Integer.toHexString(b));
+    }
+    return out.toString();
   }
 }

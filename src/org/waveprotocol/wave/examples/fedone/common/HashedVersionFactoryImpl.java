@@ -19,15 +19,13 @@ package org.waveprotocol.wave.examples.fedone.common;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Utility class for creating Hashed Versions with Crypto dependencies, this is intented
- * for "full" i.e. not lightweight implementations.
- *
- *
- *
+ * Factory for creating arbitrary hashed versions.
  */
 public class HashedVersionFactoryImpl extends HashedVersionZeroFactoryImpl {
 
@@ -37,6 +35,10 @@ public class HashedVersionFactoryImpl extends HashedVersionZeroFactoryImpl {
   @VisibleForTesting
   // Allow override for unit testing.
   static int hashSizeBits = HASH_SIZE_BITS;
+
+  public HashedVersionFactoryImpl(IdURIEncoderDecoder uriCodec) {
+    super(uriCodec);
+  }
 
   private static byte[] calculateHash(byte[] historyHash, byte[] appliedDeltaBytes) {
     byte[] joined = new byte[appliedDeltaBytes.length + historyHash.length];

@@ -17,42 +17,38 @@
 
 package org.waveprotocol.wave.examples.fedone.common;
 
-import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 
-import java.nio.charset.Charset;
+import java.io.UnsupportedEncodingException;
 
 /**
- * Utility class for creating Hashed Versions, the "lightweight" base class can only
- * calculate the version 0 hash and is suitable for use in the client.
- *
- *
- *
+ * Factory for creating hashed version zeros. This class can only
+ * calculate the version 0 hash.
  */
 public class HashedVersionZeroFactoryImpl implements HashedVersionFactory {
 
-  private final IdURIEncoderDecoder URI_CODEC = new IdURIEncoderDecoder(
-      new URLEncoderDecoderBasedPercentEncoderDecoder());
+  private final IdURIEncoderDecoder uriCodec;
 
-  private static final Charset CHAR_SET = Charset.forName("UTF-8");
+  public HashedVersionZeroFactoryImpl(IdURIEncoderDecoder uriCodec) {
+    this.uriCodec = uriCodec;
+  }
 
   /**
-   * Create a new HashedVersion for version 0 of the given wavelet.
-   * @param waveletName the name of wavelet.
-   * @throws IllegalArgumentException if a bad wavelet name is passed.
-   * @return new HashedVersion at version 0.
+   * Create a new hashed version zero for a wavelet name.
    */
   @Override
   public HashedVersion createVersionZero(WaveletName waveletName) {
     try {
       // Same encoding as used protobuf/CodedOutputSteam to serialize a String to byte[].
       // http://code.google.com/p/protobuf/source/browse/trunk/java/src/main/java/com/google/protobuf/CodedOutputStream.java
-      byte[] historyHash = URI_CODEC.waveletNameToURI(waveletName).getBytes(CHAR_SET);
+      byte[] historyHash = uriCodec.waveletNameToURI(waveletName).getBytes("UTF-8");
       return new HashedVersion(0, historyHash);
     } catch (EncodingException e) {
       throw new IllegalArgumentException("Bad wavelet name " + waveletName, e);
+    } catch (UnsupportedEncodingException e) {
+      throw new IllegalStateException("UTF-8 unsupported in creating version zero hash", e);
     }
   }
 
@@ -61,7 +57,7 @@ public class HashedVersionZeroFactoryImpl implements HashedVersionFactory {
   public HashedVersion create(byte[] appliedDeltaBytes, HashedVersion hashedVersionAppliedAt,
       int operationsApplied) {
     // For lightweight users of this Factory, don't depend on crypto code.
-    throw new UnsupportedOperationException("This method is not supported here.");
+    throw new UnsupportedOperationException("This factory can only create hashed version zero.");
   }
 
   @Override

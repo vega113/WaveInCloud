@@ -30,11 +30,14 @@ import org.waveprotocol.wave.examples.client.common.ClientBackend;
 import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.client.console.ConsoleClient;
+import org.waveprotocol.wave.examples.client.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -56,6 +59,12 @@ import java.util.concurrent.TimeUnit;
  * @author mk.mateng@gmail.com (Michael Kuntzman)
  */
 public class ClientTestingUtil {
+
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+  private static final HashedVersionFactory HASH_FACTORY =
+      new HashedVersionZeroFactoryImpl(URI_CODEC);
+
   /**
    * ClientBackend factory that creates a spy object on the backend and injects a fake RPC
    * objects factory.
@@ -65,7 +74,7 @@ public class ClientTestingUtil {
       public ClientBackend create(String userAtDomain, String server, int port)
           throws IOException {
         return spy(new ClientBackend(userAtDomain, server, port, new FakeRpcObjectFactory(),
-            new HashedVersionZeroFactoryImpl()));
+            HASH_FACTORY));
       }
     };
 
@@ -83,7 +92,7 @@ public class ClientTestingUtil {
   private final ClientBackend backend;
 
   /** The user stored in the backend */
-  private ParticipantId userId;
+  private final ParticipantId userId;
 
   /**
    * Constructs a {@code ClientTestingUtil} that acts on the given client backend.

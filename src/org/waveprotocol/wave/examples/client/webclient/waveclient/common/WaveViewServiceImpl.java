@@ -16,17 +16,18 @@
  */
 package org.waveprotocol.wave.examples.client.webclient.waveclient.common;
 
-import com.google.common.util.CharBase64;
 import com.google.gwt.user.client.Random;
 
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.Delta;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.examples.client.webclient.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.wave.examples.client.webclient.common.HashedVersion;
 import org.waveprotocol.wave.examples.client.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.client.webclient.util.Log;
 import org.waveprotocol.wave.examples.client.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolSubmitRequest;
@@ -66,6 +67,9 @@ public class WaveViewServiceImpl implements WaveViewService {
 
   private static final Log LOG = Log.get(WaveViewServiceImpl.class);
 
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+
   private final WaveId waveId;
   // Map of channel id to <filter, listener>
   private Pair<IdFilter, OpenCallback> waveletFilter;
@@ -76,6 +80,8 @@ public class WaveViewServiceImpl implements WaveViewService {
   private final DocumentFactory<?> documentFactory;
   private final Map<WaveletName, Map<Long, ProtocolHashedVersion>> versionToHistoryHashMap =
       new HashMap<WaveletName, Map<Long, ProtocolHashedVersion>>();
+  private final HashedVersionFactory hashedVersionFactory =
+      new HashedVersionZeroFactoryImpl(URI_CODEC);
 
   /**
    * Constructor
@@ -157,24 +163,6 @@ public class WaveViewServiceImpl implements WaveViewService {
     // TODO(arb): we need to send a wavelet snapshot for any wavelets we already have in cache.
   }
 
-  private final IdURIEncoderDecoder uriCodec =
-      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
-
-  private String calculateVersionZeroHash(WaveletName name) {
-    String waveletName;
-    try {
-      waveletName = uriCodec.waveletNameToURI(name);
-    } catch (URIEncoderDecoder.EncodingException e) {
-      throw new IllegalArgumentException(e);
-    }
-    char[] hh = waveletName.toCharArray();
-    byte[] bb = new byte[hh.length];
-    for (int i = 0; i < hh.length; i++) {
-      bb[i] = (byte) hh[i];
-    }
-    return CharBase64.encode(bb);
-  }
-
   @Override
   public String viewSubmit(final WaveletName waveletName,
       final Delta delta,
@@ -184,7 +172,7 @@ public class WaveViewServiceImpl implements WaveViewService {
 
     if (delta.getVersion() == 0) {
       waveletVersion = CoreWaveletOperationSerializer.serialize(
-          new HashedVersion(delta.getVersion(), calculateVersionZeroHash(waveletName)));
+          hashedVersionFactory.createVersionZero(waveletName));
     } else {
       waveletVersion = versionToHistoryHashMap.get(waveletName).get(delta.getVersion());
     }
@@ -193,8 +181,8 @@ public class WaveViewServiceImpl implements WaveViewService {
     ProtocolSubmitRequest submitRequest = ProtocolSubmitRequest.create();
     String waveletNameString;
     try {
-      waveletNameString = clientBackend.uriCodec
-          .waveletNameToURI(WaveletName.of(waveletName.waveId, waveletName.waveletId));
+      waveletNameString =
+          URI_CODEC.waveletNameToURI(WaveletName.of(waveletName.waveId, waveletName.waveletId));
     } catch (URIEncoderDecoder.EncodingException e) {
       throw new IllegalArgumentException(e);
     }
@@ -284,7 +272,7 @@ public class WaveViewServiceImpl implements WaveViewService {
               Constants.NO_TIMESTAMP, 1);
       Delta delta =
           WaveletOperationSerializer.deserialize(protobufDelta,
-              WaveletOperationSerializer.deserialize(deltaEndVersion), woc);
+              CoreWaveletOperationSerializer.deserialize(deltaEndVersion), woc);
       updateVersionMap(waveletName, deltaEndVersion);
       deltaList.add(delta);
     }
@@ -386,8 +374,7 @@ public class WaveViewServiceImpl implements WaveViewService {
       ProtocolHashedVersion hashedVersion;
       if (waveletVersion.getVersion() == 0) {
         hashedVersion = CoreWaveletOperationSerializer.serialize(
-            new HashedVersion(waveletVersion.getVersion(),
-                calculateVersionZeroHash(wavelet.getWaveletName())));
+            hashedVersionFactory.createVersionZero(wavelet.getWaveletName()));
       } else {
         hashedVersion = CoreWaveletOperationSerializer.serialize(waveletVersion);
       }
@@ -408,7 +395,7 @@ public class WaveViewServiceImpl implements WaveViewService {
     final long currentVersion = (long) update.getResultingVersion().getVersion();
     WaveletDataImpl waveletData = new WaveletDataImpl(waveletName.waveletId, creator,
         currentTimeMillis, currentVersion, WaveletOperationSerializer.newDistinctVersion(
-            WaveletOperationSerializer.deserialize(update.getResultingVersion())),
+            CoreWaveletOperationSerializer.deserialize(update.getResultingVersion())),
         currentTimeMillis, waveletName.waveId, documentFactory);
     for (String participant : update.getSnapshot().getParticipantIdList()) {
       waveletData.addParticipant(new ParticipantId(participant));

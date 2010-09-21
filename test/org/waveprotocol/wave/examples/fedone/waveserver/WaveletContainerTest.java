@@ -26,13 +26,16 @@ import com.google.protobuf.ByteString;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
+import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -54,14 +57,18 @@ import java.util.Set;
  *
  */
 public class WaveletContainerTest extends TestCase {
+
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+  private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
+
   private static final String domain = "wave.google.com";
   private static final WaveletName waveletName = WaveletName.of(
       new WaveId(domain, "waveid"), new WaveletId(domain, "waveletid"));
   private static final ParticipantId author = new ParticipantId("admin@" + domain);
   private static final Set<ParticipantId> participants = ImmutableSet.of(
       new ParticipantId("foo@" + domain), new ParticipantId("bar@example.com"));
-  private static final HashedVersion version0 =
-      new HashedVersionZeroFactoryImpl().createVersionZero(waveletName);
+  private static final HashedVersion version0 = HASH_FACTORY.createVersionZero(waveletName);
   private static final ByteString fakeSigner1 = ByteString.EMPTY;
   private static final ByteString fakeSigner2 = ByteString.copyFrom(new byte[] {1});
   private static final ProtocolSignature fakeSignature1 = ProtocolSignature.newBuilder()
@@ -264,7 +271,7 @@ public class WaveletContainerTest extends TestCase {
   private CoreWaveletDelta createDelta(List<CoreWaveletDocumentOperation> ops) {
     return new CoreWaveletDelta(author, ops);
   }
-  
+
   /**
    * Check that a container succeeds when adding non-existent participants and removing existing
    * participants.

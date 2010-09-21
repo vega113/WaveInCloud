@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.client.webclient.common;
 
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.waveserver.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveViewSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshot;
@@ -56,7 +57,7 @@ import java.util.Collection;
  */
 public class SnapshotSerializer {
   private static final DocumentFactory<?> DOCUMENT_FACTORY = BasicFactories.muteDocumentFactory();
-  
+
   private SnapshotSerializer() {
   }
 
@@ -88,7 +89,7 @@ public class SnapshotSerializer {
 
     return builder.build();
   }
-  
+
   // TODO(josephg): This is copied from WaveletDataUtil, which is not included
   // in the client. Include a similar class in the client, and move this
   // function out of here.
@@ -130,7 +131,7 @@ public class SnapshotSerializer {
 
   /**
    * Serializes a document to a document snapshot.
-   * 
+   *
    * @param document The document to serialize
    * @return A snapshot of the given document
    */
@@ -168,10 +169,10 @@ public class SnapshotSerializer {
         (long) snapshot.getLastModifiedTime(),
         (long) snapshot.getLastModifiedVersion());
   }
-  
+
   /**
    * Deserialize a wave view snapshot into a WaveViewData object
-   * 
+   *
    * @param snapshot the snapshot to deserialize
    * @return the deserialized snapshot
    * @throws OperationException

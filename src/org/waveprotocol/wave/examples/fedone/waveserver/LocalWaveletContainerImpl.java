@@ -124,7 +124,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
           lookupAppliedDelta(transformed.version);
       // TODO: look this up (in appliedDeltas or currentVersion) rather than compute it?
-      HashedVersion hashedVersionAfterApplication = HASHED_HISTORY_VERSION_FACTORY.create(
+      HashedVersion hashedVersionAfterApplication = HASH_FACTORY.create(
         appliedDelta.getByteArray(), transformed.version, transformed.delta.getOperations().size());
       return new DeltaApplicationResult(appliedDelta,
           CoreWaveletOperationSerializer.serialize(transformed.delta, transformed.version),

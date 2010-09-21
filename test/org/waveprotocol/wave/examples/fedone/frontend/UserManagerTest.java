@@ -64,7 +64,6 @@ public class UserManagerTest extends TestCase {
     serialize(new CoreWaveletDelta(USER, ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE)),
         HashedVersion.UNSIGNED_VERSION_0);
 
-  private static final ProtocolHashedVersion V0 = serialize(HashedVersion.UNSIGNED_VERSION_0);
   private static final ProtocolHashedVersion END_VERSION = serialize(HashedVersion.unsigned(2));
 
   private static final DeltaSequence DELTAS =

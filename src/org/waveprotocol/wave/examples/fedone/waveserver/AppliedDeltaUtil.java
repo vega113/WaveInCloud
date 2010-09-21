@@ -22,17 +22,22 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
+import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 
 /**
  * Utility methods for {@code ProtocolAppliedWaveletDelta}s.
  */
 public class AppliedDeltaUtil {
 
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+
   private static final HashedVersionFactory HASHED_HISTORY_VERSION_FACTORY =
-      new HashedVersionFactoryImpl();
+      new HashedVersionFactoryImpl(URI_CODEC);
 
   /**
    * Inspects the given applied delta to determine the {@code ProtocolHashedVersion} it was

@@ -38,7 +38,9 @@ import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveClientRpcImpl;
+import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 
 /**
@@ -61,6 +63,10 @@ public class WaveServerModule extends AbstractModule {
     }
   }
 
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+  private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
+
   @Override
   protected void configure() {
     bind(TimeSource.class).to(DefaultTimeSource.class).in(Singleton.class);
@@ -80,7 +86,7 @@ public class WaveServerModule extends AbstractModule {
     bind(CertificateManager.class).to(CertificateManagerImpl.class).in(Singleton.class);
     bind(WaveletProvider.class).to(WaveServerImpl.class).in(Singleton.class);
     bind(WaveBus.class).to(WaveServerImpl.class).in(Singleton.class);
-    bind(HashedVersionFactory.class).to(HashedVersionFactoryImpl.class).in(Singleton.class);
+    bind(HashedVersionFactory.class).toInstance(HASH_FACTORY);
     bind(ClientFrontend.class).to(ClientFrontendImpl.class).in(Singleton.class);
     bind(ProtocolWaveClientRpc.Interface.class).to(WaveClientRpcImpl.class).in(Singleton.class);
     bind(LocalWaveletContainer.Factory.class).to(LocalWaveletContainerFactory.class).in(

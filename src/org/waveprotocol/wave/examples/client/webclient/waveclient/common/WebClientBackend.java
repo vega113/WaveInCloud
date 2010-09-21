@@ -27,12 +27,12 @@ import org.waveprotocol.wave.examples.client.webclient.client.WaveWebSocketClien
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.wave.examples.client.webclient.common.HashedVersion;
-import org.waveprotocol.wave.examples.client.webclient.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.client.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.client.webclient.util.Log;
 import org.waveprotocol.wave.examples.client.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolWaveletUpdate;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshot;
@@ -72,7 +72,6 @@ public class WebClientBackend {
    */
   final ParticipantId userId;
 
-
   private NetworkStatusEvent.ConnectionStatus connectionStatus;
 
   /**
@@ -83,9 +82,11 @@ public class WebClientBackend {
   /**
    * Id URI encoder and decoder.
    */
-  final IdURIEncoderDecoder uriCodec;
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
 
-  HashedVersionZeroFactoryImpl hashFactory = new HashedVersionZeroFactoryImpl();
+  private static final HashedVersionZeroFactoryImpl HASH_FACTORY =
+      new HashedVersionZeroFactoryImpl(URI_CODEC);
 
   List<Pair<JavaScriptObject, SubmitResponseCallback>> queuedMessages =
       new ArrayList<Pair<JavaScriptObject, SubmitResponseCallback>>();
@@ -121,7 +122,6 @@ public class WebClientBackend {
         return seed;
       }
     });
-    this.uriCodec = new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
     ClientEvents.get().addNetworkStatusEventHandler(new NetworkStatusEventHandler() {
 
       @Override
@@ -176,7 +176,7 @@ public class WebClientBackend {
    * @return the new wave's {@code ClientWaveView}
    */
   private WebClientWaveView createWave(WaveId waveId) {
-    WebClientWaveView wave = new WebClientWaveView(new HashedVersionZeroFactoryImpl(), waveId);
+    WebClientWaveView wave = new WebClientWaveView(HASH_FACTORY, waveId);
     waves.put(waveId, wave);
     return wave;
   }
@@ -223,7 +223,7 @@ public class WebClientBackend {
 
     WaveletName waveletName;
     try {
-      waveletName = uriCodec.uriToWaveletName(waveletUpdate.getWaveletName());
+      waveletName = URI_CODEC.uriToWaveletName(waveletUpdate.getWaveletName());
     } catch (URIEncoderDecoder.EncodingException e) {
       throw new IllegalArgumentException(e);
     }
@@ -273,7 +273,7 @@ public class WebClientBackend {
                 Constants.NO_TIMESTAMP, 1);
         Delta deltaAndVersion =
             WaveletOperationSerializer.deserialize(protobufDelta,
-                WaveletOperationSerializer.deserialize(protobufDelta.getHashedVersion()), woc);
+                CoreWaveletOperationSerializer.deserialize(protobufDelta.getHashedVersion()), woc);
 
         final Pair<CoreWaveletDelta, HashedVersion> oldDeltaAndVersion =
             CoreWaveletOperationSerializer.deserialize(protobufDelta);
@@ -303,7 +303,7 @@ public class WebClientBackend {
     }
 
     if (isIndexWave(waveletName) && waveletUpdate.hasResultingVersion()) {
-      wave.setWaveletVersion(waveletName.waveletId, WaveletOperationSerializer
+      wave.setWaveletVersion(waveletName.waveletId, CoreWaveletOperationSerializer
           .deserialize(waveletUpdate.getResultingVersion()));
     }
     // If we have been removed from this wavelet then remove the data too, since if we're re-added
@@ -341,7 +341,7 @@ public class WebClientBackend {
 
         if (waveletUpdate.hasCommitNotice()) {
           LOG.info("Publishing commit notice");
-          waveView.publishCommitNotice(waveletName, WaveletOperationSerializer
+          waveView.publishCommitNotice(waveletName, CoreWaveletOperationSerializer
               .deserialize(waveletUpdate.getCommitNotice()));
         }
       } else if (waveletUpdate.hasChannelId()) {

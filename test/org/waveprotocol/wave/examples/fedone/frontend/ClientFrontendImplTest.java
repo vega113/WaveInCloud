@@ -42,10 +42,11 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
+import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
@@ -59,6 +60,7 @@ import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdFilters;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -83,14 +85,18 @@ import java.util.List;
  * Tests for {@link ClientFrontendImpl}.
  */
 public class ClientFrontendImplTest extends TestCase {
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+  private static final HashedVersionFactory HASH_FACTORY =
+      new HashedVersionFactoryImpl(URI_CODEC);
+
   private static final WaveId WAVE_ID = new WaveId("domain", "waveId");
   private static final WaveletId WAVELET_ID = new WaveletId("domain", CONVERSATION_ROOT_WAVELET);
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final WaveletName INDEX_WAVELET_NAME =
       WaveletName.of(INDEX_WAVE_ID, new WaveletId("domain", "waveId"));
   private static final ParticipantId USER = new ParticipantId("user@host.com");
-  private static final HashedVersion VERSION_0 =
-      new HashedVersionZeroFactoryImpl().createVersionZero(WAVELET_NAME);
+  private static final HashedVersion VERSION_0 = HASH_FACTORY.createVersionZero(WAVELET_NAME);
   private static final HashedVersion VERSION_1 = HashedVersion.unsigned(1L);
   private static final HashedVersion VERSION_2 = HashedVersion.unsigned(2L);
   private static final ProtocolWaveletDelta DELTA =
@@ -109,7 +115,7 @@ public class ClientFrontendImplTest extends TestCase {
     super.setUp();
     waveletProvider = mock(WaveletProvider.class);
     WaveBus waveBus = mock(WaveBus.class);
-    this.clientFrontend = new ClientFrontendImpl(new HashedVersionFactoryImpl(), waveletProvider,
+    this.clientFrontend = new ClientFrontendImpl(HASH_FACTORY, waveletProvider,
         waveBus);
     verify(waveBus).subscribe((WaveBus.Subscriber) isNotNull());
   }

@@ -290,7 +290,7 @@ public class ClientBackend {
           public ProtocolWaveClientRpc.Interface createServerInterface(ClientRpcChannel channel) {
             return ProtocolWaveClientRpc.newStub(channel);
           }
-        }, new HashedVersionZeroFactoryImpl());
+        }, new HashedVersionZeroFactoryImpl(URI_CODEC));
   }
 
   /**

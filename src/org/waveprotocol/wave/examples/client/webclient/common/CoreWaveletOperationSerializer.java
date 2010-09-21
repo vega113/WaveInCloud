@@ -17,6 +17,12 @@
 
 package org.waveprotocol.wave.examples.client.webclient.common;
 
+import com.google.common.util.Base64DecoderException;
+import com.google.common.util.CharBase64;
+
+import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.waveserver.DocumentSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshot;
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
@@ -37,12 +43,9 @@ import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
-
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshot;
-import org.waveprotocol.wave.examples.fedone.waveserver.DocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -263,17 +266,28 @@ public class CoreWaveletOperationSerializer {
     return Pair.of(new CoreWaveletDelta(new ParticipantId(delta.getAuthor()), ops), hashedVersion);
   }
 
-  /** Deserializes a protobuf to a HashedVersion POJO. */
+  /**
+   * Deserializes a {@link ProtocolHashedVersion} to a {@link HashedVersion}
+   * POJO.
+   */
   public static HashedVersion deserialize(ProtocolHashedVersion hashedVersion) {
-    final String historyHash = hashedVersion.getHistoryHash();
-    return new HashedVersion((long)hashedVersion.getVersion(),
-        historyHash);
+    String b64Hash = hashedVersion.getHistoryHash();
+    byte[] historyHash;
+    try {
+      historyHash = CharBase64.decode(b64Hash);
+      return new HashedVersion((long) hashedVersion.getVersion(), historyHash);
+    } catch (Base64DecoderException e) {
+      throw new IllegalArgumentException("Invalid Base64 hash: " + b64Hash, e);
+    }
   }
 
-  /** Serializes a HashedVersion POJO to a protobuf. */
+  /**
+   * Serializes a {@link HashedVersion} POJO to a {@link ProtocolHashedVersion}.
+   */
   public static ProtocolHashedVersion serialize(HashedVersion hashedVersion) {
-    return ProtocolHashedVersion.newBuilder().setVersion(hashedVersion.getVersion()).
-      setHistoryHash(hashedVersion.getHistoryHash());
+    String b64Hash = CharBase64.encode(hashedVersion.getHistoryHash());
+    return ProtocolHashedVersion.newBuilder().setVersion(hashedVersion.getVersion())
+        .setHistoryHash(b64Hash);
   }
 
   /**

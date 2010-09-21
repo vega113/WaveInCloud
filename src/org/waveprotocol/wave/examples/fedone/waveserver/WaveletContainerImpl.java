@@ -32,11 +32,13 @@ import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.OperationPair;
@@ -71,8 +73,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   private static final SecureRandom RANDOM_GENERATOR = new SecureRandom();
 
-  protected static final HashedVersionFactory HASHED_HISTORY_VERSION_FACTORY =
-      new HashedVersionFactoryImpl();
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+
+  protected static final HashedVersionFactory HASH_FACTORY =
+      new HashedVersionFactoryImpl(URI_CODEC);
 
   protected final NavigableSet<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas;
   private final NavigableMap<HashedVersion, ProtocolWaveletDelta> transformedDeltas =
@@ -96,7 +101,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   public WaveletContainerImpl(WaveletName waveletName) {
     this.waveletName = waveletName;
     waveletData = null;
-    currentVersion = HASHED_HISTORY_VERSION_FACTORY.createVersionZero(waveletName);
+    currentVersion = HASH_FACTORY.createVersionZero(waveletName);
     lastCommittedVersion = null;
 
     appliedDeltas = Sets.newTreeSet(appliedDeltaComparator);
@@ -393,7 +398,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     // Sanity check.
     Preconditions.checkArgument(operationsApplied == transformedDelta.getOperations().size());
 
-    HashedVersion newVersion = HASHED_HISTORY_VERSION_FACTORY.create(
+    HashedVersion newVersion = HASH_FACTORY.create(
         appliedDelta.getByteArray(), currentVersion, operationsApplied);
 
     ProtocolWaveletDelta transformedProtocolDelta =

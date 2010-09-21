@@ -3,6 +3,9 @@
     <source path="">
       <include name="CommonConstants.java"/>
       <include name="DocumentConstants.java"/>
+      <include name="HashedVersion.java"/>
+      <include name="HashedVersionFactory.java"/>
+      <include name="HashedVersionZeroFactoryImpl.java"/>
       <include name="SessionConstants.java"/>
     </source>
 </module>
