@@ -18,7 +18,7 @@
 package org.waveprotocol.wave.examples.fedone.authentication;
 
 
-import com.google.gxp.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -35,6 +35,10 @@ import java.util.Arrays;
  * Passwords are stored using a salted SHA-384 digest. To persist a password
  * object, use Java's serialization interface or save the salt and digest,
  * and recreate the password object using Password.from(salt, digest).
+ *
+ * Character arrays are used instead of strings so the contents can be cleared
+ * before they are garbage collected. (Java's strings are immutable). Passwords
+ * should never be stored as strings at any intermediate stage.
  *
  * @author josephg@gmail.com (Joseph Gentle)
  */

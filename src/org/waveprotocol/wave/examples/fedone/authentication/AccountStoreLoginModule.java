@@ -16,6 +16,7 @@
  */
 
 package org.waveprotocol.wave.examples.fedone.authentication;
+
 import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
