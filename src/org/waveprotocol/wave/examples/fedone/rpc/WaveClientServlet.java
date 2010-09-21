@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.rpc;
 
+import com.google.common.collect.Maps;
 import com.google.gxp.base.GxpContext;
 
 import org.json.JSONException;
@@ -30,7 +31,7 @@ import org.waveprotocol.wave.examples.fedone.util.Log;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -46,7 +47,7 @@ public class WaveClientServlet extends HttpServlet {
 
   private static final Log LOG = Log.get(WaveClientServlet.class);
 
-  private static final Hashtable<String, String> FLAG_MAP = new Hashtable<String, String>();
+  private static final HashMap<String, String> FLAG_MAP = Maps.newHashMap();
   static {
     // __NAME_MAPPING__ is a map of name to obfuscated id
     for (int i = 0; i < FlagConstants.__NAME_MAPPING__.length; i += 2) {
@@ -104,8 +105,15 @@ public class WaveClientServlet extends HttpServlet {
               ret.put(FLAG_MAP.get(name), Integer.parseInt(value));
             } else if (retType.equals(Boolean.class)) {
               ret.put(FLAG_MAP.get(name), Boolean.parseBoolean(value));
+            } else if (retType.equals(Float.class)) {
+              ret.put(FLAG_MAP.get(name), Float.parseFloat(value));
+            } else if (retType.equals(Double.class)) {
+              ret.put(FLAG_MAP.get(name), Double.parseDouble(value));
+            } else {
+              // Flag exists, but its type is unknown, so it can not be
+              // properly encoded in JSON.
+              LOG.warning("Ignoring flag [" + name + "] with unknown return type: " + retType);
             }
-
 
           // Ignore the flag on any exception
           } catch (SecurityException ex) {
@@ -118,7 +126,7 @@ public class WaveClientServlet extends HttpServlet {
 
       return ret;
     } catch (JSONException ex) {
-      LOG.severe("Failed to create session JSON");
+      LOG.severe("Failed to create flags JSON");
       return new JSONObject();
     }
   }
