@@ -109,8 +109,7 @@ public class ClientBackend {
      * @throws IOException if the client backend can't connect to the server.
      * @return the new ClientBackend.
      */
-    public ClientBackend create(final String userAtDomain, String server, int port)
-        throws IOException;
+    ClientBackend create(String userAtDomain, String server, int port) throws IOException;
   }
 
   /**
@@ -118,16 +117,16 @@ public class ClientBackend {
    */
   public interface RpcObjectFactory {
     /**
-     * @return a {@code ClientRpcChannel} connected to the given server and
+     * @return a {@link ClientRpcChannel} connected to the given server and
      *         port.
      */
-    public ClientRpcChannel createClientChannel(String server, int port) throws IOException;
+    ClientRpcChannel createClientChannel(String server, int port) throws IOException;
 
     /**
-     * @return an RPC server interface backed by the given {@code
-     *         ClientRpcChannel}.
+     * @return an RPC server interface backed by the given
+     *         {@link ClientRpcChannel}.
      */
-    public ProtocolWaveClientRpc.Interface createServerInterface(ClientRpcChannel channel);
+    ProtocolWaveClientRpc.Interface createServerInterface(ClientRpcChannel channel);
   }
 
   /**
@@ -135,14 +134,13 @@ public class ClientBackend {
    */
   public static class DefaultFactory implements Factory {
     @Override
-    public ClientBackend create(final String userAtDomain, String server, int port)
-        throws IOException {
+    public ClientBackend create(String userAtDomain, String server, int port) throws IOException {
       return new ClientBackend(userAtDomain, server, port);
     }
   }
 
   /**
-   * Container for data to {@code WaveletOperationListener}s on events.
+   * Container for data to {@link WaveletOperationListener}s on events.
    */
   private static class WaveletEventData {
 
@@ -270,7 +268,7 @@ public class ClientBackend {
 
   /**
    * Create new client backend tied permanently to a given server and user, using a default
-   * {@code RpcObjectFactory} implementation. Open the client's index, and begin managing waves it
+   * {@link RpcObjectFactory} implementation. Open the client's index, and begin managing waves it
    * has access to.
    *
    * @param userAtDomain the user and their domain (for example, foo@bar.org).
@@ -756,7 +754,7 @@ public class ClientBackend {
   /**
    * Creates a new, empty wave view and stores it in {@code waves}.
    * @param waveId the new wave id
-   * @return the new wave's {@code ClientWaveView}
+   * @return the new wave's {@link ClientWaveView}
    */
   private ClientWaveView createWave(WaveId waveId) {
     ClientWaveView wave = new ClientWaveView(hashedVersionFactory, waveId);
