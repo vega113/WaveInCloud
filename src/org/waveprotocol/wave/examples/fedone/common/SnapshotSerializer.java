@@ -18,7 +18,6 @@
 package org.waveprotocol.wave.examples.fedone.common;
 
 import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
@@ -26,16 +25,19 @@ import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableBlipData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
+import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.Collection;
 
@@ -93,9 +95,15 @@ public class SnapshotSerializer {
    */
   public static ObservableWaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
       throws OperationException, InvalidParticipantAddress {
-    WaveletName name = WaveletName.of(waveId, WaveletId.deserialise(snapshot.getWaveletId()));
-    ObservableWaveletData wavelet = WaveletDataUtil.createEmptyWavelet(name,
-        getParticipantId(snapshot.getCreator()), snapshot.getCreationTime());
+    ObservableWaveletData.Factory<? extends ObservableWaveletData> factory
+        = WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
+    
+    ParticipantId author = ParticipantId.of(snapshot.getCreator());
+    WaveletId waveletId = WaveletId.deserialise(snapshot.getWaveletId());
+    long creationTime = snapshot.getCreationTime();
+    
+    ObservableWaveletData wavelet = factory.create(new EmptyWaveletSnapshot(waveId, waveletId,
+            author, creationTime));
 
     for (String participant : snapshot.getParticipantIdList()) {
       wavelet.addParticipant(getParticipantId(participant));
