@@ -26,10 +26,11 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.testing.BasicFactories;
+import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableBlipData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -96,7 +97,7 @@ public class SnapshotSerializer {
    */
   public static ObservableWaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
       throws OperationException, InvalidParticipantAddress {
-    Factory factory = WaveletDataImpl.Factory.create(BasicFactories.muteDocumentFactory());
+    Factory factory = WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
     
     ParticipantId author = ParticipantId.of(snapshot.getCreator());
     WaveletId waveletId = WaveletId.deserialise(snapshot.getWaveletId());
