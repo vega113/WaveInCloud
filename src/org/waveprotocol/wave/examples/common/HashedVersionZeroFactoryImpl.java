@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.common;
+package org.waveprotocol.wave.examples.common;
 
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -47,7 +47,7 @@ public class HashedVersionZeroFactoryImpl implements HashedVersionFactory {
       return new HashedVersion(0, historyHash);
     } catch (EncodingException e) {
       throw new IllegalArgumentException("Bad wavelet name " + waveletName, e);
-    } catch (UnsupportedEncodingException e) {
+    } catch (UnsupportedEncodingException e) { // From getBytes().
       throw new IllegalStateException("UTF-8 unsupported in creating version zero hash", e);
     }
   }

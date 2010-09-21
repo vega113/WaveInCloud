@@ -19,6 +19,8 @@ package org.waveprotocol.wave.examples.fedone.common;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 
 import java.security.MessageDigest;

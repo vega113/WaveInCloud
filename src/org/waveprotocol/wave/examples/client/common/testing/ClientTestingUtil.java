@@ -20,9 +20,7 @@ package org.waveprotocol.wave.examples.client.common.testing;
 import static junit.framework.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.waveprotocol.wave.examples.fedone.common.DocumentConstants.MANIFEST_DOCUMENT_ID;
-import static org.waveprotocol.wave.examples.fedone.util.testing.TestingConstants.TEST_TIMEOUT;
-import static org.waveprotocol.wave.examples.fedone.util.testing.TestingConstants.WAVELET_NAME;
+import static org.waveprotocol.wave.examples.common.DocumentConstants.MANIFEST_DOCUMENT_ID;
 
 import com.google.common.collect.Lists;
 
@@ -31,8 +29,9 @@ import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.client.console.ConsoleClient;
 import org.waveprotocol.wave.examples.client.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
+import org.waveprotocol.wave.examples.common.HashedVersionFactory;
+import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
+import org.waveprotocol.wave.examples.common.Snippets;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
@@ -59,6 +58,15 @@ import java.util.concurrent.TimeUnit;
  * @author mk.mateng@gmail.com (Michael Kuntzman)
  */
 public class ClientTestingUtil {
+
+  /**
+   * Timeout, in milliseconds, for tests that may fail through abnormal
+   * behaviors such as deadlocks or infinite loops. Usually 1000-2000 ms should
+   * be enough. We give a little more to be safe.
+   */
+  public static final long TEST_TIMEOUT = 5000;
+
+
 
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
@@ -126,14 +134,11 @@ public class ClientTestingUtil {
   }
 
   /**
-   * Creates a new empty wavelet with an empty manifest document using
-   * {@code TestingConstants.WAVELET_NAME} for the wavelet's name. The wavelet is not part of a
-   * {@code ClientWaveView} and not stored in the client backend.
-   *
-   * @return the new wavelet
+   * Creates a new empty wavelet. The wavelet is not part of a {@code
+   * ClientWaveView} and not stored in the client backend.
    */
   public WaveletData createWavelet() throws OperationException {
-    return createWavelet(WAVELET_NAME, userId);
+    return createWavelet(WaveletName.of("example.com!wave", "example.com!wavelet"), userId);
   }
 
   /**
@@ -275,7 +280,7 @@ public class ClientTestingUtil {
    * @return A string containing the characters from the blip.
    */
   public static String getText(BlipData blip) {
-    return ClientUtils.collateTextForDocuments(Lists.newArrayList(blip));
+    return Snippets.collateTextForDocuments(Lists.newArrayList(blip));
   }
 
   /**
@@ -294,7 +299,7 @@ public class ClientTestingUtil {
         docOps.add(op.getOperation());
       }
     }
-    return ClientUtils.collateTextForOps(docOps);
+    return Snippets.collateTextForOps(docOps);
   }
 
   /**

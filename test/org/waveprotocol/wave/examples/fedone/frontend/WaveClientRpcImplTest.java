@@ -23,8 +23,8 @@ import com.google.protobuf.RpcController;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.frontend.testing.FakeClientFrontend;
 import org.waveprotocol.wave.examples.fedone.rpc.testing.FakeRpcController;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;

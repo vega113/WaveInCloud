@@ -46,13 +46,6 @@ public interface TestingConstants {
 
   public static final int PORT = 9876;
 
-  /**
-   * Timeout, in milliseconds, for tests that may fail through abnormal
-   * behaviors such as deadocks or infinite loops. Usually 1000-2000 ms should
-   * be enough. We give a little more to be safe.
-   */
-  public static final long TEST_TIMEOUT = 5000;
-
   public static final String USER = "user@" + DOMAIN;
 
   public static final ParticipantId PARTICIPANT = new ParticipantId(USER);

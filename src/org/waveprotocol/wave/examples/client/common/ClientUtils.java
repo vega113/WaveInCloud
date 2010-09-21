@@ -21,13 +21,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
+import org.waveprotocol.wave.examples.common.DocumentConstants;
+import org.waveprotocol.wave.examples.common.Snippets;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
-import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
@@ -42,7 +42,6 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -63,91 +62,6 @@ public class ClientUtils {
   }
 
   /**
-   * Concatenates all of the text for the given documents in
-   * {@link WaveletData}.
-   *
-   * @param wavelet the wavelet for which to concatenate the documents.
-   * @return A String containing the characters from all documents.
-   */
-  public static String collateTextForWavelet(WaveletData wavelet) {
-    ArrayList<BlipData> documents = new ArrayList<BlipData>();
-
-    for (String documentId : wavelet.getDocumentIds()) {
-      documents.add(wavelet.getDocument(documentId));
-    }
-    return collateTextForDocuments(documents);
-  }
-
-  /**
-   * Concatenates all of the text of the specified blips into a single String.
-   *
-   * @param documents the documents to concatenate.
-   * @return A String containing the characters from all documents.
-   */
-  public static String collateTextForDocuments(Iterable<BlipData> documents) {
-    ArrayList<DocOp> docOps = new ArrayList<DocOp>();
-    for (BlipData blipData : documents) {
-      docOps.add(blipData.getContent().asOperation());
-    }
-    return collateTextForOps(docOps);
-  }
-
-  /**
-   * Concatenates all of the text of the specified docops into a single String.
-   *
-   * @param documentops the document operations to concatenate.
-   * @return A String containing the characters from the operations.
-   */
-  public static String collateTextForOps(Iterable<DocOp> documentops) {
-    final StringBuilder resultBuilder = new StringBuilder();
-    for (DocOp docOp : documentops) {
-      docOp.apply(InitializationCursorAdapter.adapt(new DocOpCursor() {
-        @Override
-        public void characters(String s) {
-          resultBuilder.append(s);
-        }
-
-        @Override
-        public void annotationBoundary(AnnotationBoundaryMap map) {
-        }
-
-        @Override
-        public void elementStart(String type, Attributes attrs) {
-        }
-
-        @Override
-        public void elementEnd() {
-        }
-
-        @Override
-        public void retain(int itemCount) {
-        }
-
-        @Override
-        public void deleteCharacters(String chars) {
-        }
-
-        @Override
-        public void deleteElementStart(String type, Attributes attrs) {
-        }
-
-        @Override
-        public void deleteElementEnd() {
-        }
-
-        @Override
-        public void replaceAttributes(Attributes oldAttrs, Attributes newAttrs) {
-        }
-
-        @Override
-        public void updateAttributes(AttributesUpdate attrUpdate) {
-        }
-      }));
-    }
-    return resultBuilder.toString();
-  }
-
-  /**
    * Collect the text of all of the documents in a wave into a single String.
    *
    * TODO: move this to the console package (...console.ConsoleUtils)
@@ -160,7 +74,8 @@ public class ClientUtils {
     for (WaveletData wavelet : wave.getWavelets()) {
       Set<String> documentIds = wavelet.getDocumentIds();
       for (String documentId : documentIds) {
-        doc.append(ClientUtils.collateTextForDocuments(Arrays.asList(wavelet.getDocument(documentId))));
+        doc.append(
+            Snippets.collateTextForDocuments(Arrays.asList(wavelet.getDocument(documentId))));
       }
     }
     return doc.toString();
@@ -354,54 +269,5 @@ public class ClientUtils {
    */
   public static WaveletId getConversationRootId(WaveId waveId) {
     return new WaveletId(waveId.getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET);
-  }
-
-  /**
-   * Returns a snippet or null.
-   */
-  public static String renderSnippet(final WaveletData wavelet, final int maxSnippetLength) {
-    BlipData blip = wavelet.getDocument(DocumentConstants.CONVERSATION);
-    if (blip == null) {
-      // Render whatever data we have and hope its good enough
-      return ClientUtils.collateTextForWavelet(wavelet);
-    }
-
-    DocOp docOp = blip.getContent().asOperation();
-    final StringBuilder sb = new StringBuilder();
-    docOp.apply(InitializationCursorAdapter.adapt(new DocInitializationCursor() {
-      @Override
-      public void annotationBoundary(AnnotationBoundaryMap map) {
-      }
-
-      @Override
-      public void characters(String chars) {
-        // No chars in the conversation manifest
-      }
-
-      @Override
-      public void elementEnd() {
-      }
-
-      @Override
-      public void elementStart(String type, Attributes attrs) {
-        if (sb.length() >= maxSnippetLength) {
-          return;
-        }
-
-        if (DocumentConstants.BLIP.equals(type)) {
-          String blipId = attrs.get(DocumentConstants.BLIP_ID);
-          if (blipId != null) {
-            BlipData document = wavelet.getDocument(blipId);
-            if (document == null) {
-              // We see this when a blip has been deleted
-              return;
-            }
-            sb.append(ClientUtils.collateTextForDocuments(Arrays.asList(document)));
-            sb.append(" ");
-          }
-        }
-      }
-    }));
-    return sb.toString();
   }
 }

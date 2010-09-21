@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.examples.client.webclient.common;
 
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.waveserver.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveViewSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshot;

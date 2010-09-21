@@ -23,8 +23,8 @@ import com.google.common.collect.Multimap;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
 import org.waveprotocol.wave.examples.fedone.util.Log;

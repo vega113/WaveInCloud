@@ -25,11 +25,11 @@ import com.google.common.collect.MapMaker;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import org.waveprotocol.wave.examples.client.common.ClientUtils;
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersionFactory;
+import org.waveprotocol.wave.examples.common.Snippets;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
@@ -347,7 +347,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
     Preconditions.checkState(expectedVersion.equals(deltaSequence.getStartVersion()),
         "Expected deltas starting at version %s, got %s",
         expectedVersion, deltaSequence.getStartVersion().getVersion());
-    String newDigest = digest(ClientUtils.renderSnippet(wavelet, 80));
+    String newDigest = digest(Snippets.renderSnippet(wavelet, 80));
 
     synchronized (waveletInfo) {
       waveletInfo.setCurrentVersion(deltaSequence.getEndVersion());

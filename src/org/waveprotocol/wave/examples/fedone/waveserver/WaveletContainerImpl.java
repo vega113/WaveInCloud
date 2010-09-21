@@ -23,9 +23,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;

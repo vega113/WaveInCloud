@@ -19,7 +19,7 @@
   <inherits name='org.waveprotocol.wave.examples.client.webclient.common.communication.Communication'/>
   <inherits name='org.waveprotocol.wave.examples.client.webclient.util.Util'/>
   <inherits name='org.waveprotocol.wave.examples.client.webclient.waveclient.common.Common'/>
-  <inherits name="org.waveprotocol.wave.examples.fedone.common.CommonConstants"/>
+  <inherits name="org.waveprotocol.wave.examples.common.Common"/>
   <inherits name='org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc'/>
 
   <!-- Specify the app entry point class.                         -->

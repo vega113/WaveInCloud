@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;

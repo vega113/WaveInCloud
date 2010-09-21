@@ -33,7 +33,7 @@ import org.waveprotocol.wave.crypto.TrustRootsProvider;
 import org.waveprotocol.wave.crypto.VerifiedCertChainCache;
 import org.waveprotocol.wave.crypto.WaveCertPathValidator;
 import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
+import org.waveprotocol.wave.examples.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl;

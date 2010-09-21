@@ -19,7 +19,7 @@ package org.waveprotocol.wave.examples.client.webclient.client;
 
 import com.google.gwt.user.client.Window;
 
-import org.waveprotocol.wave.examples.fedone.common.SessionConstants;
+import org.waveprotocol.wave.examples.common.SessionConstants;
 
 /**
  * Session data for the web client.

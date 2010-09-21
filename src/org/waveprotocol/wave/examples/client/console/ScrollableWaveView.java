@@ -22,7 +22,7 @@ import com.google.inject.internal.Preconditions;
 
 import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.examples.client.common.ClientWaveView;
-import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
+import org.waveprotocol.wave.examples.common.DocumentConstants;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;

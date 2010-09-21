@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 
 import jline.ANSIBuffer;
 
-import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
+import org.waveprotocol.wave.examples.common.DocumentConstants;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
