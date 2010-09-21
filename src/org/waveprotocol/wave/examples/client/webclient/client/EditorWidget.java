@@ -30,7 +30,7 @@ import org.waveprotocol.wave.client.widget.popup.PopupChrome;
 import org.waveprotocol.wave.client.widget.popup.PopupChromeProvider;
 import org.waveprotocol.wave.client.widget.popup.simple.Popup;
 import org.waveprotocol.wave.examples.client.webclient.util.Log;
-import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
+import org.waveprotocol.wave.examples.common.DocumentConstants;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.LineContainers;

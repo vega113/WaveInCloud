@@ -19,7 +19,7 @@ package org.waveprotocol.wave.examples.client.webclient.common;
 
 
 import org.waveprotocol.wave.concurrencycontrol.common.Delta;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.ProtocolWaveletOperation;

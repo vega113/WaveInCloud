@@ -27,7 +27,6 @@ import org.waveprotocol.wave.examples.client.common.ClientBackend;
 import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.client.common.IndexEntry;
 import org.waveprotocol.wave.examples.client.common.testing.ClientTestingUtil;
-import org.waveprotocol.wave.examples.client.console.ConsoleClient;
 import org.waveprotocol.wave.examples.client.console.ScrollableWaveView.RenderMode;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 import org.waveprotocol.wave.examples.fedone.util.testing.TestingConstants;
@@ -123,7 +122,7 @@ public class ConsoleClientTest extends TestCase implements TestingConstants {
     assertFalse(client.isWaveOpen());
 
     // The index should contain only the new wave.
-    List<IndexEntry> index = IndexWave.getIndexEntries(indexWave);
+    List<IndexEntry> index = IndexWave.getIndexEntries(indexWave.getWavelets());
     assertEquals(1, index.size());
     WaveId newWaveId = index.get(0).getWaveId();
     assertThat(openWaves, contains(newWaveId));
@@ -170,7 +169,7 @@ public class ConsoleClientTest extends TestCase implements TestingConstants {
       createNewWave();
     }
 
-    List<IndexEntry> index = IndexWave.getIndexEntries(backend.getIndexWave());
+    List<IndexEntry> index = IndexWave.getIndexEntries(backend.getIndexWave().getWavelets());
     for (int i=0; i < index.size(); ++i) {
       openWave(i);
 
@@ -291,7 +290,7 @@ public class ConsoleClientTest extends TestCase implements TestingConstants {
       createNewWave();
     }
 
-    List<IndexEntry> index = IndexWave.getIndexEntries(backend.getIndexWave());
+    List<IndexEntry> index = IndexWave.getIndexEntries(backend.getIndexWave().getWavelets());
 
     // Check that all waves are unread.
     for (int i=0; i < index.size(); ++i) {
@@ -435,7 +434,7 @@ public class ConsoleClientTest extends TestCase implements TestingConstants {
    * @return true if the two versions are the same, or false otherwise
    */
   private boolean isRead(int entry) {
-    List<IndexEntry> index = IndexWave.getIndexEntries(backend.getIndexWave());
+    List<IndexEntry> index = IndexWave.getIndexEntries(backend.getIndexWave().getWavelets());
     ClientWaveView wave = backend.getWave(index.get(entry).getWaveId());
     return client.isRead(wave);
   }

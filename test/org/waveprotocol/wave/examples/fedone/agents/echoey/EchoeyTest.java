@@ -27,7 +27,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.waveprotocol.wave.examples.fedone.common.DocumentConstants.MANIFEST_DOCUMENT_ID;
+import static org.waveprotocol.wave.examples.common.DocumentConstants.MANIFEST_DOCUMENT_ID;
 import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.Aliases.contains;
 import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.Aliases.matches;
 

@@ -32,8 +32,8 @@ import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.client.common.IndexEntry;
 import org.waveprotocol.wave.examples.client.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.client.console.ScrollableWaveView.RenderMode;
-import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.DocumentConstants;
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
@@ -104,7 +104,7 @@ public class ConsoleClient implements WaveletOperationListener {
   /**
    * Number of lines to scroll by with { and }.
    */
-  private AtomicInteger scrollLines = new AtomicInteger(1);
+  private final AtomicInteger scrollLines = new AtomicInteger(1);
 
   /**
    * PrintStream to use for output.  We don't use ConsoleReader's functionality
@@ -605,7 +605,7 @@ public class ConsoleClient implements WaveletOperationListener {
   /**
    * Checks if the specified wave has been read.
    *
-   * @param wave to check. 
+   * @param wave to check.
    * @return true if the wave was read.
    */
   @VisibleForTesting
@@ -662,7 +662,7 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void doOpenWave(int entry) {
     if (isConnected()) {
-      List<IndexEntry> index = IndexWave.getIndexEntries(backend.getIndexWave());
+      List<IndexEntry> index = IndexWave.getIndexEntries(backend.getIndexWave().getWavelets());
 
       if (entry >= index.size()) {
         out.print("Error: entry is out of range, ");
@@ -709,7 +709,7 @@ public class ConsoleClient implements WaveletOperationListener {
 
   /**
    * Add a participant to the currently open wave(let).
-   * 
+   *
    * @param name name of the participant to add
    */
   private void addParticipant(String name) {
@@ -732,7 +732,7 @@ public class ConsoleClient implements WaveletOperationListener {
 
   /**
    * Remove a participant from the currently open wave(let).
-   * 
+   *
    * @param name name of the participant to remove
    */
   private void removeParticipant(String name) {
@@ -755,7 +755,7 @@ public class ConsoleClient implements WaveletOperationListener {
    * Ensures that a domain name is present in the returned string, by either
    * returning the given string or by appending the domain name of the local
    * user.
-   * 
+   *
    * @param address the address to ensure has a domain
    * @return {@link String} which at least contains the domain prefix.
    */

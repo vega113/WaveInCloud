@@ -25,7 +25,7 @@ import org.waveprotocol.wave.examples.client.common.ClientBackend;
 import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.client.common.IndexEntry;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 
 import java.util.List;
@@ -56,7 +56,7 @@ public class ScrollableInbox extends ConsoleScrollable {
    * @param indexWave to render
    */
   public ScrollableInbox(ClientBackend backend, ClientWaveView indexWave) {
-    Preconditions.checkArgument(IndexWave.isIndexWave(indexWave), indexWave +
+    Preconditions.checkArgument(IndexWave.isIndexWave(indexWave.getWaveId()), indexWave +
         " is not an index wave");
 
     this.indexWave = indexWave;
@@ -95,7 +95,7 @@ public class ScrollableInbox extends ConsoleScrollable {
    * Mark all waves as read.
    */
   public void markAllAsRead() {
-    for (IndexEntry indexEntry : IndexWave.getIndexEntries(indexWave)) {
+    for (IndexEntry indexEntry : IndexWave.getIndexEntries(indexWave.getWavelets())) {
       ClientWaveView wave = backend.getWave(indexEntry.getWaveId());
       markAsRead(wave);
     }
@@ -103,7 +103,7 @@ public class ScrollableInbox extends ConsoleScrollable {
 
   @Override
   public List<String> render(int width, int height) {
-    List<IndexEntry> indexEntries = IndexWave.getIndexEntries(indexWave);
+    List<IndexEntry> indexEntries = IndexWave.getIndexEntries(indexWave.getWavelets());
     List<String> lines = Lists.newArrayList();
 
     for (int i = 0; i < indexEntries.size(); i++) {

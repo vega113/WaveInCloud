@@ -20,7 +20,7 @@ package org.waveprotocol.wave.examples.client.webclient.common;
 import com.google.common.util.Base64DecoderException;
 import com.google.common.util.CharBase64;
 
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.waveserver.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshot;
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;

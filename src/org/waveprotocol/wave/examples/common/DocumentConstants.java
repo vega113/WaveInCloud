@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.common;
+package org.waveprotocol.wave.examples.common;
 
 /**
  * Constants relating to the document model.

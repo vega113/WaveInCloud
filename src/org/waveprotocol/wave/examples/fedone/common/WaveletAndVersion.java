@@ -16,6 +16,7 @@
  */
 package org.waveprotocol.wave.examples.fedone.common;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 /**

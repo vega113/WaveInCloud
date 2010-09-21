@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.examples.client.common;
 
-import static org.waveprotocol.wave.examples.fedone.common.CommonConstants.INDEX_WAVE_ID;
+import static org.waveprotocol.wave.examples.common.CommonConstants.INDEX_WAVE_ID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -29,11 +29,11 @@ import com.google.inject.Inject;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
+import org.waveprotocol.wave.examples.common.DocumentConstants;
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersionFactory;
+import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.wave.examples.fedone.common.DocumentConstants;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactory;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 import org.waveprotocol.wave.examples.fedone.rpc.ClientRpcChannel;
@@ -630,7 +630,7 @@ public class ClientBackend {
 
     // If it was an update to the index wave, might need to open/close some
     // more waves.
-    if (IndexWave.isIndexWave(wave)) {
+    if (IndexWave.isIndexWave(wave.getWaveId())) {
       syncWithIndexWave(wave);
     }
 
@@ -803,7 +803,7 @@ public class ClientBackend {
    * @param indexWave to synchronize with
    */
   private void syncWithIndexWave(ClientWaveView indexWave) {
-    List<IndexEntry> indexEntries = IndexWave.getIndexEntries(indexWave);
+    List<IndexEntry> indexEntries = IndexWave.getIndexEntries(indexWave.getWavelets());
 
     for (IndexEntry indexEntry : indexEntries) {
       if (!waveControllers.containsKey(indexEntry.getWaveId())) {

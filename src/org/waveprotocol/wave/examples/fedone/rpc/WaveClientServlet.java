@@ -21,7 +21,7 @@ import com.google.gxp.base.GxpContext;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.waveprotocol.wave.examples.fedone.common.SessionConstants;
+import org.waveprotocol.wave.examples.common.SessionConstants;
 import org.waveprotocol.wave.examples.fedone.gxp.WaveClientPage;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 

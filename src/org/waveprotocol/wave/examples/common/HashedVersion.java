@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.waveprotocol.wave.examples.fedone.common;
+package org.waveprotocol.wave.examples.common;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

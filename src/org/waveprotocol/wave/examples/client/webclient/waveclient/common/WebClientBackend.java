@@ -30,9 +30,9 @@ import org.waveprotocol.wave.examples.client.webclient.common.CoreWaveletOperati
 import org.waveprotocol.wave.examples.client.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.wave.examples.client.webclient.util.Log;
 import org.waveprotocol.wave.examples.client.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.wave.examples.fedone.common.CommonConstants;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionZeroFactoryImpl;
+import org.waveprotocol.wave.examples.common.CommonConstants;
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolWaveletUpdate;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshot;
