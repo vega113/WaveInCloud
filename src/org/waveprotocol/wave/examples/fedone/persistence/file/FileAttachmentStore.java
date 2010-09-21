@@ -15,11 +15,14 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.persistence;
+package org.waveprotocol.wave.examples.fedone.persistence.file;
 
 import com.google.common.util.CharBase64;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+
+import org.waveprotocol.wave.examples.fedone.persistence.AttachmentStore;
+import org.waveprotocol.wave.examples.fedone.persistence.AttachmentUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,42 +38,44 @@ import java.util.Date;
  *
  * @author josephg@gmail.com (Joseph Gentle)
  */
-public class FileBasedAttachmentStore implements AttachmentStore {
+public class FileAttachmentStore implements AttachmentStore {
+
+  /**
+   * The directory in which the attachments are stored
+   */
+  private String path;
+
   @Inject
-  public FileBasedAttachmentStore(@Named("attachment_store_directory") String requestedPath) {
-    setupPath(requestedPath);
+  public FileAttachmentStore(@Named("attachment_store_directory") String requestedPath) {
+    path = makePath(requestedPath);
   }
-  
-  private void setupPath(String requestedPath) {
+
+  private static String makePath(String requestedPath) {
     // Should check the directory exists and create it if it doesn't.
     File path = new File(requestedPath);
- 
+
     if (!path.exists()) {
       boolean succeeded = path.mkdirs();
       if (!succeeded) {
         throw new RuntimeException("Cannot create attachment store at path '" + requestedPath + "'");
       }
     }
-    
-    this.path = path.getAbsolutePath();
+
+    return path.getAbsolutePath();
   }
-  
-  /**
-   * The directory in which the attachments are stored
-   */
-  private String path;
-  
-  String getAttachmentPath(String id) {
-    String encodedId;
+
+  private static String encodeId(String id) {
     try {
-      encodedId = CharBase64.encode(id.getBytes("UTF-8"));
+      return CharBase64.encode(id.getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
     }
-    
-    return path + File.separatorChar + encodedId;
   }
-  
+
+  private String getAttachmentPath(String id) {
+    return path + File.separatorChar + encodeId(id);
+  }
+
   @Override
   public AttachmentData getAttachment(String id) {
     final File file = new File(getAttachmentPath(id));
@@ -83,12 +88,12 @@ public class FileBasedAttachmentStore implements AttachmentStore {
       public Date getLastModifiedDate() {
         return new Date(file.lastModified());
       }
-    
+
       @Override
       public InputStream getInputStream() throws IOException {
         return new FileInputStream(file);
       }
-    
+
       @Override
       public long getContentSize() {
         return file.length();
@@ -106,7 +111,7 @@ public class FileBasedAttachmentStore implements AttachmentStore {
   @Override
   public boolean storeAttachment(String id, InputStream data) throws IOException {
     File file = new File(getAttachmentPath(id));
-    
+
     if (file.exists()) {
       return false;
     } else {

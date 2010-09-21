@@ -19,7 +19,7 @@ package org.waveprotocol.wave.examples.fedone.persistence.file;
 
 import org.waveprotocol.wave.examples.fedone.persistence.AttachmentStore;
 import org.waveprotocol.wave.examples.fedone.persistence.AttachmentStoreTestBase;
-import org.waveprotocol.wave.examples.fedone.persistence.FileBasedAttachmentStore;
+import org.waveprotocol.wave.examples.fedone.persistence.file.FileAttachmentStore;
 
 import java.io.File;
 
@@ -28,32 +28,32 @@ import java.io.File;
  * attachment store.
  */
 public class AttachmentStoreTest extends AttachmentStoreTestBase {
-  private String pathName; 
-  
+  private String pathName;
+
   @Override
   protected void setUp() throws Exception {
     // We want a temporary directory. createTempFile will make a file with a
     // good temporary path. Its a bit nasty, but we'll create the file, then
     // delete it and create a directory with the same name.
-    
+
     File dir = File.createTempFile("fedoneattachments", null);
     pathName = dir.getAbsolutePath();
-    
+
     if (!dir.delete() || !dir.mkdir()) {
       throw new RuntimeException("Could not make temporary directory for attachment store: "
           + dir);
     }
   }
-  
+
   @Override
   protected AttachmentStore newAttachmentStore() {
-    return new FileBasedAttachmentStore(pathName);
+    return new FileAttachmentStore(pathName);
   }
 
   @Override
   protected void tearDown() throws Exception {
     super.tearDown();
-    
+
     File path = new File(pathName);
     if (path.exists()) {
       // ... And delete all the files in the directory.
@@ -62,7 +62,7 @@ public class AttachmentStoreTest extends AttachmentStoreTestBase {
       }
       path.delete();
     }
-    
+
     // On Linux, it will be impossible to delete the directory until all of the
     // input streams have been closed. This is annoying, but gives us a nice
     // check to make sure everyone is behaving themselves.

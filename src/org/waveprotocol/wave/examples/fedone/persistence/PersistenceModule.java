@@ -23,6 +23,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.waveprotocol.wave.crypto.CertPathStore;
+import org.waveprotocol.wave.examples.fedone.persistence.file.FileAttachmentStore;
 import org.waveprotocol.wave.examples.fedone.persistence.memory.MemoryStore;
 import org.waveprotocol.wave.examples.fedone.persistence.mongodb.MongoDbProvider;
 
@@ -94,7 +95,7 @@ public class PersistenceModule extends AbstractModule {
 
   private void bindAttachmentStore() {
     if (attachmentStoreType.equalsIgnoreCase("disk")) {
-      bind(AttachmentStore.class).to(FileBasedAttachmentStore.class).in(Singleton.class);
+      bind(AttachmentStore.class).to(FileAttachmentStore.class).in(Singleton.class);
     } else if (attachmentStoreType.equalsIgnoreCase("mongodb")) {
       MongoDbProvider mongoDbProvider = getMongoDbProvider();
       bind(AttachmentStore.class).toInstance(mongoDbProvider.provideMongoDbStore());
