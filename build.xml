@@ -173,10 +173,10 @@
     </junit>
 
     <junitreport todir="${dir.testout}">
-      <fileset dir="${dir.testout}"> 
-        <include name="TEST-*.xml"/> 
-      </fileset> 
-      <report format="frames" todir="${dir.testout}"/> 
+      <fileset dir="${dir.testout}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report format="frames" todir="${dir.testout}"/>
     </junitreport>
 
     <fail message="Tests failed. Check log and/or reports."
@@ -204,10 +204,10 @@
       </junit>
 
       <junitreport todir="${dir.testout}">
-        <fileset dir="${dir.testout}"> 
-          <include name="TEST-*.xml"/> 
-        </fileset> 
-        <report format="frames" todir="${dir.testout}"/> 
+        <fileset dir="${dir.testout}">
+          <include name="TEST-*.xml"/>
+        </fileset>
+        <report format="frames" todir="${dir.testout}"/>
       </junitreport>
 
       <fail message="Tests failed. Check log and/or reports."
@@ -249,6 +249,7 @@
       <jvmarg value="-Xmx512M"/>
       <jvmarg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8001"/>
       <arg value="-noserver" />
+      <arg line="-bindAddress 0.0.0.0" />
       <arg line="${gwt.args}"/>
       <arg value="org.waveprotocol.wave.examples.client.webclient.WebClient"/>
     </java>
