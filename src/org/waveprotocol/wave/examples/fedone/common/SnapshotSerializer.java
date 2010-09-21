@@ -37,7 +37,6 @@ import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
-import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl.Factory;
 
 import java.util.Collection;
 
@@ -95,7 +94,8 @@ public class SnapshotSerializer {
    */
   public static ObservableWaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
       throws OperationException, InvalidParticipantAddress {
-    Factory factory = WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
+    ObservableWaveletData.Factory<? extends ObservableWaveletData> factory
+        = WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
     
     ParticipantId author = ParticipantId.of(snapshot.getCreator());
     WaveletId waveletId = WaveletId.deserialise(snapshot.getWaveletId());
