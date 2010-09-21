@@ -293,7 +293,7 @@ public class ServerRpcProvider {
       httpServer.addConnector(createSelectChannelConnector("localhost", httpPort));
     }
 
-    ServletContextHandler context = new ServletContextHandler();
+    ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     context.setResourceBase("./war");
 
     // webclient_redirect.html will redirect to the wave servlet.

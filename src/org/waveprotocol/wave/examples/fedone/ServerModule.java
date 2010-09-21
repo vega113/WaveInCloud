@@ -22,6 +22,7 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
+import org.waveprotocol.wave.examples.fedone.authentication.ConfigurationProvider;
 import org.waveprotocol.wave.examples.fedone.rpc.ProtoSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerModule;
@@ -39,6 +40,8 @@ import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
 import java.util.Arrays;
 import java.util.List;
+
+import javax.security.auth.login.Configuration;
 
 /**
  * Guice Module for the prototype Server.
@@ -82,5 +85,7 @@ public class ServerModule extends AbstractModule {
     bind(certs).annotatedWith(Names.named("certs")).toInstance(Arrays.<String> asList());
     
     bind(ProtoSerializer.class).in(Singleton.class);
+    
+    bind(Configuration.class).toInstance(ConfigurationProvider.get());
   }
 }

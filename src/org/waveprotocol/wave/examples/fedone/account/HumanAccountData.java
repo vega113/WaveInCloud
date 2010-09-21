@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.account;
 
+import org.waveprotocol.wave.examples.fedone.authentication.PasswordDigest;
 
 /**
  * {@link HumanAccountData} representing an account from a human. This is likely
@@ -25,4 +26,24 @@ package org.waveprotocol.wave.examples.fedone.account;
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public interface HumanAccountData extends AccountData {
+  /**
+   * Get the user's password digest. The digest can be used to authenticate
+   * the user.
+   * 
+   * This method will return null if password based authentication is disabled
+   * for the user (or if no password is set).
+   * 
+   * @return The user's password digest.
+   */
+  public PasswordDigest getPasswordDigest();
+  
+  /**
+   * Reset the user's password to the specified string.
+   * 
+   * After this method is called, the caller must zero the password bytes to
+   * ensure that the user's credentials don't leak.
+   * 
+   * @param password The user's new password
+   */
+  public void setPassword(char[] password);
 }
