@@ -19,28 +19,61 @@ package org.waveprotocol.wave.examples.fedone.account;
 
 import com.google.common.base.Preconditions;
 
+import org.waveprotocol.wave.examples.fedone.authentication.PasswordDigest;
+
+import javax.annotation.Nullable;
+
 /**
  * Human Account. Expected to be expanded when authentication is implemented.
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public final class HumanAccountDataImpl implements HumanAccountData {
-
   private final String username;
+  private PasswordDigest passwordDigest;
 
   /**
-   * Creates an {@link HumanAccountData} for the given username.
+   * Creates an {@link HumanAccountData} for the given username, with no
+   * password.
+   * 
+   * This user will not be able to login using password-bsed authentication.
    *
    * @param username non-null username for this account.
    */
   public HumanAccountDataImpl(String username) {
+    this(username, null);
+  }
+  
+  /**
+   * Creates an {@link HumanAccountData} for the given username.
+   *
+   * @param username non-null username for this account.
+   * @param password The user's password, or null if the user should not be
+   *        authenticated using a password.
+   */
+  public HumanAccountDataImpl(String username, @Nullable char[] password) {
     Preconditions.checkNotNull(username, "Username can not be null");
+    
     this.username = username;
+    
+    if (password != null) {
+      setPassword(password);
+    }
   }
 
   @Override
   public String getUsername() {
     return username;
+  }
+
+  public void setPassword(char[] newPassword) {
+    Preconditions.checkNotNull(newPassword);
+
+    if (passwordDigest == null) {
+      passwordDigest = new PasswordDigest();
+    }
+    
+    passwordDigest.set(newPassword);
   }
 
   @Override
@@ -81,5 +114,10 @@ public final class HumanAccountDataImpl implements HumanAccountData {
     }
     HumanAccountDataImpl other = (HumanAccountDataImpl) obj;
     return username.equals(other.username);
+  }
+
+  @Override
+  public PasswordDigest getPasswordDigest() {
+    return passwordDigest;
   }
 }

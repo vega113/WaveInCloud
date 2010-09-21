@@ -20,10 +20,13 @@ package org.waveprotocol.wave.examples.fedone;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+
 import org.apache.commons.cli.ParseException;
+import org.waveprotocol.wave.examples.fedone.authentication.AccountStoreBridge;
 import org.waveprotocol.wave.examples.fedone.persistence.PersistenceModule;
 import org.waveprotocol.wave.examples.fedone.robots.RobotRegistrationServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.AttachmentServlet;
+import org.waveprotocol.wave.examples.fedone.rpc.AuthenticationServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.FetchServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.ServerRpcProvider;
 import org.waveprotocol.wave.examples.fedone.util.Log;
@@ -61,9 +64,11 @@ public class ServerMain {
     ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
 
+    injector.getInstance(AccountStoreBridge.class);
+    
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
-    
+    server.addServlet("/auth", injector.getInstance(AuthenticationServlet.class));
     server.addServlet("/robot/*", injector.getInstance(RobotRegistrationServlet.class));
 
     ProtocolWaveClientRpc.Interface rpcImpl =
