@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.authentication;
 
+import com.google.common.base.Preconditions;
+
 import java.security.Principal;
 
 /**
@@ -25,41 +27,39 @@ import java.security.Principal;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public final class AccountStorePrincipal implements Principal {
-  private String username;
+  final private String address;
   
   /**
    * Create a WavePrincipal for the given wave username.
    * 
-   * @param username The user's username. Does not include the domain.
+   * @param address The user's username. Does not include the domain.
    */
-  public AccountStorePrincipal(String username) {
-    this.username = username;
+  public AccountStorePrincipal(String address) {
+    Preconditions.checkNotNull(address, "Address is null");
+    this.address = address;
   }
   
   @Override
   public String getName() {
-    return username;
+    return address;
   }
 
   @Override
-  public int hashCode() {
-    return username.hashCode();
+  public String toString() {
+    return "[Principal " + address + "]";
   }
   
   @Override
-  public String toString() {
-    return "[Principal " + username + "]";
+  public int hashCode() {
+    return address.hashCode();
   }
-
+  
   @Override
   public boolean equals(Object obj) {
     if (this == obj) return true;
     if (obj == null) return false;
     if (getClass() != obj.getClass()) return false;
     AccountStorePrincipal other = (AccountStorePrincipal) obj;
-    if (username == null) {
-      if (other.username != null) return false;
-    } else if (!username.equals(other.username)) return false;
-    return true;
+    return address.equals(other.address);
   }
 }

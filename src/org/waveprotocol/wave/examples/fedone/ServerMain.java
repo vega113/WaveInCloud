@@ -22,7 +22,8 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import org.apache.commons.cli.ParseException;
-import org.waveprotocol.wave.examples.fedone.authentication.AccountStoreBridge;
+import org.waveprotocol.wave.examples.fedone.authentication.AccountStoreHolder;
+import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.PersistenceModule;
 import org.waveprotocol.wave.examples.fedone.robots.RobotRegistrationServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.AttachmentServlet;
@@ -64,7 +65,7 @@ public class ServerMain {
     ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
 
-    injector.getInstance(AccountStoreBridge.class);
+    AccountStoreHolder.init(injector.getInstance(AccountStore.class));
     
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));

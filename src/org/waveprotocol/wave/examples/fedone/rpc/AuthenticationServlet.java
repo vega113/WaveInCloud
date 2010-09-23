@@ -1,17 +1,17 @@
 /**
  * Copyright 2010 Google Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  *
  */
 
@@ -25,6 +25,7 @@ import org.eclipse.jetty.util.UrlEncoded;
 import org.waveprotocol.wave.examples.fedone.authentication.AccountStorePrincipal;
 import org.waveprotocol.wave.examples.fedone.authentication.ConfigurationProvider;
 import org.waveprotocol.wave.examples.fedone.authentication.HttpRequestBasedCallbackHandler;
+import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import java.io.IOException;
@@ -41,109 +42,125 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
- * A servlet for authenticating a user's password and giving them a token
- * via a cookie.
- * 
+ * A servlet for authenticating a user's password and giving them a token via a
+ * cookie.
+ *
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class AuthenticationServlet extends HttpServlet {
   // TODO(josephg): Make this pretty and put it somewhere else. The login
-  //     page should be implemented with GWT as part of the client.
-  private static final String SIMPLE_AUTH_FORM =
-    "<html><body><form name=\"auth\" method=\"POST\">"
-    + "<table class=\"form\"><tr><td>Username (foo@example.com)</td><td>"
-    + "<input name=\"username\" /></td></tr><tr><td>Password</td><td><input"
-    + " name=\"password\" type=\"password\" /></td></tr><tr><td colspan="
-    + "\"3\"><input type=\"submit\" value=\"Login\" /><br /></table></form>"
-    + "</body></html>";
-  
+  // page should be implemented with GWT as part of the client.
+  private static final String SIMPLE_AUTH_FORM = "<html><body><form name=\"auth\" method=\"POST\">"
+      + "<table class=\"form\"><tr><td>Username (foo@example.com)</td><td>" + "<input name=\""
+      + HttpRequestBasedCallbackHandler.ADDRESS_FIELD
+      + "\" /></td></tr><tr><td>Password</td><td><input name=\""
+      + HttpRequestBasedCallbackHandler.PASSWORD_FIELD
+      + "\" type=\"password\" /></td></tr><tr><td colspan=\"3\">"
+      + "<input type=\"submit\" value=\"Login\" /><br /></table></form></body></html>";
+
   private static final Log LOG = Log.get(AuthenticationServlet.class);
-  
-  private Configuration configuration;
-  
+
+  private final Configuration configuration;
+  private final SessionManager sessionManager;
+
   @Inject
-  public AuthenticationServlet(Configuration configuration) {
+  public AuthenticationServlet(Configuration configuration, SessionManager sessionManager) {
+    Preconditions.checkNotNull(configuration, "Configuration is null");
+    Preconditions.checkNotNull(sessionManager, "Session manager is null");
     this.configuration = configuration;
+    this.sessionManager = sessionManager;
   }
 
-  private Subject login(MultiMap<String> parameters) throws LoginException {
+  private LoginContext login(MultiMap<String> parameters) throws LoginException {
     Subject subject = new Subject();
     CallbackHandler callbackHandler = new HttpRequestBasedCallbackHandler(parameters);
-    
-    LoginContext context = new LoginContext(ConfigurationProvider.CONTEXT_NAME,
-        subject, callbackHandler, configuration);
-    
+
+    LoginContext context = new LoginContext(
+        ConfigurationProvider.CONTEXT_NAME, subject, callbackHandler, configuration);
+
     // If authentication fails, login() will throw a LoginException.
     context.login();
-    return subject;
+    return context;
   }
-  
+
   /**
    * The POST request should have all the fields required for authentication.
    */
   @Override
-  protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-      throws IOException {
-    Preconditions.checkNotNull(configuration);
-    
+  protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    // TODO(josephg): Figure out a way to decode the arguments such that the
+    // password is never stored as a string.
     MultiMap<String> arguments = new MultiMap<String>();
     UrlEncoded.decodeUtf8To(req.getInputStream(), arguments, 1024);
-    
-    Subject subject;
+
+    LoginContext context;
     try {
-      subject = login(arguments);
+      context = login(arguments);
     } catch (LoginException e) {
       resp.sendError(HttpServletResponse.SC_FORBIDDEN);
       LOG.info("User authentication failed: " + e.getLocalizedMessage());
       return;
     }
-    
-    String loggedInUser = getLoggedInUsername(subject);
-    if (loggedInUser == null) {
-      throw new IllegalStateException("The user provided valid authentication"
-          + " information, but we don't know how to map their identity to a"
-          + " wave username.");
+
+    Subject subject = context.getSubject();
+
+    String loggedInAddress = getLoggedInAddress(subject);
+    if (loggedInAddress == null) {
+      try {
+        context.logout();
+      } catch (LoginException e) {
+        // Logout failed. Absorb the error, since we're about to throw an
+        // illegal state exception anyway.
+      }
+      throw new IllegalStateException(
+          "The user provided valid authentication information, but we don't "
+              + "know how to map their identity to a wave user address.");
     }
-    
+
     HttpSession session = req.getSession(true);
-    session.setAttribute("username", loggedInUser);
-    session.setAttribute("subject", subject);
+    sessionManager.setLoggedInAddress(session, loggedInAddress);
+    // The context needs to be notified when the user logs out.
+    session.setAttribute("context", context);
     
     // TODO(josephg): Redirect back to where the user was last.
     resp.setStatus(HttpServletResponse.SC_OK);
     resp.setContentType("text/plain");
-    resp.getWriter().println("Authenticated.");
+    resp.getWriter().println("Authenticated as " + loggedInAddress);
   }
-  
-  String getLoggedInUsername(Subject subject) {
+
+  /**
+   * Get the user address of the given subject.
+   *
+   *  The subject is searched for compatible principals. When other
+   * authentication types are added, this method will need to be updated to
+   * support their principal types.
+   */
+  private String getLoggedInAddress(Subject subject) {
     for (Principal p : subject.getPrincipals()) {
       // TODO(josephg): When we support other authentication types (LDAP, etc),
-      // this method will need to read the username portion out of the other
+      // this method will need to read the address portion out of the other
       // principal types.
       if (p instanceof AccountStorePrincipal) {
         return ((AccountStorePrincipal) p).getName();
       }
     }
-    
+
     return null;
   }
-  
+
   /**
-   * On GET, present a login form.
+   * On GET, present a login form if the user isn't authenticated.
    */
   @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-      throws IOException {
-    Preconditions.checkNotNull(configuration);
-    
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     resp.setStatus(HttpServletResponse.SC_OK);
     resp.setContentType("text/html");
 
     HttpSession session = req.getSession(false);
-    if (session != null) {
-      String username = (String) session.getAttribute("username");
-      resp.getWriter().print("<html><body>Already authenticated as "
-          + username + "</body></html>");
+    String address = sessionManager.getLoggedInAddress(session);
+
+    if (address != null) {
+      resp.getWriter().print("<html><body>Already authenticated as " + address + "</body></html>");
     } else {
       resp.getWriter().write(SIMPLE_AUTH_FORM);
     }
