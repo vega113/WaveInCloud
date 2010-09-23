@@ -45,4 +45,9 @@ public class AccountStoreHolder {
     Preconditions.checkNotNull(store, "Account store not set");
     return store;
   }
+  
+  /** Needed for testing. */
+  public static void clearAccountStore() {
+    store = null;
+  }
 }

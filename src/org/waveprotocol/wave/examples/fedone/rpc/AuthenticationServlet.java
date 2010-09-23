@@ -28,6 +28,7 @@ import org.waveprotocol.wave.examples.fedone.authentication.HttpRequestBasedCall
 import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.security.Principal;
 
@@ -71,9 +72,20 @@ public class AuthenticationServlet extends HttpServlet {
     this.sessionManager = sessionManager;
   }
 
-  private LoginContext login(MultiMap<String> parameters) throws LoginException {
+  /**
+   * This method is used to read the arguments out of the request body. Care is
+   * taken to make sure the password is never stored in a string.
+   */
+  @SuppressWarnings("unchecked")
+  private MultiMap<String> getArgumentMap(BufferedReader body) throws IOException {
+    // TODO(josephg): Figure out a way to do this encoding without using
+    // intermediate string representations of the password.
+    return new UrlEncoded(body.readLine());
+  }
+  
+  private LoginContext login(BufferedReader body) throws IOException, LoginException {
     Subject subject = new Subject();
-    CallbackHandler callbackHandler = new HttpRequestBasedCallbackHandler(parameters);
+    CallbackHandler callbackHandler = new HttpRequestBasedCallbackHandler(getArgumentMap(body));
 
     LoginContext context = new LoginContext(
         ConfigurationProvider.CONTEXT_NAME, subject, callbackHandler, configuration);
@@ -88,14 +100,9 @@ public class AuthenticationServlet extends HttpServlet {
    */
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    // TODO(josephg): Figure out a way to decode the arguments such that the
-    // password is never stored as a string.
-    MultiMap<String> arguments = new MultiMap<String>();
-    UrlEncoded.decodeUtf8To(req.getInputStream(), arguments, 1024);
-
     LoginContext context;
     try {
-      context = login(arguments);
+      context = login(req.getReader());
     } catch (LoginException e) {
       resp.sendError(HttpServletResponse.SC_FORBIDDEN);
       LOG.info("User authentication failed: " + e.getLocalizedMessage());

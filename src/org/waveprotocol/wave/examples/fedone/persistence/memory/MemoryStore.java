@@ -74,7 +74,7 @@ public class MemoryStore implements CertPathStore, AccountStore {
 
   @Override
   public void putAccount(AccountData account) {
-    accountStore.put(account.getUsername(), account);
+    accountStore.put(account.getAddress(), account);
   }
 
   @Override

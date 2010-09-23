@@ -49,6 +49,10 @@ public class ConfigurationProvider {
     };
   }
 
+  /**
+   * Get the current JAAS configuration. The default configuration is provided
+   * if JAAS has not been configured.
+   */
   public static Configuration get() {
     Configuration configuration;
     try {

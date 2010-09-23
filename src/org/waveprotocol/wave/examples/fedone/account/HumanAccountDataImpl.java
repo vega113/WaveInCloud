@@ -27,8 +27,8 @@ import org.waveprotocol.wave.examples.fedone.authentication.PasswordDigest;
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public final class HumanAccountDataImpl implements HumanAccountData {
-  private final String username;
-  private PasswordDigest passwordDigest;
+  private final String address;
+  private final PasswordDigest passwordDigest;
 
   /**
    * Creates an {@link HumanAccountData} for the given username, with no
@@ -36,42 +36,34 @@ public final class HumanAccountDataImpl implements HumanAccountData {
    *
    * This user will not be able to login using password-bsed authentication.
    *
-   * @param username non-null username for this account.
+   * @param address non-null username for this account.
    */
-  public HumanAccountDataImpl(String username) {
-    this(username, null);
+  public HumanAccountDataImpl(String address) {
+    this(address, null);
   }
 
   /**
    * Creates an {@link HumanAccountData} for the given username.
    *
-   * @param username non-null username for this account.
+   * @param address non-null username for this account.
    * @param password The user's password, or null if the user should not be
    *        authenticated using a password.
    */
-  public HumanAccountDataImpl(String username, char[] password) {
-    Preconditions.checkNotNull(username, "Username can not be null");
+  public HumanAccountDataImpl(String address, char[] password) {
+    Preconditions.checkNotNull(address, "Username can not be null");
 
-    this.username = username;
-
-    if (password != null) {
-      setPassword(password);
-    }
+    this.address = address;
+    passwordDigest = (password == null) ? null : new PasswordDigest(password);
   }
 
   @Override
-  public String getUsername() {
-    return username;
+  public String getAddress() {
+    return address;
   }
 
-  private void setPassword(char[] newPassword) {
-    Preconditions.checkNotNull(newPassword, "New password is null");
-
-    if (passwordDigest == null) {
-      passwordDigest = new PasswordDigest();
-    }
-
-    passwordDigest.set(newPassword);
+  @Override
+  public PasswordDigest getPasswordDigest() {
+    return passwordDigest;
   }
 
   @Override
@@ -96,7 +88,7 @@ public final class HumanAccountDataImpl implements HumanAccountData {
 
   @Override
   public int hashCode() {
-    return username.hashCode();
+    return address.hashCode();
   }
 
   /**
@@ -111,11 +103,6 @@ public final class HumanAccountDataImpl implements HumanAccountData {
       return false;
     }
     HumanAccountDataImpl other = (HumanAccountDataImpl) obj;
-    return username.equals(other.username);
-  }
-
-  @Override
-  public PasswordDigest getPasswordDigest() {
-    return passwordDigest;
+    return address.equals(other.address);
   }
 }

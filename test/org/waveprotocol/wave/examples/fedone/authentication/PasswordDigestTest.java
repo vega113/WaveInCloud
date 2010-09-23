@@ -19,48 +19,48 @@ package org.waveprotocol.wave.examples.fedone.authentication;
 
 import junit.framework.TestCase;
 
+import java.util.Arrays;
+
 /**
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class PasswordDigestTest extends TestCase {
   public void testPasswordValidatesItself() {
-    PasswordDigest pwd = new PasswordDigest();
-    pwd.set("internet".toCharArray());
+    PasswordDigest pwd = new PasswordDigest("internet".toCharArray());
     assertTrue(pwd.verify("internet".toCharArray()));
     assertFalse(pwd.verify("wrongpwd".toCharArray()));
   }
 
-  public void testUnsetPasswordVerifiesFalse() {
-    PasswordDigest pwd = new PasswordDigest();
-
-    assertFalse(pwd.verify("".toCharArray()));
-    assertFalse(pwd.verify(null));
-    assertFalse(pwd.verify("somestring".toCharArray()));
-  }
-
-  public void testPasswordResetWorks() {
-    PasswordDigest pwd = new PasswordDigest();
-    pwd.set("internet".toCharArray());
-    pwd.set("newandshiny".toCharArray());
-    assertTrue(pwd.verify("newandshiny".toCharArray()));
-  }
-
   public void testSerializeDeserialize() {
-    PasswordDigest pwd = new PasswordDigest();
-    pwd.set("internet".toCharArray());
+    PasswordDigest pwd = new PasswordDigest("tubes".toCharArray());
 
     byte[] digest = pwd.getDigest();
     byte[] salt = pwd.getSalt();
     PasswordDigest roundtripped = PasswordDigest.from(salt, digest);
 
-    assertTrue(pwd.verify("internet".toCharArray()));
+    assertTrue(pwd.verify("tubes".toCharArray()));
     assertFalse(pwd.verify("wrongpwd".toCharArray()));
   }
 
   public void testSaltAtLeast10Bytes() {
-    PasswordDigest pwd = new PasswordDigest();
-    pwd.set("internet".toCharArray());
+    PasswordDigest pwd = new PasswordDigest("blogosphere".toCharArray());
     byte[] salt = pwd.getSalt();
     assertTrue(salt.length >= 10);
+  }
+
+  public void testReallyLongPasswordWorksRight() {
+    char[] reallyLongPassword = new char[1024];
+
+    for (int i = 0; i < reallyLongPassword.length; i++) {
+      // We'll make a password filled with junk.
+      reallyLongPassword[i] = (char) i;
+    }
+
+    PasswordDigest pwd = new PasswordDigest(reallyLongPassword);
+    assertTrue(pwd.verify(reallyLongPassword));
+
+    // Make a new password that misses the last character. It shouldn't work.
+    char[] shorterPassword = Arrays.copyOf(reallyLongPassword, 1023);
+    assertFalse(pwd.verify(shorterPassword));
   }
 }

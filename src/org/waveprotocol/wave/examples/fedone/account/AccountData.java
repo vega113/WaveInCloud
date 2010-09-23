@@ -32,7 +32,7 @@ public interface AccountData {
    *
    * @return returns a non-null username.
    */
-  String getUsername();
+  String getAddress();
 
   /**
    * @return true iff this account is a {@link HumanAccountData}.

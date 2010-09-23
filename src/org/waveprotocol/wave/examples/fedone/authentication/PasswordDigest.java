@@ -30,7 +30,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
- * A simple, secure password class.
+ * A simple, secure, immutable password class.
  *
  *  Passwords are stored using a salted SHA-384 digest. To persist a password
  * object, use Java's serialization interface or save the salt and digest, and
@@ -40,10 +40,7 @@ import java.util.Arrays;
  * before they are garbage collected. (Java's strings are immutable). Passwords
  * should never be stored as strings at any intermediate stage.
  *
- * To generate a new PasswordDigest, Call: {@code PasswordDigest digest = new
- * PasswordDigest(); digest.set(password_bytes);}
- *
- * To serialize a digest to disk / database, either use Java's Serialization or
+ *  To serialize a digest to disk / database, either use Java's Serialization or
  * store the byte arrays returned by both getSalt() and getDigest().
  *
  * To deserialize a digest from disk / database, use {@code
@@ -57,7 +54,7 @@ public class PasswordDigest implements Serializable {
   public static final String DIGEST_HASHING_ALGORITHM = "SHA-512";
 
   private final byte[] salt;
-  private byte[] digest;
+  private final byte[] digest;
 
   // The random number generator is reused, as allocating the RNG each time we
   // need one requires entropy, and is thus quite expensive.
@@ -76,10 +73,16 @@ public class PasswordDigest implements Serializable {
   }
 
   /**
-   * Create a new password object store. Use set() to set the password contents.
+   * Create a new password object using the password provided.
+   *
+   *  Callers should clear the bytes in the password array when they're done
+   * with it.
    */
-  public PasswordDigest() {
+  public PasswordDigest(char[] password) {
+    Preconditions.checkNotNull(password, "Password is null");
+    
     salt = generateSalt();
+    digest = createPasswordDigest(password, salt);
   }
 
   /**
@@ -105,8 +108,8 @@ public class PasswordDigest implements Serializable {
       hash = MessageDigest.getInstance(DIGEST_HASHING_ALGORITHM);
     } catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException(
-          "Your java environment doesn't support " + "the expected cryptographic hash functions",
-          e);
+          "Your java environment doesn't support the expected cryptographic hash function: "
+              + DIGEST_HASHING_ALGORITHM, e);
     }
 
     hash.update(salt);
@@ -133,15 +136,6 @@ public class PasswordDigest implements Serializable {
    */
   public boolean verify(char[] providedPassword) {
     return digest != null && Arrays.equals(digest, createPasswordDigest(providedPassword, salt));
-  }
-
-  /**
-   * Set the value of the password to the specified string.
-   *
-   * @param newPassword The new password value.
-   */
-  public void set(char[] newPassword) {
-    digest = createPasswordDigest(newPassword, salt);
   }
 
   /**

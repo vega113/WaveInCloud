@@ -73,7 +73,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
   }
 
   @Override
-  public String getUsername() {
+  public String getAddress() {
     return username;
   }
 

@@ -132,7 +132,7 @@ public class RobotRegistrationServlet extends HttpServlet {
     RobotAccountData robotAccount = new RobotAccountDataImpl(username, robotLocation, null, null,
         true);
     accountStore.putAccount(robotAccount);
-    LOG.info(robotAccount.getUsername() + " is now registered as a RobotAccount with Url "
+    LOG.info(robotAccount.getAddress() + " is now registered as a RobotAccount with Url "
         + robotAccount.getUrl());
 
     doRegisterGet(req, resp, "Your Robot has been succesfully registered.");
