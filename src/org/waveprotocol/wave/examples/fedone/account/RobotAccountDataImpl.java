@@ -43,7 +43,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
    *  If the capabilities map may only be null if the capabilitiesHash is null
    * and vice versa.
    *
-   * @param username non-null username for this account.
+   * @param address non-null address for this account.
    * @param url non-null Url where the robot can be reached.
    * @param capabilities mapping events to capabilities for this robot.
    * @param capabilitiesHash the hash of the robot, may be null if not
@@ -51,15 +51,15 @@ public final class RobotAccountDataImpl implements RobotAccountData {
    * @param isVerified boolean indicating wether this {@link RobotAccountData}
    *        has been verified.
    */
-  public RobotAccountDataImpl(String username, String url, Map<EventType, Capability> capabilities,
+  public RobotAccountDataImpl(String address, String url, Map<EventType, Capability> capabilities,
       String capabilitiesHash, boolean isVerified) {
-    Preconditions.checkNotNull(username, "Username can not be null");
+    Preconditions.checkNotNull(address, "Address can not be null");
     Preconditions.checkNotNull(url, "Url can not be null");
     Preconditions.checkArgument(!url.endsWith("/"), "Url must not end with /");
     Preconditions.checkArgument((capabilities == null) == (capabilitiesHash == null),
         "Capabilities must be set completely or not set at all");
 
-    this.address = username;
+    this.address = address;
     this.url = url;
 
     if (capabilities != null) {
