@@ -31,7 +31,7 @@ import java.util.Map;
  */
 public final class RobotAccountDataImpl implements RobotAccountData {
 
-  private final String username;
+  private final String address;
   private final String url;
   private final Map<EventType, Capability> capabilities;
   private final String capabilitiesHash;
@@ -59,7 +59,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
     Preconditions.checkArgument((capabilities == null) == (capabilitiesHash == null),
         "Capabilities must be set completely or not set at all");
 
-    this.username = username;
+    this.address = username;
     this.url = url;
 
     if (capabilities != null) {
@@ -74,7 +74,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
 
   @Override
   public String getAddress() {
-    return username;
+    return address;
   }
 
   @Override
@@ -125,7 +125,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
     result = prime * result + ((capabilitiesHash == null) ? 0 : capabilitiesHash.hashCode());
     result = prime * result + (isVerified ? 1231 : 1237);
     result = prime * result + url.hashCode();
-    result = prime * result + username.hashCode();
+    result = prime * result + address.hashCode();
     return result;
   }
 
@@ -155,7 +155,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
       }
     }
 
-    return username.equals(other.username) && url.equals(other.url)
+    return address.equals(other.address) && url.equals(other.url)
         && capabilities.equals(other.capabilities)
         && capabilitiesHash.equals(other.capabilitiesHash) && isVerified == other.isVerified;
   }
