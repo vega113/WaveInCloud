@@ -18,7 +18,6 @@
 package org.waveprotocol.wave.examples.fedone.frontend;
 
 import static org.mockito.Mockito.mock;
-import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
 
 import com.google.common.collect.ImmutableList;
 
@@ -28,10 +27,8 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdFilters;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -42,6 +39,7 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -60,14 +58,14 @@ public class UserManagerTest extends TestCase {
 
   private static final ParticipantId USER = ParticipantId.ofUnsafe("user@host.com");
 
-  private static final ProtocolWaveletDelta DELTA =
-    serialize(new CoreWaveletDelta(USER, ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE)),
+  private static final VersionedWaveletDelta DELTA =
+    new VersionedWaveletDelta(new CoreWaveletDelta(USER, ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE)),
         HashedVersion.UNSIGNED_VERSION_0);
 
-  private static final ProtocolHashedVersion END_VERSION = serialize(HashedVersion.unsigned(2));
+  private static final HashedVersion END_VERSION = HashedVersion.unsigned(2);
 
   private static final DeltaSequence DELTAS =
-    new DeltaSequence(ImmutableList.of(DELTA), END_VERSION);
+      new DeltaSequence(ImmutableList.of(DELTA), END_VERSION);
 
   private UserManager m;
 
@@ -137,16 +135,16 @@ public class UserManagerTest extends TestCase {
    */
   public void testUpdateSeveralDeltas() {
     // Check that test was set up correctly
-    assertEquals(2, DELTA.getOperationCount());
+    assertEquals(2, DELTA.delta.getOperations().size());
 
-    ProtocolWaveletOperation noOp = serialize(CoreNoOp.INSTANCE);
-    ProtocolHashedVersion v2 = serialize(HashedVersion.unsigned(2));
-    ProtocolWaveletDelta delta2 = ProtocolWaveletDelta.newBuilder().setAuthor(
-        USER.getAddress()).addOperation(noOp).setHashedVersion(v2).build();
+    HashedVersion v2 = HashedVersion.unsigned(2);
+
+    CoreWaveletDelta coreDelta2 = new CoreWaveletDelta(USER, Arrays.asList(CoreNoOp.INSTANCE));
+    VersionedWaveletDelta delta2 = new VersionedWaveletDelta(coreDelta2, v2);
 
     m.subscribe(W1, IdFilters.ALL_IDS, "ch1", mock(OpenListener.class));
 
-    ProtocolHashedVersion endVersion2 = serialize(HashedVersion.unsigned(3));
+    HashedVersion endVersion2 = HashedVersion.unsigned(3);
     m.onUpdate(W1A, new DeltaSequence(ImmutableList.of(DELTA, delta2), endVersion2)); // success
 
     // Also succeeds when sending the two deltas via separate onUpdates()
@@ -163,11 +161,11 @@ public class UserManagerTest extends TestCase {
     OpenListener listener = mock(OpenListener.class, "1");
     String channelId = "ch";
     m.subscribe(W1, IdFilters.ALL_IDS, channelId, listener);
-    m.onUpdate(W1A, DeltaSequence.empty(serialize(HashedVersion.UNSIGNED_VERSION_0)));
+    m.onUpdate(W1A, DeltaSequence.empty(HashedVersion.UNSIGNED_VERSION_0));
     Mockito.verifyZeroInteractions(listener);
     m.onUpdate(W1A, DELTAS);
     Mockito.verify(listener).onUpdate(Mockito.eq(W1A), (WaveletSnapshotAndVersion)Matchers.isNull(),
         Mockito.eq(DELTAS.getDeltas()), Mockito.eq(DELTAS.getEndVersion()),
-        Mockito.any(ProtocolHashedVersion.class), Mockito.eq(false), Mockito.eq(channelId));
+        Mockito.any(HashedVersion.class), Mockito.eq(false), Mockito.eq(channelId));
   }
 }

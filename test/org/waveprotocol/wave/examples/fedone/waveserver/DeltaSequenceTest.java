@@ -16,16 +16,13 @@
  */
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
-
 import com.google.common.collect.ImmutableList;
-import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreNoOp;
@@ -41,13 +38,12 @@ import java.util.List;
  */
 public class DeltaSequenceTest extends TestCase {
   private static final long START_VERSION = 23;
-  private static final ProtocolHashedVersion PROTO_START_VERSION =
-    serialize(HashedVersion.unsigned(START_VERSION));
+  private static final HashedVersion PROTO_START_VERSION = (HashedVersion.unsigned(START_VERSION));
   private static final ParticipantId USER = new ParticipantId("user@host.com");
 
   private List<CoreWaveletOperation> ops;
-  private List<ProtocolWaveletDelta> protoDeltas;
-  private ProtocolHashedVersion protoEndVersion;
+  private List<VersionedWaveletDelta> deltas;
+  private HashedVersion endVersion;
 
   @Override
   protected void setUp() throws Exception {
@@ -58,10 +54,10 @@ public class DeltaSequenceTest extends TestCase {
 
     CoreWaveletDelta delta = new CoreWaveletDelta(USER, ops);
     CoreWaveletDelta delta2 = new CoreWaveletDelta(USER, ops);
-    protoDeltas = ImmutableList.of(
-        serialize(delta, HashedVersion.unsigned(START_VERSION)),
-        serialize(delta, HashedVersion.unsigned(START_VERSION + ops.size())));
-    protoEndVersion = serialize(HashedVersion.unsigned(START_VERSION + 2 * ops.size()));
+    deltas = ImmutableList.of(
+        new VersionedWaveletDelta(delta, HashedVersion.unsigned(START_VERSION)),
+        new VersionedWaveletDelta(delta, HashedVersion.unsigned(START_VERSION + ops.size())));
+    endVersion = HashedVersion.unsigned(START_VERSION + 2 * ops.size());
   }
 
   public void testEmptySequence() {
@@ -72,9 +68,7 @@ public class DeltaSequenceTest extends TestCase {
   }
 
   public void testNegativeEndVersion() {
-    ProtocolHashedVersion invalidVersion = ProtocolHashedVersion.newBuilder()
-    .setHistoryHash(ByteString.copyFrom(new byte[0])).setVersion(-1).build();
-
+    HashedVersion invalidVersion = new HashedVersion(-1, new byte[0]);
     try {
       DeltaSequence.empty(invalidVersion);
       fail("Should have thrown IllegalArgumentException");
@@ -84,15 +78,14 @@ public class DeltaSequenceTest extends TestCase {
   }
 
   public void testValidSequence() {
-    DeltaSequence deltas = new DeltaSequence(protoDeltas, protoEndVersion);
-    assertEquals(START_VERSION, deltas.getStartVersion().getVersion());
-    assertEquals(protoEndVersion, deltas.getEndVersion());
+    DeltaSequence deltaseq = new DeltaSequence(deltas, endVersion);
+    assertEquals(START_VERSION, deltaseq.getStartVersion().getVersion());
+    assertEquals(endVersion, deltaseq.getEndVersion());
   }
 
   public void testInvalidEndVersion() {
     try {
-      new DeltaSequence(protoDeltas,
-          serialize(HashedVersion.unsigned(protoEndVersion.getVersion() + 1)));
+      new DeltaSequence(deltas, HashedVersion.unsigned(endVersion.getVersion() + 1));
     } catch (IllegalArgumentException expected) {
       // pass
     }
@@ -101,18 +94,16 @@ public class DeltaSequenceTest extends TestCase {
   public void testInvalidIntermediateVersion() {
     try {
       new DeltaSequence(
-          ImmutableList.of(protoDeltas.get(0), protoDeltas.get(0)),
-          protoEndVersion
+          ImmutableList.of(deltas.get(0), deltas.get(0)),
+          endVersion
           );
     } catch (IllegalArgumentException expected) {
       // pass
     }
 
     try {
-      new DeltaSequence(
-          ImmutableList.of(protoDeltas.get(0), protoDeltas.get(0)),
-          serialize(HashedVersion.unsigned(START_VERSION + 1 * ops.size()))
-          );
+      new DeltaSequence(ImmutableList.of(deltas.get(0), deltas.get(0)),
+          HashedVersion.unsigned(START_VERSION + 1 * ops.size()));
     } catch (IllegalArgumentException expected) {
       // pass
     }
@@ -125,18 +116,18 @@ public class DeltaSequenceTest extends TestCase {
     DeltaSequence empty = DeltaSequence.empty(PROTO_START_VERSION);
     assertEquals(empty, empty.subList(0, 0));
 
-    DeltaSequence deltas = new DeltaSequence(protoDeltas, protoEndVersion);
-    assertEquals(deltas, deltas.subList(0, deltas.size()));
+    DeltaSequence deltaseq = new DeltaSequence(deltas, endVersion);
+    assertEquals(deltas, deltaseq.subList(0, deltas.size()));
 
-    assertEquals(empty, deltas.subList(0, 0));
+    assertEquals(empty, deltaseq.subList(0, 0));
 
     // Check test data set up as expected by the test below
-    assertEquals(2, deltas.size());
-    assertTrue(deltas.getEndVersion().getVersion() > ops.size());
+    assertEquals(2, deltaseq.size());
+    assertTrue(deltaseq.getEndVersion().getVersion() > ops.size());
 
     // Now construct a sublist with just the first delta
-    DeltaSequence subDeltas = deltas.subList(0, 1);
+    DeltaSequence subDeltas = deltaseq.subList(0, 1);
     assertEquals(START_VERSION + ops.size(), subDeltas.getEndVersion().getVersion());
-    assertEquals(deltas.getStartVersion(), subDeltas.getStartVersion());
+    assertEquals(deltaseq.getStartVersion(), subDeltas.getStartVersion());
   }
 }

@@ -25,6 +25,7 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.testing.FakeClientFrontend;
 import org.waveprotocol.wave.examples.fedone.rpc.testing.FakeRpcController;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
@@ -34,12 +35,11 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOp
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 /**
@@ -49,18 +49,18 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
 
   private static final String FAIL_MESSAGE = "Failed";
 
-  private static final ProtocolHashedVersion HASHED_VERSION =
-    CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(101L));
+  private static final HashedVersion HASHED_VERSION = HashedVersion.unsigned(101L);
 
   private static final ProtocolWaveletDelta DELTA = ProtocolWaveletDelta.newBuilder()
     .setAuthor(USER)
-    .setHashedVersion(HASHED_VERSION)
-    .addOperation(ProtocolWaveletOperation.newBuilder().build()).build();
+    .setHashedVersion(CoreWaveletOperationSerializer.serialize(HASHED_VERSION))
+    .addOperation(ProtocolWaveletOperation.newBuilder().setNoOp(true).build()).build();
 
   private static final ImmutableList<ProtocolWaveletDelta> DELTAS = ImmutableList.of(DELTA);
+  private static final ImmutableList<VersionedWaveletDelta> POJO_DELTAS =
+      ImmutableList.of(CoreWaveletOperationSerializer.deserialize(DELTA));
 
-  private static final ProtocolHashedVersion RESULTING_VERSION =
-    CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(102L));
+  private static final HashedVersion RESULTING_VERSION = HashedVersion.unsigned(102L);
 
   private RpcController controller;
 
@@ -114,7 +114,8 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
         ++counter;
         assertEquals(WAVELET_NAME, getWaveletName(update.getWaveletName()));
         assertTrue(update.hasCommitNotice());
-        assertEquals(HASHED_VERSION, update.getCommitNotice());
+        assertEquals(HASHED_VERSION,
+            CoreWaveletOperationSerializer.deserialize(update.getCommitNotice()));
       }
     });
     frontend.waveletCommitted(WAVELET_NAME, HASHED_VERSION);
@@ -165,7 +166,7 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
     long dummyCreationTime = System.currentTimeMillis();
     WaveletData wavelet =
         WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, PARTICIPANT, dummyCreationTime);
-    frontend.waveletUpdate(wavelet, RESULTING_VERSION, DELTAS);
+    frontend.waveletUpdate(wavelet, RESULTING_VERSION, POJO_DELTAS);
     assertEquals(1, counter);
     assertFalse(controller.failed());
   }

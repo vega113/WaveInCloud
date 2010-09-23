@@ -11,9 +11,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.internal.Nullable;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -42,7 +43,7 @@ final class WaveViewSubscription {
   // Wavelets with outstanding submits
   private final Set<WaveletId> outstandingSubmits = Sets.newHashSet();
   // Current version of each wavelet
-  private final Map<WaveletId, ProtocolHashedVersion> currentVersions = Maps.newHashMap();
+  private final Map<WaveletId, HashedVersion> currentVersions = Maps.newHashMap();
 
   public WaveViewSubscription(WaveId waveId, IdFilter waveletIdFilter, String channelId,
       ClientFrontend.OpenListener openListener) {
@@ -86,11 +87,10 @@ final class WaveViewSubscription {
    * A submit response for the given wavelet and version has been sent to this
    * client.
    */
-  public synchronized void submitResponse(WaveletName waveletName, ProtocolHashedVersion version) {
+  public synchronized void submitResponse(WaveletName waveletName, HashedVersion version) {
+    Preconditions.checkNotNull(version, "Null delta application version");
     WaveletId waveletId = waveletName.waveletId;
-    if (version != null) {
-      submittedVersions.put(waveletId, version.getVersion());
-    }
+    submittedVersions.put(waveletId, version.getVersion());
     outstandingSubmits.remove(waveletId);
     final List<Runnable> updatesForWavelet = queuedUpdates.get(waveletId);
     while (!updatesForWavelet.isEmpty()) {
@@ -108,8 +108,8 @@ final class WaveViewSubscription {
    */
   public void onUpdate(final WaveletName waveletName,
       @Nullable final WaveletSnapshotAndVersion snapshot, final DeltaSequence deltas,
-      @Nullable final ProtocolHashedVersion endVersion,
-      @Nullable final ProtocolHashedVersion committedVersion, final boolean hasMarker) {
+      @Nullable final HashedVersion endVersion,
+      @Nullable final HashedVersion committedVersion, final boolean hasMarker) {
     checkUpdateVersion(waveletName, snapshot, deltas);
     if (deltas.isEmpty()) {
       openListener.onUpdate(waveletName, snapshot, deltas, endVersion, committedVersion, hasMarker,
@@ -125,15 +125,15 @@ final class WaveViewSubscription {
       });
       return;
     }
-    List<ProtocolWaveletDelta> filteredDeltas;
+    List<VersionedWaveletDelta> filteredDeltas;
 
     if (!submittedVersions.isEmpty() && !submittedVersions.get(waveletId).isEmpty()) {
       // Walk through the deltas, removing any that are from this client.
       filteredDeltas = Lists.newArrayList();
       Set<Long> mySubmits = submittedVersions.get(waveletId);
 
-      for (ProtocolWaveletDelta delta : deltas) {
-        long deltaEndVersion = delta.getHashedVersion().getVersion() + delta.getOperationCount();
+      for (VersionedWaveletDelta delta : deltas) {
+        long deltaEndVersion = delta.version.getVersion() + delta.delta.getOperations().size();
         if (mySubmits.contains(deltaEndVersion)) {
           submittedVersions.remove(waveletId, deltaEndVersion);
         } else {
@@ -157,16 +157,17 @@ final class WaveViewSubscription {
     if (snapshot != null) {
       Preconditions.checkArgument(deltas.isEmpty(), "Unexpected deltas with snapshot for %s",
           waveletName);
-      currentVersions.put(waveletName.waveletId, snapshot.snapshot.getVersion());
+      currentVersions.put(waveletName.waveletId,
+          CoreWaveletOperationSerializer.deserialize(snapshot.snapshot.getVersion()));
     } else if (!deltas.isEmpty()) {
       if (currentVersions.containsKey(waveletName.waveletId)) {
-        ProtocolHashedVersion expectedVersion = currentVersions.get(waveletName.waveletId);
-        ProtocolHashedVersion targetVersion = deltas.getStartVersion();
+        HashedVersion expectedVersion = currentVersions.get(waveletName.waveletId);
+        HashedVersion targetVersion = deltas.getStartVersion();
         Preconditions.checkState(targetVersion.equals(expectedVersion),
             "Subscription expected delta for %s targetting %s, was %s", waveletName,
             expectedVersion, targetVersion);
       }
-      ProtocolHashedVersion nextExpectedVersion = deltas.getEndVersion();
+      HashedVersion nextExpectedVersion = deltas.getEndVersion();
       currentVersions.put(waveletName.waveletId, nextExpectedVersion);
     }
   }

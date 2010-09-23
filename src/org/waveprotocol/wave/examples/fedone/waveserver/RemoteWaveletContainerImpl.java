@@ -44,7 +44,6 @@ import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider.HistoryResponseListener;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -175,9 +174,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     acquireWriteLock();
     try {
       assertStateOkOrLoading();
-      List<ProtocolWaveletDelta> result = new LinkedList<ProtocolWaveletDelta>();
-      ProtocolHashedVersion expectedVersion =
-          CoreWaveletOperationSerializer.serialize(currentVersion);
+      HashedVersion expectedVersion = currentVersion;
       boolean haveRequestedHistory = false;
 
       // Verify signatures of all deltas
@@ -209,6 +206,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       }
 
       // Traverse pendingDeltas while we have any to process.
+      List<VersionedWaveletDelta> result = Lists.newLinkedList();
       while (pendingDeltas.size() > 0) {
         ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = pendingDeltas.first();
         ProtocolHashedVersion appliedAt;
@@ -230,43 +228,44 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
             // TODO: only one request history should be pending at any one time?
             // We should derive a new one whenever the active one is finished,
             // based on the current state of pendingDeltas.
-            federationProvider.requestHistory(waveletName, domain, expectedVersion, appliedAt, -1,
+            federationProvider.requestHistory(waveletName, domain,
+                CoreWaveletOperationSerializer.serialize(expectedVersion), appliedAt, -1,
                 new HistoryResponseListener() {
-                  @Override
-                  public void onFailure(FederationError error) {
-                    LOG.severe("Callback failure: " + error);
-                  }
+                    @Override
+                    public void onFailure(FederationError error) {
+                      LOG.severe("Callback failure: " + error);
+                    }
 
-                  @Override
-                  public void onSuccess(List<ByteString> deltaList,
-                      ProtocolHashedVersion lastCommittedVersion, long versionTruncatedAt) {
-                    LOG.info("Got response callback: " + waveletName + ", lcv "
-                        + lastCommittedVersion + " sizeof(deltaSet) = " + deltaList.size());
+                    @Override
+                    public void onSuccess(List<ByteString> deltaList,
+                        ProtocolHashedVersion lastCommittedVersion, long versionTruncatedAt) {
+                      LOG.info("Got response callback: " + waveletName + ", lcv "
+                          + lastCommittedVersion + " sizeof(deltaSet) = " + deltaList.size());
 
-                    // Turn the ByteStrings in to a useful representation
-                    List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltaList =
-                        Lists.newArrayList();
-                    for (ByteString appliedDelta : deltaList) {
+                      // Turn the ByteStrings in to a useful representation
+                      List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltaList =
+                          Lists.newArrayList();
+                      for (ByteString appliedDelta : deltaList) {
+                        try {
+                          LOG.info("Delta incoming from history: " + appliedDelta);
+                          appliedDeltaList.add(ByteStringMessage.from(
+                              ProtocolAppliedWaveletDelta.getDefaultInstance(), appliedDelta));
+                        } catch (InvalidProtocolBufferException e) {
+                          LOG.warning("Invalid protocol buffer when requesting history!");
+                          state = State.CORRUPTED;
+                          break;
+                        }
+                      }
+
+                      // Try updating again with the new history
                       try {
-                        LOG.info("Delta incoming from history: " + appliedDelta);
-                        appliedDeltaList.add(ByteStringMessage.from(
-                            ProtocolAppliedWaveletDelta.getDefaultInstance(), appliedDelta));
-                      } catch (InvalidProtocolBufferException e) {
-                        LOG.warning("Invalid protocol buffer when requesting history!");
-                        state = State.CORRUPTED;
-                        break;
+                        update(appliedDeltaList, domain, federationProvider, certificateManager,
+                            deltaCallback);
+                      } catch (WaveServerException e) {
+                        // TODO: deal with this
+                        LOG.severe("Exception when updating from history", e);
                       }
                     }
-
-                    // Try updating again with the new history
-                    try {
-                      update(appliedDeltaList, domain, federationProvider, certificateManager,
-                          deltaCallback);
-                    } catch (WaveServerException e) {
-                      // TODO: deal with this
-                      LOG.severe("Exception when updating from history", e);
-                    }
-                  }
                 });
             haveRequestedHistory = true;
           } else {
@@ -318,7 +317,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           }
 
           // TODO: does waveletData update?
-          expectedVersion = CoreWaveletOperationSerializer.serialize(currentVersion);
+          expectedVersion = currentVersion;
         } else {
           LOG.warning("Got delta from the past: " + appliedDelta);
         }
@@ -390,6 +389,6 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     // do then the wavelet is corrupted (and the caller of this method will sort it out).
     applyWaveletOperations(transformed.delta, appliedDelta.getMessage().getApplicationTimestamp());
 
-    return commitAppliedDelta(appliedDelta, transformed.delta);
+    return commitAppliedDelta(appliedDelta, transformed);
   }
 }

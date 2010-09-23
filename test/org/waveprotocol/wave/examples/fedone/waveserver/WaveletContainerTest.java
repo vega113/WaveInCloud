@@ -152,9 +152,9 @@ public class WaveletContainerTest extends TestCase {
     localWavelet.submitRequest(waveletName, addDelta);
     assertEquals(localWavelet.getCurrentVersion().getVersion(), 2);
     assertTrue(localWavelet.isDeltaSigner(
-        serialize(localWavelet.getCurrentVersion()), fakeSigner1));
+        localWavelet.getCurrentVersion(), fakeSigner1));
     assertFalse(localWavelet.isDeltaSigner(
-        serialize(localWavelet.getCurrentVersion()), fakeSigner2));
+        localWavelet.getCurrentVersion(), fakeSigner2));
 
     HashedVersion oldVersion = localWavelet.getCurrentVersion();
     ProtocolSignedDelta removeDelta = ProtocolSignedDelta.newBuilder()
@@ -164,12 +164,12 @@ public class WaveletContainerTest extends TestCase {
         .build();
     localWavelet.submitRequest(waveletName, removeDelta);
     assertEquals(localWavelet.getCurrentVersion().getVersion(), 4);
-    assertTrue(localWavelet.isDeltaSigner(serialize(oldVersion), fakeSigner1));
-    assertFalse(localWavelet.isDeltaSigner(serialize(oldVersion), fakeSigner2));
+    assertTrue(localWavelet.isDeltaSigner(oldVersion, fakeSigner1));
+    assertFalse(localWavelet.isDeltaSigner(oldVersion, fakeSigner2));
     assertTrue(localWavelet.isDeltaSigner(
-        serialize(localWavelet.getCurrentVersion()), fakeSigner2));
+        localWavelet.getCurrentVersion(), fakeSigner2));
     assertFalse(localWavelet.isDeltaSigner(
-        serialize(localWavelet.getCurrentVersion()), fakeSigner1));
+        localWavelet.getCurrentVersion(), fakeSigner1));
   }
 
   public void testFailedLocalWaveletRequest() throws Exception {
@@ -205,9 +205,9 @@ public class WaveletContainerTest extends TestCase {
     }
     assertEquals(localWavelet.getCurrentVersion().getVersion(), 2);
     assertTrue(localWavelet.isDeltaSigner(
-        serialize(localWavelet.getCurrentVersion()), fakeSigner1));
+        localWavelet.getCurrentVersion(), fakeSigner1));
     assertFalse(localWavelet.isDeltaSigner(
-        serialize(localWavelet.getCurrentVersion()), fakeSigner2));
+        localWavelet.getCurrentVersion(), fakeSigner2));
 
     HashedVersion oldVersion = localWavelet.getCurrentVersion();
     ProtocolSignedDelta rollbackDelta = ProtocolSignedDelta.newBuilder()

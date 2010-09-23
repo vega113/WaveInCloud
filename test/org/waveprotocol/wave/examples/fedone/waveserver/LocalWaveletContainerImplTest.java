@@ -25,7 +25,6 @@ import org.waveprotocol.wave.examples.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -61,7 +60,6 @@ public class LocalWaveletContainerImplTest extends TestCase {
   private ProtocolWaveletOperation addParticipantOp;
   private static final String BLIP_ID = "b+muppet";
   private ProtocolWaveletOperation addBlipOp;
-  private ProtocolHashedVersion versionZeroHashedVersion;
   private LocalWaveletContainer wavelet;
 
   @Override
@@ -75,15 +73,7 @@ public class LocalWaveletContainerImplTest extends TestCase {
     addBlipOp = CoreWaveletOperationSerializer.serialize(
         new CoreWaveletDocumentOperation(BLIP_ID, new DocOpBuilder().build()));
 
-    versionZeroHashedVersion = createProtocolHashedVersion(HASHED_VERSION_ZERO);
     wavelet = new LocalWaveletContainerImpl(WAVELET_NAME);
-  }
-
-  private ProtocolHashedVersion createProtocolHashedVersion(HashedVersion hashedVersion) {
-    return ProtocolHashedVersion.newBuilder()
-        .setHistoryHash(ByteString.copyFrom(hashedVersion.getHistoryHash()))
-        .setVersion(hashedVersion.getVersion())
-        .build();
   }
 
   @Override
@@ -100,7 +90,7 @@ public class LocalWaveletContainerImplTest extends TestCase {
 
     // create the wavelet.
     DeltaApplicationResult v0Response = wavelet.submitRequest(
-        WAVELET_NAME, createProtocolSignedDelta(addParticipantOp, versionZeroHashedVersion));
+        WAVELET_NAME, createProtocolSignedDelta(addParticipantOp, HASHED_VERSION_ZERO));
 
     ProtocolSignedDelta psd = createProtocolSignedDelta(
         addBlipOp, v0Response.getHashedVersionAfterApplication());
@@ -111,10 +101,10 @@ public class LocalWaveletContainerImplTest extends TestCase {
   }
 
   private ProtocolSignedDelta createProtocolSignedDelta(ProtocolWaveletOperation operation,
-      ProtocolHashedVersion protocolHashedVersion) {
+      HashedVersion protocolHashedVersion) {
     ProtocolWaveletDelta delta = ProtocolWaveletDelta.newBuilder()
         .setAuthor(AUTHOR)
-        .setHashedVersion(protocolHashedVersion)
+        .setHashedVersion(CoreWaveletOperationSerializer.serialize(protocolHashedVersion))
         .addOperation(operation)
         .build();
 

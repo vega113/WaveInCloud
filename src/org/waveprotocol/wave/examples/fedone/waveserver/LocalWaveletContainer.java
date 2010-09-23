@@ -20,8 +20,8 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -63,5 +63,5 @@ interface LocalWaveletContainer extends WaveletContainer {
    * @param hashedVersion to check whether in the history of the delta
    * @param signerId of the signer
    */
-  boolean isDeltaSigner(ProtocolHashedVersion hashedVersion, ByteString signerId);
+  boolean isDeltaSigner(HashedVersion hashedVersion, ByteString signerId);
 }

@@ -24,11 +24,13 @@ import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
-import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.ReadableBlipData;
+import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Utility methods for rendering snippets.
@@ -44,9 +46,8 @@ public final class Snippets {
    * @param wavelet the wavelet for which to concatenate the documents.
    * @return A String containing the characters from all documents.
    */
-  public static String collateTextForWavelet(WaveletData wavelet) {
-    ArrayList<BlipData> documents = new ArrayList<BlipData>();
-
+  public static String collateTextForWavelet(ReadableWaveletData wavelet) {
+    List<ReadableBlipData> documents = new ArrayList<ReadableBlipData>();
     for (String documentId : wavelet.getDocumentIds()) {
       documents.add(wavelet.getDocument(documentId));
     }
@@ -59,9 +60,9 @@ public final class Snippets {
    * @param documents the documents to concatenate.
    * @return A String containing the characters from all documents.
    */
-  public static String collateTextForDocuments(Iterable<BlipData> documents) {
+  public static String collateTextForDocuments(Iterable<? extends ReadableBlipData> documents) {
     ArrayList<DocOp> docOps = new ArrayList<DocOp>();
-    for (BlipData blipData : documents) {
+    for (ReadableBlipData blipData : documents) {
       docOps.add(blipData.getContent().asOperation());
     }
     return collateTextForOps(docOps);
@@ -125,8 +126,9 @@ public final class Snippets {
   /**
    * Returns a snippet or null.
    */
-  public static String renderSnippet(final WaveletData wavelet, final int maxSnippetLength) {
-    BlipData blip = wavelet.getDocument(DocumentConstants.CONVERSATION);
+  public static String renderSnippet(final ReadableWaveletData wavelet,
+      final int maxSnippetLength) {
+    ReadableBlipData blip = wavelet.getDocument(DocumentConstants.CONVERSATION);
     if (blip == null) {
       // Render whatever data we have and hope its good enough
       return collateTextForWavelet(wavelet);
@@ -157,7 +159,7 @@ public final class Snippets {
         if (DocumentConstants.BLIP.equals(type)) {
           String blipId = attrs.get(DocumentConstants.BLIP_ID);
           if (blipId != null) {
-            BlipData document = wavelet.getDocument(blipId);
+            ReadableBlipData document = wavelet.getDocument(blipId);
             if (document == null) {
               // We see this when a blip has been deleted
               return;
