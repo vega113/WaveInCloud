@@ -25,12 +25,12 @@ import junit.framework.TestCase;
 public class HumanAccountDataImplTest extends TestCase {
   public void testUserAddressReturnsCorrectResult() {
     HumanAccountData account = new HumanAccountDataImpl("drhorrible@example.com");
-    assertEquals(account.getAddress(), "moist@example.com");
+    assertEquals(account.getAddress(), "drhorrible@example.com");
     assertTrue(account.isHuman());
     assertFalse(account.isRobot());
   }
   
-  public void testPasswordDigestWorks() {
+  public void testPasswordDigestVerifies() {
     HumanAccountData account =
         new HumanAccountDataImpl("captainhammer@example.com", "wonderflownium".toCharArray());
 

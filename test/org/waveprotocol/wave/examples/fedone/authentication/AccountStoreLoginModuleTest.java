@@ -37,19 +37,6 @@ import javax.security.auth.login.LoginException;
  *
  */
 public class AccountStoreLoginModuleTest extends TestCase {
-  @Override
-  protected void setUp() {
-    AccountStore store = new MemoryStore();
-    store.putAccount(new HumanAccountDataImpl("haspwd@example.com", "pwd".toCharArray()));
-    store.putAccount(new HumanAccountDataImpl("nopwd@example.com"));
-    AccountStoreHolder.init(store);
-  }
-
-  @Override
-  protected void tearDown() {
-    AccountStoreHolder.clearAccountStore();
-  }
-
   private class FakeCallbackHandler implements CallbackHandler {
     final String address, password;
 
@@ -72,20 +59,31 @@ public class AccountStoreLoginModuleTest extends TestCase {
     }
   }
 
-  LoginContext makeLoginContext(String address, String password) throws LoginException {
-    return new LoginContext(ConfigurationProvider.CONTEXT_NAME, new Subject(),
-        new FakeCallbackHandler(address, password), MockConfigurationProvider.make());
+  @Override
+  protected void setUp() {
+    AccountStore store = new MemoryStore();
+    store.putAccount(new HumanAccountDataImpl("haspwd@example.com", "pwd".toCharArray()));
+    store.putAccount(new HumanAccountDataImpl("nopwd@example.com"));
+    AccountStoreHolder.init(store);
   }
 
-  private void assertLoginFails(LoginContext context) {
-    boolean exceptionThrown = false;
+  @Override
+  protected void tearDown() {
+    AccountStoreHolder.clearAccountStore();
+  }
+
+  private LoginContext makeLoginContext(String address, String password) throws LoginException {
+    return new LoginContext(ConfigurationProvider.CONTEXT_NAME, new Subject(),
+        new FakeCallbackHandler(address, password), AuthTestUtil.make());
+  }
+
+  private static void assertLoginFails(LoginContext context) {
     try {
       context.login();
+      fail("Login succeeded unexpectedly");
     } catch (LoginException e) {
-      // Expected behaviour.
-      exceptionThrown = true;
+      // Pass.
     }
-    assertTrue(exceptionThrown);
   }
 
   public void testIncorrectPasswordThrowsLoginException() throws Exception {

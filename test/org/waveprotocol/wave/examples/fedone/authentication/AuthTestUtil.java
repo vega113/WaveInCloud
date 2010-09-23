@@ -24,11 +24,11 @@ import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
 
 /**
- * Provides a mock security configuration for tests.
+ * Provides an authentication configuration for tests.
  * 
  * @author josephg@gmail.com (Joseph Gentle)
  */
-public class MockConfigurationProvider {
+public class AuthTestUtil {
   public static Configuration make() {
     return new Configuration() {
       @Override

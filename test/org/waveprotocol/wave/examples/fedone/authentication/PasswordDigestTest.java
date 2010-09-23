@@ -63,4 +63,21 @@ public class PasswordDigestTest extends TestCase {
     char[] shorterPassword = Arrays.copyOf(reallyLongPassword, 1023);
     assertFalse(pwd.verify(shorterPassword));
   }
+
+  public void testEditingExposedBytesDoesntChangeInternalState() {
+    PasswordDigest pwd1 = new PasswordDigest("webernets".toCharArray());
+
+    byte[] digest = pwd1.getDigest();
+    byte[] salt = pwd1.getSalt();
+
+    PasswordDigest pwd2 = PasswordDigest.from(salt, digest);
+
+    // We'll mess with the digest and salt we got back and make sure both
+    // passwords still verify normally.
+    digest[digest.length / 2]++;
+    salt[salt.length / 2]--;
+
+    assertTrue(pwd1.verify("webernets".toCharArray()));
+    assertTrue(pwd2.verify("webernets".toCharArray()));
+  }
 }

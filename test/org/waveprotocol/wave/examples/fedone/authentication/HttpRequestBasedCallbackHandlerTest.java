@@ -54,9 +54,9 @@ public class HttpRequestBasedCallbackHandlerTest extends TestCase {
 
     try {
       handler.handle(new Callback[] {new Callback() {}});
+      fail("Should have thrown due to unsupported callback");
     } catch (UnsupportedCallbackException e) {
-      return;
+      // Pass.
     }
-    fail("Should have thrown due to unsupported callback");
   }
 }

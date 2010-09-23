@@ -33,8 +33,8 @@ import javax.servlet.http.HttpSession;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class SessionManagerTest extends TestCase {
-  SessionManager sessionManager;
-  HumanAccountData account;
+  private SessionManager sessionManager;
+  private HumanAccountData account;
 
   @Override
   protected void setUp() throws Exception {
