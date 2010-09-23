@@ -22,11 +22,9 @@ import junit.framework.TestCase;
 import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
-import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
@@ -61,7 +59,6 @@ public class RobotWaveletTest extends TestCase {
 
   private RobotWaveletData wavelet;
   private HashedVersion hashedVersionZero;
-  private ProtocolHashedVersion committedVersion;
 
   @Override
   protected void setUp() {
@@ -70,9 +67,7 @@ public class RobotWaveletTest extends TestCase {
     waveletData.createBlip("b+example", ALEX, Collections.singletonList(ALEX), content, 0L, 0);
 
     hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
-    committedVersion = CoreWaveletOperationSerializer.serialize(hashedVersionZero);
-
-    wavelet = new RobotWaveletData(waveletData, committedVersion);
+    wavelet = new RobotWaveletData(waveletData, hashedVersionZero);
   }
 
   public void testGetWaveletName() {

@@ -21,11 +21,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.robots.util.WaveletPluginDocumentFactory;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.CapturingOperationSink;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
@@ -84,10 +82,9 @@ public class RobotWaveletData {
    * @param committedVersion the committed version of the given snapshot, used
    *        to generate deltas.
    */
-  public RobotWaveletData(ReadableWaveletData snapshot, ProtocolHashedVersion committedVersion) {
+  public RobotWaveletData(ReadableWaveletData snapshot, HashedVersion committedVersion) {
     this.snapshot = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(snapshot);
-    // TODO(ljvderijk): remove deserialization here once WaveBus changes
-    this.committedVersion = CoreWaveletOperationSerializer.deserialize(committedVersion);
+    this.committedVersion = committedVersion;
   }
 
   /**

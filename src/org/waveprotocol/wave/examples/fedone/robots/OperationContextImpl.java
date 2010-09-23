@@ -30,6 +30,8 @@ import com.google.wave.api.event.EventSerializer;
 import com.google.wave.api.event.EventType;
 import com.google.wave.api.event.OperationErrorEvent;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.robots.util.OperationUtil;
@@ -208,7 +210,10 @@ public class OperationContextImpl implements OperationContext, OperationResults 
         LOG.severe("Found invalid participant when parsing a snapshot", e);
         throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved.");
       }
-      wavelet = new RobotWaveletData(obsWavelet, snapshot.committedVersion);
+      HashedVersion committedVersion =
+          CoreWaveletOperationSerializer.deserialize(snapshot.committedVersion);
+
+      wavelet = new RobotWaveletData(obsWavelet, committedVersion);
       openedWavelets.put(waveletName, wavelet);
     }
     return wavelet;
