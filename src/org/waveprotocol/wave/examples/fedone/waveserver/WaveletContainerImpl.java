@@ -57,7 +57,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.NavigableSet;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -79,7 +78,8 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   protected static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionFactoryImpl(URI_CODEC);
 
-  protected final NavigableSet<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas;
+  private final NavigableMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>>
+      appliedDeltas = Maps.newTreeMap();
   private final NavigableMap<HashedVersion, ProtocolWaveletDelta> transformedDeltas =
       Maps.newTreeMap();
   private final NavigableMap<HashedVersion, VersionedWaveletDelta> deserializedTransformedDeltas =
@@ -104,8 +104,6 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     currentVersion = HASH_FACTORY.createVersionZero(waveletName);
     lastCommittedVersion = null;
 
-    appliedDeltas = Sets.newTreeSet(appliedDeltaComparator);
-
     // Configure the locks used by this Wavelet.
     final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     readLock = readWriteLock.readLock();
@@ -129,55 +127,6 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     writeLock.unlock();
   }
 
-  /** A comparator to be used in a TreeSet for applied deltas. */
-  protected static final Comparator<ByteStringMessage<ProtocolAppliedWaveletDelta>>
-      appliedDeltaComparator =
-      new Comparator<ByteStringMessage<ProtocolAppliedWaveletDelta>>() {
-        @Override
-        public int compare(ByteStringMessage<ProtocolAppliedWaveletDelta> first,
-            ByteStringMessage<ProtocolAppliedWaveletDelta> second) {
-          if (first == null && second != null) { return -1; }
-          if (first != null && second == null) { return 1; }
-          if (first == null && second == null) { return 0; }
-          try {
-            Long v1 = AppliedDeltaUtil.getHashedVersionAppliedAt(first).getVersion();
-            Long v2 = AppliedDeltaUtil.getHashedVersionAppliedAt(second).getVersion();
-            return v1.compareTo(v2);
-          } catch (InvalidProtocolBufferException e) {
-            throw new IllegalStateException("Invalid applied delta added to history", e);
-          }
-        }
-      };
-
-  /**
-   * Return a dummy ProtocolWaveletDelta instance used as a range
-   * boundary for use in searches within a NavigableSet of deltas.
-   *
-   * @param version the version to return the delta applied at
-   * @return the generated dummy delta
-   */
-  private static ProtocolWaveletDelta emptyDeltaAtVersion(final long version) {
-    return ProtocolWaveletDelta.newBuilder()
-        .setAuthor("dummy")
-        .setHashedVersion(CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(version)))
-        .build();
-  }
-
-  /**
-   * Return a dummy ProtocolAppliedWaveleetDelta instance used as a range
-   * boundary.
-   */
-  private static ByteStringMessage<ProtocolAppliedWaveletDelta> emptyAppliedDeltaAtVersion(
-      final long version) {
-    ProtocolAppliedWaveletDelta delta = ProtocolAppliedWaveletDelta.newBuilder()
-        .setApplicationTimestamp(0)
-        .setOperationsApplied(0)
-        .setSignedOriginalDelta(ProtocolSignedDelta.newBuilder()
-             .setDelta(emptyDeltaAtVersion(version).toByteString())
-        ).build();
-    return ByteStringMessage.fromMessage(delta);
-  }
-
   protected void assertStateOk() throws WaveletStateException {
     if (state != State.OK) {
       throw new WaveletStateException(state, "The wavelet is not in a usable state. ");
@@ -193,7 +142,6 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       releaseReadLock();
     }
   }
-
 
   @Override
   public void setState(State state) {
@@ -403,7 +351,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
         CoreWaveletOperationSerializer.serialize(transformedDelta.delta, currentVersion);
     transformedDeltas.put(currentVersion, transformedProtocolDelta);
     deserializedTransformedDeltas.put(currentVersion, transformedDelta);
-    appliedDeltas.add(appliedDelta);
+    appliedDeltas.put(currentVersion, appliedDelta);
 
     HashedVersion versionAfterApplication = HASH_FACTORY.create(
         appliedDelta.getByteArray(), currentVersion, operationsApplied);
@@ -420,7 +368,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    */
   protected ByteStringMessage<ProtocolAppliedWaveletDelta> lookupAppliedDelta(
       HashedVersion version) {
-    return appliedDeltas.floor(emptyAppliedDeltaAtVersion(version.getVersion()));
+    return appliedDeltas.get(version);
   }
 
   @Override
@@ -433,14 +381,14 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       // TODO: ### validate requested range.
       // TODO: #### make immutable.
 
-      Set<ByteStringMessage<ProtocolAppliedWaveletDelta>> set =
-          appliedDeltas.subSet(
-              appliedDeltas.floor(
-                  emptyAppliedDeltaAtVersion(versionStart.getVersion())),
-              emptyAppliedDeltaAtVersion(versionEnd.getVersion()));
-      LOG.info("### HR " + versionStart.getVersion() + " - " + versionEnd.getVersion() + " set - " +
-          set.size() + " = " + set);
-      return set;
+      Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> result =
+          appliedDeltas.subMap(
+              CoreWaveletOperationSerializer.deserialize(versionStart),
+              CoreWaveletOperationSerializer.deserialize(versionEnd))
+          .values();
+      LOG.info("### HR " + versionStart.getVersion() + " - " + versionEnd.getVersion() + ", " +
+          result.size() + " deltas");
+      return result;
     } finally {
       releaseReadLock();
     }

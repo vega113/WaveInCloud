@@ -18,7 +18,7 @@
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -45,7 +45,8 @@ import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider.HistoryResponseListener;
 
 import java.util.List;
-import java.util.NavigableSet;
+import java.util.Map;
+import java.util.NavigableMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -63,8 +64,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
    * Stores all pending deltas for this wavelet, whos insertions would cause
    * discontinuous blocks of deltas. This must only be accessed under writeLock.
    */
-  private final NavigableSet<ByteStringMessage<ProtocolAppliedWaveletDelta>> pendingDeltas =
-    Sets.newTreeSet(appliedDeltaComparator);
+  private final NavigableMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>>
+      pendingDeltas = Maps.newTreeMap();
 
   /**
    * Create a new RemoteWaveletContainerImpl. Just pass through to the parent
@@ -194,21 +195,16 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       // Insert all available deltas into pendingDeltas.
       for (ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta : appliedDeltas) {
         LOG.info("Delta incoming: " + appliedDelta);
-        ProtocolWaveletDelta actualDelta;
+
+        // Log any illformed signed original deltas. TODO: Check if this can be removed.
         try {
-          actualDelta = ProtocolWaveletDelta.parseFrom(
+          ProtocolWaveletDelta actualDelta = ProtocolWaveletDelta.parseFrom(
               appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
           LOG.info("actual delta: " + actualDelta);
         } catch (InvalidProtocolBufferException e) {
           e.printStackTrace();
         }
-        pendingDeltas.add(appliedDelta);
-      }
 
-      // Traverse pendingDeltas while we have any to process.
-      List<VersionedWaveletDelta> result = Lists.newLinkedList();
-      while (pendingDeltas.size() > 0) {
-        ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = pendingDeltas.first();
         ProtocolHashedVersion appliedAt;
         try {
           appliedAt = AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
@@ -217,6 +213,17 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           throw new WaveServerException(
               "Authoritative server sent delta with badly formed original wavelet delta", e);
         }
+
+        pendingDeltas.put(CoreWaveletOperationSerializer.deserialize(appliedAt), appliedDelta);
+      }
+
+      // Traverse pendingDeltas while we have any to process.
+      List<VersionedWaveletDelta> result = Lists.newLinkedList();
+      while (pendingDeltas.size() > 0) {
+        Map.Entry<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>> first =
+            pendingDeltas.firstEntry();
+        HashedVersion appliedAt = first.getKey();
+        ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = first.getValue();
 
         // If we don't have the right version it implies there is a history we need, so set up a
         // callback to request it and fall out of this update
@@ -229,7 +236,9 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
             // We should derive a new one whenever the active one is finished,
             // based on the current state of pendingDeltas.
             federationProvider.requestHistory(waveletName, domain,
-                CoreWaveletOperationSerializer.serialize(expectedVersion), appliedAt, -1,
+                CoreWaveletOperationSerializer.serialize(expectedVersion),
+                CoreWaveletOperationSerializer.serialize(appliedAt),
+                -1,
                 new HistoryResponseListener() {
                     @Override
                     public void onFailure(FederationError error) {
@@ -240,7 +249,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                     public void onSuccess(List<ByteString> deltaList,
                         ProtocolHashedVersion lastCommittedVersion, long versionTruncatedAt) {
                       LOG.info("Got response callback: " + waveletName + ", lcv "
-                          + lastCommittedVersion + " sizeof(deltaSet) = " + deltaList.size());
+                          + lastCommittedVersion + " deltaList length = " + deltaList.size());
 
                       // Turn the ByteStrings in to a useful representation
                       List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltaList =
