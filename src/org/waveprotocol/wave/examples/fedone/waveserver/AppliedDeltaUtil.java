@@ -36,7 +36,7 @@ public class AppliedDeltaUtil {
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
 
-  private static final HashedVersionFactory HASHED_HISTORY_VERSION_FACTORY =
+  private static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionFactoryImpl(URI_CODEC);
 
   /**
@@ -67,18 +67,15 @@ public class AppliedDeltaUtil {
   public static ProtocolHashedVersion calculateHashedVersionAfter(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta)
       throws InvalidProtocolBufferException {
-    return createHashedVersion(
+    return createProtocolHashedVersion(
         appliedDelta.getByteArray(),
         getHashedVersionAppliedAt(appliedDelta),
         appliedDelta.getMessage().getOperationsApplied());
   }
 
-  /**
-   * Creates a {@link ProtocolHashedVersion};
-   */
-  private static ProtocolHashedVersion createHashedVersion(byte[] appliedDeltaBytes,
+  private static ProtocolHashedVersion createProtocolHashedVersion(byte[] appliedDeltaBytes,
       ProtocolHashedVersion hashedVersionAppliedAt, int operationsApplied) {
-    return CoreWaveletOperationSerializer.serialize(HASHED_HISTORY_VERSION_FACTORY.create(
+    return CoreWaveletOperationSerializer.serialize(HASH_FACTORY.create(
         appliedDeltaBytes,
         CoreWaveletOperationSerializer.deserialize(hashedVersionAppliedAt),
         operationsApplied));
