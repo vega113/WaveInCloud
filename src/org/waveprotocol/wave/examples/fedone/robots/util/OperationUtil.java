@@ -66,7 +66,7 @@ public class OperationUtil {
    *         parameter could not be found.
    */
   public static <T> T getOptionalParameter(OperationRequest operation, ParamsProperty key) {
-    return getOptionalParameter(operation, key, null);
+    return OperationUtil.<T> getOptionalParameter(operation, key, null);
   }
 
   /**
