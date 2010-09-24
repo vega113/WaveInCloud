@@ -88,7 +88,7 @@ public class WaveClientServlet extends HttpServlet {
     try {
       JSONObject ret = new JSONObject();
 
-      Enumeration iter = request.getParameterNames();
+      Enumeration<?> iter = request.getParameterNames();
       while (iter.hasMoreElements()) {
         String name = (String) iter.nextElement();
         String value = request.getParameter(name);
@@ -97,7 +97,7 @@ public class WaveClientServlet extends HttpServlet {
           // Set using the correct type of data in the json using reflection
           try {
             Method getter = ClientFlagsBase.class.getMethod(name);
-            Class retType = getter.getReturnType();
+            Class<?> retType = getter.getReturnType();
 
             if (retType.equals(String.class)) {
               ret.put(FLAG_MAP.get(name), value);
