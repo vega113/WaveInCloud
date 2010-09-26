@@ -22,7 +22,6 @@ import com.google.gson.Gson;
 import com.google.protobuf.Message;
 
 import org.waveprotocol.wave.examples.fedone.util.Log;
-import org.waveprotocol.wave.examples.fedone.waveserver.MessageWrapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,6 +34,28 @@ import java.util.Map;
 public abstract class WebSocketChannel extends MessageExpectingChannel {
   private static final Log LOG = Log.get(WebSocketChannel.class);
   private static final int VERSION = 1;
+
+  /**
+   * A simple message wrapper that bundles a json string with a version,
+   * sequence number, and type information.
+   */
+  private static class MessageWrapper {
+    public int version;
+    public long sequenceNumber;
+    public String messageType;
+    public String messageJson;
+
+    /** No-args constructor for {@link Gson#fromJson(String,Class)}. */
+    public MessageWrapper() { }
+
+    public MessageWrapper(int version, long sequenceNumber, String messageType,
+        String messageJson) {
+      this.version = version;
+      this.sequenceNumber = sequenceNumber;
+      this.messageType = messageType;
+      this.messageJson = messageJson;
+    }
+  }
 
   private final ProtoCallback callback;
   private Gson gson = new Gson();
@@ -101,6 +122,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
     MessageWrapper wrapper = new MessageWrapper(VERSION, sequenceNo,
         message.getDescriptorForType().getName(), json);
     sendMessageString(gson.toJson(wrapper));
-    LOG.info("sent JSON message over websocket, sequence number " + sequenceNo + ", message " + message.toString());
+    LOG.info("sent JSON message over websocket, sequence number " + sequenceNo
+        + ", message " + message.toString());
   }
 }
