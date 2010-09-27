@@ -339,6 +339,7 @@
   <target name="dist-client-console" depends="stage" description="Assembles the FedOne console client">
     <jar destfile="${jar.outfile-client-console}">
       <fileset dir="${staging}">
+        <include name="com/dyuproject/protostuff/**/*" />
         <include name="com/google/common/**/*" />
         <include name="com/google/gson/**/*" />
         <include name="com/google/inject/**/*" />
@@ -347,6 +348,7 @@
         <include name="javax/inject/**/*" />
         <include name="jline/**/*" />
         <include name="org/apache/commons/codec/**/*" />
+        <include name="org/codehaus/jackson/**/*" />
         <include name="org/waveprotocol/**/*" />
       </fileset>
       <manifest>

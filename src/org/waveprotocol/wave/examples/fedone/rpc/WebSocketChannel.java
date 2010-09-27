@@ -61,7 +61,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
   private Gson gson = new Gson();
   private Map<String, Class<? extends Message>> protosByName;
   private ProtoSerializer serializer;
-  
+
   /**
    * Constructs a new WebSocketChannel, using the callback to handle any
    * incoming messages.
@@ -86,7 +86,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
   }
 
   public void handleMessageString(String data) {
-    LOG.info("received JSON message " + data);
+    LOG.fine("received JSON message " + data);
     MessageWrapper wrapper = gson.fromJson(data, MessageWrapper.class);
     Message m;
     Class<? extends Message> protoClass = protosByName.get(wrapper.messageType);
@@ -98,7 +98,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
       e.printStackTrace();
       return;
     }
-    LOG.info("message was " + m.getDescriptorForType().getName());
+    LOG.fine("message was " + m.getDescriptorForType().getName());
     callback.message(wrapper.sequenceNumber, m);
   }
 
@@ -122,7 +122,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
     MessageWrapper wrapper = new MessageWrapper(VERSION, sequenceNo,
         message.getDescriptorForType().getName(), json);
     sendMessageString(gson.toJson(wrapper));
-    LOG.info("sent JSON message over websocket, sequence number " + sequenceNo
+    LOG.fine("sent JSON message over websocket, sequence number " + sequenceNo
         + ", message " + message.toString());
   }
 }
