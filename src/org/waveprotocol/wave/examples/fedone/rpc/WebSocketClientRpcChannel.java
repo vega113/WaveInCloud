@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
- 
+
 package org.waveprotocol.wave.examples.fedone.rpc;
 
 import com.google.common.base.Preconditions;
@@ -27,33 +27,32 @@ import java.net.SocketAddress;
 import java.util.concurrent.ExecutorService;
 
 /**
- * WebSocketClientRpcChannel starts a WebSocketClientChannel and returns it.
+ * Implementation of {@link ClientRpcChannel} based on a
+ * {@link WebSocketClientChannel}.
  */
 public class WebSocketClientRpcChannel extends ClientRpcChannelImpl {
-  private static final Log LOG = Log.get(ClientRpcChannel.class);
+  private static final Log LOG = Log.get(WebSocketClientRpcChannel.class);
 
-  public WebSocketClientRpcChannel(SocketAddress serverAddress, ExecutorService threadPool) 
+  public WebSocketClientRpcChannel(SocketAddress serverAddress, ExecutorService threadPool)
       throws IOException {
     super(serverAddress, threadPool);
   }
 
-  public WebSocketClientRpcChannel(SocketAddress serverAddress) 
-      throws IOException {
+  public WebSocketClientRpcChannel(SocketAddress serverAddress) throws IOException {
     super(serverAddress);
   }
 
   @Override
-  protected MessageExpectingChannel startChannel(SocketAddress serverAddress, 
+  protected MessageExpectingChannel startChannel(SocketAddress serverAddress,
       ExecutorService threadPool, ProtoCallback callback) {
-    Preconditions.checkArgument(serverAddress != null);
+    Preconditions.checkNotNull(serverAddress, "null serverAddress");
 
     InetSocketAddress inetAddress = (InetSocketAddress) serverAddress;
-    WebSocketClientChannel protoChannel = 
-      new WebSocketClientChannel(inetAddress.getHostName(), inetAddress.getPort(),
-        callback, threadPool);
+    WebSocketClientChannel protoChannel = new WebSocketClientChannel(
+        inetAddress.getHostName(), inetAddress.getPort(), callback, threadPool);
     protoChannel.expectMessage(Rpc.RpcFinished.getDefaultInstance());
     protoChannel.startAsyncRead();
-    LOG.fine("Opened a new ClientRpcChannel to " + serverAddress);    
+    LOG.fine("Opened a new WebSocketClientRpcChannel to " + serverAddress);
     return protoChannel;
   }
 }
