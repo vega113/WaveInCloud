@@ -30,9 +30,9 @@ public interface AccountStore {
    * Returns an {@link AccountData} for the given username or null if not
    * exists.
    *
-   * @param username to get the account for.
+   * @param address to get the account for.
    */
-  AccountData getAccount(String username);
+  AccountData getAccount(String address);
 
   /**
    * Puts the given {@link AccountData} in the storage, overrides an existing
@@ -45,7 +45,7 @@ public interface AccountStore {
   /**
    * Removes an account from storage.
    *
-   * @param username the name of the account to remove.
+   * @param address the name of the account to remove.
    */
-  void removeAccount(String username);
+  void removeAccount(String address);
 }

@@ -107,6 +107,8 @@ public class PersistenceModule extends AbstractModule {
   private void bindAccountStore() {
     if (accountStoreType.equalsIgnoreCase("memory")) {
       bind(AccountStore.class).to(MemoryStore.class).in(Singleton.class);
+    } else if (accountStoreType.equalsIgnoreCase("fake")) {
+      bind(AccountStore.class).to(FakePermissiveAccountStore.class).in(Singleton.class);
     } else {
       throw new RuntimeException("Invalid account store type: '" + accountStoreType + "'");
     }
