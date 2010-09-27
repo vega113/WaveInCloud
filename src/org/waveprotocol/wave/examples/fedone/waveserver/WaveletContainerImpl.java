@@ -37,7 +37,6 @@ import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -80,9 +79,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   private final NavigableMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>>
       appliedDeltas = Maps.newTreeMap();
-  private final NavigableMap<HashedVersion, ProtocolWaveletDelta> transformedDeltas =
-      Maps.newTreeMap();
-  private final NavigableMap<HashedVersion, VersionedWaveletDelta> deserializedTransformedDeltas =
+  private final NavigableMap<HashedVersion, VersionedWaveletDelta> transformedDeltas =
       Maps.newTreeMap();
   private final Lock readLock;
   private final Lock writeLock;
@@ -263,9 +260,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     CoreWaveletDelta submittedDelta = versionedSubmittedDelta.delta;
     HashedVersion appliedVersion = versionedSubmittedDelta.version;
     NavigableMap<HashedVersion, VersionedWaveletDelta> serverDeltas =
-        deserializedTransformedDeltas.tailMap(
-            deserializedTransformedDeltas.floorKey(appliedVersion),
-            true);
+        transformedDeltas.tailMap(transformedDeltas.floorKey(appliedVersion), true);
 
     if (serverDeltas.isEmpty()) {
       LOG.warning("Got empty server set, but not sumbitting to head! " + submittedDelta);
@@ -347,10 +342,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     Preconditions.checkState(currentVersion.equals(transformedDelta.version));
     Preconditions.checkArgument(operationsApplied == transformedDelta.delta.getOperations().size());
 
-    ProtocolWaveletDelta transformedProtocolDelta =
-        CoreWaveletOperationSerializer.serialize(transformedDelta.delta, currentVersion);
-    transformedDeltas.put(currentVersion, transformedProtocolDelta);
-    deserializedTransformedDeltas.put(currentVersion, transformedDelta);
+    transformedDeltas.put(currentVersion, transformedDelta);
     appliedDeltas.put(currentVersion, appliedDelta);
 
     HashedVersion versionAfterApplication = HASH_FACTORY.create(
@@ -404,7 +396,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       assertStateOk();
       // TODO: ### validate requested range.
       // TODO: #### make immutable.
-      return deserializedTransformedDeltas.subMap(transformedDeltas.floorKey(start), end).values();
+      return transformedDeltas.subMap(transformedDeltas.floorKey(start), end).values();
     } finally {
       releaseReadLock();
     }
