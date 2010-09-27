@@ -257,8 +257,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                       for (ByteString appliedDelta : deltaList) {
                         try {
                           LOG.info("Delta incoming from history: " + appliedDelta);
-                          appliedDeltaList.add(ByteStringMessage.from(
-                              ProtocolAppliedWaveletDelta.getDefaultInstance(), appliedDelta));
+                          appliedDeltaList.add(
+                              ByteStringMessage.parseProtocolAppliedWaveletDelta(appliedDelta));
                         } catch (InvalidProtocolBufferException e) {
                           LOG.warning("Invalid protocol buffer when requesting history!");
                           state = State.CORRUPTED;
@@ -375,9 +375,9 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     }
 
     // Extract the serialised wavelet delta
-    ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
-        ProtocolWaveletDelta.getDefaultInstance(),
-        appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
+    ByteStringMessage<ProtocolWaveletDelta> protocolDelta =
+        ByteStringMessage.parseProtocolWaveletDelta(
+            appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
     VersionedWaveletDelta deltaAndVersion =
         CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 

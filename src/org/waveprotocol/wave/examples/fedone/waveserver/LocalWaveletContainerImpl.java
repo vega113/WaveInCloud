@@ -84,8 +84,8 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
   private DeltaApplicationResult transformAndApplyLocalDelta(ProtocolSignedDelta signedDelta)
       throws OperationException, InvalidProtocolBufferException, EmptyDeltaException,
       InvalidHashException {
-    ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
-        ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
+    ByteStringMessage<ProtocolWaveletDelta> protocolDelta =
+        ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta());
     VersionedWaveletDelta deltaAndVersion =
       CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
@@ -158,7 +158,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       appliedDeltaBuilder.setHashedVersionAppliedAt(
           CoreWaveletOperationSerializer.serialize(transformed.version));
     }
-    return ByteStringMessage.fromMessage(appliedDeltaBuilder.build());
+    return ByteStringMessage.serializeMessage(appliedDeltaBuilder.build());
   }
 
   @Override

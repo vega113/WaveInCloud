@@ -109,7 +109,7 @@ public class LocalWaveletContainerImplTest extends TestCase {
         .build();
 
     return ProtocolSignedDelta.newBuilder()
-        .setDelta(ByteStringMessage.fromMessage(delta).getByteString())
+        .setDelta(delta.toByteString())
         .addSignature(SIGNATURE)
         .build();
   }

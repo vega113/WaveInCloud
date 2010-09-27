@@ -137,8 +137,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas = Lists.newArrayList();
         for (ByteString delta : rawAppliedDeltas) {
           try {
-            appliedDeltas.add(ByteStringMessage.from(
-                ProtocolAppliedWaveletDelta.getDefaultInstance(), delta));
+            appliedDeltas.add(ByteStringMessage.parseProtocolAppliedWaveletDelta(delta));
           } catch (InvalidProtocolBufferException e) {
             LOG.info("Invalid applied delta protobuf for incoming " + waveletName, e);
             safeMarkWaveletCorrupted(wavelet);
@@ -224,8 +223,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       SubmitResultListener listener) {
     // Disallow creation of wavelets by remote users.
     try {
-      ByteStringMessage<ProtocolWaveletDelta> delta = ByteStringMessage.from(
-          ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
+      ByteStringMessage<ProtocolWaveletDelta> delta =
+          ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta());
       if (delta.getMessage().getHashedVersion().getVersion() == 0) {
         LOG.warning("Remote user tried to submit delta at version 0 - disallowed. " + signedDelta);
         listener.onFailure(FederationErrors.badRequest("Remote users may not create wavelets."));
@@ -398,7 +397,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       final SubmitRequestListener listener) {
     // The serialised version of this delta happens now.  This should be the only place, ever!
     ProtocolSignedDelta signedDelta = certificateManager.signDelta(
-        ByteStringMessage.fromMessage(delta));
+        ByteStringMessage.serializeMessage(delta));
 
     submitDelta(waveletName, signedDelta, new SubmitResultListener() {
       @Override
@@ -581,8 +580,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       final SubmitResultListener resultListener) {
     ByteStringMessage<ProtocolWaveletDelta> waveletDelta;
     try {
-      waveletDelta = ByteStringMessage.from(
-          ProtocolWaveletDelta.getDefaultInstance(), delta.getDelta());
+      waveletDelta = ByteStringMessage.parseProtocolWaveletDelta(delta.getDelta());
     } catch (InvalidProtocolBufferException e) {
       throw new IllegalArgumentException("Signed delta does not contain valid wavelet delta", e);
     }
