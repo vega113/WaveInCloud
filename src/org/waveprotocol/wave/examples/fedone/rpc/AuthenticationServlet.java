@@ -138,6 +138,7 @@ public class AuthenticationServlet extends HttpServlet {
     sessionManager.setLoggedInUser(session, loggedInAddress);
     // The context needs to be notified when the user logs out.
     session.setAttribute("context", context);
+    LOG.info("Authenticated user " + loggedInAddress);
 
     // TODO(josephg): Redirect back to where the user was last.
     resp.setStatus(HttpServletResponse.SC_OK);

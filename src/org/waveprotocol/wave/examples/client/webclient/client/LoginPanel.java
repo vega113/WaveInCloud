@@ -22,6 +22,11 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.KeyPressEvent;
+import com.google.gwt.http.client.Request;
+import com.google.gwt.http.client.RequestBuilder;
+import com.google.gwt.http.client.RequestCallback;
+import com.google.gwt.http.client.RequestException;
+import com.google.gwt.http.client.Response;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -33,12 +38,16 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
+import org.waveprotocol.wave.common.util.PercentEscaper;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEvent;
+import org.waveprotocol.wave.examples.client.webclient.util.Log;
 
 public class LoginPanel extends Composite {
+  private static Log LOG = Log.get(LoginPanel.class);
+  
   interface Binder extends UiBinder<Widget, LoginPanel> {
   }
 
@@ -101,21 +110,46 @@ public class LoginPanel extends Composite {
     }
   }
 
-  private void doLogin() {
-    String text = nameField.getText();
-    if (!patternOk(text)) {
-      Window.alert("You must specify an email address");
-      return;
-    }
-
-    // Can't do anything until connected
+  private void onLoginComplete(String address) {
     if (!sendButton.isEnabled()) {
       return;
     }
     nameField.setEnabled(false);
     nameField.setFocus(false);
     sendButton.setEnabled(false);
-    ClientEvents.get().fireEvent(new UserLoginEvent(text, true));
+    ClientEvents.get().fireEvent(new UserLoginEvent(address, true));    
+  }
+  
+  private void doLogin() {
+    final String address = nameField.getText();
+    if (!patternOk(address)) {
+      Window.alert("You must specify an email address");
+      return;
+    }
+
+    PercentEscaper percentEscaper = new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, true);
+    RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, "/auth");
+    String body = "address=" + percentEscaper.escape(address) + "&password=";
+    
+    try {
+      builder.sendRequest(body, new RequestCallback() {
+        @Override
+        public void onResponseReceived(Request request, Response response) {
+          if (response.getStatusCode() == 200) {
+            onLoginComplete(address);
+          } else {
+            LOG.severe("Could not login - authentication failed.");
+          }
+        }
+      
+        @Override
+        public void onError(Request request, Throwable exception) {
+          LOG.severe("Could not login", exception);
+        }
+      });
+    } catch (RequestException e) {
+      LOG.severe("Could not submit login request", e);
+    }
   }
 
   private boolean patternOk(String text) {

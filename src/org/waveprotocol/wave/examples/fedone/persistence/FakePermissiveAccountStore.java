@@ -30,7 +30,7 @@ import java.util.Map;
  * 
  * This class exists to ease development until persistence is in. It will be
  * removed once persistence works.
- *
+ * 
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class FakePermissiveAccountStore implements AccountStore {
@@ -40,7 +40,7 @@ public class FakePermissiveAccountStore implements AccountStore {
   public AccountData getAccount(ParticipantId id) {
     AccountData account = accounts.get(id);
     
-    if (account == null) {
+    if (account == null && !id.getAddress().startsWith("xxx")) {
       account = new HumanAccountDataImpl(id, "".toCharArray());
       accounts.put(id, account);
     }
