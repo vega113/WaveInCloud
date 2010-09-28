@@ -20,6 +20,7 @@ package org.waveprotocol.wave.examples.fedone.account;
 import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.examples.fedone.authentication.PasswordDigest;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
  * Human Account. Expected to be expanded when authentication is implemented.
@@ -27,7 +28,7 @@ import org.waveprotocol.wave.examples.fedone.authentication.PasswordDigest;
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public final class HumanAccountDataImpl implements HumanAccountData {
-  private final String address;
+  private final ParticipantId id;
   private final PasswordDigest passwordDigest;
 
   /**
@@ -36,29 +37,29 @@ public final class HumanAccountDataImpl implements HumanAccountData {
    *
    * This user will not be able to login using password-bsed authentication.
    *
-   * @param address non-null username for this account.
+   * @param id non-null participant id for this account.
    */
-  public HumanAccountDataImpl(String address) {
-    this(address, null);
+  public HumanAccountDataImpl(ParticipantId id) {
+    this(id, null);
   }
 
   /**
-   * Creates an {@link HumanAccountData} for the given username.
+   * Creates an {@link HumanAccountData} for the given participant.
    *
-   * @param address non-null username for this account.
+   * @param id non-null participant id for this account.
    * @param password The user's password, or null if the user should not be
    *        authenticated using a password.
    */
-  public HumanAccountDataImpl(String address, char[] password) {
-    Preconditions.checkNotNull(address, "Username can not be null");
+  public HumanAccountDataImpl(ParticipantId id, char[] password) {
+    Preconditions.checkNotNull(id, "Id can not be null");
 
-    this.address = address;
+    this.id = id;
     passwordDigest = (password == null) ? null : new PasswordDigest(password);
   }
 
   @Override
-  public String getAddress() {
-    return address;
+  public ParticipantId getId() {
+    return id;
   }
 
   @Override
@@ -88,7 +89,7 @@ public final class HumanAccountDataImpl implements HumanAccountData {
 
   @Override
   public int hashCode() {
-    return address.hashCode();
+    return id.hashCode();
   }
 
   /**
@@ -103,6 +104,6 @@ public final class HumanAccountDataImpl implements HumanAccountData {
       return false;
     }
     HumanAccountDataImpl other = (HumanAccountDataImpl) obj;
-    return address.equals(other.address);
+    return id.equals(other.id);
   }
 }

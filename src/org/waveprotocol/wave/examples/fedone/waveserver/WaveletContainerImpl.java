@@ -210,7 +210,9 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     acquireReadLock();
     try {
       assertStateOk();
-      return waveletData.getParticipants().contains(participantId);
+      // ParticipantId will be null if the user isn't logged in. A user who isn't logged in should
+      // have access to public waves once they've been implemented.
+      return participantId != null && waveletData.getParticipants().contains(participantId);
     } finally {
       releaseReadLock();
     }

@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import javax.servlet.http.HttpSession;
 
@@ -31,8 +32,8 @@ import javax.servlet.http.HttpSession;
  *
  * @author josephg@gmail.com (Joseph Gentle)
  */
-public class SessionManager {
-  private static final String ADDRESS_FIELD = "address";
+public final class SessionManager {
+  private static final String USER_FIELD = "user";
 
   private final AccountStore accountStore;
 
@@ -42,53 +43,57 @@ public class SessionManager {
   }
 
   /**
-   * Get the address of the currently logged in user from the user's session.
+   * Get the participant id of the currently logged in user from the user's HTTP
+   * session.
    *
-   *  If the session has not been created, or if the user is not logged in, this
-   * function returns null.
+   *  If the session is null, or if the user is not logged in, this function
+   * returns null.
    *
-   * @param session The user's HTTP session, obtainable from
+   * @param session The user's HTTP session, usually obtained from
    *        request.getSession(false);
-   * @return the user's address, or null if the user is not logged in.
+   * @return the user's participant id, or null if the user is not logged in.
    */
-  public String getLoggedInAddress(HttpSession session) {
+  public ParticipantId getLoggedInUser(HttpSession session) {
     if (session != null) {
-      return (String) session.getAttribute(ADDRESS_FIELD);
+      return (ParticipantId) session.getAttribute(USER_FIELD);
     } else {
       return null;
     }
   }
 
   /**
-   * Get the currently logged in user's account data.
+   * Get account data of the currently logged in user.
    *
-   *  If the session has not been created, or if the user is not logged in, this
-   * function returns null.
+   *  If the session is null, or if the user is not logged in, this function
+   * returns null.
    *
-   * @param session The user's HTTP session, obtainable from
+   * @param session The user's HTTP session, usually obtained from
    *        request.getSession(false);
    * @return the user's account data, or null if the user is not logged in.
    */
-  public AccountData getLoggedInUser(HttpSession session) {
+  public AccountData getLoggedInAccount(HttpSession session) {
     // Consider caching the account data in the session object.
-    String address = getLoggedInAddress(session);
-    if (address != null) {
-      return accountStore.getAccount(address);
+    ParticipantId user = getLoggedInUser(session);
+    if (user != null) {
+      return accountStore.getAccount(user);
     } else {
       return null;
     }
   }
 
   /**
-   * Bind the user's address to the user's session.
+   * Bind the user's participant id to the user's session.
    *
-   * @param session The user's HTTP session, obtainable from
+   * This records that a user has been logged in.
+   *
+   * @param session The user's HTTP session, usually obtained from
    *        request.getSession(true);
-   * @param address The user's address.
+   * @param id the user who has been logged in
    */
-  public void setLoggedInAddress(HttpSession session, String address) {
+  public void setLoggedInUser(HttpSession session, ParticipantId id) {
     Preconditions.checkNotNull(session, "Session is null");
-    session.setAttribute(ADDRESS_FIELD, address);
+    Preconditions.checkNotNull(id, "Participant id is null");
+    session.setAttribute(USER_FIELD, id);
   }
 
   /**
@@ -103,7 +108,7 @@ public class SessionManager {
     if (session != null) {
       // This function should also remove any other bound fields in the session
       // object.
-      session.removeAttribute(ADDRESS_FIELD);
+      session.removeAttribute(USER_FIELD);
     }
   }
 }

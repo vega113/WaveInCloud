@@ -1,17 +1,17 @@
 /**
  * Copyright 2010 Google Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  *
  */
 
@@ -27,6 +27,7 @@ import org.waveprotocol.wave.examples.fedone.account.HumanAccountData;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountDataImpl;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.HashMap;
 
@@ -38,9 +39,9 @@ import java.util.HashMap;
  */
 public abstract class AccountStoreTestBase extends TestCase {
 
-  private static final String HUMAN_USERNAME = "human@example.com";
+  private static final ParticipantId HUMAN_ID = ParticipantId.ofUnsafe("human@example.com");
 
-  private static final String ROBOT_USERNAME = "robot@example.com";
+  private static final ParticipantId ROBOT_ID = ParticipantId.ofUnsafe("robot@example.com");
 
   private RobotAccountData robotAccount;
 
@@ -54,11 +55,11 @@ public abstract class AccountStoreTestBase extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
 
-    humanAccount = new HumanAccountDataImpl(HUMAN_USERNAME);
-    robotAccount = new RobotAccountDataImpl(ROBOT_USERNAME, "example.com", null, null, false);
+    humanAccount = new HumanAccountDataImpl(HUMAN_ID);
+    robotAccount = new RobotAccountDataImpl(ROBOT_ID, "example.com", null, null, false);
     updatedRobotAccount = new RobotAccountDataImpl(
-        ROBOT_USERNAME, "example.com", new HashMap<EventType, Capability>(), "FAKEHASH", true);
-    convertedRobot = new HumanAccountDataImpl(ROBOT_USERNAME);
+        ROBOT_ID, "example.com", new HashMap<EventType, Capability>(), "FAKEHASH", true);
+    convertedRobot = new HumanAccountDataImpl(ROBOT_ID);
   }
 
   /**
@@ -70,11 +71,11 @@ public abstract class AccountStoreTestBase extends TestCase {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(humanAccount);
-    AccountData retrievedAccount = accountStore.getAccount(HUMAN_USERNAME);
+    AccountData retrievedAccount = accountStore.getAccount(HUMAN_ID);
     assertEquals(humanAccount, retrievedAccount);
 
     accountStore.putAccount(robotAccount);
-    retrievedAccount = accountStore.getAccount(ROBOT_USERNAME);
+    retrievedAccount = accountStore.getAccount(ROBOT_ID);
     assertEquals(robotAccount, retrievedAccount);
   }
 
@@ -82,11 +83,11 @@ public abstract class AccountStoreTestBase extends TestCase {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(robotAccount);
-    AccountData account = accountStore.getAccount(ROBOT_USERNAME);
+    AccountData account = accountStore.getAccount(ROBOT_ID);
     assertEquals(robotAccount, account);
 
     accountStore.putAccount(updatedRobotAccount);
-    AccountData updatedAccount = accountStore.getAccount(ROBOT_USERNAME);
+    AccountData updatedAccount = accountStore.getAccount(ROBOT_ID);
     assertEquals(updatedRobotAccount, updatedAccount);
   }
 
@@ -94,11 +95,11 @@ public abstract class AccountStoreTestBase extends TestCase {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(robotAccount);
-    AccountData account = accountStore.getAccount(ROBOT_USERNAME);
+    AccountData account = accountStore.getAccount(ROBOT_ID);
     assertEquals(robotAccount, account);
 
     accountStore.putAccount(convertedRobot);
-    AccountData updatedAccount = accountStore.getAccount(ROBOT_USERNAME);
+    AccountData updatedAccount = accountStore.getAccount(ROBOT_ID);
     assertEquals(convertedRobot, updatedAccount);
   }
 
@@ -106,10 +107,10 @@ public abstract class AccountStoreTestBase extends TestCase {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(robotAccount);
-    AccountData account = accountStore.getAccount(ROBOT_USERNAME);
+    AccountData account = accountStore.getAccount(ROBOT_ID);
     assertEquals(robotAccount, account);
 
-    accountStore.removeAccount(ROBOT_USERNAME);
-    assertNull("Removed account was not null", accountStore.getAccount(ROBOT_USERNAME));
+    accountStore.removeAccount(ROBOT_ID);
+    assertNull("Removed account was not null", accountStore.getAccount(ROBOT_ID));
   }
 }

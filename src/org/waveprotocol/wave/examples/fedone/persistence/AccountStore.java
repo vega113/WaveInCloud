@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.examples.fedone.persistence;
 
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
  * Interface for the storage and retrieval of {@link AccountData}s.
@@ -30,9 +31,9 @@ public interface AccountStore {
    * Returns an {@link AccountData} for the given username or null if not
    * exists.
    *
-   * @param address to get the account for.
+   * @param id participant id of the requested account.
    */
-  AccountData getAccount(String address);
+  AccountData getAccount(ParticipantId id);
 
   /**
    * Puts the given {@link AccountData} in the storage, overrides an existing
@@ -45,7 +46,7 @@ public interface AccountStore {
   /**
    * Removes an account from storage.
    *
-   * @param address the name of the account to remove.
+   * @param id the participant id of the account to remove.
    */
-  void removeAccount(String address);
+  void removeAccount(ParticipantId id);
 }

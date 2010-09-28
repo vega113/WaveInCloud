@@ -22,6 +22,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.wave.api.event.EventType;
 import com.google.wave.api.robot.Capability;
 
+import org.waveprotocol.wave.model.wave.ParticipantId;
+
 import java.util.Map;
 
 /**
@@ -30,8 +32,7 @@ import java.util.Map;
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public final class RobotAccountDataImpl implements RobotAccountData {
-
-  private final String address;
+  private final ParticipantId id;
   private final String url;
   private final Map<EventType, Capability> capabilities;
   private final String capabilitiesHash;
@@ -43,7 +44,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
    *  If the capabilities map may only be null if the capabilitiesHash is null
    * and vice versa.
    *
-   * @param address non-null address for this account.
+   * @param id non-null participant id for this account.
    * @param url non-null Url where the robot can be reached.
    * @param capabilities mapping events to capabilities for this robot.
    * @param capabilitiesHash the hash of the robot, may be null if not
@@ -51,15 +52,15 @@ public final class RobotAccountDataImpl implements RobotAccountData {
    * @param isVerified boolean indicating wether this {@link RobotAccountData}
    *        has been verified.
    */
-  public RobotAccountDataImpl(String address, String url, Map<EventType, Capability> capabilities,
+  public RobotAccountDataImpl(ParticipantId id, String url, Map<EventType, Capability> capabilities,
       String capabilitiesHash, boolean isVerified) {
-    Preconditions.checkNotNull(address, "Address can not be null");
+    Preconditions.checkNotNull(id, "Id can not be null");
     Preconditions.checkNotNull(url, "Url can not be null");
     Preconditions.checkArgument(!url.endsWith("/"), "Url must not end with /");
     Preconditions.checkArgument((capabilities == null) == (capabilitiesHash == null),
         "Capabilities must be set completely or not set at all");
 
-    this.address = address;
+    this.id = id;
     this.url = url;
 
     if (capabilities != null) {
@@ -73,8 +74,8 @@ public final class RobotAccountDataImpl implements RobotAccountData {
   }
 
   @Override
-  public String getAddress() {
-    return address;
+  public ParticipantId getId() {
+    return id;
   }
 
   @Override
@@ -125,7 +126,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
     result = prime * result + ((capabilitiesHash == null) ? 0 : capabilitiesHash.hashCode());
     result = prime * result + (isVerified ? 1231 : 1237);
     result = prime * result + url.hashCode();
-    result = prime * result + address.hashCode();
+    result = prime * result + id.hashCode();
     return result;
   }
 
@@ -155,7 +156,7 @@ public final class RobotAccountDataImpl implements RobotAccountData {
       }
     }
 
-    return address.equals(other.address) && url.equals(other.url)
+    return id.equals(other.id) && url.equals(other.url)
         && capabilities.equals(other.capabilities)
         && capabilitiesHash.equals(other.capabilitiesHash) && isVerified == other.isVerified;
   }

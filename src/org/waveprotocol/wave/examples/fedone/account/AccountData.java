@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.account;
 
+import org.waveprotocol.wave.model.wave.ParticipantId;
+
 
 /**
  * Represents a basic immutable account, consists solely out of a username. It
@@ -27,12 +29,12 @@ package org.waveprotocol.wave.examples.fedone.account;
 public interface AccountData {
 
   /**
-   * Gets the address of the user who owns this account. This is the primary
-   * identifier for accounts. It should be in the form of an email address.
+   * Gets the participant id of the user who owns this account. This is the
+   * primary identifier for accounts.
    *
-   * @return returns a non-null address.
+   * @return returns a non-null participant id.
    */
-  String getAddress();
+  ParticipantId getId();
 
   /**
    * @return true iff this account is a {@link HumanAccountData}.
