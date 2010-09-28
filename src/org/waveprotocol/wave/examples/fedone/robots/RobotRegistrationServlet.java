@@ -129,8 +129,7 @@ public class RobotRegistrationServlet extends HttpServlet {
     }
 
     // TODO(ljvderijk): Implement verification and set verified to false
-    RobotAccountData robotAccount = new RobotAccountDataImpl(username, robotLocation, null, null,
-        true);
+    RobotAccountData robotAccount = new RobotAccountDataImpl(username, robotLocation, null, true);
     accountStore.putAccount(robotAccount);
     LOG.info(robotAccount.getAddress() + " is now registered as a RobotAccount with Url "
         + robotAccount.getUrl());

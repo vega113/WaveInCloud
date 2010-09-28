@@ -16,9 +16,9 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 
 /**
  * Composes a ProtocolWaveletDelta and the result of its application, the serialised representation
@@ -29,8 +29,8 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 public class DeltaApplicationResult {
 
   private final ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta;
-  private final ProtocolWaveletDelta transformedDelta;
-  private final ProtocolHashedVersion hashedVersionAfterApplication;
+  private final VersionedWaveletDelta transformedDelta;
+  private final HashedVersion hashedVersionAfterApplication;
 
   /**
    * @param appliedDelta result of application, untransformed
@@ -39,8 +39,8 @@ public class DeltaApplicationResult {
    */
   public DeltaApplicationResult(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
-      ProtocolWaveletDelta transformedDelta,
-      ProtocolHashedVersion hashedVersionAfterApplication) {
+      VersionedWaveletDelta transformedDelta,
+      HashedVersion hashedVersionAfterApplication) {
     this.appliedDelta = appliedDelta;
     this.transformedDelta = transformedDelta;
     this.hashedVersionAfterApplication = hashedVersionAfterApplication;
@@ -50,8 +50,12 @@ public class DeltaApplicationResult {
     return appliedDelta;
   }
 
-  public ProtocolWaveletDelta getDelta() {
+  public VersionedWaveletDelta getDelta() {
     return transformedDelta;
+  }
+
+  public HashedVersion getHashedVersionAfterApplication() {
+    return hashedVersionAfterApplication;
   }
 
   @Override
@@ -68,9 +72,5 @@ public class DeltaApplicationResult {
       return appliedDelta.equals(that.appliedDelta)
           && transformedDelta.equals(that.transformedDelta);
     }
-  }
-
-  public ProtocolHashedVersion getHashedVersionAfterApplication() {
-    return hashedVersionAfterApplication;
   }
 }

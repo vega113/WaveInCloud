@@ -150,7 +150,8 @@
   <target name="test" depends="compile_tests" description=
     "Runs all the unit tests in the project excluding external persistence">
 
-    <junit fork="yes" showoutput="no" failureProperty="test.failed">
+    <!-- Tests are run in a single new VM, when forkmode is set to once -->
+    <junit fork="yes" forkmode="once" showoutput="no" failureProperty="test.failed">
       <classpath>
         <path refid="fedone.classpath"/>
         <path refid="fedone.test.classpath"/>
@@ -173,10 +174,10 @@
     </junit>
 
     <junitreport todir="${dir.testout}">
-      <fileset dir="${dir.testout}"> 
-        <include name="TEST-*.xml"/> 
-      </fileset> 
-      <report format="frames" todir="${dir.testout}"/> 
+      <fileset dir="${dir.testout}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report format="frames" todir="${dir.testout}"/>
     </junitreport>
 
     <fail message="Tests failed. Check log and/or reports."
@@ -204,10 +205,10 @@
       </junit>
 
       <junitreport todir="${dir.testout}">
-        <fileset dir="${dir.testout}"> 
-          <include name="TEST-*.xml"/> 
-        </fileset> 
-        <report format="frames" todir="${dir.testout}"/> 
+        <fileset dir="${dir.testout}">
+          <include name="TEST-*.xml"/>
+        </fileset>
+        <report format="frames" todir="${dir.testout}"/>
       </junitreport>
 
       <fail message="Tests failed. Check log and/or reports."
@@ -249,6 +250,7 @@
       <jvmarg value="-Xmx512M"/>
       <jvmarg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8001"/>
       <arg value="-noserver" />
+      <arg line="-bindAddress 0.0.0.0" />
       <arg line="${gwt.args}"/>
       <arg value="org.waveprotocol.wave.examples.client.webclient.WebClient"/>
     </java>
@@ -338,6 +340,7 @@
   <target name="dist-client-console" depends="stage" description="Assembles the FedOne console client">
     <jar destfile="${jar.outfile-client-console}">
       <fileset dir="${staging}">
+        <include name="com/dyuproject/protostuff/**/*" />
         <include name="com/google/common/**/*" />
         <include name="com/google/gson/**/*" />
         <include name="com/google/inject/**/*" />
@@ -346,6 +349,7 @@
         <include name="javax/inject/**/*" />
         <include name="jline/**/*" />
         <include name="org/apache/commons/codec/**/*" />
+        <include name="org/codehaus/jackson/**/*" />
         <include name="org/waveprotocol/**/*" />
       </fileset>
       <manifest>

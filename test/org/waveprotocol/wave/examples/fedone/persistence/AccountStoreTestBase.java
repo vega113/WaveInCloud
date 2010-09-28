@@ -17,6 +17,8 @@
 
 package org.waveprotocol.wave.examples.fedone.persistence;
 
+import com.google.common.collect.Maps;
+import com.google.wave.api.ProtocolVersion;
 import com.google.wave.api.event.EventType;
 import com.google.wave.api.robot.Capability;
 
@@ -27,8 +29,7 @@ import org.waveprotocol.wave.examples.fedone.account.HumanAccountData;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountDataImpl;
-
-import java.util.HashMap;
+import org.waveprotocol.wave.examples.fedone.robots.RobotCapabilities;
 
 /**
  * Testcases for the {@link AccountStore}. Implementors of these testcases are
@@ -55,9 +56,10 @@ public abstract class AccountStoreTestBase extends TestCase {
     super.setUp();
 
     humanAccount = new HumanAccountDataImpl(HUMAN_USERNAME);
-    robotAccount = new RobotAccountDataImpl(ROBOT_USERNAME, "example.com", null, null, false);
-    updatedRobotAccount = new RobotAccountDataImpl(
-        ROBOT_USERNAME, "example.com", new HashMap<EventType, Capability>(), "FAKEHASH", true);
+    robotAccount = new RobotAccountDataImpl(ROBOT_USERNAME, "example.com", null, false);
+    updatedRobotAccount =
+        new RobotAccountDataImpl(ROBOT_USERNAME, "example.com", new RobotCapabilities(
+            Maps.<EventType, Capability> newHashMap(), "FAKEHASH", ProtocolVersion.DEFAULT), true);
     convertedRobot = new HumanAccountDataImpl(ROBOT_USERNAME);
   }
 

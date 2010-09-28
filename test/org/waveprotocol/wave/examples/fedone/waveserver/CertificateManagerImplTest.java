@@ -105,7 +105,7 @@ public class CertificateManagerImplTest extends TestCase {
         .setHashedVersion(getHashedVersion())
         .setAuthor("bob@example.com")
         .build();
-    ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = toCanonicalDelta(delta);
+    ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.serializeMessage(delta);
 
     ProtocolSignedDelta signedDelta = manager.signDelta(canonicalDelta);
 
@@ -120,7 +120,7 @@ public class CertificateManagerImplTest extends TestCase {
         .setHashedVersion(getHashedVersion())
         .setAuthor("bob@example.com")
         .build();
-    ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = toCanonicalDelta(delta);
+    ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.serializeMessage(delta);
     manager = new CertificateManagerImpl(false, getSigner(), getVerifier(store, false), store);
     ProtocolSignedDelta signedDelta = manager.signDelta(canonicalDelta);
 
@@ -139,7 +139,7 @@ public class CertificateManagerImplTest extends TestCase {
         .setHashedVersion(getHashedVersion())
         .setAuthor("bob@someotherdomain.com")
         .build();
-    ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = toCanonicalDelta(delta);
+    ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.serializeMessage(delta);
 
     ProtocolSignedDelta signedDelta = manager.signDelta(canonicalDelta);
 
@@ -326,16 +326,6 @@ public class CertificateManagerImplTest extends TestCase {
    * UTILITIES
    */
 
-  private ByteStringMessage<ProtocolWaveletDelta> toCanonicalDelta(ProtocolWaveletDelta d) {
-    try {
-      ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.from(
-          ProtocolWaveletDelta.getDefaultInstance(), d.toByteString());
-      return canonicalDelta;
-    } catch (InvalidProtocolBufferException e) {
-      throw new IllegalArgumentException(e);
-    }
-  }
-
   private ProtocolHashedVersion getHashedVersion() {
     return CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(3L));
   }
@@ -417,7 +407,7 @@ public class CertificateManagerImplTest extends TestCase {
         .setHashedVersion(getHashedVersion())
         .setAuthor("bob@initech-corp.com")
         .build();
-    return toCanonicalDelta(delta);
+    return ByteStringMessage.serializeMessage(delta);
   }
 
   private ProtocolSignature getRealSignature() throws Exception {

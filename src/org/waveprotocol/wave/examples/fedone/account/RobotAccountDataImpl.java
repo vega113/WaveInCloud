@@ -1,28 +1,25 @@
 /**
  * Copyright 2010 Google Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  *
  */
 
 package org.waveprotocol.wave.examples.fedone.account;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.wave.api.event.EventType;
-import com.google.wave.api.robot.Capability;
 
-import java.util.Map;
+import org.waveprotocol.wave.examples.fedone.robots.RobotCapabilities;
 
 /**
  * Robot Account implementation.
@@ -33,42 +30,31 @@ public final class RobotAccountDataImpl implements RobotAccountData {
 
   private final String address;
   private final String url;
-  private final Map<EventType, Capability> capabilities;
-  private final String capabilitiesHash;
+  private final RobotCapabilities capabilities;
   private final boolean isVerified;
 
   /**
    * Creates a new {@link RobotAccountData}.
    *
-   *  If the capabilities map may only be null if the capabilitiesHash is null
-   * and vice versa.
+   *  The capabilities map and version may only be null if the capabilitiesHash
+   * is null and vice versa.
    *
    * @param address non-null address for this account.
    * @param url non-null Url where the robot can be reached.
-   * @param capabilities mapping events to capabilities for this robot.
-   * @param capabilitiesHash the hash of the robot, may be null if not
-   *        retrieved.
-   * @param isVerified boolean indicating wether this {@link RobotAccountData}
+   * @param capabilities {@link RobotCapabilities} representing the robot's
+   *        capabilties.xml. May be null.
+   * @param isVerified boolean indicating whether this {@link RobotAccountData}
    *        has been verified.
    */
-  public RobotAccountDataImpl(String address, String url, Map<EventType, Capability> capabilities,
-      String capabilitiesHash, boolean isVerified) {
+  public RobotAccountDataImpl(
+      String address, String url, RobotCapabilities capabilities, boolean isVerified) {
     Preconditions.checkNotNull(address, "Address can not be null");
     Preconditions.checkNotNull(url, "Url can not be null");
     Preconditions.checkArgument(!url.endsWith("/"), "Url must not end with /");
-    Preconditions.checkArgument((capabilities == null) == (capabilitiesHash == null),
-        "Capabilities must be set completely or not set at all");
 
     this.address = address;
     this.url = url;
-
-    if (capabilities != null) {
-      this.capabilities = ImmutableMap.copyOf(capabilities);
-    } else {
-      this.capabilities = null;
-    }
-
-    this.capabilitiesHash = capabilitiesHash;
+    this.capabilities = capabilities;
     this.isVerified = isVerified;
   }
 
@@ -103,13 +89,8 @@ public final class RobotAccountDataImpl implements RobotAccountData {
   }
 
   @Override
-  public Map<EventType, Capability> getCapabilities() {
+  public RobotCapabilities getCapabilities() {
     return capabilities;
-  }
-
-  @Override
-  public String getCapabilitiesHash() {
-    return capabilitiesHash;
   }
 
   @Override
@@ -122,7 +103,6 @@ public final class RobotAccountDataImpl implements RobotAccountData {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((capabilities == null) ? 0 : capabilities.hashCode());
-    result = prime * result + ((capabilitiesHash == null) ? 0 : capabilitiesHash.hashCode());
     result = prime * result + (isVerified ? 1231 : 1237);
     result = prime * result + url.hashCode();
     result = prime * result + address.hashCode();
@@ -130,15 +110,15 @@ public final class RobotAccountDataImpl implements RobotAccountData {
   }
 
   /**
-   * Robots are equal if their username, url, capbilities, capabilitiesHash and
-   * verification are equal.
+   * Robots are equal if their username, url, capabilities and verification are
+   * equal.
    */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;
     }
-    if (obj == null || !(obj instanceof RobotAccountDataImpl)) {
+    if (!(obj instanceof RobotAccountDataImpl)) {
       return false;
     }
 
@@ -149,14 +129,8 @@ public final class RobotAccountDataImpl implements RobotAccountData {
         return false;
       }
     }
-    if (capabilitiesHash == null) {
-      if (other.capabilitiesHash != null) {
-        return false;
-      }
-    }
 
     return address.equals(other.address) && url.equals(other.url)
-        && capabilities.equals(other.capabilities)
-        && capabilitiesHash.equals(other.capabilitiesHash) && isVerified == other.isVerified;
+           && capabilities.equals(other.capabilities) && isVerified == other.isVerified;
   }
 }

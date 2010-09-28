@@ -20,8 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.examples.common.HashedVersion;
 
 import java.util.AbstractList;
 import java.util.Iterator;
@@ -30,22 +29,20 @@ import java.util.List;
 /**
  * A sequence of deltas along with the end version (after application of the
  * deltas).
- *
- *
  */
-public final class DeltaSequence extends AbstractList<ProtocolWaveletDelta> {
-  private final ImmutableList<ProtocolWaveletDelta> deltas;
-  private final ProtocolHashedVersion endVersion;
+public final class DeltaSequence extends AbstractList<VersionedWaveletDelta> {
+  private final ImmutableList<VersionedWaveletDelta> deltas;
+  private final HashedVersion endVersion;
 
-  public static DeltaSequence empty(ProtocolHashedVersion version) {
-    return new DeltaSequence(ImmutableList.<ProtocolWaveletDelta>of(), version);
+  public static DeltaSequence empty(HashedVersion version) {
+    return new DeltaSequence(ImmutableList.<VersionedWaveletDelta>of(), version);
   }
 
   /**
    * @param deltas to apply to a wavelet
    * @param endVersion the version of the wavelet after all deltas were applied
    */
-  public DeltaSequence(Iterable<ProtocolWaveletDelta> deltas, ProtocolHashedVersion endVersion) {
+  public DeltaSequence(Iterable<VersionedWaveletDelta> deltas, HashedVersion endVersion) {
     this.deltas = ImmutableList.copyOf(deltas);
     this.endVersion = endVersion;
     Preconditions.checkArgument(endVersion.getVersion() >= 0,
@@ -59,10 +56,10 @@ public final class DeltaSequence extends AbstractList<ProtocolWaveletDelta> {
    */
   private void checkDeltaVersions() {
     for (int i = 0; i < deltas.size(); i++) {
-      ProtocolWaveletDelta delta = deltas.get(i);
-      long deltaEndVersion = delta.getHashedVersion().getVersion() + delta.getOperationCount();
+      VersionedWaveletDelta delta = deltas.get(i);
+      long deltaEndVersion = delta.version.getVersion() + delta.delta.getOperations().size();
       long nextVersion =
-          ((i + 1 < deltas.size()) ? deltas.get(i + 1).getHashedVersion() : endVersion)
+          ((i + 1 < deltas.size()) ? deltas.get(i + 1).version : endVersion)
           .getVersion();
       Preconditions.checkArgument(deltaEndVersion == nextVersion,
           "Delta %s / %s ends at version %s, expected %s",
@@ -72,29 +69,28 @@ public final class DeltaSequence extends AbstractList<ProtocolWaveletDelta> {
 
   @Override
   public DeltaSequence subList(int start, int end) {
-    List<ProtocolWaveletDelta> subDeltas = deltas.subList(start, end);
-    ProtocolHashedVersion subEndVersion =
-      (end == deltas.size()) ? endVersion : deltas.get(end).getHashedVersion();
-      return new DeltaSequence(subDeltas, subEndVersion);
+    List<VersionedWaveletDelta> subDeltas = deltas.subList(start, end);
+    HashedVersion subEndVersion = (end == deltas.size()) ? endVersion : deltas.get(end).version;
+    return new DeltaSequence(subDeltas, subEndVersion);
   }
 
   /**
    * Constructs a DeltaSequence which consists of the specified deltas
    * followed by this sequence's deltas.
    */
-  public DeltaSequence prepend(Iterable<ProtocolWaveletDelta> prefixDeltas) {
+  public DeltaSequence prepend(Iterable<VersionedWaveletDelta> prefixDeltas) {
     return new DeltaSequence(Iterables.concat(prefixDeltas, deltas), endVersion);
   }
 
-  public List<ProtocolWaveletDelta> getDeltas() {
+  public List<VersionedWaveletDelta> getDeltas() {
     return deltas;
   }
 
-  public ProtocolHashedVersion getStartVersion() {
-    return deltas.isEmpty() ? endVersion : deltas.get(0).getHashedVersion();
+  public HashedVersion getStartVersion() {
+    return deltas.isEmpty() ? endVersion : deltas.get(0).version;
   }
 
-  public ProtocolHashedVersion getEndVersion() {
+  public HashedVersion getEndVersion() {
     return endVersion;
   }
 
@@ -109,12 +105,12 @@ public final class DeltaSequence extends AbstractList<ProtocolWaveletDelta> {
   }
 
   @Override
-  public ProtocolWaveletDelta get(int index) {
+  public VersionedWaveletDelta get(int index) {
     return deltas.get(index);
   }
 
   @Override
-  public Iterator<ProtocolWaveletDelta> iterator() {
+  public Iterator<VersionedWaveletDelta> iterator() {
     return deltas.iterator();
   }
 

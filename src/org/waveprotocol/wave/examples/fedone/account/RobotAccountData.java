@@ -17,10 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.account;
 
-import com.google.wave.api.event.EventType;
-import com.google.wave.api.robot.Capability;
-
-import java.util.Map;
+import org.waveprotocol.wave.examples.fedone.robots.RobotCapabilities;
 
 /**
  * Represents an {@link AccountData} belonging to a Robot.
@@ -37,16 +34,10 @@ public interface RobotAccountData extends AccountData {
   String getUrl();
 
   /**
-   * Returns the capabilities that this Robot has.
+   * The capabilities that have been retrieved from a robot's capabilities.xml
+   * file. May be null if they have not been retrieved.
    */
-  Map<EventType, Capability> getCapabilities();
-
-  /**
-   * Returns the hash generated from the capabilities as indicated by the Robot
-   * in its capabilities.xml. This may be null if this data has not been
-   * retrieved.
-   */
-  String getCapabilitiesHash();
+  RobotCapabilities getCapabilities();
 
   /**
    * Returns true iff the robot ownership has been verified and is ready to be
