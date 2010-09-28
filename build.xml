@@ -150,7 +150,8 @@
   <target name="test" depends="compile_tests" description=
     "Runs all the unit tests in the project excluding external persistence">
 
-    <junit fork="yes" showoutput="no" failureProperty="test.failed">
+    <!-- Tests are run in a single new VM, when forkmode is set to once -->
+    <junit fork="yes" forkmode="once" showoutput="no" failureProperty="test.failed">
       <classpath>
         <path refid="fedone.classpath"/>
         <path refid="fedone.test.classpath"/>
