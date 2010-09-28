@@ -19,11 +19,15 @@ package org.waveprotocol.wave.examples.fedone.rpc;
 
 import com.google.common.base.Preconditions;
 
+import com.sixfire.websocket.WebSocket;
+
 import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -33,26 +37,35 @@ import java.util.concurrent.ExecutorService;
 public class WebSocketClientRpcChannel extends ClientRpcChannelImpl {
   private static final Log LOG = Log.get(WebSocketClientRpcChannel.class);
 
-  public WebSocketClientRpcChannel(SocketAddress serverAddress, ExecutorService threadPool)
-      throws IOException {
-    super(serverAddress, threadPool);
-  }
-
   public WebSocketClientRpcChannel(SocketAddress serverAddress) throws IOException {
     super(serverAddress);
   }
 
   @Override
   protected MessageExpectingChannel startChannel(SocketAddress serverAddress,
-      ExecutorService threadPool, ProtoCallback callback) {
+      ExecutorService threadPool, ProtoCallback callback) throws IOException {
     Preconditions.checkNotNull(serverAddress, "null serverAddress");
 
-    InetSocketAddress inetAddress = (InetSocketAddress) serverAddress;
-    WebSocketClientChannel protoChannel = new WebSocketClientChannel(
-        inetAddress.getHostName(), inetAddress.getPort(), callback, threadPool);
+    WebSocket websocket = openWebSocket((InetSocketAddress) serverAddress);
+    WebSocketClientChannel protoChannel =
+        new WebSocketClientChannel(websocket, callback, threadPool);
     protoChannel.expectMessage(Rpc.RpcFinished.getDefaultInstance());
     protoChannel.startAsyncRead();
     LOG.fine("Opened a new WebSocketClientRpcChannel to " + serverAddress);
     return protoChannel;
+  }
+
+  private WebSocket openWebSocket(InetSocketAddress inetAddress) throws IOException {
+    URI uri;
+    try {
+      uri = new URI("ws", null, inetAddress.getHostName(), inetAddress.getPort(), "/socket",
+          null, null);
+    } catch (URISyntaxException e) {
+      LOG.severe("Unable to create ws:// uri from given address (" + inetAddress + ")", e);
+      throw new IllegalStateException(e);
+    }
+    WebSocket websocket = new WebSocket(uri);
+    websocket.connect();
+    return websocket;
   }
 }
