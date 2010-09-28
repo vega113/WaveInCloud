@@ -42,6 +42,7 @@ public class WaveletProviderStub implements WaveletProvider {
   private final WaveletData wavelet;
   private HashedVersion currentVersionOverride;
   private ProtocolHashedVersion committedVersion;
+  private boolean allowsAccess = true;
 
   public WaveletProviderStub() {
     wavelet = TestDataUtil.createSimpleWaveletData();
@@ -80,7 +81,7 @@ public class WaveletProviderStub implements WaveletProvider {
 
   @Override
   public boolean checkAccessPermission(WaveletName waveletName, ParticipantId participantId) {
-    return true;
+    return allowsAccess;
   }
 
   /**
@@ -109,5 +110,12 @@ public class WaveletProviderStub implements WaveletProvider {
    */
   public ProtocolHashedVersion getCommittedVersion() {
     return committedVersion;
+  }
+  
+  /**
+   * @param allowsAccess whether or not users have access permissions
+   */
+  public void setAllowsAccess(boolean allowsAccess) {
+    this.allowsAccess = allowsAccess;
   }
 }

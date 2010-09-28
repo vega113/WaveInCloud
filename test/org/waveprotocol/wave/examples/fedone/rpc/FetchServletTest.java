@@ -81,6 +81,14 @@ public class FetchServletTest extends TestCase {
     servlet.doGet(request, response);
     verify(response, times(1)).sendError(HttpServletResponse.SC_NOT_FOUND);
   }
+  
+  public void testDisallowedUserReturnsForbidden() throws Exception {
+    waveletProvider.setAllowsAccess(false);
+    
+    WaveletData wavelet = waveletProvider.getHostedWavelet();
+    WaveRef waveref = WaveRef.of(wavelet.getWaveId(), wavelet.getWaveletId());
+    verifyServletReturnsForbiddenForWaveref(waveref);
+  }
 
   public void testGetMissingDataReturnsForbidden() throws Exception {
     WaveletData wavelet = waveletProvider.getHostedWavelet();
