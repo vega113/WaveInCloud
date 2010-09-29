@@ -1,17 +1,17 @@
 /**
  * Copyright 2010 Google Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
 
@@ -21,6 +21,8 @@ import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
+import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Map;
 
@@ -44,7 +46,7 @@ import javax.security.auth.spi.LoginModule;
  */
 public class AccountStoreLoginModule implements LoginModule {
   private Subject subject;
-  private AccountStorePrincipal principal;
+  private ParticipantPrincipal principal;
   private CallbackHandler callbackHandler;
   private AccountStore accountStore;
 
@@ -82,23 +84,34 @@ public class AccountStoreLoginModule implements LoginModule {
     }
 
     boolean success;
-
-    AccountData account = accountStore.getAccount(nameCallback.getName());
-    if (account == null) {
-      // The user doesn't exist. Auth failed.
+    ParticipantId id = null;
+    
+    try {
+      id = ParticipantId.of(nameCallback.getName());
+      AccountData account = accountStore.getAccount(id);
+      
+      if (account == null) {
+        // The user doesn't exist. Auth failed.
+        success = false;
+      } else if (!account.isHuman()) {
+        // The account is owned by a robot. Auth failed.
+        success = false;
+      } else if (!account.asHuman().getPasswordDigest().verify(passwordCallback.getPassword())) {
+        // The supplied password doesn't match. Auth failed.
+        success = false;
+      } else {
+        success = true;
+      }
+    } catch (InvalidParticipantAddress e) {
+      // The supplied user address is invalid. Auth failed.
       success = false;
-    } else if (!account.isHuman()) {
-      // The account is owned by a robot. Auth failed.
-      success = false;
-    } else {
-      success = account.asHuman().getPasswordDigest().verify(passwordCallback.getPassword());
     }
 
     // The password is zeroed before it gets GC'ed for memory security.
     passwordCallback.clearPassword();
 
     if (success) {
-      principal = new AccountStorePrincipal(nameCallback.getName());
+      principal = new ParticipantPrincipal(id);
       status = Status.OK;
       return true;
     } else {

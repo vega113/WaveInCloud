@@ -33,6 +33,7 @@ import org.waveprotocol.wave.examples.fedone.authentication.AuthTestUtil;
 import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.memory.MemoryStore;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -53,10 +54,10 @@ public class AuthenticationServletTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     AccountStore store = new MemoryStore();
-    HumanAccountData account = new HumanAccountDataImpl("frodo@example.com", "password".toCharArray());
+    HumanAccountData account = new HumanAccountDataImpl(
+        ParticipantId.ofUnsafe("frodo@example.com"), "password".toCharArray());
     store.putAccount(account);
-    servlet = new AuthenticationServlet(
-        AuthTestUtil.make(), new SessionManager(new MemoryStore()));
+    servlet = new AuthenticationServlet(AuthTestUtil.make(), new SessionManager(new MemoryStore()));
     AccountStoreHolder.init(store);
   }
 
@@ -86,7 +87,7 @@ public class AuthenticationServletTest extends TestCase {
     attemptLogin(req, resp, session, "frodo@example.com", "password");
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
-    verify(session).setAttribute("address", "frodo@example.com");
+    verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
   }
 
   public void testIncorrectPasswordReturns403() throws IOException {
@@ -97,7 +98,7 @@ public class AuthenticationServletTest extends TestCase {
     attemptLogin(req, resp, session, "frodo@example.com", "incorrect");
 
     verify(resp).sendError(HttpServletResponse.SC_FORBIDDEN);
-    verify(session, never()).setAttribute(eq("address"), anyString());
+    verify(session, never()).setAttribute(eq("user"), anyString());
   }
 
   public void testInvalidUsernameReturns403() throws IOException {

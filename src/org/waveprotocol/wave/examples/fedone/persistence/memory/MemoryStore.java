@@ -24,6 +24,7 @@ import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,7 +48,7 @@ public class MemoryStore implements CertPathStore, AccountStore {
 
   public MemoryStore() {
     certPathStore = new DefaultCertPathStore();
-    accountStore = new ConcurrentHashMap<String, AccountData>();
+    accountStore = new ConcurrentHashMap<ParticipantId, AccountData>();
   }
 
   @Override
@@ -65,20 +66,20 @@ public class MemoryStore implements CertPathStore, AccountStore {
    *  AccountStore
    */
 
-  private final Map<String, AccountData> accountStore;
+  private final Map<ParticipantId, AccountData> accountStore;
 
   @Override
-  public AccountData getAccount(String username) {
-    return accountStore.get(username);
+  public AccountData getAccount(ParticipantId id) {
+    return accountStore.get(id);
   }
 
   @Override
   public void putAccount(AccountData account) {
-    accountStore.put(account.getAddress(), account);
+    accountStore.put(account.getId(), account);
   }
 
   @Override
-  public void removeAccount(String username) {
-    accountStore.remove(username);
+  public void removeAccount(ParticipantId id) {
+    accountStore.remove(id);
   }
 }

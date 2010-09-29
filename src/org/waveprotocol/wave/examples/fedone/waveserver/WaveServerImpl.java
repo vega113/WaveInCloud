@@ -413,7 +413,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
             applicationTimestamp);
       }});
   }
-
+  
+  @Override
+  public boolean checkAccessPermission(WaveletName waveletName, ParticipantId participantId)
+      throws WaveletStateException {
+    WaveletContainer wc = getWavelet(waveletName);
+    return wc != null && wc.checkAccessPermission(participantId);
+  }
+  
   //
   // WaveBus implementation.
   //

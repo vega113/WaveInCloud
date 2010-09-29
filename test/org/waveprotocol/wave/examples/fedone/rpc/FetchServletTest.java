@@ -29,11 +29,16 @@ import com.google.protobuf.MessageLite;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.common.util.JavaWaverefEncoder;
+import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
+import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
+import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
+import org.waveprotocol.wave.examples.fedone.persistence.memory.MemoryStore;
 import org.waveprotocol.wave.examples.fedone.util.TestDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.waveref.WaveRef;
@@ -62,7 +67,10 @@ public class FetchServletTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     waveletProvider = new WaveletProviderStub();
-    servlet = new FetchServlet(waveletProvider, protoSerializer);
+    AccountStore accountStore = new MemoryStore();
+    accountStore.putAccount(new HumanAccountDataImpl(ParticipantId.ofUnsafe("fred@example.com")));
+    SessionManager sessionManager = new SessionManager(accountStore);
+    servlet = new FetchServlet(waveletProvider, protoSerializer, sessionManager);
   }
 
   public void testGetInvalidWaverefReturnsNotFound() throws Exception {
@@ -72,6 +80,14 @@ public class FetchServletTest extends TestCase {
     when(request.getPathInfo()).thenReturn("/invalidwaveref");
     servlet.doGet(request, response);
     verify(response, times(1)).sendError(HttpServletResponse.SC_NOT_FOUND);
+  }
+  
+  public void testDisallowedUserReturnsForbidden() throws Exception {
+    waveletProvider.setAllowsAccess(false);
+    
+    WaveletData wavelet = waveletProvider.getHostedWavelet();
+    WaveRef waveref = WaveRef.of(wavelet.getWaveId(), wavelet.getWaveletId());
+    verifyServletReturnsForbiddenForWaveref(waveref);
   }
 
   public void testGetMissingDataReturnsForbidden() throws Exception {

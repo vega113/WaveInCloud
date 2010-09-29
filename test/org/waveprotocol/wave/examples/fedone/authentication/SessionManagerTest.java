@@ -26,6 +26,7 @@ import org.waveprotocol.wave.examples.fedone.account.HumanAccountData;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.memory.MemoryStore;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import javax.servlet.http.HttpSession;
 
@@ -39,28 +40,29 @@ public class SessionManagerTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     AccountStore store = new MemoryStore();
-    account = new HumanAccountDataImpl("tubes@example.com");
+    account = new HumanAccountDataImpl(ParticipantId.ofUnsafe("tubes@example.com"));
     store.putAccount(account);
     sessionManager = new SessionManager(store);
   }
 
   public void testSessionFetchesAddress() {
     HttpSession session = mock(HttpSession.class);
-    when(session.getAttribute("address")).thenReturn("tubes@example.com");
+    ParticipantId id = ParticipantId.ofUnsafe("tubes@example.com");
+    when(session.getAttribute("user")).thenReturn(id);
 
-    assertEquals("tubes@example.com", sessionManager.getLoggedInAddress(session));
-    assertSame(account, sessionManager.getLoggedInUser(session));
+    assertEquals(id, sessionManager.getLoggedInUser(session));
+    assertSame(account, sessionManager.getLoggedInAccount(session));
   }
 
   public void testUnknownUserReturnsNull() {
     HttpSession session = mock(HttpSession.class);
-    when(session.getAttribute("address")).thenReturn("missing@example.com");
+    when(session.getAttribute("user")).thenReturn(ParticipantId.ofUnsafe("missing@example.com"));
 
-    assertNull(sessionManager.getLoggedInUser(session));
+    assertNull(sessionManager.getLoggedInAccount(session));
   }
 
   public void testNullSessionReturnsNull() {
     assertNull(sessionManager.getLoggedInUser(null));
-    assertNull(sessionManager.getLoggedInAddress(null));
+    assertNull(sessionManager.getLoggedInAccount(null));
   }
 }

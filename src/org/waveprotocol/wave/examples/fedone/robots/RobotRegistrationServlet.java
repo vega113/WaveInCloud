@@ -101,14 +101,15 @@ public class RobotRegistrationServlet extends HttpServlet {
       return;
     }
 
-    username = username + "@" + domain;
+    ParticipantId id;
     try {
-      ParticipantId.of(username);
+      id = ParticipantId.of(username + "@" + domain);
     } catch (InvalidParticipantAddress e) {
       doRegisterGet(req, resp, "Invalid username specified, use alphanumeric characters only.");
+      return;
     }
 
-    AccountData account = accountStore.getAccount(username);
+    AccountData account = accountStore.getAccount(id);
     if (account != null) {
       doRegisterGet(req, resp, username + " is already in use, please choose another one.");
       return;
@@ -129,9 +130,9 @@ public class RobotRegistrationServlet extends HttpServlet {
     }
 
     // TODO(ljvderijk): Implement verification and set verified to false
-    RobotAccountData robotAccount = new RobotAccountDataImpl(username, robotLocation, null, true);
+    RobotAccountData robotAccount = new RobotAccountDataImpl(id, robotLocation, null, true);
     accountStore.putAccount(robotAccount);
-    LOG.info(robotAccount.getAddress() + " is now registered as a RobotAccount with Url "
+    LOG.info(robotAccount.getId() + " is now registered as a RobotAccount with Url "
         + robotAccount.getUrl());
 
     doRegisterGet(req, resp, "Your Robot has been succesfully registered.");

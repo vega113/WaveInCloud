@@ -22,6 +22,7 @@ import junit.framework.TestCase;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.memory.MemoryStore;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -62,8 +63,8 @@ public class AccountStoreLoginModuleTest extends TestCase {
   @Override
   protected void setUp() {
     AccountStore store = new MemoryStore();
-    store.putAccount(new HumanAccountDataImpl("haspwd@example.com", "pwd".toCharArray()));
-    store.putAccount(new HumanAccountDataImpl("nopwd@example.com"));
+    store.putAccount(new HumanAccountDataImpl(ParticipantId.ofUnsafe("haspwd@example.com"), "pwd".toCharArray()));
+    store.putAccount(new HumanAccountDataImpl(ParticipantId.ofUnsafe("nopwd@example.com")));
     AccountStoreHolder.init(store);
   }
 
@@ -91,7 +92,7 @@ public class AccountStoreLoginModuleTest extends TestCase {
     assertLoginFails(context);
 
     // Make sure the subject doesn't have any principals set.
-    assertEquals(0, context.getSubject().getPrincipals(AccountStorePrincipal.class).size());
+    assertEquals(0, context.getSubject().getPrincipals(ParticipantPrincipal.class).size());
   }
 
   public void testCorrectPasswordConfiguresSubject() throws Exception {
@@ -99,19 +100,19 @@ public class AccountStoreLoginModuleTest extends TestCase {
     context.login();
     Subject subject = context.getSubject();
     boolean hasPrincipal = false;
-    for (AccountStorePrincipal p : subject.getPrincipals(AccountStorePrincipal.class)) {
+    for (ParticipantPrincipal p : subject.getPrincipals(ParticipantPrincipal.class)) {
       assertEquals("haspwd@example.com", p.getName());
       hasPrincipal = true;
     }
     assertTrue(hasPrincipal);
 
     context.logout();
-    assertEquals(0, subject.getPrincipals(AccountStorePrincipal.class).size());
+    assertEquals(0, subject.getPrincipals(ParticipantPrincipal.class).size());
   }
 
   public void testUserWithNoPasswordCannotLogin() throws Exception {
     LoginContext context = makeLoginContext("nopwd@example.com", "");
     assertLoginFails(context);
-    assertEquals(0, context.getSubject().getPrincipals(AccountStorePrincipal.class).size());
+    assertEquals(0, context.getSubject().getPrincipals(ParticipantPrincipal.class).size());
   }
 }

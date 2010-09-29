@@ -42,7 +42,10 @@ abstract interface WaveletContainer {
     LOADING,
     /** Wavelet has been deleted, the instance will not contain any data. */
     DELETED,
-    /** For some reason this instance is broken, e.g. a remote wavelet update signature failed. */
+    /**
+     * For some reason this instance is broken, e.g. a remote wavelet update
+     * signature failed.
+     */
     CORRUPTED
   }
 
@@ -60,40 +63,48 @@ abstract interface WaveletContainer {
    *
    * @param versionStart start version (inclusive), minimum 0.
    * @param versionEnd end version (exclusive).
-   * @throws WaveletStateException if the wavelet is in a state unsuitable for retrieving history.
+   * @throws WaveletStateException if the wavelet is in a state unsuitable for
+   *         retrieving history.
    * @return serialised {@code ProtocolAppliedWaveletDelta}s in the range as
-   *         requested, ordered by applied version. If a delta straddles
-   *         one of the requested version boundaries, it will be included.
+   *         requested, ordered by applied version. If a delta straddles one of
+   *         the requested version boundaries, it will be included.
    */
   Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> requestHistory(
       ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd)
       throws WaveletStateException;
 
   /**
-   * Retrieve the wavelet history of deltas applied to the wavelet, with additional
-   * safety check that
+   * Retrieve the wavelet history of deltas applied to the wavelet, with
+   * additional safety check that
    *
    * @param versionStart start version (inclusive), minimum 0.
    * @param versionEnd end version (exclusive).
-   * @throws AccessControlException if the hashedVersion does not match that of the wavelet history.
-   * @throws WaveletStateException if the wavelet is in a state unsuitable for retrieving history.
-   * @return deltas in the range as requested, ordered by applied version,
-   *         or null if there was an error. If a delta straddles
-   *         one of the requested version boundaries, it will be included.
+   * @throws AccessControlException if the hashedVersion does not match that of
+   *         the wavelet history.
+   * @throws WaveletStateException if the wavelet is in a state unsuitable for
+   *         retrieving history.
+   * @return deltas in the range as requested, ordered by applied version, or
+   *         null if there was an error. If a delta straddles one of the
+   *         requested version boundaries, it will be included.
    */
   Collection<VersionedWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
       HashedVersion versionEnd) throws AccessControlException, WaveletStateException;
 
   /**
-   * @param participantId id of participant attempting to gain access to wavelet.
-   * @throws WaveletStateException if the wavelet is in a state unsuitable for checking permissions.
+   * @param participantId id of participant attempting to gain access to
+   *        wavelet, or null if the user isn't logged in.
+   * @throws WaveletStateException if the wavelet is in a state unsuitable for
+   *         checking permissions.
    * @return true if the participant is a participant on the wavelet.
    */
   boolean checkAccessPermission(ParticipantId participantId) throws WaveletStateException;
 
   /**
-   * The Last Committed Version returns when the local or remote wave server committed the wavelet.
-   * @throws WaveletStateException if the wavelet is in a state unsuitable for getting LCV.
+   * The Last Committed Version returns when the local or remote wave server
+   * committed the wavelet.
+   *
+   * @throws WaveletStateException if the wavelet is in a state unsuitable for
+   *         getting LCV.
    */
   ProtocolHashedVersion getLastCommittedVersion() throws WaveletStateException;
 

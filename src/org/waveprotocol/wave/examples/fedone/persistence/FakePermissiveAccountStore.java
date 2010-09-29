@@ -20,6 +20,7 @@ package org.waveprotocol.wave.examples.fedone.persistence;
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
 import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Map;
 
@@ -33,15 +34,15 @@ import java.util.Map;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class FakePermissiveAccountStore implements AccountStore {
-  Map<String, AccountData> accounts = CollectionUtils.newHashMap();
+  Map<ParticipantId, AccountData> accounts = CollectionUtils.newHashMap();
   
   @Override
-  public AccountData getAccount(String address) {
-    AccountData account = accounts.get(address);
+  public AccountData getAccount(ParticipantId id) {
+    AccountData account = accounts.get(id);
     
     if (account == null) {
-      account = new HumanAccountDataImpl(address, "".toCharArray());
-      accounts.put(address, account);
+      account = new HumanAccountDataImpl(id, "".toCharArray());
+      accounts.put(id, account);
     }
     
     return account;
@@ -49,11 +50,11 @@ public class FakePermissiveAccountStore implements AccountStore {
 
   @Override
   public void putAccount(AccountData account) {
-    accounts.put(account.getAddress(), account);
+    accounts.put(account.getId(), account);
   }
 
   @Override
-  public void removeAccount(String username) {
-    accounts.remove(username);
+  public void removeAccount(ParticipantId id) {
+    accounts.remove(id);
   }
 }

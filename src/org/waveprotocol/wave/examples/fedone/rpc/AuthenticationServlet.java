@@ -22,11 +22,13 @@ import com.google.inject.Inject;
 
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
-import org.waveprotocol.wave.examples.fedone.authentication.AccountStorePrincipal;
+import org.waveprotocol.wave.examples.fedone.authentication.ParticipantPrincipal;
 import org.waveprotocol.wave.examples.fedone.authentication.ConfigurationProvider;
 import org.waveprotocol.wave.examples.fedone.authentication.HttpRequestBasedCallbackHandler;
 import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -82,7 +84,7 @@ public class AuthenticationServlet extends HttpServlet {
     // intermediate string representations of the password.
     return new UrlEncoded(body.readLine());
   }
-  
+
   private LoginContext login(BufferedReader body) throws IOException, LoginException {
     Subject subject = new Subject();
     CallbackHandler callbackHandler = new HttpRequestBasedCallbackHandler(getArgumentMap(body));
@@ -111,7 +113,15 @@ public class AuthenticationServlet extends HttpServlet {
 
     Subject subject = context.getSubject();
 
-    String loggedInAddress = getLoggedInAddress(subject);
+    ParticipantId loggedInAddress;
+    try {
+      loggedInAddress = getLoggedInUser(subject);
+    } catch (InvalidParticipantAddress e1) {
+      throw new IllegalStateException(
+          "The user provided valid authentication information, but the username"
+              + " isn't a valid user address.");
+    }
+
     if (loggedInAddress == null) {
       try {
         context.logout();
@@ -125,10 +135,10 @@ public class AuthenticationServlet extends HttpServlet {
     }
 
     HttpSession session = req.getSession(true);
-    sessionManager.setLoggedInAddress(session, loggedInAddress);
+    sessionManager.setLoggedInUser(session, loggedInAddress);
     // The context needs to be notified when the user logs out.
     session.setAttribute("context", context);
-    
+
     // TODO(josephg): Redirect back to where the user was last.
     resp.setStatus(HttpServletResponse.SC_OK);
     resp.setContentType("text/plain");
@@ -136,23 +146,28 @@ public class AuthenticationServlet extends HttpServlet {
   }
 
   /**
-   * Get the user address of the given subject.
+   * Get the participant id of the given subject.
    *
    *  The subject is searched for compatible principals. When other
    * authentication types are added, this method will need to be updated to
    * support their principal types.
+   *
+   * @throws InvalidParticipantAddress The subject's address is invalid
    */
-  private String getLoggedInAddress(Subject subject) {
+  private ParticipantId getLoggedInUser(Subject subject) throws InvalidParticipantAddress {
+    String address = null;
+
     for (Principal p : subject.getPrincipals()) {
       // TODO(josephg): When we support other authentication types (LDAP, etc),
       // this method will need to read the address portion out of the other
       // principal types.
-      if (p instanceof AccountStorePrincipal) {
-        return ((AccountStorePrincipal) p).getName();
+      if (p instanceof ParticipantPrincipal) {
+        address = ((ParticipantPrincipal) p).getName();
+        break;
       }
     }
 
-    return null;
+    return address == null ? null : ParticipantId.of(address);
   }
 
   /**
@@ -164,10 +179,10 @@ public class AuthenticationServlet extends HttpServlet {
     resp.setContentType("text/html");
 
     HttpSession session = req.getSession(false);
-    String address = sessionManager.getLoggedInAddress(session);
+    ParticipantId user = sessionManager.getLoggedInUser(session);
 
-    if (address != null) {
-      resp.getWriter().print("<html><body>Already authenticated as " + address + "</body></html>");
+    if (user != null) {
+      resp.getWriter().print("<html><body>Already authenticated as " + user + "</body></html>");
     } else {
       resp.getWriter().write(SIMPLE_AUTH_FORM);
     }

@@ -22,14 +22,17 @@ import com.google.inject.Inject;
 import com.google.protobuf.MessageLite;
 
 import org.waveprotocol.wave.common.util.JavaWaverefEncoder;
+import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveViewSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletStateException;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 
@@ -44,31 +47,56 @@ import javax.servlet.http.HttpServletResponse;
  * hosted on /fetch/*. A document, a wavelet, or a whole wave can be specified
  * in the URL.
  *
- * Valid request formats are:
- * Fetch a wave:
- *  GET /fetch/wavedomain.com/waveid
- * Fetch a wavelet:
- *  GET /fetch/wavedomain.com/waveid/waveletdomain.com/waveletid
- * Fetch a document:
- *  GET /fetch/wavedomain.com/waveid/waveletdomain.com/waveletid/b+abc123
+ *  Valid request formats are: Fetch a wave: GET /fetch/wavedomain.com/waveid
+ * Fetch a wavelet: GET /fetch/wavedomain.com/waveid/waveletdomain.com/waveletid
+ * Fetch a document: GET
+ * /fetch/wavedomain.com/waveid/waveletdomain.com/waveletid/b+abc123
  *
- * The format of the returned information is the protobuf-JSON format used by
+ *  The format of the returned information is the protobuf-JSON format used by
  * the websocket interface.
  */
 public final class FetchServlet extends HttpServlet {
   private static final Log LOG = Log.get(FetchServlet.class);
 
   @Inject
-  public FetchServlet(WaveletProvider waveletProvider, ProtoSerializer serializer) {
+  public FetchServlet(
+      WaveletProvider waveletProvider, ProtoSerializer serializer, SessionManager sessionManager) {
     this.waveletProvider = waveletProvider;
     this.serializer = serializer;
+    this.sessionManager = sessionManager;
   }
 
   private final ProtoSerializer serializer;
   private final WaveletProvider waveletProvider;
+  private final SessionManager sessionManager;
+
+  /**
+   * Create an http response to the fetch query. Main entrypoint for this class.
+   */
+  @Override
+  @VisibleForTesting
+  protected void doGet(HttpServletRequest req, HttpServletResponse response) throws IOException {
+    ParticipantId user = sessionManager.getLoggedInUser(req.getSession(false));
+
+    // This path will look like "/example.com/w+abc123/foo.com/conv+root
+    // Strip off the leading '/'.
+    String urlPath = req.getPathInfo().substring(1);
+
+    // Extract the name of the wavelet from the URL
+    WaveRef waveref;
+    try {
+      waveref = JavaWaverefEncoder.decodeWaveRefFromPath(urlPath);
+    } catch (InvalidWaveRefException e) {
+      // The URL contains an invalid waveref. There's no document at this path.
+      response.sendError(HttpServletResponse.SC_NOT_FOUND);
+      return;
+    }
+
+    renderSnapshot(waveref, user, response);
+  }
 
   private void serializeObjectToServlet(MessageLite message, HttpServletResponse dest)
-        throws IOException {
+      throws IOException {
     if (message == null) {
       // Snapshot is null. It would be nice to 404 here, but we can't let
       // clients guess valid wavelet ids that they're not authorized to access.
@@ -85,25 +113,37 @@ public final class FetchServlet extends HttpServlet {
    * Render the requested waveref out to the HttpServletResponse dest.
    *
    * @param waveref The referenced wave. Could be a whole wave, a wavelet or
-   * just a document.
+   *        just a document.
    * @param dest The servlet response to render the snapshot out to.
    * @throws IOException
    */
-  private void renderSnapshot(WaveRef waveref, HttpServletResponse dest) throws IOException {
+  private void renderSnapshot(WaveRef waveref, ParticipantId requester, HttpServletResponse dest)
+      throws IOException {
     // TODO(josephg): Its currently impossible to fetch all wavelets inside a
     // wave that are visible to the user. Until this is fixed, if no wavelet is
     // specified we'll just return the conv+root.
-    WaveletId waveletId = waveref.hasWaveletId() ?
-        waveref.getWaveletId() : new WaveletId(waveref.getWaveId().getDomain(), "conv+root");
+    WaveletId waveletId = waveref.hasWaveletId() ? waveref.getWaveletId() : new WaveletId(
+        waveref.getWaveId().getDomain(), "conv+root");
 
     WaveletName waveletName = WaveletName.of(waveref.getWaveId(), waveletId);
+
+    try {
+      if (!waveletProvider.checkAccessPermission(waveletName, requester)) {
+        dest.sendError(HttpServletResponse.SC_FORBIDDEN);
+        return;
+      }
+    } catch (WaveletStateException e) {
+      throw new IOException(e);
+    }
+
     LOG.info("Fetching snapshot of wavelet " + waveletName);
     WaveletSnapshotAndVersion snapshotAndV = waveletProvider.getSnapshot(waveletName);
 
     if (snapshotAndV != null) {
       WaveletSnapshot snapshot = snapshotAndV.snapshot;
       if (waveref.hasDocumentId()) {
-        // We have a wavelet id and document id. Find the document in the snapshot
+        // We have a wavelet id and document id. Find the document in the
+        // snapshot
         // and return it.
         DocumentSnapshot docSnapshot = null;
         for (DocumentSnapshot ds : snapshot.getDocumentList()) {
@@ -119,39 +159,14 @@ public final class FetchServlet extends HttpServlet {
       } else {
         // Wrap the conv+root we fetched earlier in a WaveSnapshot object and
         // send it.
-        WaveViewSnapshot waveSnapshot = WaveViewSnapshot.newBuilder()
-            .setWaveId(waveref.getWaveId().serialise())
-            .addWavelet(snapshot).build();
+        WaveViewSnapshot waveSnapshot =
+            WaveViewSnapshot.newBuilder().setWaveId(waveref.getWaveId().serialise()).addWavelet(
+                snapshot).build();
 
         serializeObjectToServlet(waveSnapshot, dest);
       }
     } else {
       dest.sendError(HttpServletResponse.SC_FORBIDDEN);
     }
-  }
-
-  /**
-   * Create an http response to the fetch query. Main entrypoint for this class.
-   */
-  @Override
-  @VisibleForTesting
-  protected void doGet(HttpServletRequest req, HttpServletResponse response)
-      throws IOException {
-
-    // This path will look like "/example.com/w+abc123/foo.com/conv+root
-    // Strip off the leading '/'.
-    String urlPath = req.getPathInfo().substring(1);
-
-    // Extract the name of the wavelet from the URL
-    WaveRef waveref;
-    try {
-      waveref = JavaWaverefEncoder.decodeWaveRefFromPath(urlPath);
-    } catch (InvalidWaveRefException e) {
-      // The URL contains an invalid waveref. There's no document at this path.
-      response.sendError(HttpServletResponse.SC_NOT_FOUND);
-      return;
-    }
-
-    renderSnapshot(waveref, response);
   }
 }

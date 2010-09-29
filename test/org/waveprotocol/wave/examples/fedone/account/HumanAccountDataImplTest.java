@@ -19,27 +19,31 @@ package org.waveprotocol.wave.examples.fedone.account;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.model.wave.ParticipantId;
+
 /**
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class HumanAccountDataImplTest extends TestCase {
   public void testUserAddressReturnsCorrectResult() {
-    HumanAccountData account = new HumanAccountDataImpl("drhorrible@example.com");
-    assertEquals(account.getAddress(), "drhorrible@example.com");
+    ParticipantId id = ParticipantId.ofUnsafe("drhorrible@example.com");
+    HumanAccountData account = new HumanAccountDataImpl(id);
+    assertEquals(account.getId(), id);
     assertTrue(account.isHuman());
     assertFalse(account.isRobot());
   }
-  
+
   public void testPasswordDigestVerifies() {
-    HumanAccountData account =
-        new HumanAccountDataImpl("captainhammer@example.com", "wonderflownium".toCharArray());
+    HumanAccountData account = new HumanAccountDataImpl(
+        ParticipantId.ofUnsafe("captainhammer@example.com"), "wonderflownium".toCharArray());
 
     assertNotNull(account.getPasswordDigest());
     assertTrue(account.getPasswordDigest().verify("wonderflownium".toCharArray()));
   }
 
   public void testUserWithNoPasswordHasNoPasswordDigest() {
-    HumanAccountData account = new HumanAccountDataImpl("moist@example.com");
+    HumanAccountData account =
+        new HumanAccountDataImpl(ParticipantId.ofUnsafe("moist@example.com"));
 
     assertNull(account.getPasswordDigest());
   }

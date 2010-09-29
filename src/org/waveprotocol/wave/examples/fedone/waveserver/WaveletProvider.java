@@ -22,6 +22,7 @@ import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collection;
 
@@ -67,12 +68,26 @@ public interface WaveletProvider {
    * @param waveletName name of wavelet.
    * @param versionStart start version (inclusive), minimum 0.
    * @param versionEnd end version (exclusive).
-   * @return deltas in the range as requested, ordered by applied version,
-   *         or null if there was an error. If a delta straddles
-   *         one of the requested version boundaries, it will be included.
+   * @return deltas in the range as requested, ordered by applied version, or
+   *         null if there was an error. If a delta straddles one of the
+   *         requested version boundaries, it will be included.
    */
   Collection<VersionedWaveletDelta> getHistory(WaveletName waveletName,
       HashedVersion versionStart, HashedVersion versionEnd);
+
+  /**
+   * Check if the specified participantId has access to the named wavelet.
+   *
+   * @param waveletName name of wavelet.
+   * @param participantId id of participant attempting to gain access to
+   *        wavelet, or null if the user isn't logged in.
+   * @throws WaveletStateException if the wavelet is in a state unsuitable for
+   *         checking permissions.
+   * @return true if the wavelet exists and the participant is a participant on
+   *         the wavelet.
+   */
+  boolean checkAccessPermission(WaveletName waveletName, ParticipantId participantId)
+      throws WaveletStateException;
 
   /**
    * Request the current state of the wavelet.

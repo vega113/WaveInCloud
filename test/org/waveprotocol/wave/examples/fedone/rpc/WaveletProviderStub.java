@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 Google Inc.
+ * Copyright 2010 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.Collection;
@@ -41,6 +42,7 @@ public class WaveletProviderStub implements WaveletProvider {
   private final WaveletData wavelet;
   private HashedVersion currentVersionOverride;
   private ProtocolHashedVersion committedVersion;
+  private boolean allowsAccess = true;
 
   public WaveletProviderStub() {
     wavelet = TestDataUtil.createSimpleWaveletData();
@@ -51,15 +53,15 @@ public class WaveletProviderStub implements WaveletProvider {
 
   @Override
   public WaveletSnapshotAndVersion getSnapshot(WaveletName waveletName) {
-    final byte[] JUNK_BYTES = new byte[]{0,1,2,3,4,5,-128,127};
+    final byte[] JUNK_BYTES = new byte[] {0, 1, 2, 3, 4, 5, -128, 127};
 
     if (waveletName.waveId.equals(getHostedWavelet().getWaveId())
         && waveletName.waveletId.equals(getHostedWavelet().getWaveletId())) {
-      HashedVersion version = (currentVersionOverride != null)
-          ? currentVersionOverride
-          : new HashedVersion(getHostedWavelet().getVersion(), JUNK_BYTES);
-      return new WaveletSnapshotAndVersion(SnapshotSerializer.serializeWavelet(getHostedWavelet(),
-          version), getCommittedVersion());
+      HashedVersion version =
+          (currentVersionOverride != null) ? currentVersionOverride : new HashedVersion(
+              getHostedWavelet().getVersion(), JUNK_BYTES);
+      return new WaveletSnapshotAndVersion(
+          SnapshotSerializer.serializeWavelet(getHostedWavelet(), version), getCommittedVersion());
     } else {
       return null;
     }
@@ -75,6 +77,11 @@ public class WaveletProviderStub implements WaveletProvider {
   public void submitRequest(
       WaveletName waveletName, ProtocolWaveletDelta delta, SubmitRequestListener listener) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean checkAccessPermission(WaveletName waveletName, ParticipantId participantId) {
+    return allowsAccess;
   }
 
   /**
@@ -103,5 +110,12 @@ public class WaveletProviderStub implements WaveletProvider {
    */
   public ProtocolHashedVersion getCommittedVersion() {
     return committedVersion;
+  }
+  
+  /**
+   * @param allowsAccess whether or not users have access permissions
+   */
+  public void setAllowsAccess(boolean allowsAccess) {
+    this.allowsAccess = allowsAccess;
   }
 }

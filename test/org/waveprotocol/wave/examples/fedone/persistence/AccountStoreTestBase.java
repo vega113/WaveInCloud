@@ -30,6 +30,7 @@ import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.robots.RobotCapabilities;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
  * Testcases for the {@link AccountStore}. Implementors of these testcases are
@@ -39,9 +40,9 @@ import org.waveprotocol.wave.examples.fedone.robots.RobotCapabilities;
  */
 public abstract class AccountStoreTestBase extends TestCase {
 
-  private static final String HUMAN_USERNAME = "human@example.com";
+  private static final ParticipantId HUMAN_ID = ParticipantId.ofUnsafe("human@example.com");
 
-  private static final String ROBOT_USERNAME = "robot@example.com";
+  private static final ParticipantId ROBOT_ID = ParticipantId.ofUnsafe("robot@example.com");
 
   private RobotAccountData robotAccount;
 
@@ -55,12 +56,12 @@ public abstract class AccountStoreTestBase extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
 
-    humanAccount = new HumanAccountDataImpl(HUMAN_USERNAME);
-    robotAccount = new RobotAccountDataImpl(ROBOT_USERNAME, "example.com", null, false);
+    humanAccount = new HumanAccountDataImpl(HUMAN_ID);
+    robotAccount = new RobotAccountDataImpl(ROBOT_ID, "example.com", null, false);
     updatedRobotAccount =
-        new RobotAccountDataImpl(ROBOT_USERNAME, "example.com", new RobotCapabilities(
+        new RobotAccountDataImpl(ROBOT_ID, "example.com", new RobotCapabilities(
             Maps.<EventType, Capability> newHashMap(), "FAKEHASH", ProtocolVersion.DEFAULT), true);
-    convertedRobot = new HumanAccountDataImpl(ROBOT_USERNAME);
+    convertedRobot = new HumanAccountDataImpl(ROBOT_ID);
   }
 
   /**
@@ -72,11 +73,11 @@ public abstract class AccountStoreTestBase extends TestCase {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(humanAccount);
-    AccountData retrievedAccount = accountStore.getAccount(HUMAN_USERNAME);
+    AccountData retrievedAccount = accountStore.getAccount(HUMAN_ID);
     assertEquals(humanAccount, retrievedAccount);
 
     accountStore.putAccount(robotAccount);
-    retrievedAccount = accountStore.getAccount(ROBOT_USERNAME);
+    retrievedAccount = accountStore.getAccount(ROBOT_ID);
     assertEquals(robotAccount, retrievedAccount);
   }
 
@@ -84,11 +85,11 @@ public abstract class AccountStoreTestBase extends TestCase {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(robotAccount);
-    AccountData account = accountStore.getAccount(ROBOT_USERNAME);
+    AccountData account = accountStore.getAccount(ROBOT_ID);
     assertEquals(robotAccount, account);
 
     accountStore.putAccount(updatedRobotAccount);
-    AccountData updatedAccount = accountStore.getAccount(ROBOT_USERNAME);
+    AccountData updatedAccount = accountStore.getAccount(ROBOT_ID);
     assertEquals(updatedRobotAccount, updatedAccount);
   }
 
@@ -96,11 +97,11 @@ public abstract class AccountStoreTestBase extends TestCase {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(robotAccount);
-    AccountData account = accountStore.getAccount(ROBOT_USERNAME);
+    AccountData account = accountStore.getAccount(ROBOT_ID);
     assertEquals(robotAccount, account);
 
     accountStore.putAccount(convertedRobot);
-    AccountData updatedAccount = accountStore.getAccount(ROBOT_USERNAME);
+    AccountData updatedAccount = accountStore.getAccount(ROBOT_ID);
     assertEquals(convertedRobot, updatedAccount);
   }
 
@@ -108,10 +109,10 @@ public abstract class AccountStoreTestBase extends TestCase {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(robotAccount);
-    AccountData account = accountStore.getAccount(ROBOT_USERNAME);
+    AccountData account = accountStore.getAccount(ROBOT_ID);
     assertEquals(robotAccount, account);
 
-    accountStore.removeAccount(ROBOT_USERNAME);
-    assertNull("Removed account was not null", accountStore.getAccount(ROBOT_USERNAME));
+    accountStore.removeAccount(ROBOT_ID);
+    assertNull("Removed account was not null", accountStore.getAccount(ROBOT_ID));
   }
 }

@@ -20,8 +20,6 @@ package org.waveprotocol.wave.examples.fedone.waveserver;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.common.HashedVersionFactory;
@@ -36,7 +34,6 @@ import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentE
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -52,7 +49,6 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -155,7 +151,9 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     acquireReadLock();
     try {
       assertStateOk();
-      return waveletData.getParticipants().contains(participantId);
+      // ParticipantId will be null if the user isn't logged in. A user who isn't logged in should
+      // have access to public waves once they've been implemented.
+      return participantId != null && waveletData.getParticipants().contains(participantId);
     } finally {
       releaseReadLock();
     }
