@@ -366,9 +366,11 @@
   <target name="dist-agent-echoey" depends="stage" description="Assembles the FedOne echoey agent">
     <jar destfile="${jar.outfile-agent-echoey}">
       <fileset dir="${staging}">
+        <include name="com/dyuproject/protostuff/**/*" />
         <include name="com/google/common/**/*" />
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
+        <include name="com/sixfire/websocket/*" />
         <include name="javax/inject/**/*" />
         <include name="org/apache/commons/codec/**/*" />
         <include name="org/waveprotocol/**/*" />
@@ -387,9 +389,11 @@
   <target name="dist-agent-probey" depends="stage" description="Assembles the FedOne probey agent">
     <jar destfile="${jar.outfile-agent-probey}">
       <fileset dir="${staging}">
+        <include name="com/dyuproject/protostuff/**/*" />
         <include name="com/google/common/**/*" />
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
+        <include name="com/sixfire/websocket/*" />
         <include name="javax/inject/**/*" />
         <include name="javax/servlet/**/*" />
         <include name="org/apache/commons/codec/**/*" />
