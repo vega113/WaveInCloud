@@ -1,13 +1,13 @@
 /**
  * Copyright 2010 Google Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ *  Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
@@ -47,13 +47,15 @@ import org.waveprotocol.wave.examples.client.webclient.util.Log;
 
 public class LoginPanel extends Composite {
   private static Log LOG = Log.get(LoginPanel.class);
-  
+
   interface Binder extends UiBinder<Widget, LoginPanel> {
   }
 
   interface Style extends CssResource {
     String bad();
+
     String good();
+
     String neutral();
   }
 
@@ -61,20 +63,23 @@ public class LoginPanel extends Composite {
 
   private static final String INITIAL_NAME_FIELD_TEXT = "username";
 
-  @UiField Label connectionStatus;
-  @UiField TextBox nameField;
-  @UiField Button sendButton;
-  @UiField Style style;
+  @UiField
+  Label connectionStatus;
+  @UiField
+  TextBox nameField;
+  @UiField
+  Button sendButton;
+  @UiField
+  Style style;
 
   public LoginPanel() {
     initWidget(BINDER.createAndBindUi(this));
-    ClientEvents.get().addNetworkStatusEventHandler(
-        new NetworkStatusEventHandler() {
-          @Override
-          public void onNetworkStatus(NetworkStatusEvent event) {
-            setConnectionStatus(event.getStatus());
-          }
-        });
+    ClientEvents.get().addNetworkStatusEventHandler(new NetworkStatusEventHandler() {
+      @Override
+      public void onNetworkStatus(NetworkStatusEvent event) {
+        setConnectionStatus(event.getStatus());
+      }
+    });
     setConnectionStatus(ConnectionStatus.NEVER_CONNECTED);
     nameField.setText(INITIAL_NAME_FIELD_TEXT + "@" + Session.get().getDomain());
   }
@@ -110,16 +115,6 @@ public class LoginPanel extends Composite {
     }
   }
 
-  private void onLoginComplete(String address) {
-    if (!sendButton.isEnabled()) {
-      return;
-    }
-    nameField.setEnabled(false);
-    nameField.setFocus(false);
-    sendButton.setEnabled(false);
-    ClientEvents.get().fireEvent(new UserLoginEvent(address, true));    
-  }
-  
   private void doLogin() {
     final String address = nameField.getText();
     if (!patternOk(address)) {
@@ -127,21 +122,22 @@ public class LoginPanel extends Composite {
       return;
     }
 
-    PercentEscaper percentEscaper = new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, true);
+    PercentEscaper percentEscaper =
+        new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, true);
     RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, "/auth");
     String body = "address=" + percentEscaper.escape(address) + "&password=";
-    
+
     try {
       builder.sendRequest(body, new RequestCallback() {
         @Override
         public void onResponseReceived(Request request, Response response) {
-          if (response.getStatusCode() == 200) {
+          if (response.getStatusCode() == Response.SC_OK) {
             onLoginComplete(address);
           } else {
             LOG.severe("Could not login - authentication failed.");
           }
         }
-      
+
         @Override
         public void onError(Request request, Throwable exception) {
           LOG.severe("Could not login", exception);
@@ -150,6 +146,16 @@ public class LoginPanel extends Composite {
     } catch (RequestException e) {
       LOG.severe("Could not submit login request", e);
     }
+  }
+
+  private void onLoginComplete(String address) {
+    if (!sendButton.isEnabled()) {
+      return;
+    }
+    nameField.setEnabled(false);
+    nameField.setFocus(false);
+    sendButton.setEnabled(false);
+    ClientEvents.get().fireEvent(new UserLoginEvent(address, true));
   }
 
   private boolean patternOk(String text) {

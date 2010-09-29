@@ -27,24 +27,24 @@ import java.util.Map;
 /**
  * An account store which on-the-fly creates a userdata object for any account
  * requested. The created user has an empty password.
- * 
- * This class exists to ease development until persistence is in. It will be
+ *
+ *  This class exists to ease development until persistence is in. It will be
  * removed once persistence works.
- * 
+ *
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class FakePermissiveAccountStore implements AccountStore {
   Map<ParticipantId, AccountData> accounts = CollectionUtils.newHashMap();
-  
+
   @Override
   public AccountData getAccount(ParticipantId id) {
     AccountData account = accounts.get(id);
-    
+
     if (account == null && !id.getAddress().startsWith("xxx")) {
       account = new HumanAccountDataImpl(id, "".toCharArray());
       accounts.put(id, account);
     }
-    
+
     return account;
   }
 
