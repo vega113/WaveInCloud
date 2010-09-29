@@ -300,9 +300,6 @@ public class ServerRpcProvider {
     // TODO(kalman): Do this without a webclient_redirect file?
     context.setWelcomeFiles(new String[] {"webclient_redirect.html"});
 
-    // Servlet where the client is served from.
-    context.addServlet(new ServletHolder(WaveClientServlet.create(domain)), "/wave");
-
     // Servlet where the websocket connection is served from.
     ServletHolder holder = new ServletHolder(new WaveWebSocketServlet());
     context.addServlet(holder, "/socket");
@@ -314,9 +311,6 @@ public class ServerRpcProvider {
     ServletHolder defaultServlet = new ServletHolder(new DefaultServlet());
     context.addServlet(defaultServlet, "/static/*");
     context.addServlet(defaultServlet, "/webclient/*");
-
-    // Serve the client (i.e. server generated landing page) on the root path.
-    context.addServlet(new ServletHolder(WaveClientServlet.create(domain)), "/");
 
     for (Pair<String, HttpServlet> servlet : servletRegistry) {
       context.addServlet(new ServletHolder(servlet.getSecond()), servlet.getFirst());

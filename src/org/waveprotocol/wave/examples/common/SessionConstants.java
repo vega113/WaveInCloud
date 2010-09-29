@@ -28,4 +28,9 @@ public interface SessionConstants {
    * The domain the wave server serves waves for.
    */
   public final static String DOMAIN = "domain";
+
+  /**
+   * The user's logged in address.
+   */
+  public final static String ADDRESS = "address";
 }

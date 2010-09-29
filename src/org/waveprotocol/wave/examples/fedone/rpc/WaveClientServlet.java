@@ -19,14 +19,18 @@ package org.waveprotocol.wave.examples.fedone.rpc;
 
 import com.google.common.collect.Maps;
 import com.google.gxp.base.GxpContext;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.waveprotocol.wave.client.util.ClientFlagsBase;
 import org.waveprotocol.wave.common.bootstrap.FlagConstants;
 import org.waveprotocol.wave.examples.common.SessionConstants;
+import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
 import org.waveprotocol.wave.examples.fedone.gxp.WaveClientPage;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -36,6 +40,7 @@ import java.util.HashMap;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  * The HTTP servlet for serving a wave client along with content generated on
@@ -51,31 +56,28 @@ public class WaveClientServlet extends HttpServlet {
   static {
     // __NAME_MAPPING__ is a map of name to obfuscated id
     for (int i = 0; i < FlagConstants.__NAME_MAPPING__.length; i += 2) {
-      FLAG_MAP.put(FlagConstants.__NAME_MAPPING__[i], FlagConstants.__NAME_MAPPING__[i+1]);
+      FLAG_MAP.put(FlagConstants.__NAME_MAPPING__[i], FlagConstants.__NAME_MAPPING__[i + 1]);
     }
   }
 
   private final String domain;
-
-  private WaveClientServlet(String domain) {
-    this.domain = domain;
-  }
+  private final SessionManager sessionManager;
 
   /**
    * Creates a servlet for the wave client.
    */
-  public static WaveClientServlet create(String domain) {
-    return new WaveClientServlet(domain);
+  @Inject
+  public WaveClientServlet(
+      @Named("wave_server_domain") String domain, SessionManager sessionManager) {
+    this.domain = domain;
+    this.sessionManager = sessionManager;
   }
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
-      WaveClientPage.write(
-          response.getWriter(),
-          new GxpContext(request.getLocale()),
-          getSessionJson(),
-          getClientFlags(request));
+      WaveClientPage.write(response.getWriter(), new GxpContext(request.getLocale()),
+          getSessionJson(request.getSession(false)), getClientFlags(request));
       response.setContentType("text/html");
       response.setStatus(HttpServletResponse.SC_OK);
     } catch (IOException e) {
@@ -115,7 +117,7 @@ public class WaveClientServlet extends HttpServlet {
               LOG.warning("Ignoring flag [" + name + "] with unknown return type: " + retType);
             }
 
-          // Ignore the flag on any exception
+            // Ignore the flag on any exception
           } catch (SecurityException ex) {
           } catch (NoSuchMethodException ex) {
             LOG.warning("Failed to find the flag [" + name + "] in ClientFlagsBase.");
@@ -131,10 +133,15 @@ public class WaveClientServlet extends HttpServlet {
     }
   }
 
-  private JSONObject getSessionJson() {
+  private JSONObject getSessionJson(HttpSession session) {
     try {
-      return new JSONObject()
-          .put(SessionConstants.DOMAIN, domain);
+      JSONObject result = new JSONObject();
+      result.put(SessionConstants.DOMAIN, domain);
+      ParticipantId user = sessionManager.getLoggedInUser(session);
+      if (user != null) {
+        result.put(SessionConstants.ADDRESS, user.getAddress());
+      }
+      return result;
     } catch (JSONException e) {
       LOG.severe("Failed to create session JSON");
       return new JSONObject();

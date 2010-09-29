@@ -22,6 +22,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import org.apache.commons.cli.ParseException;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.waveprotocol.wave.examples.fedone.authentication.AccountStoreHolder;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.PersistenceModule;
@@ -30,6 +31,7 @@ import org.waveprotocol.wave.examples.fedone.rpc.AttachmentServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.AuthenticationServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.FetchServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.ServerRpcProvider;
+import org.waveprotocol.wave.examples.fedone.rpc.WaveClientServlet;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
@@ -71,7 +73,8 @@ public class ServerMain {
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
     server.addServlet("/auth", injector.getInstance(AuthenticationServlet.class));
     server.addServlet("/robot/*", injector.getInstance(RobotRegistrationServlet.class));
-
+    server.addServlet("/", injector.getInstance(WaveClientServlet.class));
+    
     ProtocolWaveClientRpc.Interface rpcImpl =
         injector.getInstance(ProtocolWaveClientRpc.Interface.class);
     server.registerService(ProtocolWaveClientRpc.newReflectiveService(rpcImpl));
