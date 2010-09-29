@@ -20,5 +20,5 @@ if [[ $ARGC != 1 ]]; then
 else
   USER_NAME=${ARGV[0]}@$WAVE_SERVER_DOMAIN_NAME
   echo "running client as user: ${USER_NAME}"
-  exec java $DEBUG_FLAGS -jar dist/fedone-client-console-$FEDONE_VERSION.jar $USER_NAME $WAVE_SERVER_HOSTNAME $WAVE_SERVER_PORT
+  exec java $DEBUG_FLAGS -jar dist/fedone-client-console-$FEDONE_VERSION.jar $USER_NAME $WEBSOCKET_SERVER_HOSTNAME $WEBSOCKET_SERVER_PORT
 fi

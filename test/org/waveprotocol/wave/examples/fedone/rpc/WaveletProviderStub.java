@@ -1,17 +1,17 @@
 /**
- * Copyright 2009 Google Inc.
+ * Copyright 2010 Google Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
 
@@ -19,6 +19,7 @@ package org.waveprotocol.wave.examples.fedone.rpc;
 
 import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.util.TestDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
@@ -27,7 +28,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
-import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.Collection;
 
@@ -68,14 +68,14 @@ public class WaveletProviderStub implements WaveletProvider {
   }
 
   @Override
-  public Collection<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
-      ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd) {
+  public Collection<VersionedWaveletDelta> getHistory(WaveletName waveletName,
+      HashedVersion versionStart, HashedVersion versionEnd) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void submitRequest(
-      WaveletName waveletName, ProtocolWaveletDelta delta, SubmitResultListener listener) {
+      WaveletName waveletName, ProtocolWaveletDelta delta, SubmitRequestListener listener) {
     throw new UnsupportedOperationException();
   }
 

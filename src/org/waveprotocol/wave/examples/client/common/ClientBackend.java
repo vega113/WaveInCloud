@@ -37,7 +37,7 @@ import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializ
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 import org.waveprotocol.wave.examples.fedone.rpc.ClientRpcChannel;
-import org.waveprotocol.wave.examples.fedone.rpc.ClientRpcChannelImpl;
+import org.waveprotocol.wave.examples.fedone.rpc.WebSocketClientRpcChannel;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
@@ -281,7 +281,7 @@ public class ClientBackend {
         new RpcObjectFactory() {
           @Override
           public ClientRpcChannel createClientChannel(String server, int port) throws IOException {
-            return new ClientRpcChannelImpl(new InetSocketAddress(server, port));
+            return new WebSocketClientRpcChannel(new InetSocketAddress(server, port));
           }
 
           @Override

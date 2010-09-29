@@ -8,7 +8,7 @@ ARGC=0
 declare -a ARGV
 SUSPEND="n"
 DEBUG_MODE="off"
-let DEBUG_PORT=($WAVE_SERVER_PORT + 2000)
+DEBUG_PORT="not set"
 while [ -n "$1" ]; do
   case $1 in
     --debug) DEBUG_MODE="on";;

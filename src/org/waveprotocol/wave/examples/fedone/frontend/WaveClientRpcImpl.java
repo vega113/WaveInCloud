@@ -23,6 +23,9 @@ import com.google.inject.internal.Nullable;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolOpenRequest;
@@ -30,9 +33,7 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSu
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -40,7 +41,6 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.Collections;
 import java.util.List;
@@ -95,8 +95,8 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
           @Override
           public void onUpdate(WaveletName waveletName,
               @Nullable WaveletSnapshotAndVersion snapshot,
-              List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
-              @Nullable ProtocolHashedVersion committedVersion, final boolean hasMarker,
+              List<VersionedWaveletDelta> deltas, @Nullable HashedVersion endVersion,
+              @Nullable HashedVersion committedVersion, final boolean hasMarker,
               final String channel_id) {
             ProtocolWaveletUpdate.Builder builder = ProtocolWaveletUpdate.newBuilder();
             builder.setMarker(hasMarker);
@@ -105,19 +105,26 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
             }
             try {
               builder.setWaveletName(uriCodec.waveletNameToURI(waveletName));
-              builder.addAllAppliedDelta(deltas);
+              for (VersionedWaveletDelta d : deltas) {
+                builder.addAppliedDelta(
+                    CoreWaveletOperationSerializer.serialize(d.delta, d.version));
+              }
               if (snapshot != null) {
-                Preconditions.checkState(committedVersion.equals(snapshot.committedVersion),
-                    "Mismatched commit versions");
+                Preconditions.checkState(committedVersion.equals(
+                    CoreWaveletOperationSerializer.deserialize(snapshot.committedVersion)),
+                    "Mismatched commit versions, snapshot: " + snapshot.committedVersion
+                    + " expected: " + committedVersion);
                 builder.setSnapshot(snapshot.snapshot);
                 builder.setResultingVersion(snapshot.snapshot.getVersion());
                 builder.setCommitNotice(snapshot.committedVersion);
               } else {
                 if (endVersion != null) {
-                  builder.setResultingVersion(endVersion);
+                  builder.setResultingVersion(
+                      CoreWaveletOperationSerializer.serialize(endVersion));
                 }
                 if (committedVersion != null) {
-                  builder.setCommitNotice(committedVersion);
+                  builder.setCommitNotice(
+                      CoreWaveletOperationSerializer.serialize(committedVersion));
                 }
               }
               done.run(builder.build());
@@ -143,20 +150,21 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
         channelId = null;
       }
       frontend.submitRequest(waveletName, request.getDelta(), channelId,
-          new SubmitResultListener() {
+          new SubmitRequestListener() {
             @Override
-            public void onFailure(FederationError error) {
+            public void onFailure(String error) {
               done.run(ProtocolSubmitResponse.newBuilder()
-                  .setOperationsApplied(0).setErrorMessage(error.getErrorMessage()).build());
+                  .setOperationsApplied(0).setErrorMessage(error).build());
             }
 
             @Override
             public void onSuccess(int operationsApplied,
-                ProtocolHashedVersion hashedVersionAfterApplication,
-                long applicationTimestamp) {
+                HashedVersion hashedVersionAfterApplication, long applicationTimestamp) {
               done.run(ProtocolSubmitResponse.newBuilder()
                   .setOperationsApplied(operationsApplied)
-                  .setHashedVersionAfterApplication(hashedVersionAfterApplication).build());
+                  .setHashedVersionAfterApplication(
+                      CoreWaveletOperationSerializer.serialize(hashedVersionAfterApplication))
+                  .build());
               // TODO(arb): applicationTimestamp??
             }
           });

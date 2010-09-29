@@ -1,17 +1,17 @@
 /**
  * Copyright 2010 Google Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
 
@@ -89,21 +89,25 @@ public final class HumanAccountDataImpl implements HumanAccountData {
 
   @Override
   public int hashCode() {
-    return id.hashCode();
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((id == null) ? 0 : id.hashCode());
+    result = prime * result + ((passwordDigest == null) ? 0 : passwordDigest.hashCode());
+    return result;
   }
 
-  /**
-   * An {@link HumanAccountDataImpl} is equal when the usernames match.
-   */
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || !(obj instanceof HumanAccountDataImpl)) {
-      return false;
-    }
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!(obj instanceof HumanAccountDataImpl)) return false;
     HumanAccountDataImpl other = (HumanAccountDataImpl) obj;
-    return id.equals(other.id);
+    if (id == null) {
+      if (other.id != null) return false;
+    } else if (!id.equals(other.id)) return false;
+    if (passwordDigest == null) {
+      if (other.passwordDigest != null) return false;
+    } else if (!passwordDigest.equals(other.passwordDigest)) return false;
+    return true;
   }
 }

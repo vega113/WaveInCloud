@@ -1,27 +1,27 @@
 /**
  * Copyright 2009 Google Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -87,9 +87,8 @@ abstract interface WaveletContainer {
    *         null if there was an error. If a delta straddles one of the
    *         requested version boundaries, it will be included.
    */
-  Collection<ProtocolWaveletDelta> requestTransformedHistory(
-      ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd)
-      throws AccessControlException, WaveletStateException;
+  Collection<VersionedWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
+      HashedVersion versionEnd) throws AccessControlException, WaveletStateException;
 
   /**
    * @param participantId id of participant attempting to gain access to

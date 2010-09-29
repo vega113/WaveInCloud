@@ -11,6 +11,7 @@
 
   <gxp:import class="org.json.JSONObject" />
   <gxp:param name='sessionJson' type='JSONObject' />
+  <gxp:param name='clientFlags' type='JSONObject' />
 
   <html>
     <head>
@@ -21,6 +22,7 @@
       <!-- Session variables. -->
       <script type="text/javascript" language="javascript">
         var __session = <gxp:eval expr='sessionJson' />;
+        var __client_flags = <gxp:eval expr='clientFlags' />;
       </script>
 
       <!-- GWT-compiled JS. -->
