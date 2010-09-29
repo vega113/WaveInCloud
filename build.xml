@@ -368,11 +368,13 @@
       <fileset dir="${staging}">
         <include name="com/dyuproject/protostuff/**/*" />
         <include name="com/google/common/**/*" />
+        <include name="com/google/gson/**/*" />
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
         <include name="com/sixfire/websocket/*" />
         <include name="javax/inject/**/*" />
         <include name="org/apache/commons/codec/**/*" />
+        <include name="org/codehaus/jackson/**/*" />
         <include name="org/waveprotocol/**/*" />
       </fileset>
       <manifest>
@@ -391,12 +393,14 @@
       <fileset dir="${staging}">
         <include name="com/dyuproject/protostuff/**/*" />
         <include name="com/google/common/**/*" />
+        <include name="com/google/gson/**/*" />
         <include name="com/google/inject/**/*" />
         <include name="com/google/protobuf/**/*" />
         <include name="com/sixfire/websocket/*" />
         <include name="javax/inject/**/*" />
         <include name="javax/servlet/**/*" />
         <include name="org/apache/commons/codec/**/*" />
+        <include name="org/codehaus/jackson/**/*" />
         <include name="org/eclipse/jetty/**/*" />
         <include name="org/waveprotocol/**/*" />
       </fileset>
