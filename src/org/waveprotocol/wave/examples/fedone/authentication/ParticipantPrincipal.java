@@ -29,7 +29,7 @@ import java.security.Principal;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public final class ParticipantPrincipal implements Principal {
-  final private ParticipantId id;
+  private final ParticipantId id;
   
   /**
    * Create a WavePrincipal for the given wave user.
