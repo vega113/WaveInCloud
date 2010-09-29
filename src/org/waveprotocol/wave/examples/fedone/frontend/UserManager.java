@@ -23,8 +23,8 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -87,7 +87,7 @@ final class UserManager {
    * Receives notification that the specified wavelet has been committed at the
    * specified version.
    */
-  public void onCommit(WaveletName waveletName, ProtocolHashedVersion version, String channelId) {
+  public void onCommit(WaveletName waveletName, HashedVersion version, String channelId) {
     Preconditions.checkNotNull(waveletName);
     Preconditions.checkNotNull(version);
     List<WaveViewSubscription> listeners = matchSubscriptions(waveletName);
@@ -134,7 +134,7 @@ final class UserManager {
    *        response (or null if the submit request failed)
    */
   public void submitResponse(String channelId, WaveletName waveletName,
-      ProtocolHashedVersion hashedVersionAfterApplication) {
+      HashedVersion hashedVersionAfterApplication) {
     WaveViewSubscription subscription = findSubscription(waveletName, channelId);
     if (subscription != null) {
       subscription.submitResponse(waveletName, hashedVersionAfterApplication);

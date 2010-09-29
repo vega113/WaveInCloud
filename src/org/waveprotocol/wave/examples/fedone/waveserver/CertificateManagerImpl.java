@@ -90,7 +90,6 @@ public class CertificateManagerImpl implements CertificateManager {
 
   @Override
   public Set<String> getLocalDomains() {
-
     // TODO: for now, we just support a single signer
     return ImmutableSet.of(waveSigner.getDomain());
   }
@@ -102,7 +101,6 @@ public class CertificateManagerImpl implements CertificateManager {
 
   @Override
   public ProtocolSignedDelta signDelta(ByteStringMessage<ProtocolWaveletDelta> delta) {
-
     // TODO: support extended address paths. For now, there will be exactly
     // one signature, and we don't support federated groups.
     Preconditions.checkState(delta.getMessage().getAddressPathCount() == 0);
@@ -117,11 +115,9 @@ public class CertificateManagerImpl implements CertificateManager {
   @Override
   public ByteStringMessage<ProtocolWaveletDelta> verifyDelta(ProtocolSignedDelta signedDelta)
       throws SignatureException, UnknownSignerException {
-
     ByteStringMessage<ProtocolWaveletDelta> delta;
     try {
-      delta = ByteStringMessage.from(
-          ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
+      delta = ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta());
     } catch (InvalidProtocolBufferException e) {
       throw new IllegalArgumentException("signed delta does not contain valid delta", e);
     }

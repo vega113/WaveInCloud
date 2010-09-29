@@ -19,6 +19,7 @@ package org.waveprotocol.wave.examples.fedone.rpc;
 
 import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.util.TestDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
@@ -26,7 +27,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
-import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.Collection;
 
@@ -66,14 +66,14 @@ public class WaveletProviderStub implements WaveletProvider {
   }
 
   @Override
-  public Collection<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
-      ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd) {
+  public Collection<VersionedWaveletDelta> getHistory(WaveletName waveletName,
+      HashedVersion versionStart, HashedVersion versionEnd) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void submitRequest(
-      WaveletName waveletName, ProtocolWaveletDelta delta, SubmitResultListener listener) {
+      WaveletName waveletName, ProtocolWaveletDelta delta, SubmitRequestListener listener) {
     throw new UnsupportedOperationException();
   }
 

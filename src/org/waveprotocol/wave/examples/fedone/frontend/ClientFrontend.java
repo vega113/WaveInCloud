@@ -19,14 +19,15 @@ package org.waveprotocol.wave.examples.fedone.frontend;
 
 import com.google.inject.internal.Nullable;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 
 import java.util.Collection;
 import java.util.List;
@@ -48,8 +49,8 @@ public interface ClientFrontend {
      * Called when an update is received.
      */
     void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
-        List<ProtocolWaveletDelta> deltas, @Nullable ProtocolHashedVersion endVersion,
-        @Nullable ProtocolHashedVersion committedVersion, boolean hasMarker, String channel_id);
+        List<VersionedWaveletDelta> deltas, @Nullable HashedVersion endVersion,
+        @Nullable HashedVersion committedVersion, boolean hasMarker, String channel_id);
 
     /**
      * Called when the stream fails. No further updates will be received.
@@ -66,7 +67,7 @@ public interface ClientFrontend {
    * @param listener callback for the result.
    */
   void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta, String channelId,
-      SubmitResultListener listener);
+      WaveletProvider.SubmitRequestListener listener);
 
   /**
    * Request to open a Wave. Optional waveletIdPrefixes allows the requester to

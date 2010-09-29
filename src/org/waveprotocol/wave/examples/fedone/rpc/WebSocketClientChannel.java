@@ -17,79 +17,49 @@
 
 package org.waveprotocol.wave.examples.fedone.rpc;
 
-import org.waveprotocol.wave.examples.fedone.util.Log;
-
 import com.sixfire.websocket.WebSocket;
 
+import org.waveprotocol.wave.examples.fedone.util.Log;
+
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * The client side of a WebSocketChannel.
  */
 class WebSocketClientChannel extends WebSocketChannel {
   private static final Log LOG = Log.get(WebSocketClientChannel.class);
-  private final ExecutorService threadPool;
-  private final Runnable asyncRead;
-  private boolean isReading = false;
 
   private final WebSocket websocket;
+  private final ExecutorService threadPool;
+  private final Runnable asyncRead = new Runnable() {
+        @Override
+        public void run() {
+          try {
+            String data;
+            while ((data = websocket.recv()) != null) {
+              handleMessageString(data);
+            }
+          } catch (IOException e) {
+            LOG.severe("WebSocket async data read failed, aborting connection.", e);
+          }
+        }
+      };
+
+  private boolean isReading = false;
 
   /**
-   * Creates a WebSocketClientChannel with a default thread executor. See
-   * {@link #WebSocketClientChannel(String, Integer, ProtoCallback, ExecutorService)}
-   */
-  public WebSocketClientChannel(String host, Integer port, ProtoCallback callback) {
-    this(host, port, callback, Executors.newSingleThreadExecutor());
-  }
-
-  /**
-   * Constructs a WebSocketClientChannel, connects to host:port, and sets up
-   * async read.
+   * Constructs a WebSocketClientChannel.
    *
-   * @param host host to connect to
-   * @param port port to connect to
+   * @param websocket connected websocket
    * @param callback ProtoCallback handler for incoming messages
    * @param threadPool threadpool for thread that performs async read.
    */
-  public WebSocketClientChannel(String host, Integer port,
-      ProtoCallback callback, ExecutorService threadPool) {
+  public WebSocketClientChannel(WebSocket websocket, ProtoCallback callback,
+      ExecutorService threadPool) {
     super(callback);
+    this.websocket = websocket;
     this.threadPool = threadPool;
-    URI uri;
-    try {
-      uri = new URI("ws", null, host, port, "/socket", null, null);      
-    } catch (URISyntaxException use) {
-      LOG.severe("Unable to create ws:// uri from given host ("
-        + host + ") and port (" + port + ")", use);
-      throw new IllegalStateException(use);
-    }
-
-    websocket = new WebSocket(uri);
-    try {
-      websocket.connect();
-    } catch (IOException e) {
-      LOG.severe("WebSocket unable to connect.", e);
-      throw new IllegalStateException(e);
-    }
-
-    this.asyncRead = new Runnable() {
-      @Override
-      public void run() {
-        try {
-          String data = websocket.recv();
-          while (data != null) {
-            handleMessageString(data);
-            data = websocket.recv();
-          }
-        } catch (IOException e) {
-          LOG.severe("WebSocket async data read failed, aborting connection.", e);
-        }
-      }
-    };
   }
 
   /**

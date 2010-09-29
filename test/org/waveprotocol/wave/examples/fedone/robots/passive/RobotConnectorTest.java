@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.ProtocolVersion;
@@ -35,9 +36,9 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountDataImpl;
+import org.waveprotocol.wave.examples.fedone.robots.RobotCapabilities;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -53,8 +54,9 @@ public class RobotConnectorTest extends TestCase {
 
   private static final String TEST_URL = "www.example.com/robot";
 
-  private static final RobotAccountData ROBOT_ACCOUNT = new RobotAccountDataImpl(
-      ROBOT_ACCOUNT_NAME, TEST_URL, new HashMap<EventType, Capability>(), "FakeHash", true);
+  private static final RobotAccountData ROBOT_ACCOUNT =
+      new RobotAccountDataImpl(ROBOT_ACCOUNT_NAME, TEST_URL, new RobotCapabilities(
+          Maps.<EventType, Capability> newHashMap(), "FakeHash", ProtocolVersion.DEFAULT), true);
 
   private static final EventMessageBundle BUNDLE =
       new EventMessageBundle(ROBOT_ACCOUNT_NAME, "www.example.com/rpc");

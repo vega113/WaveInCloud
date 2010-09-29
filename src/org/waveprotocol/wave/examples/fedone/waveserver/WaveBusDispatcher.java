@@ -17,11 +17,11 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.util.List;
 
@@ -45,15 +45,15 @@ public final class WaveBusDispatcher implements WaveBus, WaveBus.Subscriber {
   }
 
   @Override
-  public void waveletUpdate(WaveletData wavelet, ProtocolHashedVersion resultingVersion,
-      List<ProtocolWaveletDelta> deltas) {
+  public void waveletUpdate(ReadableWaveletData wavelet, HashedVersion resultingVersion,
+      List<VersionedWaveletDelta> deltas) {
     for (WaveBus.Subscriber s : subscribers) {
       s.waveletUpdate(wavelet, resultingVersion, deltas);
     }
   }
 
   @Override
-  public void waveletCommitted(WaveletName waveletName, ProtocolHashedVersion version) {
+  public void waveletCommitted(WaveletName waveletName, HashedVersion version) {
     for (WaveBus.Subscriber s : subscribers) {
       s.waveletCommitted(waveletName, version);
     }
