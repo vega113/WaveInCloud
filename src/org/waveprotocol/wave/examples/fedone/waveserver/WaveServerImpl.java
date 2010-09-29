@@ -33,8 +33,10 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
+import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
@@ -135,8 +137,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas = Lists.newArrayList();
         for (ByteString delta : rawAppliedDeltas) {
           try {
-            appliedDeltas.add(ByteStringMessage.from(
-                ProtocolAppliedWaveletDelta.getDefaultInstance(), delta));
+            appliedDeltas.add(ByteStringMessage.parseProtocolAppliedWaveletDelta(delta));
           } catch (InvalidProtocolBufferException e) {
             LOG.info("Invalid applied delta protobuf for incoming " + waveletName, e);
             safeMarkWaveletCorrupted(wavelet);
@@ -158,8 +159,9 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
               new RemoteWaveletDeltaCallback() {
                 @Override
                 public void onSuccess(DeltaSequence result) {
-                  dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(),
-                      result.getEndVersion(), result);
+                  HashedVersion version = result.getEndVersion();
+                  dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(), version,
+                      result);
                 }
 
                 @Override
@@ -192,7 +194,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       public void waveletCommitUpdate(WaveletName waveletName,
           ProtocolHashedVersion committedVersion, WaveletUpdateCallback callback) {
         Preconditions.checkNotNull(committedVersion);
-        dispatcher.waveletCommitted(waveletName, committedVersion);
+        dispatcher.waveletCommitted(waveletName,
+            CoreWaveletOperationSerializer.deserialize(committedVersion));
         // Pretend we've committed it, there is no persistence
         LOG.fine("Responding with success to wavelet commit on " + waveletName);
         callback.onSuccess();
@@ -220,8 +223,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       SubmitResultListener listener) {
     // Disallow creation of wavelets by remote users.
     try {
-      ByteStringMessage<ProtocolWaveletDelta> delta = ByteStringMessage.from(
-          ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
+      ByteStringMessage<ProtocolWaveletDelta> delta =
+          ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta());
       if (delta.getMessage().getHashedVersion().getVersion() == 0) {
         LOG.warning("Remote user tried to submit delta at version 0 - disallowed. " + signedDelta);
         listener.onFailure(FederationErrors.badRequest("Remote users may not create wavelets."));
@@ -306,6 +309,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       WaveletName waveletName, ProtocolHashedVersion deltaEndVersion,
       DeltaSignerInfoResponseListener listener) {
     WaveletContainer wavelet = getWavelet(waveletName);
+    HashedVersion endVersion = CoreWaveletOperationSerializer.deserialize(deltaEndVersion);
 
     if (wavelet == null) {
       LOG.info("getDeltaSignerInfo for nonexistent wavelet " + waveletName);
@@ -315,7 +319,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       listener.onFailure(FederationErrors.badRequest("Wavelet is not locally hosted"));
     } else {
       LocalWaveletContainer localWavelet = (LocalWaveletContainer) wavelet;
-      if (localWavelet.isDeltaSigner(deltaEndVersion, signerId)) {
+      if (localWavelet.isDeltaSigner(endVersion, signerId)) {
         ProtocolSignerInfo signerInfo = certificateManager.retrieveSignerInfo(signerId);
         if (signerInfo == null) {
           // Oh no!  We are supposed to store it, and we already know they did sign this delta.
@@ -351,14 +355,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   //
 
   @Override
-  public Collection<ProtocolWaveletDelta> getHistory(WaveletName waveletName,
-      ProtocolHashedVersion startVersion, ProtocolHashedVersion endVersion) {
+  public Collection<VersionedWaveletDelta> getHistory(WaveletName waveletName,
+      HashedVersion startVersion, HashedVersion endVersion) {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
       LOG.info("Client request for history made for non-existent wavelet: " + waveletName);
       return null;
     } else {
-      Collection<ProtocolWaveletDelta> deltaHistory = null;
+      Collection<VersionedWaveletDelta> deltaHistory = null;
       try {
         deltaHistory = wc.requestTransformedHistory(startVersion, endVersion);
       } catch (AccessControlException e) {
@@ -390,11 +394,24 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
 
   @Override
   public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
-      SubmitResultListener listener) {
+      final SubmitRequestListener listener) {
     // The serialised version of this delta happens now.  This should be the only place, ever!
     ProtocolSignedDelta signedDelta = certificateManager.signDelta(
-        ByteStringMessage.fromMessage(delta));
-    submitDelta(waveletName, signedDelta, listener);
+        ByteStringMessage.serializeMessage(delta));
+
+    submitDelta(waveletName, signedDelta, new SubmitResultListener() {
+      @Override
+      public void onFailure(FederationError errorMessage) {
+        listener.onFailure(errorMessage.getErrorMessage());
+      }
+
+      @Override
+      public void onSuccess(int operationsApplied,
+          ProtocolHashedVersion hashedVersionAfterApplication, long applicationTimestamp) {
+        listener.onSuccess(operationsApplied,
+            CoreWaveletOperationSerializer.deserialize(hashedVersionAfterApplication),
+            applicationTimestamp);
+      }});
   }
   
   @Override
@@ -570,8 +587,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       final SubmitResultListener resultListener) {
     ByteStringMessage<ProtocolWaveletDelta> waveletDelta;
     try {
-      waveletDelta = ByteStringMessage.from(
-          ProtocolWaveletDelta.getDefaultInstance(), delta.getDelta());
+      waveletDelta = ByteStringMessage.parseProtocolWaveletDelta(delta.getDelta());
     } catch (InvalidProtocolBufferException e) {
       throw new IllegalArgumentException("Signed delta does not contain valid wavelet delta", e);
     }
@@ -604,11 +620,12 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
               submitResult.getAppliedDelta();
 
           // return result to caller.
-          ProtocolHashedVersion resultingVersion =
-              submitResult.getHashedVersionAfterApplication();
+          HashedVersion resultingVersion = submitResult.getHashedVersionAfterApplication();
+          ProtocolHashedVersion resultVersionProto =
+              CoreWaveletOperationSerializer.serialize(resultingVersion);
           LOG.info("## WS: Submit result: " + waveletName + " appliedDelta: " + appliedDelta);
           resultListener.onSuccess(appliedDelta.getMessage().getOperationsApplied(),
-              resultingVersion, appliedDelta.getMessage().getApplicationTimestamp());
+              resultVersionProto, appliedDelta.getMessage().getApplicationTimestamp());
 
           // Send the results to subscribers.
           LOG.info("Sending update to client listener: " + submitResult.getDelta());
@@ -634,7 +651,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
                 });
 
             // TODO: if persistence is added, don't send commit notice
-            host.waveletCommitUpdate(waveletName, resultingVersion,
+            host.waveletCommitUpdate(waveletName, resultVersionProto,
                 new WaveletFederationListener.WaveletUpdateCallback() {
                   @Override
                   public void onSuccess() {

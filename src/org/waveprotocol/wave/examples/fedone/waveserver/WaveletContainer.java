@@ -18,10 +18,10 @@
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
 import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -87,9 +87,8 @@ abstract interface WaveletContainer {
    *         null if there was an error. If a delta straddles one of the
    *         requested version boundaries, it will be included.
    */
-  Collection<ProtocolWaveletDelta> requestTransformedHistory(
-      ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd)
-      throws AccessControlException, WaveletStateException;
+  Collection<VersionedWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
+      HashedVersion versionEnd) throws AccessControlException, WaveletStateException;
 
   /**
    * @param participantId id of participant attempting to gain access to

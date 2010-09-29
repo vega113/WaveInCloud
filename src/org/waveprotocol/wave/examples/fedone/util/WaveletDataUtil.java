@@ -32,6 +32,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
@@ -55,7 +56,7 @@ public final class WaveletDataUtil {
    *
    * @param wavelet the wavelet to get the name for
    */
-  public static WaveletName waveletNameOf(WaveletData wavelet) {
+  public static WaveletName waveletNameOf(ReadableWaveletData wavelet) {
     return WaveletName.of(wavelet.getWaveId(), wavelet.getWaveletId());
   }
 

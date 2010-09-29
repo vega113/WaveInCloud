@@ -44,6 +44,7 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.ReadableBlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.io.IOException;
@@ -279,7 +280,7 @@ public class ClientTestingUtil {
    * @param blip document to collect the text from.
    * @return A string containing the characters from the blip.
    */
-  public static String getText(BlipData blip) {
+  public static String getText(ReadableBlipData blip) {
     return Snippets.collateTextForDocuments(Lists.newArrayList(blip));
   }
 

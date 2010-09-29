@@ -24,8 +24,20 @@ import org.waveprotocol.wave.model.id.WaveletName;
  *
  */
 public interface HashedVersionFactory {
+  /** Creates a hashed version zero. */
   HashedVersion createVersionZero(WaveletName waveletName);
-  HashedVersion create(byte[] appliedDeltaBytes, HashedVersion hashedVersionAppliedAt,
-      int operationsApplied);
+
+  /**
+   * Creates a hashed version after the application of a delta. The version
+   * of the created hashed version is targetVersion + opsApplied.
+   *
+   * @param appliedDeltaBytes byte representation of applied delta
+   * @param versionAppliedAt version to which the delta applied
+   * @param opsApplied number of ops in the delta
+   * @return a hashed version after the delta application
+   */
+  HashedVersion create(byte[] appliedDeltaBytes, HashedVersion versionAppliedAt, int opsApplied);
+
+  /** Creates a hased version from a version number and hash array. */
   HashedVersion create(long version, byte[] historyHash);
 }

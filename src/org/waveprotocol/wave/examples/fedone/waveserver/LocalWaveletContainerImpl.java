@@ -29,7 +29,6 @@ import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -50,8 +49,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
    * Associates a delta (represented by the hashed version of the wavelet state after its
    * application) with its signers (represented by their signer id)
    */
-  private final Multimap<ProtocolHashedVersion, ByteString> deltaSigners =
-      ArrayListMultimap.create();
+  private final Multimap<HashedVersion, ByteString> deltaSigners = ArrayListMultimap.create();
 
   public LocalWaveletContainerImpl(WaveletName waveletName) {
     super(waveletName);
@@ -86,8 +84,8 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
   private DeltaApplicationResult transformAndApplyLocalDelta(ProtocolSignedDelta signedDelta)
       throws OperationException, InvalidProtocolBufferException, EmptyDeltaException,
       InvalidHashException {
-    ByteStringMessage<ProtocolWaveletDelta> protocolDelta = ByteStringMessage.from(
-        ProtocolWaveletDelta.getDefaultInstance(), signedDelta.getDelta());
+    ByteStringMessage<ProtocolWaveletDelta> protocolDelta =
+        ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta());
     VersionedWaveletDelta deltaAndVersion =
       CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
@@ -110,9 +108,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       // applyWaveletOperations(), because that will throw EmptyDeltaException, or
       // commitAppliedDelta(), because empty deltas cannot be part of the delta history.
       return new DeltaApplicationResult(buildAppliedDelta(signedDelta, transformed,
-          applicationTimeStamp),
-          CoreWaveletOperationSerializer.serialize(transformed.delta, transformed.version),
-          CoreWaveletOperationSerializer.serialize(transformed.version));
+          applicationTimeStamp), transformed, transformed.version);
     }
 
     if (!transformed.version.equals(currentVersion)) {
@@ -126,9 +122,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       // TODO: look this up (in appliedDeltas or currentVersion) rather than compute it?
       HashedVersion hashedVersionAfterApplication = HASH_FACTORY.create(
         appliedDelta.getByteArray(), transformed.version, transformed.delta.getOperations().size());
-      return new DeltaApplicationResult(appliedDelta,
-          CoreWaveletOperationSerializer.serialize(transformed.delta, transformed.version),
-          CoreWaveletOperationSerializer.serialize(hashedVersionAfterApplication));
+      return new DeltaApplicationResult(appliedDelta, transformed, hashedVersionAfterApplication);
     }
 
     applyWaveletOperations(transformed.delta, applicationTimeStamp);
@@ -137,12 +131,11 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
         buildAppliedDelta(signedDelta, transformed, applicationTimeStamp);
 
-    DeltaApplicationResult applicationResult = commitAppliedDelta(appliedDelta, transformed.delta);
+    DeltaApplicationResult applicationResult = commitAppliedDelta(appliedDelta, transformed);
 
     // Associate this hashed version with its signers.
     for (ProtocolSignature signature : signedDelta.getSignatureList()) {
-      deltaSigners.put(
-          applicationResult.getHashedVersionAfterApplication(),
+      deltaSigners.put(applicationResult.getHashedVersionAfterApplication(),
           signature.getSignerId());
     }
 
@@ -165,11 +158,11 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       appliedDeltaBuilder.setHashedVersionAppliedAt(
           CoreWaveletOperationSerializer.serialize(transformed.version));
     }
-    return ByteStringMessage.fromMessage(appliedDeltaBuilder.build());
+    return ByteStringMessage.serializeMessage(appliedDeltaBuilder.build());
   }
 
   @Override
-  public boolean isDeltaSigner(ProtocolHashedVersion version, ByteString signerId) {
+  public boolean isDeltaSigner(HashedVersion version, ByteString signerId) {
     return deltaSigners.get(version).contains(signerId);
   }
 }

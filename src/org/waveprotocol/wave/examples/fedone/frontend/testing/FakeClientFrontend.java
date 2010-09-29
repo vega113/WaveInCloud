@@ -18,20 +18,20 @@
 package org.waveprotocol.wave.examples.fedone.frontend.testing;
 
 import com.google.inject.internal.Nullable;
-import com.google.protobuf.ByteString;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
-import org.waveprotocol.wave.federation.FederationErrors;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
-import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
+import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -45,9 +45,9 @@ import java.util.Map;
   */
 public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
   private static class SubmitRecord {
-    final SubmitResultListener listener;
+    final SubmitRequestListener listener;
     final int operations;
-    SubmitRecord(int operations, SubmitResultListener listener) {
+    SubmitRecord(int operations, SubmitRequestListener listener) {
       this.operations = operations;
       this.listener = listener;
     }
@@ -61,19 +61,18 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
   public void doSubmitFailed(WaveletName waveletName, String errorMessage) {
     SubmitRecord record = submitRecords.remove(waveletName);
     if (record != null) {
-      record.listener.onFailure(FederationErrors.badRequest(errorMessage));
+      record.listener.onFailure(errorMessage);
     }
   }
 
   /** Reports a submit success with resulting version 0 application timestamp 0 */
   public void doSubmitSuccess(WaveletName waveletName) {
-    ProtocolHashedVersion fakeHashedVersion =
-        ProtocolHashedVersion.newBuilder().setVersion(0).setHistoryHash(ByteString.EMPTY).build();
+    HashedVersion fakeHashedVersion = new HashedVersion(0, new byte[0]);
     doSubmitSuccess(waveletName, fakeHashedVersion, 0);
   }
 
   /** Reports a submit success with the specified resulting version and application timestamp */
-  public void doSubmitSuccess(WaveletName waveletName, ProtocolHashedVersion resultingVersion,
+  public void doSubmitSuccess(WaveletName waveletName, HashedVersion resultingVersion,
       long applicationTimestamp) {
     SubmitRecord record = submitRecords.remove(waveletName);
     if (record != null) {
@@ -96,22 +95,22 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
 
   @Override
   public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
-      @Nullable String channelId, SubmitResultListener listener) {
+      @Nullable String channelId, WaveletProvider.SubmitRequestListener listener) {
     submitRecords.put(waveletName, new SubmitRecord(delta.getOperationCount(), listener));
   }
 
   @Override
-  public void waveletCommitted(WaveletName waveletName, ProtocolHashedVersion version) {
+  public void waveletCommitted(WaveletName waveletName, HashedVersion version) {
     OpenListener listener = openListeners.get(waveletName.waveId);
     if (listener != null) {
-      final List<ProtocolWaveletDelta> emptyList = Collections.emptyList();
+      final List<VersionedWaveletDelta> emptyList = Collections.emptyList();
       listener.onUpdate(waveletName, null, emptyList, null, version, false, null);
     }
   }
 
   @Override
-  public void waveletUpdate(WaveletData wavelet, ProtocolHashedVersion resultingVersion,
-      List<ProtocolWaveletDelta> newDeltas) {
+  public void waveletUpdate(ReadableWaveletData wavelet, HashedVersion resultingVersion,
+      List<VersionedWaveletDelta> newDeltas) {
     OpenListener listener = openListeners.get(wavelet.getWaveId());
     if (listener != null) {
       WaveletName waveletName = WaveletName.of(wavelet.getWaveId(), wavelet.getWaveletId());
