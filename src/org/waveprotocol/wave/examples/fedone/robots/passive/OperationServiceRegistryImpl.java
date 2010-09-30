@@ -20,6 +20,7 @@ package org.waveprotocol.wave.examples.fedone.robots.passive;
 import com.google.wave.api.OperationType;
 
 import org.waveprotocol.wave.examples.fedone.robots.AbstractOperationServiceRegistry;
+import org.waveprotocol.wave.examples.fedone.robots.operations.AppendBlipService;
 import org.waveprotocol.wave.examples.fedone.robots.operations.DoNothingService;
 import org.waveprotocol.wave.examples.fedone.robots.operations.OperationService;
 
@@ -40,7 +41,6 @@ public final class OperationServiceRegistryImpl extends AbstractOperationService
     // Register all the OperationProviders
     register(OperationType.ROBOT_NOTIFY, DoNothingService.create());
     register(OperationType.ROBOT_NOTIFY_CAPABILITIES_HASH, DoNothingService.create());
-    // TODO(ljvderijk): Uncomment as soon as appendBlip is complete.
-    // register(OperationType.WAVELET_APPEND_BLIP, AppendBlipService.create());
+    register(OperationType.WAVELET_APPEND_BLIP, AppendBlipService.create());
   }
 }
