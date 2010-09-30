@@ -64,6 +64,7 @@
 	<classpathentry kind="lib" path="third_party/test/junit/junit.jar"/>
 	<classpathentry kind="lib" path="third_party/test/junit/src.jar"/>
 	<classpathentry kind="lib" path="third_party/test/mockito/mockito-all-1.8.2.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/testing.jar" sourcepath="third_party/runtime/wave-libraries/testing-src.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="third_party/runtime/mongo-driver/mongo-2.1.jar" sourcepath="third_party/runtime/mongo-driver/mongo-java-driver-r2.1-0-src.zip"/>
 	<classpathentry kind="lib" path="third_party/runtime/commons_codec/commons-codec-1.4.jar" sourcepath="third_party/runtime/commons_codec/commons-codec-1.4-sources.jar"/>
