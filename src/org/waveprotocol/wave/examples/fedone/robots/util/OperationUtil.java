@@ -120,7 +120,6 @@ public class OperationUtil {
    * @return the type of operation present in the request
    */
   public static OperationType getOperationType(OperationRequest operation) {
-    // TODO(ljvderijk): Add tests
     String methodName = operation.getMethod();
 
     // TODO(ljvderijk): This might be removed after the deserialization is fixed

@@ -32,6 +32,7 @@ import com.google.wave.api.event.WaveletBlipCreatedEvent;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.examples.fedone.robots.util.ConversationUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
@@ -59,18 +60,21 @@ public class OperationContextImplTest extends TestCase {
   private OperationContextImpl operationContext;
   private RobotWaveletData wavelet;
   private OperationContextImpl boundOperationContext;
+  private ConversationUtil conversationUtil;
 
   @Override
   protected void setUp() throws Exception {
     converter = mock(EventDataConverter.class);
     waveletProvider = mock(WaveletProvider.class);
+    conversationUtil = mock(ConversationUtil.class);
     request = new OperationRequest("wave.setTitle", OPERATION_ID);
-    operationContext = new OperationContextImpl(waveletProvider, converter);
+    operationContext = new OperationContextImpl(waveletProvider, converter, conversationUtil);
 
     wavelet = mock(RobotWaveletData.class);
     when(wavelet.getWaveletName()).thenReturn(WAVELET_NAME);
 
-    boundOperationContext = new OperationContextImpl(waveletProvider, converter, wavelet);
+    boundOperationContext =
+        new OperationContextImpl(waveletProvider, converter, conversationUtil, wavelet);
   }
 
   public void testConstructResponse() {

@@ -23,10 +23,14 @@ import com.google.wave.api.OperationRequest;
 import com.google.wave.api.ProtocolVersion;
 import com.google.wave.api.RobotSerializer;
 import com.google.wave.api.impl.EventMessageBundle;
+import com.google.wave.api.robot.CapabilityFetchException;
+import com.google.wave.api.robot.RobotCapabilitiesParser;
 import com.google.wave.api.robot.RobotConnection;
 import com.google.wave.api.robot.RobotConnectionException;
 
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
+import org.waveprotocol.wave.examples.fedone.account.RobotAccountDataImpl;
+import org.waveprotocol.wave.examples.fedone.robots.RobotCapabilities;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 
 import java.util.Collections;
@@ -39,7 +43,7 @@ import java.util.List;
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
-public final class RobotConnector {
+public class RobotConnector {
 
   private static final Log LOG = Log.get(RobotConnector.class);
 
@@ -64,19 +68,43 @@ public final class RobotConnector {
    *          executed.
    */
   public List<OperationRequest> sendMessageBundle(
-      EventMessageBundle bundle, RobotAccountData robot, ProtocolVersion version) {
+      EventMessageBundle bundle, Robot robot, ProtocolVersion version) {
     String serializedBundle = serializer.serialize(bundle, version);
 
+    String robotUrl = robot.getAccount().getUrl() + Robot.RPC_URL;
+    LOG.info("Sending: " + serializedBundle + " to " + robotUrl);
+
     try {
-      String response = connection.postJson(robot.getUrl(), serializedBundle);
+      String response = connection.postJson(robotUrl, serializedBundle);
+      LOG.info("Received: " + response + " from " + robotUrl);
       return serializer.deserializeOperations(response);
     } catch (RobotConnectionException e) {
-      LOG.info("Failed to receive a response from " + robot.getUrl(), e);
+      LOG.info("Failed to receive a response from " + robotUrl, e);
     } catch (InvalidRequestException e) {
       LOG.info("Failed to deserialize passive API response", e);
     }
 
     // Return an empty list and let the caller ignore the failure
     return Collections.emptyList();
+  }
+
+  /**
+   * Returns a new {@link RobotAccountData} updated with the new capabilities
+   * using the given {@link RobotAccountData}.
+   *
+   * @param account The {@link RobotAccountData} to update the capabilities for.
+   * @param activeApiUrl the url of the Active Robot API.
+   * @throws CapabilityFetchException if the capabilities couldn't be retrieved
+   *         or parsed.
+   */
+  public RobotAccountData fetchCapabilities(RobotAccountData account, String activeApiUrl)
+      throws CapabilityFetchException {
+    RobotCapabilitiesParser parser = new RobotCapabilitiesParser(
+        account.getUrl() + Robot.CAPABILITIES_URL, connection, activeApiUrl);
+    RobotCapabilities capabilities = new RobotCapabilities(
+        parser.getCapabilities(), parser.getCapabilitiesHash(), parser.getProtocolVersion());
+
+    return new RobotAccountDataImpl(
+        account.getId(), account.getUrl(), capabilities, account.isVerified());
   }
 }

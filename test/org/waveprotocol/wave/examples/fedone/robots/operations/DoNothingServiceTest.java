@@ -27,6 +27,7 @@ import com.google.wave.api.data.converter.EventDataConverter;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.fedone.robots.OperationContextImpl;
+import org.waveprotocol.wave.examples.fedone.robots.util.ConversationUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -54,8 +55,10 @@ public class DoNothingServiceTest extends TestCase {
 
     WaveletProvider waveletProvider = mock(WaveletProvider.class);
     EventDataConverter converter = mock(EventDataConverter.class);
+    ConversationUtil conversationUtil = mock(ConversationUtil.class);
 
-    OperationContextImpl context = new OperationContextImpl(waveletProvider, converter);
+    OperationContextImpl context =
+        new OperationContextImpl(waveletProvider, converter, conversationUtil);
 
     operationService.execute(request, context, BOB);
     JsonRpcResponse response = context.getResponse(request.getId());
