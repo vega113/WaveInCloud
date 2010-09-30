@@ -232,7 +232,7 @@
         <path refid="fedone.classpath"/>
         <path refid="fedone.test.classpath"/>
       </classpath>
-      <jvmarg value="-Xmx256M"/>
+      <jvmarg value="-Xmx512M"/>
       <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
       <arg line="-style PRETTY"/>
       <arg line="${gwt.args}"/>
