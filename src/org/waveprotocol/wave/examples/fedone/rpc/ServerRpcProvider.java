@@ -70,7 +70,6 @@ public class ServerRpcProvider {
   private final SocketAddress rpcHostingAddress;
   private final String httpHost;
   private final Integer httpPort;
-  private final String domain;
   private final Set<Connection> incomingConnections = Sets.newHashSet();
   private final ExecutorService threadPool;
   private ServerSocketChannel rpcServer = null;
@@ -226,33 +225,29 @@ public class ServerRpcProvider {
    * @param rpcHost the hosting socket
    * @param httpHost host for http server
    * @param httpPort port for http server
-   * @param domain the domain of the server
    * @param threadPool the service used to create threads
    */
-  public ServerRpcProvider(SocketAddress rpcHost, String httpHost, Integer httpPort, String domain,
+  public ServerRpcProvider(SocketAddress rpcHost, String httpHost, Integer httpPort,
       ExecutorService threadPool) {
     rpcHostingAddress = rpcHost;
     this.httpHost = httpHost;
     this.httpPort = httpPort;
-    this.domain = domain;
     this.threadPool = threadPool;
   }
 
   /**
    * Constructs a new ServerRpcProvider with a default ExecutorService.
    */
-  public ServerRpcProvider(SocketAddress rpcHost, String httpHost, Integer httpPort,
-      String domain) {
-    this(rpcHost, httpHost, httpPort, domain, Executors.newCachedThreadPool());
+  public ServerRpcProvider(SocketAddress rpcHost, String httpHost, Integer httpPort) {
+    this(rpcHost, httpHost, httpPort, Executors.newCachedThreadPool());
   }
 
   @Inject
   public ServerRpcProvider(@Named("client_frontend_hostname") String rpcHost,
       @Named("client_frontend_port") Integer rpcPort,
       @Named("http_frontend_hostname") String httpHost,
-      @Named("http_frontend_port") Integer httpPort,
-      @Named("wave_server_domain") String domain) {
-    this(new InetSocketAddress(rpcHost, rpcPort), httpHost, httpPort, domain);
+      @Named("http_frontend_port") Integer httpPort) {
+    this(new InetSocketAddress(rpcHost, rpcPort), httpHost, httpPort);
   }
 
   /**
@@ -295,10 +290,6 @@ public class ServerRpcProvider {
 
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     context.setResourceBase("./war");
-
-    // webclient_redirect.html will redirect to the wave servlet.
-    // TODO(kalman): Do this without a webclient_redirect file?
-    context.setWelcomeFiles(new String[] {"webclient_redirect.html"});
 
     // Servlet where the websocket connection is served from.
     ServletHolder holder = new ServletHolder(new WaveWebSocketServlet());

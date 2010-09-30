@@ -135,13 +135,12 @@ public class WaveClientServlet extends HttpServlet {
 
   private JSONObject getSessionJson(HttpSession session) {
     try {
-      JSONObject result = new JSONObject();
-      result.put(SessionConstants.DOMAIN, domain);
       ParticipantId user = sessionManager.getLoggedInUser(session);
-      if (user != null) {
-        result.put(SessionConstants.ADDRESS, user.getAddress());
-      }
-      return result;
+      String address = (user != null) ? user.getAddress() : null;
+      
+      return new JSONObject()
+          .put(SessionConstants.DOMAIN, domain)
+          .putOpt(SessionConstants.ADDRESS, address);
     } catch (JSONException e) {
       LOG.severe("Failed to create session JSON");
       return new JSONObject();
