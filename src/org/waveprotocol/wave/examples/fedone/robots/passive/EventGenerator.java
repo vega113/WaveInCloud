@@ -139,14 +139,14 @@ public class EventGenerator {
         }
       }
 
-      // This deviates from Google Wave production which always sent this event,
+      // This deviates from Google Wave production which always sends this event,
       // even if it wasn't present in your capabilities.
       if (capabilities.containsKey(EventType.WAVELET_SELF_ADDED) && participant.equals(robotId)) {
         // The robot has been added
         String rootBlipId = getRootBlipId(conversation);
-        WaveletSelfAddedEvent wsae = new WaveletSelfAddedEvent(
+        WaveletSelfAddedEvent event = new WaveletSelfAddedEvent(
             null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId);
-        addEvent(wsae, capabilities, rootBlipId, messages);
+        addEvent(event, capabilities, rootBlipId, messages);
       }
     }
 
@@ -158,9 +158,9 @@ public class EventGenerator {
 
       if (capabilities.containsKey(EventType.WAVELET_SELF_REMOVED) && participant.equals(robotId)) {
         String rootBlipId = getRootBlipId(conversation);
-        WaveletSelfRemovedEvent wsre = new WaveletSelfRemovedEvent(
+        WaveletSelfRemovedEvent event = new WaveletSelfRemovedEvent(
             null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId);
-        addEvent(wsre, capabilities, rootBlipId, messages);
+        addEvent(event, capabilities, rootBlipId, messages);
       }
     }
 
@@ -172,10 +172,10 @@ public class EventGenerator {
       if (!participantsAdded.isEmpty() || !participantsRemoved.isEmpty()) {
         String rootBlipId = getRootBlipId(conversation);
 
-        WaveletParticipantsChangedEvent pce =
+        WaveletParticipantsChangedEvent event =
             new WaveletParticipantsChangedEvent(null, null, deltaAuthor.getAddress(),
                 deltaTimestamp, rootBlipId, participantsAdded, participantsRemoved);
-        addEvent(pce, capabilities, rootBlipId, messages);
+        addEvent(event, capabilities, rootBlipId, messages);
       }
       clearOncePerDeltaCollectors();
 
