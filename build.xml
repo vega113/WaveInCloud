@@ -232,7 +232,7 @@
         <path refid="fedone.classpath"/>
         <path refid="fedone.test.classpath"/>
       </classpath>
-      <jvmarg value="-Xmx256M"/>
+      <jvmarg value="-Xmx512M"/>
       <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
       <arg line="-style PRETTY"/>
       <arg line="${gwt.args}"/>
@@ -312,13 +312,17 @@
         <include name="javax/inject/**/*" />
         <include name="javax/servlet/**/*" />
         <include name="javax/xml/**/*" />
+        <include name="net/oauth/**/*" />
         <include name="org/aopalliance/**/*" />
         <include name="org/apache/commons/cli/**/*" />
         <include name="org/apache/commons/codec/**/*" />
+        <include name="org/apache/commons/httpclient/**/*" />
+        <include name="org/apache/commons/logging/**/*" />
         <include name="org/bson/**/*" />
         <include name="org/codehaus/jackson/**/*" />
         <include name="org/dom4j/**/*" />
         <include name="org/eclipse/**/*" />
+        <include name="org/jdom/**/*" />
         <include name="org/jivesoftware/**/*" />
         <include name="org/joda/time/**/*" />
         <include name="org/json/**/*" />

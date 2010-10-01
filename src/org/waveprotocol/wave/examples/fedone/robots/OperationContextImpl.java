@@ -34,14 +34,17 @@ import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
+import org.waveprotocol.wave.examples.fedone.robots.util.ConversationUtil;
 import org.waveprotocol.wave.examples.fedone.robots.util.OperationUtil;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
+import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
+import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
@@ -90,15 +93,20 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   /** Stores temporary wavelet names -> real wavelet names */
   private final Map<WaveletName, WaveletName> tempWaveletNameMap = Maps.newHashMap();
 
+  /** Used to create conversations. */
+  private final ConversationUtil conversationUtil;
+
   /**
    * Constructs an operation context not bound to any wavelet.
    *
    * @param waveletProvider the waveletprovider to use for querying wavelet.
    * @param converter {@link EventDataConverter} for converting from server side
    *        objects.
+   * @param conversationUtil used to create conversations.
    */
-  public OperationContextImpl(WaveletProvider waveletProvider, EventDataConverter converter) {
-    this(waveletProvider, converter, null);
+  public OperationContextImpl(WaveletProvider waveletProvider, EventDataConverter converter,
+      ConversationUtil conversationUtil) {
+    this(waveletProvider, converter, conversationUtil, null);
   }
 
   /**
@@ -110,11 +118,13 @@ public class OperationContextImpl implements OperationContext, OperationResults 
    *        objects.
    * @param boundWavelet the wavelet to bind this context to, null for an
    *        unbound context.
+   * @param conversationUtil used to create conversations.
    */
   public OperationContextImpl(WaveletProvider waveletProvider, EventDataConverter converter,
-      RobotWaveletData boundWavelet) {
+      ConversationUtil conversationUtil, RobotWaveletData boundWavelet) {
     this.waveletProvider = waveletProvider;
     this.converter = converter;
+    this.conversationUtil = conversationUtil;
     this.boundWavelet = boundWavelet;
 
     if (boundWavelet != null) {
@@ -217,6 +227,11 @@ public class OperationContextImpl implements OperationContext, OperationResults 
       openedWavelets.put(waveletName, wavelet);
     }
     return wavelet;
+  }
+
+  @Override
+  public ObservableConversationView getConversation(ObservableWavelet wavelet) {
+    return conversationUtil.getConversation(wavelet);
   }
 
   @Override

@@ -25,6 +25,8 @@ import com.google.wave.api.event.Event;
 
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
+import org.waveprotocol.wave.model.conversation.ObservableConversationView;
+import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
@@ -92,6 +94,14 @@ public interface OperationContext {
    * @throws InvalidRequestException if the wavelet can not be opened.
    */
   RobotWaveletData openWavelet(String waveId, String waveletId) throws InvalidRequestException;
+
+  /**
+   * Creates a conversation for the given wavelet. The wavelet must be a valid
+   * conversational wavelet.
+   *
+   * @param wavelet the wavelet to construct a conversation for.
+   */
+  ObservableConversationView getConversation(ObservableWavelet wavelet);
 
   /**
    * Stores a reference from a temporary blip id to a real blip id. If the given
