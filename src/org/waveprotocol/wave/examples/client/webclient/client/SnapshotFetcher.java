@@ -43,22 +43,22 @@ import org.waveprotocol.wave.model.waveref.WaveRef;
 public final class SnapshotFetcher {
   private static final LoggerBundle LOG = new DomLogger("SnapshotFetcher");
   private static final String FETCH_URL_BASE = "/fetch";
-  
-  private SnapshotFetcher() {}
+
+  private SnapshotFetcher() {
+  }
 
   private static String getUrl(WaveRef waveRef) {
     String pathSegment = GwtWaverefEncoder.encodeToUriPathSegment(waveRef);
     return FETCH_URL_BASE + "/" + pathSegment;
   }
-  
+
   /**
    * Fetches a wave view snapshot from the static fetch servlet.
-   * 
+   *
    * @param waveId The wave to fetch
    * @param callback A callback through which the fetched wave will be returned.
    */
-  public void fetchWave(WaveId waveId,
-      final SimpleCallback<WaveViewData, Throwable> callback) {
+  public void fetchWave(WaveId waveId, final SimpleCallback<WaveViewData, Throwable> callback) {
     String url = getUrl(WaveRef.of(waveId));
     LOG.trace().log("Fetching wavelet ", waveId.toString(), " at ", url);
 
@@ -70,7 +70,8 @@ public final class SnapshotFetcher {
         // Pull the snapshot out of the response object and return it using
         // the provided callback function.
         if (response.getStatusCode() != Response.SC_OK) {
-          callback.onFailure(new RequestException("Got back status code " + response.getStatusCode()));
+          callback.onFailure(
+              new RequestException("Got back status code " + response.getStatusCode()));
         } else if (!response.getHeader("Content-Type").startsWith("application/json")) {
           callback.onFailure(new RuntimeException("Fetch service did not return json"));
         } else {
@@ -85,18 +86,18 @@ public final class SnapshotFetcher {
             callback.onFailure(e);
             return;
           }
-          
+
           callback.onSuccess(waveView);
         }
       }
-    
+
       @Override
       public void onError(Request request, Throwable exception) {
         LOG.error().log("Snapshot error: ", exception);
         callback.onFailure(exception);
       }
     });
-    
+
     try {
       requestBuilder.send();
     } catch (RequestException e) {
