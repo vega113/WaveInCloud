@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.examples.fedone.robots.passive;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.wave.api.Context;
@@ -25,6 +26,8 @@ import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.EventType;
 import com.google.wave.api.event.WaveletParticipantsChangedEvent;
+import com.google.wave.api.event.WaveletSelfAddedEvent;
+import com.google.wave.api.event.WaveletSelfRemovedEvent;
 import com.google.wave.api.impl.EventMessageBundle;
 import com.google.wave.api.robot.Capability;
 import com.google.wave.api.robot.RobotName;
@@ -85,14 +88,18 @@ public class EventGenerator {
   }
 
   private static class EventGeneratingConversationListener extends ConversationListenerImpl {
-
     private final Map<EventType, Capability> capabilities;
     private final Conversation conversation;
     private final EventMessageBundle messages;
+    private final ParticipantId robotId;
 
     // Event collectors
     private final List<String> participantsAdded = Lists.newArrayList();
     private final List<String> participantsRemoved = Lists.newArrayList();
+
+    // Changes for each delta
+    private ParticipantId deltaAuthor;
+    private Long deltaTimestamp;
 
     /**
      * Creates a {@link ObservableConversation.Listener} which will generate
@@ -103,10 +110,24 @@ public class EventGenerator {
      * @param messages the bundle to put the events in.
      */
     public EventGeneratingConversationListener(Conversation conversation,
-        Map<EventType, Capability> capabilities, EventMessageBundle messages) {
+        Map<EventType, Capability> capabilities, EventMessageBundle messages, RobotName robotName) {
       this.conversation = conversation;
       this.capabilities = capabilities;
       this.messages = messages;
+      this.robotId = ParticipantId.ofUnsafe(robotName.toParticipantAddress());
+    }
+
+    /**
+     * Prepares this listener for events coming from a single delta.
+     *
+     * @param author the author of the delta.
+     * @param timestamp the timestamp of the delta.
+     */
+    public void deltaBegin(ParticipantId author, long timestamp) {
+      Preconditions.checkState(
+          deltaAuthor == null && deltaTimestamp == null, "DeltaEnd wasn't called");
+      deltaAuthor = author;
+      deltaTimestamp = timestamp;
     }
 
     @Override
@@ -117,6 +138,16 @@ public class EventGenerator {
           participantsAdded.add(participant.getAddress());
         }
       }
+
+      // This deviates from Google Wave production which always sent this event,
+      // even if it wasn't present in your capabilities.
+      if (capabilities.containsKey(EventType.WAVELET_SELF_ADDED) && participant.equals(robotId)) {
+        // The robot has been added
+        String rootBlipId = getRootBlipId(conversation);
+        WaveletSelfAddedEvent wsae = new WaveletSelfAddedEvent(
+            null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId);
+        addEvent(wsae, capabilities, rootBlipId, messages);
+      }
     }
 
     @Override
@@ -124,25 +155,32 @@ public class EventGenerator {
       if (capabilities.containsKey(EventType.WAVELET_PARTICIPANTS_CHANGED)) {
         participantsRemoved.add(participant.getAddress());
       }
+
+      if (capabilities.containsKey(EventType.WAVELET_SELF_REMOVED) && participant.equals(robotId)) {
+        String rootBlipId = getRootBlipId(conversation);
+        WaveletSelfRemovedEvent wsre = new WaveletSelfRemovedEvent(
+            null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId);
+        addEvent(wsre, capabilities, rootBlipId, messages);
+      }
     }
 
     /**
      * Generates the events that are collected over the span of one delta.
      *
-     * @param author the address of the delta's author.
-     * @param timestamp time present in the delta.
      */
-    public void generateOncePerDeltaEvents(String author, Long timestamp) {
+    public void deltaEnd() {
       if (!participantsAdded.isEmpty() || !participantsRemoved.isEmpty()) {
+        String rootBlipId = getRootBlipId(conversation);
 
-        ConversationBlip rootBlip = conversation.getRootThread().getFirstBlip();
-        String rootBlipId = (rootBlip != null) ? rootBlip.getId() : "";
-
-        WaveletParticipantsChangedEvent pce = new WaveletParticipantsChangedEvent(
-            null, null, author, timestamp, rootBlipId, participantsAdded, participantsRemoved);
+        WaveletParticipantsChangedEvent pce =
+            new WaveletParticipantsChangedEvent(null, null, deltaAuthor.getAddress(),
+                deltaTimestamp, rootBlipId, participantsAdded, participantsRemoved);
         addEvent(pce, capabilities, rootBlipId, messages);
       }
       clearOncePerDeltaCollectors();
+
+      deltaAuthor = null;
+      deltaTimestamp = null;
     }
 
     /**
@@ -186,6 +224,17 @@ public class EventGenerator {
     }
     // Add the event to the bundle.
     messages.addEvent(event);
+  }
+
+  /**
+   * Returns the blip id of the first blip in the root thread.
+   *
+   * @param conversation the conversation to get the blip id from.
+   */
+  private static String getRootBlipId(Conversation conversation) {
+    ConversationBlip rootBlip = conversation.getRootThread().getFirstBlip();
+    String rootBlipId = (rootBlip != null) ? rootBlip.getId() : "";
+    return rootBlipId;
   }
 
   // TODO(ljvderijk): Schemas should be enforced, see issue 109.
@@ -244,7 +293,7 @@ public class EventGenerator {
 
     // Start listening
     EventGeneratingConversationListener conversationListener =
-        new EventGeneratingConversationListener(conversation, capabilities, messages);
+        new EventGeneratingConversationListener(conversation, capabilities, messages, robotName);
     conversation.addListener(conversationListener);
     EventGeneratingWaveletListener waveletListener =
         new EventGeneratingWaveletListener(capabilities);
@@ -254,14 +303,16 @@ public class EventGenerator {
       for (VersionedWaveletDelta vWDelta : waveletAndDeltas.getDeltas()) {
         CoreWaveletDelta delta = vWDelta.delta;
 
-        // TODO(ljvderijk): Add timestamp once wavebus sends them along
+        // TODO(ljvderijk): Set correct timestamp once wavebus sends them along
         long timestamp = 0L;
+        conversationListener.deltaBegin(delta.getAuthor(), timestamp);
+
         List<WaveletOperation> ops = ConversionUtil.fromCoreWaveletDelta(
             delta, timestamp, DistinctVersion.NO_DISTINCT_VERSION);
         for (WaveletOperation op : ops) {
           op.apply(snapshot);
         }
-        conversationListener.generateOncePerDeltaEvents(delta.getAuthor().getAddress(), timestamp);
+        conversationListener.deltaEnd();
       }
     } catch (OperationException e) {
       throw new IllegalStateException("Operation failed to apply when generating events", e);

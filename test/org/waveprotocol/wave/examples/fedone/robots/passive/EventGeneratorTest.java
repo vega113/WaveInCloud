@@ -17,11 +17,14 @@
 
 package org.waveprotocol.wave.examples.fedone.robots.passive;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Maps;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.data.converter.v22.EventDataConverterV22;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.EventType;
+import com.google.wave.api.event.WaveletParticipantsChangedEvent;
 import com.google.wave.api.impl.EventMessageBundle;
 import com.google.wave.api.robot.Capability;
 import com.google.wave.api.robot.RobotName;
@@ -83,8 +86,21 @@ public class EventGeneratorTest extends TestCase {
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
   private static final ParticipantId BOB = ParticipantId.ofUnsafe("bob@example.com");
+  private static final ParticipantId ROBOT = ParticipantId.ofUnsafe("robot@example.com");
   private static final BasicWaveletOperationContextFactory CONTEXT_FACTORY =
       new BasicWaveletOperationContextFactory(ALEX);
+
+  /** Map containing a subscription to all possible events */
+  private static final Map<EventType, Capability> ALL_CAPABILITIES;
+  static {
+    Builder<EventType, Capability> builder = ImmutableMap.builder();
+    for (EventType event : EventType.values()) {
+      if (!event.equals(EventType.UNKNOWN)) {
+        builder.put(event, new Capability(event));
+      }
+    }
+    ALL_CAPABILITIES = builder.build();
+  }
 
   private EventGenerator eventGenerator;
   private HashedVersion versionZero;
@@ -98,8 +114,8 @@ public class EventGeneratorTest extends TestCase {
     eventGenerator = new EventGenerator(ROBOT_NAME, conversationUtil);
     versionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
 
-    waveletData = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(new EmptyWaveletSnapshot(
-        WAVELET_NAME.waveId, WAVELET_NAME.waveletId, ALEX, 0L));
+    waveletData = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(
+        new EmptyWaveletSnapshot(WAVELET_NAME.waveId, WAVELET_NAME.waveletId, ALEX, 0L));
     waveletData.addParticipant(ALEX);
 
     SilentOperationSink<WaveletOperation> executor =
@@ -122,12 +138,32 @@ public class EventGeneratorTest extends TestCase {
     wavelet.addParticipant(BOB);
     EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_PARTICIPANTS_CHANGED);
     assertTrue("Only expected one event", messages.getEvents().size() == 1);
+    WaveletParticipantsChangedEvent event =
+        WaveletParticipantsChangedEvent.as(messages.getEvents().get(0));
+    assertTrue("Bob should be added", event.getParticipantsAdded().contains(BOB.getAddress()));
   }
 
   public void testGenerateWaveletParticipantsChangedEventOnRemove() throws Exception {
     wavelet.removeParticipant(ALEX);
     EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_PARTICIPANTS_CHANGED);
-    assertTrue("Only expected one event", messages.getEvents().size() == 1);
+    assertEquals("Only expected one event", 1, messages.getEvents().size());
+    WaveletParticipantsChangedEvent event =
+        WaveletParticipantsChangedEvent.as(messages.getEvents().get(0));
+    assertTrue(
+        "Alex should be removed", event.getParticipantsRemoved().contains(ALEX.getAddress()));
+  }
+
+  public void testGenerateWaveletSelfAddedEvent() throws Exception {
+    wavelet.addParticipant(ROBOT);
+    EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_SELF_ADDED);
+    assertEquals("Only expected two evenst", 2, messages.getEvents().size());
+  }
+
+  public void testGenerateWaveletSelfRemovedEvent() throws Exception {
+    wavelet.addParticipant(ROBOT);
+    wavelet.removeParticipant(ROBOT);
+    EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_SELF_REMOVED);
+    assertEquals("Expected three events", 3, messages.getEvents().size());
   }
 
   // Helper Methods
@@ -137,7 +173,8 @@ public class EventGeneratorTest extends TestCase {
    * the event generator.
    *
    * @param eventType the type of event that should have been generated.
-   * @return the {@link EventMessageBundle} with the events generated
+   * @return the {@link EventMessageBundle} with the events generated when a
+   *         robot is subscribed to all possible events.
    */
   private EventMessageBundle generateAndCheckEvents(EventType eventType) throws Exception {
     // Create the delta
@@ -157,6 +194,10 @@ public class EventGeneratorTest extends TestCase {
     // Check that the event was generated and that no other types were generated
     checkGeneratedEvent(messages, eventType);
     checkAllEventsAreInCapabilites(messages, capabilities);
+
+    // Generate events with all capabilities
+    messages = eventGenerator.generateEvents(waveletAndDeltas, ALL_CAPABILITIES, CONVERTER);
+    checkGeneratedEvent(messages, eventType);
 
     return messages;
   }
