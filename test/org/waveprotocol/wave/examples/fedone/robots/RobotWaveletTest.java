@@ -51,7 +51,7 @@ public class RobotWaveletTest extends TestCase {
   private static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionZeroFactoryImpl(URI_CODEC);
   private static final String WAVE_ID = "example.com!waveid";
-  private static final String WAVELET_ID = "a!conv+root";
+  private static final String WAVELET_ID = "example!conv+root";
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
   private static final ParticipantId BOB = ParticipantId.ofUnsafe("bob@example.com");

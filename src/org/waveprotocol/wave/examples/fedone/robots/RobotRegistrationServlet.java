@@ -124,7 +124,7 @@ public class RobotRegistrationServlet extends HttpServlet {
       return;
     }
 
-    String robotLocation = uri.getHost() + uri.getPath();
+    String robotLocation = "http://" + uri.getHost() + uri.getPath();
     if (robotLocation.endsWith("/")) {
       robotLocation = robotLocation.substring(0, robotLocation.length() - 1);
     }

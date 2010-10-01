@@ -25,12 +25,15 @@ import org.apache.commons.cli.ParseException;
 import org.waveprotocol.wave.examples.fedone.authentication.AccountStoreHolder;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.PersistenceModule;
+import org.waveprotocol.wave.examples.fedone.robots.RobotApiModule;
 import org.waveprotocol.wave.examples.fedone.robots.RobotRegistrationServlet;
+import org.waveprotocol.wave.examples.fedone.robots.passive.RobotsGateway;
 import org.waveprotocol.wave.examples.fedone.rpc.AttachmentServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.AuthenticationServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.FetchServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.ServerRpcProvider;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
 import org.xmpp.component.ComponentException;
@@ -61,16 +64,21 @@ public class ServerMain {
   public static void run(Module flags) throws IOException {
     Injector flagInjector = Guice.createInjector(flags);
     PersistenceModule persistenceModule = flagInjector.getInstance(PersistenceModule.class);
-    Injector injector = flagInjector.createChildInjector(new ServerModule(), persistenceModule);
+    Injector injector = flagInjector.createChildInjector(new ServerModule(), new RobotApiModule(),
+        persistenceModule);
     ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
 
     AccountStoreHolder.init(injector.getInstance(AccountStore.class));
-    
+
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
     server.addServlet("/auth", injector.getInstance(AuthenticationServlet.class));
     server.addServlet("/robot/*", injector.getInstance(RobotRegistrationServlet.class));
+
+    RobotsGateway robotsGateway = injector.getInstance(RobotsGateway.class);
+    WaveBus waveBus = injector.getInstance(WaveBus.class);
+    waveBus.subscribe(robotsGateway);
 
     ProtocolWaveClientRpc.Interface rpcImpl =
         injector.getInstance(ProtocolWaveClientRpc.Interface.class);
