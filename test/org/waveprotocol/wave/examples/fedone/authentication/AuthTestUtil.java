@@ -33,7 +33,7 @@ public class AuthTestUtil {
     return new Configuration() {
       @Override
       public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
-        if (name.equals(ConfigurationProvider.CONTEXT_NAME)) {
+        if (name.equals("Wave")) {
           AppConfigurationEntry entry =
               new AppConfigurationEntry(AccountStoreLoginModule.class.getName(),
                   LoginModuleControlFlag.REQUIRED, new HashMap<String, Object>());

@@ -22,9 +22,8 @@ import com.google.inject.Inject;
 
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
-import org.waveprotocol.wave.examples.fedone.authentication.ParticipantPrincipal;
-import org.waveprotocol.wave.examples.fedone.authentication.ConfigurationProvider;
 import org.waveprotocol.wave.examples.fedone.authentication.HttpRequestBasedCallbackHandler;
+import org.waveprotocol.wave.examples.fedone.authentication.ParticipantPrincipal;
 import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
@@ -90,7 +89,7 @@ public class AuthenticationServlet extends HttpServlet {
     CallbackHandler callbackHandler = new HttpRequestBasedCallbackHandler(getArgumentMap(body));
 
     LoginContext context = new LoginContext(
-        ConfigurationProvider.CONTEXT_NAME, subject, callbackHandler, configuration);
+        "Wave", subject, callbackHandler, configuration);
 
     // If authentication fails, login() will throw a LoginException.
     context.login();

@@ -74,7 +74,7 @@ public class AccountStoreLoginModuleTest extends TestCase {
   }
 
   private LoginContext makeLoginContext(String address, String password) throws LoginException {
-    return new LoginContext(ConfigurationProvider.CONTEXT_NAME, new Subject(),
+    return new LoginContext("Wave", new Subject(),
         new FakeCallbackHandler(address, password), AuthTestUtil.make());
   }
 

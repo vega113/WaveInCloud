@@ -22,7 +22,6 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
-import org.waveprotocol.wave.examples.fedone.authentication.ConfigurationProvider;
 import org.waveprotocol.wave.examples.fedone.rpc.ProtoSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerModule;
@@ -86,6 +85,6 @@ public class ServerModule extends AbstractModule {
     
     bind(ProtoSerializer.class).in(Singleton.class);
     
-    bind(Configuration.class).toInstance(ConfigurationProvider.get());
+    bind(Configuration.class).toInstance(Configuration.getConfiguration());
   }
 }
