@@ -19,6 +19,7 @@ package org.waveprotocol.wave.examples.fedone.persistence;
 
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
+import org.waveprotocol.wave.examples.fedone.authentication.PasswordDigest;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -41,7 +42,7 @@ public class FakePermissiveAccountStore implements AccountStore {
     AccountData account = accounts.get(id);
 
     if (account == null && !id.getAddress().startsWith("xxx")) {
-      account = new HumanAccountDataImpl(id, "".toCharArray());
+      account = new HumanAccountDataImpl(id, new PasswordDigest("".toCharArray()));
       accounts.put(id, account);
     }
 

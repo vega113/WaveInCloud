@@ -78,21 +78,29 @@ public class RobotCapabilities {
 
   @Override
   public int hashCode() {
-    return capabilitiesHash.hashCode();
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((capabilities == null) ? 0 : capabilities.hashCode());
+    result = prime * result + ((capabilitiesHash == null) ? 0 : capabilitiesHash.hashCode());
+    result = prime * result + ((version == null) ? 0 : version.hashCode());
+    return result;
   }
 
-  /**
-   * {@link RobotCapabilities} are equal when their capabilities hash matches.
-   */
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (!(obj instanceof RobotCapabilities)) {
-      return false;
-    }
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!(obj instanceof RobotCapabilities)) return false;
     RobotCapabilities other = (RobotCapabilities) obj;
-    return capabilitiesHash.equals(other.capabilitiesHash);
+    if (capabilities == null) {
+      if (other.capabilities != null) return false;
+    } else if (!capabilities.equals(other.capabilities)) return false;
+    if (capabilitiesHash == null) {
+      if (other.capabilitiesHash != null) return false;
+    } else if (!capabilitiesHash.equals(other.capabilitiesHash)) return false;
+    if (version == null) {
+      if (other.version != null) return false;
+    } else if (!version.equals(other.version)) return false;
+    return true;
   }
 }

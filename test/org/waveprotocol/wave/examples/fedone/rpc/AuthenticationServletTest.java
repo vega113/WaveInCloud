@@ -30,6 +30,7 @@ import org.waveprotocol.wave.examples.fedone.account.HumanAccountData;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.authentication.AccountStoreHolder;
 import org.waveprotocol.wave.examples.fedone.authentication.AuthTestUtil;
+import org.waveprotocol.wave.examples.fedone.authentication.PasswordDigest;
 import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.memory.MemoryStore;
@@ -55,7 +56,7 @@ public class AuthenticationServletTest extends TestCase {
   protected void setUp() throws Exception {
     AccountStore store = new MemoryStore();
     HumanAccountData account = new HumanAccountDataImpl(
-        ParticipantId.ofUnsafe("frodo@example.com"), "password".toCharArray());
+        ParticipantId.ofUnsafe("frodo@example.com"), new PasswordDigest("password".toCharArray()));
     store.putAccount(account);
     servlet = new AuthenticationServlet(AuthTestUtil.make(), new SessionManager(new MemoryStore()));
     AccountStoreHolder.init(store);

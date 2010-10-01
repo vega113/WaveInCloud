@@ -103,34 +103,28 @@ public final class RobotAccountDataImpl implements RobotAccountData {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((capabilities == null) ? 0 : capabilities.hashCode());
+    result = prime * result + ((id == null) ? 0 : id.hashCode());
     result = prime * result + (isVerified ? 1231 : 1237);
-    result = prime * result + url.hashCode();
-    result = prime * result + id.hashCode();
+    result = prime * result + ((url == null) ? 0 : url.hashCode());
     return result;
   }
 
-  /**
-   * Robots are equal if their username, url, capabilities and verification are
-   * equal.
-   */
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (!(obj instanceof RobotAccountDataImpl)) {
-      return false;
-    }
-
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!(obj instanceof RobotAccountDataImpl)) return false;
     RobotAccountDataImpl other = (RobotAccountDataImpl) obj;
-
     if (capabilities == null) {
-      if (other.capabilities != null) {
-        return false;
-      }
-    }
-
-    return id.equals(other.id) && url.equals(other.url) && capabilities.equals(other.capabilities)
-        && isVerified == other.isVerified;
+      if (other.capabilities != null) return false;
+    } else if (!capabilities.equals(other.capabilities)) return false;
+    if (id == null) {
+      if (other.id != null) return false;
+    } else if (!id.equals(other.id)) return false;
+    if (isVerified != other.isVerified) return false;
+    if (url == null) {
+      if (other.url != null) return false;
+    } else if (!url.equals(other.url)) return false;
+    return true;
   }
 }

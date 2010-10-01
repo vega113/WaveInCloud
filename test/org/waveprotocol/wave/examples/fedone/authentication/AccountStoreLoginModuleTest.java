@@ -63,7 +63,8 @@ public class AccountStoreLoginModuleTest extends TestCase {
   @Override
   protected void setUp() {
     AccountStore store = new MemoryStore();
-    store.putAccount(new HumanAccountDataImpl(ParticipantId.ofUnsafe("haspwd@example.com"), "pwd".toCharArray()));
+    store.putAccount(new HumanAccountDataImpl(
+        ParticipantId.ofUnsafe("haspwd@example.com"), new PasswordDigest("pwd".toCharArray())));
     store.putAccount(new HumanAccountDataImpl(ParticipantId.ofUnsafe("nopwd@example.com")));
     AccountStoreHolder.init(store);
   }
@@ -74,8 +75,8 @@ public class AccountStoreLoginModuleTest extends TestCase {
   }
 
   private LoginContext makeLoginContext(String address, String password) throws LoginException {
-    return new LoginContext("Wave", new Subject(),
-        new FakeCallbackHandler(address, password), AuthTestUtil.make());
+    return new LoginContext(
+        "Wave", new Subject(), new FakeCallbackHandler(address, password), AuthTestUtil.make());
   }
 
   private static void assertLoginFails(LoginContext context) {

@@ -19,6 +19,7 @@ package org.waveprotocol.wave.examples.fedone.account;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.examples.fedone.authentication.PasswordDigest;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
@@ -34,8 +35,9 @@ public class HumanAccountDataImplTest extends TestCase {
   }
 
   public void testPasswordDigestVerifies() {
-    HumanAccountData account = new HumanAccountDataImpl(
-        ParticipantId.ofUnsafe("captainhammer@example.com"), "wonderflownium".toCharArray());
+    HumanAccountData account =
+        new HumanAccountDataImpl(ParticipantId.ofUnsafe("captainhammer@example.com"),
+            new PasswordDigest("wonderflownium".toCharArray()));
 
     assertNotNull(account.getPasswordDigest());
     assertTrue(account.getPasswordDigest().verify("wonderflownium".toCharArray()));
