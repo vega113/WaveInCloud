@@ -22,7 +22,7 @@ public class WebSocketRpcTest extends RpcTest {
 
   @Override
   protected void startServer() {
-    server = new ServerRpcProvider(null, "localhost", 0, "example.com");
+    server = new ServerRpcProvider(null, "localhost", 0);
     server.startWebSocketServer();
   }
 

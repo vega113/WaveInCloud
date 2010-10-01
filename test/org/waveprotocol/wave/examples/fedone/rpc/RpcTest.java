@@ -51,7 +51,7 @@ public class RpcTest extends TestCase {
   }
 
   protected void startServer() throws IOException {
-    server = new ServerRpcProvider(null, null, null, null);
+    server = new ServerRpcProvider(null, null, null);
     server.startRpcServer();
   }
 
