@@ -19,7 +19,6 @@ package org.waveprotocol.wave.examples.fedone.robots.passive;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.ProtocolVersion;
@@ -30,8 +29,6 @@ import com.google.wave.api.robot.RobotName;
 
 import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
-import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.robots.OperationContext;
 import org.waveprotocol.wave.examples.fedone.robots.OperationContextImpl;
 import org.waveprotocol.wave.examples.fedone.robots.OperationResults;
@@ -39,17 +36,15 @@ import org.waveprotocol.wave.examples.fedone.robots.OperationServiceRegistry;
 import org.waveprotocol.wave.examples.fedone.robots.RobotWaveletData;
 import org.waveprotocol.wave.examples.fedone.robots.operations.OperationService;
 import org.waveprotocol.wave.examples.fedone.robots.util.ConversationUtil;
+import org.waveprotocol.wave.examples.fedone.robots.util.LoggingRequestListener;
 import org.waveprotocol.wave.examples.fedone.robots.util.OperationUtil;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.util.List;
-import java.util.Map.Entry;
 
 /**
  * This class is responsible for applying operations received from a Robot in
@@ -63,21 +58,8 @@ public class RobotOperationApplicator {
 
   private static final Log LOG = Log.get(RobotOperationApplicator.class);
 
-  private final static WaveletProvider.SubmitRequestListener LOGGING_RESULT_LISTENER =
-      new WaveletProvider.SubmitRequestListener() {
-
-        @Override
-        public void onFailure(String errorMessage) {
-          LOG.info("Passive Robot operations failed to be submitted: " + errorMessage);
-        }
-
-        @Override
-        public void onSuccess(int operationsApplied, HashedVersion hashedVersionAfterApplication,
-            long applicationTimestamp) {
-          LOG.fine(operationsApplied + " passive Robot operations have been succesfully applied "
-              + "changing the version to " + hashedVersionAfterApplication);
-        }
-      };
+  private final static WaveletProvider.SubmitRequestListener LOGGING_REQUEST_LISTENER =
+      new LoggingRequestListener(LOG);
 
   private final EventDataConverterManager converterManager;
   private final WaveletProvider waveletProvider;
@@ -133,8 +115,7 @@ public class RobotOperationApplicator {
    * @param operations the operations to perform.
    * @param account the account for which to execute robot operations.
    */
-  @VisibleForTesting
-  void executeOperations(
+  private void executeOperations(
       OperationContext context, List<OperationRequest> operations, RobotAccountData account) {
     for (OperationRequest operation : operations) {
       // Get the operation of the author taking into account the proxying for
@@ -147,16 +128,7 @@ public class RobotOperationApplicator {
         context.constructErrorResponse(operation, e.getMessage());
         continue;
       }
-
-      try {
-        operationRegistry.getServiceFor(OperationUtil.getOperationType(operation)).execute(
-            operation, context, author);
-      } catch (InvalidRequestException e) {
-        if (!context.hasResponse(operation.getId())) {
-          LOG.warning("Error has occurred when applying an operation", e);
-          context.constructErrorResponse(operation, "An unknown error has occurred");
-        }
-      }
+      OperationUtil.executeOperation(operation, operationRegistry, context, author);
     }
   }
 
@@ -168,18 +140,8 @@ public class RobotOperationApplicator {
    * @param results the results of the operations performed
    * @param account the account for which to handle results of robot operations.
    */
-  @VisibleForTesting
-  void handleResults(OperationResults results, RobotAccountData account) {
-    // Submit all deltas for all open wavelets
-    for (Entry<WaveletName, RobotWaveletData> entry : results.getOpenWavelets().entrySet()) {
-      WaveletName waveletName = entry.getKey();
-      RobotWaveletData w = entry.getValue();
-      for (VersionedWaveletDelta delta : w.getDeltas()) {
-        ProtocolWaveletDelta pwd =
-            CoreWaveletOperationSerializer.serialize(delta.delta, delta.version);
-        waveletProvider.submitRequest(waveletName, pwd, LOGGING_RESULT_LISTENER);
-      }
-    }
+  private void handleResults(OperationResults results, RobotAccountData account) {
+    OperationUtil.submitDeltas(results, waveletProvider, LOGGING_REQUEST_LISTENER);
 
     // TODO(ljvderijk): In theory we should be sending off all events that are
     // generated by the operations. Currently not done in production. We should

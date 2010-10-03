@@ -37,26 +37,20 @@ import com.google.wave.api.robot.Capability;
 
 import junit.framework.TestCase;
 
-import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountDataImpl;
-import org.waveprotocol.wave.examples.fedone.robots.OperationContextImpl;
-import org.waveprotocol.wave.examples.fedone.robots.OperationResults;
+import org.waveprotocol.wave.examples.fedone.robots.OperationContext;
 import org.waveprotocol.wave.examples.fedone.robots.OperationServiceRegistry;
 import org.waveprotocol.wave.examples.fedone.robots.RobotCapabilities;
-import org.waveprotocol.wave.examples.fedone.robots.RobotWaveletData;
-import org.waveprotocol.wave.examples.fedone.robots.operations.DoNothingService;
 import org.waveprotocol.wave.examples.fedone.robots.operations.OperationService;
 import org.waveprotocol.wave.examples.fedone.robots.util.ConversationUtil;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.document.operation.DocInitialization;
-import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
@@ -91,80 +85,43 @@ public class RobotOperationApplicatorTest extends TestCase {
   private WaveletProvider waveletProvider;
   private OperationServiceRegistry operationRegistry;
   private RobotOperationApplicator applicator;
-  private OperationContextImpl context;
+  private ObservableWaveletData waveletData;
+  private HashedVersion hashedVersionZero;
 
   @Override
   protected void setUp() {
     converterManager = mock(EventDataConverterManager.class);
     waveletProvider = mock(WaveletProvider.class);
     operationRegistry = mock(OperationServiceRegistry.class);
-    ConversationUtil conversationUtil = mock(ConversationUtil.class);
+    EventDataConverter converter = mock(EventDataConverter.class);
 
+    ConversationUtil conversationUtil = mock(ConversationUtil.class);
     applicator = new RobotOperationApplicator(
         converterManager, waveletProvider, operationRegistry, conversationUtil);
 
-    EventDataConverter converter = mock(EventDataConverter.class);
-    context = new OperationContextImpl(waveletProvider, converter, conversationUtil);
+    waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ROBOT_PARTICIPANT, 0L);
+    hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
   }
 
-  public void testExecuteOperationsExecutes() throws Exception {
-    String operationId = "op1";
-    OperationRequest operation = new OperationRequest("wavelet.create", operationId);
-    List<OperationRequest> operations = Collections.singletonList(operation);
-
-    OperationService service = DoNothingService.create();
+  public void testapplyOperationsExecutesAndSubmitsDelta() throws Exception {
+    // Use a special operation service that generates a simple delta;
+    OperationService service = new OperationService() {
+      @Override
+      public void execute(
+          OperationRequest operation, OperationContext context, ParticipantId participant)
+          throws InvalidRequestException {
+        context.openWavelet(WAVE_ID, WAVELET_ID).getOpBasedWavelet(ROBOT_PARTICIPANT)
+            .addParticipant(ALEX);
+      }
+    };
     when(operationRegistry.getServiceFor(any(OperationType.class))).thenReturn(service);
 
-    applicator.executeOperations(context, operations, ACCOUNT);
-    assertTrue("Expected one response", context.getResponses().size() == 1);
-    assertFalse("Expected a succesful response", context.getResponse(operationId).isError());
-  }
-
-  public void testExecuteOperationsSetsErrorInvalidParticipantAddressException() throws Exception {
-    String operationId = "op1";
-    OperationRequest operation = new OperationRequest(
-        "wavelet.create", operationId, Parameter.of(ParamsProperty.PROXYING_FOR, "invalid#$%^"));
+    OperationRequest operation = new OperationRequest("wavelet.create", "op1");
     List<OperationRequest> operations = Collections.singletonList(operation);
 
-    OperationService service = DoNothingService.create();
-    when(operationRegistry.getServiceFor(any(OperationType.class))).thenReturn(service);
+    applicator.applyOperations(operations, waveletData, hashedVersionZero, ACCOUNT);
 
-    applicator.executeOperations(context, operations, ACCOUNT);
-    assertTrue("Expected one response", context.getResponses().size() == 1);
-    assertTrue("Expected an error response", context.getResponse(operationId).isError());
-  }
-
-  public void testExecuteOperationsSetsErrorOnInvalidRequestException() throws Exception {
-    String operationId = "op1";
-    OperationRequest operation = new OperationRequest("wavelet.create", operationId);
-    List<OperationRequest> operations = Collections.singletonList(operation);
-
-    OperationService service =
-        mock(OperationService.class, new ThrowsException(new InvalidRequestException("")));
-    when(operationRegistry.getServiceFor(any(OperationType.class))).thenReturn(service);
-
-    applicator.executeOperations(context, operations, ACCOUNT);
-    assertTrue("Expected one response", context.getResponses().size() == 1);
-    assertTrue("Expected an error response", context.getResponse(operationId).isError());
-  }
-
-  public void testHandleResultsSubmitsDelta() throws Exception {
-    ObservableWaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX, 0L);
-    DocInitialization content = new DocInitializationBuilder().build();
-    waveletData.createBlip("b+example", ROBOT_PARTICIPANT,
-        Collections.singletonList(ROBOT_PARTICIPANT), content, 0L, 0);
-
-    HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
-    RobotWaveletData wavelet = new RobotWaveletData(waveletData, hashedVersionZero);
-
-    // Perform an operation that will be put into a delta
-    wavelet.getOpBasedWavelet(ROBOT_PARTICIPANT).addParticipant(ALEX);
-
-    OperationResults results = mock(OperationResults.class);
-    when(results.getOpenWavelets()).thenReturn(Collections.singletonMap(WAVELET_NAME, wavelet));
-
-    applicator.handleResults(results, ACCOUNT);
-
+    verify(operationRegistry).getServiceFor(any(OperationType.class));
     verify(waveletProvider).submitRequest(eq(WAVELET_NAME), any(ProtocolWaveletDelta.class),
         any(WaveletProvider.SubmitRequestListener.class));
   }

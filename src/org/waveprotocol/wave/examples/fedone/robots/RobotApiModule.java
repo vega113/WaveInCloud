@@ -30,6 +30,7 @@ import com.google.wave.api.robot.RobotConnection;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.waveprotocol.wave.examples.fedone.robots.dataapi.DataApiOperationServiceRegistry;
 import org.waveprotocol.wave.examples.fedone.robots.passive.RobotConnector;
 
 import java.util.concurrent.Executor;
@@ -77,5 +78,12 @@ public class RobotApiModule extends AbstractModule {
     ThreadFactory threadFactory =
         new ThreadFactoryBuilder().setNameFormat("PassiveRobotRunner").build();
     return Executors.newFixedThreadPool(NUMBER_OF_THREADS, threadFactory);
+  }
+
+  @Provides
+  @Singleton
+  @Named("DataApiRegistry")
+  protected OperationServiceRegistry provideDataApiRegistry() {
+    return new DataApiOperationServiceRegistry();
   }
 }

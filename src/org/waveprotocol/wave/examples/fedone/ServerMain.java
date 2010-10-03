@@ -22,12 +22,12 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import org.apache.commons.cli.ParseException;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.waveprotocol.wave.examples.fedone.authentication.AccountStoreHolder;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.PersistenceModule;
 import org.waveprotocol.wave.examples.fedone.robots.RobotApiModule;
 import org.waveprotocol.wave.examples.fedone.robots.RobotRegistrationServlet;
+import org.waveprotocol.wave.examples.fedone.robots.dataapi.DataApiServlet;
 import org.waveprotocol.wave.examples.fedone.robots.passive.RobotsGateway;
 import org.waveprotocol.wave.examples.fedone.rpc.AttachmentServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.AuthenticationServlet;
@@ -75,8 +75,12 @@ public class ServerMain {
 
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
+
     server.addServlet("/auth", injector.getInstance(AuthenticationServlet.class));
+
+    server.addServlet("/robot/dataapi", injector.getInstance(DataApiServlet.class));
     server.addServlet("/robot/*", injector.getInstance(RobotRegistrationServlet.class));
+
     server.addServlet("/", injector.getInstance(WaveClientServlet.class));
 
     RobotsGateway robotsGateway = injector.getInstance(RobotsGateway.class);
