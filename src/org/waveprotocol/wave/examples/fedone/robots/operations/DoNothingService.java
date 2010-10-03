@@ -17,16 +17,15 @@
 
 package org.waveprotocol.wave.examples.fedone.robots.operations;
 
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
 
 import org.waveprotocol.wave.examples.fedone.robots.OperationContext;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
-import java.util.HashMap;
-
 /**
- * {@link OperationService} that just returns an empty response.
+ * {@link OperationService} that just does nothing. Used for robot.notify
+ * operation in the active robot and data api where we inspect this operation
+ * to see which protocol version it uses but not produce any results.
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
@@ -42,7 +41,5 @@ public final class DoNothingService implements OperationService {
   @Override
   public void execute(
       OperationRequest operation, OperationContext context, ParticipantId participant) {
-    // Just report success by setting an empty response
-    context.constructResponse(operation, new HashMap<ParamsProperty, Object>());
   }
 }

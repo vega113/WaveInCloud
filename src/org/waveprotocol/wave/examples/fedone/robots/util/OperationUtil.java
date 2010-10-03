@@ -147,9 +147,9 @@ public class OperationUtil {
   }
 
   /**
-   * Executes an {@link OperationRequest}, ensuring that a response is always
-   * set. In case that the {@link OperationService} does not set a response this
-   * method will set an error response for the id of the given robot operation.
+   * Executes an {@link OperationRequest}. If the operation throws an
+   * {@link InvalidRequestException} this exception will be used to construct an
+   * error response in the {@link OperationContext}.
    *
    * @param operation the operation to be executed.
    * @param operationRegistry the registry containing the operations that can be
@@ -166,12 +166,6 @@ public class OperationUtil {
     } catch (InvalidRequestException e) {
       LOG.warning("Operation " + operation + " failed to execute", e);
       context.constructErrorResponse(operation, e.getMessage());
-    }
-    // Check whether a response has been set
-    if (!context.hasResponse(operation.getId())) {
-      LOG.severe("No repsponse has been set for " + operation);
-      context.constructErrorResponse(
-          operation, "No response set by server, please report this issue");
     }
   }
 

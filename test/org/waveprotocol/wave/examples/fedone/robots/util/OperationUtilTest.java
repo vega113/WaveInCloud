@@ -41,7 +41,6 @@ import org.waveprotocol.wave.examples.fedone.robots.OperationContextImpl;
 import org.waveprotocol.wave.examples.fedone.robots.OperationResults;
 import org.waveprotocol.wave.examples.fedone.robots.OperationServiceRegistry;
 import org.waveprotocol.wave.examples.fedone.robots.RobotWaveletData;
-import org.waveprotocol.wave.examples.fedone.robots.operations.DoNothingService;
 import org.waveprotocol.wave.examples.fedone.robots.operations.OperationService;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
@@ -141,17 +140,16 @@ public class OperationUtilTest extends TestCase {
         "Notify op as first op should return its version", ProtocolVersion.V2_1, protocolVersion);
   }
 
-  public void testExecuteOperationsExecutes() throws Exception {
+  public void testExecuteOperationCallsExecute() throws Exception {
     String operationId = "op1";
     OperationRequest operation = new OperationRequest("wavelet.create", operationId);
 
-    OperationService service = DoNothingService.create();
+    OperationService service = mock(OperationService.class);
     when(operationRegistry.getServiceFor(any(OperationType.class))).thenReturn(service);
 
     OperationUtil.executeOperation(operation, operationRegistry, context, ALEX);
 
-    assertTrue("Expected one response", context.getResponses().size() == 1);
-    assertFalse("Expected a succesful response", context.getResponse(operationId).isError());
+    verify(service).execute(operation, context, ALEX);
   }
 
   public void testExecuteOperationsSetsErrorOnInvalidRequestException() throws Exception {

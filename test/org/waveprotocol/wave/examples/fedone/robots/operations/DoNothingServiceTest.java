@@ -19,8 +19,6 @@ package org.waveprotocol.wave.examples.fedone.robots.operations;
 
 import static org.mockito.Mockito.mock;
 
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
-import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.data.converter.EventDataConverter;
 
@@ -30,8 +28,6 @@ import org.waveprotocol.wave.examples.fedone.robots.OperationContextImpl;
 import org.waveprotocol.wave.examples.fedone.robots.util.ConversationUtil;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-
-import java.util.Collections;
 
 /**
  * Unit test for the {@link DoNothingService}.
@@ -61,9 +57,7 @@ public class DoNothingServiceTest extends TestCase {
         new OperationContextImpl(waveletProvider, converter, conversationUtil);
 
     operationService.execute(request, context, BOB);
-    JsonRpcResponse response = context.getResponse(request.getId());
-
-    assertFalse("Expected non error response", response.isError());
-    assertEquals(Collections.<ParamsProperty, Object> emptyMap(), response.getData());
+    assertNull("No response must be set", context.getResponse(request.getId()));
+    assertTrue("No response must be set", context.getResponses().isEmpty());
   }
 }
