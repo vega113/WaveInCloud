@@ -60,7 +60,7 @@ public class RobotRegistrationServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String pathInfo = req.getPathInfo();
-    if (pathInfo.equals("/register")) {
+    if (pathInfo.equals("/create")) {
       doRegisterGet(req, resp, "");
     } else {
       resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -70,7 +70,7 @@ public class RobotRegistrationServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String pathInfo = req.getPathInfo();
-    if (pathInfo.equals("/register")) {
+    if (pathInfo.equals("/create")) {
       doRegisterPost(req, resp);
     } else {
       resp.setStatus(HttpServletResponse.SC_NOT_FOUND);

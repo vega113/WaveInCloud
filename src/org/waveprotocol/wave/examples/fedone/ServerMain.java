@@ -45,9 +45,7 @@ import java.io.IOException;
 
 
 /**
- * Prototype server entrypoint.
- *
- *
+ * Wave Server entrypoint.
  */
 public class ServerMain {
 
@@ -67,8 +65,8 @@ public class ServerMain {
   public static void run(Module flags) throws IOException {
     Injector flagInjector = Guice.createInjector(flags);
     PersistenceModule persistenceModule = flagInjector.getInstance(PersistenceModule.class);
-    Injector injector = flagInjector.createChildInjector(new ServerModule(), new RobotApiModule(),
-        persistenceModule);
+    Injector injector = flagInjector.createChildInjector(
+        new ServerModule(), new RobotApiModule(), persistenceModule);
     ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
 
@@ -81,7 +79,7 @@ public class ServerMain {
 
     server.addServlet("/robot/rpc", injector.getInstance(ActiveApiServlet.class));
     server.addServlet("/robot/dataapi", injector.getInstance(DataApiServlet.class));
-    server.addServlet("/robot/*", injector.getInstance(RobotRegistrationServlet.class));
+    server.addServlet("/robot/register/*", injector.getInstance(RobotRegistrationServlet.class));
 
     server.addServlet("/", injector.getInstance(WaveClientServlet.class));
 
