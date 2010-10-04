@@ -104,7 +104,7 @@ public class RobotConnector {
     RobotCapabilities capabilities = new RobotCapabilities(
         parser.getCapabilities(), parser.getCapabilitiesHash(), parser.getProtocolVersion());
 
-    return new RobotAccountDataImpl(
-        account.getId(), account.getUrl(), capabilities, account.isVerified());
+    return new RobotAccountDataImpl(account.getId(), account.getUrl(), account.getConsumerSecret(),
+        capabilities, account.isVerified());
   }
 }

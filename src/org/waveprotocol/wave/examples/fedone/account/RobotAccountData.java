@@ -34,6 +34,12 @@ public interface RobotAccountData extends AccountData {
   String getUrl();
 
   /**
+   * The consumer secret used in OAuth of the Robot. The consumer key is equal
+   * to {@link RobotAccountData#getId()}.
+   */
+  String getConsumerSecret();
+
+  /**
    * The capabilities that have been retrieved from a robot's capabilities.xml
    * file. May be null if they have not been retrieved.
    */

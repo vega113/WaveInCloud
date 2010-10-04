@@ -30,6 +30,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 public final class RobotAccountDataImpl implements RobotAccountData {
   private final ParticipantId id;
   private final String url;
+  private final String consumerSecret;
   private final RobotCapabilities capabilities;
   private final boolean isVerified;
 
@@ -40,20 +41,23 @@ public final class RobotAccountDataImpl implements RobotAccountData {
    * is null and vice versa.
    *
    * @param id non-null participant id for this account.
-   * @param url non-null Url where the robot can be reached.
+   * @param url non-null url where the robot can be reached.
+   * @param consumerSecret non-null consumer secret used in OAuth.
    * @param capabilities {@link RobotCapabilities} representing the robot's
    *        capabilties.xml. May be null.
    * @param isVerified boolean indicating whether this {@link RobotAccountData}
    *        has been verified.
    */
-  public RobotAccountDataImpl(
-      ParticipantId id, String url, RobotCapabilities capabilities, boolean isVerified) {
+  public RobotAccountDataImpl(ParticipantId id, String url, String consumerSecret,
+      RobotCapabilities capabilities, boolean isVerified) {
     Preconditions.checkNotNull(id, "Id can not be null");
     Preconditions.checkNotNull(url, "Url can not be null");
+    Preconditions.checkNotNull(consumerSecret, "Consumer secret can not be null");
     Preconditions.checkArgument(!url.endsWith("/"), "Url must not end with /");
 
     this.id = id;
     this.url = url;
+    this.consumerSecret = consumerSecret;
     this.capabilities = capabilities;
     this.isVerified = isVerified;
   }
@@ -89,6 +93,11 @@ public final class RobotAccountDataImpl implements RobotAccountData {
   }
 
   @Override
+  public String getConsumerSecret() {
+    return consumerSecret;
+  }
+
+  @Override
   public RobotCapabilities getCapabilities() {
     return capabilities;
   }
@@ -103,34 +112,56 @@ public final class RobotAccountDataImpl implements RobotAccountData {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((capabilities == null) ? 0 : capabilities.hashCode());
+    result = prime * result + ((consumerSecret == null) ? 0 : consumerSecret.hashCode());
+    result = prime * result + ((id == null) ? 0 : id.hashCode());
     result = prime * result + (isVerified ? 1231 : 1237);
-    result = prime * result + url.hashCode();
-    result = prime * result + id.hashCode();
+    result = prime * result + ((url == null) ? 0 : url.hashCode());
     return result;
   }
 
-  /**
-   * Robots are equal if their username, url, capabilities and verification are
-   * equal.
-   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;
     }
+    if (obj == null) {
+      return false;
+    }
     if (!(obj instanceof RobotAccountDataImpl)) {
       return false;
     }
-
     RobotAccountDataImpl other = (RobotAccountDataImpl) obj;
-
     if (capabilities == null) {
       if (other.capabilities != null) {
         return false;
       }
+    } else if (!capabilities.equals(other.capabilities)) {
+      return false;
     }
-
-    return id.equals(other.id) && url.equals(other.url) && capabilities.equals(other.capabilities)
-        && isVerified == other.isVerified;
+    if (consumerSecret == null) {
+      if (other.consumerSecret != null) {
+        return false;
+      }
+    } else if (!consumerSecret.equals(other.consumerSecret)) {
+      return false;
+    }
+    if (id == null) {
+      if (other.id != null) {
+        return false;
+      }
+    } else if (!id.equals(other.id)) {
+      return false;
+    }
+    if (isVerified != other.isVerified) {
+      return false;
+    }
+    if (url == null) {
+      if (other.url != null) {
+        return false;
+      }
+    } else if (!url.equals(other.url)) {
+      return false;
+    }
+    return true;
   }
 }

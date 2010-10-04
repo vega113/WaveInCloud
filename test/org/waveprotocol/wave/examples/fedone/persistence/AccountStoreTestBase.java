@@ -57,9 +57,9 @@ public abstract class AccountStoreTestBase extends TestCase {
     super.setUp();
 
     humanAccount = new HumanAccountDataImpl(HUMAN_ID);
-    robotAccount = new RobotAccountDataImpl(ROBOT_ID, "example.com", null, false);
+    robotAccount = new RobotAccountDataImpl(ROBOT_ID, "example.com", "secret", null, false);
     updatedRobotAccount =
-        new RobotAccountDataImpl(ROBOT_ID, "example.com", new RobotCapabilities(
+        new RobotAccountDataImpl(ROBOT_ID, "example.com", "secret", new RobotCapabilities(
             Maps.<EventType, Capability> newHashMap(), "FAKEHASH", ProtocolVersion.DEFAULT), true);
     convertedRobot = new HumanAccountDataImpl(ROBOT_ID);
   }

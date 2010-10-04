@@ -83,9 +83,9 @@ public class RobotTest extends TestCase {
   private static final RobotName ROBOT_NAME = RobotName.fromAddress("robot@example.com");
   private static final ParticipantId ROBOT = ParticipantId.ofUnsafe(ROBOT_NAME.toEmailAddress());
   private static final RobotAccountData ACCOUNT =
-      new RobotAccountDataImpl(ROBOT, "www.example.com", null, true);
+      new RobotAccountDataImpl(ROBOT, "www.example.com", "secret", null, true);
   private static final RobotAccountData INITIALIZED_ACCOUNT =
-      new RobotAccountDataImpl(ROBOT, "www.example.com", new RobotCapabilities(
+      new RobotAccountDataImpl(ROBOT, "www.example.com", "secret", new RobotCapabilities(
           Maps.<EventType, Capability> newHashMap(), "fake", ProtocolVersion.DEFAULT), true);
 
   private RobotsGateway gateway;

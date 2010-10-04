@@ -27,6 +27,7 @@ import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.PersistenceModule;
 import org.waveprotocol.wave.examples.fedone.robots.RobotApiModule;
 import org.waveprotocol.wave.examples.fedone.robots.RobotRegistrationServlet;
+import org.waveprotocol.wave.examples.fedone.robots.active.ActiveApiServlet;
 import org.waveprotocol.wave.examples.fedone.robots.dataapi.DataApiServlet;
 import org.waveprotocol.wave.examples.fedone.robots.passive.RobotsGateway;
 import org.waveprotocol.wave.examples.fedone.rpc.AttachmentServlet;
@@ -78,6 +79,7 @@ public class ServerMain {
 
     server.addServlet("/auth", injector.getInstance(AuthenticationServlet.class));
 
+    server.addServlet("/robot/rpc", injector.getInstance(ActiveApiServlet.class));
     server.addServlet("/robot/dataapi", injector.getInstance(DataApiServlet.class));
     server.addServlet("/robot/*", injector.getInstance(RobotRegistrationServlet.class));
 

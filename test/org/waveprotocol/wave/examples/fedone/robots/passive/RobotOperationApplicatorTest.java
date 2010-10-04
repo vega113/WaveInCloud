@@ -78,8 +78,9 @@ public class RobotOperationApplicatorTest extends TestCase {
   private static final ParticipantId ROBOT_PARTICIPANT =
       ParticipantId.ofUnsafe("robot@example.com");
   private static final RobotAccountData ACCOUNT =
-      new RobotAccountDataImpl(ROBOT_PARTICIPANT, "www.example.com", new RobotCapabilities(
-          Maps.<EventType, Capability> newHashMap(), "fake", ProtocolVersion.DEFAULT), true);
+      new RobotAccountDataImpl(ROBOT_PARTICIPANT, "www.example.com", "secret",
+          new RobotCapabilities(
+              Maps.<EventType, Capability> newHashMap(), "fake", ProtocolVersion.DEFAULT), true);
 
   private EventDataConverterManager converterManager;
   private WaveletProvider waveletProvider;

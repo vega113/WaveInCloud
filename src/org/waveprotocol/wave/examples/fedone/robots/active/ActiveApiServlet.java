@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.examples.fedone.robots.dataapi;
+package org.waveprotocol.wave.examples.fedone.robots.active;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -28,6 +28,17 @@ import com.google.wave.api.RobotSerializer;
 import com.google.wave.api.data.converter.EventDataConverterManager;
 import com.google.wave.api.impl.GsonFactory;
 
+import net.oauth.OAuth;
+import net.oauth.OAuthAccessor;
+import net.oauth.OAuthConsumer;
+import net.oauth.OAuthException;
+import net.oauth.OAuthMessage;
+import net.oauth.OAuthServiceProvider;
+import net.oauth.OAuthValidator;
+import net.oauth.server.HttpRequestMessage;
+
+import org.waveprotocol.wave.examples.fedone.account.AccountData;
+import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.robots.OperationContext;
 import org.waveprotocol.wave.examples.fedone.robots.OperationContextImpl;
 import org.waveprotocol.wave.examples.fedone.robots.OperationResults;
@@ -43,6 +54,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.servlet.http.HttpServlet;
@@ -50,16 +62,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * {@link HttpServlet} that serves as the endpoint for the Data Api.
+ * {@link HttpServlet} that serves as the endpoint for the Active Api.
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
-public class DataApiServlet extends HttpServlet {
+public class ActiveApiServlet extends HttpServlet {
 
-  private static final Log LOG = Log.get(DataApiServlet.class);
+  private static final Log LOG = Log.get(ActiveApiServlet.class);
   private static final WaveletProvider.SubmitRequestListener LOGGING_REQUEST_LISTENER =
       new LoggingRequestListener(LOG);
-  public static final String USERNAME_HEADER = "X-Wave-Username";
   private static final String JSON_CONTENT_TYPE = "application/json";
 
   private final RobotSerializer robotSerializer;
@@ -67,38 +78,72 @@ public class DataApiServlet extends HttpServlet {
   private final WaveletProvider waveletProvider;
   private final OperationServiceRegistry operationRegistry;
   private final ConversationUtil conversationUtil;
+  private final OAuthValidator validator;
+  private final OAuthServiceProvider oauthServiceProvider;
+  private final AccountStore accountStore;
 
   @Inject
-  public DataApiServlet(RobotSerializer robotSerializer, EventDataConverterManager converterManager,
-      WaveletProvider waveletProvider,
-      @Named("DataApiRegistry") OperationServiceRegistry operationRegistry,
-      ConversationUtil conversationUtil) {
+  public ActiveApiServlet(RobotSerializer robotSerializer,
+      EventDataConverterManager converterManager, WaveletProvider waveletProvider,
+      @Named("ActiveApiRegistry") OperationServiceRegistry operationRegistry,
+      ConversationUtil conversationUtil, OAuthServiceProvider oAuthServiceProvider,
+      OAuthValidator validator, AccountStore accountStore) {
     this.robotSerializer = robotSerializer;
     this.converterManager = converterManager;
     this.waveletProvider = waveletProvider;
     this.conversationUtil = conversationUtil;
     this.operationRegistry = operationRegistry;
+    this.validator = validator;
+    this.oauthServiceProvider = oAuthServiceProvider;
+    this.accountStore = accountStore;
   }
 
   /**
-   * Entry point for the Data API Calls.
+   * Entry point for the Active Api Calls.
    */
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    // TODO(ljvderijk): Remove this once proper authentication is up
-    String username = req.getHeader(USERNAME_HEADER);
-    LOG.info("Performing operations for: " + username);
+    OAuthMessage message = new HttpRequestMessage(req, req.getRequestURL().toString());
+    // OAuth %-escapes the @ in the username so we need to decode it.
+    String username = OAuth.decodePercent(message.getConsumerKey());
 
     ParticipantId participant;
     try {
       participant = ParticipantId.of(username);
     } catch (InvalidParticipantAddress e) {
-      resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+      LOG.info("Participant id invalid", e);
+      resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      return;
+    }
+
+    AccountData account = accountStore.getAccount(participant);
+    if (account == null || !account.isRobot()) {
+      LOG.info("The account for robot named " + participant + " does not exist");
+      resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      return;
+    }
+
+    OAuthConsumer consumer =
+        new OAuthConsumer(null, participant.getAddress(), account.asRobot().getConsumerSecret(),
+            oauthServiceProvider);
+    OAuthAccessor accessor = new OAuthAccessor(consumer);
+
+    try {
+      validator.validateMessage(message, accessor);
+    } catch (OAuthException e) {
+      LOG.info("The message does not conform to OAuth", e);
+      resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      return;
+    } catch (URISyntaxException e) {
+      LOG.info("The message URL is invalid", e);
+      resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       return;
     }
 
     String apiRequest;
     try {
+      // message.readBodyAsString() doesn't work due to a NPE in the OAuth
+      // libraries.
       BufferedReader reader = req.getReader();
       apiRequest = reader.readLine();
     } catch (IOException e) {

@@ -63,7 +63,7 @@ public class RobotConnectorTest extends TestCase {
   private static final String TEST_RPC_ENDPOINT = TEST_URL + Robot.RPC_URL;
   private static final String TEST_CAPABILITIES_ENDPOINT = TEST_URL + Robot.CAPABILITIES_URL;
   private static final RobotAccountData ROBOT_ACCOUNT =
-      new RobotAccountDataImpl(ParticipantId.ofUnsafe(ROBOT_ACCOUNT_NAME), TEST_URL,
+      new RobotAccountDataImpl(ParticipantId.ofUnsafe(ROBOT_ACCOUNT_NAME), TEST_URL, "secret",
           new RobotCapabilities(
               Maps.<EventType, Capability> newHashMap(), "FakeHash", ProtocolVersion.DEFAULT),
           true);
