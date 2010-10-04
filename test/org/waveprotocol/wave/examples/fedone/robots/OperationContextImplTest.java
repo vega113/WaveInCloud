@@ -32,11 +32,24 @@ import com.google.wave.api.event.WaveletBlipCreatedEvent;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.examples.common.HashedVersionFactory;
+import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
+import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
+import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.examples.fedone.robots.util.ConversationUtil;
+import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
+import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
 import java.util.Map;
 
@@ -47,11 +60,16 @@ import java.util.Map;
  */
 public class OperationContextImplTest extends TestCase {
 
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+  private static final HashedVersionFactory HASH_FACTORY =
+      new HashedVersionZeroFactoryImpl(URI_CODEC);
   private static final String WAVE_ID = "example.com!waveid";
   private static final String WAVELET_ID = "example.com!conv+root";
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final String ERROR_MESSAGE = "ERROR_MESSAGE";
   private static final String USERNAME = "test@example.com";
+  private static final ParticipantId PARTICIPANT = ParticipantId.ofUnsafe(USERNAME);
   private static final String OPERATION_ID = "op1";
 
   private EventDataConverter converter;
@@ -61,17 +79,27 @@ public class OperationContextImplTest extends TestCase {
   private RobotWaveletData wavelet;
   private OperationContextImpl boundOperationContext;
   private ConversationUtil conversationUtil;
+  private WaveletSnapshot snapshot;
+  private ObservableWaveletData waveletData;
 
   @Override
   protected void setUp() throws Exception {
     converter = mock(EventDataConverter.class);
     waveletProvider = mock(WaveletProvider.class);
     conversationUtil = mock(ConversationUtil.class);
+
     request = new OperationRequest("wave.setTitle", OPERATION_ID);
     operationContext = new OperationContextImpl(waveletProvider, converter, conversationUtil);
 
-    wavelet = mock(RobotWaveletData.class);
-    when(wavelet.getWaveletName()).thenReturn(WAVELET_NAME);
+    waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, PARTICIPANT, 0L);
+    waveletData.addParticipant(PARTICIPANT);
+    HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
+    wavelet = new RobotWaveletData(waveletData, hashedVersionZero);
+
+    snapshot = SnapshotSerializer.serializeWavelet(waveletData, hashedVersionZero);
+    WaveletSnapshotAndVersion snapshotAndVersion = new WaveletSnapshotAndVersion(
+        snapshot, CoreWaveletOperationSerializer.serialize(hashedVersionZero));
+    when(waveletProvider.getSnapshot(WAVELET_NAME)).thenReturn(snapshotAndVersion);
 
     boundOperationContext =
         new OperationContextImpl(waveletProvider, converter, conversationUtil, wavelet);
@@ -119,31 +147,55 @@ public class OperationContextImplTest extends TestCase {
   }
 
   public void testContextIsBound() throws Exception {
-    assertTrue(boundOperationContext.isBound());
+    assertTrue("Bound contexts should return true", boundOperationContext.isBound());
     Map<WaveletName, RobotWaveletData> openWavelets = boundOperationContext.getOpenWavelets();
     assertEquals("Bound wavelet should be open", openWavelets.get(WAVELET_NAME), wavelet);
 
-    // TODO(ljvderijk): Add tests that opening of wavelet outside context can
-    // succeed and fail depending on authorization.
+    assertFalse("Unbound contexts should return false", operationContext.isBound());
   }
 
   public void testPutNonTemporaryWavelet() throws Exception {
+    OpBasedWavelet opBasedWavelet = wavelet.getOpBasedWavelet(PARTICIPANT);
     operationContext.putWavelet(WAVE_ID, WAVELET_ID, wavelet);
-    assertEquals(wavelet, operationContext.openWavelet(WAVE_ID, WAVELET_ID));
+    assertEquals(opBasedWavelet, operationContext.openWavelet(WAVE_ID, WAVELET_ID, PARTICIPANT));
   }
 
   public void testPutTemporaryWavelet() throws Exception {
+    OpBasedWavelet opBasedWavelet = wavelet.getOpBasedWavelet(PARTICIPANT);
     String tempWaveId = "example.com!" + OperationContextImpl.TEMP_ID_MARKER + "random";
     String tempWaveletId = "example.com!conv+root";
     operationContext.putWavelet(tempWaveId, tempWaveletId, wavelet);
-    assertEquals(wavelet, operationContext.openWavelet(tempWaveId, tempWaveletId));
-    assertEquals(wavelet, operationContext.openWavelet(WAVE_ID, WAVELET_ID));
+    assertEquals(
+        opBasedWavelet, operationContext.openWavelet(tempWaveId, tempWaveletId, PARTICIPANT));
+    assertEquals(opBasedWavelet, operationContext.openWavelet(WAVE_ID, WAVELET_ID, PARTICIPANT));
+  }
+
+  /**
+   * Tests opening a wavelet that has to be retrieved using the
+   * {@link WaveletProvider}.
+   */
+  public void testOpenWaveletFromWaveletProvider() throws Exception {
+    OpBasedWavelet opBasedWavelet = wavelet.getOpBasedWavelet(PARTICIPANT);
+    assertEquals(opBasedWavelet, operationContext.openWavelet(WAVE_ID, WAVELET_ID, PARTICIPANT));
   }
 
   public void testOpenNonExistingWaveletThrowsInvalidRequestException() throws Exception {
     try {
-      operationContext.openWavelet(WAVE_ID, WAVELET_ID);
+      operationContext.openWavelet(WAVE_ID, WAVELET_ID + "nonexisting", PARTICIPANT);
       fail("Expected InvalidRequestException");
+    } catch (InvalidRequestException e) {
+      // expected
+    }
+  }
+
+  public void testOpenExistingWaveletForNonParticipantThrowsInvalidRequestException()
+      throws Exception {
+    ParticipantId nonExistingParticipant = ParticipantId.ofUnsafe("nonexisting@example.com");
+    assertFalse("This participant should not exist",
+        waveletData.getParticipants().contains(nonExistingParticipant));
+    try {
+      operationContext.openWavelet(WAVE_ID, WAVELET_ID, nonExistingParticipant);
+      fail("Expected InvalidRequestException for a non-existing participant");
     } catch (InvalidRequestException e) {
       // expected
     }

@@ -91,9 +91,11 @@ public interface OperationContext {
    *
    * @param waveId the wave id of the wavelet to open.
    * @param waveletId the wavelet id of the wavelet to open.
+   * @param participant the id of the participant that wants to open the wavelet.
    * @throws InvalidRequestException if the wavelet can not be opened.
    */
-  RobotWaveletData openWavelet(String waveId, String waveletId) throws InvalidRequestException;
+  OpBasedWavelet openWavelet(String waveId, String waveletId, ParticipantId participant)
+      throws InvalidRequestException;
 
   /**
    * Creates a conversation for the given wavelet. The wavelet must be a valid

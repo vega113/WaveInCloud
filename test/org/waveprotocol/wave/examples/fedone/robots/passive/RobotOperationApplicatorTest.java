@@ -110,8 +110,7 @@ public class RobotOperationApplicatorTest extends TestCase {
       public void execute(
           OperationRequest operation, OperationContext context, ParticipantId participant)
           throws InvalidRequestException {
-        context.openWavelet(WAVE_ID, WAVELET_ID).getOpBasedWavelet(ROBOT_PARTICIPANT)
-            .addParticipant(ALEX);
+        context.openWavelet(WAVE_ID, WAVELET_ID, ROBOT_PARTICIPANT).addParticipant(ALEX);
       }
     };
     when(operationRegistry.getServiceFor(any(OperationType.class))).thenReturn(service);

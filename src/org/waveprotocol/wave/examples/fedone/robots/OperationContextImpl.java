@@ -189,10 +189,8 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   }
 
   @Override
-  public RobotWaveletData openWavelet(String waveId, String waveletId)
+  public OpBasedWavelet openWavelet(String waveId, String waveletId, ParticipantId participant)
       throws InvalidRequestException {
-    // TODO(ljvderijk): Access checks might need to be added here for bound
-    // contexts!
     WaveletName waveletName;
     if (waveId.contains("!" + TEMP_ID_MARKER)) {
       WaveletName tempWaveletName = WaveletName.of(waveId, waveletId);
@@ -207,26 +205,33 @@ public class OperationContextImpl implements OperationContext, OperationResults 
       WaveletSnapshotAndVersion snapshot = waveletProvider.getSnapshot(waveletName);
 
       if (snapshot == null) {
-        throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved.");
+        throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
       }
 
+      // Note: The error messages relayed to the client don't give away that the
+      // wavelet actually exists.
       ObservableWaveletData obsWavelet;
       try {
         obsWavelet = SnapshotSerializer.deserializeWavelet(snapshot.snapshot, waveletName.waveId);
       } catch (OperationException e) {
         LOG.severe("Unable to parse retrieved snapshot", e);
-        throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved.");
+        throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
       } catch (InvalidParticipantAddress e) {
         LOG.severe("Found invalid participant when parsing a snapshot", e);
-        throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved.");
+        throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
       }
       HashedVersion committedVersion =
           CoreWaveletOperationSerializer.deserialize(snapshot.committedVersion);
 
+      if (!obsWavelet.getParticipants().contains(participant)) {
+        LOG.severe(
+            participant + " tried to open " + waveletName + " which it isn't participating in");
+        throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
+      }
       wavelet = new RobotWaveletData(obsWavelet, committedVersion);
       openedWavelets.put(waveletName, wavelet);
     }
-    return wavelet;
+    return wavelet.getOpBasedWavelet(participant);
   }
 
   @Override
@@ -239,10 +244,8 @@ public class OperationContextImpl implements OperationContext, OperationResults 
       throws InvalidRequestException {
     String waveId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVE_ID);
     String waveletId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVELET_ID);
-    return openWavelet(waveId, waveletId).getOpBasedWavelet(participant);
+    return openWavelet(waveId, waveletId, participant);
   }
-
-  // OperationResults implementation begins here
 
   @Override
   public void putBlip(String blipId, ConversationBlip newBlip) {
@@ -258,6 +261,8 @@ public class OperationContextImpl implements OperationContext, OperationResults 
     }
     return conversation.getBlip(blipId);
   }
+
+  // OperationResults implementation begins here
 
   @Override
   public Map<String, JsonRpcResponse> getResponses() {
