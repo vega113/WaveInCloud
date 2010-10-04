@@ -13,7 +13,7 @@ fi
 
 exec java $DEBUG_FLAGS \
   -Dorg.eclipse.jetty.util.log.DEBUG=true \
-  -Djava.security.auth.login.config=="jaas.config" \
+  -Djava.security.auth.login.config=jaas.config \
   -jar dist/fedone-server-$FEDONE_VERSION.jar \
   --client_frontend_hostname=$WAVE_SERVER_HOSTNAME \
   --client_frontend_port=$WAVE_SERVER_PORT \
