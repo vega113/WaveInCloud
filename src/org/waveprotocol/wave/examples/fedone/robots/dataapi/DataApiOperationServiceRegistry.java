@@ -21,6 +21,7 @@ import com.google.wave.api.OperationType;
 
 import org.waveprotocol.wave.examples.fedone.robots.AbstractOperationServiceRegistry;
 import org.waveprotocol.wave.examples.fedone.robots.operations.AppendBlipService;
+import org.waveprotocol.wave.examples.fedone.robots.operations.CreateWaveletService;
 import org.waveprotocol.wave.examples.fedone.robots.operations.DoNothingService;
 import org.waveprotocol.wave.examples.fedone.robots.operations.OperationService;
 
@@ -41,5 +42,6 @@ public final class DataApiOperationServiceRegistry extends AbstractOperationServ
     register(OperationType.ROBOT_NOTIFY, DoNothingService.create());
     register(OperationType.ROBOT_NOTIFY_CAPABILITIES_HASH, DoNothingService.create());
     register(OperationType.WAVELET_APPEND_BLIP, AppendBlipService.create());
+    register(OperationType.ROBOT_CREATE_WAVELET, CreateWaveletService.create());
   }
 }

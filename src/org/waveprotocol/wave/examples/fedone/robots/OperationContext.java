@@ -23,6 +23,7 @@ import com.google.wave.api.OperationRequest;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 
+import org.waveprotocol.wave.examples.fedone.robots.util.ConversationUtil;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
@@ -40,7 +41,7 @@ import java.util.Map;
 public interface OperationContext {
 
   /** Marks temporary wave and blip ID's since V2 */
-  public static final String TEMP_ID_MARKER = "TBD_";
+  final String TEMP_ID_MARKER = "TBD_";
 
   /**
    * @return true iff this context is bound to a wavelet.
@@ -78,7 +79,8 @@ public interface OperationContext {
   void processEvent(OperationRequest operation, Event event) throws InvalidRequestException;
 
   /**
-   * Stores a new wavelet under the, possibly temporary, wave id and wavelet id.
+   * Stores a reference from a temporary wavelet id to a real wavelet id. If the
+   * given id is not a temporary id no reference will be stored.
    *
    * @param waveId the wave id.
    * @param waveletId the wavelet id.
@@ -126,7 +128,7 @@ public interface OperationContext {
   /**
    * @return the converter to convert to API objects
    */
-  public EventDataConverter getConverter();
+  EventDataConverter getConverter();
 
   /**
    * Returns the {@link OpBasedWavelet} as specified by the given operation.
@@ -136,6 +138,12 @@ public interface OperationContext {
    *         context.
    * @throws InvalidRequestException if the wave could not be retrieved
    */
-  public OpBasedWavelet getWavelet(OperationRequest operation, ParticipantId participant)
+  OpBasedWavelet getWavelet(OperationRequest operation, ParticipantId participant)
       throws InvalidRequestException;
+
+  /**
+   * Returns {@link ConversationUtil} which is used to generate conversations and
+   * ids.
+   */
+  ConversationUtil getConversationUtil();
 }

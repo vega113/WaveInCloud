@@ -26,6 +26,7 @@ import org.waveprotocol.wave.model.conversation.WaveBasedConversationView;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdUtil;
+import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ReadOnlyWaveView;
 
@@ -62,5 +63,12 @@ public class ConversationUtil {
     wv.addWavelet(wavelet);
 
     return WaveBasedConversationView.create(wv, idGenerator);
+  }
+
+  /**
+   * Generates a {@link WaveletName} for a conversational wavelet.
+   */
+  public WaveletName generateWaveletName() {
+    return WaveletName.of(idGenerator.newWaveId(), idGenerator.newConversationRootWaveletId());
   }
 }

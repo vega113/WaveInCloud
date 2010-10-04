@@ -265,6 +265,11 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   // OperationResults implementation begins here
 
   @Override
+  public ConversationUtil getConversationUtil() {
+    return conversationUtil;
+  }
+
+  @Override
   public Map<String, JsonRpcResponse> getResponses() {
     return Collections.unmodifiableMap(responses);
   }
