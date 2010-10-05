@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.google.wave.api.RobotSerializer;
 import com.google.wave.api.data.converter.EventDataConverterModule;
 import com.google.wave.api.robot.HttpRobotConnection;
@@ -51,10 +52,21 @@ public class RobotApiModule extends AbstractModule {
 
   private static final int NUMBER_OF_THREADS = 10;
 
+  private static final String AUTHORIZE_TOKEN_PATH = "/OAuthAuthorizeToken";
+  private static final String REQUEST_TOKEN_PATH = "/OAuthGetRequestToken";
+  private static final String ACCESS_TOKEN_PATH = "/OAuthGetAccessToken";
+
   @Override
   protected void configure() {
     install(new EventDataConverterModule());
     install(new RobotSerializerModule());
+
+    bind(String.class).annotatedWith(Names.named("authorize_token_path")).toInstance(
+        AUTHORIZE_TOKEN_PATH);
+    bind(String.class).annotatedWith(Names.named("request_token_path")).toInstance(
+        REQUEST_TOKEN_PATH);
+    bind(String.class).annotatedWith(Names.named("access_token_path")).toInstance(
+        ACCESS_TOKEN_PATH);
   }
 
   @Provides
@@ -109,12 +121,27 @@ public class RobotApiModule extends AbstractModule {
 
   @Provides
   @Singleton
-  protected OAuthServiceProvider provideOAuthServiceProvider() {
-    // TODO (ljvderijk): For the Data api we need the host name here.
-    // Three urls, first is for the unauthorized request token, second is to
+  protected OAuthServiceProvider provideOAuthServiceProvider(
+      @Named("http_frontend_hostname") String domain, @Named("http_frontend_port") int port) {
+    // Three urls, first is to get an unauthorized request token, second is to
     // authorize the request token, third is to exchange the authorized request
     // token with an access token.
-    return new OAuthServiceProvider("http://%s/robot/dataapi/request",
-        "http://%s/robot/dataapi/authorize", "http://%s/robot/dataapi/exchange");
+    String requestTokenUrl = getOAuthUrl(domain, port, REQUEST_TOKEN_PATH);
+    String authorizeTokenUrl = getOAuthUrl(domain, port, AUTHORIZE_TOKEN_PATH);
+    String accessTokenUrl = getOAuthUrl(domain, port, ACCESS_TOKEN_PATH);
+
+    return new OAuthServiceProvider(requestTokenUrl, authorizeTokenUrl, accessTokenUrl);
+  }
+
+  /**
+   * Returns the full url used to do 3-legged OAuth in the data api.
+   *
+   * @param domain the domain of the http frontend
+   * @param port the port of the http frontend
+   * @param postFix the end part of the url
+   */
+  private String getOAuthUrl(String domain, int port, String postFix) {
+    String host = (port == 80) ? domain : (domain + ":" + port);
+    return String.format("http://%s/robot/dataapi%s", host, postFix);
   }
 }
