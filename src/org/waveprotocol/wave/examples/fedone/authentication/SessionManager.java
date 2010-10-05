@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.examples.fedone.authentication;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import org.waveprotocol.wave.common.util.PercentEscaper;
@@ -122,7 +123,7 @@ public final class SessionManager {
    * @return a url containing the login page.
    */
   public String getLoginUrl(String redirect) {
-    if (redirect == null) {
+    if (Strings.isNullOrEmpty(redirect)) {
       return AUTH_URL;
     } else {
       PercentEscaper escaper =

@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.examples.fedone.rpc;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import org.eclipse.jetty.util.MultiMap;
@@ -31,6 +32,8 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.security.Principal;
 
@@ -89,8 +92,7 @@ public class AuthenticationServlet extends HttpServlet {
     Subject subject = new Subject();
     CallbackHandler callbackHandler = new HttpRequestBasedCallbackHandler(getArgumentMap(body));
 
-    LoginContext context = new LoginContext(
-        "Wave", subject, callbackHandler, configuration);
+    LoginContext context = new LoginContext("Wave", subject, callbackHandler, configuration);
 
     // If authentication fails, login() will throw a LoginException.
     context.login();
@@ -143,11 +145,29 @@ public class AuthenticationServlet extends HttpServlet {
     // If the user specified a redirect location (/auth?r=/some/other/place)
     // then redirect them to that URL.
     String query = req.getQueryString();
-    
+
     if (query != null && query.startsWith("r=")) {
       String encoded_url = query.substring("r=".length());
-      String url = URLDecoder.decode(encoded_url, "UTF-8");
-      resp.sendRedirect(url);
+      String path = URLDecoder.decode(encoded_url, "UTF-8");
+
+      // For security reasons, the URL must not be an absolute URL. (We don't
+      // want people using this as a generic redirection service).
+
+      URI uri;
+      try {
+        uri = new URI(path);
+      } catch (URISyntaxException e) {
+        // The redirect URL is invalid.
+        resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        return;
+      }
+
+      if (Strings.isNullOrEmpty(uri.getHost()) == false) {
+        // The URL includes a host component. Disallow it.
+        resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      } else {
+        resp.sendRedirect(path);
+      }
     } else {
       resp.setStatus(HttpServletResponse.SC_OK);
       resp.setContentType("text/plain");

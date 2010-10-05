@@ -107,6 +107,21 @@ public class AuthenticationServletTest extends TestCase {
     verify(resp).sendRedirect(redirect_location);
     verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
   }
+  
+  public void testLoginDoesNotRedirectToRemoteSite() throws IOException {
+    HttpServletRequest req = mock(HttpServletRequest.class);
+    HttpSession session = mock(HttpSession.class);
+    HttpServletResponse resp = mock(HttpServletResponse.class);
+
+    String redirect_location = "http://example.com/other/site";
+    PercentEscaper escaper =
+      new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
+    String query_str = "r=" + escaper.escape(redirect_location);
+    
+    attemptLogin(req, resp, session, "frodo@example.com", "password", query_str);
+
+    verify(resp, never()).sendRedirect(anyString());
+  }
 
   public void testIncorrectPasswordReturns403() throws IOException {
     HttpServletRequest req = mock(HttpServletRequest.class);
