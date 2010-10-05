@@ -39,6 +39,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
    * A simple message wrapper that bundles a json string with a version,
    * sequence number, and type information.
    */
+  @SuppressWarnings("unused")
   private static class MessageWrapper {
     public int version;
     public long sequenceNumber;

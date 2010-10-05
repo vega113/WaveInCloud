@@ -18,6 +18,10 @@
 package org.waveprotocol.wave.examples.fedone.persistence.mongodb;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.wave.api.Context;
+import com.google.wave.api.ProtocolVersion;
+import com.google.wave.api.event.EventType;
+import com.google.wave.api.robot.Capability;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -28,16 +32,30 @@ import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 
+import org.bson.types.BasicBSONList;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
+import org.waveprotocol.wave.examples.fedone.account.AccountData;
+import org.waveprotocol.wave.examples.fedone.account.HumanAccountData;
+import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
+import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
+import org.waveprotocol.wave.examples.fedone.account.RobotAccountDataImpl;
+import org.waveprotocol.wave.examples.fedone.authentication.PasswordDigest;
+import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.AttachmentStore;
+import org.waveprotocol.wave.examples.fedone.robots.RobotCapabilities;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,7 +73,26 @@ import java.util.logging.Logger;
  * @author josephg@gmail.com (Joseph Gentle)
  *
  */
-public final class MongoDbStore implements CertPathStore, AttachmentStore {
+public final class MongoDbStore implements CertPathStore, AttachmentStore, AccountStore {
+
+  private static final String ACCOUNT_COLLECTION = "account";
+  private static final String ACCOUNT_HUMAN_DATA_FIELD = "human";
+  private static final String ACCOUNT_ROBOT_DATA_FIELD = "robot";
+  
+  private static final String HUMAN_PASSWORD_FIELD = "passwordDigest";
+  
+  private static final String PASSWORD_DIGEST_FIELD = "digest";
+  private static final String PASSWORD_SALT_FIELD = "salt";
+  
+  private static final String ROBOT_URL_FIELD = "url";
+  private static final String ROBOT_SECRET_FIELD = "secret";
+  private static final String ROBOT_CAPABILITIES_FIELD = "capabilities";
+  private static final String ROBOT_VERIFIED_FIELD = "verified";
+  
+  private static final String CAPABILITIES_VERSION_FIELD = "version";
+  private static final String CAPABILITIES_HASH_FIELD = "capabilitiesHash";
+  private static final String CAPABILITIES_CAPABILITIES_FIELD = "capabilities";
+  private static final String CAPABILITY_CONTEXTS_FIELD = "contexts";
 
   private static final Logger LOG = Logger.getLogger(MongoDbStore.class.getName());
 
@@ -121,20 +158,21 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore {
   }
 
   // *********** Attachments.
-  
+
   private GridFS attachmentGrid;
+
   private GridFS getAttachmentGrid() {
     if (attachmentGrid == null) {
       attachmentGrid = new GridFS(database, "attachments");
     }
-    
+
     return attachmentGrid;
   }
 
   @Override
   public AttachmentData getAttachment(String id) {
     final GridFSDBFile attachment = getAttachmentGrid().findOne(id);
-    
+
     if (attachment == null) {
       return null;
     } else {
@@ -143,12 +181,12 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore {
         public void writeDataTo(OutputStream out) throws IOException {
           attachment.writeTo(out);
         }
-        
+
         @Override
         public Date getLastModifiedDate() {
           return attachment.getUploadDate();
         }
-        
+
         @Override
         public long getContentSize() {
           return attachment.getLength();
@@ -167,7 +205,7 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore {
     // This method returns false if the attachment is already in the database.
     // Unfortunately, as far as I can tell the only way to do this is to perform
     // a second database query.
-    if (getAttachment(id) != null) { 
+    if (getAttachment(id) != null) {
       return false;
     } else {
       GridFSInputFile file = getAttachmentGrid().createFile(data, id);
@@ -194,4 +232,161 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore {
     getAttachmentGrid().remove(id);
   }
 
+
+  // ******** AccountStore
+
+  @Override
+  public AccountData getAccount(ParticipantId id) {
+    DBObject query = getDBObjectForParticipant(id);
+    DBObject result = getAccountCollection().findOne(query);
+
+    if (result == null) {
+      return null;
+    }
+
+    DBObject human = (DBObject) result.get(ACCOUNT_HUMAN_DATA_FIELD);
+    if (human != null) {
+      return objectToHuman(id, human);
+    }
+
+    DBObject robot = (DBObject) result.get(ACCOUNT_ROBOT_DATA_FIELD);
+    if (robot != null) {
+      return objectToRobot(id, robot);
+    }
+
+    throw new IllegalStateException("DB object contains neither a human nor a robot");
+  }
+
+  @Override
+  public void putAccount(AccountData account) {
+    DBObject object = getDBObjectForParticipant(account.getId());
+
+    if (account.isHuman()) {
+      object.put(ACCOUNT_HUMAN_DATA_FIELD, humanToObject(account.asHuman()));
+    } else if (account.isRobot()) {
+      object.put(ACCOUNT_ROBOT_DATA_FIELD, robotToObject(account.asRobot()));
+    } else {
+      throw new IllegalStateException("Account is neither a human nor a robot");
+    }
+
+    getAccountCollection().save(object);
+  }
+
+  @Override
+  public void removeAccount(ParticipantId id) {
+    DBObject object = getDBObjectForParticipant(id);
+    getAccountCollection().remove(object);
+  }
+
+  private DBObject getDBObjectForParticipant(ParticipantId id) {
+    DBObject query = new BasicDBObject();
+    query.put("_id", id.getAddress());
+    return query;
+  }
+
+  private DBCollection getAccountCollection() {
+    return database.getCollection(ACCOUNT_COLLECTION);
+  }
+
+  // ****** HumanAccountData serialization
+
+  private DBObject humanToObject(HumanAccountData account) {
+    DBObject object = new BasicDBObject();
+
+    PasswordDigest digest = account.getPasswordDigest();
+    if (digest != null) {
+      DBObject digestObj = new BasicDBObject();
+      digestObj.put(PASSWORD_SALT_FIELD, digest.getSalt());
+      digestObj.put(PASSWORD_DIGEST_FIELD, digest.getDigest());
+
+      object.put(HUMAN_PASSWORD_FIELD, digestObj);
+    }
+
+    return object;
+  }
+
+  private HumanAccountData objectToHuman(ParticipantId id, DBObject object) {
+    PasswordDigest passwordDigest = null;
+
+    DBObject digestObj = (DBObject) object.get(HUMAN_PASSWORD_FIELD);
+    if (digestObj != null) {
+      byte[] salt = (byte[]) digestObj.get(PASSWORD_SALT_FIELD);
+      byte[] digest = (byte[]) digestObj.get(PASSWORD_DIGEST_FIELD);
+      passwordDigest = PasswordDigest.from(salt, digest);
+    }
+
+    return new HumanAccountDataImpl(id, passwordDigest);
+  }
+
+  // ****** RobotAccountData serialization
+
+  private DBObject robotToObject(RobotAccountData account) {
+    return new BasicDBObject()
+        .append(ROBOT_URL_FIELD, account.getUrl())
+        .append(ROBOT_SECRET_FIELD, account.getConsumerSecret())
+        .append(ROBOT_CAPABILITIES_FIELD, capabilitiesToObject(account.getCapabilities()))
+        .append(ROBOT_VERIFIED_FIELD, account.isVerified());
+  }
+
+  private DBObject capabilitiesToObject(RobotCapabilities capabilities) {
+    if (capabilities == null) {
+      return null;
+    }
+
+    BasicDBObject capabilitiesObj = new BasicDBObject();
+    for (Capability capability : capabilities.getCapabilitiesMap().values()) {
+      BasicBSONList contexts = new BasicBSONList();
+      for (Context c : capability.getContexts()) {
+        contexts.add(c.name());
+      }
+      capabilitiesObj.put(capability.getEventType().name(),
+          new BasicDBObject()
+              .append(CAPABILITY_CONTEXTS_FIELD, contexts)
+              // TODO: Add Capability.filter.
+              );
+    }
+    
+    BasicDBObject object =
+        new BasicDBObject()
+            .append(CAPABILITIES_CAPABILITIES_FIELD, capabilitiesObj)
+            .append(CAPABILITIES_HASH_FIELD, capabilities.getCapabilitiesHash())
+            .append(CAPABILITIES_VERSION_FIELD, capabilities.getProtocolVersion().name());
+
+    return object;
+  }
+
+  private AccountData objectToRobot(ParticipantId id, DBObject robot) {
+    String url = (String) robot.get(ROBOT_URL_FIELD);
+    String secret = (String) robot.get(ROBOT_SECRET_FIELD);
+    RobotCapabilities capabilities = objectToCapabilities((DBObject) robot.get(ROBOT_CAPABILITIES_FIELD));
+    boolean verified = (Boolean) robot.get(ROBOT_VERIFIED_FIELD);
+    return new RobotAccountDataImpl(id, url, secret, capabilities, verified);
+  }
+
+  @SuppressWarnings("unchecked")
+  private RobotCapabilities objectToCapabilities(DBObject object) {
+    if (object == null) {
+      return null;
+    }
+    
+    Map<String, Object> capabilitiesObj = (Map<String, Object>) object.get(CAPABILITIES_CAPABILITIES_FIELD);
+    Map<EventType, Capability> capabilities = CollectionUtils.newHashMap();
+    
+    for (Entry<String, Object> capability : capabilitiesObj.entrySet()) {
+      EventType eventType = EventType.valueOf(capability.getKey());
+      List<Context> contexts = CollectionUtils.newArrayList();
+      DBObject capabilityObj = (DBObject) capability.getValue();
+      DBObject contextsObj = (DBObject) capabilityObj.get(CAPABILITY_CONTEXTS_FIELD);
+      for (String contextId : contextsObj.keySet()) {
+        contexts.add(Context.valueOf((String) contextsObj.get(contextId)));
+      }
+      
+      capabilities.put(eventType, new Capability(eventType, contexts));
+    }
+    
+    String capabilitiesHash = (String) object.get(CAPABILITIES_HASH_FIELD);
+    ProtocolVersion version = ProtocolVersion.valueOf((String) object.get(CAPABILITIES_VERSION_FIELD));
+
+    return new RobotCapabilities(capabilities, capabilitiesHash, version);
+  }
 }
