@@ -146,6 +146,9 @@ public class AuthenticationServlet extends HttpServlet {
     // then redirect them to that URL.
     String query = req.getQueryString();
 
+    // Not using req.getParameter() for this because calling that method might parse the password
+    // sitting in POST data into a String, where it could be read by another process after the
+    // string is garbage collected.
     if (query != null && query.startsWith("r=")) {
       String encoded_url = query.substring("r=".length());
       String path = URLDecoder.decode(encoded_url, "UTF-8");
