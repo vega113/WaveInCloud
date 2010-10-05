@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.common.util.PercentEscaper;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountData;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.authentication.AccountStoreHolder;
@@ -85,9 +86,25 @@ public class AuthenticationServletTest extends TestCase {
     HttpSession session = mock(HttpSession.class);
     HttpServletResponse resp = mock(HttpServletResponse.class);
 
-    attemptLogin(req, resp, session, "frodo@example.com", "password");
+    attemptLogin(req, resp, session, "frodo@example.com", "password", null);
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
+    verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
+  }
+
+  public void testLoginRedirects() throws IOException {
+    HttpServletRequest req = mock(HttpServletRequest.class);
+    HttpSession session = mock(HttpSession.class);
+    HttpServletResponse resp = mock(HttpServletResponse.class);
+
+    String redirect_location = "/abc123?nested=query&string";
+    PercentEscaper escaper =
+      new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
+    String query_str = "r=" + escaper.escape(redirect_location);
+    
+    attemptLogin(req, resp, session, "frodo@example.com", "password", query_str);
+
+    verify(resp).sendRedirect(redirect_location);
     verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
   }
 
@@ -96,7 +113,7 @@ public class AuthenticationServletTest extends TestCase {
     HttpSession session = mock(HttpSession.class);
     HttpServletResponse resp = mock(HttpServletResponse.class);
 
-    attemptLogin(req, resp, session, "frodo@example.com", "incorrect");
+    attemptLogin(req, resp, session, "frodo@example.com", "incorrect", null);
 
     verify(resp).sendError(HttpServletResponse.SC_FORBIDDEN);
     verify(session, never()).setAttribute(eq("user"), anyString());
@@ -107,19 +124,22 @@ public class AuthenticationServletTest extends TestCase {
     HttpSession session = mock(HttpSession.class);
     HttpServletResponse resp = mock(HttpServletResponse.class);
 
-    attemptLogin(req, resp, session, "madeup@example.com", "incorrect");
+    attemptLogin(req, resp, session, "madeup@example.com", "incorrect", null);
 
     verify(resp).sendError(HttpServletResponse.SC_FORBIDDEN);
     verify(session, never()).setAttribute(eq("address"), anyString());
   }
 
+  // *** Utility methods
+
   public void attemptLogin(HttpServletRequest req, HttpServletResponse resp, HttpSession session,
-      String address, String password) throws IOException {
+      String address, String password, String queryString) throws IOException {
     String data = "address=" + address + "&" + "password=" + password;
 
     when(req.getSession(false)).thenReturn(null);
     Reader reader = new StringReader(data);
     when(req.getReader()).thenReturn(new BufferedReader(reader));
+    when(req.getQueryString()).thenReturn(queryString);
     PrintWriter writer = mock(PrintWriter.class);
     when(resp.getWriter()).thenReturn(writer);
     when(req.getSession(true)).thenReturn(session);

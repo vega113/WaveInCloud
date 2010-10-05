@@ -20,6 +20,7 @@ package org.waveprotocol.wave.examples.fedone.authentication;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import org.waveprotocol.wave.common.util.PercentEscaper;
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -27,12 +28,12 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import javax.servlet.http.HttpSession;
 
 /**
- * Utility class for managing the authentication information stored in the
- * client's session object.
+ * Utility class for managing the session's authentication status.
  *
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public final class SessionManager {
+  public static final String AUTH_URL = "/auth";
   private static final String USER_FIELD = "user";
 
   private final AccountStore accountStore;
@@ -109,6 +110,25 @@ public final class SessionManager {
       // This function should also remove any other bound fields in the session
       // object.
       session.removeAttribute(USER_FIELD);
+    }
+  }
+
+  /**
+   * Get the relative URL to redirect the user to the login page.
+   *
+   * @param redirect a url path to redirect the user back to once they have
+   *        logged in, or null if the user should not be redirected after
+   *        authenticating.
+   * @return a url containing the login page.
+   */
+  public String getLoginUrl(String redirect) {
+    if (redirect == null) {
+      return AUTH_URL;
+    } else {
+      PercentEscaper escaper =
+          new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
+      String queryStr = "?r=" + escaper.escape(redirect);
+      return AUTH_URL + queryStr;
     }
   }
 }

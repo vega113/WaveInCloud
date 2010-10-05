@@ -31,6 +31,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.security.Principal;
 
 import javax.security.auth.Subject;
@@ -139,10 +140,19 @@ public class AuthenticationServlet extends HttpServlet {
     session.setAttribute("context", context);
     LOG.info("Authenticated user " + loggedInAddress);
 
-    // TODO(josephg): Redirect back to where the user was last.
-    resp.setStatus(HttpServletResponse.SC_OK);
-    resp.setContentType("text/plain");
-    resp.getWriter().println("Authenticated as " + loggedInAddress);
+    // If the user specified a redirect location (/auth?r=/some/other/place)
+    // then redirect them to that URL.
+    String query = req.getQueryString();
+    
+    if (query != null && query.startsWith("r=")) {
+      String encoded_url = query.substring("r=".length());
+      String url = URLDecoder.decode(encoded_url, "UTF-8");
+      resp.sendRedirect(url);
+    } else {
+      resp.setStatus(HttpServletResponse.SC_OK);
+      resp.setContentType("text/plain");
+      resp.getWriter().println("Authenticated as " + loggedInAddress);
+    }
   }
 
   /**
