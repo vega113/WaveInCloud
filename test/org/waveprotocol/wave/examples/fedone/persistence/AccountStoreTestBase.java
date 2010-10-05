@@ -90,16 +90,15 @@ public abstract class AccountStoreTestBase extends TestCase {
     HumanAccountDataImpl account = new HumanAccountDataImpl(HUMAN_ID);
     accountStore.putAccount(account);
     AccountData retrievedAccount = accountStore.getAccount(HUMAN_ID);
-    assertEquals(HUMAN_ID, retrievedAccount.getId());
-    assertNull(retrievedAccount.asHuman().getPasswordDigest());
     assertEquals(account, retrievedAccount);
-
-    // And test an account that doesn't have a password...
+  }
+  
+  public final void testRoundtripHumanAccountWithPassword() {
+    AccountStore accountStore = newAccountStore();
+    
     accountStore.putAccount(
         new HumanAccountDataImpl(HUMAN_ID, new PasswordDigest("internet".toCharArray())));
-    retrievedAccount = accountStore.getAccount(HUMAN_ID);
-    assertEquals(HUMAN_ID, retrievedAccount.getId());
-    assertNotNull(retrievedAccount.asHuman().getPasswordDigest());
+    AccountData retrievedAccount = accountStore.getAccount(HUMAN_ID);
     assertTrue(retrievedAccount.asHuman().getPasswordDigest().verify("internet".toCharArray()));
   }
 

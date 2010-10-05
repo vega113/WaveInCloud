@@ -75,6 +75,20 @@ import java.util.logging.Logger;
  */
 public final class MongoDbStore implements CertPathStore, AttachmentStore, AccountStore {
 
+  private static final String ACCOUNT_COLLECTION = "account";
+  private static final String ACCOUNT_HUMAN_DATA_FIELD = "human";
+  private static final String ACCOUNT_ROBOT_DATA_FIELD = "robot";
+  private static final String HUMAN_PASSWORD_FIELD = "passwordDigest";
+  private static final String PASSWORD_DIGEST_FIELD = "digest";
+  private static final String PASSWORD_SALT_FIELD = "salt";
+  private static final String ROBOT_URL_FIELD = "url";
+  private static final String ROBOT_VERIFIED_FIELD = "verified";
+  private static final String ROBOT_CAPABILITIES_FIELD = "capabilities";
+  private static final String CAPABILITIES_VERSION_FIELD = "version";
+  private static final String CAPABILITIES_HASH_FIELD = "capabilitiesHash";
+  private static final String CAPABILITIES_CAPABILITIES_FIELD = "capabilities";
+  private static final String CAPABILITY_CONTEXTS_FIELD = "contexts";
+
   private static final Logger LOG = Logger.getLogger(MongoDbStore.class.getName());
 
   private final DB database;
@@ -225,12 +239,12 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
       return null;
     }
 
-    DBObject human = (DBObject) result.get("human");
+    DBObject human = (DBObject) result.get(ACCOUNT_HUMAN_DATA_FIELD);
     if (human != null) {
       return objectToHuman(id, human);
     }
 
-    DBObject robot = (DBObject) result.get("robot");
+    DBObject robot = (DBObject) result.get(ACCOUNT_ROBOT_DATA_FIELD);
     if (robot != null) {
       return objectToRobot(id, robot);
     }
@@ -243,9 +257,9 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
     DBObject object = getDBObjectForParticipant(account.getId());
 
     if (account.isHuman()) {
-      object.put("human", humanToObject(account.asHuman()));
+      object.put(ACCOUNT_HUMAN_DATA_FIELD, humanToObject(account.asHuman()));
     } else if (account.isRobot()) {
-      object.put("robot", robotToObject(account.asRobot()));
+      object.put(ACCOUNT_ROBOT_DATA_FIELD, robotToObject(account.asRobot()));
     } else {
       throw new IllegalStateException("Account is neither a human nor a robot");
     }
@@ -266,9 +280,9 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
   }
 
   private DBCollection getAccountCollection() {
-    return database.getCollection("account");
+    return database.getCollection(ACCOUNT_COLLECTION);
   }
-  
+
   // ****** HumanAccountData serialization
 
   private DBObject humanToObject(HumanAccountData account) {
@@ -277,10 +291,10 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
     PasswordDigest digest = account.getPasswordDigest();
     if (digest != null) {
       DBObject digestObj = new BasicDBObject();
-      digestObj.put("salt", digest.getSalt());
-      digestObj.put("digest", digest.getDigest());
+      digestObj.put(PASSWORD_SALT_FIELD, digest.getSalt());
+      digestObj.put(PASSWORD_DIGEST_FIELD, digest.getDigest());
 
-      object.put("passwordDigest", digestObj);
+      object.put(HUMAN_PASSWORD_FIELD, digestObj);
     }
 
     return object;
@@ -289,10 +303,10 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
   private HumanAccountData objectToHuman(ParticipantId id, DBObject object) {
     PasswordDigest passwordDigest = null;
 
-    DBObject digestObj = (DBObject) object.get("passwordDigest");
+    DBObject digestObj = (DBObject) object.get(HUMAN_PASSWORD_FIELD);
     if (digestObj != null) {
-      byte[] salt = (byte[]) digestObj.get("salt");
-      byte[] digest = (byte[]) digestObj.get("digest");
+      byte[] salt = (byte[]) digestObj.get(PASSWORD_SALT_FIELD);
+      byte[] digest = (byte[]) digestObj.get(PASSWORD_DIGEST_FIELD);
       passwordDigest = PasswordDigest.from(salt, digest);
     }
 
@@ -300,12 +314,12 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
   }
 
   // ****** RobotAccountData serialization
-  
+
   private DBObject robotToObject(RobotAccountData account) {
     return new BasicDBObject()
-        .append("url", account.getUrl())
-        .append("verified", account.isVerified())
-        .append("capabilities", capabilitiesToObject(account.getCapabilities()));
+        .append(ROBOT_URL_FIELD, account.getUrl())
+        .append(ROBOT_VERIFIED_FIELD, account.isVerified())
+        .append(ROBOT_CAPABILITIES_FIELD, capabilitiesToObject(account.getCapabilities()));
   }
 
   private DBObject capabilitiesToObject(RobotCapabilities capabilities) {
@@ -321,24 +335,24 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
       }
       capabilitiesObj.put(capability.getEventType().name(),
           new BasicDBObject()
-              .append("contexts", contexts)
+              .append(CAPABILITY_CONTEXTS_FIELD, contexts)
               // TODO: Add Capability.filter.
               );
     }
     
     BasicDBObject object =
         new BasicDBObject()
-            .append("capabilities", capabilitiesObj)
-            .append("capabilitiesHash", capabilities.getCapabilitiesHash())
-            .append("version", capabilities.getProtocolVersion().name());
+            .append(CAPABILITIES_CAPABILITIES_FIELD, capabilitiesObj)
+            .append(CAPABILITIES_HASH_FIELD, capabilities.getCapabilitiesHash())
+            .append(CAPABILITIES_VERSION_FIELD, capabilities.getProtocolVersion().name());
 
     return object;
   }
 
   private AccountData objectToRobot(ParticipantId id, DBObject robot) {
-    String url = (String) robot.get("url");
-    RobotCapabilities capabilities = objectToCapabilities((DBObject) robot.get("capabilities"));
-    boolean verified = (Boolean) robot.get("verified");
+    String url = (String) robot.get(ROBOT_URL_FIELD);
+    RobotCapabilities capabilities = objectToCapabilities((DBObject) robot.get(ROBOT_CAPABILITIES_FIELD));
+    boolean verified = (Boolean) robot.get(ROBOT_VERIFIED_FIELD);
     return new RobotAccountDataImpl(id, url, capabilities, verified);
   }
 
@@ -348,14 +362,14 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
       return null;
     }
     
-    Map<String, Object> capabilitiesObj = (Map<String, Object>) object.get("capabilities");
+    Map<String, Object> capabilitiesObj = (Map<String, Object>) object.get(CAPABILITIES_CAPABILITIES_FIELD);
     Map<EventType, Capability> capabilities = CollectionUtils.newHashMap();
     
     for (Entry<String, Object> capability : capabilitiesObj.entrySet()) {
       EventType eventType = EventType.valueOf(capability.getKey());
       List<Context> contexts = CollectionUtils.newArrayList();
       DBObject capabilityObj = (DBObject) capability.getValue();
-      DBObject contextsObj = (DBObject) capabilityObj.get("contexts");
+      DBObject contextsObj = (DBObject) capabilityObj.get(CAPABILITY_CONTEXTS_FIELD);
       for (String contextId : contextsObj.keySet()) {
         contexts.add(Context.valueOf((String) contextsObj.get(contextId)));
       }
@@ -363,8 +377,8 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
       capabilities.put(eventType, new Capability(eventType, contexts));
     }
     
-    String capabilitiesHash = (String) object.get("capabilitiesHash");
-    ProtocolVersion version = ProtocolVersion.valueOf((String) object.get("version"));
+    String capabilitiesHash = (String) object.get(CAPABILITIES_HASH_FIELD);
+    ProtocolVersion version = ProtocolVersion.valueOf((String) object.get(CAPABILITIES_VERSION_FIELD));
 
     return new RobotCapabilities(capabilities, capabilitiesHash, version);
   }

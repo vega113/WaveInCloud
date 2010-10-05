@@ -49,7 +49,7 @@ public final class HumanAccountDataImpl implements HumanAccountData {
    * @param id non-null participant id for this account.
    * @param passwordDigest The user's password digest, or null if the user
    *        should not be authenticated using a password. This is typically
-   *        obtained by calling new PasswordDigest(password_chars);
+   *        obtained by calling {@code new PasswordDigest(password_chars);}
    */
   public HumanAccountDataImpl(ParticipantId id, PasswordDigest passwordDigest) {
     Preconditions.checkNotNull(id, "Id can not be null");
