@@ -34,6 +34,7 @@ import org.waveprotocol.wave.examples.fedone.rpc.AttachmentServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.AuthenticationServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.FetchServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.ServerRpcProvider;
+import org.waveprotocol.wave.examples.fedone.rpc.UserRegistrationServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.WaveClientServlet;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
@@ -81,6 +82,7 @@ public class ServerMain {
     server.addServlet("/robot/dataapi", injector.getInstance(DataApiServlet.class));
     server.addServlet("/robot/register/*", injector.getInstance(RobotRegistrationServlet.class));
 
+    server.addServlet("/register", injector.getInstance(UserRegistrationServlet.class));
     server.addServlet("/", injector.getInstance(WaveClientServlet.class));
 
     RobotsGateway robotsGateway = injector.getInstance(RobotsGateway.class);

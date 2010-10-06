@@ -59,7 +59,8 @@ public class AuthenticationServletTest extends TestCase {
     HumanAccountData account = new HumanAccountDataImpl(
         ParticipantId.ofUnsafe("frodo@example.com"), new PasswordDigest("password".toCharArray()));
     store.putAccount(account);
-    servlet = new AuthenticationServlet(AuthTestUtil.make(), new SessionManager(new MemoryStore()));
+    servlet = new AuthenticationServlet(
+        AuthTestUtil.make(), new SessionManager(new MemoryStore()));
     AccountStoreHolder.init(store);
   }
 
@@ -99,15 +100,15 @@ public class AuthenticationServletTest extends TestCase {
 
     String redirect_location = "/abc123?nested=query&string";
     PercentEscaper escaper =
-      new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
+        new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
     String query_str = "r=" + escaper.escape(redirect_location);
-    
+
     attemptLogin(req, resp, session, "frodo@example.com", "password", query_str);
 
     verify(resp).sendRedirect(redirect_location);
     verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
   }
-  
+
   public void testLoginDoesNotRedirectToRemoteSite() throws IOException {
     HttpServletRequest req = mock(HttpServletRequest.class);
     HttpSession session = mock(HttpSession.class);
@@ -115,9 +116,9 @@ public class AuthenticationServletTest extends TestCase {
 
     String redirect_location = "http://example.com/other/site";
     PercentEscaper escaper =
-      new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
+        new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
     String query_str = "r=" + escaper.escape(redirect_location);
-    
+
     attemptLogin(req, resp, session, "frodo@example.com", "password", query_str);
 
     verify(resp, never()).sendRedirect(anyString());
@@ -149,7 +150,11 @@ public class AuthenticationServletTest extends TestCase {
 
   public void attemptLogin(HttpServletRequest req, HttpServletResponse resp, HttpSession session,
       String address, String password, String queryString) throws IOException {
-    String data = "address=" + address + "&" + "password=" + password;
+    // The query string is escaped.
+    PercentEscaper escaper =
+        new PercentEscaper(PercentEscaper.SAFECHARS_URLENCODER, true);
+    String data =
+        "address=" + escaper.escape(address) + "&" + "password=" + escaper.escape(password);
 
     when(req.getSession(false)).thenReturn(null);
     Reader reader = new StringReader(data);

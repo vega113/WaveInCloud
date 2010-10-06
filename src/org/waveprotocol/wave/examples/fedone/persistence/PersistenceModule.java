@@ -109,6 +109,9 @@ public class PersistenceModule extends AbstractModule {
       bind(AccountStore.class).to(MemoryStore.class).in(Singleton.class);
     } else if (accountStoreType.equalsIgnoreCase("fake")) {
       bind(AccountStore.class).to(FakePermissiveAccountStore.class).in(Singleton.class);
+    } else if (accountStoreType.equalsIgnoreCase("mongodb")) {
+      MongoDbProvider mongoDbProvider = getMongoDbProvider();
+      bind(AccountStore.class).toInstance(mongoDbProvider.provideMongoDbStore());
     } else {
       throw new RuntimeException("Invalid account store type: '" + accountStoreType + "'");
     }

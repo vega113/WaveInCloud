@@ -135,6 +135,7 @@ public class PasswordDigest implements Serializable {
    * @return true if the passwords match, false otherwise.
    */
   public boolean verify(char[] providedPassword) {
+    Preconditions.checkNotNull(providedPassword, "Provided password is null");
     return digest != null && Arrays.equals(digest, createPasswordDigest(providedPassword, salt));
   }
 

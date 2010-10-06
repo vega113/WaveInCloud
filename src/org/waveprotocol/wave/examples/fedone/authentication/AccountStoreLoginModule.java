@@ -89,6 +89,7 @@ public class AccountStoreLoginModule implements LoginModule {
     try {
       id = ParticipantId.of(nameCallback.getName());
       AccountData account = accountStore.getAccount(id);
+      char[] password = passwordCallback.getPassword();
       
       if (account == null) {
         // The user doesn't exist. Auth failed.
@@ -96,7 +97,10 @@ public class AccountStoreLoginModule implements LoginModule {
       } else if (!account.isHuman()) {
         // The account is owned by a robot. Auth failed.
         success = false;
-      } else if (!account.asHuman().getPasswordDigest().verify(passwordCallback.getPassword())) {
+      } else if (password == null) {
+        // Null password provided by callback. We require a password (even an empty one).
+        success = false;
+      } else if (!account.asHuman().getPasswordDigest().verify(password)) {
         // The supplied password doesn't match. Auth failed.
         success = false;
       } else {

@@ -80,4 +80,10 @@ public class PasswordDigestTest extends TestCase {
     assertTrue(pwd1.verify("webernets".toCharArray()));
     assertTrue(pwd2.verify("webernets".toCharArray()));
   }
+  
+  public void testEmptyPasswordVerifiesCorrectly() {
+    PasswordDigest pwd = new PasswordDigest(new char[0]);
+    assertTrue(pwd.verify(new char[0]));
+    assertFalse(pwd.verify(new char[1]));
+  }
 }

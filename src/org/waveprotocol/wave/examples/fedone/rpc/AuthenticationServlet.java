@@ -77,20 +77,11 @@ public class AuthenticationServlet extends HttpServlet {
     this.sessionManager = sessionManager;
   }
 
-  /**
-   * This method is used to read the arguments out of the request body. Care is
-   * taken to make sure the password is never stored in a string.
-   */
   @SuppressWarnings("unchecked")
-  private MultiMap<String> getArgumentMap(BufferedReader body) throws IOException {
-    // TODO(josephg): Figure out a way to do this encoding without using
-    // intermediate string representations of the password.
-    return new UrlEncoded(body.readLine());
-  }
-
   private LoginContext login(BufferedReader body) throws IOException, LoginException {
     Subject subject = new Subject();
-    CallbackHandler callbackHandler = new HttpRequestBasedCallbackHandler(getArgumentMap(body));
+    MultiMap<String> parameters = new UrlEncoded(body.readLine());
+    CallbackHandler callbackHandler = new HttpRequestBasedCallbackHandler(parameters);
 
     LoginContext context = new LoginContext("Wave", subject, callbackHandler, configuration);
 
