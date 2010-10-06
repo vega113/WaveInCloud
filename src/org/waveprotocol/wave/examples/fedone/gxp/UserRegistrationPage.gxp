@@ -1,7 +1,7 @@
 <!--
-  GXP template for the Robot registration page.
+  GXP template for the user registration page.
   Generate "ant gen_gxp".
-  Author: ljvderijk@google.com (Lennard de Rijk)
+  Author: gentle@google.com (Joseph Gentle)
 -->
 
 <gxp:template
