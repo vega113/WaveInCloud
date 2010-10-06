@@ -21,8 +21,6 @@ import com.google.gxp.base.GxpContext;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import org.eclipse.jetty.util.MultiMap;
-import org.eclipse.jetty.util.UrlEncoded;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.authentication.HttpRequestBasedCallbackHandler;
 import org.waveprotocol.wave.examples.fedone.authentication.PasswordDigest;
@@ -31,7 +29,6 @@ import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Locale;
 
@@ -45,8 +42,8 @@ import javax.servlet.http.HttpServletResponse;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class UserRegistrationServlet extends HttpServlet {
-  private AccountStore accountStore;
-  private String domain;
+  private final AccountStore accountStore;
+  private final String domain;
 
   @Inject
   public UserRegistrationServlet(
@@ -63,23 +60,24 @@ public class UserRegistrationServlet extends HttpServlet {
   @SuppressWarnings("unchecked")
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    BufferedReader body = req.getReader();
-    MultiMap<String> parameters = new UrlEncoded(body.readLine());
+    String message = tryCreateUser(req.getParameter(HttpRequestBasedCallbackHandler.ADDRESS_FIELD),
+        req.getParameter(HttpRequestBasedCallbackHandler.PASSWORD_FIELD));
 
-    try {
-      String username = parameters.getString(HttpRequestBasedCallbackHandler.ADDRESS_FIELD);
-      String password = parameters.getString(HttpRequestBasedCallbackHandler.PASSWORD_FIELD);
-
-      tryCreateUser(username, password, req.getLocale(), resp);
-    } finally {
-      body.close();
+    if (message != null) {
+      resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+    } else {
+      message = "Registration complete.";
+      resp.setStatus(HttpServletResponse.SC_OK);
     }
-  }
 
-  // Returns an error message on error, null on success.
-  private void tryCreateUser(
-      String username, String password, Locale locale, HttpServletResponse response)
-      throws IOException {
+    writeRegistrationPage(message, req.getLocale(), resp);
+  }
+  
+  /**
+   * Try to create a user with the provided username and password. On error,
+   * returns a string containing an error message. On success, returns null.
+   */
+  private String tryCreateUser(String username, String password) {
     String message = null;
     ParticipantId id = null;
 
@@ -92,32 +90,26 @@ public class UserRegistrationServlet extends HttpServlet {
         id = ParticipantId.of(username + ParticipantId.DOMAIN_PREFIX + domain);
       }
       if (id.getAddress().indexOf("@") < 2) {
-        message = "Username portion of address cannot be less than 2 characters";
+        return "Username portion of address cannot be less than 2 characters";
       }
     } catch (InvalidParticipantAddress e) {
-      message = "Invalid username";
+      return "Invalid username";
     }
 
-    if (message == null && accountStore.getAccount(id) != null) {
-      message = "Account already exists";
+    if (accountStore.getAccount(id) != null) {
+      return "Account already exists";
     }
 
-    if (message != null) {
-      response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-    } else {
-      if (password == null) {
-        // Register the user with an empty password.
-        password = "";
-      }
-
-      HumanAccountDataImpl account =
-          new HumanAccountDataImpl(id, new PasswordDigest(password.toCharArray()));
-      accountStore.putAccount(account);
-      message = "Registered " + id.getAddress();
-      response.setStatus(HttpServletResponse.SC_OK);
+    if (password == null) {
+      // Register the user with an empty password.
+      password = "";
     }
 
-    writeRegistrationPage(message, locale, response);
+    HumanAccountDataImpl account =
+        new HumanAccountDataImpl(id, new PasswordDigest(password.toCharArray()));
+    accountStore.putAccount(account);
+
+    return null;
   }
 
   private void writeRegistrationPage(String message, Locale locale, HttpServletResponse dest)

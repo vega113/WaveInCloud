@@ -117,15 +117,8 @@ public class UserRegistrationServletTest extends TestCase {
   public void attemptToRegister(
       HttpServletRequest req, HttpServletResponse resp, String address, String password)
       throws IOException {
-    // The query string is escaped.
-    PercentEscaper escaper = new PercentEscaper(PercentEscaper.SAFECHARS_URLENCODER, true);
-    String data = "address=" + escaper.escape(address);
-    if (password != null) {
-      data += "&" + "password=" + escaper.escape(password);
-    }
-
-    Reader reader = new StringReader(data);
-    when(req.getReader()).thenReturn(new BufferedReader(reader));
+    when(req.getParameter("address")).thenReturn(address);
+    when(req.getParameter("password")).thenReturn(password);
     when(req.getLocale()).thenReturn(Locale.ENGLISH);
     PrintWriter writer = mock(PrintWriter.class);
     when(resp.getWriter()).thenReturn(new PrintWriter(new StringWriter()));

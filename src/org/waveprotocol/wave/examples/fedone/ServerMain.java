@@ -74,15 +74,12 @@ public class ServerMain {
     AccountStoreHolder.init(injector.getInstance(AccountStore.class));
 
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
-    server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
-
     server.addServlet("/auth", injector.getInstance(AuthenticationServlet.class));
-
-    server.addServlet("/robot/rpc", injector.getInstance(ActiveApiServlet.class));
+    server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
+    server.addServlet("/register", injector.getInstance(UserRegistrationServlet.class));
     server.addServlet("/robot/dataapi", injector.getInstance(DataApiServlet.class));
     server.addServlet("/robot/register/*", injector.getInstance(RobotRegistrationServlet.class));
-
-    server.addServlet("/register", injector.getInstance(UserRegistrationServlet.class));
+    server.addServlet("/robot/rpc", injector.getInstance(ActiveApiServlet.class));
     server.addServlet("/", injector.getInstance(WaveClientServlet.class));
 
     RobotsGateway robotsGateway = injector.getInstance(RobotsGateway.class);
