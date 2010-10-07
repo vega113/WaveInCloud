@@ -100,6 +100,39 @@ public class DataApiTokenContainerTest extends TestCase {
     }
   }
 
+  public void testRejectRequestToken() throws Exception {
+    OAuthAccessor unauthorizedRequestToken = container.generateRequestToken(consumer);
+
+    container.rejectRequestToken(unauthorizedRequestToken.requestToken);
+    try {
+      container.getRequestTokenAccessor(unauthorizedRequestToken.requestToken);
+      fail("Retrieving the request token should fail because it was rejected");
+    } catch (OAuthProblemException e) {
+      // expected
+    }
+  }
+
+  public void testRejectRequestTokenAfterAuthorizationThrowsException() throws Exception {
+    OAuthAccessor unauthorizedRequestToken = container.generateRequestToken(consumer);
+
+    container.authorizeRequestToken(unauthorizedRequestToken.requestToken, ALEX);
+    try {
+      container.rejectRequestToken(unauthorizedRequestToken.requestToken);
+      fail("Expected OAuthProblemException");
+    } catch (OAuthProblemException e) {
+      // expected
+    }
+  }
+
+  public void testRejectUnknownRequestTokenThrowsException() throws Exception {
+    try {
+      container.rejectRequestToken("unknown");
+      fail("Expected OAuthProblemException");
+    } catch (OAuthProblemException e) {
+      // expected
+    }
+  }
+
   public void testGenerateAccessToken() throws Exception {
     OAuthAccessor unauthorizedRequestToken = container.generateRequestToken(consumer);
     OAuthAccessor authorizedRequestToken =

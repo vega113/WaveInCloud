@@ -160,6 +160,25 @@ public final class DataApiTokenContainer {
   }
 
   /**
+   * Rejects authorization of a request token.
+   *
+   * @param requestToken the request token used for identification.
+   * @throws OAuthProblemException if the request token does not map to an
+   *         accessor or if the token was already used.
+   */
+  public void rejectRequestToken(String requestToken) throws OAuthProblemException {
+    OAuthAccessor accessor = getRequestTokenAccessor(requestToken);
+
+    if (accessor.getProperty(USER_PROPERTY_NAME) != null) {
+      throw OAuthUtil.newOAuthProblemException(OAuth.Problems.TOKEN_USED);
+    }
+
+    // Can't use remove(String, OAuthAccessor) since equals is not defined.
+    requestTokenAccessors.remove(requestToken);
+    LOG.info("Rejected request token " + requestToken);
+  }
+
+  /**
    * Authorize the {@link OAuthAccessor} by generating a new access token and
    * token secret.
    *
