@@ -30,6 +30,7 @@ import org.waveprotocol.wave.examples.common.SessionConstants;
 import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
 import org.waveprotocol.wave.examples.fedone.gxp.WaveClientPage;
 import org.waveprotocol.wave.examples.fedone.util.Log;
+import org.waveprotocol.wave.examples.fedone.util.RandomBase64Generator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
@@ -137,10 +138,14 @@ public class WaveClientServlet extends HttpServlet {
     try {
       ParticipantId user = sessionManager.getLoggedInUser(session);
       String address = (user != null) ? user.getAddress() : null;
-      
+
+      // TODO(zdwang): Figure out a proper session id rather than generating a random number
+      String sessionId = (new RandomBase64Generator()).next(10);
+
       return new JSONObject()
           .put(SessionConstants.DOMAIN, domain)
-          .putOpt(SessionConstants.ADDRESS, address);
+          .putOpt(SessionConstants.ADDRESS, address)
+          .putOpt(SessionConstants.ID_SEED, sessionId);
     } catch (JSONException e) {
       LOG.severe("Failed to create session JSON");
       return new JSONObject();

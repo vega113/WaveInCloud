@@ -56,6 +56,17 @@ public abstract class Session implements SessionConstants {
   public abstract String getDomain();
 
   /**
+   * @return the user's logged in address.
+   */
+  public abstract String getAddress();
+
+  /**
+   * @return the id seed that's going to be used for generating ids for the session
+   */
+  public abstract String getIdSeed();
+
+
+  /**
    * A {@link Session} which gets its data from the __session JS variable.
    */
   private static final class JsSession extends Session {
@@ -71,6 +82,16 @@ public abstract class Session implements SessionConstants {
       return getFieldAsString(DOMAIN);
     }
 
+    @Override
+    public String getAddress() {
+      return getFieldAsString(ADDRESS);
+    }
+
+    @Override
+    public String getIdSeed() {
+      return getFieldAsString(ID_SEED);
+    }
+
     private native String getFieldAsString(String s) /*-{
       return $wnd.__session[s];
     }-*/;
@@ -83,6 +104,16 @@ public abstract class Session implements SessionConstants {
     @Override
     public String getDomain() {
       return DOMAIN;
+    }
+
+    @Override
+    public String getAddress() {
+      return ADDRESS;
+    }
+
+    @Override
+    public String getIdSeed() {
+      return ID_SEED;
     }
   }
 }

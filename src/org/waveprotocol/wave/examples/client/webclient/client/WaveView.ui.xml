@@ -7,33 +7,41 @@
         background: #ddd; cursor: pointer; padding: 5px !important;
         text-align: center;
       }
-      
+
       .addParticipant {
         margin-right: 5px;
       }
-      
+
       .blip {
         border: thin solid #ccc; border-radius: 5px; padding: 0 5px;
         margin: 0 5px 5px 5px;
       }
-      
+
       .hasOverflow {
         overflow: auto;
       }
-      
+
       .participants {
         display: inline-block;
       }
-      
+
+      .top {
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        top: 0px;
+        bottom: 0px;
+      }
+
       .topBox {
         margin: 5px;
       }
-      
+
       .thread {
         margin-left: 10px;
       }
     </ui:style>
-  <g:DockLayoutPanel unit="EM">
+  <g:DockLayoutPanel unit="EM" styleName="{style.top}">
     <g:north size="3">
       <g:FlowPanel styleName="{style.topBox}">
         <g:Button ui:field="addParticipant" styleName="{style.addParticipant}">+</g:Button>
