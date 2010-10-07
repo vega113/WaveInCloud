@@ -28,6 +28,14 @@ import com.google.wave.api.RobotSerializer;
 import com.google.wave.api.data.converter.EventDataConverterManager;
 import com.google.wave.api.impl.GsonFactory;
 
+import net.oauth.OAuth;
+import net.oauth.OAuthAccessor;
+import net.oauth.OAuthException;
+import net.oauth.OAuthMessage;
+import net.oauth.OAuthProblemException;
+import net.oauth.OAuthValidator;
+import net.oauth.server.HttpRequestMessage;
+
 import org.waveprotocol.wave.examples.fedone.robots.OperationContext;
 import org.waveprotocol.wave.examples.fedone.robots.OperationContextImpl;
 import org.waveprotocol.wave.examples.fedone.robots.OperationResults;
@@ -37,12 +45,12 @@ import org.waveprotocol.wave.examples.fedone.robots.util.LoggingRequestListener;
 import org.waveprotocol.wave.examples.fedone.robots.util.OperationUtil;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
-import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.servlet.http.HttpServlet;
@@ -59,7 +67,6 @@ public class DataApiServlet extends HttpServlet {
   private static final Log LOG = Log.get(DataApiServlet.class);
   private static final WaveletProvider.SubmitRequestListener LOGGING_REQUEST_LISTENER =
       new LoggingRequestListener(LOG);
-  public static final String USERNAME_HEADER = "X-Wave-Username";
   private static final String JSON_CONTENT_TYPE = "application/json";
 
   private final RobotSerializer robotSerializer;
@@ -67,17 +74,22 @@ public class DataApiServlet extends HttpServlet {
   private final WaveletProvider waveletProvider;
   private final OperationServiceRegistry operationRegistry;
   private final ConversationUtil conversationUtil;
+  private final DataApiTokenContainer tokenContainer;
+  private final OAuthValidator validator;
 
   @Inject
   public DataApiServlet(RobotSerializer robotSerializer, EventDataConverterManager converterManager,
       WaveletProvider waveletProvider,
       @Named("DataApiRegistry") OperationServiceRegistry operationRegistry,
-      ConversationUtil conversationUtil) {
+      ConversationUtil conversationUtil, OAuthValidator validator,
+      DataApiTokenContainer tokenContainer) {
     this.robotSerializer = robotSerializer;
     this.converterManager = converterManager;
     this.waveletProvider = waveletProvider;
     this.conversationUtil = conversationUtil;
     this.operationRegistry = operationRegistry;
+    this.validator = validator;
+    this.tokenContainer = tokenContainer;
   }
 
   /**
@@ -85,17 +97,34 @@ public class DataApiServlet extends HttpServlet {
    */
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    // TODO(ljvderijk): Remove this once proper authentication is up
-    String username = req.getHeader(USERNAME_HEADER);
-    LOG.info("Performing operations for: " + username);
+    OAuthMessage message = new HttpRequestMessage(req, req.getRequestURL().toString());
 
-    ParticipantId participant;
+    OAuthAccessor accessor;
     try {
-      participant = ParticipantId.of(username);
-    } catch (InvalidParticipantAddress e) {
-      resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+      message.requireParameters(OAuth.OAUTH_TOKEN);
+      accessor = tokenContainer.getAccessTokenAccessor(message.getParameter(OAuth.OAUTH_TOKEN));
+    } catch (OAuthProblemException e) {
+      LOG.info("No valid OAuth token present", e);
+      // Have to set status here manually, cannot use e.getHttpStatusCode
+      // because message.requireParameters doesn't set it in the exception.
+      resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
       return;
     }
+
+    try {
+      validator.validateMessage(message, accessor);
+    } catch (OAuthException e) {
+      LOG.info("The message does not conform to OAuth", e);
+      resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      return;
+    } catch (URISyntaxException e) {
+      LOG.info("The message URL is invalid", e);
+      resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      return;
+    }
+
+    ParticipantId participant =
+        (ParticipantId) accessor.getProperty(DataApiTokenContainer.USER_PROPERTY_NAME);
 
     String apiRequest;
     try {
