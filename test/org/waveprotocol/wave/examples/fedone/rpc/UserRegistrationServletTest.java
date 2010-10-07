@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.waveprotocol.wave.common.util.PercentEscaper;
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
@@ -51,17 +53,18 @@ public class UserRegistrationServletTest extends TestCase {
   private UserRegistrationServlet servlet;
   private AccountStore store;
 
+  private @Mock HttpServletRequest req;
+  private @Mock HttpServletResponse resp;
+  
   @Override
   protected void setUp() throws Exception {
     store = new MemoryStore();
     store.putAccount(account);
     servlet = new UserRegistrationServlet(store, "example.com");
+    MockitoAnnotations.initMocks(this);
   }
 
   public void testRegisterNewUser() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    HttpServletResponse resp = mock(HttpServletResponse.class);
-
     attemptToRegister(req, resp, "foo@example.com", "internet");
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
@@ -71,9 +74,6 @@ public class UserRegistrationServletTest extends TestCase {
   }
 
   public void testRegisterExistingUserThrowsError() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    HttpServletResponse resp = mock(HttpServletResponse.class);
-
     attemptToRegister(req, resp, "frodo@example.com", "asdf");
 
     verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -83,9 +83,6 @@ public class UserRegistrationServletTest extends TestCase {
   }
 
   public void testDomainInsertedAutomatically() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    HttpServletResponse resp = mock(HttpServletResponse.class);
-
     attemptToRegister(req, resp, "sam", "fdsa");
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
@@ -93,9 +90,6 @@ public class UserRegistrationServletTest extends TestCase {
   }
 
   public void testUsernameTrimmed() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    HttpServletResponse resp = mock(HttpServletResponse.class);
-
     attemptToRegister(req, resp, " ben@example.com ", "beetleguice");
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
@@ -103,9 +97,6 @@ public class UserRegistrationServletTest extends TestCase {
   }
 
   public void testNullPasswordWorks() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    HttpServletResponse resp = mock(HttpServletResponse.class);
-
     attemptToRegister(req, resp, "zd@example.com", null);
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
