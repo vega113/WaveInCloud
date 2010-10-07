@@ -31,6 +31,8 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import javax.servlet.http.HttpSession;
 
 /**
+ * Unit tests for {@link SessionManagerImpl}.
+ *
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class SessionManagerTest extends TestCase {
@@ -42,7 +44,7 @@ public class SessionManagerTest extends TestCase {
     AccountStore store = new MemoryStore();
     account = new HumanAccountDataImpl(ParticipantId.ofUnsafe("tubes@example.com"));
     store.putAccount(account);
-    sessionManager = new SessionManager(store);
+    sessionManager = new SessionManagerImpl(store);
   }
 
   public void testSessionFetchesAddress() {
@@ -78,7 +80,7 @@ public class SessionManagerTest extends TestCase {
   public void testGetLoginUrlEncodesQueryParameters() {
     String url = "/abc123?nested=query&string";
     String encoded_url = "/abc123?nested%3Dquery%26string";
-    assertEquals(SessionManager.AUTH_URL + "?r=" + encoded_url,
-        sessionManager.getLoginUrl(url));
+    assertEquals(
+        SessionManager.AUTH_URL + "?r=" + encoded_url, sessionManager.getLoginUrl(url));
   }
 }

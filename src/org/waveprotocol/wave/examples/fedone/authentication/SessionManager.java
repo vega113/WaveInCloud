@@ -17,32 +17,20 @@
 
 package org.waveprotocol.wave.examples.fedone.authentication;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.inject.Inject;
-
-import org.waveprotocol.wave.common.util.PercentEscaper;
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
-import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import javax.servlet.http.HttpSession;
+
 
 /**
  * Utility class for managing the session's authentication status.
  *
  * @author josephg@gmail.com (Joseph Gentle)
  */
-public final class SessionManager {
-  public static final String AUTH_URL = "/auth";
-  private static final String USER_FIELD = "user";
+public interface SessionManager {
 
-  private final AccountStore accountStore;
-
-  @Inject
-  public SessionManager(AccountStore accountStore) {
-    this.accountStore = accountStore;
-  }
+  static final String AUTH_URL = "/auth";
 
   /**
    * Get the participant id of the currently logged in user from the user's HTTP
@@ -55,13 +43,7 @@ public final class SessionManager {
    *        request.getSession(false);
    * @return the user's participant id, or null if the user is not logged in.
    */
-  public ParticipantId getLoggedInUser(HttpSession session) {
-    if (session != null) {
-      return (ParticipantId) session.getAttribute(USER_FIELD);
-    } else {
-      return null;
-    }
-  }
+  ParticipantId getLoggedInUser(HttpSession session);
 
   /**
    * Get account data of the currently logged in user.
@@ -73,15 +55,7 @@ public final class SessionManager {
    *        request.getSession(false);
    * @return the user's account data, or null if the user is not logged in.
    */
-  public AccountData getLoggedInAccount(HttpSession session) {
-    // Consider caching the account data in the session object.
-    ParticipantId user = getLoggedInUser(session);
-    if (user != null) {
-      return accountStore.getAccount(user);
-    } else {
-      return null;
-    }
-  }
+  AccountData getLoggedInAccount(HttpSession session);
 
   /**
    * Bind the user's participant id to the user's session.
@@ -92,11 +66,7 @@ public final class SessionManager {
    *        request.getSession(true);
    * @param id the user who has been logged in
    */
-  public void setLoggedInUser(HttpSession session, ParticipantId id) {
-    Preconditions.checkNotNull(session, "Session is null");
-    Preconditions.checkNotNull(id, "Participant id is null");
-    session.setAttribute(USER_FIELD, id);
-  }
+  void setLoggedInUser(HttpSession session, ParticipantId id);
 
   /**
    * Log the user out.
@@ -106,13 +76,7 @@ public final class SessionManager {
    * @param session The user's HTTP session, obtainable from
    *        request.getSession(false);
    */
-  public void logout(HttpSession session) {
-    if (session != null) {
-      // This function should also remove any other bound fields in the session
-      // object.
-      session.removeAttribute(USER_FIELD);
-    }
-  }
+  void logout(HttpSession session);
 
   /**
    * Get the relative URL to redirect the user to the login page.
@@ -122,14 +86,6 @@ public final class SessionManager {
    *        authenticating.
    * @return a url containing the login page.
    */
-  public String getLoginUrl(String redirect) {
-    if (Strings.isNullOrEmpty(redirect)) {
-      return AUTH_URL;
-    } else {
-      PercentEscaper escaper =
-          new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
-      String queryStr = "?r=" + escaper.escape(redirect);
-      return AUTH_URL + queryStr;
-    }
-  }
+  String getLoginUrl(String redirect);
+
 }

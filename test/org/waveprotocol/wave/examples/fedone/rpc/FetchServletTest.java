@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 import org.waveprotocol.wave.common.util.JavaWaverefEncoder;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
+import org.waveprotocol.wave.examples.fedone.authentication.SessionManagerImpl;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.persistence.memory.MemoryStore;
@@ -69,7 +70,7 @@ public class FetchServletTest extends TestCase {
     waveletProvider = new WaveletProviderStub();
     AccountStore accountStore = new MemoryStore();
     accountStore.putAccount(new HumanAccountDataImpl(ParticipantId.ofUnsafe("fred@example.com")));
-    SessionManager sessionManager = new SessionManager(accountStore);
+    SessionManager sessionManager = new SessionManagerImpl(accountStore);
     servlet = new FetchServlet(waveletProvider, protoSerializer, sessionManager);
   }
 
