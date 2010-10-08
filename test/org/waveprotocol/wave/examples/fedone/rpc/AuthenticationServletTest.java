@@ -59,7 +59,8 @@ public class AuthenticationServletTest extends TestCase {
     HumanAccountData account = new HumanAccountDataImpl(
         ParticipantId.ofUnsafe("frodo@example.com"), new PasswordDigest("password".toCharArray()));
     store.putAccount(account);
-    servlet = new AuthenticationServlet(AuthTestUtil.make(), new SessionManagerImpl(store));
+    servlet = new AuthenticationServlet(
+        AuthTestUtil.make(), new SessionManagerImpl(store), "example.com");
     AccountStoreHolder.init(store);
   }
 
@@ -150,8 +151,7 @@ public class AuthenticationServletTest extends TestCase {
   public void attemptLogin(HttpServletRequest req, HttpServletResponse resp, HttpSession session,
       String address, String password, String queryString) throws IOException {
     // The query string is escaped.
-    PercentEscaper escaper =
-        new PercentEscaper(PercentEscaper.SAFECHARS_URLENCODER, true);
+    PercentEscaper escaper = new PercentEscaper(PercentEscaper.SAFECHARS_URLENCODER, true);
     String data =
         "address=" + escaper.escape(address) + "&" + "password=" + escaper.escape(password);
 

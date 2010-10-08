@@ -1,0 +1,31 @@
+<!--
+  GXP template for the user authentication (login) page.
+  Generate "ant gen_gxp".
+  Author: gentle@google.com (Joseph Gentle)
+-->
+
+<gxp:template
+    name='org.waveprotocol.wave.examples.fedone.gxp.AuthenticationPage'
+    xmlns='http://www.w3.org/1999/xhtml'
+    xmlns:gxp='http://google.com/2001/gxp'>
+
+  <gxp:param name='domain' type='String' />
+
+  <html>
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+      <title>Login</title>
+      <link rel="shortcut icon" href="/static/favicon.ico" />
+    </head>
+
+    <body>
+      <b>Note: For now, you must enter your full user address (user@<gxp:eval expr='domain'/>).</b>
+
+      <form method="post" action="">
+        Username: <input name="address" type="text"/><br/>
+        Password: <input name="password" type="password"/><br/>
+        <input type="submit"/>
+      </form>
+    </body>
+  </html>
+</gxp:template>

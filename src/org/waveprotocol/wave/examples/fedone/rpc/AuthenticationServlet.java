@@ -19,13 +19,16 @@ package org.waveprotocol.wave.examples.fedone.rpc;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.gxp.base.GxpContext;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
 import org.waveprotocol.wave.examples.fedone.authentication.HttpRequestBasedCallbackHandler;
 import org.waveprotocol.wave.examples.fedone.authentication.ParticipantPrincipal;
 import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
+import org.waveprotocol.wave.examples.fedone.gxp.AuthenticationPage;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -54,27 +57,20 @@ import javax.servlet.http.HttpSession;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class AuthenticationServlet extends HttpServlet {
-  // TODO(josephg): Make this pretty and put it somewhere else. The login
-  // page should be implemented with GWT as part of the client.
-  private static final String SIMPLE_AUTH_FORM = "<html><body><form name=\"auth\" method=\"POST\">"
-      + "<table class=\"form\"><tr><td>Username (foo@example.com)</td><td>" + "<input name=\""
-      + HttpRequestBasedCallbackHandler.ADDRESS_FIELD
-      + "\" /></td></tr><tr><td>Password</td><td><input name=\""
-      + HttpRequestBasedCallbackHandler.PASSWORD_FIELD
-      + "\" type=\"password\" /></td></tr><tr><td colspan=\"3\">"
-      + "<input type=\"submit\" value=\"Login\" /><br /></table></form></body></html>";
-
   private static final Log LOG = Log.get(AuthenticationServlet.class);
 
   private final Configuration configuration;
   private final SessionManager sessionManager;
+  private final String domain;
 
   @Inject
-  public AuthenticationServlet(Configuration configuration, SessionManager sessionManager) {
+  public AuthenticationServlet(Configuration configuration, SessionManager sessionManager,
+      @Named("wave_server_domain") String domain) {
     Preconditions.checkNotNull(configuration, "Configuration is null");
     Preconditions.checkNotNull(sessionManager, "Session manager is null");
     this.configuration = configuration;
     this.sessionManager = sessionManager;
+    this.domain = domain;
   }
 
   @SuppressWarnings("unchecked")
@@ -137,8 +133,10 @@ public class AuthenticationServlet extends HttpServlet {
     // then redirect them to that URL.
     String query = req.getQueryString();
 
-    // Not using req.getParameter() for this because calling that method might parse the password
-    // sitting in POST data into a String, where it could be read by another process after the
+    // Not using req.getParameter() for this because calling that method might
+    // parse the password
+    // sitting in POST data into a String, where it could be read by another
+    // process after the
     // string is garbage collected.
     if (query != null && query.startsWith("r=")) {
       String encoded_url = query.substring("r=".length());
@@ -208,7 +206,7 @@ public class AuthenticationServlet extends HttpServlet {
     if (user != null) {
       resp.getWriter().print("<html><body>Already authenticated as " + user + "</body></html>");
     } else {
-      resp.getWriter().write(SIMPLE_AUTH_FORM);
+      AuthenticationPage.write(resp.getWriter(), new GxpContext(req.getLocale()), domain);
     }
   }
 }
