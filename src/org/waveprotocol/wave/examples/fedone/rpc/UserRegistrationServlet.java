@@ -41,7 +41,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author josephg@gmail.com (Joseph Gentle)
  */
-public class UserRegistrationServlet extends HttpServlet {
+public final class UserRegistrationServlet extends HttpServlet {
   private final AccountStore accountStore;
   private final String domain;
 
