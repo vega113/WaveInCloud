@@ -138,6 +138,10 @@ public abstract class AttachmentStoreTestBase extends TestCase {
     // Check that a new input stream created now still has the same first byte.
     InputStream is3 = data.getInputStream();
     assertSame(firstByte, is3.read());
+	
+    is1.close();
+    is2.close();
+    is3.close();
   }
   
   public void testOverwriteAttachmentReturnsFalse() throws Exception {

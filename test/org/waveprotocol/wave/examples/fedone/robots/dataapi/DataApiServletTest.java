@@ -20,10 +20,13 @@ package org.waveprotocol.wave.examples.fedone.robots.dataapi;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.OperationType;
 import com.google.wave.api.ProtocolVersion;
@@ -31,6 +34,14 @@ import com.google.wave.api.RobotSerializer;
 import com.google.wave.api.data.converter.EventDataConverterManager;
 
 import junit.framework.TestCase;
+
+import net.oauth.OAuth;
+import net.oauth.OAuthAccessor;
+import net.oauth.OAuthConsumer;
+import net.oauth.OAuthException;
+import net.oauth.OAuthMessage;
+import net.oauth.OAuthServiceProvider;
+import net.oauth.OAuthValidator;
 
 import org.waveprotocol.wave.examples.fedone.robots.OperationContext;
 import org.waveprotocol.wave.examples.fedone.robots.OperationServiceRegistry;
@@ -46,6 +57,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,29 +76,42 @@ public class DataApiServletTest extends TestCase {
   private WaveletProvider waveletProvider;
   private OperationServiceRegistry operationRegistry;
   private DataApiServlet servlet;
+  private OAuthValidator validator;
+  private DataApiTokenContainer tokenContainer;
+  private HttpServletRequest req;
+  private HttpServletResponse resp;
+  private StringWriter stringWriter;
+  private OAuthConsumer consumer;
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
     robotSerializer = mock(RobotSerializer.class);
     converterManager = mock(EventDataConverterManager.class);
     waveletProvider = mock(WaveletProvider.class);
     operationRegistry = mock(OperationServiceRegistry.class);
     ConversationUtil conversationUtil = mock(ConversationUtil.class);
+    validator = mock(OAuthValidator.class);
+    tokenContainer = new DataApiTokenContainer();
 
-    servlet = new DataApiServlet(
-        robotSerializer, converterManager, waveletProvider, operationRegistry, conversationUtil);
-  }
+    OAuthServiceProvider serviceProvider = new OAuthServiceProvider("", "", "");
+    consumer = new OAuthConsumer("", "consumerkey", "consumersecret", serviceProvider);
 
-  public void testDoPostExecutesAndWritesResponse() throws Exception {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    when(req.getHeader(DataApiServlet.USERNAME_HEADER)).thenReturn(ALEX.getAddress());
+    req = mock(HttpServletRequest.class);
+    when(req.getRequestURL()).thenReturn(new StringBuffer("www.example.com"));
     when(req.getReader()).thenReturn(new BufferedReader(new StringReader("")));
+    when(req.getMethod()).thenReturn("POST");
 
-    HttpServletResponse resp = mock(HttpServletResponse.class);
-    StringWriter stringWriter = new StringWriter();
+    resp = mock(HttpServletResponse.class);
+    stringWriter = new StringWriter();
     PrintWriter writer = new PrintWriter(stringWriter);
     when(resp.getWriter()).thenReturn(writer);
 
+    servlet =
+        new DataApiServlet(robotSerializer, converterManager, waveletProvider, operationRegistry,
+            conversationUtil, validator, tokenContainer);
+  }
+
+  public void testDoPostExecutesAndWritesResponse() throws Exception {
     String operationId = "op1";
     OperationRequest operation = new OperationRequest("wavelet.create", operationId);
     List<OperationRequest> operations = Collections.singletonList(operation);
@@ -94,16 +119,48 @@ public class DataApiServletTest extends TestCase {
     String responseValue = "response value";
     when(robotSerializer.serialize(any(), any(Type.class), any(ProtocolVersion.class))).thenReturn(
         responseValue);
+    when(req.getParameterMap()).thenReturn(getOAuthParams());
 
     OperationService service = mock(OperationService.class);
     when(operationRegistry.getServiceFor(any(OperationType.class))).thenReturn(service);
 
     servlet.doPost(req, resp);
 
+    verify(validator).validateMessage(any(OAuthMessage.class), any(OAuthAccessor.class));
     verify(operationRegistry).getServiceFor(any(OperationType.class));
     verify(service).execute(eq(operation), any(OperationContext.class), eq(ALEX));
     verify(resp).setStatus(HttpServletResponse.SC_OK);
     assertEquals("Response should have been written into the servlet", responseValue,
         stringWriter.toString());
+  }
+
+
+  public void testDoPostUnauthorizedWhenMissingToken() throws Exception {
+    servlet.doPost(req, resp);
+    when(req.getParameterMap()).thenReturn(ImmutableMap.of());
+
+    verify(resp).sendError(eq(HttpServletResponse.SC_UNAUTHORIZED), anyString());
+  }
+
+  public void testDoPostUnauthorizedWhenValidationFails() throws Exception {
+    doThrow(new OAuthException("")).when(validator).validateMessage(
+        any(OAuthMessage.class), any(OAuthAccessor.class));
+    when(req.getParameterMap()).thenReturn(getOAuthParams());
+
+    servlet.doPost(req, resp);
+
+    verify(validator).validateMessage(any(OAuthMessage.class), any(OAuthAccessor.class));
+    verify(resp).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+  }
+
+  /** Sets the list of parameters needed to test exchanging a request token */
+  private Map<String, String[]> getOAuthParams() throws Exception {
+    OAuthAccessor requestAccessor = tokenContainer.generateRequestToken(consumer);
+    tokenContainer.authorizeRequestToken(requestAccessor.requestToken, ALEX);
+    OAuthAccessor authorizedAccessor =
+        tokenContainer.generateAccessToken(requestAccessor.requestToken);
+    Map<String, String[]> params = Maps.newHashMap();
+    params.put(OAuth.OAUTH_TOKEN, new String[] {authorizedAccessor.accessToken});
+    return params;
   }
 }

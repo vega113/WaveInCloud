@@ -33,4 +33,11 @@ public interface SessionConstants {
    * The user's logged in address.
    */
   public final static String ADDRESS = "address";
+
+  /**
+   * A globally unique id that the client can use to seed unique ids of the session.
+   * It has no relationship with the application session or http session or authentication, and
+   * is not guaranteed to be cryptographically strong.
+   */
+  public final static String ID_SEED = "id";
 }

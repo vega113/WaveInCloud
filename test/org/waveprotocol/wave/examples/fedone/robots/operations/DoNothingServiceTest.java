@@ -19,6 +19,7 @@ package org.waveprotocol.wave.examples.fedone.robots.operations;
 
 import static org.mockito.Mockito.mock;
 
+import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.data.converter.EventDataConverter;
 
@@ -57,7 +58,9 @@ public class DoNothingServiceTest extends TestCase {
         new OperationContextImpl(waveletProvider, converter, conversationUtil);
 
     operationService.execute(request, context, BOB);
-    assertNull("No response must be set", context.getResponse(request.getId()));
-    assertTrue("No response must be set", context.getResponses().isEmpty());
+
+    JsonRpcResponse response = context.getResponse(request.getId());
+    assertFalse("Expected non error response", response.isError());
+    assertTrue("Empty Response must be set", response.getData().isEmpty());
   }
 }

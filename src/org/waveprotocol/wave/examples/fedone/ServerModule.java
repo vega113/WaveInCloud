@@ -25,6 +25,8 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
+import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
+import org.waveprotocol.wave.examples.fedone.authentication.SessionManagerImpl;
 import org.waveprotocol.wave.examples.fedone.rpc.ProtoSerializer;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveServerModule;
@@ -100,8 +102,9 @@ public class ServerModule extends AbstractModule {
     bind(certs).annotatedWith(Names.named("certs")).toInstance(Arrays.<String> asList());
 
     bind(ProtoSerializer.class).in(Singleton.class);
-    
+
     bind(Configuration.class).toInstance(Configuration.getConfiguration());
+    bind(SessionManager.class).to(SessionManagerImpl.class).in(Singleton.class);
   }
 
   @Provides
