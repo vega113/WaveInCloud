@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -76,7 +77,8 @@ public class AuthenticationServletTest extends TestCase {
     HttpServletResponse resp = mock(HttpServletResponse.class);
     PrintWriter writer = mock(PrintWriter.class);
     when(resp.getWriter()).thenReturn(writer);
-
+    when(req.getLocale()).thenReturn(Locale.ENGLISH);
+    
     servlet.doGet(req, resp);
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
