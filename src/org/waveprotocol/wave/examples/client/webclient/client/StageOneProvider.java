@@ -64,7 +64,7 @@ public class StageOneProvider extends Stages {
 
   @Override
   protected AsyncHolder<StageTwo> createStageTwoLoader(StageOne one) {
-    return new StageTwoProvider(one);
+    return new StageTwoProvider(one, null);
   }
 
 }
