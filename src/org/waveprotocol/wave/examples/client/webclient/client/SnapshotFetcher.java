@@ -1,18 +1,18 @@
 /**
  * Copyright 2010 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  */
 
 package org.waveprotocol.wave.examples.client.webclient.client;
@@ -32,6 +32,7 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveViewSnapshot;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
+import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 
@@ -58,7 +59,9 @@ public final class SnapshotFetcher {
    * @param waveId The wave to fetch
    * @param callback A callback through which the fetched wave will be returned.
    */
-  public void fetchWave(WaveId waveId, final SimpleCallback<WaveViewData, Throwable> callback) {
+  public static void fetchWave(WaveId waveId,
+      final SimpleCallback<WaveViewData, Throwable> callback,
+      final DocumentFactory<?> docFactory) {
     String url = getUrl(WaveRef.of(waveId));
     LOG.trace().log("Fetching wavelet ", waveId.toString(), " at ", url);
 
@@ -78,7 +81,7 @@ public final class SnapshotFetcher {
           WaveViewData waveView;
           try {
             WaveViewSnapshot snapshot = WaveViewSnapshot.parse(response.getText());
-            waveView = SnapshotSerializer.deserializeWave(snapshot);
+            waveView = SnapshotSerializer.deserializeWave(snapshot, docFactory);
           } catch (OperationException e) {
             callback.onFailure(e);
             return;

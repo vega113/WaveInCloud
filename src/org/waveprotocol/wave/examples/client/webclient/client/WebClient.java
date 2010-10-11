@@ -42,6 +42,7 @@ import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreatio
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreationEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveIndexUpdatedEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveSelectionEvent;
+import org.waveprotocol.wave.examples.client.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveUpdatedEvent;
 import org.waveprotocol.wave.examples.client.webclient.util.Log;
 import org.waveprotocol.wave.examples.client.webclient.waveclient.common.WaveViewServiceImpl;
@@ -164,7 +165,20 @@ public class WebClient implements EntryPoint {
       }
     });
 
-    if (!ClientFlags.get().enableWavePanelHarness()) {
+    if (ClientFlags.get().enableWavePanelHarness()) {
+      // For handling the opening of wave using the new wave panel
+      ClientEvents.get().addWaveSelectionEventHandler(
+          new WaveSelectionEventHandler() {
+            @Override
+            public void onSelection(WaveId id) {
+              contentPanel.clear();
+              Stages stages = new StagesProvider(
+                  contentPanel.getElement().appendChild(Document.get().createDivElement()),
+                  contentPanel, id);
+              stages.load(null);
+            }
+          });
+    } else {
       waveView = new WaveView();
       contentPanel.add(waveView);
 
@@ -179,9 +193,9 @@ public class WebClient implements EntryPoint {
           public void onCreateRequest(WaveCreationEvent event) {
 
             if (ClientFlags.get().enableWavePanelHarness()) {
-              Stages stages = new StageOneProvider(
+              Stages stages = new StagesProvider(
                   contentPanel.getElement().appendChild(Document.get().createDivElement()),
-                  contentPanel);
+                  contentPanel, null);
               stages.load(null);
             } else {
               LOG.info("WaveCreationEvent received");

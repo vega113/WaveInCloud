@@ -27,11 +27,10 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
+import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableBlipData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -86,7 +85,7 @@ public class SnapshotSerializer {
 
     return builder.build();
   }
-  
+
   /**
    * Deserializes the snapshot contained in the {@link WaveletSnapshot}
    * into a {@link WaveletData}.
@@ -95,15 +94,15 @@ public class SnapshotSerializer {
    * @throws OperationException if the ops in the snapshot can not be applied.
    * @throws InvalidParticipantAddress
    */
-  public static ObservableWaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
-      throws OperationException, InvalidParticipantAddress {
+  public static ObservableWaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId,
+      DocumentFactory<?> docFactory) throws OperationException, InvalidParticipantAddress {
     ObservableWaveletData.Factory<? extends ObservableWaveletData> factory
-        = WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
-    
+        = WaveletDataImpl.Factory.create(docFactory);
+
     ParticipantId author = ParticipantId.of(snapshot.getCreator());
     WaveletId waveletId = WaveletId.deserialise(snapshot.getWaveletId());
     long creationTime = (long) snapshot.getCreationTime();
-    
+
     ObservableWaveletData wavelet = factory.create(new EmptyWaveletSnapshot(waveId, waveletId,
             author, creationTime));
 
@@ -157,7 +156,7 @@ public class SnapshotSerializer {
     }
     container.createBlip(
         snapshot.getDocumentId(),
-        ParticipantId.of(snapshot.getAuthor()),
+        new ParticipantId(snapshot.getAuthor()),  // We trust the server's snapshot
         contributors,
         docInit,
         (long) snapshot.getLastModifiedTime(),
@@ -172,12 +171,12 @@ public class SnapshotSerializer {
    * @throws OperationException
    * @throws InvalidParticipantAddress
    */
-  public static WaveViewData deserializeWave(WaveViewSnapshot snapshot)
-      throws OperationException, InvalidParticipantAddress {
+  public static WaveViewData deserializeWave(WaveViewSnapshot snapshot,
+      DocumentFactory<?> docFactory) throws OperationException, InvalidParticipantAddress {
     WaveId waveId = WaveId.deserialise(snapshot.getWaveId());
     Collection<ObservableWaveletData> wavelets = CollectionUtils.newArrayList();
     for (WaveletSnapshot s : snapshot.getWaveletList()) {
-      wavelets.add(deserializeWavelet(s, waveId));
+      wavelets.add(deserializeWavelet(s, waveId, docFactory));
     }
 
     return WaveViewDataImpl.create(waveId, wavelets);

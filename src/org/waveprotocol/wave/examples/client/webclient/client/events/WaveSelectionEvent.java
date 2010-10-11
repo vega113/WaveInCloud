@@ -21,8 +21,7 @@ import com.google.gwt.event.shared.GwtEvent;
 
 import org.waveprotocol.wave.model.id.WaveId;
 
-public class WaveSelectionEvent extends
-    GwtEvent<WaveSelectionEventHandler> {
+public class WaveSelectionEvent extends GwtEvent<WaveSelectionEventHandler> {
   public static final GwtEvent.Type<WaveSelectionEventHandler> TYPE = new GwtEvent.Type<WaveSelectionEventHandler>();
   private final WaveId id;
 

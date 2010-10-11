@@ -29,6 +29,8 @@ import org.waveprotocol.wave.client.concurrencycontrol.MuxConnector;
 import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
 import org.waveprotocol.wave.client.wave.RegistriesHolder;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
+import org.waveprotocol.wave.examples.client.webclient.common.communication.callback.SimpleCallback;
+import org.waveprotocol.wave.examples.client.webclient.util.Log;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
@@ -122,8 +124,16 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
 
   }
 
-  public StageTwoProvider(StageOne stageOne) {
+  private static final Log LOG = Log.get(StageTwoProvider.class);
+  private final WaveId waveId;
+
+
+  /**
+   * @param waveId the id of the wave to open. If null, it means, create a new wave.
+   */
+  public StageTwoProvider(StageOne stageOne, WaveId waveId) {
     super(stageOne);
+    this.waveId = waveId;
   }
 
   @Override
@@ -165,8 +175,24 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
   }
 
   @Override
-  protected void fetchWave(AsyncHolder.Accessor<WaveViewData> whenReady) {
-    whenReady.use(WaveFactory.create(getDocumentRegistry()));
+  protected void fetchWave(final AsyncHolder.Accessor<WaveViewData> whenReady) {
+    // TODO(zdwang): Create a real wave, For now, when there is no wave to open, use a fake wave.
+    if (waveId == null) {
+      whenReady.use(WaveFactory.create(getDocumentRegistry()));
+    } else {
+      SnapshotFetcher.fetchWave(waveId, new SimpleCallback<WaveViewData, Throwable>() {
+
+        @Override
+        public void onSuccess(WaveViewData response) {
+          whenReady.use(response);
+        }
+
+        @Override
+        public void onFailure(Throwable reason) {
+          throw new RuntimeException("Unable to handle failed fetchWave.", reason);
+        }
+      }, getDocumentRegistry());
+    }
   }
 
 
