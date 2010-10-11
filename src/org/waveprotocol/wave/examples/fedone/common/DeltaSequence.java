@@ -20,7 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.util.AbstractList;
 import java.util.Iterator;

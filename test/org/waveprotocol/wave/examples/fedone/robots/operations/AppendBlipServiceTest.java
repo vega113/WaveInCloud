@@ -20,17 +20,15 @@ package org.waveprotocol.wave.examples.fedone.robots.operations;
 import static org.mockito.Mockito.mock;
 
 import com.google.wave.api.BlipData;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
-import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.OperationType;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
+import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.data.converter.EventDataConverter;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.robots.OperationContext;
@@ -48,12 +46,15 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.testing.BasicFactories;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.version.DistinctVersion;
+import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
@@ -160,8 +161,10 @@ public class AppendBlipServiceTest extends TestCase {
     List<VersionedWaveletDelta> deltas = robotWavelet.getDeltas();
 
     for (VersionedWaveletDelta vWDelta : deltas) {
-      List<WaveletOperation> ops = ConversionUtil.fromCoreWaveletDelta(
-          vWDelta.delta, 0L, DistinctVersion.NO_DISTINCT_VERSION);
+      CoreWaveletDelta delta = vWDelta.delta;
+      DistinctVersion endVersion = DistinctVersion.of(
+          delta.getTargetVersion().getVersion() + delta.getOperations().size(), -1);
+      List<WaveletOperation> ops = ConversionUtil.fromCoreWaveletDelta(delta, 0L, endVersion);
       for (WaveletOperation op : ops) {
         op.apply(waveletData);
       }

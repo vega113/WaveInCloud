@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableMap;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.examples.client.common.ClientUtils;
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
@@ -37,6 +36,7 @@ import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Arrays;
@@ -71,9 +71,8 @@ public class WaveletOperationSerializerTest extends TestCase {
     List<CoreWaveletOperation> ops = ImmutableList.of(op, op, op);
     ParticipantId author = new ParticipantId("kalman@google.com");
     HashedVersion hashedVersion = HashedVersion.UNSIGNED_VERSION_0;
-    CoreWaveletDelta delta = new CoreWaveletDelta(author, ops);
-    ProtocolWaveletDelta serialized =
-        CoreWaveletOperationSerializer.serialize(delta, hashedVersion);
+    CoreWaveletDelta delta = new CoreWaveletDelta(author, hashedVersion, ops);
+    ProtocolWaveletDelta serialized = CoreWaveletOperationSerializer.serialize(delta);
     VersionedWaveletDelta deserialized = CoreWaveletOperationSerializer.deserialize(serialized);
     assertEquals(hashedVersion.getVersion(), serialized.getHashedVersion().getVersion());
     assertTrue(Arrays.equals(hashedVersion.getHistoryHash(),

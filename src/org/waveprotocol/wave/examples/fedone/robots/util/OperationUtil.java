@@ -18,10 +18,10 @@
 package org.waveprotocol.wave.examples.fedone.robots.util;
 
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.OperationType;
 import com.google.wave.api.ProtocolVersion;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
@@ -184,8 +184,7 @@ public class OperationUtil {
       WaveletName waveletName = entry.getKey();
       RobotWaveletData w = entry.getValue();
       for (VersionedWaveletDelta delta : w.getDeltas()) {
-        ProtocolWaveletDelta protocolDelta =
-            CoreWaveletOperationSerializer.serialize(delta.delta, delta.version);
+        ProtocolWaveletDelta protocolDelta = CoreWaveletOperationSerializer.serialize(delta.delta);
         waveletProvider.submitRequest(waveletName, protocolDelta, requestListener);
       }
     }

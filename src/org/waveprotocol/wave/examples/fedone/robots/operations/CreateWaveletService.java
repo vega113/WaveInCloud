@@ -19,14 +19,11 @@ package org.waveprotocol.wave.examples.fedone.robots.operations;
 
 import com.google.common.collect.Lists;
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.event.WaveletCreatedEvent;
 import com.google.wave.api.impl.WaveletData;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.common.HashedVersionFactory;
-import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.robots.OperationContext;
 import org.waveprotocol.wave.examples.fedone.robots.RobotWaveletData;
 import org.waveprotocol.wave.examples.fedone.robots.util.OperationUtil;
@@ -37,6 +34,9 @@ import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;

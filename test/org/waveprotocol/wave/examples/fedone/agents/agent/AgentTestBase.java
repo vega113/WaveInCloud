@@ -18,7 +18,6 @@
 package org.waveprotocol.wave.examples.fedone.agents.agent;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-
 import static org.waveprotocol.wave.examples.fedone.util.testing.Matchers.contains;
 
 import junit.framework.TestCase;
@@ -58,6 +57,7 @@ public abstract class AgentTestBase<A extends AbstractAgent> extends TestCase
     agent = createAgent(new AgentConnection(USER, DOMAIN, PORT,
         ClientTestingUtil.backendSpyFactory));
     agent.connect();
+
     // These must be done after connecting, otherwise the backend may be null:
     backend = agent.getBackend();
     util = new ClientTestingUtil(backend);

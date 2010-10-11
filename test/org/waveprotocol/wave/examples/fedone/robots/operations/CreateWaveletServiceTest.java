@@ -21,11 +21,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
-import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.OperationType;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
+import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.impl.WaveletData;
 
@@ -106,7 +106,7 @@ public class CreateWaveletServiceTest extends TestCase {
     assertNotNull("A new wavelet must be open", newWavelet);
 
     List<VersionedWaveletDelta> deltas = newWavelet.getDeltas();
-    List<CoreWaveletOperation> operations = deltas.get(0).delta.getOperations();
+    List<? extends CoreWaveletOperation> operations = deltas.get(0).delta.getOperations();
     boolean seenAddAlex = false;
     boolean seenAddBob = false;
     for (CoreWaveletOperation op : operations) {

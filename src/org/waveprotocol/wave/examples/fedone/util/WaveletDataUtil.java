@@ -76,6 +76,9 @@ public final class WaveletDataUtil {
   public static void applyWaveletDelta(CoreWaveletDelta delta, WaveletData wavelet,
       DistinctVersion endVersion, long applicationTimestamp) throws OperationException {
     Preconditions.checkState(wavelet != null, "wavelet may not be null");
+    Preconditions.checkState(delta.getTargetVersion().getVersion() == wavelet.getVersion(),
+        "Delta targeting version %s doesn't apply to wavelet at %s", delta.getTargetVersion(),
+        wavelet.getVersion());
     long expectedEndVersion = wavelet.getVersion() + delta.getOperations().size();
     Preconditions.checkState(expectedEndVersion == endVersion.getVersion(),
         "Expected end version (" + expectedEndVersion + ") does not match the given end version ("

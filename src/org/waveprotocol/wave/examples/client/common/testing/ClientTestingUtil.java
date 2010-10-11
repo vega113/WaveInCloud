@@ -22,6 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.waveprotocol.wave.examples.common.DocumentConstants.MANIFEST_DOCUMENT_ID;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.waveprotocol.wave.examples.client.common.ClientBackend;
@@ -29,8 +30,6 @@ import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.client.console.ConsoleClient;
 import org.waveprotocol.wave.examples.client.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.wave.examples.common.HashedVersionFactory;
-import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.common.Snippets;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
@@ -42,6 +41,8 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.util.Pair;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.ReadableBlipData;
@@ -67,11 +68,9 @@ public class ClientTestingUtil {
    */
   public static final long TEST_TIMEOUT = 5000;
 
-
-
-  private static final IdURIEncoderDecoder URI_CODEC =
+  public static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
-  private static final HashedVersionFactory HASH_FACTORY =
+  public static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionZeroFactoryImpl(URI_CODEC);
 
   /**
@@ -169,11 +168,11 @@ public class ClientTestingUtil {
   public WaveletData createWaveletInBackend() {
     BlockingSuccessFailCallback<ProtocolSubmitResponse, String> callback =
         BlockingSuccessFailCallback.create();
-    WaveletData wavelet = ClientUtils.getConversationRoot(backend.createConversationWave(
-        callback));
+    ClientWaveView view = backend.createConversationWave(callback);
     // Make sure the wavelet creation completes successfully before returning the wavelet.
     assertOperationComplete(callback);
-    return wavelet;
+    Preconditions.checkNotNull(ClientUtils.getConversationRoot(view), "Wavelet creation failed");
+    return ClientUtils.getConversationRoot(view);
   }
 
   /**

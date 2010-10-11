@@ -26,7 +26,6 @@ import org.waveprotocol.wave.examples.fedone.util.SuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -140,47 +139,26 @@ public abstract class AbstractAgent implements AgentEventListener {
   }
 
   /**
-   * Sends an operation to server.
+   * Sends operations to server.
    *
-   * @param waveletName of the wavelet to apply the operation to.
-   * @param operation the operation to apply.
+   * @param waveletName of the wavelet to send the operations to
    * @param callback completion callback
+   * @param operations operations to send
    */
-  public void sendWaveletOperation(WaveletName waveletName, CoreWaveletOperation operation,
-      SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String> callback) {
-    connection.sendWaveletOperation(waveletName, operation, callback);
+  public void sendWaveletOperations(WaveletName waveletName,
+      SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String> callback,
+      CoreWaveletOperation... operations) {
+    connection.sendWaveletOperations(waveletName, callback, operations);
   }
 
   /**
    * Sends an operation to server and waits for it to be applied locally.
    *
-   * @param waveletName of the wavelet to apply the operation to.
-   * @param operation the operation to apply.
+   * @param waveletName of the wavelet to send the operations to
+   * @param operations operations to send
    */
-  public void sendAndAwaitWaveletOperation(WaveletName waveletName,
-      CoreWaveletOperation operation) {
-    connection.sendAndAwaitWaveletOperation(waveletName, operation);
-  }
-
-  /**
-   * Sends a delta to the server.
-   *
-   * @param waveletName of the wavelet to apply the operation to
-   * @param waveletDelta to send
-   * @param callback completion callback
-   */
-  public void sendWaveletDelta(WaveletName waveletName, CoreWaveletDelta waveletDelta,
-      SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String> callback) {
-    connection.sendWaveletDelta(waveletName, waveletDelta, callback);
-  }
-
-    /**
-   * Sends a delta to the server and waits for a response.
-   *
-   * @param waveletName of the wavelet to apply the operation to
-   * @param waveletDelta to send
-   */
-  public void sendAndAwaitWaveletDelta(WaveletName waveletName, CoreWaveletDelta waveletDelta) {
-    connection.sendAndAwaitWaveletDelta(waveletName, waveletDelta);
+  public void sendAndAwaitWaveletOperations(WaveletName waveletName,
+      CoreWaveletOperation... operations) {
+    connection.sendAndAwaitWaveletOperations(waveletName, operations);
   }
 }

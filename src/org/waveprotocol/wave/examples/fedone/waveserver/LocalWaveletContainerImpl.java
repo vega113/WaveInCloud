@@ -17,13 +17,13 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.util.EmptyDeltaException;
@@ -34,6 +34,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.version.HashedVersion;
 
 /**
  * A local wavelet may be updated by submits. The local wavelet will perform
@@ -142,7 +143,8 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     return applicationResult;
   }
 
-  private static ByteStringMessage<ProtocolAppliedWaveletDelta> buildAppliedDelta(
+  @VisibleForTesting
+  static ByteStringMessage<ProtocolAppliedWaveletDelta> buildAppliedDelta(
       ProtocolSignedDelta signedDelta, VersionedWaveletDelta transformed,
       long applicationTimeStamp) {
     ProtocolAppliedWaveletDelta.Builder appliedDeltaBuilder = ProtocolAppliedWaveletDelta

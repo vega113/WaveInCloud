@@ -28,9 +28,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.waveprotocol.wave.examples.common.CommonConstants.INDEX_WAVE_ID;
-import static org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer.serialize;
-import static org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl.createUnsignedDeltas;
-import static org.waveprotocol.wave.model.id.IdConstants.CONVERSATION_ROOT_WAVELET;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.internal.Nullable;
@@ -39,8 +36,6 @@ import junit.framework.TestCase;
 
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
-import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
@@ -58,6 +53,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
+import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdFilters;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
@@ -71,6 +67,8 @@ import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -90,7 +88,8 @@ public class ClientFrontendImplTest extends TestCase {
       new HashedVersionFactoryImpl(URI_CODEC);
 
   private static final WaveId WAVE_ID = new WaveId("domain", "waveId");
-  private static final WaveletId WAVELET_ID = new WaveletId("domain", CONVERSATION_ROOT_WAVELET);
+  private static final WaveletId WAVELET_ID =
+    new WaveletId("domain", IdConstants.CONVERSATION_ROOT_WAVELET);
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final WaveletName INDEX_WAVELET_NAME =
       WaveletName.of(INDEX_WAVE_ID, new WaveletId("domain", "waveId"));
@@ -99,12 +98,12 @@ public class ClientFrontendImplTest extends TestCase {
   private static final HashedVersion VERSION_1 = HashedVersion.unsigned(1L);
   private static final HashedVersion VERSION_2 = HashedVersion.unsigned(2L);
   private static final VersionedWaveletDelta DELTA = new VersionedWaveletDelta(
-      new CoreWaveletDelta(USER, ImmutableList.of(new CoreAddParticipant(USER))),
+      new CoreWaveletDelta(USER, VERSION_0, ImmutableList.of(new CoreAddParticipant(USER))),
       VERSION_0);
   private static final DeltaSequence DELTAS =
       new DeltaSequence(ImmutableList.of(DELTA), HashedVersion.unsigned(1L));
   private static final ProtocolWaveletDelta SERIALIZED_DELTA =
-      CoreWaveletOperationSerializer.serialize(DELTA.delta, DELTA.version);
+      CoreWaveletOperationSerializer.serialize(DELTA.delta);
   private static final Collection<WaveletVersion> NO_KNOWN_WAVELETS =
       Collections.<WaveletVersion>emptySet();
 
@@ -220,7 +219,7 @@ public class ClientFrontendImplTest extends TestCase {
     verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, subscriptions.get(0).getChannelId());
 
     List<? extends CoreWaveletOperation> ops = ImmutableList.of(CoreNoOp.INSTANCE);
-    CoreWaveletDelta delta = new CoreWaveletDelta(USER, ops);
+    CoreWaveletDelta delta = new CoreWaveletDelta(USER, VERSION_0, ops);
     DeltaSequence deltas = new DeltaSequence(
         ImmutableList.of(new VersionedWaveletDelta(delta, VERSION_0)),
         HashedVersion.unsigned(1L));
@@ -307,7 +306,7 @@ public class ClientFrontendImplTest extends TestCase {
     CoreWaveletOperation expectedDigestOp =
         makeAppendOp(IndexWave.DIGEST_DOCUMENT_ID, 0, "Hello, world");
 
-    DeltaSequence expectedDeltas = createUnsignedDeltas(ImmutableList.of(
+    DeltaSequence expectedDeltas = ClientFrontendImpl.createUnsignedDeltas(ImmutableList.of(
         makeDelta(USER, HashedVersion.unsigned(0), HashedVersion.unsigned(1),
             new CoreAddParticipant(USER)),
         makeDelta(IndexWave.DIGEST_AUTHOR, HashedVersion.unsigned(1), HashedVersion.unsigned(2),
@@ -331,7 +330,7 @@ public class ClientFrontendImplTest extends TestCase {
         new CoreWaveletDocumentOperation("docId", addTextOp));
     assertFalse(oldListener.deltas.isEmpty());
 
-    ProtocolHashedVersion startVersion = serialize(VERSION_0);
+    ProtocolHashedVersion startVersion = CoreWaveletOperationSerializer.serialize(VERSION_0);
     WaveletSnapshot snapshot = SnapshotSerializer.serializeWavelet(wavelet, VERSION_2);
     WaveletSnapshotAndVersion snapshotAndV = new WaveletSnapshotAndVersion(snapshot, startVersion);
     when(waveletProvider.getSnapshot(eq(WAVELET_NAME))).thenReturn(snapshotAndV);
@@ -356,14 +355,15 @@ public class ClientFrontendImplTest extends TestCase {
 
   private VersionedWaveletDelta makeDelta(ParticipantId author, HashedVersion startVersion,
       HashedVersion endVersion, CoreWaveletOperation... operations) {
-    CoreWaveletDelta delta = new CoreWaveletDelta(author, ImmutableList.copyOf(operations));
+    CoreWaveletDelta delta =
+        new CoreWaveletDelta(author, startVersion, ImmutableList.copyOf(operations));
     return new VersionedWaveletDelta(delta, startVersion);
   }
 
   private void waveletUpdate(HashedVersion startVersion, HashedVersion endVersion,
       WaveletData wavelet, CoreWaveletOperation... operations) {
     VersionedWaveletDelta delta = makeDelta(USER, startVersion, endVersion, operations);
-    DeltaSequence deltas = createUnsignedDeltas(ImmutableList.of(delta));
+    DeltaSequence deltas = ClientFrontendImpl.createUnsignedDeltas(ImmutableList.of(delta));
     clientFrontend.waveletUpdate(wavelet, deltas.getEndVersion(), deltas);
   }
 

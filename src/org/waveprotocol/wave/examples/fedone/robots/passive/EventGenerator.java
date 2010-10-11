@@ -307,8 +307,10 @@ public class EventGenerator {
         long timestamp = 0L;
         conversationListener.deltaBegin(delta.getAuthor(), timestamp);
 
+        DistinctVersion endVersion = DistinctVersion.of(
+            delta.getTargetVersion().getVersion() + delta.getOperations().size(), -1);
         List<WaveletOperation> ops = ConversionUtil.fromCoreWaveletDelta(
-            delta, timestamp, DistinctVersion.NO_DISTINCT_VERSION);
+            delta, timestamp, endVersion);
         for (WaveletOperation op : ops) {
           op.apply(snapshot);
         }

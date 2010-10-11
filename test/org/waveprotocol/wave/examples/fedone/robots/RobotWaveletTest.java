@@ -19,9 +19,6 @@ package org.waveprotocol.wave.examples.fedone.robots;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.common.HashedVersionFactory;
-import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
@@ -32,6 +29,9 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
@@ -99,7 +99,7 @@ public class RobotWaveletTest extends TestCase {
     CoreWaveletDelta delta = versionedDelta.delta;
     assertEquals(ALEX, delta.getAuthor());
 
-    List<CoreWaveletOperation> operations = delta.getOperations();
+    List<? extends CoreWaveletOperation> operations = delta.getOperations();
     assertTrue(operations.size() == 1);
 
     CoreAddParticipant addParticipantOp = new CoreAddParticipant(TRIXIE);

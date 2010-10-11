@@ -21,15 +21,10 @@ import com.google.common.collect.Lists;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.common.HashedVersionFactory;
-import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
-import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
-import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
@@ -37,6 +32,7 @@ import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -53,9 +49,6 @@ import java.util.List;
  */
 public class WaveletAndDeltasTest extends TestCase {
 
-  private static final IdURIEncoderDecoder URI_CODEC =
-      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
-  private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
   private static final String WAVE_ID = "example.com!waveid";
   private static final String WAVELET_ID = "example!conv+root";
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
@@ -86,14 +79,13 @@ public class WaveletAndDeltasTest extends TestCase {
     List<WaveletOperation> ops = Lists.newArrayList();
     ops.add(addBobOp);
 
-    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX);
+    hashedVersionOne = HashedVersion.unsigned(1L);
+    hashedVersionTwo = HashedVersion.unsigned(2L);
+    hashedVersionThree = HashedVersion.unsigned(3L);
+
+    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionOne);
     List<VersionedWaveletDelta> deltas =
         Collections.singletonList(new VersionedWaveletDelta(delta, hashedVersionOne));
-
-    HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
-    hashedVersionOne = HASH_FACTORY.create(1L, hashedVersionZero.getHistoryHash());
-    hashedVersionTwo = HASH_FACTORY.create(2L, hashedVersionOne.getHistoryHash());
-    hashedVersionThree = HASH_FACTORY.create(3L, hashedVersionTwo.getHistoryHash());
 
     wavelet = WaveletAndDeltas.create(waveletData, deltas, hashedVersionOne);
 
@@ -128,10 +120,9 @@ public class WaveletAndDeltasTest extends TestCase {
     List<WaveletOperation> ops = Lists.newArrayList();
     ops.add(addCarolOp);
 
-    HashedVersion hashedVersionTwo =
-        HASH_FACTORY.create(2L, hashedVersionOne.getHistoryHash());
+    HashedVersion hashedVersionTwo = HashedVersion.unsigned(2);
 
-    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX);
+    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionOne);
     List<VersionedWaveletDelta> deltas =
         Collections.singletonList(new VersionedWaveletDelta(delta, hashedVersionOne));
 
@@ -154,12 +145,12 @@ public class WaveletAndDeltasTest extends TestCase {
     addCarolOp.apply(waveletData);
     List<WaveletOperation> ops = Lists.newArrayList(addCarolOp);
 
-    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX);
+    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionOne);
     VersionedWaveletDelta vWDeltaAdd = new VersionedWaveletDelta(delta, hashedVersionOne);
 
     removeAlexOp.apply(waveletData);
     ops = Lists.newArrayList(removeAlexOp);
-    delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX);
+    delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionTwo);
     VersionedWaveletDelta vWDeltaRemove = new VersionedWaveletDelta(delta, hashedVersionTwo);
 
     List<VersionedWaveletDelta> deltas = Lists.newArrayList(vWDeltaAdd, vWDeltaRemove);
@@ -171,12 +162,12 @@ public class WaveletAndDeltasTest extends TestCase {
     addCarolOp.apply(waveletData);
     List<WaveletOperation> ops = Lists.newArrayList(addCarolOp);
 
-    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX);
+    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionOne);
     VersionedWaveletDelta vWDeltaAdd = new VersionedWaveletDelta(delta, hashedVersionOne);
 
     removeAlexOp.apply(waveletData);
     ops = Lists.newArrayList(removeAlexOp);
-    delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX);
+    delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionThree);
     VersionedWaveletDelta vWDeltaRemove = new VersionedWaveletDelta(delta, hashedVersionThree);
 
     List<VersionedWaveletDelta> deltas = Lists.newArrayList(vWDeltaAdd, vWDeltaRemove);

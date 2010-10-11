@@ -19,15 +19,14 @@ package org.waveprotocol.wave.examples.fedone.robots.passive;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.ProtocolVersion;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.converter.EventDataConverterManager;
 import com.google.wave.api.event.EventType;
 import com.google.wave.api.event.OperationErrorEvent;
 import com.google.wave.api.robot.RobotName;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
 import org.waveprotocol.wave.examples.fedone.robots.OperationContext;
 import org.waveprotocol.wave.examples.fedone.robots.OperationContextImpl;
@@ -40,6 +39,7 @@ import org.waveprotocol.wave.examples.fedone.robots.util.LoggingRequestListener;
 import org.waveprotocol.wave.examples.fedone.robots.util.OperationUtil;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;

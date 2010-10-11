@@ -33,7 +33,6 @@ import org.waveprotocol.wave.examples.client.common.IndexEntry;
 import org.waveprotocol.wave.examples.client.common.WaveletOperationListener;
 import org.waveprotocol.wave.examples.client.console.ScrollableWaveView.RenderMode;
 import org.waveprotocol.wave.examples.common.DocumentConstants;
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
 import org.waveprotocol.wave.examples.fedone.util.BlockingSuccessFailCallback;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
@@ -42,6 +41,8 @@ import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -631,9 +632,10 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void sendAppendBlipDelta(String text) {
     if (isWaveOpen()) {
-      backend.sendAndAwaitWaveletDelta(WaveletDataUtil.waveletNameOf(getOpenWavelet()),
-          ClientUtils.createAppendBlipDelta(getManifestDocument(), backend.getUserId(),
-              backend.getIdGenerator().newBlipId(), text), 1, TimeUnit.MINUTES);
+      CoreWaveletOperation[] ops = ClientUtils.createAppendBlipOps(getManifestDocument(),
+          backend.getIdGenerator().newBlipId(), text);
+      backend.sendAndAwaitWaveletOperations(WaveletDataUtil.waveletNameOf(getOpenWavelet()), 1,
+          TimeUnit.MINUTES, ops);
     } else {
       errorNoWaveOpen();
     }
@@ -720,8 +722,8 @@ public class ConsoleClient implements WaveletOperationListener {
       // Don't send an invalid op, although the server should be robust enough
       // to deal with it
       if (!getOpenWavelet().getParticipants().contains(addId)) {
-        backend.sendAndAwaitWaveletOperation(WaveletDataUtil.waveletNameOf(getOpenWavelet()),
-            new CoreAddParticipant(addId), 1, TimeUnit.MINUTES);
+        backend.sendAndAwaitWaveletOperations(WaveletDataUtil.waveletNameOf(getOpenWavelet()),
+            1, TimeUnit.MINUTES, new CoreAddParticipant(addId));
       } else {
         out.println("Error: " + name + " is already a participant on this wave");
       }
@@ -741,8 +743,8 @@ public class ConsoleClient implements WaveletOperationListener {
       ParticipantId removeId = ParticipantId.ofUnsafe(name);
 
       if (getOpenWavelet().getParticipants().contains(removeId)) {
-        backend.sendAndAwaitWaveletOperation(WaveletDataUtil.waveletNameOf(getOpenWavelet()),
-            new CoreRemoveParticipant(removeId), 1, TimeUnit.MINUTES);
+        backend.sendAndAwaitWaveletOperations(WaveletDataUtil.waveletNameOf(getOpenWavelet()),
+            1, TimeUnit.MINUTES, new CoreRemoveParticipant(removeId));
       } else {
         out.println("Error: " + name + " is not a participant on this wave");
       }

@@ -18,7 +18,6 @@
 package org.waveprotocol.wave.examples.fedone.agents.probey;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -47,10 +46,10 @@ import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -67,7 +66,7 @@ import javax.servlet.http.HttpServletResponse;
  * The probey agent provides a web interface for remote applications to trigger
  * operations against a fedone waveserver. It allows easy testing of
  * Federation.
- * 
+ *
  * @author arb@google.com (Anthony Baxter)
  */
 public class Probey extends AbstractAgent {
@@ -100,9 +99,9 @@ public class Probey extends AbstractAgent {
     WaveletData convRoot = ClientUtils.getConversationRoot(wave);
     BlipData manifest = convRoot.getDocument(DocumentConstants.MANIFEST_DOCUMENT_ID);
     String newDocId = getNewDocumentId();
-    CoreWaveletDelta delta = ClientUtils.createAppendBlipDelta(manifest, getParticipantId(),
-        newDocId, blipText);
-    sendAndAwaitWaveletDelta(WaveletDataUtil.waveletNameOf(convRoot), delta);
+    CoreWaveletDocumentOperation[] ops =
+        ClientUtils.createAppendBlipOps(manifest, newDocId, blipText);
+    sendAndAwaitWaveletOperations(WaveletDataUtil.waveletNameOf(convRoot), ops);
     return newDocId;
   }
 
@@ -120,8 +119,7 @@ public class Probey extends AbstractAgent {
     }
     WaveletData convRoot = ClientUtils.getConversationRoot(wave);
     CoreAddParticipant addUserOp = new CoreAddParticipant(addId);
-    sendAndAwaitWaveletDelta(WaveletDataUtil.waveletNameOf(convRoot),
-        new CoreWaveletDelta(getParticipantId(), ImmutableList.of(addUserOp)));
+    sendAndAwaitWaveletOperations(WaveletDataUtil.waveletNameOf(convRoot), addUserOp);
   }
 
   /**
@@ -249,7 +247,7 @@ public class Probey extends AbstractAgent {
 
         LoginService loginService = new HashLoginService("probey","./etc/probey/realm.properties");
         //Lifecycle object that will now be started/stopped w/ server
-        server.addBean(loginService); 
+        server.addBean(loginService);
 
         ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
         server.setHandler(securityHandler);
@@ -268,7 +266,7 @@ public class Probey extends AbstractAgent {
         securityHandler.setAuthenticator(new BasicAuthenticator());
         securityHandler.setLoginService(loginService);
         securityHandler.setStrict(false);
-        securityHandler.setConstraintMappings(Lists.newArrayList(constraintMapping), 
+        securityHandler.setConstraintMappings(Lists.newArrayList(constraintMapping),
             knownRoles);
 
         ContextHandlerCollection contexts = new ContextHandlerCollection();

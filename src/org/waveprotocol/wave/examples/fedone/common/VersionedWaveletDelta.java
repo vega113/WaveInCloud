@@ -16,8 +16,8 @@
 
 package org.waveprotocol.wave.examples.fedone.common;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.version.HashedVersion;
 
 /**
  * A wavelet delta with a target hashed version.

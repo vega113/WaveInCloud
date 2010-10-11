@@ -31,8 +31,6 @@ import org.waveprotocol.wave.examples.client.webclient.common.WaveletOperationSe
 import org.waveprotocol.wave.examples.client.webclient.util.Log;
 import org.waveprotocol.wave.examples.client.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.examples.common.CommonConstants;
-import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolOpenRequest;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolWaveletUpdate;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshot;
@@ -49,6 +47,8 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.Pair;
+import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
@@ -275,11 +275,10 @@ public class WebClientBackend {
             WaveletOperationSerializer.deserialize(protobufDelta,
                 CoreWaveletOperationSerializer.deserialize(protobufDelta.getHashedVersion()), woc);
 
-        final Pair<CoreWaveletDelta, HashedVersion> oldDeltaAndVersion =
-            CoreWaveletOperationSerializer.deserialize(protobufDelta);
+        final CoreWaveletDelta oldDelta = CoreWaveletOperationSerializer.deserialize(protobufDelta);
 
         if (isIndexWave(waveletName)) { // only apply the hacky ops to index wave.
-          for (CoreWaveletOperation op : oldDeltaAndVersion.first.getOperations()) {
+          for (CoreWaveletOperation op : oldDelta.getOperations()) {
 
             try {
               op.apply(oldWaveletData);

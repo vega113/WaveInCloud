@@ -17,18 +17,30 @@
 
 package org.waveprotocol.wave.examples.fedone.waveserver;
 
+import org.waveprotocol.wave.model.version.HashedVersion;
+
 /**
  * Indicates a caller submitted a delta with a mismatched hash.
  *
  */
 public class InvalidHashException extends Exception {
-  public InvalidHashException(String message) {
-    super(message);
+  private final HashedVersion expected;
+  private final HashedVersion target;
+
+  public InvalidHashException(HashedVersion expectedVersion, HashedVersion targetVersion) {
+    // Note: The expected hash is not included in the exception message
+    // to avoid revealing it to clients. It's useful to keep a reference
+    // here for debugging though.
+    super("Mismatched hash at version " + expectedVersion.getVersion() + ": " + targetVersion);
+    this.expected = expectedVersion;
+    this.target = targetVersion;
   }
-  public InvalidHashException(Throwable cause) {
-    super(cause);
+
+  public HashedVersion expectedVersion() {
+    return expected;
   }
-  public InvalidHashException(String message, Throwable cause) {
-    super(message, cause);
+
+  public HashedVersion targetVersion() {
+    return target;
   }
 }

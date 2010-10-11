@@ -17,9 +17,9 @@
 
 package org.waveprotocol.wave.examples.fedone.robots.util;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider.SubmitRequestListener;
+import org.waveprotocol.wave.model.version.HashedVersion;
 
 /**
  * {@link SubmitRequestListener} that simply logs its calls.

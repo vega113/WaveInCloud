@@ -22,7 +22,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.WaveletSnapshot;
@@ -51,6 +50,7 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.DistinctVersion;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
@@ -82,18 +82,16 @@ public class CoreWaveletOperationSerializer {
    * specific version.
    *
    * @param waveletDelta to serialize
-   * @param version version at which the delta applies
    * @return serialized protocol buffer wavelet delta
    */
-  public static ProtocolWaveletDelta serialize(CoreWaveletDelta waveletDelta,
-      HashedVersion version) {
+  public static ProtocolWaveletDelta serialize(CoreWaveletDelta waveletDelta) {
    ProtocolWaveletDelta.Builder protobufDelta = ProtocolWaveletDelta.newBuilder();
 
    for (CoreWaveletOperation waveletOp : waveletDelta.getOperations()) {
      protobufDelta.addOperation(serialize(waveletOp));
    }
    protobufDelta.setAuthor(waveletDelta.getAuthor().getAddress());
-   protobufDelta.setHashedVersion(serialize(version));
+   protobufDelta.setHashedVersion(serialize(waveletDelta.getTargetVersion()));
 
    return protobufDelta.build();
   }
@@ -274,16 +272,16 @@ public class CoreWaveletOperationSerializer {
     for (ProtocolWaveletOperation op : delta.getOperationList()) {
       ops.add(deserialize(op));
     }
-    CoreWaveletDelta coreDelta = new CoreWaveletDelta(new ParticipantId(delta.getAuthor()), ops);
     HashedVersion hashedVersion = deserialize(delta.getHashedVersion());
+    CoreWaveletDelta coreDelta = new CoreWaveletDelta(new ParticipantId(delta.getAuthor()),
+        deserialize(delta.getHashedVersion()), ops);
     return new VersionedWaveletDelta(coreDelta, hashedVersion);
   }
 
   /** Deserializes a protobuf to a HashedVersion POJO. */
   public static HashedVersion deserialize(ProtocolHashedVersion hashedVersion) {
     final ByteString historyHash = hashedVersion.getHistoryHash();
-    return new HashedVersion(hashedVersion.getVersion(),
-        historyHash.toByteArray());
+    return HashedVersion.of(hashedVersion.getVersion(), historyHash.toByteArray());
   }
 
   /** Serializes a HashedVersion POJO to a protobuf. */

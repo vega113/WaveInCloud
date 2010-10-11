@@ -19,7 +19,6 @@ package org.waveprotocol.wave.examples.fedone.frontend.testing;
 
 import com.google.inject.internal.Nullable;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveBus;
@@ -30,6 +29,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
@@ -67,7 +67,7 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
 
   /** Reports a submit success with resulting version 0 application timestamp 0 */
   public void doSubmitSuccess(WaveletName waveletName) {
-    HashedVersion fakeHashedVersion = new HashedVersion(0, new byte[0]);
+    HashedVersion fakeHashedVersion = HashedVersion.of(0, new byte[0]);
     doSubmitSuccess(waveletName, fakeHashedVersion, 0);
   }
 

@@ -42,8 +42,6 @@ import junit.framework.TestCase;
 
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountDataImpl;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
@@ -59,6 +57,8 @@ import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
+import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -147,10 +147,10 @@ public class RobotTest extends TestCase {
     ParticipantId bob = ParticipantId.of("bob@exmaple.com");
     WaveletOperation addBob = new AddParticipant(new WaveletOperationContext(ALEX, 0L, 1), bob);
     addBob.apply(waveletData);
-    HashedVersion hashedVersionOne = HASH_FACTORY.create(1, hashedVersionZero.getHistoryHash());
+    HashedVersion hashedVersionOne = HashedVersion.unsigned(1);
 
-    CoreWaveletDelta cwDelta =
-        ConversionUtil.toCoreWaveletDelta(Collections.singletonList(addBob), ALEX);
+    CoreWaveletDelta cwDelta = ConversionUtil.toCoreWaveletDelta(
+        Collections.singletonList(addBob), ALEX, hashedVersionOne);
     VersionedWaveletDelta delta = new VersionedWaveletDelta(cwDelta, hashedVersionOne);
 
     // Send the delta for version 1 to the robot, it should now enqueue a new

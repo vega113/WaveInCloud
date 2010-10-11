@@ -21,7 +21,6 @@ import static org.waveprotocol.wave.examples.common.CommonConstants.INDEX_WAVE_I
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -30,9 +29,6 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
 import org.waveprotocol.wave.examples.common.DocumentConstants;
-import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.common.HashedVersionFactory;
-import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
@@ -68,6 +64,9 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.DistinctVersion;
+import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
@@ -77,6 +76,7 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -456,16 +456,11 @@ public class ClientBackend {
     ClientWaveView waveView = createWave(newWaveId);
     WaveletId waveletId = getIdGenerator().newConversationRootWaveletId();
 
-    // Add ourselves in the first operation.
-    CoreAddParticipant addUserOp = new CoreAddParticipant(getUserId());
-
-    // Create a document manifest in the second operation.
-    CoreWaveletDocumentOperation addManifestOp = new CoreWaveletDocumentOperation(
-        DocumentConstants.MANIFEST_DOCUMENT_ID, ClientUtils.createManifest());
-
-    sendWaveletDelta(WaveletName.of(newWaveId, waveletId),
-        new CoreWaveletDelta(getUserId(), ImmutableList.of(addUserOp, addManifestOp)), callback);
-
+    // Add ourselves then create a conversation manifest.
+    sendWaveletOperations(WaveletName.of(newWaveId, waveletId), callback,
+        new CoreAddParticipant(getUserId()),
+        new CoreWaveletDocumentOperation(
+            DocumentConstants.MANIFEST_DOCUMENT_ID, ClientUtils.createManifest()));
     return waveView;
   }
 
@@ -485,33 +480,33 @@ public class ClientBackend {
   }
 
   /**
-   * Send a single wavelet operation over the wire.
+   * Sends wavelet operations over the wire.
    *
    * @param waveletName of the wavelet to apply the operation to
-   * @param op to send
    * @param callback callback invoked when the server rpc is complete
+   * @param ops to send
    */
-  public void sendWaveletOperation(WaveletName waveletName, CoreWaveletOperation op,
-      SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
-    sendWaveletDelta(waveletName, new CoreWaveletDelta(getUserId(), ImmutableList.of(op)),
-        callback);
+  public void sendWaveletOperations(WaveletName waveletName,
+      SuccessFailCallback<ProtocolSubmitResponse, String> callback, CoreWaveletOperation... ops) {
+    CoreWaveletDelta delta = makeDelta(waveletName, ops);
+    sendWaveletDelta(waveletName, delta, callback);
   }
 
   /**
-   * Send a single wavelet operation over the wire and wait for the roundtrip success: the submit
+   * Sends wavelet operations over the wire and waits for the roundtrip success: the submit
    * callback from our local server, and the wavelet to be updated to the version given in the
    * response.
    *
    * @param waveletName of the wavelet to apply the operation to
-   * @param op to send
    * @param timeout used twice, so real timeout may be up to twice that specified
    * @param unit of timeout
+   * @param ops to send
    * @return true if the roundtrip trip was successful, false otherwise
    */
-  public boolean sendAndAwaitWaveletOperation(WaveletName waveletName, CoreWaveletOperation op,
-      long timeout, TimeUnit unit) {
-    return sendAndAwaitWaveletDelta(waveletName, new CoreWaveletDelta(getUserId(),
-        ImmutableList.of(op)), timeout, unit);
+  public boolean sendAndAwaitWaveletOperations(WaveletName waveletName, long timeout,
+      TimeUnit unit, CoreWaveletOperation... ops) {
+    CoreWaveletDelta delta = makeDelta(waveletName, ops);
+    return sendAndAwaitWaveletDelta(waveletName, delta, timeout, unit);
   }
 
   /**
@@ -521,7 +516,7 @@ public class ClientBackend {
    * @param delta to send
    * @param callback callback invoked when the server rpc is complete
    */
-  public void sendWaveletDelta(WaveletName waveletName, CoreWaveletDelta delta,
+  private void sendWaveletDelta(WaveletName waveletName, CoreWaveletDelta delta,
       final SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
     // Build the submit request.
     ProtocolSubmitRequest.Builder submitRequest = ProtocolSubmitRequest.newBuilder();
@@ -532,12 +527,9 @@ public class ClientBackend {
       throw new IllegalArgumentException(e);
     }
 
-    ClientWaveView wave = waves.get(waveletName.waveId);
-    submitRequest.setDelta(CoreWaveletOperationSerializer.serialize(delta,
-        wave.getWaveletVersion(waveletName.waveletId)));
+    submitRequest.setDelta(CoreWaveletOperationSerializer.serialize(delta));
 
     final RpcController rpcController = rpcChannel.newRpcController();
-
     LOG.info("Sending delta " + delta + " for " + waveletName);
     rpcServer.submit(rpcController, submitRequest.build(),
         new RpcCallback<ProtocolSubmitResponse>() {
@@ -724,21 +716,23 @@ public class ClientBackend {
           CoreWaveletOperationSerializer.deserialize(protobufDelta);
       CoreWaveletDelta delta = versionedWaveletDelta.delta;
 
-      long dummyTimestamp = Constants.NO_TIMESTAMP;
-
       if (wavelet == null) {
         // TODO(ljvderijk): This should never happen, but it currently does.
         // Snapshot should be received first.
         // Instantiate a new wavelet
-        wavelet =
-            WaveletDataUtil.createEmptyWavelet(waveletName, delta.getAuthor(), dummyTimestamp);
+        wavelet = WaveletDataUtil.createEmptyWavelet(waveletName, delta.getAuthor(),
+                Constants.NO_TIMESTAMP);
         wave.addWavelet(wavelet, hashedVersionFactory.createVersionZero(waveletName));
       }
 
-      DistinctVersion dummyVersion =
+      Preconditions.checkState(delta.getTargetVersion().getVersion() == wavelet.getVersion(),
+          "Delta at version %s doesn't apply to wavelet %s at %s", delta.getTargetVersion(),
+          waveletName, wavelet.getVersion());
+
+      DistinctVersion dummyEndVersion =
           DistinctVersion.of(wavelet.getVersion() + delta.getOperations().size(), 0);
       try {
-        WaveletDataUtil.applyWaveletDelta(delta, wavelet, dummyVersion, dummyTimestamp);
+        WaveletDataUtil.applyWaveletDelta(delta, wavelet, dummyEndVersion, Constants.NO_TIMESTAMP);
       } catch (OperationException e) {
         LOG.severe("Operations failed to apply", e);
       }
@@ -917,5 +911,11 @@ public class ClientBackend {
     while (!eventQueue.isEmpty()) {
       Thread.yield();
     }
+  }
+
+  private CoreWaveletDelta makeDelta(WaveletName wavelet, CoreWaveletOperation... ops) {
+    ClientWaveView wave = waves.get(wavelet.waveId);
+    HashedVersion targetVersion = wave.getWaveletVersion(wavelet.waveletId);
+    return new CoreWaveletDelta(getUserId(), targetVersion, Arrays.asList(ops));
   }
 }

@@ -25,7 +25,6 @@ import junit.framework.TestCase;
 
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend.OpenListener;
@@ -36,6 +35,7 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.core.CoreNoOp;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.ArrayList;
@@ -59,7 +59,8 @@ public class UserManagerTest extends TestCase {
   private static final ParticipantId USER = ParticipantId.ofUnsafe("user@host.com");
 
   private static final VersionedWaveletDelta DELTA =
-    new VersionedWaveletDelta(new CoreWaveletDelta(USER, ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE)),
+    new VersionedWaveletDelta(new CoreWaveletDelta(USER,
+        HashedVersion.UNSIGNED_VERSION_0, ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE)),
         HashedVersion.UNSIGNED_VERSION_0);
 
   private static final HashedVersion END_VERSION = HashedVersion.unsigned(2);
@@ -139,7 +140,7 @@ public class UserManagerTest extends TestCase {
 
     HashedVersion v2 = HashedVersion.unsigned(2);
 
-    CoreWaveletDelta coreDelta2 = new CoreWaveletDelta(USER, Arrays.asList(CoreNoOp.INSTANCE));
+    CoreWaveletDelta coreDelta2 = new CoreWaveletDelta(USER, v2, Arrays.asList(CoreNoOp.INSTANCE));
     VersionedWaveletDelta delta2 = new VersionedWaveletDelta(coreDelta2, v2);
 
     m.subscribe(W1, IdFilters.ALL_IDS, "ch1", mock(OpenListener.class));

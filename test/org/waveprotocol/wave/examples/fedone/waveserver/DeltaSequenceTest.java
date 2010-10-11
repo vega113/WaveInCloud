@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -29,6 +28,7 @@ import org.waveprotocol.wave.model.operation.core.CoreNoOp;
 import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.List;
@@ -38,7 +38,7 @@ import java.util.List;
  */
 public class DeltaSequenceTest extends TestCase {
   private static final long START_VERSION = 23;
-  private static final HashedVersion PROTO_START_VERSION = (HashedVersion.unsigned(START_VERSION));
+  private static final HashedVersion HASHED_START_VERSION = (HashedVersion.unsigned(START_VERSION));
   private static final ParticipantId USER = new ParticipantId("user@host.com");
 
   private List<CoreWaveletOperation> ops;
@@ -52,8 +52,9 @@ public class DeltaSequenceTest extends TestCase {
         CoreNoOp.INSTANCE, CoreNoOp.INSTANCE, new CoreAddParticipant(USER), CoreNoOp.INSTANCE,
         new CoreRemoveParticipant(USER));
 
-    CoreWaveletDelta delta = new CoreWaveletDelta(USER, ops);
-    CoreWaveletDelta delta2 = new CoreWaveletDelta(USER, ops);
+    CoreWaveletDelta delta = new CoreWaveletDelta(USER, HashedVersion.unsigned(START_VERSION), ops);
+    CoreWaveletDelta delta2 =
+      new CoreWaveletDelta(USER, HashedVersion.unsigned(START_VERSION + ops.size()), ops);
     deltas = ImmutableList.of(
         new VersionedWaveletDelta(delta, HashedVersion.unsigned(START_VERSION)),
         new VersionedWaveletDelta(delta, HashedVersion.unsigned(START_VERSION + ops.size())));
@@ -61,20 +62,10 @@ public class DeltaSequenceTest extends TestCase {
   }
 
   public void testEmptySequence() {
-    DeltaSequence empty = DeltaSequence.empty(PROTO_START_VERSION);
-    assertEquals(PROTO_START_VERSION, empty.getStartVersion());
-    assertEquals(PROTO_START_VERSION, empty.getEndVersion());
+    DeltaSequence empty = DeltaSequence.empty(HASHED_START_VERSION);
+    assertEquals(HASHED_START_VERSION, empty.getStartVersion());
+    assertEquals(HASHED_START_VERSION, empty.getEndVersion());
     assertEquals(ImmutableList.<ProtocolWaveletDelta>of(), empty);
-  }
-
-  public void testNegativeEndVersion() {
-    HashedVersion invalidVersion = new HashedVersion(-1, new byte[0]);
-    try {
-      DeltaSequence.empty(invalidVersion);
-      fail("Should have thrown IllegalArgumentException");
-    } catch (IllegalArgumentException expected) {
-      // pass
-    }
   }
 
   public void testValidSequence() {
@@ -113,7 +104,7 @@ public class DeltaSequenceTest extends TestCase {
    * Tests DeltaSequence.subList() on both empty and nonempty delta sequences.
    */
   public void testSubList() {
-    DeltaSequence empty = DeltaSequence.empty(PROTO_START_VERSION);
+    DeltaSequence empty = DeltaSequence.empty(HASHED_START_VERSION);
     assertEquals(empty, empty.subList(0, 0));
 
     DeltaSequence deltaseq = new DeltaSequence(deltas, endVersion);

@@ -18,8 +18,8 @@
 package org.waveprotocol.wave.examples.fedone.robots.passive;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.data.converter.v22.EventDataConverterV22;
 import com.google.wave.api.event.Event;
@@ -31,8 +31,6 @@ import com.google.wave.api.robot.RobotName;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.robots.util.ConversationUtil;
@@ -49,6 +47,8 @@ import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
+import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
@@ -178,7 +178,7 @@ public class EventGeneratorTest extends TestCase {
    */
   private EventMessageBundle generateAndCheckEvents(EventType eventType) throws Exception {
     // Create the delta
-    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(output.getOps(), ALEX);
+    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(output.getOps(), ALEX, versionZero);
     VersionedWaveletDelta versionedDelta = new VersionedWaveletDelta(delta, versionZero);
     WaveletAndDeltas waveletAndDeltas = WaveletAndDeltas.create(
         waveletData, Collections.singletonList(versionedDelta), versionZero);

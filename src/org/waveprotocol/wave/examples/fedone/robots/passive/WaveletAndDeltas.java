@@ -20,7 +20,6 @@ package org.waveprotocol.wave.examples.fedone.robots.passive;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -30,6 +29,7 @@ import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
 import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
@@ -123,7 +123,7 @@ public class WaveletAndDeltas {
     // Go through everything in reverse order
     for (int i = deltas.size() - 1; i >= 0; i--) {
       VersionedWaveletDelta delta = deltas.get(i);
-      List<CoreWaveletOperation> coreOps = delta.delta.getOperations();
+      List<? extends CoreWaveletOperation> coreOps = delta.delta.getOperations();
       // Metadata such as the last modified ts will change due to the rollback
       // of operations.
       long timestamp = 0L;

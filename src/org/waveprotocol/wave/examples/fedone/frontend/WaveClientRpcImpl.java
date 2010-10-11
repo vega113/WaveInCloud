@@ -23,7 +23,6 @@ import com.google.inject.internal.Nullable;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.util.Log;
@@ -40,6 +39,7 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collections;
@@ -106,8 +106,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
             try {
               builder.setWaveletName(uriCodec.waveletNameToURI(waveletName));
               for (VersionedWaveletDelta d : deltas) {
-                builder.addAppliedDelta(
-                    CoreWaveletOperationSerializer.serialize(d.delta, d.version));
+                builder.addAppliedDelta(CoreWaveletOperationSerializer.serialize(d.delta));
               }
               if (snapshot != null) {
                 Preconditions.checkState(committedVersion.equals(

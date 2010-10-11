@@ -33,7 +33,6 @@ import org.waveprotocol.wave.crypto.TrustRootsProvider;
 import org.waveprotocol.wave.crypto.VerifiedCertChainCache;
 import org.waveprotocol.wave.crypto.WaveCertPathValidator;
 import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
-import org.waveprotocol.wave.examples.common.HashedVersionFactory;
 import org.waveprotocol.wave.examples.fedone.common.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontend;
 import org.waveprotocol.wave.examples.fedone.frontend.ClientFrontendImpl;
@@ -42,6 +41,7 @@ import org.waveprotocol.wave.examples.fedone.util.URLEncoderDecoderBasedPercentE
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
 
 /**
  * Guice Module for the prototype Server.

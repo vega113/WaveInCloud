@@ -20,7 +20,6 @@ package org.waveprotocol.wave.examples.client.webclient.common;
 import com.google.common.util.Base64DecoderException;
 import com.google.common.util.CharBase64;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.waveserver.DocumentSnapshot;
 import org.waveprotocol.wave.examples.fedone.waveserver.WaveletSnapshot;
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;
@@ -44,7 +43,7 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.util.Pair;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.ArrayList;
@@ -249,13 +248,12 @@ public class CoreWaveletOperationSerializer {
   }
 
   /**
-   * Deserializes a {@link ProtocolWaveletDelta} as a {@link CoreWaveletDelta} and
-   * {@link HashedVersion}.
+   * Deserializes a {@link ProtocolWaveletDelta} as a {@link CoreWaveletDelta}.
    *
    * @param delta protocol buffer wavelet delta to deserialize
    * @return deserialized wavelet delta and version
    */
-  public static Pair<CoreWaveletDelta, HashedVersion> deserialize(ProtocolWaveletDelta delta) {
+  public static CoreWaveletDelta deserialize(ProtocolWaveletDelta delta) {
     List<CoreWaveletOperation> ops = new ArrayList<CoreWaveletOperation>();
 
     for (ProtocolWaveletOperation op : delta.getOperationList()) {
@@ -263,7 +261,7 @@ public class CoreWaveletOperationSerializer {
     }
 
     HashedVersion hashedVersion = deserialize(delta.getHashedVersion());
-    return Pair.of(new CoreWaveletDelta(new ParticipantId(delta.getAuthor()), ops), hashedVersion);
+    return new CoreWaveletDelta(new ParticipantId(delta.getAuthor()), hashedVersion, ops);
   }
 
   /**
@@ -275,7 +273,7 @@ public class CoreWaveletOperationSerializer {
     byte[] historyHash;
     try {
       historyHash = CharBase64.decode(b64Hash);
-      return new HashedVersion((long) hashedVersion.getVersion(), historyHash);
+      return HashedVersion.of((long) hashedVersion.getVersion(), historyHash);
     } catch (Base64DecoderException e) {
       throw new IllegalArgumentException("Invalid Base64 hash: " + b64Hash, e);
     }

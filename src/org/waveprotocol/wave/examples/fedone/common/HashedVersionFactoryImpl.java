@@ -19,9 +19,9 @@ package org.waveprotocol.wave.examples.fedone.common;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
-import org.waveprotocol.wave.examples.common.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -60,7 +60,7 @@ public class HashedVersionFactoryImpl extends HashedVersionZeroFactoryImpl {
   public HashedVersion create(byte[] appliedDeltaBytes,
       HashedVersion hashedVersionAppliedAt, int operationsApplied) {
 
-    return new HashedVersion(hashedVersionAppliedAt.getVersion() + operationsApplied,
+    return HashedVersion.of(hashedVersionAppliedAt.getVersion() + operationsApplied,
         calculateHash(hashedVersionAppliedAt.getHistoryHash(), appliedDeltaBytes));
   }
 }

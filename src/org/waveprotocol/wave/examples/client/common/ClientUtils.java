@@ -17,7 +17,6 @@
 
 package org.waveprotocol.wave.examples.client.common;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
@@ -36,7 +35,6 @@ import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorA
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
@@ -114,12 +112,11 @@ public class ClientUtils {
    * manifest.
    *
    * @param manifestDocument document containing the manifest
-   * @param author of the delta
    * @param newBlipId
    * @param text to place in the new blip
    */
-  public static CoreWaveletDelta createAppendBlipDelta(
-      BlipData manifestDocument, ParticipantId author, String newBlipId, String text) {
+  public static CoreWaveletDocumentOperation[] createAppendBlipOps(BlipData manifestDocument,
+      String newBlipId, String text) {
     if (text.length() == 0) {
       throw new IllegalArgumentException("Cannot append a empty String");
     } else {
@@ -134,13 +131,10 @@ public class ClientUtils {
 
       // An empty doc op to indicate a new blip is being created.
       BufferedDocOp emptyNewBlipOp = new DocOpBuilder().build();
-
-      // Send the operation.
-      ImmutableList<CoreWaveletDocumentOperation> operations =
-          ImmutableList.of(new CoreWaveletDocumentOperation(newBlipId, emptyNewBlipOp),
-              new CoreWaveletDocumentOperation(newBlipId, newBlipOp),
-              appendToManifest(manifestDocument, newBlipId));
-      return new CoreWaveletDelta(author, operations);
+      return new CoreWaveletDocumentOperation[] {
+          new CoreWaveletDocumentOperation(newBlipId, emptyNewBlipOp),
+          new CoreWaveletDocumentOperation(newBlipId, newBlipOp),
+          appendToManifest(manifestDocument, newBlipId)};
     }
   }
 

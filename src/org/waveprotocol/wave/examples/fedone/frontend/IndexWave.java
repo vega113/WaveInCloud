@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.waveprotocol.wave.examples.client.common.IndexEntry;
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.common.Snippets;
 import org.waveprotocol.wave.examples.fedone.common.DeltaSequence;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
@@ -41,6 +40,7 @@ import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -100,13 +100,16 @@ public final class IndexWave {
    */
   public static DeltaSequence createIndexDeltas(long targetVersion, DeltaSequence sourceDeltas,
       String oldDigest, String newDigest) {
+    long deltaTargetVersion = targetVersion; // Target for the next delta.
     long numSourceOps = sourceDeltas.getEndVersion().getVersion() - targetVersion;
-    List<CoreWaveletDelta> indexDeltas = createParticipantDeltas(sourceDeltas);
+    List<CoreWaveletDelta> indexDeltas = createParticipantDeltas(sourceDeltas, deltaTargetVersion);
     long numIndexOps = numOpsInDeltas(indexDeltas);
+    deltaTargetVersion += numIndexOps;
 
     if (numIndexOps < numSourceOps) {
-      indexDeltas.add(createDigestDelta(targetVersion, oldDigest, newDigest));
+      indexDeltas.add(createDigestDelta(deltaTargetVersion, oldDigest, newDigest));
       numIndexOps += 1;
+      deltaTargetVersion += 1;
     }
 
     if (numIndexOps < numSourceOps) {
@@ -116,7 +119,8 @@ public final class IndexWave {
       for (long i = 0; i < numNoOps; ++i) {
         noOps.add(CoreNoOp.INSTANCE);
       }
-      CoreWaveletDelta noOpDelta = new CoreWaveletDelta(DIGEST_AUTHOR, noOps);
+      CoreWaveletDelta noOpDelta =
+          new CoreWaveletDelta(DIGEST_AUTHOR, HashedVersion.unsigned(deltaTargetVersion), noOps);
       indexDeltas.add(noOpDelta);
     }
 
@@ -214,7 +218,8 @@ public final class IndexWave {
       String newDigest) {
     CoreWaveletOperation op =
         new CoreWaveletDocumentOperation(DIGEST_DOCUMENT_ID, createEditOp(oldDigest, newDigest));
-    CoreWaveletDelta delta = new CoreWaveletDelta(DIGEST_AUTHOR, ImmutableList.of(op));
+    CoreWaveletDelta delta = new CoreWaveletDelta(DIGEST_AUTHOR,
+        HashedVersion.unsigned(targetVersion), ImmutableList.of(op));
     return delta;
   }
 
@@ -236,7 +241,7 @@ public final class IndexWave {
 
   /** Extracts participant change operations from a delta sequence. */
   private static List<CoreWaveletDelta> createParticipantDeltas(
-      Iterable<VersionedWaveletDelta> deltas) {
+      Iterable<VersionedWaveletDelta> deltas, long targetVersion) {
     List<CoreWaveletDelta> participantDeltas = Lists.newArrayList();
     for (VersionedWaveletDelta delta : deltas) {
       List<CoreWaveletOperation> participantOps = Lists.newArrayList();
@@ -246,7 +251,10 @@ public final class IndexWave {
         }
       }
       if (!participantOps.isEmpty()) {
-        participantDeltas.add(new CoreWaveletDelta(delta.delta.getAuthor(), participantOps));
+        HashedVersion hashedVersion = HashedVersion.unsigned(targetVersion);
+        targetVersion += participantOps.size();
+        participantDeltas.add(new CoreWaveletDelta(delta.delta.getAuthor(), hashedVersion,
+            participantOps));
       }
     }
     return participantDeltas;

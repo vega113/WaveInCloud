@@ -25,8 +25,8 @@ import org.waveprotocol.wave.examples.client.common.ClientBackend;
 import org.waveprotocol.wave.examples.client.common.ClientUtils;
 import org.waveprotocol.wave.examples.client.common.ClientWaveView;
 import org.waveprotocol.wave.examples.client.common.IndexEntry;
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.frontend.IndexWave;
+import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.util.List;
 import java.util.Map;

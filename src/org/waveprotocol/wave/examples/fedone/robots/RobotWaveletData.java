@@ -20,7 +20,6 @@ package org.waveprotocol.wave.examples.fedone.robots;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.robots.util.WaveletPluginDocumentFactory;
 import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
@@ -33,6 +32,7 @@ import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.testing.BasicFactories;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
@@ -61,7 +61,7 @@ public class RobotWaveletData {
 
   private final ReadableWaveletData snapshot;
 
-  private final HashedVersion committedVersion;
+  private final HashedVersion snapshotVersion;
 
   /**
    * {@link LinkedHashMap} that maps participants to their
@@ -84,7 +84,7 @@ public class RobotWaveletData {
    */
   public RobotWaveletData(ReadableWaveletData snapshot, HashedVersion committedVersion) {
     this.snapshot = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(snapshot);
-    this.committedVersion = committedVersion;
+    this.snapshotVersion = committedVersion;
   }
 
   /**
@@ -159,8 +159,8 @@ public class RobotWaveletData {
         // No ops to generate delta for
         continue;
       }
-      CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, author);
-      VersionedWaveletDelta versionedDelta = new VersionedWaveletDelta(delta, committedVersion);
+      CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, author, snapshotVersion);
+      VersionedWaveletDelta versionedDelta = new VersionedWaveletDelta(delta, snapshotVersion);
       deltas.add(versionedDelta);
     }
     return deltas;

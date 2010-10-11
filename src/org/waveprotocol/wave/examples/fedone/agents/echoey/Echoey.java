@@ -19,7 +19,6 @@ package org.waveprotocol.wave.examples.fedone.agents.echoey;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.inject.Inject;
 import com.google.inject.internal.Sets;
@@ -33,14 +32,12 @@ import org.waveprotocol.wave.examples.fedone.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -143,19 +140,23 @@ public class Echoey extends AbstractAgent {
       // Don't echo any document that we created
     } else {
       String echoDocId = docId + getEchoeyDocumentSuffix();
-      List<CoreWaveletOperation> ops = Lists.newArrayList();
 
-      // Echo the change to the other document
-      //documentOperation.
-      ops.add(new CoreWaveletDocumentOperation(echoDocId, docOp));
+      // Echo the change to the other document documentOperation.
+      CoreWaveletOperation[] ops = new CoreWaveletOperation[] {
+          new CoreWaveletDocumentOperation(echoDocId, docOp)
+      };
 
       // Write the document into the manifest if it isn't already there
       if (documentsSeen.get(waveletName).add(docId)) {
         BlipData manifest = wavelet.getDocument(DocumentConstants.MANIFEST_DOCUMENT_ID);
-        ops.add(ClientUtils.appendToManifest(manifest, echoDocId));
+        ops = new CoreWaveletOperation[] {
+          ops[0],
+          ClientUtils.appendToManifest(manifest, echoDocId)
+        };
+
       }
 
-      sendAndAwaitWaveletDelta(waveletName, new CoreWaveletDelta(getParticipantId(), ops));
+      sendAndAwaitWaveletOperations(waveletName, ops);
     }
   }
 
@@ -164,11 +165,10 @@ public class Echoey extends AbstractAgent {
    */
   private void appendText(WaveletData wavelet, String text) {
     String docId = getNewDocumentId() + getEchoeyDocumentSuffix();
-    CoreWaveletDelta delta =
-        ClientUtils.createAppendBlipDelta(
-            wavelet.getDocument(DocumentConstants.MANIFEST_DOCUMENT_ID), getParticipantId(), docId,
-            text);
-    sendAndAwaitWaveletDelta(WaveletDataUtil.waveletNameOf(wavelet), delta);
+    CoreWaveletOperation[] ops = ClientUtils.createAppendBlipOps(
+        wavelet.getDocument(DocumentConstants.MANIFEST_DOCUMENT_ID), docId,
+        text);
+    sendAndAwaitWaveletOperations(WaveletDataUtil.waveletNameOf(wavelet), ops);
   }
 
   @Override

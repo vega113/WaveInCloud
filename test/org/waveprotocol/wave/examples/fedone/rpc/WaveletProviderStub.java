@@ -17,7 +17,6 @@
 
 package org.waveprotocol.wave.examples.fedone.rpc;
 
-import org.waveprotocol.wave.examples.common.HashedVersion;
 import org.waveprotocol.wave.examples.fedone.common.SnapshotSerializer;
 import org.waveprotocol.wave.examples.fedone.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.examples.fedone.frontend.WaveletSnapshotAndVersion;
@@ -26,6 +25,7 @@ import org.waveprotocol.wave.examples.fedone.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -58,7 +58,7 @@ public class WaveletProviderStub implements WaveletProvider {
     if (waveletName.waveId.equals(getHostedWavelet().getWaveId())
         && waveletName.waveletId.equals(getHostedWavelet().getWaveletId())) {
       HashedVersion version =
-          (currentVersionOverride != null) ? currentVersionOverride : new HashedVersion(
+          (currentVersionOverride != null) ? currentVersionOverride : HashedVersion.of(
               getHostedWavelet().getVersion(), JUNK_BYTES);
       return new WaveletSnapshotAndVersion(
           SnapshotSerializer.serializeWavelet(getHostedWavelet(), version), getCommittedVersion());
@@ -111,7 +111,7 @@ public class WaveletProviderStub implements WaveletProvider {
   public ProtocolHashedVersion getCommittedVersion() {
     return committedVersion;
   }
-  
+
   /**
    * @param allowsAccess whether or not users have access permissions
    */
