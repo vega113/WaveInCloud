@@ -25,7 +25,7 @@ import com.google.inject.name.Named;
 import org.waveprotocol.wave.examples.fedone.account.AccountData;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountData;
 import org.waveprotocol.wave.examples.fedone.account.RobotAccountDataImpl;
-import org.waveprotocol.wave.examples.fedone.gxp.RobotRegistrationPage;
+import org.waveprotocol.wave.examples.fedone.gxp.robots.RobotRegistrationPage;
 import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
@@ -137,6 +137,6 @@ public class RobotRegistrationServlet extends HttpServlet {
     LOG.info(robotAccount.getId() + " is now registered as a RobotAccount with Url "
         + robotAccount.getUrl());
 
-    doRegisterGet(req, resp, "Your Robot has been succesfully registered.");
+    doRegisterGet(req, resp, "Your Robot has been successfully registered.");
   }
 }

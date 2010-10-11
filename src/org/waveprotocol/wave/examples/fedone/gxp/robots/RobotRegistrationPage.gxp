@@ -1,11 +1,11 @@
 <!--
   GXP template for the Robot registration page.
-  Generate "ant gen_gxp".
+  Generate with "ant gen_gxp".
   Author: ljvderijk@google.com (Lennard de Rijk)
 -->
 
 <gxp:template
-    name='org.waveprotocol.wave.examples.fedone.gxp.RobotRegistrationPage'
+    name='org.waveprotocol.wave.examples.fedone.gxp.robots.RobotRegistrationPage'
     xmlns='http://www.w3.org/1999/xhtml'
     xmlns:gxp='http://google.com/2001/gxp'>
 
