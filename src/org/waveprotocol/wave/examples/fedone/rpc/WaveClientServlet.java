@@ -28,6 +28,7 @@ import org.waveprotocol.wave.client.util.ClientFlagsBase;
 import org.waveprotocol.wave.common.bootstrap.FlagConstants;
 import org.waveprotocol.wave.examples.common.SessionConstants;
 import org.waveprotocol.wave.examples.fedone.authentication.SessionManager;
+import org.waveprotocol.wave.examples.fedone.gxp.LoginBar;
 import org.waveprotocol.wave.examples.fedone.gxp.WaveClientPage;
 import org.waveprotocol.wave.examples.fedone.util.Log;
 import org.waveprotocol.wave.examples.fedone.util.RandomBase64Generator;
@@ -78,10 +79,11 @@ public class WaveClientServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     ParticipantId id = sessionManager.getLoggedInUser(request.getSession(false));
     String address = (id == null) ? null : id.getAddress();
-    
+
     try {
       WaveClientPage.write(response.getWriter(), new GxpContext(request.getLocale()),
-          getSessionJson(request.getSession(false)), getClientFlags(request), address);
+          getSessionJson(request.getSession(false)), getClientFlags(request),
+          LoginBar.getGxpClosure(address));
       response.setContentType("text/html");
       response.setStatus(HttpServletResponse.SC_OK);
     } catch (IOException e) {
@@ -142,13 +144,12 @@ public class WaveClientServlet extends HttpServlet {
       ParticipantId user = sessionManager.getLoggedInUser(session);
       String address = (user != null) ? user.getAddress() : null;
 
-      // TODO(zdwang): Figure out a proper session id rather than generating a random number
+      // TODO(zdwang): Figure out a proper session id rather than generating a
+      // random number
       String sessionId = (new RandomBase64Generator()).next(10);
 
-      return new JSONObject()
-          .put(SessionConstants.DOMAIN, domain)
-          .putOpt(SessionConstants.ADDRESS, address)
-          .putOpt(SessionConstants.ID_SEED, sessionId);
+      return new JSONObject().put(SessionConstants.DOMAIN, domain).putOpt(
+          SessionConstants.ADDRESS, address).putOpt(SessionConstants.ID_SEED, sessionId);
     } catch (JSONException e) {
       LOG.severe("Failed to create session JSON");
       return new JSONObject();

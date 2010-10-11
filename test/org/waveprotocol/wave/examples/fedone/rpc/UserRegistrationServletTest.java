@@ -49,9 +49,9 @@ public class UserRegistrationServletTest extends TestCase {
   private UserRegistrationServlet servlet;
   private AccountStore store;
 
-  private @Mock HttpServletRequest req;
-  private @Mock HttpServletResponse resp;
-  
+  @Mock private HttpServletRequest req;
+  @Mock private HttpServletResponse resp;
+
   @Override
   protected void setUp() throws Exception {
     store = new MemoryStore();
@@ -87,11 +87,11 @@ public class UserRegistrationServletTest extends TestCase {
 
   public void testRegisterUserAtForeignDomainThrowsError() throws IOException {
     attemptToRegister(req, resp, "bilbo@example2.com", "fdsa");
-    
+
     verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
     assertNull(store.getAccount(ParticipantId.ofUnsafe("bilbo@example2.com")));
   }
-  
+
   public void testUsernameTrimmed() throws IOException {
     attemptToRegister(req, resp, " ben@example.com ", "beetleguice");
 

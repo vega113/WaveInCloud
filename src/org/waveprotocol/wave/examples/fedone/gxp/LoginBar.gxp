@@ -17,10 +17,13 @@
     </div>
     <div style="padding: 5px 8px 5px 0px; float: right;">
       <gxp:if cond='address == null'>
-        <b style="padding-right: 1px;">Not logged in</b> | <a href="/auth/register">Register</a> | <a href="/auth/signin?r=/">Sign In</a>    
+        <b style="padding-right: 1px;">Not logged in</b> | 
+        <a href="/auth/register">Register</a> | 
+        <a href="/auth/signin?r=/">Sign In</a>    
       </gxp:if>
       <gxp:if cond='address != null'>
-        <b style="padding-right: 1px;"><gxp:eval expr='address' /></b> | <a href="/auth/signout?r=/">Sign out</a>
+        <b style="padding-right: 1px;"><gxp:eval expr='address' /></b> | 
+        <a href="/auth/signout?r=/">Sign out</a>
       </gxp:if>
     </div>
     <div style="clear: both"></div>

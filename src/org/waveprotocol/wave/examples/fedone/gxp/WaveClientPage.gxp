@@ -14,8 +14,8 @@
   <gxp:import class="org.waveprotocol.wave.examples.fedone.gxp.LoginBar" />
   <gxp:param name='sessionJson' type='JSONObject' />
   <gxp:param name='clientFlags' type='JSONObject' />
-  <gxp:param name='address' type='String' />
-
+  <gxp:param name='loginBar' type='HtmlClosure' />
+  
   <html>
     <head>
       <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
@@ -30,18 +30,13 @@
 
       <!-- GWT-compiled JS. -->
       <script type="text/javascript" language="javascript" src="webclient/webclient.nocache.js" />
-      
     </head>
 
     <body>
       <!-- GWT history support. -->
       <iframe src="javascript:''" id="__gwt_historyFrame" style="position:absolute;width:0;height:0;border:0" />
 
-      <call:LoginBar>
-        <gxp:attr name='address'>
-          <gxp:eval expr='address'/>
-        </gxp:attr>
-      </call:LoginBar>
+      <gxp:eval expr='loginBar'/>
       <div id="app" style="position:fixed; top:31px; right:0px; bottom:0px; left:0px;" />
 
       <noscript>

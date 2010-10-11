@@ -26,7 +26,6 @@ import static org.waveprotocol.wave.examples.fedone.waveserver.Ticker.EASY_TICKS
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 import junit.framework.TestCase;
 

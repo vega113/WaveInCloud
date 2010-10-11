@@ -54,20 +54,20 @@ import javax.servlet.http.HttpSession;
  */
 public class AuthenticationServletTest extends TestCase {
   private AuthenticationServlet servlet;
-  
-  private @Mock HttpServletRequest req;
-  private @Mock HttpServletResponse resp;
-  private @Mock HttpSession session;
-  
+
+  @Mock private HttpServletRequest req;
+  @Mock private HttpServletResponse resp;
+  @Mock private HttpSession session;
+
   @Override
   protected void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
     AccountStore store = new MemoryStore();
     HumanAccountData account = new HumanAccountDataImpl(
         ParticipantId.ofUnsafe("frodo@example.com"), new PasswordDigest("password".toCharArray()));
     store.putAccount(account);
     servlet = new AuthenticationServlet(AuthTestUtil.make(), new SessionManagerImpl(store));
     AccountStoreHolder.init(store, "example.com");
-    MockitoAnnotations.initMocks(this);
   }
 
   @Override
@@ -77,7 +77,7 @@ public class AuthenticationServletTest extends TestCase {
 
   public void testGetReturnsSomething() throws IOException {
     when(req.getSession(false)).thenReturn(null);
-    
+
     PrintWriter writer = mock(PrintWriter.class);
     when(resp.getWriter()).thenReturn(writer);
 
@@ -92,7 +92,7 @@ public class AuthenticationServletTest extends TestCase {
     verify(resp).setStatus(HttpServletResponse.SC_OK);
     verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
   }
-  
+
   public void testUserWithNoDomainGetsDomainAutomaticallyAdded() throws Exception {
     attemptLogin("frodo", "password", null);
 
@@ -141,8 +141,7 @@ public class AuthenticationServletTest extends TestCase {
 
   public void attemptLogin(String address, String password, String queryString) throws IOException {
     // The query string is escaped.
-    PercentEscaper escaper =
-        new PercentEscaper(PercentEscaper.SAFECHARS_URLENCODER, true);
+    PercentEscaper escaper = new PercentEscaper(PercentEscaper.SAFECHARS_URLENCODER, true);
     String data =
         "address=" + escaper.escape(address) + "&" + "password=" + escaper.escape(password);
 
