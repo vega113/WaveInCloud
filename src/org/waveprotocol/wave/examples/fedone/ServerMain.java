@@ -80,10 +80,11 @@ public class ServerMain {
 
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
 
-    server.addServlet("/auth", injector.getInstance(AuthenticationServlet.class));
+    server.addServlet("/auth/signin", injector.getInstance(AuthenticationServlet.class));
+    server.addServlet("/auth/signout", injector.getInstance(SignOutServlet.class));
+    server.addServlet("/auth/register", injector.getInstance(UserRegistrationServlet.class));
+    
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
-    server.addServlet("/register", injector.getInstance(UserRegistrationServlet.class));
-    server.addServlet("/signout", injector.getInstance(SignOutServlet.class));
 
     server.addServlet("/robot/dataapi", injector.getInstance(DataApiServlet.class));
     server.addServlet(DataApiOAuthServlet.DATA_API_OAUTH_PATH + "*",

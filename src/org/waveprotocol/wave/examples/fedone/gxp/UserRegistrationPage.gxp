@@ -23,7 +23,7 @@
       <gxp:if cond='!message.isEmpty()'>
         <b><gxp:eval expr='message' /></b>
       </gxp:if>
-
+      <h1>Register a new user</h1>
       <form method="post" action="">
         Username: <input name="address" type="text"/>@<gxp:eval expr='domain'/><br/>
         Password: <input name="password" type="password"/><br/>

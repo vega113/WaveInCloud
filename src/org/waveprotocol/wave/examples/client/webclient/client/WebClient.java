@@ -24,8 +24,8 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
-import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 
@@ -227,6 +227,20 @@ public class WebClient implements EntryPoint {
 
     websocket.connect(getWebSocketBaseUrl(GWT.getModuleBaseURL()) + "socket");
 
+    // For some reason, if this code is executed immediately (without the timer), the backend isn't
+    // initialized properly.
+    // TODO(josephg): Refactor this, potentially removing UserLoginEvent.
+    new Timer() {
+      @Override
+      public void run() {
+        String address = Session.get().getAddress();
+        if (address != null) {
+          LOG.info("User logged in");
+          ClientEvents.get().fireEvent(new UserLoginEvent(address, true));
+        }
+      }
+    }.schedule(100);
+    
     LOG.info("SimpleWebClient.onModuleLoad() done");
   }
 
