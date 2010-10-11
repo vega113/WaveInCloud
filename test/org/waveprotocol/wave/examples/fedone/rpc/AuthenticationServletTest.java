@@ -26,6 +26,8 @@ import static org.mockito.Mockito.when;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.waveprotocol.wave.common.util.PercentEscaper;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountData;
 import org.waveprotocol.wave.examples.fedone.account.HumanAccountDataImpl;
@@ -52,7 +54,11 @@ import javax.servlet.http.HttpSession;
  */
 public class AuthenticationServletTest extends TestCase {
   private AuthenticationServlet servlet;
-
+  
+  private @Mock HttpServletRequest req;
+  private @Mock HttpServletResponse resp;
+  private @Mock HttpSession session;
+  
   @Override
   protected void setUp() throws Exception {
     AccountStore store = new MemoryStore();
@@ -60,19 +66,18 @@ public class AuthenticationServletTest extends TestCase {
         ParticipantId.ofUnsafe("frodo@example.com"), new PasswordDigest("password".toCharArray()));
     store.putAccount(account);
     servlet = new AuthenticationServlet(AuthTestUtil.make(), new SessionManagerImpl(store));
-    AccountStoreHolder.init(store);
+    AccountStoreHolder.init(store, "example.com");
+    MockitoAnnotations.initMocks(this);
   }
 
   @Override
   protected void tearDown() throws Exception {
-    AccountStoreHolder.clearAccountStore();
+    AccountStoreHolder.clear();
   }
 
   public void testGetReturnsSomething() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
     when(req.getSession(false)).thenReturn(null);
-
-    HttpServletResponse resp = mock(HttpServletResponse.class);
+    
     PrintWriter writer = mock(PrintWriter.class);
     when(resp.getWriter()).thenReturn(writer);
 
@@ -82,64 +87,51 @@ public class AuthenticationServletTest extends TestCase {
   }
 
   public void testValidLoginWorks() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    HttpSession session = mock(HttpSession.class);
-    HttpServletResponse resp = mock(HttpServletResponse.class);
+    attemptLogin("frodo@example.com", "password", null);
 
-    attemptLogin(req, resp, session, "frodo@example.com", "password", null);
+    verify(resp).setStatus(HttpServletResponse.SC_OK);
+    verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
+  }
+  
+  public void testUserWithNoDomainGetsDomainAutomaticallyAdded() throws Exception {
+    attemptLogin("frodo", "password", null);
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
     verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
   }
 
   public void testLoginRedirects() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    HttpSession session = mock(HttpSession.class);
-    HttpServletResponse resp = mock(HttpServletResponse.class);
-
     String redirect_location = "/abc123?nested=query&string";
     PercentEscaper escaper =
         new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
     String query_str = "r=" + escaper.escape(redirect_location);
 
-    attemptLogin(req, resp, session, "frodo@example.com", "password", query_str);
+    attemptLogin("frodo@example.com", "password", query_str);
 
     verify(resp).sendRedirect(redirect_location);
     verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
   }
 
   public void testLoginDoesNotRedirectToRemoteSite() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    HttpSession session = mock(HttpSession.class);
-    HttpServletResponse resp = mock(HttpServletResponse.class);
-
     String redirect_location = "http://example.com/other/site";
     PercentEscaper escaper =
         new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
     String query_str = "r=" + escaper.escape(redirect_location);
 
-    attemptLogin(req, resp, session, "frodo@example.com", "password", query_str);
+    attemptLogin("frodo@example.com", "password", query_str);
 
     verify(resp, never()).sendRedirect(anyString());
   }
 
   public void testIncorrectPasswordReturns403() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    HttpSession session = mock(HttpSession.class);
-    HttpServletResponse resp = mock(HttpServletResponse.class);
-
-    attemptLogin(req, resp, session, "frodo@example.com", "incorrect", null);
+    attemptLogin("frodo@example.com", "incorrect", null);
 
     verify(resp).sendError(HttpServletResponse.SC_FORBIDDEN);
     verify(session, never()).setAttribute(eq("user"), anyString());
   }
 
   public void testInvalidUsernameReturns403() throws IOException {
-    HttpServletRequest req = mock(HttpServletRequest.class);
-    HttpSession session = mock(HttpSession.class);
-    HttpServletResponse resp = mock(HttpServletResponse.class);
-
-    attemptLogin(req, resp, session, "madeup@example.com", "incorrect", null);
+    attemptLogin("madeup@example.com", "incorrect", null);
 
     verify(resp).sendError(HttpServletResponse.SC_FORBIDDEN);
     verify(session, never()).setAttribute(eq("address"), anyString());
@@ -147,8 +139,7 @@ public class AuthenticationServletTest extends TestCase {
 
   // *** Utility methods
 
-  public void attemptLogin(HttpServletRequest req, HttpServletResponse resp, HttpSession session,
-      String address, String password, String queryString) throws IOException {
+  public void attemptLogin(String address, String password, String queryString) throws IOException {
     // The query string is escaped.
     PercentEscaper escaper =
         new PercentEscaper(PercentEscaper.SAFECHARS_URLENCODER, true);

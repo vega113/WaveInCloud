@@ -66,12 +66,12 @@ public class AccountStoreLoginModuleTest extends TestCase {
     store.putAccount(new HumanAccountDataImpl(
         ParticipantId.ofUnsafe("haspwd@example.com"), new PasswordDigest("pwd".toCharArray())));
     store.putAccount(new HumanAccountDataImpl(ParticipantId.ofUnsafe("nopwd@example.com")));
-    AccountStoreHolder.init(store);
+    AccountStoreHolder.init(store, "example.com");
   }
 
   @Override
   protected void tearDown() {
-    AccountStoreHolder.clearAccountStore();
+    AccountStoreHolder.clear();
   }
 
   private LoginContext makeLoginContext(String address, String password) throws LoginException {
@@ -100,15 +100,19 @@ public class AccountStoreLoginModuleTest extends TestCase {
     LoginContext context = makeLoginContext("haspwd@example.com", "pwd");
     context.login();
     Subject subject = context.getSubject();
-    boolean hasPrincipal = false;
-    for (ParticipantPrincipal p : subject.getPrincipals(ParticipantPrincipal.class)) {
-      assertEquals("haspwd@example.com", p.getName());
-      hasPrincipal = true;
-    }
-    assertTrue(hasPrincipal);
+    ParticipantPrincipal p = subject.getPrincipals(ParticipantPrincipal.class).iterator().next();
+    assertEquals("haspwd@example.com", p.getName());
 
     context.logout();
     assertEquals(0, subject.getPrincipals(ParticipantPrincipal.class).size());
+  }
+  
+  public void testMissingDomainIsAddedAutomatically() throws Exception {
+    LoginContext context = makeLoginContext("haspwd", "pwd");
+    context.login();
+    Subject subject = context.getSubject();
+    ParticipantPrincipal p = subject.getPrincipals(ParticipantPrincipal.class).iterator().next();
+    assertEquals("haspwd@example.com", p.getName());
   }
 
   public void testUserWithNoPasswordCannotLogin() throws Exception {

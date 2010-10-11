@@ -26,6 +26,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 
 import org.waveprotocol.wave.client.Stages;
@@ -70,9 +71,6 @@ public class WebClient implements EntryPoint {
   private static final Binder BINDER = GWT.create(Binder.class);
 
   @UiField
-  LoginPanel loginPanel;
-
-  @UiField
   SplitLayoutPanel splitPanel;
 
   @UiField
@@ -107,8 +105,7 @@ public class WebClient implements EntryPoint {
     });
 
     // Set up UI
-    RootLayoutPanel.get().add(BINDER.createAndBindUi(this));
-    loginPanel.setFocus(true);
+    RootPanel.get("app").add(BINDER.createAndBindUi(this));
 
     ClientEvents.get().addUserLoginEventHandler(new UserLoginEventHandler() {
       @Override

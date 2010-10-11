@@ -86,8 +86,13 @@ public class AccountStoreLoginModule implements LoginModule {
     boolean success;
     ParticipantId id = null;
     
+    String address = nameCallback.getName();
+    if (!address.contains(ParticipantId.DOMAIN_PREFIX)) {
+      address = address + ParticipantId.DOMAIN_PREFIX + AccountStoreHolder.getDefaultDomain();
+    }
+    
     try {
-      id = ParticipantId.of(nameCallback.getName());
+      id = ParticipantId.of(address);
       AccountData account = accountStore.getAccount(id);
       char[] password = passwordCallback.getPassword();
       

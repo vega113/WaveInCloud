@@ -52,23 +52,9 @@
       margin: 2px;
       margin-right: 5px;
     }
-
-    .loginPanel {
-      margin: 5px;
-    }
   </ui:style>
   <ui:image field="logo" />
   <g:DockLayoutPanel unit="PX" styleName="{style.root}">
-    <g:north size="45">
-      <g:DockLayoutPanel styleName="{style.subPanel} {style.fullGap}">
-        <g:west size="55">
-          <g:Image resource="{logo}" styleName="{style.logo}" />
-        </g:west>
-        <g:center>
-          <s:LoginPanel ui:field="loginPanel" styleName="{style.loginPanel}" />
-        </g:center>
-      </g:DockLayoutPanel>
-    </g:north>
     <g:center>
       <g:SplitLayoutPanel ui:field="splitPanel" stylePrimaryName="{style.splitPanel}">
         <g:south size="200">

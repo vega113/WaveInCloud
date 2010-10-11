@@ -19,7 +19,9 @@ package org.waveprotocol.wave.examples.fedone;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.name.Names;
 
 import org.apache.commons.cli.ParseException;
 import org.waveprotocol.wave.examples.fedone.authentication.AccountStoreHolder;
@@ -35,6 +37,7 @@ import org.waveprotocol.wave.examples.fedone.rpc.AttachmentServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.AuthenticationServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.FetchServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.ServerRpcProvider;
+import org.waveprotocol.wave.examples.fedone.rpc.SignOutServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.UserRegistrationServlet;
 import org.waveprotocol.wave.examples.fedone.rpc.WaveClientServlet;
 import org.waveprotocol.wave.examples.fedone.util.Log;
@@ -72,13 +75,15 @@ public class ServerMain {
     ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
 
-    AccountStoreHolder.init(injector.getInstance(AccountStore.class));
+    AccountStoreHolder.init(injector.getInstance(AccountStore.class), 
+        injector.getInstance(Key.get(String.class, Names.named("wave_server_domain"))));
 
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
 
     server.addServlet("/auth", injector.getInstance(AuthenticationServlet.class));
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
     server.addServlet("/register", injector.getInstance(UserRegistrationServlet.class));
+    server.addServlet("/signout", injector.getInstance(SignOutServlet.class));
 
     server.addServlet("/robot/dataapi", injector.getInstance(DataApiServlet.class));
     server.addServlet(DataApiOAuthServlet.DATA_API_OAUTH_PATH + "*",

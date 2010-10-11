@@ -31,11 +31,13 @@ import org.waveprotocol.wave.examples.fedone.persistence.AccountStore;
  */
 public class AccountStoreHolder {
   private static AccountStore store = null;
+  private static String defaultDomain = null;
 
-  synchronized public static void init(AccountStore newStore) {
-    Preconditions.checkNotNull(newStore, "Account store cannot be null");
-    Preconditions.checkState(store == null, "Account store already set");
-    store = newStore;
+  synchronized public static void init(AccountStore store, String defaultDomain) {
+    Preconditions.checkNotNull(store, "Account store cannot be null");
+    Preconditions.checkState(AccountStoreHolder.store == null, "Account store already set");
+    AccountStoreHolder.store = store;
+    AccountStoreHolder.defaultDomain = defaultDomain;
   }
 
   /**
@@ -46,8 +48,16 @@ public class AccountStoreHolder {
     return store;
   }
   
+  /**
+   * @return the default domain
+   */
+  public static String getDefaultDomain() {
+    return defaultDomain;
+  }
+  
   /** Needed for testing. */
-  public static void clearAccountStore() {
+  public static void clear() {
     store = null;
+    defaultDomain = null;
   }
 }

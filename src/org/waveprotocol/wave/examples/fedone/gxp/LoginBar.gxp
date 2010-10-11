@@ -1,0 +1,28 @@
+<!--
+  GXP template for the bar up the top of the page showing who you're logged in as.
+  Author: josephg@gmail.com (Joseph Gentle)
+-->
+
+<gxp:template
+    name='org.waveprotocol.wave.examples.fedone.gxp.LoginBar'
+    xmlns='http://www.w3.org/1999/xhtml'
+    xmlns:gxp='http://google.com/2001/gxp'>
+
+  <gxp:param name='address' type='String' />
+
+  <div
+    style="display: block; position: relative; width: 100%; height: 30px; border-bottom: solid 1px black;">
+    <div style="padding: 6px 0px 5px 8px; float: left;">
+      <b>Wave in a box</b>
+    </div>
+    <div style="padding: 5px 8px 5px 0px; float: right;">
+      <gxp:if cond='address == null'>
+        <b style="padding-right: 1px;">Not logged in</b> | <a href="/register">Register</a> | <a href="/auth?r=/">Sign In</a>    
+      </gxp:if>
+      <gxp:if cond='address != null'>
+        <b style="padding-right: 1px;"><gxp:eval expr='address' /></b> | <a href="/signout?r=/">Sign out</a>
+      </gxp:if>
+    </div>
+    <div style="clear: both"></div>
+  </div>
+</gxp:template>

@@ -69,6 +69,13 @@ public class UserRegistrationServletTest extends TestCase {
     assertTrue(account.asHuman().getPasswordDigest().verify("internet".toCharArray()));
   }
 
+  public void testDomainInsertedAutomatically() throws IOException {
+    attemptToRegister(req, resp, "sam", "fdsa");
+
+    verify(resp).setStatus(HttpServletResponse.SC_OK);
+    assertNotNull(store.getAccount(ParticipantId.ofUnsafe("sam@example.com")));
+  }
+
   public void testRegisterExistingUserThrowsError() throws IOException {
     attemptToRegister(req, resp, "frodo@example.com", "asdf");
 
@@ -78,13 +85,13 @@ public class UserRegistrationServletTest extends TestCase {
     assertSame(account, store.getAccount(account.getId()));
   }
 
-  public void testDomainInsertedAutomatically() throws IOException {
-    attemptToRegister(req, resp, "sam", "fdsa");
-
-    verify(resp).setStatus(HttpServletResponse.SC_OK);
-    assertNotNull(store.getAccount(ParticipantId.ofUnsafe("sam@example.com")));
+  public void testRegisterUserAtForeignDomainThrowsError() throws IOException {
+    attemptToRegister(req, resp, "bilbo@example2.com", "fdsa");
+    
+    verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
+    assertNull(store.getAccount(ParticipantId.ofUnsafe("bilbo@example2.com")));
   }
-
+  
   public void testUsernameTrimmed() throws IOException {
     attemptToRegister(req, resp, " ben@example.com ", "beetleguice");
 

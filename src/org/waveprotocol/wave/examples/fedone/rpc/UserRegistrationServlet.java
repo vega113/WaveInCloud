@@ -92,6 +92,9 @@ public final class UserRegistrationServlet extends HttpServlet {
       if (id.getAddress().indexOf("@") < 2) {
         return "Username portion of address cannot be less than 2 characters";
       }
+      if (!id.getDomain().equals(domain)) {
+        return "You can only create users at the " + domain + " domain";
+      }
     } catch (InvalidParticipantAddress e) {
       return "Invalid username";
     }
