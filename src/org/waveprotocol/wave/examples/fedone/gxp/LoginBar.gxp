@@ -11,21 +11,22 @@
   <gxp:param name='address' type='String' />
 
   <div
-    style="display: block; position: relative; width: 100%; height: 30px; border-bottom: solid 1px black;">
-    <div style="padding: 6px 0px 5px 8px; float: left;">
-      <b>Wave in a box</b>
+    style="display: block; position: relative; width: 100%; height: 32px; line-height: 29px; border-bottom: solid 1px black; overflow: hidden;">
+    <div style="float: left;">
+      <img src="/static/logo.png" alt="logo" style="vertical-align: middle;" />
+      <span style="font-weight: bold; padding-left: 5px">Wave in a box</span>
     </div>
-    <div style="padding: 5px 8px 5px 0px; float: right;">
+    <span style="padding-right: 8px; float: right;">
       <gxp:if cond='address == null'>
-        <b style="padding-right: 1px;">Not logged in</b> | 
-        <a href="/auth/register">Register</a> | 
-        <a href="/auth/signin?r=/">Sign In</a>    
+        <b style="padding-right: 1px;">Not logged in</b> |
+        <a href="/auth/register">Register</a> |
+        <a href="/auth/signin?r=/">Sign In</a>
       </gxp:if>
       <gxp:if cond='address != null'>
         <b style="padding-right: 1px;"><gxp:eval expr='address' /></b> | 
         <a href="/auth/signout?r=/">Sign out</a>
       </gxp:if>
-    </div>
+    </span>
     <div style="clear: both"></div>
   </div>
 </gxp:template>
