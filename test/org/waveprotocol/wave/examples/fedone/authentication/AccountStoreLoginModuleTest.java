@@ -71,7 +71,7 @@ public class AccountStoreLoginModuleTest extends TestCase {
 
   @Override
   protected void tearDown() {
-    AccountStoreHolder.clear();
+    AccountStoreHolder.resetForTesting();
   }
 
   private LoginContext makeLoginContext(String address, String password) throws LoginException {

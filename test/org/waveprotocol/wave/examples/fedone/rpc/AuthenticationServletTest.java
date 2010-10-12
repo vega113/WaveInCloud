@@ -72,7 +72,7 @@ public class AuthenticationServletTest extends TestCase {
 
   @Override
   protected void tearDown() throws Exception {
-    AccountStoreHolder.clear();
+    AccountStoreHolder.resetForTesting();
   }
 
   public void testGetReturnsSomething() throws IOException {

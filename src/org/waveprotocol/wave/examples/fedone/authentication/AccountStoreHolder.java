@@ -35,6 +35,7 @@ public class AccountStoreHolder {
 
   synchronized public static void init(AccountStore store, String defaultDomain) {
     Preconditions.checkNotNull(store, "Account store cannot be null");
+    Preconditions.checkNotNull(defaultDomain, "Default domain cannot be null");
     Preconditions.checkState(AccountStoreHolder.store == null, "Account store already set");
     AccountStoreHolder.store = store;
     AccountStoreHolder.defaultDomain = defaultDomain;
@@ -49,14 +50,15 @@ public class AccountStoreHolder {
   }
   
   /**
-   * @return the default domain
+   * @return the non-null default domain
    */
   public static String getDefaultDomain() {
+    Preconditions.checkNotNull(store, "Default domain not set");
     return defaultDomain;
   }
   
   /** Needed for testing. */
-  public static void clear() {
+  public static void resetForTesting() {
     store = null;
     defaultDomain = null;
   }

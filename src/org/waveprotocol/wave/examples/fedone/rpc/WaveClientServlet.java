@@ -148,8 +148,10 @@ public class WaveClientServlet extends HttpServlet {
       // random number
       String sessionId = (new RandomBase64Generator()).next(10);
 
-      return new JSONObject().put(SessionConstants.DOMAIN, domain).putOpt(
-          SessionConstants.ADDRESS, address).putOpt(SessionConstants.ID_SEED, sessionId);
+      return new JSONObject()
+          .put(SessionConstants.DOMAIN, domain)
+          .putOpt(SessionConstants.ADDRESS, address)
+          .putOpt(SessionConstants.ID_SEED, sessionId);
     } catch (JSONException e) {
       LOG.severe("Failed to create session JSON");
       return new JSONObject();
