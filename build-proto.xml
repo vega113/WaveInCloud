@@ -42,21 +42,21 @@
       <arg value="--proto_path=${proto.stage}/" />
       <arg value="--proto_path=${protoc_dist}/src/" />
       <arg value="--java_out=proto_src" />
-      <arg value="${proto.stage}/org/waveprotocol/wave/examples/fedone/rpc/rpc.proto" />
+      <arg value="${proto.stage}/org/waveprotocol/box/server/rpc/rpc.proto" />
     </exec>
 
     <exec executable="${protoc}">
       <arg value="--proto_path=${proto.stage}/" />
       <arg value="--proto_path=${protoc_dist}/src" />
       <arg value="--java_out=proto_src" />
-      <arg value="${proto.stage}/org/waveprotocol/wave/examples/fedone/waveserver/waveclient-rpc.proto" />
+      <arg value="${proto.stage}/org/waveprotocol/box/server/waveserver/waveclient-rpc.proto" />
     </exec>
   </target>
 
   <!-- Requires all proto files to be on the same path! -->
   <target name="compile_json" depends="stage" description="Compiles Javascript files from protocol buffers">
     <java classname="com.dyuproject.protostuff.compiler.CompilerMain" fork="true" dir="${proto.stage}">
-      <jvmarg value="-Dsource=org/waveprotocol/wave/examples/fedone/waveserver/waveclient-rpc.proto" />
+        <jvmarg value="-Dsource=org/waveprotocol/box/server/waveserver/waveclient-rpc.proto" />
       <jvmarg value="-DoutputDir=${basedir}/proto_gwt_src" />
       <jvmarg value="-Doutput=gwt_overlay" />
       <jvmarg value="-Dencoding=UTF-8" />

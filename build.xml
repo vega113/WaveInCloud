@@ -113,7 +113,7 @@
         srcdir="${src}"
         srcpaths="${src}"
         destdir="${gen}"
-        target="org.waveprotocol.wave.examples.fedone.gxp" />
+        target="org.waveprotocol.box.server.gxp" />
   </target>
 
   <target name="compile_tests" depends="compile" description="Compiles all the unit tests in the project">
@@ -164,12 +164,12 @@
         <fileset dir="${test}">
           <include name="**/*Test.java"/>
           <!-- Exclude all persistence tests -->
-          <exclude name="**/fedone/persistence/**"/>
+          <exclude name="**/server/persistence/**"/>
         </fileset>
         <fileset dir="${test}">
           <!-- Include the persistence tests that aren't run elsewhere -->
-          <include name="**/fedone/persistence/memory/*Test.java"/>
-          <include name="**/fedone/persistence/file/*Test.java"/>
+          <include name="**/server/persistence/memory/*Test.java"/>
+          <include name="**/server/persistence/file/*Test.java"/>
         </fileset>
       </batchtest>
     </junit>
@@ -200,7 +200,7 @@
         <batchtest todir="${dir.testout}">
           <fileset dir="${test}">
             <!-- Include the mongoDb tests -->
-            <include name="**/fedone/persistence/mongodb/**/*Test.java"/>
+            <include name="**/server/persistence/mongodb/**/*Test.java"/>
           </fileset>
         </batchtest>
       </junit>
@@ -237,7 +237,7 @@
       <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
       <arg line="-style PRETTY"/>
       <arg line="${gwt.args}"/>
-      <arg value="org.waveprotocol.wave.examples.client.webclient.WebClient"/>
+      <arg value="org.waveprotocol.box.client.webclient.WebClient"/>
     </java>
   </target>
 
@@ -253,7 +253,7 @@
       <arg value="-noserver" />
       <arg line="-bindAddress 0.0.0.0" />
       <arg line="${gwt.args}"/>
-      <arg value="org.waveprotocol.wave.examples.client.webclient.WebClient"/>
+      <arg value="org.waveprotocol.box.client.webclient.WebClient"/>
     </java>
   </target>
 
@@ -284,10 +284,10 @@
       <fileset dir="${staging}">
         <include name="org/waveprotocol/**/*" />
         <!-- Only exclude runnable targets -->
-        <exclude name="org/waveprotocol/wave/examples/fedone/waveclient/agents/echoey/**/*" />
-        <exclude name="org/waveprotocol/wave/examples/fedone/waveclient/agents/probey/**/*" />
-        <exclude name="org/waveprotocol/wave/examples/fedone/waveclient/console/**/*" />
-        <exclude name="org/waveprotocol/wave/examples/fedone/waveserver/**/*" />
+        <exclude name="org/waveprotocol/box/agents/echoey/**/*" />
+        <exclude name="org/waveprotocol/box/agents/probey/**/*" />
+        <exclude name="org/waveprotocol/box/consoleclient/**/*" />
+        <exclude name="org/waveprotocol/box/server/waveserver/**/*" />
       </fileset>
       <manifest>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
@@ -334,7 +334,7 @@
       <manifest>
         <!-- Application entry point -->
         <attribute name="Main-Class"
-          value="org.waveprotocol.wave.examples.fedone.ServerMain"/>
+          value="org.waveprotocol.box.server.ServerMain"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
         <attribute name="Implementation-Title" value="Google Wave FedOne Server"/>
         <attribute name="Implementation-Version" value="${fedone.version}"/>
@@ -360,7 +360,7 @@
       <manifest>
         <!-- Application entry point -->
         <attribute name="Main-Class"
-          value="org.waveprotocol.wave.examples.client.console.ConsoleClient"/>
+          value="org.waveprotocol.box.consoleclient.ConsoleClient"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
         <attribute name="Implementation-Title" value="Google Wave FedOne Console Client"/>
         <attribute name="Implementation-Version" value="${fedone.version}"/>
@@ -385,7 +385,7 @@
       <manifest>
         <!-- Application entry point -->
         <attribute name="Main-Class"
-          value="org.waveprotocol.wave.examples.fedone.agents.echoey.Echoey"/>
+          value="org.waveprotocol.box.agents.echoey.Echoey"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
         <attribute name="Implementation-Title" value="Google Wave FedOne Echoey Agent"/>
         <attribute name="Implementation-Version" value="${fedone.version}"/>
@@ -412,7 +412,7 @@
       <manifest>
         <!-- Application entry point -->
         <attribute name="Main-Class"
-          value="org.waveprotocol.wave.examples.fedone.agents.probey.Probey"/>
+          value="org.waveprotocol.box.agents.probey.Probey"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
         <attribute name="Implementation-Title" value="Google Wave FedOne Probey Agent"/>
         <attribute name="Implementation-Version" value="${fedone.version}"/>
