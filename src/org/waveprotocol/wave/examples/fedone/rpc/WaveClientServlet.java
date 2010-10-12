@@ -78,12 +78,18 @@ public class WaveClientServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     ParticipantId id = sessionManager.getLoggedInUser(request.getSession(false));
-    String address = (id == null) ? null : id.getAddress();
+    String username = null;
+    String userDomain = null;
+    if (id != null) {
+      String[] parts = id.getAddress().split("@");
+      username = parts[0];
+      userDomain = id.getDomain();
+    }
 
     try {
       WaveClientPage.write(response.getWriter(), new GxpContext(request.getLocale()),
           getSessionJson(request.getSession(false)), getClientFlags(request),
-          LoginBar.getGxpClosure(address));
+          LoginBar.getGxpClosure(username, userDomain));
       response.setContentType("text/html");
       response.setStatus(HttpServletResponse.SC_OK);
     } catch (IOException e) {

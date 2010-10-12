@@ -8,25 +8,27 @@
     xmlns='http://www.w3.org/1999/xhtml'
     xmlns:gxp='http://google.com/2001/gxp'>
 
-  <gxp:param name='address' type='String' />
+  <gxp:param name='username' type='String' />
+  <gxp:param name='domain' type='String' />
 
-  <div
-    style="display: block; position: relative; width: 100%; height: 32px; line-height: 29px; border-bottom: solid 1px black; overflow: hidden;">
-    <div style="float: left;">
-      <img src="/static/logo.png" alt="logo" style="vertical-align: middle;" />
-      <span style="font-weight: bold; padding-left: 5px">Wave in a box</span>
+  <div class="loginbar">
+    <div class="loginbarLeft">
+      <img src="/static/logo.png" alt="logo" class="logo" />
+      <span class="loginbarLeftText">Wave in a box</span>
     </div>
-    <span style="padding-right: 8px; float: right;">
-      <gxp:if cond='address == null'>
-        <b style="padding-right: 1px;">Not logged in</b> |
+    <span class="loginbarRight">
+      <gxp:if cond='username == null'>
+        <span class="loginbarRightMainText">Not logged in</span> |
         <a href="/auth/register">Register</a> |
         <a href="/auth/signin?r=/">Sign In</a>
       </gxp:if>
-      <gxp:if cond='address != null'>
-        <b style="padding-right: 1px;"><gxp:eval expr='address' /></b> | 
+      <gxp:if cond='username != null'>
+        <span class="loginbarRightMainText">
+          <gxp:eval expr='username' /><span class="loginbarDomain">@<gxp:eval expr='domain' /></span>
+        </span> | 
+        <span id="netstatus" class="offline">Offline</span> | 
         <a href="/auth/signout?r=/">Sign out</a>
       </gxp:if>
     </span>
-    <div style="clear: both"></div>
   </div>
 </gxp:template>

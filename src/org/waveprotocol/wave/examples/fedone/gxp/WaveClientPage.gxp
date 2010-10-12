@@ -27,7 +27,8 @@
         var __session = <gxp:eval expr='sessionJson' />;
         var __client_flags = <gxp:eval expr='clientFlags' />;
       </script>
-
+      
+      <link href="/static/client.css" rel="stylesheet" type="text/css" />
       <!-- GWT-compiled JS. -->
       <script type="text/javascript" language="javascript" src="webclient/webclient.nocache.js" />
     </head>

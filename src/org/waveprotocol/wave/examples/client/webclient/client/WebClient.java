@@ -21,6 +21,7 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -200,6 +201,8 @@ public class WebClient implements EntryPoint {
           }
         });
 
+    configureConnectionIndicator();
+    
     HistorySupport.init();
 
     websocket.connect(getWebSocketBaseUrl(GWT.getModuleBaseURL()) + "socket");
@@ -210,6 +213,31 @@ public class WebClient implements EntryPoint {
     }
     History.fireCurrentHistoryState();
     LOG.info("SimpleWebClient.onModuleLoad() done");
+  }
+
+  private void configureConnectionIndicator() {
+    ClientEvents.get().addNetworkStatusEventHandler(new NetworkStatusEventHandler() {
+      @Override
+      public void onNetworkStatus(NetworkStatusEvent event) {
+        Element element = Document.get().getElementById("netstatus");
+        
+        switch (event.getStatus()) {
+          case CONNECTED:
+          case RECONNECTED:
+            element.setInnerText("Online");
+            element.setClassName("online");
+            break;
+          case DISCONNECTED:
+            element.setInnerText("Offline");
+            element.setClassName("offline");
+            break;
+          case RECONNECTING:
+            element.setInnerText("Connecting ...");
+            element.setClassName("connecting");
+            break;
+        }
+      }
+    });
   }
 
   /**
