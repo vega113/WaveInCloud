@@ -51,6 +51,7 @@
 
   <target name="clean" description="Cleans up the build artifacts and temporary directories">
     <delete dir="${build}"/>
+    <delete dir="${gen}"/>
   </target>
 
   <target name="init">
