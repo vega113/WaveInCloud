@@ -8,6 +8,8 @@
 
   <target name="init">
     <mkdir dir="${proto.stage}" />
+    <mkdir dir="proto_src" />
+    <mkdir dir="proto_gwt_src" />
   </target>
 
   <target name="clean" description="Cleans up the temp folders">
@@ -56,7 +58,20 @@
   <!-- Requires all proto files to be on the same path! -->
   <target name="compile_json" depends="stage" description="Compiles Javascript files from protocol buffers">
     <java classname="com.dyuproject.protostuff.compiler.CompilerMain" fork="true" dir="${proto.stage}">
-        <jvmarg value="-Dsource=org/waveprotocol/box/server/waveserver/waveclient-rpc.proto" />
+      <jvmarg value="-Dsource=org/waveprotocol/box/server/waveserver/waveclient-rpc.proto" />
+      <jvmarg value="-DoutputDir=${basedir}/proto_gwt_src" />
+      <jvmarg value="-Doutput=gwt_overlay" />
+      <jvmarg value="-Dencoding=UTF-8" />
+      <jvmarg value="-Doptions=numeric:true,generate_helper_methods:true" />
+      <classpath>
+        <fileset dir="" includes="third_party/runtime/protostuff/*.jar" />
+        <pathelement location="third_party/codegen/stringtemplate/stringtemplate-3.2.1.jar" />
+        <pathelement location="third_party/codegen/antlr/antlr-3.2.jar" />
+      </classpath>
+    </java>
+
+    <java classname="com.dyuproject.protostuff.compiler.CompilerMain" fork="true" dir="${proto.stage}">
+      <jvmarg value="-Dsource=org/waveprotocol/wave/federation/federation.protodevel" />
       <jvmarg value="-DoutputDir=${basedir}/proto_gwt_src" />
       <jvmarg value="-Doutput=gwt_overlay" />
       <jvmarg value="-Dencoding=UTF-8" />

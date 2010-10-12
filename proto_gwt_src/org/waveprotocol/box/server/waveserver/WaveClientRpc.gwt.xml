@@ -7,7 +7,6 @@
         <include name="ProtocolSubmitRequest.java"/>
         <include name="ProtocolSubmitResponse.java"/>
         <include name="ProtocolWaveletUpdate.java"/>
-        <include name="WaveClientRpc.gwt.xml"/>
         <include name="WaveletSnapshot.java"/>
         <include name="WaveletVersion.java"/>
         <include name="WaveViewSnapshot.java"/>
