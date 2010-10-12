@@ -38,8 +38,7 @@
   <set-configuration-property name="compiler.emulatedStack.recordFileNames" value="true" />
   <set-configuration-property name="compiler.emulatedStack.recordLineNumbers" value="true" />
 
-  <!-- Uncomment the line below to restrict the build for faster compile in development -->
+  <!-- These lines restrict the build for faster compiles in development -->
   <set-property name="client.type" value="default" />
   <set-property name="loglevel" value="debug" />
-
 </module>
