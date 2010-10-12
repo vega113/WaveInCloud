@@ -208,7 +208,7 @@ public class WebClient implements EntryPoint {
 
     if (Session.get().isLoggedIn()) {
       loggedInUser = new ParticipantId(Session.get().getAddress());
-      loginToServer(loggedInUser.getAddress());
+      loginToServer();
     }
     History.fireCurrentHistoryState();
     LOG.info("SimpleWebClient.onModuleLoad() done");
@@ -248,8 +248,8 @@ public class WebClient implements EntryPoint {
   /**
    * Send the name from the nameField to the server and wait for a response.
    */
-  private void loginToServer(final String userInput) {
-    backend = new WebClientBackend(userInput, websocket);
+  private void loginToServer() {
+    backend = new WebClientBackend(loggedInUser, websocket);
 
     if (!ClientFlags.get().enableWavePanelHarness()) {
       waveView.setBackend(backend);

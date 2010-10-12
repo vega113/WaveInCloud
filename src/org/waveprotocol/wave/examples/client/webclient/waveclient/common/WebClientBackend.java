@@ -99,16 +99,16 @@ public class WebClientBackend {
   int sequenceNumber;
   private final IdGenerator idGenerator;
 
-  public WebClientBackend(final String userId, WaveWebSocketClient websocket) {
+  public WebClientBackend(final ParticipantId userId, WaveWebSocketClient websocket) {
     connectionStatus = NetworkStatusEvent.ConnectionStatus.CONNECTED;
-    this.userId = new ParticipantId(userId);
+    this.userId = userId;
     this.websocket = websocket;
     this.sequenceNumber = 0;
     this.idGenerator = new IdGeneratorImpl(this.userId.getDomain(), new IdGeneratorImpl.Seed() {
       private final String seed;
 
       {
-        String start = userId + System.currentTimeMillis();
+        String start = userId.getAddress() + System.currentTimeMillis();
         char[] chars = start.toCharArray();
         byte[] bytes = new byte[chars.length];
         for (int i = 0, j = chars.length; i < j; i++) {
