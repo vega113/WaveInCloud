@@ -20,8 +20,6 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
 
-import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEvent;
-import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.util.Log;

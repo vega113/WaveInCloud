@@ -26,8 +26,6 @@ import org.waveprotocol.wave.examples.client.webclient.client.events.DebugMessag
 import org.waveprotocol.wave.examples.client.webclient.client.events.DebugMessageEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEventHandler;
-import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEvent;
-import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreationEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveIndexUpdatedEvent;
@@ -56,11 +54,6 @@ public class ClientEvents {
   public HandlerRegistration addNetworkStatusEventHandler(
       NetworkStatusEventHandler handler) {
     return handlerManager.addHandler(NetworkStatusEvent.TYPE, handler);
-  }
-
-  public HandlerRegistration addUserLoginEventHandler(
-      UserLoginEventHandler handler) {
-    return handlerManager.addHandler(UserLoginEvent.TYPE, handler);
   }
 
   public HandlerRegistration addWaveCreationEventHandler(

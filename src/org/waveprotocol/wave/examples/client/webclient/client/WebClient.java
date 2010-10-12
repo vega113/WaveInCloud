@@ -38,7 +38,6 @@ import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWavelet;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEventHandler;
-import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreationEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveIndexUpdatedEvent;
@@ -275,20 +274,16 @@ public class WebClient implements EntryPoint {
           @Override
           public void onException(ChannelException e) {
             LOG.severe("ChannelException opening index wave", e);
-            ClientEvents.get().fireEvent(new UserLoginEvent(loggedInUser.getAddress(), e));
           }
 
           @Override
           public void onFailure(String reason) {
             LOG.info("Failure for index wave " + reason);
-            ClientEvents.get().fireEvent(
-                new UserLoginEvent(loggedInUser.getAddress(), new RuntimeException(reason)));
           }
 
           @Override
           public void onSuccess(String response) {
             LOG.info("Success for index wave subscription");
-            ClientEvents.get().fireEvent(new UserLoginEvent(loggedInUser.getAddress(), false));
           }
 
           @Override
