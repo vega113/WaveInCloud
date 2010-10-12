@@ -3,15 +3,14 @@
 # This script will make a set of certificates for federation.
 # To actually federate, the certificiates will need to be signed.
 #
-# For instructions, see this wiki page:
-# http://code.google.com/p/wave-protocol/wiki/Certificates
+# For instructions, see: http://www.waveprotocol.org/federation/certificates
 
 NAME=$1
 
 if [ "$NAME" == '' ]
 then
   echo "Usage: $0 <domain name>" 1>&2
-  echo "See http://code.google.com/p/wave-protocol/wiki/Certificates\
+  echo "See http://www.waveprotocol.org/federation/certificates\
  for more information" 1>&2
   exit 1
 fi
