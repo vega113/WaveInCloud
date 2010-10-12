@@ -6,7 +6,6 @@
   <ui:style type="org.waveprotocol.wave.examples.client.webclient.client.WebClient.Style">
     @def rootBackground #f0f0ff;
     @def gap 5px;
-    @url logo logo;
     .root {
       background: rootBackground;
       height:100%;
@@ -46,14 +45,7 @@
     .fullGap {
       margin: gap;
     }
-
-    .logo {
-      display: inline-block;
-      margin: 2px;
-      margin-right: 5px;
-    }
   </ui:style>
-  <ui:image field="logo" />
   <g:DockLayoutPanel unit="PX" styleName="{style.root}">
     <g:center>
       <g:SplitLayoutPanel ui:field="splitPanel" stylePrimaryName="{style.splitPanel}">

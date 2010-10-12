@@ -59,13 +59,6 @@ public class HistorySupport {
             LOG.info("Added new history token state");
           }
         });
-
-    ClientEvents.get().addUserLoginEventHandler(new UserLoginEventHandler() {
-      @Override
-      public void onUserLoginSuccess(UserLoginEvent event) {
-        History.fireCurrentHistoryState();
-      }
-    });
   }
 
   private HistorySupport() {

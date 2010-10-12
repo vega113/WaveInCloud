@@ -32,8 +32,6 @@ import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import org.waveprotocol.wave.examples.client.common.IndexEntry;
-import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEvent;
-import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveIndexUpdatedEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveIndexUpdatedEventHandler;
@@ -68,6 +66,7 @@ public class WaveList extends Composite {
 
   public WaveList() {
     initWidget(BINDER.createAndBindUi(this));
+    newWaveButton.setEnabled(Session.get().isLoggedIn());
 
     addDomHandler(new ClickHandler() {
       @Override
@@ -104,12 +103,6 @@ public class WaveList extends Composite {
             update(event.getEntries());
           }
         });
-    ClientEvents.get().addUserLoginEventHandler(new UserLoginEventHandler() {
-      @Override
-      public void onUserLoginSuccess(UserLoginEvent event) {
-        newWaveButton.setEnabled(true);
-      }
-    });
   }
 
   @UiHandler("newWaveButton")

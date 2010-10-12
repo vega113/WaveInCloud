@@ -56,10 +56,17 @@ public abstract class Session implements SessionConstants {
   public abstract String getDomain();
 
   /**
-   * @return the user's logged in address.
+   * @return the user's logged in address, or null if the user is not logged in.
    */
   public abstract String getAddress();
 
+  /**
+   * @return true if the user is currently logged in.
+   */
+  public boolean isLoggedIn() {
+    return getAddress() != null;
+  }
+  
   /**
    * @return the id seed that's going to be used for generating ids for the session
    */

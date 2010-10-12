@@ -24,6 +24,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -38,7 +39,6 @@ import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWavelet;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEvent;
-import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreationEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveIndexUpdatedEvent;
@@ -48,7 +48,6 @@ import org.waveprotocol.wave.examples.client.webclient.util.Log;
 import org.waveprotocol.wave.examples.client.webclient.waveclient.common.WaveViewServiceImpl;
 import org.waveprotocol.wave.examples.client.webclient.waveclient.common.WebClientBackend;
 import org.waveprotocol.wave.examples.client.webclient.waveclient.common.WebClientUtils;
-import org.waveprotocol.wave.examples.common.SessionConstants;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolSubmitResponse;
 import org.waveprotocol.wave.examples.fedone.waveserver.ProtocolWaveletUpdate;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
@@ -106,28 +105,6 @@ public class WebClient implements EntryPoint {
 
     // Set up UI
     RootPanel.get("app").add(BINDER.createAndBindUi(this));
-
-    ClientEvents.get().addUserLoginEventHandler(new UserLoginEventHandler() {
-      @Override
-      public void onUserLoginRequest(UserLoginEvent event) {
-        loginToServer(event.getUsername());
-      }
-      @Override
-      public void onUserLoginSuccess(UserLoginEvent event) {
-        loggedInUser = new ParticipantId(event.getUsername());
-
-        hackSetSessionData(SessionConstants.ADDRESS, event.getUsername());
-      }
-
-      // HACK(zdwang/gentle): Remove this when the proper login flow is installed
-      // where the user has to be logged in before being able to see the client.
-      // In the proper flow the session data will be filled by the
-      // server rather than having to fill it in here.
-      private native String hackSetSessionData(String key, String value) /*-{
-        return $wnd.__session[key] = value;
-      }-*/;
-
-    });
 
     websocket = new WaveWebSocketClient(new WaveWebSocketCallback() {
 
@@ -230,17 +207,22 @@ public class WebClient implements EntryPoint {
     // For some reason, if this code is executed immediately (without the timer), the backend isn't
     // initialized properly.
     // TODO(josephg): Refactor this, potentially removing UserLoginEvent.
-    new Timer() {
-      @Override
-      public void run() {
-        String address = Session.get().getAddress();
-        if (address != null) {
-          LOG.info("User logged in");
-          ClientEvents.get().fireEvent(new UserLoginEvent(address, true));
-        }
-      }
-    }.schedule(100);
-    
+//    new Timer() {
+//      @Override
+//      public void run() {
+//        String address = Session.get().getAddress();
+//        if (address != null) {
+//          LOG.info("User logged in");
+//          ClientEvents.get().fireEvent(new UserLoginEvent(address, true));
+//        }
+//      }
+//    }.schedule(1000);
+//    
+    if (Session.get().isLoggedIn()) {
+      loggedInUser = new ParticipantId(Session.get().getAddress());
+      loginToServer(loggedInUser.getAddress());
+    }
+    History.fireCurrentHistoryState();
     LOG.info("SimpleWebClient.onModuleLoad() done");
   }
 

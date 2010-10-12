@@ -32,8 +32,6 @@ import com.google.gwt.user.client.ui.Widget;
 
 import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWaveView.OpenListener;
 import org.waveprotocol.wave.examples.client.webclient.client.CcStackManager.SimpleCcDocument;
-import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEvent;
-import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveOpenEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.util.Log;
@@ -99,6 +97,9 @@ public class WaveView extends Composite {
 
   public WaveView() {
     initWidget(BINDER.createAndBindUi(this));
+    if (Session.get().isLoggedIn()) {
+      participant = new ParticipantId(Session.get().getAddress());
+    }
 
     ClientEvents.get().addWaveSelectionEventHandler(
         new WaveSelectionEventHandler() {
@@ -107,13 +108,6 @@ public class WaveView extends Composite {
             setWave(id);
           }
         });
-
-    ClientEvents.get().addUserLoginEventHandler(new UserLoginEventHandler() {
-      @Override
-      public void onUserLoginSuccess(UserLoginEvent event) {
-        participant = new ParticipantId(event.getUsername());
-      }
-    });
   }
 
   public void setBackend(WebClientBackend backend) {
