@@ -25,7 +25,6 @@ import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.History;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
@@ -37,13 +36,14 @@ import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWavelet;
 import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent;
-import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
+import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.UserLoginEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveCreationEventHandler;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveIndexUpdatedEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.wave.examples.client.webclient.client.events.WaveUpdatedEvent;
+import org.waveprotocol.wave.examples.client.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.wave.examples.client.webclient.util.Log;
 import org.waveprotocol.wave.examples.client.webclient.waveclient.common.WaveViewServiceImpl;
 import org.waveprotocol.wave.examples.client.webclient.waveclient.common.WebClientBackend;
@@ -204,20 +204,6 @@ public class WebClient implements EntryPoint {
 
     websocket.connect(getWebSocketBaseUrl(GWT.getModuleBaseURL()) + "socket");
 
-    // For some reason, if this code is executed immediately (without the timer), the backend isn't
-    // initialized properly.
-    // TODO(josephg): Refactor this, potentially removing UserLoginEvent.
-//    new Timer() {
-//      @Override
-//      public void run() {
-//        String address = Session.get().getAddress();
-//        if (address != null) {
-//          LOG.info("User logged in");
-//          ClientEvents.get().fireEvent(new UserLoginEvent(address, true));
-//        }
-//      }
-//    }.schedule(1000);
-//    
     if (Session.get().isLoggedIn()) {
       loggedInUser = new ParticipantId(Session.get().getAddress());
       loginToServer(loggedInUser.getAddress());
@@ -242,6 +228,17 @@ public class WebClient implements EntryPoint {
       waveView.setBackend(backend);
     }
 
+    ClientEvents.get().addNetworkStatusEventHandler(new NetworkStatusEventHandler() {
+      @Override
+      public void onNetworkStatus(NetworkStatusEvent event) {
+        if (event.getStatus() == ConnectionStatus.CONNECTED) {
+          openIndexWave();
+        }
+      }
+    });
+  }
+  
+  private void openIndexWave() {
     SimpleCcDocumentFactory docFactory = new SimpleCcDocumentFactory();
     final WaveViewServiceImpl indexWave = (WaveViewServiceImpl) backend.getIndexWave(docFactory);
     indexWave.viewOpen(IdFilters.ALL_IDS, null,
@@ -250,20 +247,20 @@ public class WebClient implements EntryPoint {
           @Override
           public void onException(ChannelException e) {
             LOG.severe("ChannelException opening index wave", e);
-            ClientEvents.get().fireEvent(new UserLoginEvent(userInput, e));
+            ClientEvents.get().fireEvent(new UserLoginEvent(loggedInUser.getAddress(), e));
           }
 
           @Override
           public void onFailure(String reason) {
             LOG.info("Failure for index wave " + reason);
             ClientEvents.get().fireEvent(
-                new UserLoginEvent(userInput, new RuntimeException(reason)));
+                new UserLoginEvent(loggedInUser.getAddress(), new RuntimeException(reason)));
           }
 
           @Override
           public void onSuccess(String response) {
             LOG.info("Success for index wave subscription");
-            ClientEvents.get().fireEvent(new UserLoginEvent(userInput, false));
+            ClientEvents.get().fireEvent(new UserLoginEvent(loggedInUser.getAddress(), false));
           }
 
           @Override
