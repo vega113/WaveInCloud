@@ -17,8 +17,8 @@
 
 package org.waveprotocol.box.consoleclient;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.inject.internal.Preconditions;
 
 import org.waveprotocol.box.client.common.ClientUtils;
 import org.waveprotocol.box.client.common.ClientWaveView;

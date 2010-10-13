@@ -31,10 +31,8 @@ import java.util.Set;
 /**
  * Interface for a container class for a Wavelet's current state as well as its
  * delta history. Local and remote wavelet interfaces inherit from this one.
- *
- *
  */
-abstract interface WaveletContainer {
+interface WaveletContainer {
   enum State {
     /** Everything is working fine. */
     OK,
@@ -57,7 +55,6 @@ abstract interface WaveletContainer {
 
   WaveletSnapshotAndVersion getSnapshot();
 
-  // TODO: decide which to go for depending on common.proto modification. ###
   /**
    * Retrieve the wavelet history of deltas applied to the wavelet.
    *

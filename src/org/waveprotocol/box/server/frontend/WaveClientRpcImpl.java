@@ -19,7 +19,6 @@ package org.waveprotocol.box.server.frontend;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.internal.Nullable;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
@@ -44,6 +43,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * RPC interface implementation for the wave server. Adapts incoming and

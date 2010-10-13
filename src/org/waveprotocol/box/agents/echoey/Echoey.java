@@ -20,8 +20,8 @@ package org.waveprotocol.box.agents.echoey;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.MapMaker;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.google.inject.internal.Sets;
 
 import org.waveprotocol.box.client.common.ClientUtils;
 import org.waveprotocol.box.common.DocumentConstants;

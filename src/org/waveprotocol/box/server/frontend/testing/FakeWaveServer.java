@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.internal.Nullable;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.VersionedWaveletDelta;
@@ -43,6 +42,7 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.Collection;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * A fake single-user wave server which only echoes back submitted deltas and

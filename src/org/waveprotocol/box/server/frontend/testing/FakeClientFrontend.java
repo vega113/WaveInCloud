@@ -17,8 +17,6 @@
 
 package org.waveprotocol.box.server.frontend.testing;
 
-import com.google.inject.internal.Nullable;
-
 import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.frontend.ClientFrontend;
 import org.waveprotocol.box.server.waveserver.WaveBus;
@@ -38,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
   * Implementation of a ClientFrontend which only records requests and will make callbacks when it

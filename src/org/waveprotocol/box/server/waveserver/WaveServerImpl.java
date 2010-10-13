@@ -18,6 +18,7 @@
 package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -26,7 +27,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.internal.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -59,7 +59,6 @@ import org.waveprotocol.wave.waveserver.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
-import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener.Factory;
 
 import java.util.Collection;
 import java.util.List;
@@ -69,8 +68,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The main class that services the FederationHost, FederationRemote and ClientFrontend.
- *
- *
  */
 @Singleton
 public class WaveServerImpl implements WaveBus, WaveletProvider,
@@ -81,7 +78,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   protected static final long HISTORY_REQUEST_LENGTH_LIMIT_BYTES = 1024 * 1024;
 
   private final CertificateManager certificateManager;
-  private final Factory federationHostFactory;
+  private final WaveletFederationListener.Factory federationHostFactory;
   private final RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
   private final LocalWaveletContainer.Factory localWaveletContainerFactory;
   private final WaveletFederationProvider federationRemote;
@@ -266,8 +263,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       // TODO: once we support federated groups, expand support to request
       // remote wavelets too.
       if (!isLocalWavelet(waveletName)) {
-        listener.onFailure(FederationErrors.badRequest("Wavelet " + waveletName
-                                                       + " not hosted here."));
+        listener.onFailure(FederationErrors.badRequest(
+            "Wavelet " + waveletName + " not hosted here."));
         LOG.info("Federation remote for domain: " + domain + " requested a remote wavelet: " +
             waveletName);
       } else {
@@ -411,7 +408,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         listener.onSuccess(operationsApplied,
             CoreWaveletOperationSerializer.deserialize(hashedVersionAfterApplication),
             applicationTimestamp);
-      }});
+      }
+    });
   }
   
   @Override
@@ -464,7 +462,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
     this.remoteWaveletContainerFactory = remoteWaveletContainerFactory;
 
     LOG.info("Wave Server configured to host local domains: "
-        + certificateManager.getLocalDomains().toString());
+        + certificateManager.getLocalDomains());
 
     // Preemptively add our own signer info to the certificate manager
     SignerInfo signerInfo = certificateManager.getLocalSigner().getSignerInfo();
@@ -484,14 +482,13 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
     return isLocal;
   }
 
-  private boolean checkWaveletHosting(boolean isLocal, WaveletName waveletName)
+  private void checkWaveletHosting(boolean isLocal, WaveletName waveletName)
       throws HostingException {
     boolean l = isLocalWavelet(waveletName);
     if (l != isLocal) {
       throw new HostingException("Wavelet (" + waveletName + ") which is " +
           (l ? "local" : "remote") + " should have been " + (l ? "remote." : "local."));
     }
-    return l == isLocal;
   }
 
   /**
@@ -661,7 +658,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
                   public void onFailure(FederationError error) {
                     LOG.warning("outgoing waveletCommitUpdate failure: " + error);
                   }
-            });
+                });
           }
         }
       } catch (AccessControlException e) {
@@ -677,8 +674,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       } catch (HostingException e) {
-        throw new IllegalStateException("Should not get HostingException after " +
-                                        "checking isLocalWavelet", e);
+        throw new IllegalStateException(
+            "Should not get HostingException after checking isLocalWavelet", e);
       } catch (InvalidProtocolBufferException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;

@@ -30,7 +30,6 @@ import static org.mockito.Mockito.when;
 import static org.waveprotocol.box.common.CommonConstants.INDEX_WAVE_ID;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.internal.Nullable;
 
 import junit.framework.TestCase;
 
@@ -82,6 +81,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Tests for {@link ClientFrontendImpl}.
