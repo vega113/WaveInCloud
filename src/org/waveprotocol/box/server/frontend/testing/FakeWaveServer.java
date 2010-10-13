@@ -25,17 +25,17 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.frontend.IndexWave;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
-import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
+import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -58,7 +58,7 @@ public class FakeWaveServer extends FakeClientFrontend {
   private final Map<WaveId, Map<WaveletId, WaveletData>> waves = Maps.newHashMap();
 
   /** A history of submitted deltas, per wavelet. Does not store generated index deltas. */
-  private final ListMultimap<WaveletName, VersionedWaveletDelta> deltas = ArrayListMultimap.create();
+  private final ListMultimap<WaveletName, CoreWaveletDelta> deltas = ArrayListMultimap.create();
 
   /** The current versions of the user's wavelets, including index wavelets */
   private final Map<WaveletName, HashedVersion> versions = Maps.newHashMap();
@@ -111,7 +111,7 @@ public class FakeWaveServer extends FakeClientFrontend {
     }
 
     // Add the delta to the history and update the wavelet's version.
-    VersionedWaveletDelta versionedDelta = CoreWaveletOperationSerializer.deserialize(delta);
+    CoreWaveletDelta versionedDelta = CoreWaveletOperationSerializer.deserialize(delta);
     deltas.put(waveletName, versionedDelta);
     HashedVersion resultingVersion = updateAndGetVersion(waveletName, delta.getOperationCount());
 

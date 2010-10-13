@@ -17,19 +17,21 @@
 
 package org.waveprotocol.box.server.frontend;
 
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
-import org.waveprotocol.box.server.waveserver.WaveletProvider;
+import com.google.inject.internal.Nullable;
+
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
+import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collection;
 import java.util.List;
-import javax.annotation.Nullable;
+
 
 /**
  * The client front-end handles requests from clients and directs them to
@@ -47,7 +49,7 @@ public interface ClientFrontend {
      * Called when an update is received.
      */
     void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
-        List<VersionedWaveletDelta> deltas, @Nullable HashedVersion endVersion,
+        List<CoreWaveletDelta> deltas, @Nullable HashedVersion endVersion,
         @Nullable HashedVersion committedVersion, boolean hasMarker, String channel_id);
 
     /**

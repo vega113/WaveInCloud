@@ -24,7 +24,6 @@ import com.google.common.collect.Maps;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.common.SnapshotSerializer;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.util.EmptyDeltaException;
 import org.waveprotocol.box.server.util.Log;
@@ -75,7 +74,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   private final NavigableMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>>
       appliedDeltas = Maps.newTreeMap();
-  private final NavigableMap<HashedVersion, VersionedWaveletDelta> transformedDeltas =
+  private final NavigableMap<HashedVersion, CoreWaveletDelta> transformedDeltas =
       Maps.newTreeMap();
   private final Lock readLock;
   private final Lock writeLock;
@@ -205,9 +204,9 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * @throws InvalidHashException if submitting against same version but different hash
    * @throws OperationException if transformation fails
    */
-  protected VersionedWaveletDelta maybeTransformSubmittedDelta(VersionedWaveletDelta delta)
+  protected CoreWaveletDelta maybeTransformSubmittedDelta(CoreWaveletDelta delta)
       throws InvalidHashException, OperationException {
-    HashedVersion targetVersion = delta.version;
+    HashedVersion targetVersion = delta.getTargetVersion();
     if (targetVersion.equals(currentVersion)) {
       // Applied version is the same, we're submitting against head, don't need to do OT
       return delta;
@@ -251,12 +250,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * Finds range of server deltas needed to transform against, then transforms all client
    * ops against the server ops.
    */
-  private VersionedWaveletDelta transformSubmittedDelta(
-      VersionedWaveletDelta versionedSubmittedDelta)
+  private CoreWaveletDelta transformSubmittedDelta(
+      CoreWaveletDelta submittedDelta)
       throws OperationException, InvalidHashException {
-    CoreWaveletDelta submittedDelta = versionedSubmittedDelta.delta;
-    HashedVersion appliedVersion = versionedSubmittedDelta.version;
-    NavigableMap<HashedVersion, VersionedWaveletDelta> serverDeltas =
+    HashedVersion appliedVersion = submittedDelta.getTargetVersion();
+    NavigableMap<HashedVersion, CoreWaveletDelta> serverDeltas =
         transformedDeltas.tailMap(transformedDeltas.floorKey(appliedVersion), true);
 
     if (serverDeltas.isEmpty()) {
@@ -274,24 +272,22 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
     ParticipantId clientAuthor = submittedDelta.getAuthor();
     List<? extends CoreWaveletOperation> clientOps = submittedDelta.getOperations();
-    for (Map.Entry<HashedVersion, VersionedWaveletDelta> d : serverDeltas.entrySet()) {
+    for (Map.Entry<HashedVersion, CoreWaveletDelta> d : serverDeltas.entrySet()) {
       // If the client delta transforms to nothing before we've traversed all the server
       // deltas, return the version at which the delta was obliterated (rather than the
       // current version) to ensure that delta submission is idempotent.
       if (clientOps.isEmpty()) {
-        return new VersionedWaveletDelta(
-            new CoreWaveletDelta(clientAuthor, d.getKey(), clientOps), d.getKey());
+        return new CoreWaveletDelta(clientAuthor, d.getKey(), clientOps);
       }
-      CoreWaveletDelta coreDelta = d.getValue().delta;
+      CoreWaveletDelta coreDelta = d.getValue();
       ParticipantId serverAuthor = coreDelta.getAuthor();
       List<? extends CoreWaveletOperation> serverOps = coreDelta.getOperations();
       if (clientAuthor.equals(serverAuthor) && clientOps.equals(serverOps)) {
-        return new VersionedWaveletDelta(coreDelta, d.getKey());
+        return coreDelta;
       }
       clientOps = transformOps(clientOps, clientAuthor, serverOps, serverAuthor);
     }
-    return new VersionedWaveletDelta(new CoreWaveletDelta(clientAuthor, currentVersion, clientOps),
-        currentVersion);
+    return new CoreWaveletDelta(clientAuthor, currentVersion, clientOps);
   }
 
   /**
@@ -334,11 +330,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    */
   protected DeltaApplicationResult commitAppliedDelta(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
-      VersionedWaveletDelta transformedDelta) {
+      CoreWaveletDelta transformedDelta) {
     int operationsApplied = appliedDelta.getMessage().getOperationsApplied();
     // Sanity check.
-    Preconditions.checkState(currentVersion.equals(transformedDelta.version));
-    Preconditions.checkArgument(operationsApplied == transformedDelta.delta.getOperations().size());
+    Preconditions.checkState(currentVersion.equals(transformedDelta.getTargetVersion()));
+    Preconditions.checkArgument(operationsApplied == transformedDelta.getOperations().size());
 
     transformedDeltas.put(currentVersion, transformedDelta);
     appliedDeltas.put(currentVersion, appliedDelta);
@@ -385,7 +381,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public Collection<VersionedWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
+  public Collection<CoreWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
       HashedVersion versionEnd) throws WaveletStateException {
     HashedVersion start = versionStart;
     HashedVersion end = versionEnd;

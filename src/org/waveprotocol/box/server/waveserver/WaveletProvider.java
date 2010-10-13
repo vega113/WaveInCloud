@@ -17,10 +17,10 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -72,7 +72,7 @@ public interface WaveletProvider {
    *         null if there was an error. If a delta straddles one of the
    *         requested version boundaries, it will be included.
    */
-  Collection<VersionedWaveletDelta> getHistory(WaveletName waveletName,
+  Collection<CoreWaveletDelta> getHistory(WaveletName waveletName,
       HashedVersion versionStart, HashedVersion versionEnd);
 
   /**

@@ -30,11 +30,9 @@ import com.google.wave.api.data.converter.EventDataConverter;
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.OperationContextImpl;
 import org.waveprotocol.box.server.robots.RobotWaveletData;
-import org.waveprotocol.box.server.robots.operations.AppendBlipService;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
@@ -159,10 +157,9 @@ public class AppendBlipServiceTest extends TestCase {
    */
   private void applyOperations() throws OperationException {
     RobotWaveletData robotWavelet = context.getOpenWavelets().get(WAVELET_NAME);
-    List<VersionedWaveletDelta> deltas = robotWavelet.getDeltas();
+    List<CoreWaveletDelta> deltas = robotWavelet.getDeltas();
 
-    for (VersionedWaveletDelta vWDelta : deltas) {
-      CoreWaveletDelta delta = vWDelta.delta;
+    for (CoreWaveletDelta delta : deltas) {
       DistinctVersion endVersion = DistinctVersion.of(
           delta.getTargetVersion().getVersion() + delta.getOperations().size(), -1);
       List<WaveletOperation> ops = ConversionUtil.fromCoreWaveletDelta(delta, 0L, endVersion);

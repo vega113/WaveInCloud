@@ -17,16 +17,16 @@
 
 package org.waveprotocol.box.server.frontend.testing;
 
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.frontend.ClientFrontend;
 import org.waveprotocol.box.server.waveserver.WaveBus;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.annotation.Nullable;
 
 /**
@@ -102,14 +103,14 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
   public void waveletCommitted(WaveletName waveletName, HashedVersion version) {
     OpenListener listener = openListeners.get(waveletName.waveId);
     if (listener != null) {
-      final List<VersionedWaveletDelta> emptyList = Collections.emptyList();
+      final List<CoreWaveletDelta> emptyList = Collections.emptyList();
       listener.onUpdate(waveletName, null, emptyList, null, version, false, null);
     }
   }
 
   @Override
   public void waveletUpdate(ReadableWaveletData wavelet, HashedVersion resultingVersion,
-      List<VersionedWaveletDelta> newDeltas) {
+      List<CoreWaveletDelta> newDeltas) {
     OpenListener listener = openListeners.get(wavelet.getWaveId());
     if (listener != null) {
       WaveletName waveletName = WaveletName.of(wavelet.getWaveId(), wavelet.getWaveletId());

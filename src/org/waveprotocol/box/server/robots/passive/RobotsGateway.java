@@ -29,7 +29,6 @@ import com.google.wave.api.robot.RobotName;
 
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.account.RobotAccountData;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.util.Log;
@@ -37,6 +36,7 @@ import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -86,7 +86,7 @@ public class RobotsGateway implements WaveBus.Subscriber {
 
   @Override
   public void waveletUpdate(ReadableWaveletData wavelet, HashedVersion resultingVersion,
-      List<VersionedWaveletDelta> deltas) {
+      List<CoreWaveletDelta> deltas) {
     // TODO(ljvderijk): Determine which robot should receive which deltas,
     // enqueue deltas
     // for these robots
@@ -159,7 +159,7 @@ public class RobotsGateway implements WaveBus.Subscriber {
    * @param resultingVersion version after application of deltas
    */
   private void updateRobot(Robot robot, ReadableWaveletData wavelet,
-      List<VersionedWaveletDelta> deltas, HashedVersion resultingVersion) {
+      List<CoreWaveletDelta> deltas, HashedVersion resultingVersion) {
     try {
       robot.waveletUpdate(wavelet, deltas, resultingVersion);
       ensureScheduled(robot);

@@ -262,20 +262,19 @@ public class CoreWaveletOperationSerializer {
   }
 
   /**
-   * Deserializes a {@link ProtocolWaveletDelta} as a {@link VersionedWaveletDelta}.
+   * Deserializes a {@link ProtocolWaveletDelta} as a {@link CoreWaveletDelta}.
    *
    * @param delta protocol buffer wavelet delta to deserialize
    * @return deserialized wavelet delta and version
    */
-  public static VersionedWaveletDelta deserialize(ProtocolWaveletDelta delta) {
+  public static CoreWaveletDelta deserialize(ProtocolWaveletDelta delta) {
     List<CoreWaveletOperation> ops = Lists.newArrayList();
     for (ProtocolWaveletOperation op : delta.getOperationList()) {
       ops.add(deserialize(op));
     }
     HashedVersion hashedVersion = deserialize(delta.getHashedVersion());
-    CoreWaveletDelta coreDelta = new CoreWaveletDelta(new ParticipantId(delta.getAuthor()),
+    return new CoreWaveletDelta(new ParticipantId(delta.getAuthor()),
         deserialize(delta.getHashedVersion()), ops);
-    return new VersionedWaveletDelta(coreDelta, hashedVersion);
   }
 
   /** Deserializes a protobuf to a HashedVersion POJO. */

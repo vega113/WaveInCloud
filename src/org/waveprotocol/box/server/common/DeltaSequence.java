@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.util.AbstractList;
@@ -30,19 +31,19 @@ import java.util.List;
  * A sequence of deltas along with the end version (after application of the
  * deltas).
  */
-public final class DeltaSequence extends AbstractList<VersionedWaveletDelta> {
-  private final ImmutableList<VersionedWaveletDelta> deltas;
+public final class DeltaSequence extends AbstractList<CoreWaveletDelta> {
+  private final ImmutableList<CoreWaveletDelta> deltas;
   private final HashedVersion endVersion;
 
   public static DeltaSequence empty(HashedVersion version) {
-    return new DeltaSequence(ImmutableList.<VersionedWaveletDelta>of(), version);
+    return new DeltaSequence(ImmutableList.<CoreWaveletDelta>of(), version);
   }
 
   /**
    * @param deltas to apply to a wavelet
    * @param endVersion the version of the wavelet after all deltas were applied
    */
-  public DeltaSequence(Iterable<VersionedWaveletDelta> deltas, HashedVersion endVersion) {
+  public DeltaSequence(Iterable<CoreWaveletDelta> deltas, HashedVersion endVersion) {
     this.deltas = ImmutableList.copyOf(deltas);
     this.endVersion = endVersion;
     Preconditions.checkArgument(endVersion.getVersion() >= 0,
@@ -56,11 +57,14 @@ public final class DeltaSequence extends AbstractList<VersionedWaveletDelta> {
    */
   private void checkDeltaVersions() {
     for (int i = 0; i < deltas.size(); i++) {
-      VersionedWaveletDelta delta = deltas.get(i);
-      long deltaEndVersion = delta.version.getVersion() + delta.delta.getOperations().size();
-      long nextVersion =
-          ((i + 1 < deltas.size()) ? deltas.get(i + 1).version : endVersion)
-          .getVersion();
+      CoreWaveletDelta delta = deltas.get(i);
+      long deltaEndVersion = delta.getTargetVersion().getVersion() + delta.getOperations().size();
+      long nextVersion;
+      if (i + 1 < deltas.size()) {
+        nextVersion = deltas.get(i + 1).getTargetVersion().getVersion();
+      } else {
+        nextVersion = endVersion.getVersion();
+      }
       Preconditions.checkArgument(deltaEndVersion == nextVersion,
           "Delta %s / %s ends at version %s, expected %s",
           i + 1, deltas.size(), deltaEndVersion, nextVersion);
@@ -69,8 +73,9 @@ public final class DeltaSequence extends AbstractList<VersionedWaveletDelta> {
 
   @Override
   public DeltaSequence subList(int start, int end) {
-    List<VersionedWaveletDelta> subDeltas = deltas.subList(start, end);
-    HashedVersion subEndVersion = (end == deltas.size()) ? endVersion : deltas.get(end).version;
+    List<CoreWaveletDelta> subDeltas = deltas.subList(start, end);
+    HashedVersion subEndVersion = (end == deltas.size()) ?
+        endVersion : deltas.get(end).getTargetVersion();
     return new DeltaSequence(subDeltas, subEndVersion);
   }
 
@@ -78,16 +83,16 @@ public final class DeltaSequence extends AbstractList<VersionedWaveletDelta> {
    * Constructs a DeltaSequence which consists of the specified deltas
    * followed by this sequence's deltas.
    */
-  public DeltaSequence prepend(Iterable<VersionedWaveletDelta> prefixDeltas) {
+  public DeltaSequence prepend(Iterable<CoreWaveletDelta> prefixDeltas) {
     return new DeltaSequence(Iterables.concat(prefixDeltas, deltas), endVersion);
   }
 
-  public List<VersionedWaveletDelta> getDeltas() {
+  public List<CoreWaveletDelta> getDeltas() {
     return deltas;
   }
 
   public HashedVersion getStartVersion() {
-    return deltas.isEmpty() ? endVersion : deltas.get(0).version;
+    return deltas.isEmpty() ? endVersion : deltas.get(0).getTargetVersion();
   }
 
   public HashedVersion getEndVersion() {
@@ -105,12 +110,12 @@ public final class DeltaSequence extends AbstractList<VersionedWaveletDelta> {
   }
 
   @Override
-  public VersionedWaveletDelta get(int index) {
+  public CoreWaveletDelta get(int index) {
     return deltas.get(index);
   }
 
   @Override
-  public Iterator<VersionedWaveletDelta> iterator() {
+  public Iterator<CoreWaveletDelta> iterator() {
     return deltas.iterator();
   }
 

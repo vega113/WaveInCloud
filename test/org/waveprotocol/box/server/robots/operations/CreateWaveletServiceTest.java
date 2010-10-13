@@ -31,15 +31,14 @@ import com.google.wave.api.impl.WaveletData;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.OperationContextImpl;
 import org.waveprotocol.box.server.robots.RobotWaveletData;
-import org.waveprotocol.box.server.robots.operations.CreateWaveletService;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -106,8 +105,8 @@ public class CreateWaveletServiceTest extends TestCase {
     RobotWaveletData newWavelet = context.getOpenWavelets().get(WaveletName.of(waveId, waveletId));
     assertNotNull("A new wavelet must be open", newWavelet);
 
-    List<VersionedWaveletDelta> deltas = newWavelet.getDeltas();
-    List<? extends CoreWaveletOperation> operations = deltas.get(0).delta.getOperations();
+    List<CoreWaveletDelta> deltas = newWavelet.getDeltas();
+    List<? extends CoreWaveletOperation> operations = deltas.get(0).getOperations();
     boolean seenAddAlex = false;
     boolean seenAddBob = false;
     for (CoreWaveletOperation op : operations) {

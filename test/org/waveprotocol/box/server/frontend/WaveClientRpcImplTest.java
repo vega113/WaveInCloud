@@ -24,8 +24,6 @@ import com.google.protobuf.RpcController;
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
-import org.waveprotocol.box.server.frontend.WaveClientRpcImpl;
 import org.waveprotocol.box.server.frontend.testing.FakeClientFrontend;
 import org.waveprotocol.box.server.rpc.testing.FakeRpcController;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
@@ -40,6 +38,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -58,7 +57,7 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
     .addOperation(ProtocolWaveletOperation.newBuilder().setNoOp(true).build()).build();
 
   private static final ImmutableList<ProtocolWaveletDelta> DELTAS = ImmutableList.of(DELTA);
-  private static final ImmutableList<VersionedWaveletDelta> POJO_DELTAS =
+  private static final ImmutableList<CoreWaveletDelta> POJO_DELTAS =
       ImmutableList.of(CoreWaveletOperationSerializer.deserialize(DELTA));
 
   private static final HashedVersion RESULTING_VERSION = HashedVersion.unsigned(102L);

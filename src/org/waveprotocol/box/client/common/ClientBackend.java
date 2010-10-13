@@ -30,7 +30,6 @@ import com.google.protobuf.RpcController;
 
 import org.waveprotocol.box.common.DocumentConstants;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.frontend.IndexWave;
 import org.waveprotocol.box.server.rpc.ClientRpcChannel;
 import org.waveprotocol.box.server.rpc.WebSocketClientRpcChannel;
@@ -712,10 +711,7 @@ public class ClientBackend {
     // Preconditions.checkState(wavelet != null, "Wavelet must be present!");
 
     for (ProtocolWaveletDelta protobufDelta : waveletUpdate.getAppliedDeltaList()) {
-      VersionedWaveletDelta versionedWaveletDelta =
-          CoreWaveletOperationSerializer.deserialize(protobufDelta);
-      CoreWaveletDelta delta = versionedWaveletDelta.delta;
-
+      CoreWaveletDelta delta = CoreWaveletOperationSerializer.deserialize(protobufDelta);
       if (wavelet == null) {
         // TODO(ljvderijk): This should never happen, but it currently does.
         // Snapshot should be received first.

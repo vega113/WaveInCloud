@@ -25,7 +25,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.jivesoftware.util.Base64;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.DeltaSequence;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.util.EmptyDeltaException;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
@@ -40,6 +39,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider.HistoryResponseListener;
@@ -218,7 +218,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       }
 
       // Traverse pendingDeltas while we have any to process.
-      List<VersionedWaveletDelta> result = Lists.newLinkedList();
+      List<CoreWaveletDelta> result = Lists.newLinkedList();
       while (pendingDeltas.size() > 0) {
         Map.Entry<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>> first =
             pendingDeltas.firstEntry();
@@ -378,12 +378,11 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta =
         ByteStringMessage.parseProtocolWaveletDelta(
             appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
-    VersionedWaveletDelta deltaAndVersion =
-        CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
+    CoreWaveletDelta delta = CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
     // Transform operations against earlier deltas, if necessary
-    VersionedWaveletDelta transformed = maybeTransformSubmittedDelta(deltaAndVersion);
-    if (transformed.version.equals(deltaAndVersion.version)) {
+    CoreWaveletDelta transformed = maybeTransformSubmittedDelta(delta);
+    if (transformed.getTargetVersion().equals(delta.getTargetVersion())) {
       // No transformation took place.
       // As a sanity check, the hash from the applied delta should NOT be set (an optimisation, but
       // part of the protocol).
@@ -396,7 +395,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
 
     // Apply operations.  These shouldn't fail since they're the authoritative versions, so if they
     // do then the wavelet is corrupted (and the caller of this method will sort it out).
-    applyWaveletOperations(transformed.delta, appliedDelta.getMessage().getApplicationTimestamp());
+    applyWaveletOperations(transformed, appliedDelta.getMessage().getApplicationTimestamp());
 
     return commitAppliedDelta(appliedDelta, transformed);
   }

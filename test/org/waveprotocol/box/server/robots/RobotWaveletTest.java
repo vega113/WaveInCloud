@@ -19,8 +19,6 @@ package org.waveprotocol.box.server.robots;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
-import org.waveprotocol.box.server.robots.RobotWaveletData;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
@@ -88,16 +86,15 @@ public class RobotWaveletTest extends TestCase {
     // Bob doesn't perform any operations but we do retrieve his wavelet
     wavelet.getOpBasedWavelet(BOB);
 
-    List<VersionedWaveletDelta> deltas = wavelet.getDeltas();
+    List<CoreWaveletDelta> deltas = wavelet.getDeltas();
     assertTrue("Only one participant has performed operations", deltas.size() == 1);
 
-    VersionedWaveletDelta versionedDelta = deltas.get(0);
+    CoreWaveletDelta delta = deltas.get(0);
 
-    HashedVersion version = versionedDelta.version;
+    HashedVersion version = delta.getTargetVersion();
     assertEquals(
         "Delta should apply to the version given on construction", hashedVersionZero, version);
 
-    CoreWaveletDelta delta = versionedDelta.delta;
     assertEquals(ALEX, delta.getAuthor());
 
     List<? extends CoreWaveletOperation> operations = delta.getOperations();
@@ -117,10 +114,10 @@ public class RobotWaveletTest extends TestCase {
     OpBasedWavelet waveletBob = wavelet.getOpBasedWavelet(BOB);
     waveletBob.getDocument("r+randomDocument").insertText(0, "/nHello");
 
-    List<VersionedWaveletDelta> deltas = wavelet.getDeltas();
+    List<CoreWaveletDelta> deltas = wavelet.getDeltas();
     assertTrue(deltas.size() == 2);
 
-    assertEquals("Expected Alex to be first", ALEX, deltas.get(0).delta.getAuthor());
-    assertEquals("Expected Bob to be the second author", BOB, deltas.get(1).delta.getAuthor());
+    assertEquals("Expected Alex to be first", ALEX, deltas.get(0).getAuthor());
+    assertEquals("Expected Bob to be the second author", BOB, deltas.get(1).getAuthor());
   }
 }

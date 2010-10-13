@@ -25,15 +25,8 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.util.EmptyDeltaException;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.box.server.waveserver.ByteStringMessage;
-import org.waveprotocol.box.server.waveserver.DeltaApplicationResult;
-import org.waveprotocol.box.server.waveserver.LocalWaveletContainerImpl;
-import org.waveprotocol.box.server.waveserver.RemoteWaveletContainerImpl;
-import org.waveprotocol.box.server.waveserver.WaveletContainer;
-import org.waveprotocol.box.server.waveserver.WaveletContainerImpl;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -318,12 +311,10 @@ public class WaveletContainerTest extends TestCase {
 
     wavelet.applyWaveletOperations(delta, 0L);
 
-    VersionedWaveletDelta versionedDelta =
-        new VersionedWaveletDelta(delta, delta.getTargetVersion());
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
-        LocalWaveletContainerImpl.buildAppliedDelta(signedDelta, versionedDelta, 0L);
+        LocalWaveletContainerImpl.buildAppliedDelta(signedDelta, delta, 0L);
     DeltaApplicationResult applicationResult = wavelet.commitAppliedDelta(appliedDelta,
-        versionedDelta);
+        delta);
   }
 
   private static CoreWaveletDelta addParticipantDelta(WaveletContainer target) {

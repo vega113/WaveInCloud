@@ -32,7 +32,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.DeltaSequence;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.util.EmptyDeltaException;
 import org.waveprotocol.box.server.util.Log;
@@ -52,6 +51,7 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
@@ -352,14 +352,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   //
 
   @Override
-  public Collection<VersionedWaveletDelta> getHistory(WaveletName waveletName,
+  public Collection<CoreWaveletDelta> getHistory(WaveletName waveletName,
       HashedVersion startVersion, HashedVersion endVersion) {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
       LOG.info("Client request for history made for non-existent wavelet: " + waveletName);
       return null;
     } else {
-      Collection<VersionedWaveletDelta> deltaHistory = null;
+      Collection<CoreWaveletDelta> deltaHistory = null;
       try {
         deltaHistory = wc.requestTransformedHistory(startVersion, endVersion);
       } catch (AccessControlException e) {
@@ -411,14 +411,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       }
     });
   }
-  
+
   @Override
   public boolean checkAccessPermission(WaveletName waveletName, ParticipantId participantId)
       throws WaveletStateException {
     WaveletContainer wc = getWavelet(waveletName);
     return wc != null && wc.checkAccessPermission(participantId);
   }
-  
+
   //
   // WaveBus implementation.
   //

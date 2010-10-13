@@ -20,7 +20,6 @@ package org.waveprotocol.box.server.robots;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.robots.util.WaveletPluginDocumentFactory;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -147,8 +146,8 @@ public class RobotWaveletData {
    * apply to the version given during construction of the
    * {@link RobotWaveletData}.
    */
-  public List<VersionedWaveletDelta> getDeltas() {
-    List<VersionedWaveletDelta> deltas = Lists.newArrayList();
+  public List<CoreWaveletDelta> getDeltas() {
+    List<CoreWaveletDelta> deltas = Lists.newArrayList();
 
     for (Entry<ParticipantId, CapturingOperationSink<WaveletOperation>> entry :
         sinkMap.entrySet()) {
@@ -160,8 +159,7 @@ public class RobotWaveletData {
         continue;
       }
       CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, author, snapshotVersion);
-      VersionedWaveletDelta versionedDelta = new VersionedWaveletDelta(delta, snapshotVersion);
-      deltas.add(versionedDelta);
+      deltas.add(delta);
     }
     return deltas;
   }

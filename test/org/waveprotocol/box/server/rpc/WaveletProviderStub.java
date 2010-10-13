@@ -18,13 +18,13 @@
 package org.waveprotocol.box.server.rpc;
 
 import org.waveprotocol.box.server.common.SnapshotSerializer;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.util.TestDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -68,7 +68,7 @@ public class WaveletProviderStub implements WaveletProvider {
   }
 
   @Override
-  public Collection<VersionedWaveletDelta> getHistory(WaveletName waveletName,
+  public Collection<CoreWaveletDelta> getHistory(WaveletName waveletName,
       HashedVersion versionStart, HashedVersion versionEnd) {
     throw new UnsupportedOperationException();
   }

@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.DeltaSequence;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreNoOp;
@@ -41,25 +40,20 @@ public class DeltaSequenceTest extends TestCase {
   private static final HashedVersion HASHED_START_VERSION = (HashedVersion.unsigned(START_VERSION));
   private static final ParticipantId USER = new ParticipantId("user@host.com");
 
-  private List<CoreWaveletOperation> ops;
-  private List<VersionedWaveletDelta> deltas;
-  private HashedVersion endVersion;
+  private final List<CoreWaveletOperation> ops = ImmutableList.of(
+      CoreNoOp.INSTANCE, CoreNoOp.INSTANCE, new CoreAddParticipant(USER), CoreNoOp.INSTANCE,
+      new CoreRemoveParticipant(USER));
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    ops = ImmutableList.of(
-        CoreNoOp.INSTANCE, CoreNoOp.INSTANCE, new CoreAddParticipant(USER), CoreNoOp.INSTANCE,
-        new CoreRemoveParticipant(USER));
-
-    CoreWaveletDelta delta = new CoreWaveletDelta(USER, HashedVersion.unsigned(START_VERSION), ops);
-    CoreWaveletDelta delta2 =
+  private final CoreWaveletDelta delta1 =
+      new CoreWaveletDelta(USER, HashedVersion.unsigned(START_VERSION), ops);
+  private final CoreWaveletDelta delta2 =
       new CoreWaveletDelta(USER, HashedVersion.unsigned(START_VERSION + ops.size()), ops);
-    deltas = ImmutableList.of(
-        new VersionedWaveletDelta(delta, HashedVersion.unsigned(START_VERSION)),
-        new VersionedWaveletDelta(delta, HashedVersion.unsigned(START_VERSION + ops.size())));
-    endVersion = HashedVersion.unsigned(START_VERSION + 2 * ops.size());
-  }
+  private final CoreWaveletDelta delta3 =
+      new CoreWaveletDelta(USER, HashedVersion.unsigned(START_VERSION + (2 * ops.size())), ops);
+
+  private final List<CoreWaveletDelta> twoDeltas = ImmutableList.of(delta1, delta2);
+  private final HashedVersion twoDeltasEndVersion =
+    HashedVersion.unsigned(START_VERSION + 2 * ops.size());
 
   public void testEmptySequence() {
     DeltaSequence empty = DeltaSequence.empty(HASHED_START_VERSION);
@@ -69,35 +63,29 @@ public class DeltaSequenceTest extends TestCase {
   }
 
   public void testValidSequence() {
-    DeltaSequence deltaseq = new DeltaSequence(deltas, endVersion);
+    DeltaSequence deltaseq = new DeltaSequence(twoDeltas, twoDeltasEndVersion);
     assertEquals(START_VERSION, deltaseq.getStartVersion().getVersion());
-    assertEquals(endVersion, deltaseq.getEndVersion());
+    assertEquals(twoDeltasEndVersion, deltaseq.getEndVersion());
   }
 
   public void testInvalidEndVersion() {
-    try {
-      new DeltaSequence(deltas, HashedVersion.unsigned(endVersion.getVersion() + 1));
-    } catch (IllegalArgumentException expected) {
-      // pass
-    }
+    assertSequenceInvalid(twoDeltas, HashedVersion.unsigned(twoDeltasEndVersion.getVersion() + 1));
   }
 
   public void testInvalidIntermediateVersion() {
-    try {
-      new DeltaSequence(
-          ImmutableList.of(deltas.get(0), deltas.get(0)),
-          endVersion
-          );
-    } catch (IllegalArgumentException expected) {
-      // pass
-    }
+    // Repeated version, end version correct for last delta.
+    assertSequenceInvalid(ImmutableList.of(delta1, delta1),
+        HashedVersion.unsigned(START_VERSION + ops.size()));
+    // Repeated version, end version correct as sum of ops.
+    assertSequenceInvalid(ImmutableList.of(delta1, delta1),
+        HashedVersion.unsigned(START_VERSION + (2 * ops.size())));
 
-    try {
-      new DeltaSequence(ImmutableList.of(deltas.get(0), deltas.get(0)),
-          HashedVersion.unsigned(START_VERSION + 1 * ops.size()));
-    } catch (IllegalArgumentException expected) {
-      // pass
-    }
+    // Skipped version, end version correct for last delta.
+    assertSequenceInvalid(ImmutableList.of(delta1, delta3),
+        HashedVersion.unsigned(START_VERSION + (3 * ops.size())));
+    // Skipped version, end version correct as sum of ops.
+    assertSequenceInvalid(ImmutableList.of(delta1, delta3),
+        HashedVersion.unsigned(START_VERSION + (2 * ops.size())));
   }
 
   /**
@@ -107,8 +95,8 @@ public class DeltaSequenceTest extends TestCase {
     DeltaSequence empty = DeltaSequence.empty(HASHED_START_VERSION);
     assertEquals(empty, empty.subList(0, 0));
 
-    DeltaSequence deltaseq = new DeltaSequence(deltas, endVersion);
-    assertEquals(deltas, deltaseq.subList(0, deltas.size()));
+    DeltaSequence deltaseq = new DeltaSequence(twoDeltas, twoDeltasEndVersion);
+    assertEquals(twoDeltas, deltaseq.subList(0, twoDeltas.size()));
 
     assertEquals(empty, deltaseq.subList(0, 0));
 
@@ -120,5 +108,14 @@ public class DeltaSequenceTest extends TestCase {
     DeltaSequence subDeltas = deltaseq.subList(0, 1);
     assertEquals(START_VERSION + ops.size(), subDeltas.getEndVersion().getVersion());
     assertEquals(deltaseq.getStartVersion(), subDeltas.getStartVersion());
+  }
+
+  private static void assertSequenceInvalid(List<CoreWaveletDelta> deltas,
+      HashedVersion endVersion) {
+    try {
+      new DeltaSequence(ImmutableList.of(deltas.get(0), deltas.get(0)), endVersion);
+      fail("Expected delta sequence construction to fail");
+    } catch (IllegalArgumentException expected) {
+    }
   }
 }

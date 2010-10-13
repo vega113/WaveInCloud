@@ -39,20 +39,14 @@ import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.DeltaSequence;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.common.SnapshotSerializer;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
-import org.waveprotocol.box.server.frontend.ClientFrontendImpl;
-import org.waveprotocol.box.server.frontend.IndexWave;
-import org.waveprotocol.box.server.frontend.UserManager;
-import org.waveprotocol.box.server.frontend.WaveViewSubscription;
-import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
-import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletVersion;
+import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
@@ -102,13 +96,12 @@ public class ClientFrontendImplTest extends TestCase {
   private static final HashedVersion VERSION_0 = HASH_FACTORY.createVersionZero(WAVELET_NAME);
   private static final HashedVersion VERSION_1 = HashedVersion.unsigned(1L);
   private static final HashedVersion VERSION_2 = HashedVersion.unsigned(2L);
-  private static final VersionedWaveletDelta DELTA = new VersionedWaveletDelta(
-      new CoreWaveletDelta(USER, VERSION_0, ImmutableList.of(new CoreAddParticipant(USER))),
-      VERSION_0);
+  private static final CoreWaveletDelta DELTA = new CoreWaveletDelta(USER, VERSION_0,
+      ImmutableList.of(new CoreAddParticipant(USER)));
   private static final DeltaSequence DELTAS =
       new DeltaSequence(ImmutableList.of(DELTA), HashedVersion.unsigned(1L));
   private static final ProtocolWaveletDelta SERIALIZED_DELTA =
-      CoreWaveletOperationSerializer.serialize(DELTA.delta);
+      CoreWaveletOperationSerializer.serialize(DELTA);
   private static final Collection<WaveletVersion> NO_KNOWN_WAVELETS =
       Collections.<WaveletVersion>emptySet();
 
@@ -167,7 +160,7 @@ public class ClientFrontendImplTest extends TestCase {
     WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, 0L);
     clientFrontend.waveletUpdate(wavelet, DELTAS.getEndVersion(), DELTAS);
     verify(listener, Mockito.never()).onUpdate(eq(WAVELET_NAME),
-        any(WaveletSnapshotAndVersion.class), anyListOf(VersionedWaveletDelta.class),
+        any(WaveletSnapshotAndVersion.class), anyListOf(CoreWaveletDelta.class),
         any(HashedVersion.class), any(HashedVersion.class),
         anyBoolean(), anyString());
   }
@@ -226,12 +219,12 @@ public class ClientFrontendImplTest extends TestCase {
     List<? extends CoreWaveletOperation> ops = ImmutableList.of(CoreNoOp.INSTANCE);
     CoreWaveletDelta delta = new CoreWaveletDelta(USER, VERSION_0, ops);
     DeltaSequence deltas = new DeltaSequence(
-        ImmutableList.of(new VersionedWaveletDelta(delta, VERSION_0)),
+        ImmutableList.of(delta),
         HashedVersion.unsigned(1L));
     clientFrontend.participantUpdate(WAVELET_NAME, USER, deltas, true, false, "", "");
 
     verify(listener, Mockito.never()).onUpdate(eq(dummyWaveletName),
-        any(WaveletSnapshotAndVersion.class), argThat(new IsNonEmptyList<VersionedWaveletDelta>()),
+        any(WaveletSnapshotAndVersion.class), argThat(new IsNonEmptyList<CoreWaveletDelta>()),
         any(HashedVersion.class), any(HashedVersion.class),
         anyBoolean(), anyString());
   }
@@ -262,7 +255,7 @@ public class ClientFrontendImplTest extends TestCase {
     @Override
     public void onUpdate(WaveletName wn,
         @Nullable WaveletSnapshotAndVersion snapshot,
-        List<VersionedWaveletDelta> newDeltas,
+        List<CoreWaveletDelta> newDeltas,
         @Nullable HashedVersion endVersion,
         @Nullable HashedVersion committedVersion, final boolean hasMarker,
         @Nullable final String channelId) {
@@ -312,10 +305,8 @@ public class ClientFrontendImplTest extends TestCase {
         makeAppendOp(IndexWave.DIGEST_DOCUMENT_ID, 0, "Hello, world");
 
     DeltaSequence expectedDeltas = ClientFrontendImpl.createUnsignedDeltas(ImmutableList.of(
-        makeDelta(USER, HashedVersion.unsigned(0), HashedVersion.unsigned(1),
-            new CoreAddParticipant(USER)),
-        makeDelta(IndexWave.DIGEST_AUTHOR, HashedVersion.unsigned(1), HashedVersion.unsigned(2),
-            expectedDigestOp)
+        makeDelta(USER, HashedVersion.unsigned(0), new CoreAddParticipant(USER)),
+        makeDelta(IndexWave.DIGEST_AUTHOR, HashedVersion.unsigned(1), expectedDigestOp)
         ));
     assertEquals(expectedDeltas, listener.deltas);
   }
@@ -358,16 +349,14 @@ public class ClientFrontendImplTest extends TestCase {
     assertEquals(oldListener.endVersion, newListener.endVersion);
   }
 
-  private VersionedWaveletDelta makeDelta(ParticipantId author, HashedVersion startVersion,
-      HashedVersion endVersion, CoreWaveletOperation... operations) {
-    CoreWaveletDelta delta =
-        new CoreWaveletDelta(author, startVersion, ImmutableList.copyOf(operations));
-    return new VersionedWaveletDelta(delta, startVersion);
+  private CoreWaveletDelta makeDelta(ParticipantId author, HashedVersion startVersion,
+      CoreWaveletOperation... operations) {
+    return new CoreWaveletDelta(author, startVersion, ImmutableList.copyOf(operations));
   }
 
   private void waveletUpdate(HashedVersion startVersion, HashedVersion endVersion,
       WaveletData wavelet, CoreWaveletOperation... operations) {
-    VersionedWaveletDelta delta = makeDelta(USER, startVersion, endVersion, operations);
+    CoreWaveletDelta delta = makeDelta(USER, startVersion, operations);
     DeltaSequence deltas = ClientFrontendImpl.createUnsignedDeltas(ImmutableList.of(delta));
     clientFrontend.waveletUpdate(wavelet, deltas.getEndVersion(), deltas);
   }
@@ -389,10 +378,10 @@ public class ClientFrontendImplTest extends TestCase {
       OpenListener listener, WaveletName dummyWaveletName, String channelId) {
     // First the channel id
     verify(listener).onUpdate(eq(dummyWaveletName), isNullSnapshot(),
-        eq(new ArrayList<VersionedWaveletDelta>()), isNullVersion(),
+        eq(new ArrayList<CoreWaveletDelta>()), isNullVersion(),
         isNullVersion(), eq(false), channelId == null ? anyString() : eq(channelId));
     // Secondly get the marker
-    verify(listener).onUpdate(dummyWaveletName, null, new ArrayList<VersionedWaveletDelta>(), null,
+    verify(listener).onUpdate(dummyWaveletName, null, new ArrayList<CoreWaveletDelta>(), null,
         null, true, null);
   }
 

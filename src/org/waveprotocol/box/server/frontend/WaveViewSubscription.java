@@ -12,11 +12,11 @@ import com.google.common.collect.Sets;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.DeltaSequence;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.util.List;
@@ -125,15 +125,15 @@ final class WaveViewSubscription {
       });
       return;
     }
-    List<VersionedWaveletDelta> filteredDeltas;
+    List<CoreWaveletDelta> filteredDeltas;
 
     if (!submittedVersions.isEmpty() && !submittedVersions.get(waveletId).isEmpty()) {
       // Walk through the deltas, removing any that are from this client.
       filteredDeltas = Lists.newArrayList();
       Set<Long> mySubmits = submittedVersions.get(waveletId);
 
-      for (VersionedWaveletDelta delta : deltas) {
-        long deltaEndVersion = delta.version.getVersion() + delta.delta.getOperations().size();
+      for (CoreWaveletDelta delta : deltas) {
+        long deltaEndVersion = delta.getTargetVersion().getVersion() + delta.getOperations().size();
         if (mySubmits.contains(deltaEndVersion)) {
           submittedVersions.remove(waveletId, deltaEndVersion);
         } else {

@@ -45,14 +45,7 @@ import org.mockito.stubbing.Answer;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.account.RobotAccountDataImpl;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
-import org.waveprotocol.box.server.robots.passive.EventGenerator;
-import org.waveprotocol.box.server.robots.passive.Robot;
-import org.waveprotocol.box.server.robots.passive.RobotConnector;
-import org.waveprotocol.box.server.robots.passive.RobotOperationApplicator;
-import org.waveprotocol.box.server.robots.passive.RobotsGateway;
-import org.waveprotocol.box.server.robots.passive.WaveletAndDeltas;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
@@ -145,7 +138,7 @@ public class RobotTest extends TestCase {
   public void testUpdateWaveletWithGap() throws Exception {
     WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX, 0L);
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
-    List<VersionedWaveletDelta> deltas = Collections.emptyList();
+    List<CoreWaveletDelta> deltas = Collections.emptyList();
     robot.waveletUpdate(waveletData, deltas, hashedVersionZero);
 
     // We are making an delta which applies to version 1, however the robot only
@@ -155,9 +148,8 @@ public class RobotTest extends TestCase {
     addBob.apply(waveletData);
     HashedVersion hashedVersionOne = HashedVersion.unsigned(1);
 
-    CoreWaveletDelta cwDelta = ConversionUtil.toCoreWaveletDelta(
+    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(
         Collections.singletonList(addBob), ALEX, hashedVersionOne);
-    VersionedWaveletDelta delta = new VersionedWaveletDelta(cwDelta, hashedVersionOne);
 
     // Send the delta for version 1 to the robot, it should now enqueue a new
     // wavelet since it is missing deltas.
@@ -231,7 +223,7 @@ public class RobotTest extends TestCase {
   private void enqueueEmptyWavelet() throws Exception {
     WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX, 0L);
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
-    List<VersionedWaveletDelta> deltas = Collections.emptyList();
+    List<CoreWaveletDelta> deltas = Collections.emptyList();
     robot.waveletUpdate(waveletData, deltas, hashedVersionZero);
   }
 }

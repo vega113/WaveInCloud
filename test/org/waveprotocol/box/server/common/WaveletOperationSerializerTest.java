@@ -22,8 +22,6 @@ import com.google.common.collect.ImmutableMap;
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.client.common.ClientUtils;
-import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
@@ -75,11 +73,11 @@ public class WaveletOperationSerializerTest extends TestCase {
     HashedVersion hashedVersion = HashedVersion.UNSIGNED_VERSION_0;
     CoreWaveletDelta delta = new CoreWaveletDelta(author, hashedVersion, ops);
     ProtocolWaveletDelta serialized = CoreWaveletOperationSerializer.serialize(delta);
-    VersionedWaveletDelta deserialized = CoreWaveletOperationSerializer.deserialize(serialized);
+    CoreWaveletDelta deserialized = CoreWaveletOperationSerializer.deserialize(serialized);
     assertEquals(hashedVersion.getVersion(), serialized.getHashedVersion().getVersion());
     assertTrue(Arrays.equals(hashedVersion.getHistoryHash(),
         serialized.getHashedVersion().getHistoryHash().toByteArray()));
-    assertDeepEquals(delta, deserialized.delta);
+    assertDeepEquals(delta, deserialized);
   }
 
   public void testNoOp() {

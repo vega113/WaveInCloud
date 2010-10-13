@@ -16,8 +16,8 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
 /**
@@ -29,7 +29,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 public class DeltaApplicationResult {
 
   private final ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta;
-  private final VersionedWaveletDelta transformedDelta;
+  private final CoreWaveletDelta transformedDelta;
   private final HashedVersion hashedVersionAfterApplication;
 
   /**
@@ -39,7 +39,7 @@ public class DeltaApplicationResult {
    */
   public DeltaApplicationResult(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
-      VersionedWaveletDelta transformedDelta,
+      CoreWaveletDelta transformedDelta,
       HashedVersion hashedVersionAfterApplication) {
     this.appliedDelta = appliedDelta;
     this.transformedDelta = transformedDelta;
@@ -50,7 +50,7 @@ public class DeltaApplicationResult {
     return appliedDelta;
   }
 
-  public VersionedWaveletDelta getDelta() {
+  public CoreWaveletDelta getDelta() {
     return transformedDelta;
   }
 

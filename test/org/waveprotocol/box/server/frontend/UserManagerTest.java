@@ -26,10 +26,6 @@ import junit.framework.TestCase;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.waveprotocol.box.server.common.DeltaSequence;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
-import org.waveprotocol.box.server.frontend.UserManager;
-import org.waveprotocol.box.server.frontend.WaveViewSubscription;
-import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdFilters;
@@ -61,10 +57,8 @@ public class UserManagerTest extends TestCase {
 
   private static final ParticipantId USER = ParticipantId.ofUnsafe("user@host.com");
 
-  private static final VersionedWaveletDelta DELTA =
-    new VersionedWaveletDelta(new CoreWaveletDelta(USER,
-        HashedVersion.UNSIGNED_VERSION_0, ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE)),
-        HashedVersion.UNSIGNED_VERSION_0);
+  private static final CoreWaveletDelta DELTA = new CoreWaveletDelta(USER,
+      HashedVersion.UNSIGNED_VERSION_0, ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE));
 
   private static final HashedVersion END_VERSION = HashedVersion.unsigned(2);
 
@@ -139,12 +133,10 @@ public class UserManagerTest extends TestCase {
    */
   public void testUpdateSeveralDeltas() {
     // Check that test was set up correctly
-    assertEquals(2, DELTA.delta.getOperations().size());
+    assertEquals(2, DELTA.getOperations().size());
 
     HashedVersion v2 = HashedVersion.unsigned(2);
-
-    CoreWaveletDelta coreDelta2 = new CoreWaveletDelta(USER, v2, Arrays.asList(CoreNoOp.INSTANCE));
-    VersionedWaveletDelta delta2 = new VersionedWaveletDelta(coreDelta2, v2);
+    CoreWaveletDelta delta2 = new CoreWaveletDelta(USER, v2, Arrays.asList(CoreNoOp.INSTANCE));
 
     m.subscribe(W1, IdFilters.ALL_IDS, "ch1", mock(OpenListener.class));
 

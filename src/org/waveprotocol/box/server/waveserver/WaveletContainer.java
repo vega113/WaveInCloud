@@ -17,10 +17,10 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -84,7 +84,7 @@ interface WaveletContainer {
    *         null if there was an error. If a delta straddles one of the
    *         requested version boundaries, it will be included.
    */
-  Collection<VersionedWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
+  Collection<CoreWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
       HashedVersion versionEnd) throws AccessControlException, WaveletStateException;
 
   /**

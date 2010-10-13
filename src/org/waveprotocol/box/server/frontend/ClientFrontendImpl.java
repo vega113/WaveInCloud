@@ -28,12 +28,11 @@ import com.google.inject.Inject;
 import org.waveprotocol.box.common.Snippets;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.DeltaSequence;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveBus;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -41,6 +40,7 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
@@ -210,12 +210,12 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         // Send message with just the channel id.
         LOG.info("sending just a channel id for " + dummyWaveletName);
         openListener.onUpdate(dummyWaveletName,
-            null, new ArrayList<VersionedWaveletDelta>(), null, null, false, channel_id);
+            null, new ArrayList<CoreWaveletDelta>(), null, null, false, channel_id);
       }
 
       LOG.info("sending marker for " + dummyWaveletName);
       openListener.onUpdate(dummyWaveletName,
-          null, new ArrayList<VersionedWaveletDelta>(), null, null, true, null);
+          null, new ArrayList<CoreWaveletDelta>(), null, null, true, null);
     }
   }
 
@@ -326,7 +326,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
    */
   @Override
   public void waveletUpdate(ReadableWaveletData wavelet, HashedVersion endVersion,
-      List<VersionedWaveletDelta> newDeltas) {
+      List<CoreWaveletDelta> newDeltas) {
     if (newDeltas.isEmpty()) {
       return;
     }
@@ -358,9 +358,9 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
     Set<ParticipantId> newParticipants = Sets.newHashSet();
 
     for (int i = 0; i < newDeltas.size(); i++) {
-      VersionedWaveletDelta delta = newDeltas.get(i);
+      CoreWaveletDelta delta = newDeltas.get(i);
       // Participants added or removed in this delta get the whole delta
-      for (CoreWaveletOperation op : delta.delta.getOperations()) {
+      for (CoreWaveletOperation op : delta.getOperations()) {
         if (op instanceof CoreAddParticipant) {
           ParticipantId p = ((CoreAddParticipant) op).getParticipantId();
           remainingParticipants.add(p);
@@ -408,10 +408,10 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   }
 
   @VisibleForTesting
-  static DeltaSequence createUnsignedDeltas(List<VersionedWaveletDelta> deltas) {
+  static DeltaSequence createUnsignedDeltas(List<CoreWaveletDelta> deltas) {
     Preconditions.checkArgument(!deltas.isEmpty(), "No deltas specified");
-    VersionedWaveletDelta lastDelta = Iterables.getLast(deltas);
-    long endVersion = lastDelta.version.getVersion() + lastDelta.delta.getOperations().size();
+    CoreWaveletDelta lastDelta = Iterables.getLast(deltas);
+    long endVersion = lastDelta.getTargetVersion().getVersion() + lastDelta.getOperations().size();
     return new DeltaSequence(deltas, HashedVersion.unsigned(endVersion));
   }
 

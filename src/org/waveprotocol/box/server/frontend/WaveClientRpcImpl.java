@@ -23,21 +23,21 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
+import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -95,7 +95,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
           @Override
           public void onUpdate(WaveletName waveletName,
               @Nullable WaveletSnapshotAndVersion snapshot,
-              List<VersionedWaveletDelta> deltas, @Nullable HashedVersion endVersion,
+              List<CoreWaveletDelta> deltas, @Nullable HashedVersion endVersion,
               @Nullable HashedVersion committedVersion, final boolean hasMarker,
               final String channel_id) {
             ProtocolWaveletUpdate.Builder builder = ProtocolWaveletUpdate.newBuilder();
@@ -105,8 +105,8 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
             }
             try {
               builder.setWaveletName(uriCodec.waveletNameToURI(waveletName));
-              for (VersionedWaveletDelta d : deltas) {
-                builder.addAppliedDelta(CoreWaveletOperationSerializer.serialize(d.delta));
+              for (CoreWaveletDelta d : deltas) {
+                builder.addAppliedDelta(CoreWaveletOperationSerializer.serialize(d));
               }
               if (snapshot != null) {
                 Preconditions.checkState(committedVersion.equals(

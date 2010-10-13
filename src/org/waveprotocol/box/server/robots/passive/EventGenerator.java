@@ -32,7 +32,6 @@ import com.google.wave.api.impl.EventMessageBundle;
 import com.google.wave.api.robot.Capability;
 import com.google.wave.api.robot.RobotName;
 
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
@@ -300,8 +299,7 @@ public class EventGenerator {
     wavelet.addListener(waveletListener);
 
     try {
-      for (VersionedWaveletDelta vWDelta : waveletAndDeltas.getDeltas()) {
-        CoreWaveletDelta delta = vWDelta.delta;
+      for (CoreWaveletDelta delta : waveletAndDeltas.getDeltas()) {
 
         // TODO(ljvderijk): Set correct timestamp once wavebus sends them along
         long timestamp = 0L;

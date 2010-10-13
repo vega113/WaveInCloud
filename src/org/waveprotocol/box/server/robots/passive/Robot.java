@@ -28,13 +28,13 @@ import com.google.wave.api.robot.CapabilityFetchException;
 import com.google.wave.api.robot.RobotName;
 
 import org.waveprotocol.box.server.account.RobotAccountData;
-import org.waveprotocol.box.server.common.VersionedWaveletDelta;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
@@ -156,7 +156,7 @@ public class Robot implements Runnable {
    * @throws OperationException if an update for a new wavelet could not be
    *         processed.
    */
-  void waveletUpdate(ReadableWaveletData wavelet, List<VersionedWaveletDelta> deltas,
+  void waveletUpdate(ReadableWaveletData wavelet, List<CoreWaveletDelta> deltas,
       HashedVersion resultingVersion) throws OperationException {
     WaveletName waveletName = WaveletDataUtil.waveletNameOf(wavelet);
 
