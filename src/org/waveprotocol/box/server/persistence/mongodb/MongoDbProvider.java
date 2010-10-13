@@ -42,7 +42,7 @@ public class MongoDbProvider {
 
   /** Location of the MongoDB properties file in the classpath. */
   private static final String PROPERTIES_LOC =
-      "org/waveprotocol/box.server/persistence/mongodb/mongodb.properties";
+      "org/waveprotocol/box/server/persistence/mongodb/mongodb.properties";
 
   /** Name of the property that stores the host. */
   private static final String HOST_PROPERTY = "mongoDbHost";
