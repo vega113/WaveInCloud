@@ -23,7 +23,7 @@ import com.google.common.collect.MapMaker;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import org.waveprotocol.box.client.common.ClientUtils;
+import org.waveprotocol.box.client.ClientUtils;
 import org.waveprotocol.box.common.DocumentConstants;
 import org.waveprotocol.box.server.agents.agent.AbstractAgent;
 import org.waveprotocol.box.server.agents.agent.AgentConnection;

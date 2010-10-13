@@ -35,8 +35,8 @@ import com.google.common.collect.Lists;
 
 import org.mockito.ArgumentCaptor;
 import org.waveprotocol.box.agents.echoey.Echoey;
-import org.waveprotocol.box.client.common.ClientUtils;
-import org.waveprotocol.box.client.common.ClientWaveView;
+import org.waveprotocol.box.client.ClientUtils;
+import org.waveprotocol.box.client.ClientWaveView;
 import org.waveprotocol.box.server.agents.agent.AgentConnection;
 import org.waveprotocol.box.server.agents.agent.AgentTestBase;
 import org.waveprotocol.box.server.util.BlockingSuccessFailCallback;

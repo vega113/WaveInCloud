@@ -23,7 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import org.waveprotocol.box.client.common.IndexEntry;
+import org.waveprotocol.box.client.IndexEntry;
 import org.waveprotocol.box.common.Snippets;
 import org.waveprotocol.box.server.common.DeltaSequence;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;

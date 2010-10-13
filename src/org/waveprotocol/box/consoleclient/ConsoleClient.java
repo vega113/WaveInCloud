@@ -26,11 +26,11 @@ import jline.ANSIBuffer;
 import jline.Completor;
 import jline.ConsoleReader;
 
-import org.waveprotocol.box.client.common.ClientBackend;
-import org.waveprotocol.box.client.common.ClientUtils;
-import org.waveprotocol.box.client.common.ClientWaveView;
-import org.waveprotocol.box.client.common.IndexEntry;
-import org.waveprotocol.box.client.common.WaveletOperationListener;
+import org.waveprotocol.box.client.ClientBackend;
+import org.waveprotocol.box.client.ClientUtils;
+import org.waveprotocol.box.client.ClientWaveView;
+import org.waveprotocol.box.client.IndexEntry;
+import org.waveprotocol.box.client.WaveletOperationListener;
 import org.waveprotocol.box.common.DocumentConstants;
 import org.waveprotocol.box.consoleclient.ScrollableWaveView.RenderMode;
 import org.waveprotocol.box.server.frontend.IndexWave;

@@ -23,10 +23,10 @@ import static org.waveprotocol.box.server.util.testing.Matchers.doesNotContain;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.client.common.ClientBackend;
-import org.waveprotocol.box.client.common.ClientWaveView;
-import org.waveprotocol.box.client.common.IndexEntry;
-import org.waveprotocol.box.client.common.testing.ClientTestingUtil;
+import org.waveprotocol.box.client.ClientBackend;
+import org.waveprotocol.box.client.ClientWaveView;
+import org.waveprotocol.box.client.IndexEntry;
+import org.waveprotocol.box.client.testing.ClientTestingUtil;
 import org.waveprotocol.box.consoleclient.ConsoleClient;
 import org.waveprotocol.box.consoleclient.ScrollableWaveView.RenderMode;
 import org.waveprotocol.box.server.frontend.IndexWave;

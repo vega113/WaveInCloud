@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.client.common.ClientUtils;
+import org.waveprotocol.box.client.ClientUtils;
 import org.waveprotocol.box.server.agents.agent.AgentConnection;
 import org.waveprotocol.box.server.agents.agent.AgentEventListener;
 import org.waveprotocol.box.server.agents.agent.AgentEventProvider;

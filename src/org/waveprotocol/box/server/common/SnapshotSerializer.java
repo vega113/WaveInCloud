@@ -48,7 +48,7 @@ import java.util.Collection;
  *
  * NOTE: This class is mirrored in the client. Any changes here should also be
  * made in
- * {@link org.waveprotocol.box.client.webclient.common.SnapshotSerializer}
+ * {@link org.waveprotocol.box.webclient.common.SnapshotSerializer}
  *
  * @author Joseph Gentle (josephg@gmail.com)
  */

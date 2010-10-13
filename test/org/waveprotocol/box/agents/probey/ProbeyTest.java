@@ -29,8 +29,8 @@ import static org.waveprotocol.box.server.util.testing.Matchers.Aliases.contains
 import org.eclipse.jetty.server.Request;
 import org.mockito.ArgumentCaptor;
 import org.waveprotocol.box.agents.probey.Probey;
-import org.waveprotocol.box.client.common.ClientWaveView;
-import org.waveprotocol.box.client.common.testing.ClientTestingUtil;
+import org.waveprotocol.box.client.ClientWaveView;
+import org.waveprotocol.box.client.testing.ClientTestingUtil;
 import org.waveprotocol.box.common.DocumentConstants;
 import org.waveprotocol.box.server.agents.agent.AgentConnection;
 import org.waveprotocol.box.server.agents.agent.AgentTestBase;

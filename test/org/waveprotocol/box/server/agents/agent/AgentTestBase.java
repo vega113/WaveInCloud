@@ -22,8 +22,8 @@ import static org.waveprotocol.box.server.util.testing.Matchers.contains;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.client.common.ClientBackend;
-import org.waveprotocol.box.client.common.testing.ClientTestingUtil;
+import org.waveprotocol.box.client.ClientBackend;
+import org.waveprotocol.box.client.testing.ClientTestingUtil;
 import org.waveprotocol.box.server.agents.agent.AbstractAgent;
 import org.waveprotocol.box.server.agents.agent.AgentConnection;
 import org.waveprotocol.box.server.util.Log;

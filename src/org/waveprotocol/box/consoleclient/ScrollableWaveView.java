@@ -20,8 +20,8 @@ package org.waveprotocol.box.consoleclient;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-import org.waveprotocol.box.client.common.ClientUtils;
-import org.waveprotocol.box.client.common.ClientWaveView;
+import org.waveprotocol.box.client.ClientUtils;
+import org.waveprotocol.box.client.ClientWaveView;
 import org.waveprotocol.box.common.DocumentConstants;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;

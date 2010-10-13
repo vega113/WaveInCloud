@@ -21,10 +21,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.waveprotocol.box.client.common.ClientBackend;
-import org.waveprotocol.box.client.common.ClientUtils;
-import org.waveprotocol.box.client.common.ClientWaveView;
-import org.waveprotocol.box.client.common.IndexEntry;
+import org.waveprotocol.box.client.ClientBackend;
+import org.waveprotocol.box.client.ClientUtils;
+import org.waveprotocol.box.client.ClientWaveView;
+import org.waveprotocol.box.client.IndexEntry;
 import org.waveprotocol.box.server.frontend.IndexWave;
 import org.waveprotocol.wave.model.version.HashedVersion;
 

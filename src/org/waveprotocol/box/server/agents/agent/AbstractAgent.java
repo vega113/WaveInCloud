@@ -19,8 +19,8 @@ package org.waveprotocol.box.server.agents.agent;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.waveprotocol.box.client.common.ClientBackend;
-import org.waveprotocol.box.client.common.ClientWaveView;
+import org.waveprotocol.box.client.ClientBackend;
+import org.waveprotocol.box.client.ClientWaveView;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.SuccessFailCallback;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;

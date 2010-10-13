@@ -237,7 +237,7 @@
       <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
       <arg line="-style PRETTY"/>
       <arg line="${gwt.args}"/>
-      <arg value="org.waveprotocol.box.client.webclient.WebClient"/>
+      <arg value="org.waveprotocol.box.webclient.WebClient"/>
     </java>
   </target>
 
@@ -253,7 +253,7 @@
       <arg value="-noserver" />
       <arg line="-bindAddress 0.0.0.0" />
       <arg line="${gwt.args}"/>
-      <arg value="org.waveprotocol.box.client.webclient.WebClient"/>
+      <arg value="org.waveprotocol.box.webclient.WebClient"/>
     </java>
   </target>
 
