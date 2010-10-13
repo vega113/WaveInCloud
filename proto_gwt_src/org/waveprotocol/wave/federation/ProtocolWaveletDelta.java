@@ -115,9 +115,6 @@ public class ProtocolWaveletDelta extends JavaScriptObject  {
         if(_4 != null && _4.length != 0) {
             buf.push("\"4\":[\"" + _4.join("\",\"") + "\"]");
         }
-        var _5 = obj["5"];
-        if(_5 != null)
-            buf.push("\"5\":" + @org.waveprotocol.wave.federation.ProtocolHashedVersion::stringify(Lorg/waveprotocol/wave/federation/ProtocolHashedVersion;)(_5));
 
         return buf.length == 0 ? "{}" : "{" + buf.join(",") + "}";
     }-*/;
@@ -259,25 +256,6 @@ public class ProtocolWaveletDelta extends JavaScriptObject  {
             array = clearAddressPathArray();
         array.push(addressPath);
     }
-
-    // postHashedVersion
-
-    public final native ProtocolHashedVersion getPostHashedVersion() /*-{
-        return this["5"];
-    }-*/;
-
-    public final native ProtocolWaveletDelta setPostHashedVersion(ProtocolHashedVersion postHashedVersion) /*-{
-        this["5"] = postHashedVersion;
-        return this;
-    }-*/;
-
-    public final native void clearPostHashedVersion() /*-{
-        delete this["5"];
-    }-*/;
-
-    public final native boolean hasPostHashedVersion() /*-{
-        return this["5"] != null;
-    }-*/;
 
 
 }

@@ -84,5 +84,8 @@
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/model.jar" sourcepath="third_party/runtime/wave-libraries/model-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/proto.jar" sourcepath="third_party/runtime/wave-libraries/proto-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/waveserver.jar" sourcepath="third_party/runtime/wave-libraries/waveserver-src.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/stringtemplate/antlr.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/stringtemplate/stringtemplate.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/communication.jar" sourcepath="third_party/runtime/wave-libraries/communication-src.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

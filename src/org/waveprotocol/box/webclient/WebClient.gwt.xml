@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to='webclient'>
+  <!-- Inherit the core Web Toolkit stuff.                        -->
+  <inherits name='com.google.gwt.user.User'/>
+  <inherits name="com.google.gwt.event.EventBase"/>
+
+  <inherits name='com.google.gwt.user.theme.chrome.Chrome'/>
+
+  <!-- Other module inherits                                      -->
+  <inherits name='com.google.gwt.json.JSON'/>
+  <inherits name='com.google.gwt.websockets.WebSockets'/>
+
+  <inherits name='org.waveprotocol.wave.client.Client'/>
+  <inherits name='org.waveprotocol.wave.client.editor.Editor'/>
+  <inherits name='org.waveprotocol.wave.client.util.ClientFlags'/>
+  <inherits name='org.waveprotocol.wave.model.Model'/>
+  <inherits name="org.waveprotocol.wave.model.account.Account"/>
+  <inherits name='org.waveprotocol.wave.model.conversation.Conversation'/>
+
+  <!-- Temporary dependency that creates fake waves. Once the new wave panel
+  is hooked up to the backend, remove this. -->
+  <inherits name='org.waveprotocol.wave.model.conversation.Testing'/>
+
+  <inherits name='org.waveprotocol.box.client.IndexEntry'/>
+  <inherits name='org.waveprotocol.box.webclient.common.communication.Communication'/>
+  <inherits name='org.waveprotocol.box.webclient.util.Util'/>
+  <inherits name='org.waveprotocol.box.webclient.waveclient.common.Common'/>
+  <inherits name="org.waveprotocol.box.common.Common"/>
+  <inherits name='org.waveprotocol.box.server.waveserver.WaveClientRpc'/>
+
+  <!-- Specify the app entry point class.                         -->
+  <entry-point class='org.waveprotocol.box.webclient.client.WebClient'/>
+
+  <set-property name="compiler.emulatedStack" value="true"/>
+  <set-property name="user.agent" value="safari"/>
+
+  <set-configuration-property name="CssResource.obfuscationPrefix" value="SWC" />
+  <set-configuration-property name="compiler.emulatedStack.recordFileNames" value="true" />
+  <set-configuration-property name="compiler.emulatedStack.recordLineNumbers" value="true" />
+
+  <!-- Uncomment the line below to restrict to safari for faster compile in development -->
+  <!-- <set-property name="user.agent" value="safari" /> -->
+
+</module>

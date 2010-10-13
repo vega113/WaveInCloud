@@ -19,3 +19,4 @@ war/webclient
 _attachments
 gen
 build-proto.properties
+\.DS_Store
