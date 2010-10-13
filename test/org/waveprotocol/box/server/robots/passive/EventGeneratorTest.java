@@ -24,6 +24,8 @@ import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.data.converter.v22.EventDataConverterV22;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.EventType;
+import com.google.wave.api.event.WaveletBlipCreatedEvent;
+import com.google.wave.api.event.WaveletBlipRemovedEvent;
 import com.google.wave.api.event.WaveletParticipantsChangedEvent;
 import com.google.wave.api.impl.EventMessageBundle;
 import com.google.wave.api.robot.Capability;
@@ -35,6 +37,9 @@ import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.robots.util.WaveletPluginDocumentFactory;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
+import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
+import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -106,10 +111,11 @@ public class EventGeneratorTest extends TestCase {
   private ObservableWaveletData waveletData;
   private OpBasedWavelet wavelet;
   private CapturingOperationSink<WaveletOperation> output;
+  private ConversationUtil conversationUtil;
 
   @Override
   protected void setUp() throws Exception {
-    ConversationUtil conversationUtil = new ConversationUtil(FakeIdGenerator.create());
+    conversationUtil = new ConversationUtil(FakeIdGenerator.create());
     eventGenerator = new EventGenerator(ROBOT_NAME, conversationUtil);
     versionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
 
@@ -145,7 +151,7 @@ public class EventGeneratorTest extends TestCase {
   public void testGenerateWaveletParticipantsChangedEventOnRemove() throws Exception {
     wavelet.removeParticipant(ALEX);
     EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_PARTICIPANTS_CHANGED);
-    assertEquals("Only expected one event", 1, messages.getEvents().size());
+    assertEquals("Expected one event", 1, messages.getEvents().size());
     WaveletParticipantsChangedEvent event =
         WaveletParticipantsChangedEvent.as(messages.getEvents().get(0));
     assertTrue(
@@ -155,7 +161,7 @@ public class EventGeneratorTest extends TestCase {
   public void testGenerateWaveletSelfAddedEvent() throws Exception {
     wavelet.addParticipant(ROBOT);
     EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_SELF_ADDED);
-    assertEquals("Only expected two evenst", 2, messages.getEvents().size());
+    assertEquals("Expected two events", 2, messages.getEvents().size());
   }
 
   public void testGenerateWaveletSelfRemovedEvent() throws Exception {
@@ -163,6 +169,28 @@ public class EventGeneratorTest extends TestCase {
     wavelet.removeParticipant(ROBOT);
     EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_SELF_REMOVED);
     assertEquals("Expected three events", 3, messages.getEvents().size());
+  }
+
+  public void testGenerateWaveletBlipCreatedEvent() throws Exception {
+    ObservableConversationView conversation = conversationUtil.getConversation(wavelet);
+    ObservableConversationBlip newBlip = conversation.getRoot().getRootThread().appendBlip();
+    EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_BLIP_CREATED);
+    assertEquals("Expected one event", 1, messages.getEvents().size());
+    WaveletBlipCreatedEvent event = WaveletBlipCreatedEvent.as(messages.getEvents().get(0));
+    assertEquals("Expected the same id as the new blip", newBlip.getId(), event.getNewBlipId());
+  }
+
+  public void testGenerateWaveletBlipRemovedEvent() throws Exception {
+    ObservableConversationThread rootThread =
+        conversationUtil.getConversation(wavelet).getRoot().getRootThread();
+    ObservableConversationBlip newBlip = rootThread.appendBlip();
+    newBlip.delete();
+    EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_BLIP_REMOVED);
+    assertEquals("Expected two events", 2, messages.getEvents().size());
+    // Blip removed should be the second event.
+    WaveletBlipRemovedEvent event = WaveletBlipRemovedEvent.as(messages.getEvents().get(1));
+    assertEquals(
+        "Expected the same id as the removed blip", newBlip.getId(), event.getRemovedBlipId());
   }
 
   // Helper Methods
@@ -178,8 +206,8 @@ public class EventGeneratorTest extends TestCase {
   private EventMessageBundle generateAndCheckEvents(EventType eventType) throws Exception {
     // Create the delta
     CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(output.getOps(), ALEX, versionZero);
-    WaveletAndDeltas waveletAndDeltas = WaveletAndDeltas.create(
-        waveletData, Collections.singletonList(delta), versionZero);
+    WaveletAndDeltas waveletAndDeltas =
+        WaveletAndDeltas.create(waveletData, Collections.singletonList(delta), versionZero);
 
     // Put the wanted event in the capabilities map
     Map<EventType, Capability> capabilities = Maps.newHashMap();

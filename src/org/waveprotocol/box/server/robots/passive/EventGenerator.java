@@ -25,6 +25,8 @@ import com.google.wave.api.data.converter.ContextResolver;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.EventType;
+import com.google.wave.api.event.WaveletBlipCreatedEvent;
+import com.google.wave.api.event.WaveletBlipRemovedEvent;
 import com.google.wave.api.event.WaveletParticipantsChangedEvent;
 import com.google.wave.api.event.WaveletSelfAddedEvent;
 import com.google.wave.api.event.WaveletSelfRemovedEvent;
@@ -37,6 +39,7 @@ import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationListenerImpl;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
+import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
@@ -138,8 +141,8 @@ public class EventGenerator {
         }
       }
 
-      // This deviates from Google Wave production which always sends this event,
-      // even if it wasn't present in your capabilities.
+      // This deviates from Google Wave production which always sends this
+      // event, even if it wasn't present in your capabilities.
       if (capabilities.containsKey(EventType.WAVELET_SELF_ADDED) && participant.equals(robotId)) {
         // The robot has been added
         String rootBlipId = getRootBlipId(conversation);
@@ -163,9 +166,28 @@ public class EventGenerator {
       }
     }
 
+    @Override
+    public void onBlipAdded(ObservableConversationBlip blip) {
+      if (capabilities.containsKey(EventType.WAVELET_BLIP_CREATED)) {
+        String rootBlipId = getRootBlipId(conversation);
+        WaveletBlipCreatedEvent event = new WaveletBlipCreatedEvent(
+            null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId, blip.getId());
+        addEvent(event, capabilities, rootBlipId, messages);
+      }
+    }
+
+    @Override
+    public void onBlipDeleted(ObservableConversationBlip blip) {
+      if (capabilities.containsKey(EventType.WAVELET_BLIP_REMOVED)) {
+        String rootBlipId = getRootBlipId(conversation);
+        WaveletBlipRemovedEvent event = new WaveletBlipRemovedEvent(
+            null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId, blip.getId());
+        addEvent(event, capabilities, rootBlipId, messages);
+      }
+    }
+
     /**
      * Generates the events that are collected over the span of one delta.
-     *
      */
     public void deltaEnd() {
       if (!participantsAdded.isEmpty() || !participantsRemoved.isEmpty()) {
@@ -307,8 +329,8 @@ public class EventGenerator {
 
         DistinctVersion endVersion = DistinctVersion.of(
             delta.getTargetVersion().getVersion() + delta.getOperations().size(), -1);
-        List<WaveletOperation> ops = ConversionUtil.fromCoreWaveletDelta(
-            delta, timestamp, endVersion);
+        List<WaveletOperation> ops =
+            ConversionUtil.fromCoreWaveletDelta(delta, timestamp, endVersion);
         for (WaveletOperation op : ops) {
           op.apply(snapshot);
         }
