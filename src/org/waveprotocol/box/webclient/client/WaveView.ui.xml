@@ -1,0 +1,63 @@
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder" xmlns:g='urn:import:com.google.gwt.user.client.ui'
+  xmlns:s='urn:import:org.waveprotocol.box.webclient.client'>
+  <ui:style
+    type="org.waveprotocol.box.webclient.client.WaveView.Style">
+      @def threadIndent 15px;
+      .addBlip {
+        background: #ddd; cursor: pointer; padding: 5px !important;
+        text-align: center;
+      }
+
+      .addParticipant {
+        margin-right: 5px;
+      }
+
+      .blip {
+        border: thin solid #ccc; border-radius: 5px; padding: 0 5px;
+        margin: 0 5px 5px 5px;
+      }
+
+      .hasOverflow {
+        overflow: auto;
+      }
+
+      .participants {
+        display: inline-block;
+      }
+
+      .top {
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        top: 0px;
+        bottom: 0px;
+      }
+
+      .topBox {
+        margin: 5px;
+      }
+
+      .thread {
+        margin-left: 10px;
+      }
+    </ui:style>
+  <g:DockLayoutPanel unit="EM" styleName="{style.top}">
+    <g:north size="3">
+      <g:FlowPanel styleName="{style.topBox}">
+        <g:Button ui:field="addParticipant" styleName="{style.addParticipant}">+</g:Button>
+        <g:Label ui:field="participants" stylePrimaryName="{style.participants}" />
+      </g:FlowPanel>
+    </g:north>
+    <!--
+      <g:north size="3"> <g:Label styleName="{style.toolbar}"> The toolbar will
+      go here </g:Label> </g:north>
+    -->
+    <g:center>
+      <g:FlowPanel styleName="{style.hasOverflow}">
+        <g:FlowPanel ui:field="panel" />
+        <g:Label ui:field="addBlip" styleName="{style.blip} {style.addBlip}">
+          Click here to add a reply</g:Label>
+      </g:FlowPanel>
+    </g:center>
+  </g:DockLayoutPanel>
+</ui:UiBinder>

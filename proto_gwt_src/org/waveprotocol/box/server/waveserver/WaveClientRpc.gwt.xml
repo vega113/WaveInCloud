@@ -1,0 +1,14 @@
+<module>
+    <inherits name="com.google.gwt.user.User"/>
+    <inherits name="org.waveprotocol.wave.federation.Federation"/>
+    <source path="">
+        <include name="DocumentSnapshot.java"/>
+        <include name="ProtocolOpenRequest.java"/>
+        <include name="ProtocolSubmitRequest.java"/>
+        <include name="ProtocolSubmitResponse.java"/>
+        <include name="ProtocolWaveletUpdate.java"/>
+        <include name="WaveletSnapshot.java"/>
+        <include name="WaveletVersion.java"/>
+        <include name="WaveViewSnapshot.java"/>
+    </source>
+</module>

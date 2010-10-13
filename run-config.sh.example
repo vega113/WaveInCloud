@@ -3,7 +3,7 @@
 # Configuration for the FedOne run scripts.
 #
 # Copy this file to run-config.sh and configure the variables there.
-# Please see http://code.google.com/p/wave-protocol/wiki/Installation for
+# Please see http://www.waveprotocol.org/code/installation for
 # instructions on how to configure the flags.
 #
 
@@ -36,7 +36,7 @@ PRIVATE_KEY_FILENAME=${WAVE_SERVER_DOMAIN_NAME}.key
 
 # The order of certificates is important. Place intermediate certs
 # after "${WAVE_SERVER_DOMAIN_NAME}.crt". Please refer to 
-# http://code.google.com/p/wave-protocol/wiki/Certificates
+# http://www.waveprotocol.org/federation/certificates
 # for more details.
 CERTIFICATE_FILENAME_LIST=${WAVE_SERVER_DOMAIN_NAME}.crt
 
