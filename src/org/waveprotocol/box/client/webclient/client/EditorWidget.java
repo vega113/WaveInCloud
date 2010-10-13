@@ -34,7 +34,7 @@ import org.waveprotocol.wave.client.widget.popup.simple.Popup;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.LineContainers;
-import org.waveprotocol.wave.model.schema.impl.ConversationSchemas;
+import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 
 /**
  * A composite containing an editor and debug output.

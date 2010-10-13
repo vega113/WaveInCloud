@@ -37,7 +37,7 @@ import org.waveprotocol.box.server.persistence.memory.MemoryStore;
 import org.waveprotocol.box.server.rpc.FetchServlet;
 import org.waveprotocol.box.server.rpc.ProtoSerializer;
 import org.waveprotocol.box.server.util.TestDataUtil;
-import org.waveprotocol.wave.common.util.JavaWaverefEncoder;
+import org.waveprotocol.wave.common.util.jvm.JavaWaverefEncoder;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;

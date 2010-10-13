@@ -47,7 +47,7 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl.Seed;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
-import org.waveprotocol.wave.model.schema.impl.ConversationSchemas;
+import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 import org.waveprotocol.wave.model.util.ImmediateExcecutionScheduler;
 import org.waveprotocol.wave.model.util.Scheduler;
 import org.waveprotocol.wave.model.wave.ParticipantId;

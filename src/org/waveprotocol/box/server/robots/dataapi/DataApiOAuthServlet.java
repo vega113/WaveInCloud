@@ -21,7 +21,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.MapMaker;
-import com.google.common.util.CharBase64;
 import com.google.gxp.base.GxpContext;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -39,6 +38,7 @@ import net.oauth.server.HttpRequestMessage;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.gxp.OAuthAuthorizeTokenPage;
 import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.wave.common.util.CharBase64;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;

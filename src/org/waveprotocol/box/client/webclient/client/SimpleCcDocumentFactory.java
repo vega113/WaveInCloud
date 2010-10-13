@@ -26,7 +26,7 @@ import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
-import org.waveprotocol.wave.model.schema.impl.ConversationSchemas;
+import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
 import java.util.HashMap;

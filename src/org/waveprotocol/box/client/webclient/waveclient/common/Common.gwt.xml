@@ -1,5 +1,4 @@
 <module>
-    <inherits name="com.google.common.util.Util"/>
     <inherits name="com.google.gwt.user.User"/>
     <inherits name="com.google.gwt.user.ClippedImage"/>
     <inherits name="org.waveprotocol.wave.concurrencycontrol.Client"/>
@@ -7,6 +6,7 @@
     <inherits name="org.waveprotocol.wave.concurrencycontrol.Channel"/>
     <inherits name="org.waveprotocol.wave.concurrencycontrol.Sinks"/>
     <inherits name="org.waveprotocol.wave.concurrencycontrol.Wave"/>
+    <inherits name="org.waveprotocol.wave.common.util.Util"/>
     <inherits name="org.waveprotocol.wave.common.logging.Logging"/>
     <inherits name="org.waveprotocol.box.client.webclient.common.Common"/>
     <inherits name="org.waveprotocol.box.client.webclient.util.Util"/>

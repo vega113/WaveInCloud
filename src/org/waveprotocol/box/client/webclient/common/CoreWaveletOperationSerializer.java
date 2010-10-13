@@ -17,11 +17,10 @@
 
 package org.waveprotocol.box.client.webclient.common;
 
-import com.google.common.util.Base64DecoderException;
-import com.google.common.util.CharBase64;
-
 import org.waveprotocol.box.server.waveserver.DocumentSnapshot;
 import org.waveprotocol.box.server.waveserver.WaveletSnapshot;
+import org.waveprotocol.wave.common.util.Base64DecoderException;
+import org.waveprotocol.wave.common.util.CharBase64;
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;

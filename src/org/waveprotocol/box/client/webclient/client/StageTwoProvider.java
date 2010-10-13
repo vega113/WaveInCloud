@@ -40,7 +40,7 @@ import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.schema.impl.ConversationSchemas;
+import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 import org.waveprotocol.wave.model.testing.BasicFactories;
 import org.waveprotocol.wave.model.testing.FakeDocument;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;

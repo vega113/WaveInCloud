@@ -27,7 +27,7 @@ import org.waveprotocol.box.client.webclient.common.SnapshotSerializer;
 import org.waveprotocol.box.client.webclient.common.communication.callback.SimpleCallback;
 import org.waveprotocol.wave.client.debug.logger.DomLogger;
 import org.waveprotocol.wave.common.logging.LoggerBundle;
-import org.waveprotocol.wave.common.util.GwtWaverefEncoder;
+import org.waveprotocol.wave.common.util.gwt.GwtWaverefEncoder;
 import org.waveprotocol.box.server.waveserver.WaveViewSnapshot;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.OperationException;

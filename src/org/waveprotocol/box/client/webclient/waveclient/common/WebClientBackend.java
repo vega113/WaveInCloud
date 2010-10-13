@@ -17,7 +17,6 @@
 
 package org.waveprotocol.box.client.webclient.waveclient.common;
 
-import com.google.common.util.CharBase64;
 import com.google.gwt.core.client.JavaScriptObject;
 
 import org.waveprotocol.box.client.webclient.client.ClientEvents;
@@ -29,6 +28,7 @@ import org.waveprotocol.box.client.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.client.webclient.util.Log;
 import org.waveprotocol.box.client.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.common.CommonConstants;
+import org.waveprotocol.wave.common.util.CharBase64;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.Delta;
 import org.waveprotocol.box.server.waveserver.ProtocolOpenRequest;

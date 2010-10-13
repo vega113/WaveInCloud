@@ -20,7 +20,6 @@ package org.waveprotocol.box.server.robots.dataapi;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.MapMaker;
-import com.google.common.util.CharBase64;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -31,6 +30,7 @@ import net.oauth.OAuthProblemException;
 
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.OAuthUtil;
+import org.waveprotocol.wave.common.util.CharBase64;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.security.SecureRandom;

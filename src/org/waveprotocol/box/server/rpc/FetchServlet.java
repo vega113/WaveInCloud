@@ -26,7 +26,7 @@ import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletStateException;
-import org.waveprotocol.wave.common.util.JavaWaverefEncoder;
+import org.waveprotocol.wave.common.util.jvm.JavaWaverefEncoder;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveViewSnapshot;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
