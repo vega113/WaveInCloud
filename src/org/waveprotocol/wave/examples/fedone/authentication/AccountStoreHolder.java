@@ -53,7 +53,7 @@ public class AccountStoreHolder {
    * @return the non-null default domain
    */
   public static String getDefaultDomain() {
-    Preconditions.checkNotNull(store, "Default domain not set");
+    Preconditions.checkNotNull(defaultDomain, "Default domain not set");
     return defaultDomain;
   }
   

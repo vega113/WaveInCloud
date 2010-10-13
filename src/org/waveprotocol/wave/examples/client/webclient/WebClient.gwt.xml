@@ -32,13 +32,13 @@
   <entry-point class='org.waveprotocol.wave.examples.client.webclient.client.WebClient'/>
 
   <set-property name="compiler.emulatedStack" value="true"/>
-  <set-property name="user.agent" value="safari"/>
 
   <set-configuration-property name="CssResource.obfuscationPrefix" value="SWC" />
   <set-configuration-property name="compiler.emulatedStack.recordFileNames" value="true" />
   <set-configuration-property name="compiler.emulatedStack.recordLineNumbers" value="true" />
 
-  <!-- These lines restrict the build for faster compiles in development -->
+  <!-- These lines restrict the build permutations for faster compiles in development. -->
+  <set-property name="user.agent" value="safari"/>
   <set-property name="client.type" value="default" />
   <set-property name="loglevel" value="debug" />
 </module>
