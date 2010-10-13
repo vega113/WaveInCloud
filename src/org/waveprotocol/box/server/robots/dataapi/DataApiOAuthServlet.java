@@ -38,12 +38,11 @@ import net.oauth.server.HttpRequestMessage;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.gxp.OAuthAuthorizeTokenPage;
 import org.waveprotocol.box.server.util.Log;
-import org.waveprotocol.wave.common.util.CharBase64;
+import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.security.SecureRandom;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
@@ -64,7 +63,6 @@ public class DataApiOAuthServlet extends HttpServlet {
   private static final String ANONYMOUS_TOKEN = "anonymous";
   private static final String ANONYMOUS_TOKEN_SECRET = "anonymous";
   private static final String HTML_CONTENT_TYPE = "text/html";
-  private static final SecureRandom RANDOM = new SecureRandom();
   private static final int TOKEN_LENGTH = 8;
   private static final int XSRF_TOKEN_TIMEOUT_HOURS = 12;
 
@@ -75,6 +73,7 @@ public class DataApiOAuthServlet extends HttpServlet {
   private final OAuthValidator validator;
   private final DataApiTokenContainer tokenContainer;
   private final SessionManager sessionManager;
+  private final TokenGenerator tokenGenerator;
   // TODO(ljvderijk): We should refactor this and use it for our other pages.
   private final ConcurrentMap<ParticipantId, String> xsrfTokens;
 
@@ -83,7 +82,7 @@ public class DataApiOAuthServlet extends HttpServlet {
       @Named("authorize_token_path") String authorizeTokenPath,
       @Named("access_token_path") String accessTokenPath, OAuthServiceProvider serviceProvider,
       OAuthValidator validator, DataApiTokenContainer tokenContainer,
-      SessionManager sessionManager) {
+      SessionManager sessionManager, TokenGenerator tokenGenerator) {
     this.requestTokenPath = requestTokenPath;
     this.authorizeTokenPath = authorizeTokenPath;
     this.accessTokenPath = accessTokenPath;
@@ -91,6 +90,7 @@ public class DataApiOAuthServlet extends HttpServlet {
     this.validator = validator;
     this.tokenContainer = tokenContainer;
     this.sessionManager = sessionManager;
+    this.tokenGenerator = tokenGenerator;
     this.xsrfTokens = new MapMaker().expiration(XSRF_TOKEN_TIMEOUT_HOURS, TimeUnit.HOURS).makeMap();
   }
 
@@ -347,20 +347,11 @@ public class DataApiOAuthServlet extends HttpServlet {
    */
   @VisibleForTesting
   String getOrGenerateXsrfToken(ParticipantId user) {
-    String token = generateXsrfToken();
+    String token = tokenGenerator.generateToken(TOKEN_LENGTH);
     String previousToken = xsrfTokens.putIfAbsent(user, token);
     if (previousToken != null) {
       token = previousToken;
     }
     return token;
-  }
-
-  /**
-   * Generates an XSRF token.
-   */
-  private String generateXsrfToken() {
-    byte[] bytes = new byte[TOKEN_LENGTH];
-    RANDOM.nextBytes(bytes);
-    return CharBase64.encodeWebSafe(bytes, false);
   }
 }

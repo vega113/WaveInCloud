@@ -17,6 +17,10 @@
 
 package org.waveprotocol.box.server.robots.dataapi;
 
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.google.gxp.com.google.common.base.Objects;
 
 import junit.framework.TestCase;
@@ -27,6 +31,7 @@ import net.oauth.OAuthProblemException;
 import net.oauth.OAuthServiceProvider;
 
 import org.waveprotocol.box.server.robots.dataapi.DataApiTokenContainer;
+import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 
@@ -38,13 +43,16 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 public class DataApiTokenContainerTest extends TestCase {
 
   private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
+  private static final String FAKE_TOKEN = "fake_token";
 
   private DataApiTokenContainer container;
   private OAuthConsumer consumer;
 
   @Override
   protected void setUp() throws Exception {
-    container = new DataApiTokenContainer();
+    TokenGenerator tokenGenerator = mock(TokenGenerator.class);
+    when(tokenGenerator.generateToken(anyInt())).thenReturn(FAKE_TOKEN);
+    container = new DataApiTokenContainer(tokenGenerator);
     OAuthServiceProvider serviceProvider = new OAuthServiceProvider("", "", "");
     consumer = new OAuthConsumer("", "consumerkey", "consumersecret", serviceProvider);
   }

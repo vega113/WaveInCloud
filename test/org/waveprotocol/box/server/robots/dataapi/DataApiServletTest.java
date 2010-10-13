@@ -18,6 +18,7 @@
 package org.waveprotocol.box.server.robots.dataapi;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -45,11 +46,10 @@ import net.oauth.OAuthValidator;
 
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.OperationServiceRegistry;
-import org.waveprotocol.box.server.robots.dataapi.DataApiServlet;
-import org.waveprotocol.box.server.robots.dataapi.DataApiTokenContainer;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
+import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.BufferedReader;
@@ -72,6 +72,7 @@ import javax.servlet.http.HttpServletResponse;
 public class DataApiServletTest extends TestCase {
 
   private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
+  private static final String FAKE_TOKEN = "fake_token";
 
   private RobotSerializer robotSerializer;
   private EventDataConverterManager converterManager;
@@ -93,7 +94,9 @@ public class DataApiServletTest extends TestCase {
     operationRegistry = mock(OperationServiceRegistry.class);
     ConversationUtil conversationUtil = mock(ConversationUtil.class);
     validator = mock(OAuthValidator.class);
-    tokenContainer = new DataApiTokenContainer();
+    TokenGenerator tokenGenerator = mock(TokenGenerator.class);
+    when(tokenGenerator.generateToken(anyInt())).thenReturn(FAKE_TOKEN);
+    tokenContainer = new DataApiTokenContainer(tokenGenerator);
 
     OAuthServiceProvider serviceProvider = new OAuthServiceProvider("", "", "");
     consumer = new OAuthConsumer("", "consumerkey", "consumersecret", serviceProvider);
@@ -121,7 +124,8 @@ public class DataApiServletTest extends TestCase {
     String responseValue = "response value";
     when(robotSerializer.serialize(any(), any(Type.class), any(ProtocolVersion.class))).thenReturn(
         responseValue);
-    when(req.getParameterMap()).thenReturn(getOAuthParams());
+    Map<String, String[]> params = getOAuthParams();
+    when(req.getParameterMap()).thenReturn(params);
 
     OperationService service = mock(OperationService.class);
     when(operationRegistry.getServiceFor(any(OperationType.class))).thenReturn(service);
@@ -147,7 +151,8 @@ public class DataApiServletTest extends TestCase {
   public void testDoPostUnauthorizedWhenValidationFails() throws Exception {
     doThrow(new OAuthException("")).when(validator).validateMessage(
         any(OAuthMessage.class), any(OAuthAccessor.class));
-    when(req.getParameterMap()).thenReturn(getOAuthParams());
+    Map<String, String[]> params = getOAuthParams();
+    when(req.getParameterMap()).thenReturn(params);
 
     servlet.doPost(req, resp);
 
