@@ -26,8 +26,10 @@ import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.account.RobotAccountDataImpl;
 import org.waveprotocol.box.server.gxp.robots.RobotRegistrationPage;
+import org.waveprotocol.box.server.gxp.robots.RobotRegistrationSuccessPage;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -45,22 +47,28 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class RobotRegistrationServlet extends HttpServlet {
 
+  private static final String CREATE_PATH = "/create";
+
+  private static final int TOKEN_LENGTH = 48;
+
   private static final Log LOG = Log.get(RobotRegistrationServlet.class);
 
   private final AccountStore accountStore;
   private final String domain;
+  private final TokenGenerator tokenGenerator;
 
   @Inject
-  private RobotRegistrationServlet(
-      AccountStore accountStore, @Named("wave_server_domain") String domain) {
+  private RobotRegistrationServlet(AccountStore accountStore,
+      @Named("wave_server_domain") String domain, TokenGenerator tokenGenerator) {
     this.accountStore = accountStore;
     this.domain = domain;
+    this.tokenGenerator = tokenGenerator;
   }
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String pathInfo = req.getPathInfo();
-    if (pathInfo.equals("/create")) {
+    if (CREATE_PATH.equals(pathInfo)) {
       doRegisterGet(req, resp, "");
     } else {
       resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -70,7 +78,7 @@ public class RobotRegistrationServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String pathInfo = req.getPathInfo();
-    if (pathInfo.equals("/create")) {
+    if (CREATE_PATH.equals(pathInfo)) {
       doRegisterPost(req, resp);
     } else {
       resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -129,14 +137,29 @@ public class RobotRegistrationServlet extends HttpServlet {
       robotLocation = robotLocation.substring(0, robotLocation.length() - 1);
     }
 
-    // TODO(ljvderijk): Implement the verification and handing out of consumer
-    // token steps.
-    RobotAccountData robotAccount =
-        new RobotAccountDataImpl(id, robotLocation, "secret", null, true);
+    // TODO(ljvderijk): Implement the verification.
+    RobotAccountData robotAccount = new RobotAccountDataImpl(
+        id, robotLocation, tokenGenerator.generateToken(TOKEN_LENGTH), null, true);
     accountStore.putAccount(robotAccount);
     LOG.info(robotAccount.getId() + " is now registered as a RobotAccount with Url "
         + robotAccount.getUrl());
 
-    doRegisterGet(req, resp, "Your Robot has been successfully registered.");
+    onRegisterSuccess(req, resp, robotAccount);
+  }
+
+  /**
+   * Shows the page that signals that a robot was successfully registered a
+   * robot. It will show the robot's token and token secret to use for the
+   * Active API.
+   *
+   * @param robotAccount the newly registered robot account.
+   */
+  private void onRegisterSuccess(
+      HttpServletRequest req, HttpServletResponse resp, RobotAccountData robotAccount)
+      throws IOException {
+    RobotRegistrationSuccessPage.write(resp.getWriter(), new GxpContext(req.getLocale()),
+        robotAccount.getId().getAddress(), robotAccount.getConsumerSecret());
+    resp.setContentType("text/html");
+    resp.setStatus(HttpServletResponse.SC_OK);
   }
 }
