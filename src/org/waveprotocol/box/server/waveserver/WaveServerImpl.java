@@ -121,6 +121,13 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       public void waveletDeltaUpdate(final WaveletName waveletName,
           List<ByteString> rawAppliedDeltas, final WaveletUpdateCallback callback) {
         Preconditions.checkArgument(!rawAppliedDeltas.isEmpty());
+
+        if (isLocalWavelet(waveletName)) {
+          LOG.warning("Remote tried to update local wavelet " + waveletName);
+          callback.onFailure(FederationErrors.badRequest("Received update to local wavelet"));
+          return;
+        }
+
         WaveletContainer wavelet = getWavelet(waveletName);
 
         if (wavelet != null && wavelet.getState() == State.CORRUPTED) {
@@ -172,8 +179,6 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // HACK(jochen): TODO: fix the case of the missing history! ###
           LOG.severe("DANGER WILL ROBINSON, WAVELET HISTORY IS INCOMPLETE!!!", e);
           error = e.getMessage();
-        } catch (HostingException e) {
-          error = e.getMessage();
         } catch (WaveServerException e) {
           error = e.getMessage();
         } catch (IllegalArgumentException e) {
@@ -221,6 +226,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
     if (!isLocalWavelet(waveletName)) {
       LOG.warning("Remote tried to submit to non-local wavelet " + waveletName);
       listener.onFailure(FederationErrors.badRequest("Non-local wavelet update"));
+      return;
     }
 
     // Disallow creation of wavelets by remote users.
