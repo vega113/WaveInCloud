@@ -31,9 +31,6 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
-import org.waveprotocol.box.server.robots.passive.Robot;
-import org.waveprotocol.box.server.robots.passive.RobotConnector;
-import org.waveprotocol.box.server.robots.passive.RobotsGateway;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.testing.DeferredExecutor;

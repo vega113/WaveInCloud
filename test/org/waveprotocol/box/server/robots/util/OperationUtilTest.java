@@ -39,8 +39,6 @@ import org.waveprotocol.box.server.robots.OperationResults;
 import org.waveprotocol.box.server.robots.OperationServiceRegistry;
 import org.waveprotocol.box.server.robots.RobotWaveletData;
 import org.waveprotocol.box.server.robots.operations.OperationService;
-import org.waveprotocol.box.server.robots.util.ConversationUtil;
-import org.waveprotocol.box.server.robots.util.OperationUtil;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;

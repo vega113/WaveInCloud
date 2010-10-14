@@ -26,7 +26,6 @@ import com.google.protobuf.UnknownFieldSet;
 import com.google.protobuf.Descriptors.MethodDescriptor;
 
 import org.waveprotocol.box.server.util.Log;
-import org.waveprotocol.box.server.rpc.Rpc;
 
 import java.io.IOException;
 import java.net.SocketAddress;

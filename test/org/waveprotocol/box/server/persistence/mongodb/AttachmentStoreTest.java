@@ -21,8 +21,6 @@ import com.mongodb.DB;
 
 import org.waveprotocol.box.server.persistence.AttachmentStore;
 import org.waveprotocol.box.server.persistence.AttachmentStoreTestBase;
-import org.waveprotocol.box.server.persistence.mongodb.MongoDbProvider;
-import org.waveprotocol.box.server.persistence.mongodb.MongoDbStore;
 
 /**
  * A wrapper around AttachmentStoreBase which tests the mongo-based attachment

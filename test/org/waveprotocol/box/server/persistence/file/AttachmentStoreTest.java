@@ -19,7 +19,6 @@ package org.waveprotocol.box.server.persistence.file;
 
 import org.waveprotocol.box.server.persistence.AttachmentStore;
 import org.waveprotocol.box.server.persistence.AttachmentStoreTestBase;
-import org.waveprotocol.box.server.persistence.file.FileAttachmentStore;
 
 import java.io.File;
 

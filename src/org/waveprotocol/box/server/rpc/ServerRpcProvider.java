@@ -23,11 +23,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.Service;
 import com.google.protobuf.UnknownFieldSet;
+import com.google.protobuf.Descriptors.MethodDescriptor;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -38,7 +38,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
 import org.waveprotocol.box.server.util.Log;
-import org.waveprotocol.box.server.rpc.Rpc;
 import org.waveprotocol.wave.model.util.Pair;
 
 import java.io.IOException;

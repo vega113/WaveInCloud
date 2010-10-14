@@ -30,7 +30,6 @@ import net.oauth.OAuthConsumer;
 import net.oauth.OAuthProblemException;
 import net.oauth.OAuthServiceProvider;
 
-import org.waveprotocol.box.server.robots.dataapi.DataApiTokenContainer;
 import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 

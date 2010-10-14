@@ -18,8 +18,8 @@
 package org.waveprotocol.box.server.robots;
 
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 

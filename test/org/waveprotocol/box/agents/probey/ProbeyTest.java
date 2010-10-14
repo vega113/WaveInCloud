@@ -28,7 +28,6 @@ import static org.waveprotocol.box.server.util.testing.Matchers.Aliases.contains
 
 import org.eclipse.jetty.server.Request;
 import org.mockito.ArgumentCaptor;
-import org.waveprotocol.box.agents.probey.Probey;
 import org.waveprotocol.box.client.ClientWaveView;
 import org.waveprotocol.box.client.testing.ClientTestingUtil;
 import org.waveprotocol.box.common.DocumentConstants;
@@ -42,8 +41,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletResponse;
 

@@ -20,8 +20,6 @@ package org.waveprotocol.box.server.persistence.mongodb;
 import com.mongodb.DB;
 
 import org.waveprotocol.box.server.persistence.CertPathStoreTestBase;
-import org.waveprotocol.box.server.persistence.mongodb.MongoDbProvider;
-import org.waveprotocol.box.server.persistence.mongodb.MongoDbStore;
 import org.waveprotocol.wave.crypto.CertPathStore;
 
 /**

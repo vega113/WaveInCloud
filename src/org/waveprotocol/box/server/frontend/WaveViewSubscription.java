@@ -22,6 +22,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.annotation.Nullable;
 
 /**

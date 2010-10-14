@@ -24,8 +24,6 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.client.ClientBackend;
 import org.waveprotocol.box.client.testing.ClientTestingUtil;
-import org.waveprotocol.box.server.agents.agent.AbstractAgent;
-import org.waveprotocol.box.server.agents.agent.AgentConnection;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.testing.ExceptionLogHandler;
 import org.waveprotocol.box.server.util.testing.TestingConstants;

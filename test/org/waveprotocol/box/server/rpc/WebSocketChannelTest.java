@@ -5,8 +5,6 @@ import com.google.protobuf.UnknownFieldSet;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.rpc.ProtoCallback;
-import org.waveprotocol.box.server.rpc.WebSocketChannel;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 
 /**

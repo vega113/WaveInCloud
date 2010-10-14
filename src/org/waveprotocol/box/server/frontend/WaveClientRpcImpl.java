@@ -43,6 +43,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collections;
 import java.util.List;
+
 import javax.annotation.Nullable;
 
 /**

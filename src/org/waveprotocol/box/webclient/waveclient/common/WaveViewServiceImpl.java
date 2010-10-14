@@ -18,9 +18,6 @@ package org.waveprotocol.box.webclient.waveclient.common;
 
 import com.google.gwt.user.client.Random;
 
-import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
-import org.waveprotocol.wave.concurrencycontrol.common.Delta;
-import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.box.server.waveserver.DocumentSnapshot;
 import org.waveprotocol.box.server.waveserver.ProtocolOpenRequest;
 import org.waveprotocol.box.server.waveserver.ProtocolSubmitRequest;
@@ -31,6 +28,9 @@ import org.waveprotocol.box.webclient.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
+import org.waveprotocol.wave.concurrencycontrol.common.Delta;
+import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;

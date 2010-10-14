@@ -19,8 +19,6 @@ package org.waveprotocol.box.server.authentication;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.authentication.PasswordDigest;
-
 import java.util.Arrays;
 
 /**

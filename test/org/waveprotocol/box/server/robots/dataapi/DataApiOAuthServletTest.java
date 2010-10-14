@@ -33,7 +33,6 @@ import com.google.common.collect.Maps;
 import junit.framework.TestCase;
 
 import net.oauth.OAuth;
-import net.oauth.OAuth.Parameter;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthException;
@@ -41,6 +40,7 @@ import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 import net.oauth.OAuthServiceProvider;
 import net.oauth.OAuthValidator;
+import net.oauth.OAuth.Parameter;
 
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.wave.model.id.TokenGenerator;

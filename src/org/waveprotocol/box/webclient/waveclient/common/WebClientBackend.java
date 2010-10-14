@@ -20,6 +20,9 @@ package org.waveprotocol.box.webclient.waveclient.common;
 import com.google.gwt.core.client.JavaScriptObject;
 
 import org.waveprotocol.box.common.CommonConstants;
+import org.waveprotocol.box.server.waveserver.ProtocolOpenRequest;
+import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
+import org.waveprotocol.box.server.waveserver.WaveletSnapshot;
 import org.waveprotocol.box.webclient.client.ClientEvents;
 import org.waveprotocol.box.webclient.client.WaveWebSocketClient;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
@@ -31,9 +34,6 @@ import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderD
 import org.waveprotocol.wave.common.util.CharBase64;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.Delta;
-import org.waveprotocol.box.server.waveserver.ProtocolOpenRequest;
-import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
-import org.waveprotocol.box.server.waveserver.WaveletSnapshot;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;

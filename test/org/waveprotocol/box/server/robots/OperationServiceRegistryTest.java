@@ -22,7 +22,6 @@ import com.google.wave.api.OperationType;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.robots.AbstractOperationServiceRegistry;
 import org.waveprotocol.box.server.robots.operations.DoNothingService;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 

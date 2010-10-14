@@ -20,7 +20,6 @@ package org.waveprotocol.box.server.authentication;
 import junit.framework.TestCase;
 
 import org.eclipse.jetty.util.MultiMap;
-import org.waveprotocol.box.server.authentication.HttpRequestBasedCallbackHandler;
 
 import java.io.IOException;
 

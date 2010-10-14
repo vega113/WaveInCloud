@@ -19,7 +19,6 @@ package org.waveprotocol.box.server.persistence.memory;
 
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.AccountStoreTestBase;
-import org.waveprotocol.box.server.persistence.memory.MemoryStore;
 
 /**
  * Testcases for the {@link MemoryStore} implementation of the

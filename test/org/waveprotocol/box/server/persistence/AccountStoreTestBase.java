@@ -29,7 +29,6 @@ import org.waveprotocol.box.server.account.HumanAccountDataImpl;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.account.RobotAccountDataImpl;
 import org.waveprotocol.box.server.authentication.PasswordDigest;
-import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.wave.ParticipantId;

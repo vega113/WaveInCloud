@@ -19,8 +19,6 @@ package org.waveprotocol.box.server.common;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.util.TestDataUtil;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;

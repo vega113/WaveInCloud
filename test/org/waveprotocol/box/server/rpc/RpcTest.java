@@ -23,10 +23,6 @@ import com.google.protobuf.RpcController;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.rpc.ClientRpcChannel;
-import org.waveprotocol.box.server.rpc.ClientRpcChannelImpl;
-import org.waveprotocol.box.server.rpc.ServerRpcProvider;
-import org.waveprotocol.box.server.rpc.Rpc;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest;

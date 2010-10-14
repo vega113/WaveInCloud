@@ -18,7 +18,6 @@
 package org.waveprotocol.box.server.persistence.memory;
 
 import org.waveprotocol.box.server.persistence.CertPathStoreTestBase;
-import org.waveprotocol.box.server.persistence.memory.MemoryStore;
 import org.waveprotocol.wave.crypto.CertPathStore;
 
 /**

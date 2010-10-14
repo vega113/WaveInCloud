@@ -17,11 +17,10 @@
 
 package org.waveprotocol.box.server.rpc;
 
-import java.io.IOException;
-
+import org.eclipse.jetty.websocket.WebSocket;
 import org.waveprotocol.box.server.util.Log;
 
-import org.eclipse.jetty.websocket.WebSocket;
+import java.io.IOException;
 
 /**
  * The server side of WebSocketChannel.

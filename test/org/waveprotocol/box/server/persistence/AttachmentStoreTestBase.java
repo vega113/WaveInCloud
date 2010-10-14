@@ -19,8 +19,6 @@ package org.waveprotocol.box.server.persistence;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.persistence.AttachmentStore;
-import org.waveprotocol.box.server.persistence.AttachmentUtil;
 import org.waveprotocol.box.server.persistence.AttachmentStore.AttachmentData;
 
 import java.io.BufferedReader;
