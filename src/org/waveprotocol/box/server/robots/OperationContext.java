@@ -36,6 +36,10 @@ import java.util.Map;
 /**
  * Context for performing robot operations.
  *
+ * <p>
+ * {@link OperationContext} throws {@link InvalidRequestException} because it is
+ * expected to be used together with an {@link OperationRequest}.
+ *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public interface OperationContext {
@@ -93,7 +97,8 @@ public interface OperationContext {
    *
    * @param waveId the wave id of the wavelet to open.
    * @param waveletId the wavelet id of the wavelet to open.
-   * @param participant the id of the participant that wants to open the wavelet.
+   * @param participant the id of the participant that wants to open the
+   *        wavelet.
    * @throws InvalidRequestException if the wavelet can not be opened.
    */
   OpBasedWavelet openWavelet(String waveId, String waveletId, ParticipantId participant)
@@ -121,9 +126,11 @@ public interface OperationContext {
    * conversation.
    *
    * @param conversation the conversation the blip belongs to.
-   * @param blipId the id of the blip, maybe be a temporary id.
+   * @param blipId the id of the blip, may be be a temporary id.
+   * @throws InvalidRequestException if the blip could not be retrieved or has
+   *         been deleted.
    */
-  ConversationBlip getBlip(Conversation conversation, String blipId);
+  ConversationBlip getBlip(Conversation conversation, String blipId) throws InvalidRequestException;
 
   /**
    * @return the converter to convert to API objects
@@ -136,14 +143,14 @@ public interface OperationContext {
    * @param operation the operation which contains the wave and wavelet id.
    * @return {@link OpBasedWavelet} object for the wavelet specified in this
    *         context.
-   * @throws InvalidRequestException if the wavelet could not be retrieved
+   * @throws InvalidRequestException if the wavelet could not be retrieved.
    */
   OpBasedWavelet getWavelet(OperationRequest operation, ParticipantId participant)
       throws InvalidRequestException;
 
   /**
-   * Returns {@link ConversationUtil} which is used to generate conversations and
-   * ids.
+   * Returns {@link ConversationUtil} which is used to generate conversations
+   * and ids.
    */
   ConversationUtil getConversationUtil();
 }
