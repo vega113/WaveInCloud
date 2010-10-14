@@ -33,7 +33,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.DeltaSequence;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
-import org.waveprotocol.box.server.util.EmptyDeltaException;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.crypto.SignatureException;
@@ -229,23 +228,25 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       return;
     }
 
-    // Disallow creation of wavelets by remote users.
+    ProtocolWaveletDelta delta;
     try {
-      ByteStringMessage<ProtocolWaveletDelta> delta =
-          ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta());
-      if (delta.getMessage().getHashedVersion().getVersion() == 0) {
-        LOG.warning("Remote user tried to submit delta at version 0 - disallowed. " + signedDelta);
-        listener.onFailure(FederationErrors.badRequest("Remote users may not create wavelets."));
-        return;
-      }
+      delta = ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta()).getMessage();
     } catch (InvalidProtocolBufferException e) {
+      LOG.warning("Submit request: Invalid delta protobuf. WaveletName: " + waveletName, e);
       listener.onFailure(FederationErrors.badRequest("Signed delta contains invalid delta"));
+      return;
+    }
+
+    // Disallow creation of wavelets by remote users.
+    if (delta.getHashedVersion().getVersion() == 0) {
+      LOG.warning("Remote user tried to submit delta at version 0 - disallowed. " + signedDelta);
+      listener.onFailure(FederationErrors.badRequest("Remote users may not create wavelets."));
       return;
     }
 
     try {
       certificateManager.verifyDelta(signedDelta);
-      submitDelta(waveletName, signedDelta, listener);
+      submitDelta(waveletName, delta, signedDelta, listener);
     } catch (SignatureException e) {
       LOG.warning("Submit request: Delta failed verification. WaveletName: " + waveletName +
           " delta: " + signedDelta, e);
@@ -399,11 +400,16 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   @Override
   public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
       final SubmitRequestListener listener) {
-    // The serialised version of this delta happens now.  This should be the only place, ever!
-    ProtocolSignedDelta signedDelta = certificateManager.signDelta(
-        ByteStringMessage.serializeMessage(delta));
+    if (delta.getOperationCount() == 0) {
+      listener.onFailure("Empty delta at version " + delta.getHashedVersion().getVersion());
+      return;
+    }
 
-    submitDelta(waveletName, signedDelta, new SubmitResultListener() {
+    // The serialised version of this delta happens now.  This should be the only place, ever!
+    ProtocolSignedDelta signedDelta =
+        certificateManager.signDelta(ByteStringMessage.serializeMessage(delta));
+
+    submitDelta(waveletName, delta, signedDelta, new SubmitResultListener() {
       @Override
       public void onFailure(FederationError errorMessage) {
         listener.onFailure(errorMessage.getErrorMessage());
@@ -571,28 +577,26 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    * Submit the delta to local or remote wavelets, return results via listener.
    * Also broadcast updates to federationHosts and clientFrontend.
    *
+   * @param waveletName the wavelet to apply the delta to
+   * @param delta the {@link ProtocolWaveletDelta} inside {@code signedDelta}
+   * @param signedDelta the signed delta
+   * @param resultListener callback
+   *
    * TODO: for now a the WaveletFederationProvider will have
    *               made sure this is a local wavelet. Once we support
    *               federated groups, that test should be removed.
    */
-  private void submitDelta(final WaveletName waveletName, final ProtocolSignedDelta delta,
-      final SubmitResultListener resultListener) {
-    ByteStringMessage<ProtocolWaveletDelta> waveletDelta;
-    try {
-      waveletDelta = ByteStringMessage.parseProtocolWaveletDelta(delta.getDelta());
-    } catch (InvalidProtocolBufferException e) {
-      throw new IllegalArgumentException("Signed delta does not contain valid wavelet delta", e);
-    }
+  private void submitDelta(final WaveletName waveletName, ProtocolWaveletDelta delta,
+      final ProtocolSignedDelta signedDelta, final SubmitResultListener resultListener) {
+    Preconditions.checkArgument(delta.getOperationCount() > 0, "empty delta");
 
     if (isLocalWavelet(waveletName)) {
-      LocalWaveletContainer wc = null;
-
       try {
-        LOG.info("## WS: Got submit: " + waveletName + " delta: " + waveletDelta);
+        LOG.info("## WS: Got submit: " + waveletName + " delta: " + delta);
 
         // TODO(arb): add v0 policer here.
-        wc = getOrCreateLocalWavelet(waveletName,
-            new ParticipantId(waveletDelta.getMessage().getAuthor()));
+        LocalWaveletContainer wc =
+            getOrCreateLocalWavelet(waveletName, new ParticipantId(delta.getAuthor()));
 
         /*
          * Synchronise on the wavelet container so that updates passed to clientListener and
@@ -607,7 +611,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // Get the host domains before applying the delta in case
           // the delta contains a removeParticipant operation.
           Set<String> hostDomains = Sets.newHashSet(getParticipantDomains(wc));
-          DeltaApplicationResult submitResult = wc.submitRequest(waveletName, delta);
+          DeltaApplicationResult submitResult = wc.submitRequest(waveletName, signedDelta);
           ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
               submitResult.getAppliedDelta();
 
@@ -618,6 +622,11 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           LOG.info("## WS: Submit result: " + waveletName + " appliedDelta: " + appliedDelta);
           resultListener.onSuccess(appliedDelta.getMessage().getOperationsApplied(),
               resultVersionProto, appliedDelta.getMessage().getApplicationTimestamp());
+
+          // This is always false right now since the current algorithm doesn't transform ops away.
+          if (appliedDelta.getMessage().getOperationsApplied() == 0) {
+            return; // ignore the delta (don't publish it), it was transformed away
+          }
 
           // Send the results to subscribers.
           LOG.info("Sending update to client listener: " + submitResult.getDelta());
@@ -674,19 +683,16 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       } catch (InvalidHashException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
-      } catch (EmptyDeltaException e) {
-        // This is okay, just succeed silently.  Use an empty timestamp since nothing was applied.
-        resultListener.onSuccess(
-            0, CoreWaveletOperationSerializer.serialize(wc.getCurrentVersion()), 0);
       }
     } else {
       // For remote wavelets post required signatures to the authorative server then send delta
-      postAllSignerInfo(delta.getSignatureList(), waveletName.waveletId.getDomain(),
+      postAllSignerInfo(signedDelta.getSignatureList(), waveletName.waveletId.getDomain(),
           new PostSignerInfoCallback() {
             @Override public void done(int successCount) {
               LOG.info("Remote: successfully sent " + successCount + " of "
-                  + delta.getSignatureCount() + " certs to " + waveletName.waveletId.getDomain());
-              federationRemote.submitRequest(waveletName, delta, resultListener);
+                  + signedDelta.getSignatureCount() + " certs to "
+                  + waveletName.waveletId.getDomain());
+              federationRemote.submitRequest(waveletName, signedDelta, resultListener);
             }
           });
     }

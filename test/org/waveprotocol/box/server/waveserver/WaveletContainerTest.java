@@ -25,7 +25,6 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.util.EmptyDeltaException;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -218,12 +217,12 @@ public class WaveletContainerTest extends TestCase {
     try {
       localWavelet.submitRequest(waveletName, emptyDelta);
       fail("Should fail");
-    } catch (EmptyDeltaException e) {
+    } catch (IllegalArgumentException e) {
       // Correct
     }
   }
 
-  public void testOperationsOfDifferentSizes() throws EmptyDeltaException, OperationException {
+  public void testOperationsOfDifferentSizes() throws OperationException {
     String docId = "b+somedoc";
     BufferedDocOp docOp1 = new DocOpBuilder().characters("hi").build();
     CoreWaveletDelta delta1 =
@@ -301,7 +300,7 @@ public class WaveletContainerTest extends TestCase {
    * Applies and commits a delta to a wavelet container.
    */
   private static void applyDeltaToWavelet(WaveletContainerImpl wavelet, CoreWaveletDelta delta)
-      throws OperationException, EmptyDeltaException {
+      throws OperationException {
     ProtocolWaveletDelta protoDelta = serialize(delta);
     ByteStringMessage<ProtocolWaveletDelta> deltaByteString =
         ByteStringMessage.serializeMessage(protoDelta);
