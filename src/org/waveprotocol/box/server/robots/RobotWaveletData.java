@@ -48,6 +48,12 @@ import java.util.Map.Entry;
  * possibly different participants and can offer up these operations as a list
  * of deltas.
  *
+ * <p>
+ * TODO(ljvderijk): Possible limitation of this class occurs when a robot wants
+ * to execute operations for multiple users in the same request where operations
+ * from different users depend on each other. The code will apply each operation
+ * to the snapshot given upon construction and not the most up to date one.
+ *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public class RobotWaveletData {
