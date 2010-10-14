@@ -34,6 +34,7 @@ import com.google.wave.api.impl.EventMessageBundle;
 import com.google.wave.api.robot.Capability;
 import com.google.wave.api.robot.RobotName;
 
+import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
@@ -47,17 +48,12 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
-import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.WaveletListener;
-import org.waveprotocol.wave.model.wave.data.DocumentFactory;
-import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
-import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
-import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 import org.waveprotocol.wave.model.wave.opbased.WaveletListenerImpl;
 
@@ -258,10 +254,6 @@ public class EventGenerator {
     return rootBlipId;
   }
 
-  // TODO(ljvderijk): Schemas should be enforced, see issue 109.
-  private final static DocumentFactory<DocumentOperationSink> DOCUMENT_FACTORY =
-      new MuteDocumentFactory(SchemaCollection.empty());
-
   /**
    * The name of the Robot to which this {@link EventGenerator} belongs. Used
    * for events where "self" is important.
@@ -299,8 +291,8 @@ public class EventGenerator {
       messages.setProxyingFor(robotName.getProxyFor());
     }
 
-    ObservableWaveletData snapshot = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(
-        waveletAndDeltas.getSnapshotBeforeDeltas());
+    ObservableWaveletData snapshot =
+        WaveletDataUtil.copyWavelet(waveletAndDeltas.getSnapshotBeforeDeltas());
 
     OpBasedWavelet wavelet =
         new OpBasedWavelet(snapshot.getWaveId(), snapshot, WaveletOperationContext.Factory.READONLY,

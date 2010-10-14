@@ -26,11 +26,12 @@ import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.testing.BasicFactories;
+import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
+import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -47,7 +48,10 @@ import java.util.List;
  */
 public final class WaveletDataUtil {
 
-  private static final DocumentFactory<?> DOCUMENT_FACTORY = BasicFactories.muteDocumentFactory();
+  // TODO(ljvderijk): Schemas should be enforced, see issue 109.
+  private static final ObservableWaveletData.Factory<?> WAVELET_FACTORY =
+      WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
+
   private WaveletDataUtil() {
   }
 
@@ -133,8 +137,18 @@ public final class WaveletDataUtil {
    */
   public static ObservableWaveletData createEmptyWavelet(
       WaveletName waveletName, ParticipantId author, long creationTimeStamp) {
-    return WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(new EmptyWaveletSnapshot(
+    return copyWavelet(new EmptyWaveletSnapshot(
         waveletName.waveId, waveletName.waveletId, author, creationTimeStamp));
+  }
+
+  /**
+   * Copies a wavelet.
+   *
+   * @param wavelet the wavelet to copy.
+   * @return A mutable copy.
+   */
+  public static ObservableWaveletData copyWavelet(ReadableWaveletData wavelet) {
+    return WAVELET_FACTORY.create(wavelet);
   }
 
   /**
