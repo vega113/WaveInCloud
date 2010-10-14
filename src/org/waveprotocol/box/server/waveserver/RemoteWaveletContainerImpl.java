@@ -326,7 +326,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           LOG.warning("Got delta from the past: " + appliedDelta);
         }
 
-        pendingDeltas.remove(appliedDelta);
+        pendingDeltas.remove(appliedAt);
       }
 
       if (!haveRequestedHistory) {
