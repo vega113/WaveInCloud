@@ -218,6 +218,11 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   @Override
   public void submitRequest(WaveletName waveletName, ProtocolSignedDelta signedDelta,
       SubmitResultListener listener) {
+    if (!isLocalWavelet(waveletName)) {
+      LOG.warning("Remote tried to submit to non-local wavelet " + waveletName);
+      listener.onFailure(FederationErrors.badRequest("Non-local wavelet update"));
+    }
+
     // Disallow creation of wavelets by remote users.
     try {
       ByteStringMessage<ProtocolWaveletDelta> delta =
@@ -233,12 +238,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
     }
 
     try {
-      checkWaveletHosting(true, waveletName);
       certificateManager.verifyDelta(signedDelta);
       submitDelta(waveletName, signedDelta, listener);
-    } catch (HostingException e) {
-      LOG.warning("Remote tried to submit to local wavelet", e);
-      listener.onFailure(FederationErrors.badRequest("Local wavelet update"));
     } catch (SignatureException e) {
       LOG.warning("Submit request: Delta failed verification. WaveletName: " + waveletName +
           " delta: " + signedDelta, e);
@@ -482,28 +483,17 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
     return isLocal;
   }
 
-  private void checkWaveletHosting(boolean isLocal, WaveletName waveletName)
-      throws HostingException {
-    boolean l = isLocalWavelet(waveletName);
-    if (l != isLocal) {
-      throw new HostingException("Wavelet (" + waveletName + ") which is " +
-          (l ? "local" : "remote") + " should have been " + (l ? "remote." : "local."));
-    }
-  }
-
   /**
    * Returns a container for a remote wavelet. If it doesn't exist, it will be created.
    * This method is only called in response to a Federation Remote doing an update
    * or commit on this wavelet.
    *
    * @param waveletName name of wavelet
-   * @throws HostingException if the name refers to a local wavelet.
    * @return an existing or new instance.
-   * @throws IllegalArgumentException on bad wavelet name
+   * @throws IllegalArgumentException if the name refers to a local wavelet.
    */
-  private RemoteWaveletContainer getOrCreateRemoteWavelet(WaveletName waveletName) throws
-      HostingException {
-    checkWaveletHosting(false, waveletName);
+  private RemoteWaveletContainer getOrCreateRemoteWavelet(WaveletName waveletName) {
+    Preconditions.checkArgument(!isLocalWavelet(waveletName), "%s is local", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
       // This will blow up if we messed up and put a local wavelet in by mistake.
@@ -524,15 +514,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    *
    * @param waveletName name of wavelet
    * @param participantId on who's behalf this wavelet is to be accessed.
-   * @throws HostingException if the name refers to a local wavelet.
-   * @throws AccessControlException if the participant may not access the wavelet.
    * @return an existing or new instance.
+   * @throws AccessControlException if the participant may not access the wavelet.
+   * @throws IllegalArgumentException if the name refers to a remote wavelet.
    * @throws WaveletStateException if the wavelet is in a bad state.
    */
   private LocalWaveletContainer getOrCreateLocalWavelet(WaveletName waveletName,
-      ParticipantId participantId) throws
-      HostingException, AccessControlException, WaveletStateException {
-    checkWaveletHosting(true, waveletName);
+      ParticipantId participantId) throws AccessControlException, WaveletStateException {
+    Preconditions.checkArgument(isLocalWavelet(waveletName), "%s is remote", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
       // This will blow up if we messed up and put a remote wavelet in by mistake.
@@ -673,9 +662,6 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       } catch (IllegalArgumentException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
-      } catch (HostingException e) {
-        throw new IllegalStateException(
-            "Should not get HostingException after checking isLocalWavelet", e);
       } catch (InvalidProtocolBufferException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
