@@ -23,6 +23,7 @@ import org.waveprotocol.box.server.robots.AbstractOperationServiceRegistry;
 import org.waveprotocol.box.server.robots.operations.AppendBlipService;
 import org.waveprotocol.box.server.robots.operations.CreateWaveletService;
 import org.waveprotocol.box.server.robots.operations.DoNothingService;
+import org.waveprotocol.box.server.robots.operations.FetchWaveService;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 
 /**
@@ -43,5 +44,6 @@ public final class DataApiOperationServiceRegistry extends AbstractOperationServ
     register(OperationType.ROBOT_NOTIFY_CAPABILITIES_HASH, DoNothingService.create());
     register(OperationType.WAVELET_APPEND_BLIP, AppendBlipService.create());
     register(OperationType.ROBOT_CREATE_WAVELET, CreateWaveletService.create());
+    register(OperationType.ROBOT_FETCH_WAVE, FetchWaveService.create());
   }
 }

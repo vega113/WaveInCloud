@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import org.waveprotocol.wave.model.conversation.Conversation;
+import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveBasedConversationView;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
@@ -70,5 +71,15 @@ public class ConversationUtil {
    */
   public WaveletName generateWaveletName() {
     return WaveletName.of(idGenerator.newWaveId(), idGenerator.newConversationRootWaveletId());
+  }
+
+  /**
+   * Returns the blip id of the first blip in the root thread.
+   *
+   * @param conversation the conversation to get the blip id from.
+   */
+  public static String getRootBlipId(Conversation conversation) {
+    ConversationBlip rootBlip = conversation.getRootThread().getFirstBlip();
+    return (rootBlip != null) ? rootBlip.getId() : "";
   }
 }

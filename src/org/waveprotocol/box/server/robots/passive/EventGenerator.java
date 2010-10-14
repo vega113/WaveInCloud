@@ -37,7 +37,6 @@ import com.google.wave.api.robot.RobotName;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.wave.model.conversation.Conversation;
-import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationListenerImpl;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
@@ -141,7 +140,7 @@ public class EventGenerator {
       // event, even if it wasn't present in your capabilities.
       if (capabilities.containsKey(EventType.WAVELET_SELF_ADDED) && participant.equals(robotId)) {
         // The robot has been added
-        String rootBlipId = getRootBlipId(conversation);
+        String rootBlipId = ConversationUtil.getRootBlipId(conversation);
         WaveletSelfAddedEvent event = new WaveletSelfAddedEvent(
             null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId);
         addEvent(event, capabilities, rootBlipId, messages);
@@ -155,7 +154,7 @@ public class EventGenerator {
       }
 
       if (capabilities.containsKey(EventType.WAVELET_SELF_REMOVED) && participant.equals(robotId)) {
-        String rootBlipId = getRootBlipId(conversation);
+        String rootBlipId = ConversationUtil.getRootBlipId(conversation);
         WaveletSelfRemovedEvent event = new WaveletSelfRemovedEvent(
             null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId);
         addEvent(event, capabilities, rootBlipId, messages);
@@ -165,7 +164,7 @@ public class EventGenerator {
     @Override
     public void onBlipAdded(ObservableConversationBlip blip) {
       if (capabilities.containsKey(EventType.WAVELET_BLIP_CREATED)) {
-        String rootBlipId = getRootBlipId(conversation);
+        String rootBlipId = ConversationUtil.getRootBlipId(conversation);
         WaveletBlipCreatedEvent event = new WaveletBlipCreatedEvent(
             null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId, blip.getId());
         addEvent(event, capabilities, rootBlipId, messages);
@@ -175,7 +174,7 @@ public class EventGenerator {
     @Override
     public void onBlipDeleted(ObservableConversationBlip blip) {
       if (capabilities.containsKey(EventType.WAVELET_BLIP_REMOVED)) {
-        String rootBlipId = getRootBlipId(conversation);
+        String rootBlipId = ConversationUtil.getRootBlipId(conversation);
         WaveletBlipRemovedEvent event = new WaveletBlipRemovedEvent(
             null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId, blip.getId());
         addEvent(event, capabilities, rootBlipId, messages);
@@ -187,7 +186,7 @@ public class EventGenerator {
      */
     public void deltaEnd() {
       if (!participantsAdded.isEmpty() || !participantsRemoved.isEmpty()) {
-        String rootBlipId = getRootBlipId(conversation);
+        String rootBlipId = ConversationUtil.getRootBlipId(conversation);
 
         WaveletParticipantsChangedEvent event =
             new WaveletParticipantsChangedEvent(null, null, deltaAuthor.getAddress(),
@@ -241,17 +240,6 @@ public class EventGenerator {
     }
     // Add the event to the bundle.
     messages.addEvent(event);
-  }
-
-  /**
-   * Returns the blip id of the first blip in the root thread.
-   *
-   * @param conversation the conversation to get the blip id from.
-   */
-  private static String getRootBlipId(Conversation conversation) {
-    ConversationBlip rootBlip = conversation.getRootThread().getFirstBlip();
-    String rootBlipId = (rootBlip != null) ? rootBlip.getId() : "";
-    return rootBlipId;
   }
 
   /**
