@@ -18,8 +18,8 @@
 package org.waveprotocol.box.server.robots;
 
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 
@@ -136,7 +136,7 @@ public interface OperationContext {
    * @param operation the operation which contains the wave and wavelet id.
    * @return {@link OpBasedWavelet} object for the wavelet specified in this
    *         context.
-   * @throws InvalidRequestException if the wave could not be retrieved
+   * @throws InvalidRequestException if the wavelet could not be retrieved
    */
   OpBasedWavelet getWavelet(OperationRequest operation, ParticipantId participant)
       throws InvalidRequestException;

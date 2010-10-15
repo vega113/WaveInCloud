@@ -30,7 +30,7 @@ import javax.servlet.http.HttpSession;
  */
 public interface SessionManager {
 
-  static final String AUTH_URL = "/auth";
+  static final String SIGN_IN_URL = "/auth/signin";
 
   /**
    * Get the participant id of the currently logged in user from the user's HTTP

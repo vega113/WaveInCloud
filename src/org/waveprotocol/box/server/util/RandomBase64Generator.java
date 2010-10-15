@@ -18,8 +18,9 @@
 package org.waveprotocol.box.server.util;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.util.Random;
+
 import java.security.SecureRandom;
+import java.util.Random;
 
 /**
  * Produces sequence of pseudo-random id strings.

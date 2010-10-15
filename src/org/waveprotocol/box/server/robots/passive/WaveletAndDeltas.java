@@ -28,15 +28,10 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
-import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.model.wave.data.DocumentFactory;
-import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
-import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
-import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.Collections;
 import java.util.List;
@@ -47,9 +42,6 @@ import java.util.List;
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public class WaveletAndDeltas {
-
-  private static final DocumentFactory<DocumentOperationSink> DOCUMENT_FACTORY =
-      new MuteDocumentFactory(SchemaCollection.empty());
 
   /**
    * Snapshot of the wavelet before any deltas are applied.
@@ -99,11 +91,9 @@ public class WaveletAndDeltas {
     Preconditions.checkArgument(
         areContiguousDeltas(deltas), "Deltas are not contiguous: " + deltas);
 
-    ObservableWaveletData preDeltaWavelet =
-        WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(snapshot);
+    ObservableWaveletData preDeltaWavelet = WaveletDataUtil.copyWavelet(snapshot);
     rollback(preDeltaWavelet, deltas);
-    ObservableWaveletData postDeltaWavelet =
-        WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(snapshot);
+    ObservableWaveletData postDeltaWavelet = WaveletDataUtil.copyWavelet(snapshot);
     return new WaveletAndDeltas(preDeltaWavelet, postDeltaWavelet, deltas, resultingVersion);
   }
 
@@ -252,7 +242,7 @@ public class WaveletAndDeltas {
 
     // TODO(ljvderijk): This should actually be applying the deltas, however
     // they do not contain a timestamp at this time.
-    snapshotAfterDeltas = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(updatedSnapshot);
+    snapshotAfterDeltas = WaveletDataUtil.copyWavelet(updatedSnapshot);
     deltas.addAll(newDeltas);
     currentVersion = newVersion;
   }

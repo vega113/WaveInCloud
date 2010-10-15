@@ -17,9 +17,9 @@
 
 package org.waveprotocol.box.server.rpc;
 
+import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
-import com.google.protobuf.Message;
 
 /**
  * Implements the client end-point of a wave server RPC connection. This class

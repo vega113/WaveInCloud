@@ -22,7 +22,6 @@ import static org.waveprotocol.wave.model.id.IdConstants.CONVERSATION_ROOT_WAVEL
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.frontend.IndexWave;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;

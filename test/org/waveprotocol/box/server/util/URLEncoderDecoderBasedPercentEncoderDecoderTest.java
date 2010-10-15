@@ -16,10 +16,9 @@
 
 package org.waveprotocol.box.server.util;
 
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder;
-
 import junit.framework.TestCase;
+
+import org.waveprotocol.wave.model.id.URIEncoderDecoder;
 
 /**
  * Tests {@link URLEncoderDecoderBasedPercentEncoderDecoder}.

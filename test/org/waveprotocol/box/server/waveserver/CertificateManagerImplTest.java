@@ -31,10 +31,6 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
-import org.waveprotocol.box.server.waveserver.ByteStringMessage;
-import org.waveprotocol.box.server.waveserver.CertificateManager;
-import org.waveprotocol.box.server.waveserver.CertificateManagerImpl;
-import org.waveprotocol.box.server.waveserver.SigningSignatureHandler;
 import org.waveprotocol.box.server.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.box.server.waveserver.testing.Certificates;
 import org.waveprotocol.wave.crypto.CachedCertPathValidator;

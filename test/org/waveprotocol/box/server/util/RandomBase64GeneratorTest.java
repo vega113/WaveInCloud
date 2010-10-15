@@ -18,8 +18,6 @@ package org.waveprotocol.box.server.util;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.util.RandomBase64Generator;
-
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Random;

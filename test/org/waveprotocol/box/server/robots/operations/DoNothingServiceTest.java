@@ -26,8 +26,6 @@ import com.google.wave.api.data.converter.EventDataConverter;
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.robots.OperationContextImpl;
-import org.waveprotocol.box.server.robots.operations.DoNothingService;
-import org.waveprotocol.box.server.robots.operations.OperationService;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.wave.ParticipantId;

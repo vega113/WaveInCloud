@@ -30,7 +30,6 @@ import org.waveprotocol.box.server.account.HumanAccountDataImpl;
 import org.waveprotocol.box.server.authentication.PasswordDigest;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
-import org.waveprotocol.box.server.rpc.UserRegistrationServlet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;

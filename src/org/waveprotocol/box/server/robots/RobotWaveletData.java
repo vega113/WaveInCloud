@@ -30,12 +30,9 @@ import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFa
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
-import org.waveprotocol.wave.model.testing.BasicFactories;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
-import org.waveprotocol.wave.model.wave.data.DocumentFactory;
-import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
@@ -51,12 +48,15 @@ import java.util.Map.Entry;
  * possibly different participants and can offer up these operations as a list
  * of deltas.
  *
+ * <p>
+ * TODO(ljvderijk): Possible limitation of this class occurs when a robot wants
+ * to execute operations for multiple users in the same request where operations
+ * from different users depend on each other. The code will apply each operation
+ * to the snapshot given upon construction and not the most up to date one.
+ *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public class RobotWaveletData {
-
-  private static final DocumentFactory<DocumentOperationSink> DOCUMENT_FACTORY =
-      BasicFactories.muteDocumentFactory();
 
   private final ReadableWaveletData snapshot;
 
@@ -82,7 +82,7 @@ public class RobotWaveletData {
    *        to generate deltas.
    */
   public RobotWaveletData(ReadableWaveletData snapshot, HashedVersion committedVersion) {
-    this.snapshot = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(snapshot);
+    this.snapshot = WaveletDataUtil.copyWavelet(snapshot);
     this.snapshotVersion = committedVersion;
   }
 

@@ -42,6 +42,7 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.Collection;
 import java.util.Map;
+
 import javax.annotation.Nullable;
 
 /**

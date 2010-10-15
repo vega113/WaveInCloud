@@ -20,7 +20,6 @@ package org.waveprotocol.box.server.waveserver;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.waveprotocol.box.server.util.EmptyDeltaException;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -53,7 +52,7 @@ interface LocalWaveletContainer extends WaveletContainer {
    */
   public DeltaApplicationResult submitRequest(WaveletName waveletName, ProtocolSignedDelta delta)
       throws OperationException, WaveletStateException, InvalidProtocolBufferException,
-      InvalidHashException, EmptyDeltaException;
+      InvalidHashException;
 
   /**
    * Check whether a submitted delta (identified by its hashed version after application) was

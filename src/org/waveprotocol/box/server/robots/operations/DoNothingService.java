@@ -18,8 +18,8 @@
 package org.waveprotocol.box.server.robots.operations;
 
 import com.google.gxp.com.google.common.collect.Maps;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.wave.model.wave.ParticipantId;

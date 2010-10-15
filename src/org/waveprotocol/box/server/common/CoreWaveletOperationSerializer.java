@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 
+import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
@@ -52,13 +53,10 @@ import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 import org.waveprotocol.wave.model.wave.data.core.impl.CoreWaveletDataImpl;
 import org.waveprotocol.wave.model.wave.data.impl.DataUtil;
-import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
-import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.List;
 import java.util.Map;
@@ -70,9 +68,6 @@ import java.util.Map;
  *
  */
 public class CoreWaveletOperationSerializer {
-
-  private static DocumentFactory<?> DOCUMENT_FACTORY =
-      ObservablePluggableMutableDocument.createFactory(SchemaCollection.empty());
 
   private CoreWaveletOperationSerializer() {
   }
@@ -468,8 +463,7 @@ public class CoreWaveletOperationSerializer {
     ObservableWaveletData immutableWaveletData =
         DataUtil.fromCoreWaveletData(coreWavelet, distinctVersion, SchemaCollection.empty());
 
-    ObservableWaveletData wavelet =
-        WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(immutableWaveletData);
+    ObservableWaveletData wavelet = WaveletDataUtil.copyWavelet(immutableWaveletData);
 
     for (String participant : snapshot.getParticipantIdList()) {
       wavelet.addParticipant(new ParticipantId(participant));

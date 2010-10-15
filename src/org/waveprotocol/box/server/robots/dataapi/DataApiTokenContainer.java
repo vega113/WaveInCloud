@@ -30,10 +30,9 @@ import net.oauth.OAuthProblemException;
 
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.OAuthUtil;
-import org.waveprotocol.wave.common.util.CharBase64;
+import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
-import java.security.SecureRandom;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
@@ -46,10 +45,9 @@ import java.util.concurrent.TimeUnit;
 public final class DataApiTokenContainer {
 
   private static final Log LOG = Log.get(DataApiTokenContainer.class);
-  private static final SecureRandom RANDOM = new SecureRandom();
 
-  /** Number of bytes to use to generate a token */
-  private static final int TOKEN_LENGTH = 16;
+  /** Length of a token in number of characters */
+  private static final int TOKEN_LENGTH = 48;
 
   /** Number of minutes a request token is valid */
   private static final int REQUEST_TOKEN_EXPIRATION = 10;
@@ -67,9 +65,14 @@ public final class DataApiTokenContainer {
   /** Map containing the authorized accessors indexed on the access token */
   private ConcurrentMap<String, OAuthAccessor> accessTokenAccessors;
 
+  /** Used to generate OAuth tokens */
+  private final TokenGenerator tokenGenerator;
+
   @Inject
   @VisibleForTesting
-  DataApiTokenContainer() {
+  DataApiTokenContainer(TokenGenerator tokenGenerator) {
+    this.tokenGenerator = tokenGenerator;
+
     requestTokenAccessors =
         new MapMaker().expiration(REQUEST_TOKEN_EXPIRATION, TimeUnit.MINUTES).makeMap();
     accessTokenAccessors =
@@ -213,8 +216,6 @@ public final class DataApiTokenContainer {
    * Generates an OAuth token.
    */
   private String generateToken() {
-    byte[] bytes = new byte[TOKEN_LENGTH];
-    RANDOM.nextBytes(bytes);
-    return CharBase64.encodeWebSafe(bytes, false);
+    return tokenGenerator.generateToken(TOKEN_LENGTH);
   }
 }

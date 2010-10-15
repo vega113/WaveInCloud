@@ -22,7 +22,7 @@ import com.google.inject.name.Named;
 
 import org.waveprotocol.box.server.persistence.AttachmentStore;
 import org.waveprotocol.box.server.persistence.AttachmentUtil;
-import org.waveprotocol.wave.common.util.CharBase64;
+import org.waveprotocol.wave.model.util.CharBase64;
 
 import java.io.File;
 import java.io.FileInputStream;

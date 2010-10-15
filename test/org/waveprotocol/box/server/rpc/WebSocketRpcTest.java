@@ -16,10 +16,6 @@
 
 package org.waveprotocol.box.server.rpc;
 
-import org.waveprotocol.box.server.rpc.ClientRpcChannel;
-import org.waveprotocol.box.server.rpc.ServerRpcProvider;
-import org.waveprotocol.box.server.rpc.WebSocketClientRpcChannel;
-
 import java.io.IOException;
 
 public class WebSocketRpcTest extends RpcTest {

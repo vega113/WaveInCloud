@@ -19,8 +19,8 @@ package org.waveprotocol.box.server.robots.operations;
 
 import com.google.wave.api.BlipData;
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.event.WaveletBlipCreatedEvent;
 
 import org.waveprotocol.box.server.robots.OperationContext;

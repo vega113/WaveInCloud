@@ -17,9 +17,9 @@
 
 package org.waveprotocol.box.webclient.client.events;
 
-import org.waveprotocol.wave.model.id.WaveId;
-
 import com.google.gwt.event.shared.GwtEvent;
+
+import org.waveprotocol.wave.model.id.WaveId;
 
 public class WaveOpenEvent extends GwtEvent<WaveOpenEventHandler> {
   public static final GwtEvent.Type<WaveOpenEventHandler> TYPE = new GwtEvent.Type<WaveOpenEventHandler>();

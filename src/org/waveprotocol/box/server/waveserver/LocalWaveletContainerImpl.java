@@ -25,7 +25,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.util.EmptyDeltaException;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -59,7 +58,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
   @Override
   public DeltaApplicationResult submitRequest(WaveletName waveletName,
       ProtocolSignedDelta signedDelta) throws OperationException,
-      InvalidProtocolBufferException, InvalidHashException, EmptyDeltaException {
+      InvalidProtocolBufferException, InvalidHashException {
     acquireWriteLock();
     try {
       return transformAndApplyLocalDelta(signedDelta);
@@ -79,23 +78,16 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
    *         application
    * @throws InvalidProtocolBufferException if the signed delta did not contain a valid delta
    * @throws InvalidHashException if delta hash sanity checks fail
-   *
-   * @throws OperationException
    */
   private DeltaApplicationResult transformAndApplyLocalDelta(ProtocolSignedDelta signedDelta)
-      throws OperationException, InvalidProtocolBufferException, EmptyDeltaException,
-      InvalidHashException {
-    ByteStringMessage<ProtocolWaveletDelta> protocolDelta =
-        ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta());
-    CoreWaveletDelta deltaAndVersion =
-      CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
+      throws OperationException, InvalidProtocolBufferException, InvalidHashException {
+    ProtocolWaveletDelta protocolDelta =
+        ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta()).getMessage();
 
-    if (deltaAndVersion.getOperations().isEmpty()) {
-      LOG.warning("No operations to apply at version " + deltaAndVersion.getTargetVersion());
-      throw new EmptyDeltaException();
-    }
+    Preconditions.checkArgument(protocolDelta.getOperationCount() > 0, "empty delta");
 
-    CoreWaveletDelta transformed = maybeTransformSubmittedDelta(deltaAndVersion);
+    CoreWaveletDelta transformed = maybeTransformSubmittedDelta(
+        CoreWaveletOperationSerializer.deserialize(protocolDelta));
 
     // TODO(ljvderijk): a Clock needs to be injected here (Issue 104)
     long applicationTimeStamp = System.currentTimeMillis();
@@ -107,7 +99,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       Preconditions.checkState(
           transformed.getTargetVersion().getVersion() <= currentVersion.getVersion());
       // The delta was transformed away. That's OK but we don't call either
-      // applyWaveletOperations(), because that will throw EmptyDeltaException, or
+      // applyWaveletOperations(), because that will throw IllegalArgumentException, or
       // commitAppliedDelta(), because empty deltas cannot be part of the delta history.
       return new DeltaApplicationResult(buildAppliedDelta(signedDelta, transformed,
           applicationTimeStamp), transformed, transformed.getTargetVersion());

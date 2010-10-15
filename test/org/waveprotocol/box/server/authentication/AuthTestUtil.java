@@ -17,13 +17,11 @@
 
 package org.waveprotocol.box.server.authentication;
 
-import org.waveprotocol.box.server.authentication.AccountStoreLoginModule;
-
 import java.util.HashMap;
 
 import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
+import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 
 /**
  * Provides an authentication configuration for tests.

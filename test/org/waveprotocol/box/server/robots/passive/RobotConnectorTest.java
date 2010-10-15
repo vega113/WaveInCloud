@@ -38,8 +38,6 @@ import junit.framework.TestCase;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.account.RobotAccountDataImpl;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
-import org.waveprotocol.box.server.robots.passive.Robot;
-import org.waveprotocol.box.server.robots.passive.RobotConnector;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collections;

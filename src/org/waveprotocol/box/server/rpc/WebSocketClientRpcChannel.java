@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.sixfire.websocket.WebSocket;
 
 import org.waveprotocol.box.server.util.Log;
-import org.waveprotocol.box.server.rpc.Rpc;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

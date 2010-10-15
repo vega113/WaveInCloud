@@ -23,8 +23,6 @@ import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.AccountStoreTestBase;
 import org.waveprotocol.box.server.persistence.AttachmentStoreTestBase;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
-import org.waveprotocol.box.server.persistence.mongodb.MongoDbProvider;
-import org.waveprotocol.box.server.persistence.mongodb.MongoDbStore;
 
 /**
  * Testcases for the {@link MemoryStore} implementation of the

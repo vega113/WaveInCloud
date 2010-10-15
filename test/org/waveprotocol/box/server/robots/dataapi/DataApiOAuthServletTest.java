@@ -19,6 +19,7 @@ package org.waveprotocol.box.server.robots.dataapi;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Matchers.eq;
@@ -32,7 +33,6 @@ import com.google.common.collect.Maps;
 import junit.framework.TestCase;
 
 import net.oauth.OAuth;
-import net.oauth.OAuth.Parameter;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthException;
@@ -40,10 +40,10 @@ import net.oauth.OAuthMessage;
 import net.oauth.OAuthProblemException;
 import net.oauth.OAuthServiceProvider;
 import net.oauth.OAuthValidator;
+import net.oauth.OAuth.Parameter;
 
 import org.waveprotocol.box.server.authentication.SessionManager;
-import org.waveprotocol.box.server.robots.dataapi.DataApiOAuthServlet;
-import org.waveprotocol.box.server.robots.dataapi.DataApiTokenContainer;
+import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
@@ -97,6 +97,7 @@ public class DataApiOAuthServletTest extends TestCase {
     }
   }
 
+  private static final String FAKE_TOKEN = "fake_token";
   private static final String REQUEST_TOKEN_PATH = "/request_token";
   private static final String AUTHORIZE_TOKEN_PATH = "/authorize_token";
   private static final String ACCESS_TOKEN_PATH = "/access_token";
@@ -116,8 +117,11 @@ public class DataApiOAuthServletTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     validator = mock(OAuthValidator.class);
-    tokenContainer = new DataApiTokenContainer();
     sessionManager = mock(SessionManager.class);
+
+    TokenGenerator tokenGenerator = mock(TokenGenerator.class);
+    when(tokenGenerator.generateToken(anyInt())).thenReturn(FAKE_TOKEN);
+    tokenContainer = new DataApiTokenContainer(tokenGenerator);
 
     req = mock(HttpServletRequest.class);
     when(req.getRequestURL()).thenReturn(new StringBuffer("www.example.com/robot"));
@@ -137,7 +141,7 @@ public class DataApiOAuthServletTest extends TestCase {
 
     servlet =
         new DataApiOAuthServlet(REQUEST_TOKEN_PATH, AUTHORIZE_TOKEN_PATH, ACCESS_TOKEN_PATH,
-            serviceProvider, validator, tokenContainer, sessionManager);
+            serviceProvider, validator, tokenContainer, sessionManager, tokenGenerator);
   }
 
   @Override
@@ -195,7 +199,8 @@ public class DataApiOAuthServletTest extends TestCase {
   public void testDoAuthorizeTokenGet() throws Exception {
     when(req.getPathInfo()).thenReturn(AUTHORIZE_TOKEN_PATH);
     when(req.getMethod()).thenReturn("GET");
-    when(req.getParameterMap()).thenReturn(getDoAuthorizeTokenParams());
+    Map<String, String[]> params = getDoAuthorizeTokenParams();
+    when(req.getParameterMap()).thenReturn(params);
 
     when(sessionManager.getLoggedInUser(any(HttpSession.class))).thenReturn(ALEX);
 
@@ -219,7 +224,8 @@ public class DataApiOAuthServletTest extends TestCase {
   public void testDoAuthorizeTokenRedirectsForLogin() throws Exception {
     when(req.getPathInfo()).thenReturn(AUTHORIZE_TOKEN_PATH);
     when(req.getMethod()).thenReturn("GET");
-    when(req.getParameterMap()).thenReturn(getDoAuthorizeTokenParams());
+    Map<String, String[]> params = getDoAuthorizeTokenParams();
+    when(req.getParameterMap()).thenReturn(params);
 
     String expectedRedirect = "/auth/login/fake";
     when(sessionManager.getLoginUrl(anyString())).thenReturn(expectedRedirect);
@@ -251,7 +257,8 @@ public class DataApiOAuthServletTest extends TestCase {
     when(req.getMethod()).thenReturn("POST");
     Map<String, String[]> params = getDoAuthorizeTokenParams();
     when(req.getParameterMap()).thenReturn(params);
-    when(req.getParameter("token")).thenReturn(servlet.getOrGenerateXsrfToken(ALEX));
+    String token = servlet.getOrGenerateXsrfToken(ALEX);
+    when(req.getParameter("token")).thenReturn(token);
     when(req.getParameter("agree")).thenReturn("yes");
 
     when(sessionManager.getLoggedInUser(any(HttpSession.class))).thenReturn(ALEX);
@@ -268,7 +275,8 @@ public class DataApiOAuthServletTest extends TestCase {
   public void testDoAuthorizeTokenPostUnauthorizedOnFailingXsrf() throws Exception {
     when(req.getPathInfo()).thenReturn(AUTHORIZE_TOKEN_PATH);
     when(req.getMethod()).thenReturn("POST");
-    when(req.getParameterMap()).thenReturn(getDoAuthorizeTokenParams());
+    Map<String, String[]> params = getDoAuthorizeTokenParams();
+    when(req.getParameterMap()).thenReturn(params);
     when(req.getParameter("token")).thenReturn("wrong_token");
 
     when(sessionManager.getLoggedInUser(any(HttpSession.class))).thenReturn(ALEX);
@@ -284,7 +292,8 @@ public class DataApiOAuthServletTest extends TestCase {
     when(req.getParameter("cancel")).thenReturn("yes");
     Map<String, String[]> params = getDoAuthorizeTokenParams();
     when(req.getParameterMap()).thenReturn(params);
-    when(req.getParameter("token")).thenReturn(servlet.getOrGenerateXsrfToken(ALEX));
+    String token = servlet.getOrGenerateXsrfToken(ALEX);
+    when(req.getParameter("token")).thenReturn(token);
 
     when(sessionManager.getLoggedInUser(any(HttpSession.class))).thenReturn(ALEX);
 
@@ -305,7 +314,8 @@ public class DataApiOAuthServletTest extends TestCase {
 
     Map<String, String[]> params = getDoAuthorizeTokenParams();
     when(req.getParameterMap()).thenReturn(params);
-    when(req.getParameter("token")).thenReturn(servlet.getOrGenerateXsrfToken(ALEX));
+    String token = servlet.getOrGenerateXsrfToken(ALEX);
+    when(req.getParameter("token")).thenReturn(token);
 
     when(sessionManager.getLoggedInUser(any(HttpSession.class))).thenReturn(ALEX);
 
@@ -319,7 +329,8 @@ public class DataApiOAuthServletTest extends TestCase {
   public void testDoExchangeToken() throws Exception {
     when(req.getPathInfo()).thenReturn(ACCESS_TOKEN_PATH);
     when(req.getMethod()).thenReturn("GET");
-    when(req.getParameterMap()).thenReturn(getDoExchangeTokenParams());
+    Map<String, String[]> params = getDoExchangeTokenParams();
+    when(req.getParameterMap()).thenReturn(params);
 
     servlet.doGet(req, resp);
 
@@ -355,7 +366,8 @@ public class DataApiOAuthServletTest extends TestCase {
     when(req.getPathInfo()).thenReturn(ACCESS_TOKEN_PATH);
     when(req.getMethod()).thenReturn("GET");
 
-    when(req.getParameterMap()).thenReturn(getDoExchangeTokenParams());
+    Map<String, String[]> params = getDoExchangeTokenParams();
+    when(req.getParameterMap()).thenReturn(params);
 
     doThrow(new OAuthException("")).when(validator).validateMessage(
         any(OAuthMessage.class), any(OAuthAccessor.class));
@@ -369,7 +381,8 @@ public class DataApiOAuthServletTest extends TestCase {
   public void testDoExchangeTokenUnauthorizedOnURISyntaxException() throws Exception {
     when(req.getPathInfo()).thenReturn(ACCESS_TOKEN_PATH);
     when(req.getMethod()).thenReturn("GET");
-    when(req.getParameterMap()).thenReturn(getDoExchangeTokenParams());
+    Map<String, String[]> params = getDoExchangeTokenParams();
+    when(req.getParameterMap()).thenReturn(params);
 
     doThrow(new URISyntaxException("", "")).when(validator).validateMessage(
         any(OAuthMessage.class), any(OAuthAccessor.class));

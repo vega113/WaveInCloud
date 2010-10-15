@@ -39,7 +39,9 @@ import org.waveprotocol.wave.federation.xmpp.XmppFederationRemote;
 import org.waveprotocol.wave.federation.xmpp.XmppManager;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
+import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl.Seed;
+import org.waveprotocol.wave.model.id.TokenGeneratorImpl;
 import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
 import org.waveprotocol.wave.waveserver.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
@@ -48,7 +50,6 @@ import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import javax.security.auth.login.Configuration;
 
@@ -58,15 +59,6 @@ import javax.security.auth.login.Configuration;
  *
  */
 public class ServerModule extends AbstractModule {
-
-  private static final Seed SEED = new Seed() {
-    private final Random r = new SecureRandom();
-
-    @Override
-    public String get() {
-      return Long.toString(Math.abs(r.nextLong()), 36);
-    }
-  };
 
   @Override
   protected void configure() {
@@ -110,7 +102,32 @@ public class ServerModule extends AbstractModule {
   @Provides
   @Singleton
   @Inject
-  public IdGenerator provideIdGenerator(@Named("wave_server_domain") String domain) {
-    return new IdGeneratorImpl(domain, SEED);
+  public IdGenerator provideIdGenerator(@Named("wave_server_domain") String domain, Seed seed) {
+    return new IdGeneratorImpl(domain, seed);
+  }
+
+  @Provides
+  @Singleton
+  public SecureRandom provideSecureRandom() {
+    return new SecureRandom();
+  }
+
+  @Provides
+  @Singleton
+  @Inject
+  public TokenGenerator provideTokenGenerator(SecureRandom random) {
+    return new TokenGeneratorImpl(random);
+  }
+
+  @Provides
+  @Singleton
+  @Inject
+  public Seed provideSeed(final SecureRandom random) {
+    return new Seed() {
+      @Override
+      public String get() {
+        return Long.toString(Math.abs(random.nextLong()), 36);
+      }
+    };
   }
 }

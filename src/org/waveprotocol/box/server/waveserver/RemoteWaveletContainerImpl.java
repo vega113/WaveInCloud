@@ -25,7 +25,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.jivesoftware.util.Base64;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.DeltaSequence;
-import org.waveprotocol.box.server.util.EmptyDeltaException;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.crypto.SignatureException;
@@ -314,10 +313,6 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           } catch (InvalidHashException e) {
             state = State.CORRUPTED;
             throw new WaveServerException("Couldn't apply authoritative delta", e);
-          } catch (EmptyDeltaException e) {
-            // The host shouldn't be forwarding empty deltas!
-            state = State.CORRUPTED;
-            throw new WaveServerException("Couldn't apply authoritative delta", e);
           }
 
           // This is the version 0 case - now we have a valid wavelet!
@@ -331,7 +326,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           LOG.warning("Got delta from the past: " + appliedDelta);
         }
 
-        pendingDeltas.remove(appliedDelta);
+        pendingDeltas.remove(appliedAt);
       }
 
       if (!haveRequestedHistory) {
@@ -359,11 +354,12 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
    * @return transformed operations are applied to this delta
    * @throws AccessControlException if the supplied Delta's historyHash does not
    *         match the canonical history.
+   * @throws WaveServerException if the delta transforms away.
    */
   private DeltaApplicationResult transformAndApplyRemoteDelta(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta) throws OperationException,
       AccessControlException, InvalidHashException, InvalidProtocolBufferException,
-      EmptyDeltaException {
+      WaveServerException {
 
     // The serialised hashed version should actually match the currentVersion at this point, since
     // the caller of transformAndApply delta will have made sure the applied deltas are ordered
@@ -391,6 +387,13 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         // TODO: re-enable this exception for version 0.3 of the spec
 //        throw new InvalidHashException("Applied delta and its contained delta have same hash");
       }
+    }
+
+    if (transformed.getOperations().isEmpty()) {
+      // The host shouldn't be forwarding empty deltas!
+      state = State.CORRUPTED;
+      throw new WaveServerException("Couldn't apply authoritative delta, " +
+          "it transformed away at version " + transformed.getTargetVersion().getVersion());
     }
 
     // Apply operations.  These shouldn't fail since they're the authoritative versions, so if they

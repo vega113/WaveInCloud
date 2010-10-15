@@ -25,7 +25,6 @@ import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
-import org.waveprotocol.box.server.util.EmptyDeltaException;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
@@ -225,15 +224,12 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   /**
    * Apply the operations from a single delta to the wavelet container.
    *
-   * @param delta {@link CoreWaveletDelta} to apply.
+   * @param delta {@link CoreWaveletDelta} to apply, must be non-empty.
    * @param applicationTimeStamp timestamp of the application.
    */
   protected void applyWaveletOperations(CoreWaveletDelta delta, long applicationTimeStamp)
-      throws OperationException, EmptyDeltaException {
-    if (delta.getOperations().isEmpty()) {
-      throw new EmptyDeltaException(
-          "No operations to apply at version " + currentVersion.getVersion());
-    }
+      throws OperationException {
+    Preconditions.checkArgument(!delta.getOperations().isEmpty(), "empty delta");
 
     if (waveletData == null) {
       Preconditions.checkState(currentVersion.getVersion() == 0L, "CurrentVersion must be 0");

@@ -19,9 +19,6 @@ package org.waveprotocol.box.server.rpc;
 import com.google.protobuf.Message;
 import com.google.protobuf.UnknownFieldSet;
 
-import org.waveprotocol.box.server.rpc.ProtoCallback;
-import org.waveprotocol.box.server.rpc.SequencedProtoChannel;
-
 import java.nio.channels.ByteChannel;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;

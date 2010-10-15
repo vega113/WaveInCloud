@@ -20,8 +20,6 @@ import com.google.common.collect.Lists;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.util.Log;
-
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

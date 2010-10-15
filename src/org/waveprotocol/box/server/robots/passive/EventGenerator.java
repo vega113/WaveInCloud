@@ -25,6 +25,8 @@ import com.google.wave.api.data.converter.ContextResolver;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.EventType;
+import com.google.wave.api.event.WaveletBlipCreatedEvent;
+import com.google.wave.api.event.WaveletBlipRemovedEvent;
 import com.google.wave.api.event.WaveletParticipantsChangedEvent;
 import com.google.wave.api.event.WaveletSelfAddedEvent;
 import com.google.wave.api.event.WaveletSelfRemovedEvent;
@@ -32,11 +34,12 @@ import com.google.wave.api.impl.EventMessageBundle;
 import com.google.wave.api.robot.Capability;
 import com.google.wave.api.robot.RobotName;
 
+import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.wave.model.conversation.Conversation;
-import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationListenerImpl;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
+import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
@@ -44,17 +47,12 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
-import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.WaveletListener;
-import org.waveprotocol.wave.model.wave.data.DocumentFactory;
-import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
-import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
-import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 import org.waveprotocol.wave.model.wave.opbased.WaveletListenerImpl;
 
@@ -138,11 +136,11 @@ public class EventGenerator {
         }
       }
 
-      // This deviates from Google Wave production which always sends this event,
-      // even if it wasn't present in your capabilities.
+      // This deviates from Google Wave production which always sends this
+      // event, even if it wasn't present in your capabilities.
       if (capabilities.containsKey(EventType.WAVELET_SELF_ADDED) && participant.equals(robotId)) {
         // The robot has been added
-        String rootBlipId = getRootBlipId(conversation);
+        String rootBlipId = ConversationUtil.getRootBlipId(conversation);
         WaveletSelfAddedEvent event = new WaveletSelfAddedEvent(
             null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId);
         addEvent(event, capabilities, rootBlipId, messages);
@@ -156,20 +154,39 @@ public class EventGenerator {
       }
 
       if (capabilities.containsKey(EventType.WAVELET_SELF_REMOVED) && participant.equals(robotId)) {
-        String rootBlipId = getRootBlipId(conversation);
+        String rootBlipId = ConversationUtil.getRootBlipId(conversation);
         WaveletSelfRemovedEvent event = new WaveletSelfRemovedEvent(
             null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId);
         addEvent(event, capabilities, rootBlipId, messages);
       }
     }
 
+    @Override
+    public void onBlipAdded(ObservableConversationBlip blip) {
+      if (capabilities.containsKey(EventType.WAVELET_BLIP_CREATED)) {
+        String rootBlipId = ConversationUtil.getRootBlipId(conversation);
+        WaveletBlipCreatedEvent event = new WaveletBlipCreatedEvent(
+            null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId, blip.getId());
+        addEvent(event, capabilities, rootBlipId, messages);
+      }
+    }
+
+    @Override
+    public void onBlipDeleted(ObservableConversationBlip blip) {
+      if (capabilities.containsKey(EventType.WAVELET_BLIP_REMOVED)) {
+        String rootBlipId = ConversationUtil.getRootBlipId(conversation);
+        WaveletBlipRemovedEvent event = new WaveletBlipRemovedEvent(
+            null, null, deltaAuthor.getAddress(), deltaTimestamp, rootBlipId, blip.getId());
+        addEvent(event, capabilities, rootBlipId, messages);
+      }
+    }
+
     /**
      * Generates the events that are collected over the span of one delta.
-     *
      */
     public void deltaEnd() {
       if (!participantsAdded.isEmpty() || !participantsRemoved.isEmpty()) {
-        String rootBlipId = getRootBlipId(conversation);
+        String rootBlipId = ConversationUtil.getRootBlipId(conversation);
 
         WaveletParticipantsChangedEvent event =
             new WaveletParticipantsChangedEvent(null, null, deltaAuthor.getAddress(),
@@ -226,21 +243,6 @@ public class EventGenerator {
   }
 
   /**
-   * Returns the blip id of the first blip in the root thread.
-   *
-   * @param conversation the conversation to get the blip id from.
-   */
-  private static String getRootBlipId(Conversation conversation) {
-    ConversationBlip rootBlip = conversation.getRootThread().getFirstBlip();
-    String rootBlipId = (rootBlip != null) ? rootBlip.getId() : "";
-    return rootBlipId;
-  }
-
-  // TODO(ljvderijk): Schemas should be enforced, see issue 109.
-  private final static DocumentFactory<DocumentOperationSink> DOCUMENT_FACTORY =
-      new MuteDocumentFactory(SchemaCollection.empty());
-
-  /**
    * The name of the Robot to which this {@link EventGenerator} belongs. Used
    * for events where "self" is important.
    */
@@ -277,8 +279,8 @@ public class EventGenerator {
       messages.setProxyingFor(robotName.getProxyFor());
     }
 
-    ObservableWaveletData snapshot = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(
-        waveletAndDeltas.getSnapshotBeforeDeltas());
+    ObservableWaveletData snapshot =
+        WaveletDataUtil.copyWavelet(waveletAndDeltas.getSnapshotBeforeDeltas());
 
     OpBasedWavelet wavelet =
         new OpBasedWavelet(snapshot.getWaveId(), snapshot, WaveletOperationContext.Factory.READONLY,
@@ -307,8 +309,8 @@ public class EventGenerator {
 
         DistinctVersion endVersion = DistinctVersion.of(
             delta.getTargetVersion().getVersion() + delta.getOperations().size(), -1);
-        List<WaveletOperation> ops = ConversionUtil.fromCoreWaveletDelta(
-            delta, timestamp, endVersion);
+        List<WaveletOperation> ops =
+            ConversionUtil.fromCoreWaveletDelta(delta, timestamp, endVersion);
         for (WaveletOperation op : ops) {
           op.apply(snapshot);
         }

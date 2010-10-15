@@ -23,12 +23,12 @@ import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 
-import org.waveprotocol.wave.client.debug.logger.DomLogger;
-import org.waveprotocol.wave.common.logging.LoggerBundle;
-import org.waveprotocol.wave.common.util.gwt.GwtWaverefEncoder;
 import org.waveprotocol.box.server.waveserver.WaveViewSnapshot;
 import org.waveprotocol.box.webclient.common.SnapshotSerializer;
 import org.waveprotocol.box.webclient.common.communication.callback.SimpleCallback;
+import org.waveprotocol.wave.client.debug.logger.DomLogger;
+import org.waveprotocol.wave.common.logging.LoggerBundle;
+import org.waveprotocol.wave.common.util.gwt.GwtWaverefEncoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;

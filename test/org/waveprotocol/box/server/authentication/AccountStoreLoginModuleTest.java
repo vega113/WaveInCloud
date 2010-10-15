@@ -20,9 +20,6 @@ package org.waveprotocol.box.server.authentication;
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.account.HumanAccountDataImpl;
-import org.waveprotocol.box.server.authentication.AccountStoreHolder;
-import org.waveprotocol.box.server.authentication.ParticipantPrincipal;
-import org.waveprotocol.box.server.authentication.PasswordDigest;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
 import org.waveprotocol.wave.model.wave.ParticipantId;
