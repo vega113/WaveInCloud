@@ -53,9 +53,9 @@ public class RobotApiModule extends AbstractModule {
 
   private static final int NUMBER_OF_THREADS = 10;
 
-  private static final String AUTHORIZE_TOKEN_PATH = "OAuthAuthorizeToken";
-  private static final String REQUEST_TOKEN_PATH = "OAuthGetRequestToken";
-  private static final String ACCESS_TOKEN_PATH = "OAuthGetAccessToken";
+  private static final String AUTHORIZE_TOKEN_PATH = "/OAuthAuthorizeToken";
+  private static final String REQUEST_TOKEN_PATH = "/OAuthGetRequestToken";
+  private static final String ACCESS_TOKEN_PATH = "/OAuthGetAccessToken";
 
   @Override
   protected void configure() {
@@ -143,6 +143,6 @@ public class RobotApiModule extends AbstractModule {
    */
   private String getOAuthUrl(String domain, int port, String postFix) {
     String host = (port == 80) ? domain : (domain + ":" + port);
-    return String.format("http://%s/%s/%s", host, DataApiOAuthServlet.DATA_API_OAUTH_PATH, postFix);
+    return String.format("http://%s/%s%s", host, DataApiOAuthServlet.DATA_API_OAUTH_PATH, postFix);
   }
 }

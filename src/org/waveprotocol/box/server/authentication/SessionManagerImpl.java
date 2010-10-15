@@ -82,12 +82,12 @@ public final class SessionManagerImpl implements SessionManager {
   @Override
   public String getLoginUrl(String redirect) {
     if (Strings.isNullOrEmpty(redirect)) {
-      return AUTH_URL;
+      return SIGN_IN_URL;
     } else {
       PercentEscaper escaper =
           new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
       String queryStr = "?r=" + escaper.escape(redirect);
-      return AUTH_URL + queryStr;
+      return SIGN_IN_URL + queryStr;
     }
   }
 }

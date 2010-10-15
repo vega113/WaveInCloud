@@ -25,6 +25,7 @@ import com.google.inject.name.Names;
 
 import org.apache.commons.cli.ParseException;
 import org.waveprotocol.box.server.authentication.AccountStoreHolder;
+import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceModule;
 import org.waveprotocol.box.server.robots.RobotApiModule;
@@ -75,15 +76,16 @@ public class ServerMain {
     ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
 
-    AccountStoreHolder.init(injector.getInstance(AccountStore.class), 
+    AccountStoreHolder.init(injector.getInstance(AccountStore.class),
         injector.getInstance(Key.get(String.class, Names.named("wave_server_domain"))));
 
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
 
-    server.addServlet("/auth/signin", injector.getInstance(AuthenticationServlet.class));
+    server.addServlet(
+        SessionManager.SIGN_IN_URL, injector.getInstance(AuthenticationServlet.class));
     server.addServlet("/auth/signout", injector.getInstance(SignOutServlet.class));
     server.addServlet("/auth/register", injector.getInstance(UserRegistrationServlet.class));
-    
+
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
 
     server.addServlet("/robot/dataapi", injector.getInstance(DataApiServlet.class));
