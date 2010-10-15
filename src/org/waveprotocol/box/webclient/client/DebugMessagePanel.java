@@ -53,7 +53,9 @@ public class DebugMessagePanel extends Composite {
 
   public DebugMessagePanel() {
     initWidget(BINDER.createAndBindUi(this));
+  }
 
+  public void enable() {
     ClientEvents.get().addDebugMessageHandler(new DebugMessageEventHandler() {
       @Override
       public void onDebugMessage(DebugMessageEvent event) {

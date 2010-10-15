@@ -50,7 +50,7 @@
     <g:center>
       <g:SplitLayoutPanel ui:field="splitPanel" stylePrimaryName="{style.splitPanel}">
         <g:south size="200">
-          <s:DebugMessagePanel styleName="{style.subPanel} {style.debugPanel}" />
+          <s:DebugMessagePanel ui:field="log" styleName="{style.subPanel} {style.debugPanel}" />
         </g:south>
         <g:west size="300">
           <s:WaveList styleName="{style.subPanel} {style.waveList}" />

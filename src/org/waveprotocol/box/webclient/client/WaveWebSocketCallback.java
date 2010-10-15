@@ -17,7 +17,6 @@
 
 package org.waveprotocol.box.webclient.client;
 
-import org.waveprotocol.box.server.waveserver.ProtocolSubmitResponse;
 import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
 
 /**
@@ -25,15 +24,7 @@ import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
  *
  * @author arb@google.com (Anthony Baxter)
  */
-interface WaveWebSocketCallback {
+public interface WaveWebSocketCallback {
 
-  void connected();
-
-  void disconnected();
-
-  void handleWaveletUpdate(ProtocolWaveletUpdate message);
-
-  void receiveSubmitResponse(ProtocolSubmitResponse message, int sequenceNo);
-
-  void unknown();
+  void onWaveletUpdate(ProtocolWaveletUpdate message);
 }

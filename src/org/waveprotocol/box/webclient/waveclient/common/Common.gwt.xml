@@ -1,4 +1,5 @@
 <module>
+    <inherits name="com.google.common.base.Base"/>
     <inherits name="com.google.gwt.user.User"/>
     <inherits name="com.google.gwt.user.ClippedImage"/>
     <inherits name="org.waveprotocol.wave.concurrencycontrol.Client"/>

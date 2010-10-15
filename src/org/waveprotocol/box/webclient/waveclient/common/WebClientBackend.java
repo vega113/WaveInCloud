@@ -96,14 +96,12 @@ public class WebClientBackend {
    */
   private final Map<WaveId, WebClientWaveView> waves = new HashMap<WaveId, WebClientWaveView>();
   final WaveWebSocketClient websocket;
-  int sequenceNumber;
   private final IdGenerator idGenerator;
 
   public WebClientBackend(final ParticipantId userId, WaveWebSocketClient websocket) {
     connectionStatus = NetworkStatusEvent.ConnectionStatus.CONNECTED;
     this.userId = userId;
     this.websocket = websocket;
-    this.sequenceNumber = 0;
     this.idGenerator = new IdGeneratorImpl(this.userId.getDomain(), new IdGeneratorImpl.Seed() {
       private final String seed;
 
@@ -194,14 +192,14 @@ public class WebClientBackend {
       queuedMessages.add(
           new Pair<JavaScriptObject, SubmitResponseCallback>(message, callback));
     } else {
-      websocket.sendMessage(sequenceNumber++, message, callback);
+      websocket.sendMessage(message, callback);
     }
   }
 
   private void sendQueuedMessages() {
     while (!queuedMessages.isEmpty()) {
       Pair<JavaScriptObject, SubmitResponseCallback> messageAndCallback = queuedMessages.remove(0);
-      websocket.sendMessage(sequenceNumber++, messageAndCallback.first, messageAndCallback.second);
+      websocket.sendMessage(messageAndCallback.first, messageAndCallback.second);
     }
   }
 
@@ -231,9 +229,8 @@ public class WebClientBackend {
 
     WebClientWaveView wave = waves.get(waveletName.waveId);
     if (wave == null) {
-      // The wave view should always be present, since openWave adds them immediately.
-      LOG.info("Received update on absent waveId " + waveletName.waveId.serialise());
-      throw new RuntimeException("Received update on absent waveId " + waveletName.waveId);
+      // Not a wave for us.
+      return;
     }
 
     CoreWaveletData oldWaveletData = wave.getWavelet(waveletName.waveletId);

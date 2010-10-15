@@ -24,6 +24,7 @@ import org.waveprotocol.box.server.waveserver.ProtocolSubmitRequest;
 import org.waveprotocol.box.server.waveserver.ProtocolSubmitResponse;
 import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
 import org.waveprotocol.box.server.waveserver.WaveletVersion;
+import org.waveprotocol.box.webclient.client.RemoteWaveViewService;
 import org.waveprotocol.box.webclient.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;
@@ -62,7 +63,10 @@ import java.util.Map;
 
 /**
  * Notifies clients about events on a wave.
+ *
+ * @deprecated use {@link RemoteWaveViewService} instead.
  */
+@Deprecated
 public class WaveViewServiceImpl implements WaveViewService {
 
   private static final Log LOG = Log.get(WaveViewServiceImpl.class);

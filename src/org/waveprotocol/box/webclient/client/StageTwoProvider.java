@@ -18,8 +18,8 @@
 
 package org.waveprotocol.box.webclient.client;
 
-import org.waveprotocol.box.webclient.common.communication.callback.SimpleCallback;
-import org.waveprotocol.box.webclient.util.Log;
+import com.google.gwt.user.client.Command;
+
 import org.waveprotocol.wave.client.StageOne;
 import org.waveprotocol.wave.client.StageTwo;
 import org.waveprotocol.wave.client.account.Profile;
@@ -27,9 +27,11 @@ import org.waveprotocol.wave.client.account.ProfileListener;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.account.testing.FakeProfile;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
-import org.waveprotocol.wave.client.concurrencycontrol.MuxConnector;
 import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
 import org.waveprotocol.wave.client.wave.RegistriesHolder;
+import org.waveprotocol.wave.client.wavepanel.impl.reader.Reader;
+import org.waveprotocol.wave.client.wavepanel.render.FullDomWaveRendererImpl;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.WaveRenderer;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
@@ -124,16 +126,18 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
 
   }
 
-  private static final Log LOG = Log.get(StageTwoProvider.class);
   private final WaveId waveId;
+  private final RemoteViewServiceMultiplexer channel;
 
 
   /**
    * @param waveId the id of the wave to open. If null, it means, create a new wave.
+   * @param channel communication channel
    */
-  public StageTwoProvider(StageOne stageOne, WaveId waveId) {
+  public StageTwoProvider(StageOne stageOne, WaveId waveId, RemoteViewServiceMultiplexer channel) {
     super(stageOne);
     this.waveId = waveId;
+    this.channel = channel;
   }
 
   @Override
@@ -158,21 +162,32 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
 
   @Override
   protected WaveViewService createWaveViewService() {
-    // new WaveViewServiceImpl(this, waveId, waveletIdPrefix, clientWaveView,
-    // documentFactory)
-    throw new RuntimeException("should not be called");
+    return new RemoteWaveViewService(waveId, channel, getDocumentRegistry());
   }
 
+  /**
+   * Swaps order of open and render.
+   */
   @Override
-  protected MuxConnector createUpgrader() {
-    // unused.
-    return new MuxConnector() {
+  protected void install() {
+    // Activate liveness.
+    createUpgrader().connect(new Command() {
       @Override
-      public void connect() {
-        // Do nothing.
+      public void execute() {
+        WaveRenderer waveRenderer =
+          FullDomWaveRendererImpl.create(getConversations(), getProfileManager(), getBlipDetailer(),
+              getViewIdMapper(), getBlipQueue());
+
+        stageOne.getDomAsViewProvider().setRenderer(waveRenderer);
+        // Ensure the wave is rendered.
+        renderWave(waveRenderer);
+
+        // Eagerly install some features.
+        Reader.createAndInstall(getSupplement(), stageOne.getFocusFrame(), getModelAsViewProvider());
       }
-    };
+    });
   }
+
 
   @Override
   protected void fetchWave(final AsyncHolder.Accessor<WaveViewData> whenReady) {
@@ -180,18 +195,22 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
     if (waveId == null) {
       whenReady.use(WaveFactory.create(getDocumentRegistry()));
     } else {
-      SnapshotFetcher.fetchWave(waveId, new SimpleCallback<WaveViewData, Throwable>() {
-
-        @Override
-        public void onSuccess(WaveViewData response) {
-          whenReady.use(response);
-        }
-
-        @Override
-        public void onFailure(Throwable reason) {
-          throw new RuntimeException("Unable to handle failed fetchWave.", reason);
-        }
-      }, getDocumentRegistry());
+//      // Re-enable this once the protocol supports connecting on versions.
+//      SnapshotFetcher.fetchWave(waveId, new SimpleCallback<WaveViewData, Throwable>() {
+//
+//        @Override
+//        public void onSuccess(WaveViewData response) {
+//          whenReady.use(response);
+//        }
+//
+//        @Override
+//        public void onFailure(Throwable reason) {
+//          throw new RuntimeException("Unable to handle failed fetchWave.", reason);
+//        }
+//      }, getDocumentRegistry());
+      // Use an empty view as the initial state, since the protocol will send
+      // snapshots when opened.
+      whenReady.use(WaveViewDataImpl.create(waveId));
     }
   }
 

@@ -30,9 +30,8 @@ import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 
-import org.waveprotocol.box.server.waveserver.ProtocolSubmitResponse;
-import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
+import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEventHandler;
@@ -40,12 +39,12 @@ import org.waveprotocol.box.webclient.client.events.WaveIndexUpdatedEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveUpdatedEvent;
-import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.waveclient.common.WaveViewServiceImpl;
 import org.waveprotocol.box.webclient.waveclient.common.WebClientBackend;
 import org.waveprotocol.box.webclient.waveclient.common.WebClientUtils;
 import org.waveprotocol.wave.client.Stages;
+import org.waveprotocol.wave.client.debug.logger.LogLevel;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.widget.common.ImplPanel;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
@@ -79,6 +78,9 @@ public class WebClient implements EntryPoint {
   @UiField
   ImplPanel contentPanel;
 
+  @UiField
+  DebugMessagePanel logPanel;
+
   static Log LOG = Log.get(WebClient.class);
 
   private WebClientBackend backend = null;
@@ -93,51 +95,31 @@ public class WebClient implements EntryPoint {
 
   private ParticipantId loggedInUser;
 
+  private RemoteViewServiceMultiplexer channel;
+
   /**
    * This is the entry point method.
    */
   public void onModuleLoad() {
+    final UncaughtExceptionHandler parent = GWT.getUncaughtExceptionHandler();
     GWT.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
       @Override
       public void onUncaughtException(Throwable e) {
         LOG.severe("Unhandled exception", e);
+        if (parent != null) {
+          parent.onUncaughtException(e);
+        }
       }
     });
 
     // Set up UI
     RootPanel.get("app").add(BINDER.createAndBindUi(this));
 
-    websocket = new WaveWebSocketClient(new WaveWebSocketCallback() {
-
-      public void connected() {
-        ClientEvents.get().fireEvent(
-            new NetworkStatusEvent(ConnectionStatus.CONNECTED));
-      }
-
-      public void disconnected() {
-        ClientEvents.get().fireEvent(
-            new NetworkStatusEvent(ConnectionStatus.DISCONNECTED));
-      }
-
-      public void handleWaveletUpdate(final ProtocolWaveletUpdate message) {
-        LOG.info("Wavelet update for " + message.getWaveletName());
-        // Pass to ClientBackend
-        if (backend != null) {
-          LOG.info("handling wavelet update");
-          backend.receiveWaveletUpdate(message);
-        }
-      }
-
-      public void receiveSubmitResponse(final ProtocolSubmitResponse message,
-          int sequenceNumber) {
-        // To change body of implemented methods use File | Settings | File
-        // Templates.
-      }
-
-      public void unknown() {
-        // TODO(arb): implement
-      }
-    });
+    if (LogLevel.showDebug()) {
+      logPanel.enable();
+    } else {
+      logPanel.removeFromParent();
+    }
 
     if (ClientFlags.get().enableWavePanelHarness()) {
       // For handling the opening of wave using the new wave panel
@@ -148,10 +130,11 @@ public class WebClient implements EntryPoint {
               contentPanel.clear();
               Stages stages = new StagesProvider(
                   contentPanel.getElement().appendChild(Document.get().createDivElement()),
-                  contentPanel, id);
+                  contentPanel, id, channel);
               stages.load(null);
             }
           });
+      waveView = null;
     } else {
       waveView = new WaveView();
       contentPanel.add(waveView);
@@ -165,59 +148,35 @@ public class WebClient implements EntryPoint {
 
           @Override
           public void onCreateRequest(WaveCreationEvent event) {
+            LOG.info("WaveCreationEvent received");
+            if (channel == null) {
+              throw new RuntimeException("Spaghetti attack.  Create occured before login");
+            }
 
             if (ClientFlags.get().enableWavePanelHarness()) {
               Stages stages = new StagesProvider(
                   contentPanel.getElement().appendChild(Document.get().createDivElement()),
-                  contentPanel, null);
+                  contentPanel, null, channel);
               stages.load(null);
             } else {
-              LOG.info("WaveCreationEvent received");
-              if (backend == null) {
-                LOG.info("Not creating wave since there is no backend");
-                return;
-              }
 
               final WaveId newWaveId = backend.getIdGenerator().newWaveId();
 
               ClientEvents.get().fireEvent(new WaveSelectionEvent(newWaveId));
-  //            ClientEvents.get().addWaveOpenEventHandler(new WaveOpenEventHandler() {
-  //
-  //              @Override
-  //              public void onOpen(WaveId id) {
-  //                LOG.info("created the conversation root, whee!");
-  //              }
-  //            });
               ObservableConversation convo = waveView.getConversationView().createRoot();
               CcBasedWavelet rootWavelet = waveView.getCcStackManager().view.getRoot();
               rootWavelet.addParticipant(loggedInUser);
               LOG.info("created conversation: " + convo);
               convo.getRootThread().appendBlip();
-
-
-  //            SimpleCcDocumentFactory docFactory = new SimpleCcDocumentFactory();
-  //            final CcStackManager mgr = new CcStackManager(
-  //                (WaveViewServiceImpl) backend.getWaveView(newWaveId, "",
-  //                    docFactory), docFactory, backend.getUserId());
-  //            mgr.view.open(new OpenListener() {
-  //              @Override
-  //              public void onOpenFinished() {
-  //                LOG.info("Wave open; creating wavelet " + newWaveId);
-  //                CcBasedWavelet root = mgr.view.createRoot();
-  //                LOG.info("wavelet created");
-  //                // mgr.view.close();
-  //                ClientEvents.get().fireEvent(
-  //                    new WaveSelectionEvent(mgr.view.getWaveId()));
-  //              }
-  //            });
             }
           }
         });
 
     configureConnectionIndicator();
-    
+
     HistorySupport.init();
 
+    websocket = new WaveWebSocketClient();
     websocket.connect(getWebSocketBaseUrl(GWT.getModuleBaseURL()) + "socket");
 
     if (Session.get().isLoggedIn()) {
@@ -261,11 +220,13 @@ public class WebClient implements EntryPoint {
   private native String getWebSocketBaseUrl(String moduleBase) /*-{return "ws" + /:\/\/[^\/]+/.exec(moduleBase)[0] + "/";}-*/;
 
   /**
-   * Send the name from the nameField to the server and wait for a response.
    */
   private void loginToServer() {
+    assert loggedInUser != null;
     backend = new WebClientBackend(loggedInUser, websocket);
+    channel = new RemoteViewServiceMultiplexer(websocket, loggedInUser.getAddress());
 
+    websocket.attachLegacy(backend);
     if (!ClientFlags.get().enableWavePanelHarness()) {
       waveView.setBackend(backend);
     }
@@ -279,7 +240,7 @@ public class WebClient implements EntryPoint {
       }
     });
   }
-  
+
   private void openIndexWave() {
     SimpleCcDocumentFactory docFactory = new SimpleCcDocumentFactory();
     final WaveViewServiceImpl indexWave = (WaveViewServiceImpl) backend.getIndexWave(docFactory);

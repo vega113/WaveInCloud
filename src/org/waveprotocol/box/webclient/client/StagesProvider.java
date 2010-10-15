@@ -38,17 +38,22 @@ public class StagesProvider extends Stages {
   private final Element wavePanelElement;
   private final LogicalPanel rootPanel;
   private final WaveId waveId;
+  private final RemoteViewServiceMultiplexer channel;
 
   /**
    * @param wavePanelElement The dom element to become the wave panel
-   * @param rootPanel A panel that this an ancestor of wavePanelElement. This
-   *    is used for adopting to the GWT widget tree.
-   * @param waveId the id of the wave to open. If null, it means, create a new wave.
+   * @param rootPanel A panel that this an ancestor of wavePanelElement. This is
+   *        used for adopting to the GWT widget tree.
+   * @param waveId the id of the wave to open. If null, it means, create a new
+   *        wave.
+   * @param channel communication channel.
    */
-  public StagesProvider(Element wavePanelElement, LogicalPanel rootPanel, WaveId waveId) {
+  public StagesProvider(Element wavePanelElement, LogicalPanel rootPanel, WaveId waveId,
+      RemoteViewServiceMultiplexer channel) {
     this.wavePanelElement = wavePanelElement;
     this.rootPanel = rootPanel;
     this.waveId = waveId;
+    this.channel = channel;
   }
 
   @Override
@@ -68,7 +73,7 @@ public class StagesProvider extends Stages {
 
   @Override
   protected AsyncHolder<StageTwo> createStageTwoLoader(StageOne one) {
-    return new StageTwoProvider(one, waveId);
+    return new StageTwoProvider(one, waveId, channel);
   }
 
 }
