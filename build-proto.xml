@@ -1,4 +1,4 @@
-<project name="fedone_proto" default="all">
+<project name="waveinabox_proto" default="all">
   <description>Generation of Protocol Buffers</description>
 
   <property file="build.properties" />

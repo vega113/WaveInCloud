@@ -15,13 +15,13 @@
 
   Author: dhanji@google.com (Dhanji R. Prasanna)
  -->
-<project name="fedone" default="dist">
+<project name="waveinabox" default="dist">
   <description>Google Wave Reference Implementation</description>
 
   <property file="build.properties"/>
 
   <!-- Classpath of external dependencies -->
-  <path id="fedone.classpath">
+  <path id="waveinabox.classpath">
     <fileset dir="${lib}">
       <include name="*.jar"/>
     </fileset>
@@ -40,7 +40,7 @@
   </path>
 
   <!-- Classpath for testing only -->
-  <path id="fedone.test.classpath">
+  <path id="waveinabox.test.classpath">
     <fileset dir="${lib.test}">
       <include name="*.jar"/>
       <include name="*/*.jar"/>
@@ -68,7 +68,7 @@
     <javac sourcepath="" srcdir="proto_src" destdir="${core.classes}" debug="on"
         target="1.5">
       <include name="**/*.java"/>
-      <classpath refid="fedone.classpath"/>
+      <classpath refid="waveinabox.classpath"/>
     </javac>
   </target>
 
@@ -81,7 +81,7 @@
       <include name="**/*.java"/>
       <classpath>
         <pathelement location="proto_gwt_src"/>
-        <path refid="fedone.classpath"/>
+        <path refid="waveinabox.classpath"/>
       </classpath>
       <compilerarg value="-Werror"/>
       <compilerarg value="-Xlint:all"/>
@@ -126,8 +126,8 @@
         target="1.5" includeAntRuntime="false">
       <include name="**/*.java"/>
       <classpath>
-        <path refid="fedone.classpath"/>
-        <path refid="fedone.test.classpath"/>
+        <path refid="waveinabox.classpath"/>
+        <path refid="waveinabox.test.classpath"/>
         <pathelement location="${core.classes}"/>
       </classpath>
       <compilerarg value="-Werror"/>
@@ -154,8 +154,8 @@
     <!-- Tests are run in a single new VM, when forkmode is set to once -->
     <junit fork="yes" forkmode="once" showoutput="no" failureProperty="test.failed">
       <classpath>
-        <path refid="fedone.classpath"/>
-        <path refid="fedone.test.classpath"/>
+        <path refid="waveinabox.classpath"/>
+        <path refid="waveinabox.test.classpath"/>
         <pathelement location="${core.classes}"/>
         <pathelement location="${test.classes}"/>
       </classpath>
@@ -191,8 +191,8 @@
     <target name="test_mongodb" depends="compile_tests" description="Runs the MongoDb tests">
       <junit fork="yes" showoutput="no" failureProperty="test.failed">
         <classpath>
-          <path refid="fedone.classpath"/>
-          <path refid="fedone.test.classpath"/>
+          <path refid="waveinabox.classpath"/>
+          <path refid="waveinabox.test.classpath"/>
           <pathelement location="${core.classes}"/>
           <pathelement location="${test.classes}"/>
         </classpath>
@@ -221,7 +221,7 @@
     <javac sourcepath="" srcdir="proto_gwt_src" destdir="${core.classes}" debug="on"
         target="1.6">
       <include name="**/*.java"/>
-      <classpath refid="fedone.classpath"/>
+      <classpath refid="waveinabox.classpath"/>
     </javac>
   </target>
 
@@ -230,8 +230,8 @@
       <classpath>
         <pathelement location="proto_gwt_src"/>
         <pathelement location="src"/>
-        <path refid="fedone.classpath"/>
-        <path refid="fedone.test.classpath"/>
+        <path refid="waveinabox.classpath"/>
+        <path refid="waveinabox.test.classpath"/>
       </classpath>
       <jvmarg value="-Xmx512M"/>
       <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
@@ -246,7 +246,7 @@
       <classpath>
         <pathelement location="proto_gwt_src"/>
         <pathelement location="src"/>
-        <path refid="fedone.classpath"/>
+        <path refid="waveinabox.classpath"/>
       </classpath>
       <jvmarg value="-Xmx512M"/>
       <jvmarg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8001"/>
@@ -279,7 +279,7 @@
   </target>
 
   <!-- dist-api is broken due to non-runnable dependencies in the waveserver directory.  TODO: fix. -->
-  <target name="dist-api" depends="stage" description="Assembles the FedOne API">
+  <target name="dist-api" depends="stage" description="Assembles the Wave in a Box API">
     <jar destfile="${jar.outfile-api}">
       <fileset dir="${staging}">
         <include name="org/waveprotocol/**/*" />
@@ -292,12 +292,12 @@
       <manifest>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
         <attribute name="Implementation-Title" value="Google Wave Reference Impl API"/>
-        <attribute name="Implementation-Version" value="${fedone.version}"/>
+        <attribute name="Implementation-Version" value="${waveinabox.version}"/>
       </manifest>
     </jar>
   </target>
 
-  <target name="dist-server" depends="stage" description="Assembles the FedOne server">
+  <target name="dist-server" depends="stage" description="Assembles the Wave in a Box server">
     <jar destfile="${jar.outfile-server}">
       <fileset dir="${staging}">
         <include name="META-INF/services/*" />
@@ -336,13 +336,13 @@
         <attribute name="Main-Class"
           value="org.waveprotocol.box.server.ServerMain"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
-        <attribute name="Implementation-Title" value="Google Wave FedOne Server"/>
-        <attribute name="Implementation-Version" value="${fedone.version}"/>
+        <attribute name="Implementation-Title" value="Wave in a Box Server"/>
+        <attribute name="Implementation-Version" value="${waveinabox.version}"/>
       </manifest>
     </jar>
   </target>
 
-  <target name="dist-client-console" depends="stage" description="Assembles the FedOne console client">
+  <target name="dist-client-console" depends="stage" description="Assembles the Wave in a Box console client">
     <jar destfile="${jar.outfile-client-console}">
       <fileset dir="${staging}">
         <include name="com/dyuproject/protostuff/**/*" />
@@ -362,13 +362,13 @@
         <attribute name="Main-Class"
           value="org.waveprotocol.box.consoleclient.ConsoleClient"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
-        <attribute name="Implementation-Title" value="Google Wave FedOne Console Client"/>
-        <attribute name="Implementation-Version" value="${fedone.version}"/>
+        <attribute name="Implementation-Title" value="Wave in a Box Console Client"/>
+        <attribute name="Implementation-Version" value="${waveinabox.version}"/>
       </manifest>
     </jar>
   </target>
 
-  <target name="dist-agent-echoey" depends="stage" description="Assembles the FedOne echoey agent">
+  <target name="dist-agent-echoey" depends="stage" description="Assembles the Wave in a Box echoey agent">
     <jar destfile="${jar.outfile-agent-echoey}">
       <fileset dir="${staging}">
         <include name="com/dyuproject/protostuff/**/*" />
@@ -387,13 +387,13 @@
         <attribute name="Main-Class"
           value="org.waveprotocol.box.agents.echoey.Echoey"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
-        <attribute name="Implementation-Title" value="Google Wave FedOne Echoey Agent"/>
-        <attribute name="Implementation-Version" value="${fedone.version}"/>
+        <attribute name="Implementation-Title" value="Wave in a Box Echoey Agent"/>
+        <attribute name="Implementation-Version" value="${waveinabox.version}"/>
       </manifest>
     </jar>
   </target>
 
-  <target name="dist-agent-probey" depends="stage" description="Assembles the FedOne probey agent">
+  <target name="dist-agent-probey" depends="stage" description="Assembles the Wave in a Box probey agent">
     <jar destfile="${jar.outfile-agent-probey}">
       <fileset dir="${staging}">
         <include name="com/dyuproject/protostuff/**/*" />
@@ -414,8 +414,8 @@
         <attribute name="Main-Class"
           value="org.waveprotocol.box.agents.probey.Probey"/>
         <attribute name="Implementation-Vendor" value="Google, Inc."/>
-        <attribute name="Implementation-Title" value="Google Wave FedOne Probey Agent"/>
-        <attribute name="Implementation-Version" value="${fedone.version}"/>
+        <attribute name="Implementation-Title" value="Wave in a Box Probey Agent"/>
+        <attribute name="Implementation-Version" value="${waveinabox.version}"/>
       </manifest>
     </jar>
   </target>
@@ -423,13 +423,13 @@
   <!-- This rule should be run whenever the build configuration (i.e. build files, libraries) is changed -->
   <target name="dist-test" depends="dist, test" description="Runs all the unit tests in the project against the jar files">
     <taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
-      <classpath refid="fedone.test.classpath"/>
+      <classpath refid="waveinabox.test.classpath"/>
     </taskdef>
 
     <junit fork="yes" showoutput="no" haltonerror="yes">
       <classpath>
-        <path refid="fedone.classpath"/>
-        <path refid="fedone.test.classpath"/>
+        <path refid="waveinabox.classpath"/>
+        <path refid="waveinabox.test.classpath"/>
         <pathelement location="${jar.outfile-server}"/>
         <pathelement location="${test.classes}"/>
       </classpath>
@@ -442,7 +442,7 @@
     </junit>
   </target>
 
-  <target name="doc" depends="stage" description="Builds the Java documentation for the mode, protocol, and FedOne">
+  <target name="doc" depends="stage" description="Builds the Java documentation for the mode, protocol, and Wave in a Box">
     <javadoc sourcepath="${src}" destdir="${dir.docs}" linksource="yes">
       <classpath>
         <pathelement location="${staging}" />

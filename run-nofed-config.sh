@@ -15,7 +15,7 @@ WEBSOCKET_SERVER_HOSTNAME=`hostname`
 WEBSOCKET_SERVER_PORT=9898
 
 # The version of FedOne, extracted from the build.properties file
-FEDONE_VERSION=`grep ^fedone.version= build.properties | cut -f2 -d=`
+WAVEINABOX_VERSION=`grep ^waveinabox.version= build.properties | cut -f2 -d=`
 
 # Disabled federation, as promised.
 ENABLE_FEDERATION=false
