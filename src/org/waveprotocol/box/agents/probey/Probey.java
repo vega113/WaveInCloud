@@ -286,7 +286,7 @@ public class Probey extends AbstractAgent {
         server.start();  // spawns a new thread.
         probey.run();
       } else {
-        System.out.println("usage: java Probey <username@domain> <fedone hostname> <fedone port>"
+        System.out.println("usage: java Probey <username@domain> <fedone hostname> <waveinabox port>"
             + " <http port>");
       }
     } catch (Exception e) {

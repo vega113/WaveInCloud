@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script will start the FedOne wave client.
+# This script will start the Wave in a Box wave client.
 #
 
 if [ -f run-config.sh ] ; then

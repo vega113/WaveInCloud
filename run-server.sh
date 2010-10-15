@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script will start the FedOne wave server.
+# This script will start the Wave in a Box server.
 #
 
 if [ -f run-config.sh ] ; then
@@ -20,7 +20,7 @@ exec java $DEBUG_FLAGS \
   --wave_server_domain=$WAVE_SERVER_DOMAIN_NAME \
   --xmpp_component_name=wave \
   --xmpp_jid=wave.${WAVE_SERVER_DOMAIN_NAME} \
-  --xmpp_server_description="FedOne" \
+  --xmpp_server_description="Wave in a Box" \
   --xmpp_server_hostname=$XMPP_SERVER_HOSTNAME \
   --xmpp_server_ip=$XMPP_SERVER_IP \
   --xmpp_server_port=$XMPP_SERVER_PORT \

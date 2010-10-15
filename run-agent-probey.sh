@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script will start the Echoey the FedOne wave agent.
+# This script will start the Echoey the Wave in a Box wave agent.
 #
 
 if [ -f run-config.sh ] ; then

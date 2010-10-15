@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Configuration for the FedOne run scripts.
+# Configuration for the Wave in a Box run scripts.
 #
 # Copy this file to run-config.sh and configure the variables there.
 # Please see http://www.waveprotocol.org/code/installation for
@@ -24,7 +24,7 @@ WAVE_SERVER_PORT=9876
 WEBSOCKET_SERVER_HOSTNAME=`hostname`
 WEBSOCKET_SERVER_PORT=9898
 
-# The version of FedOne, extracted from the build.properties file
+# The version of Wave in a Box, extracted from the build.properties file
 WAVEINABOX_VERSION=`grep ^waveinabox.version= build.properties | cut -f2 -d=`
 
 ### Server-specific variables
@@ -47,7 +47,7 @@ XMPP_SERVER_HOSTNAME=$WAVE_SERVER_DOMAIN_NAME
 XMPP_SERVER_PORT=5275
 XMPP_SERVER_PING=wavesandbox.com
 
-# Set XMPP_SERVER_IP to localhost if the XMPP and FedOne servers are
+# Set XMPP_SERVER_IP to localhost if the XMPP and Wave in a Box servers are
 # running on the same host
 XMPP_SERVER_IP=$XMPP_SERVER_HOSTNAME
 
