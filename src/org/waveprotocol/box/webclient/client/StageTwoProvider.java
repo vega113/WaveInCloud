@@ -18,6 +18,8 @@
 
 package org.waveprotocol.box.webclient.client;
 
+import com.google.gwt.user.client.Command;
+
 import org.waveprotocol.box.webclient.common.communication.callback.SimpleCallback;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.wave.client.StageOne;
@@ -168,8 +170,11 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
     // unused.
     return new MuxConnector() {
       @Override
-      public void connect() {
+      public void connect(Command onOpened) {
         // Do nothing.
+        if (onOpened != null) {
+          onOpened.execute();
+        }
       }
     };
   }
