@@ -18,7 +18,6 @@ package org.waveprotocol.box.webclient.client;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JsArray;
-import com.google.gwt.user.client.Random;
 
 import org.waveprotocol.box.server.waveserver.DocumentSnapshot;
 import org.waveprotocol.box.server.waveserver.ProtocolSubmitRequest;
@@ -59,6 +58,7 @@ import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Implements the {@link WaveViewService} using RPCs.
@@ -146,8 +146,30 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
     @Override
     public boolean hasMarker() {
-      // The WaveViewService API's marker is not optional: it is present or absent.
-      // The serialized message's marker is optional: it is true, false, or absent.
+      // Note that the WaveViewService API and the current server-provided
+      // protocol do not agree on the meaning of this method.
+      //
+      // Wave-in-a-box server provides:
+      // If present and true, then there are no wavelets in the wave matching
+      // the wavelet prefixes in the ViewOpenRequest. When the client receives
+      // an empty wave view, it can consult this boolean value to determine if
+      // the wave is truly empty (e.g., has no conversation wavelets) or if
+      // there are wavelets but the user has no access.
+      //
+      // WaveViewService provides:
+      // The marker is not a boolean. It is an opaque token that is either
+      // present or absent. Its presence indicates that the initial set of
+      // snapshots has been delivered.
+      //
+      // Given those, the wave-in-a-box server protocol is an extension of the
+      // WaveViewService. The presence of the marker in its protocol corresponds
+      // to the presence of the marker in WaveViewService.
+      //
+      // return update.hasMarker();
+
+      // Code above disabled due to server bug, that sets the marker as false on
+      // every update.  The client synthesizes the marker until that is fixed.
+      // Issue: 116.
       return update.hasMarker() && update.getMarker();
     }
   }
@@ -185,8 +207,8 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
       } else {
         ProtocolHashedVersion current = versions.get(wavelet);
         Preconditions.checkNotNull(current);
-        int prevVersion = (int) current.getVersion();
-        int deltaVersion = (int) delta.getVersion();
+        double prevVersion = current.getVersion();
+        double deltaVersion = delta.getVersion();
         if (deltaVersion != prevVersion) {
           throw new IllegalArgumentException(
               "Client delta expressed against non-server version.  Server version: " + prevVersion
@@ -201,6 +223,12 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   private final RemoteViewServiceMultiplexer mux;
   private final DocumentFactory<?> docFactory;
   private final VersionSignatureManager versions = new VersionSignatureManager();
+
+  /** Distinction generator.  */
+  // Distinctions are obsolete in the new protocol provided by the server, but
+  // client model code still expects them, so random numbers are used as a
+  // stop-gap until the model code no longer uses DistinctVersion.
+  private final Random distinction = new Random();
 
   /** Filter for client-side filtering. */
   private IdFilter filter;
@@ -251,25 +279,26 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
           versions.updateHistory(wavelet, response.getHashedVersionAfterApplication());
         }
         callback.onSuccess(DistinctVersion.of(
-            (long) response.getHashedVersionAfterApplication().getVersion(), Random.nextInt()),
+            (long) response.getHashedVersionAfterApplication().getVersion(), distinction.nextInt()),
             response.getOperationsApplied(), null, ResponseCode.OK);
       }
     });
 
     // We don't support the getDebugProfiling thing anyway.
-    return "Poor APIs are not supported";
+    return null;
   }
 
   @Override
   public void viewClose(final WaveId waveId, final String channelId, final CloseCallback callback) {
-    LOG.info("closing viewserver channel " + this);
+    Preconditions.checkArgument(this.waveId.equals(waveId));
+    LOG.info("closing channel " + waveId);
     callback.onSuccess();
-    // TODO(arb): the client server protocol needs a ProtocolCloseRequest. Oops.
+    mux.close(waveId, this);
   }
 
   @Override
   public String debugGetProfilingInfo(final String requestId) {
-    return "Poor APIs are not supported";
+    throw new UnsupportedOperationException();
   }
 
   //
@@ -299,7 +328,9 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
         callback.onUpdate(deserialize(update));
       }
 
-      // Synthesize open-finished marker after a conv-root wavelet is seen.
+      // HACK: synthesize open-finished marker after a conv-root wavelet is seen.
+      // This should be removed once the server stops setting the marker on
+      // every update.
       if (update.hasSnapshot()
           && getTarget(update).waveletId.getId().startsWith("conv+root")) {
         callback.onUpdate(deserialize(ProtocolWaveletUpdate.create().setMarker(true)));

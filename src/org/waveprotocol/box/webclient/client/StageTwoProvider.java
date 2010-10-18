@@ -129,6 +129,11 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
   private final WaveId waveId;
   private final RemoteViewServiceMultiplexer channel;
 
+  /**
+   * Continuation to progress to the next stage. This will disappear with the
+   * new protocol.
+   */
+  private AsyncHolder.Accessor<StageTwo> whenReady;
 
   /**
    * @param waveId the id of the wave to open. If null, it means, create a new wave.
@@ -179,15 +184,30 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
               getViewIdMapper(), getBlipQueue());
 
         stageOne.getDomAsViewProvider().setRenderer(waveRenderer);
+
         // Ensure the wave is rendered.
         renderWave(waveRenderer);
 
         // Eagerly install some features.
-        Reader.createAndInstall(getSupplement(), stageOne.getFocusFrame(), getModelAsViewProvider());
+        Reader.createAndInstall(
+            getSupplement(), stageOne.getFocusFrame(), getModelAsViewProvider());
+
+        // Rendering, and therefore the whole stage is now ready.
+        whenReady.use(StageTwoProvider.this);
       }
     });
   }
 
+  @Override
+  protected void create(final AsyncHolder.Accessor<StageTwo> whenReady) {
+    this.whenReady = whenReady;
+    super.create(new AsyncHolder.Accessor<StageTwo>() {
+      @Override
+      public void use(StageTwo x) {
+        // Delay progression until rendering is ready.
+      }
+    });
+  }
 
   @Override
   protected void fetchWave(final AsyncHolder.Accessor<WaveViewData> whenReady) {

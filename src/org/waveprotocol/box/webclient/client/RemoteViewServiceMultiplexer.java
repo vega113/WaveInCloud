@@ -31,12 +31,13 @@ import org.waveprotocol.wave.model.util.CollectionUtils;
 
 import java.util.Map;
 
-
 /**
- * Multiplexes incoming
+ * Distributes the incoming update stream (from wave-in-a-box's client/server
+ * protocol) into per-wave streams.
  */
 public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback {
 
+  /** Codec for parsing wavelet names, for identifying each update's target .*/
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
 
@@ -113,7 +114,7 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
       streams.remove(id);
     }
 
-    // The C/S protocol does not support closing the stream.
+    // Issue 117: the client server protocol does not support closing a wave stream.
   }
 
   /**
