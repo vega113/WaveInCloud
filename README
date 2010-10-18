@@ -5,7 +5,7 @@ you'll need to install it from
 http://www.apple.com/support/downloads/javaformacosx105update1.html - 
 MacOS 10.5 ships with Java 5 by default.
 
-Wave Protocol uses Ant to build. To run the tests, run:
+Wave in a Box uses Ant to build. To run the tests, run:
 
 <code>
   ant test
@@ -16,7 +16,7 @@ To build the server, run just
   ant
 </code>
 
-It will be left in dist/fedone-X.Y.jar.
+It will be left in dist/waveinabox-X.Y.jar.
 
 If you want to use the web client, you will also need to run:
 <code>

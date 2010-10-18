@@ -20,7 +20,7 @@ package org.waveprotocol.box.server.robots.dataapi;
 import com.google.wave.api.OperationType;
 
 import org.waveprotocol.box.server.robots.AbstractOperationServiceRegistry;
-import org.waveprotocol.box.server.robots.operations.AppendBlipService;
+import org.waveprotocol.box.server.robots.operations.BlipOperationServices;
 import org.waveprotocol.box.server.robots.operations.CreateWaveletService;
 import org.waveprotocol.box.server.robots.operations.DoNothingService;
 import org.waveprotocol.box.server.robots.operations.FetchWaveService;
@@ -42,7 +42,14 @@ public final class DataApiOperationServiceRegistry extends AbstractOperationServ
     // Register all the OperationProviders
     register(OperationType.ROBOT_NOTIFY, DoNothingService.create());
     register(OperationType.ROBOT_NOTIFY_CAPABILITIES_HASH, DoNothingService.create());
-    register(OperationType.WAVELET_APPEND_BLIP, AppendBlipService.create());
+    register(OperationType.WAVELET_APPEND_BLIP, BlipOperationServices.create());
+    register(OperationType.BLIP_CONTINUE_THREAD, BlipOperationServices.create());
+    register(OperationType.BLIP_CREATE_CHILD, BlipOperationServices.create());
+    register(OperationType.BLIP_DELETE, BlipOperationServices.create());
+    register(OperationType.DOCUMENT_APPEND_INLINE_BLIP, BlipOperationServices.create());
+    register(OperationType.DOCUMENT_INSERT_INLINE_BLIP, BlipOperationServices.create());
+    register(
+        OperationType.DOCUMENT_INSERT_INLINE_BLIP_AFTER_ELEMENT, BlipOperationServices.create());
     register(OperationType.ROBOT_CREATE_WAVELET, CreateWaveletService.create());
     register(OperationType.ROBOT_FETCH_WAVE, FetchWaveService.create());
   }

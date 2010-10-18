@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script will start the Echoey the FedOne wave agent.
+# This script will start the Echoey the Wave in a Box wave agent.
 #
 
 if [ -f run-config.sh ] ; then
@@ -19,4 +19,5 @@ PROBEY_PORT=8090
 
 USER_NAME=probey@$WAVE_SERVER_DOMAIN_NAME
 echo "running agent.probey as user: ${USER_NAME}"
-exec java $DEBUG_FLAGS -jar dist/fedone-agent-probey-$FEDONE_VERSION.jar $USER_NAME $WEBSOCKET_SERVER_HOSTNAME $WEBSOCKET_SERVER_PORT $PROBEY_PORT
+exec java $DEBUG_FLAGS -jar dist/waveinabox-agent-probey-$WAVEINABOX_VERSION.jar $USER_NAME $WEBSOCKET_SERVER_HOSTNAME $WEBSOCKET_SERVER_PORT $PROBEY_PORT
+

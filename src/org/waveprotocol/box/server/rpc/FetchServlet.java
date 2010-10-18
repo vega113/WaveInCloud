@@ -102,9 +102,14 @@ public final class FetchServlet extends HttpServlet {
       // clients guess valid wavelet ids that they're not authorized to access.
       dest.sendError(HttpServletResponse.SC_FORBIDDEN);
     } else {
-      dest.setContentType("application/json");
       dest.setStatus(HttpServletResponse.SC_OK);
-
+      dest.setContentType("application/json");
+      
+      // This is a hack to make sure the fetched data is fresh.
+      // TODO(josephg): Change this so that browsers can cache wave snapshots. Probably need:
+      // 'Cache-Control: must-revalidate, private' and an ETag with the wave[let]'s version.
+      dest.setHeader("Cache-Control", "no-store");
+      
       serializer.writeTo(dest.getWriter(), message);
     }
   }

@@ -32,10 +32,10 @@ public interface OperationService {
   /**
    * Tries to execute the operation in the given context.
    *
-   * @param operation the operation to execute
+   * @param operation the operation to execute.
    * @param context the context of the operation.
-   * @param participant the participant performing this operation
-   * @throws InvalidRequestException if the operation fails to perform
+   * @param participant the participant performing this operation.
+   * @throws InvalidRequestException if the operation fails to perform.
    */
   void execute(OperationRequest operation, OperationContext context, ParticipantId participant)
       throws InvalidRequestException;

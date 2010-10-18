@@ -240,7 +240,7 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   }
 
   @Override
-  public final OpBasedWavelet getWavelet(OperationRequest operation, ParticipantId participant)
+  public OpBasedWavelet getWavelet(OperationRequest operation, ParticipantId participant)
       throws InvalidRequestException {
     String waveId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVE_ID);
     String waveletId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVELET_ID);
@@ -255,11 +255,18 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   }
 
   @Override
-  public ConversationBlip getBlip(Conversation conversation, String blipId) {
-    if (blipId.startsWith(TEMP_ID_MARKER)) {
-      blipId = tempBlipIdMap.get(blipId);
+  public ConversationBlip getBlip(Conversation conversation, String blipId)
+      throws InvalidRequestException {
+    // We might need to look up the blip id for new blips.
+    String actualBlipId = blipId.startsWith(TEMP_ID_MARKER) ? tempBlipIdMap.get(blipId) : blipId;
+
+    ConversationBlip blip = conversation.getBlip(actualBlipId);
+    if (blip == null || blip.isDeleted()) {
+      throw new InvalidRequestException(
+          "Blip with id " + blipId + " does not exist or has been deleted");
     }
-    return conversation.getBlip(blipId);
+
+    return blip;
   }
 
   // OperationResults implementation begins here

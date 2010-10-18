@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Configuration for the FedOne run scripts without federation support.  To add
+# Configuration for Wave in a Box run scripts without federation support.  To add
 # federation support see run-config.sh.example.
 
 # Domain name of the wave server 
@@ -14,8 +14,8 @@ WAVE_SERVER_PORT=9876
 WEBSOCKET_SERVER_HOSTNAME=`hostname`
 WEBSOCKET_SERVER_PORT=9898
 
-# The version of FedOne, extracted from the build.properties file
-FEDONE_VERSION=`grep ^fedone.version= build.properties | cut -f2 -d=`
+# The version of Wave in a Box, extracted from the build.properties file
+WAVEINABOX_VERSION=`grep ^waveinabox.version= build.properties | cut -f2 -d=`
 
 # Disabled federation, as promised.
 ENABLE_FEDERATION=false

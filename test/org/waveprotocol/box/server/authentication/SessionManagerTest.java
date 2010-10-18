@@ -69,11 +69,11 @@ public class SessionManagerTest extends TestCase {
   }
 
   public void testGetLoginUrlWithNoArgument() {
-    assertEquals(SessionManager.AUTH_URL, sessionManager.getLoginUrl(null));
+    assertEquals(SessionManager.SIGN_IN_URL, sessionManager.getLoginUrl(null));
   }
 
   public void testGetLoginUrlWithSimpleRedirect() {
-    assertEquals(SessionManager.AUTH_URL + "?r=/some/other/url",
+    assertEquals(SessionManager.SIGN_IN_URL + "?r=/some/other/url",
         sessionManager.getLoginUrl("/some/other/url"));
   }
 
@@ -81,6 +81,6 @@ public class SessionManagerTest extends TestCase {
     String url = "/abc123?nested=query&string";
     String encoded_url = "/abc123?nested%3Dquery%26string";
     assertEquals(
-        SessionManager.AUTH_URL + "?r=" + encoded_url, sessionManager.getLoginUrl(url));
+        SessionManager.SIGN_IN_URL + "?r=" + encoded_url, sessionManager.getLoginUrl(url));
   }
 }
