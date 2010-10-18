@@ -104,7 +104,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
     @Override
     public boolean hasDeltas() {
-      return update.getAppliedDeltaArray().length() > 0;
+      return update.getAppliedDeltaArray() != null && update.getAppliedDeltaArray().length() > 0;
     }
 
     @Override
@@ -344,15 +344,19 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
   private static List<Delta> deserialize(
       JsArray<ProtocolWaveletDelta> deltas, ProtocolHashedVersion end) {
-    List<Delta> parsed = new ArrayList<Delta>();
+    if (deltas == null) {
+      return null;
+    } else {
+      List<Delta> parsed = new ArrayList<Delta>();
 
-    for (int i = 0; i < deltas.length(); i++) {
-      ProtocolHashedVersion thisEnd = //
+      for (int i = 0; i < deltas.length(); i++) {
+        ProtocolHashedVersion thisEnd = //
           i < deltas.length() - 1 ? deltas.get(i + 1).getHashedVersion() : end;
-      parsed.add(deserialize(deltas.get(i), thisEnd));
-    }
+          parsed.add(deserialize(deltas.get(i), thisEnd));
+      }
 
-    return parsed;
+      return parsed;
+    }
   }
 
   private static Delta deserialize(ProtocolWaveletDelta delta, ProtocolHashedVersion end) {
