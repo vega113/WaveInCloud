@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.box.server.common;
+package org.waveprotocol.box.common;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

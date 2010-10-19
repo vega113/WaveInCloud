@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.box.client;
+package org.waveprotocol.box.common;
 
 import com.google.common.annotations.GwtCompatible;
 

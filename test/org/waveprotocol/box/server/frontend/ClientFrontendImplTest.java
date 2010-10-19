@@ -35,8 +35,9 @@ import junit.framework.TestCase;
 
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
+import org.waveprotocol.box.common.DeltaSequence;
+import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.DeltaSequence;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.frontend.ClientFrontend.OpenListener;

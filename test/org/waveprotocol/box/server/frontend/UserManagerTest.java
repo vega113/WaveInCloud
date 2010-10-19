@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.waveprotocol.box.server.common.DeltaSequence;
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdFilters;

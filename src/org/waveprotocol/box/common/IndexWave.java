@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.waveprotocol.box.server.frontend;
+package org.waveprotocol.box.common;
 
 import static org.waveprotocol.box.common.CommonConstants.INDEX_WAVE_ID;
 
@@ -23,9 +23,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import org.waveprotocol.box.client.IndexEntry;
-import org.waveprotocol.box.common.Snippets;
-import org.waveprotocol.box.server.common.DeltaSequence;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdConstants;

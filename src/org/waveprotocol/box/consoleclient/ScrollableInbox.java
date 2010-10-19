@@ -24,8 +24,8 @@ import com.google.common.collect.Maps;
 import org.waveprotocol.box.client.ClientBackend;
 import org.waveprotocol.box.client.ClientUtils;
 import org.waveprotocol.box.client.ClientWaveView;
-import org.waveprotocol.box.client.IndexEntry;
-import org.waveprotocol.box.server.frontend.IndexWave;
+import org.waveprotocol.box.common.IndexEntry;
+import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.util.List;
