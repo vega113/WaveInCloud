@@ -20,7 +20,7 @@ package org.waveprotocol.box.server.agents.agent;
 import com.google.common.annotations.VisibleForTesting;
 
 import org.waveprotocol.box.client.WaveletOperationListener;
-import org.waveprotocol.box.server.frontend.IndexWave;
+import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;

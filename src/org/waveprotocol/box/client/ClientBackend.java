@@ -29,8 +29,9 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
 import org.waveprotocol.box.common.DocumentConstants;
+import org.waveprotocol.box.common.IndexEntry;
+import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.frontend.IndexWave;
 import org.waveprotocol.box.server.rpc.ClientRpcChannel;
 import org.waveprotocol.box.server.rpc.WebSocketClientRpcChannel;
 import org.waveprotocol.box.server.util.BlockingSuccessFailCallback;

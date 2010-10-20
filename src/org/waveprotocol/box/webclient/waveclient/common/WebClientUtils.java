@@ -17,9 +17,9 @@
 
 package org.waveprotocol.box.webclient.waveclient.common;
 
-import org.waveprotocol.box.client.IndexEntry;
 import org.waveprotocol.box.common.CommonConstants;
 import org.waveprotocol.box.common.DocumentConstants;
+import org.waveprotocol.box.common.IndexEntry;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;

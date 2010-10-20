@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.common.DeltaSequence;
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreNoOp;

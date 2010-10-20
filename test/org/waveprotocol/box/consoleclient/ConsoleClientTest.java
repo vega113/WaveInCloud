@@ -25,10 +25,10 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.client.ClientBackend;
 import org.waveprotocol.box.client.ClientWaveView;
-import org.waveprotocol.box.client.IndexEntry;
 import org.waveprotocol.box.client.testing.ClientTestingUtil;
+import org.waveprotocol.box.common.IndexEntry;
+import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.box.consoleclient.ScrollableWaveView.RenderMode;
-import org.waveprotocol.box.server.frontend.IndexWave;
 import org.waveprotocol.box.server.util.testing.TestingConstants;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.wave.ParticipantId;

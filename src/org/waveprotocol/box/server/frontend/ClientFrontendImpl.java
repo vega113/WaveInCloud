@@ -25,9 +25,10 @@ import com.google.common.collect.MapMaker;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import org.waveprotocol.box.common.DeltaSequence;
+import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.box.common.Snippets;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.DeltaSequence;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;

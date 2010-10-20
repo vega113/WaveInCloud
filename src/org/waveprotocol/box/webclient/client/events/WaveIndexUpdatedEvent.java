@@ -17,7 +17,7 @@ package org.waveprotocol.box.webclient.client.events;
 
 import com.google.gwt.event.shared.GwtEvent;
 
-import org.waveprotocol.box.client.IndexEntry;
+import org.waveprotocol.box.common.IndexEntry;
 
 import java.util.List;
 

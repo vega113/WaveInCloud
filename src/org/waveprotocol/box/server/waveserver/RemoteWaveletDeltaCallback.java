@@ -17,7 +17,7 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import org.waveprotocol.box.server.common.DeltaSequence;
+import org.waveprotocol.box.common.DeltaSequence;
 
 /**
  * Notification interface for when remote wavelet deltas are ready to be processed.
