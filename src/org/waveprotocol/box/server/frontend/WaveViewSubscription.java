@@ -4,14 +4,13 @@ package org.waveprotocol.box.server.frontend;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.DeltaSequence;
+import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -32,15 +31,14 @@ import javax.annotation.Nullable;
  */
 final class WaveViewSubscription {
 
+  private static final Log LOG = Log.get(WaveViewSubscription.class);
+
   private final WaveId waveId;
   private final IdFilter waveletIdFilter;
   private final ClientFrontend.OpenListener openListener;
   private final String channelId;
   // Successfully submitted versions for which we haven't yet seen the update
   private final HashMultimap<WaveletId, Long> submittedVersions = HashMultimap.create();
-  // While there are outstanding submits, this contains the list of updates
-  // that are blocked.
-  private final ListMultimap<WaveletId, Runnable> queuedUpdates = LinkedListMultimap.create();
   // Wavelets with outstanding submits
   private final Set<WaveletId> outstandingSubmits = Sets.newHashSet();
   // Current version of each wavelet
@@ -80,7 +78,10 @@ final class WaveViewSubscription {
 
   /** This client sent a submit request */
   public synchronized void submitRequest(WaveletName waveletName) {
-    // A given client can only have one outstanding submit per wave.
+    // A given client can only have one outstanding submit per wavelet.
+    Preconditions.checkState(!outstandingSubmits.contains(waveletName.waveletId),
+        "Received overlapping submit requests to subscription %s", this);
+    LOG.info("Submit oustandinding on channel " + channelId);
     outstandingSubmits.add(waveletName.waveletId);
   }
 
@@ -93,11 +94,7 @@ final class WaveViewSubscription {
     WaveletId waveletId = waveletName.waveletId;
     submittedVersions.put(waveletId, version.getVersion());
     outstandingSubmits.remove(waveletId);
-    final List<Runnable> updatesForWavelet = queuedUpdates.get(waveletId);
-    while (!updatesForWavelet.isEmpty()) {
-      Runnable runnable = updatesForWavelet.remove(0);
-      runnable.run();
-    }
+    LOG.info("Submit resolved on channel " + channelId);
   }
 
   /**
@@ -117,17 +114,7 @@ final class WaveViewSubscription {
           channelId);
     }
     WaveletId waveletId = waveletName.waveletId;
-    if (!outstandingSubmits.isEmpty()) {
-      queuedUpdates.put(waveletId, new Runnable() {
-        @Override
-        public void run() {
-          onUpdate(waveletName, snapshot, deltas, endVersion, committedVersion, hasMarker);
-        }
-      });
-      return;
-    }
     List<CoreWaveletDelta> filteredDeltas;
-
     if (!submittedVersions.isEmpty() && !submittedVersions.get(waveletId).isEmpty()) {
       // Walk through the deltas, removing any that are from this client.
       filteredDeltas = Lists.newArrayList();
@@ -171,5 +158,10 @@ final class WaveViewSubscription {
       HashedVersion nextExpectedVersion = deltas.getEndVersion();
       currentVersions.put(waveletName.waveletId, nextExpectedVersion);
     }
+  }
+
+  @Override
+  public String toString() {
+    return "[WaveViewSubscription wave: " + waveId + ", channel: " + channelId + "]";
   }
 }

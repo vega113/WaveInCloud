@@ -491,7 +491,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   private boolean isLocalWavelet(WaveletName waveletName) {
     boolean isLocal = certificateManager.getLocalDomains().
         contains(waveletName.waveletId.getDomain());
-    LOG.info("### WS is local? " + waveletName + " = " + isLocal);
+    LOG.fine("" + waveletName + " is " + (isLocal? "" : "not") + " local");
     return isLocal;
   }
 
@@ -592,7 +592,9 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
 
     if (isLocalWavelet(waveletName)) {
       try {
-        LOG.info("## WS: Got submit: " + waveletName + " delta: " + delta);
+        LOG.info("Submit to " + waveletName + " by " + delta.getAuthor() + " @ "
+            + delta.getHashedVersion().getVersion() + " with " + delta.getOperationCount()
+            + " ops");
 
         // TODO(arb): add v0 policer here.
         LocalWaveletContainer wc =
@@ -612,26 +614,34 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // the delta contains a removeParticipant operation.
           Set<String> hostDomains = Sets.newHashSet(getParticipantDomains(wc));
           DeltaApplicationResult submitResult = wc.submitRequest(waveletName, signedDelta);
-          ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
+          ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDeltaBytes =
               submitResult.getAppliedDelta();
+          ProtocolAppliedWaveletDelta appliedDelta = appliedDeltaBytes.getMessage();
 
           // return result to caller.
           HashedVersion resultingVersion = submitResult.getHashedVersionAfterApplication();
           ProtocolHashedVersion resultVersionProto =
               CoreWaveletOperationSerializer.serialize(resultingVersion);
-          LOG.info("## WS: Submit result: " + waveletName + " appliedDelta: " + appliedDelta);
-          resultListener.onSuccess(appliedDelta.getMessage().getOperationsApplied(),
-              resultVersionProto, appliedDelta.getMessage().getApplicationTimestamp());
+          LOG.info("Submit result for " + waveletName + " by "
+              + submitResult.getDelta().getAuthor() + " applied "
+              + appliedDelta.getOperationsApplied() + " ops at v: "
+              + appliedDelta.getHashedVersionAppliedAt().getVersion() + " t: "
+              + appliedDelta.getApplicationTimestamp());
+          resultListener.onSuccess(appliedDelta.getOperationsApplied(),
+              resultVersionProto, appliedDelta.getApplicationTimestamp());
 
           // This is always false right now since the current algorithm doesn't transform ops away.
-          if (appliedDelta.getMessage().getOperationsApplied() == 0) {
+          if (appliedDelta.getOperationsApplied() == 0) {
             return; // ignore the delta (don't publish it), it was transformed away
           }
 
           // Send the results to subscribers.
-          LOG.info("Sending update to client listener: " + submitResult.getDelta());
-          dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(), resultingVersion,
-              ImmutableList.of(submitResult.getDelta()));
+          try {
+            dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(), resultingVersion,
+                ImmutableList.of(submitResult.getDelta()));
+          } catch (RuntimeException e) {
+            LOG.severe("Runtime exception in wave bus subscriber", e);
+          }
 
           // Capture any new domains from addParticipant operations.
           hostDomains.addAll(getParticipantDomains(wc));
@@ -639,7 +649,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // Broadcast results to the remote servers, but make sure they all have our signatures
           for (final String hostDomain : hostDomains) {
             final WaveletFederationListener host = federationHosts.get(hostDomain);
-            host.waveletDeltaUpdate(waveletName, ImmutableList.of(appliedDelta.getByteString()),
+            host.waveletDeltaUpdate(waveletName, ImmutableList.of(appliedDeltaBytes.getByteString()),
                 new WaveletFederationListener.WaveletUpdateCallback() {
                   @Override
                   public void onSuccess() {

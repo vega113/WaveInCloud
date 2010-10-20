@@ -121,7 +121,7 @@ public final class DeltaSequence extends AbstractList<CoreWaveletDelta> {
 
   @Override
   public String toString() {
-    return String.format("%d delta%s (version %s .. %s): %s", deltas.size(),
+    return String.format("[DeltaSequence %d delta%s (version %s .. %s): %s]", deltas.size(),
         (deltas.size() == 1 ? "" : "s"),
         getStartVersion(), getEndVersion(), deltas);
   }

@@ -146,12 +146,13 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
       return;
     }
 
-    String channel_id = generateChannelID();
+    String channelId = generateChannelID();
     boolean isIndexWave = IndexWave.isIndexWave(waveId);
     UserManager userManager = perUser.get(participant);
     synchronized (userManager) {
       WaveViewSubscription subscription =
-          userManager.subscribe(waveId, waveletIdFilter, channel_id, openListener);
+          userManager.subscribe(waveId, waveletIdFilter, channelId, openListener);
+      LOG.info("Subscribed " + participant + " to " + waveId + " channel " + channelId);
 
       Set<WaveletId> waveletIds = visibleWaveletsFor(subscription);
       for (WaveletId waveletId : waveletIds) {
@@ -192,16 +193,16 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
               snapshotToSend.snapshot.getVersion());
         }
 
-        LOG.info("snapshot in response is: " + (snapshotToSend == null));
+        LOG.info("snapshot in response is: " + (snapshotToSend != null));
         if (snapshotToSend == null) {
           // Send deltas.
           openListener.onUpdate(waveletName, snapshotToSend, deltasToSend, endVersion,
-              null, false, channel_id);
+              null, false, channelId);
         } else {
           // Send the snapshot.
           openListener.onUpdate(waveletName, snapshotToSend, deltasToSend, endVersion,
               CoreWaveletOperationSerializer.deserialize(snapshotToSend.committedVersion), false,
-              channel_id);
+              channelId);
         }
       }
 
@@ -210,7 +211,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         // Send message with just the channel id.
         LOG.info("sending just a channel id for " + dummyWaveletName);
         openListener.onUpdate(dummyWaveletName,
-            null, new ArrayList<CoreWaveletDelta>(), null, null, false, channel_id);
+            null, new ArrayList<CoreWaveletDelta>(), null, null, false, channelId);
       }
 
       LOG.info("sending marker for " + dummyWaveletName);
