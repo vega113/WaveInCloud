@@ -22,7 +22,6 @@
   is hooked up to the backend, remove this. -->
   <inherits name='org.waveprotocol.wave.model.conversation.Testing'/>
 
-  <inherits name='org.waveprotocol.box.client.IndexEntry'/>
   <inherits name='org.waveprotocol.box.webclient.common.communication.Communication'/>
   <inherits name='org.waveprotocol.box.webclient.util.Util'/>
   <inherits name='org.waveprotocol.box.webclient.waveclient.common.Common'/>

@@ -1,6 +1,0 @@
-<module>
-    <inherits name="org.waveprotocol.wave.model.Model"/>
-    <source path="">
-      <include name="IndexEntry.java"/>
-    </source>
-</module>
