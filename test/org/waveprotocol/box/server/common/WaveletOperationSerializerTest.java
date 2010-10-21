@@ -70,7 +70,7 @@ public class WaveletOperationSerializerTest extends TestCase {
 
     List<CoreWaveletOperation> ops = ImmutableList.of(op, op, op);
     ParticipantId author = new ParticipantId("kalman@google.com");
-    HashedVersion hashedVersion = HashedVersion.UNSIGNED_VERSION_0;
+    HashedVersion hashedVersion = HashedVersion.unsigned(0);
     CoreWaveletDelta delta = new CoreWaveletDelta(author, hashedVersion, ops);
     ProtocolWaveletDelta serialized = CoreWaveletOperationSerializer.serialize(delta);
     CoreWaveletDelta deserialized = CoreWaveletOperationSerializer.deserialize(serialized);

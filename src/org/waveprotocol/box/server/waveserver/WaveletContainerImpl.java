@@ -38,7 +38,6 @@ import org.waveprotocol.wave.model.operation.TransformException;
 import org.waveprotocol.wave.model.operation.core.CoreTransform;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
-import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -233,12 +232,13 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
     if (waveletData == null) {
       Preconditions.checkState(currentVersion.getVersion() == 0L, "CurrentVersion must be 0");
-      waveletData =
-          WaveletDataUtil.createEmptyWavelet(waveletName, delta.getAuthor(), applicationTimeStamp);
+      waveletData = WaveletDataUtil.createEmptyWavelet(waveletName, delta.getAuthor(),
+          currentVersion, applicationTimeStamp);
     }
 
-    DistinctVersion endVersion = DistinctVersion.of(
-        waveletData.getVersion() + delta.getOperations().size(), RANDOM_GENERATOR.nextInt());
+    // TODO(anorth): Plumb a TransformedWaveletDelta with the right hashed version.
+    HashedVersion endVersion = HashedVersion.unsigned(
+        waveletData.getVersion() + delta.getOperations().size());
     WaveletDataUtil.applyWaveletDelta(delta, waveletData, endVersion, applicationTimeStamp);
   }
 
@@ -256,7 +256,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     if (serverDeltas.isEmpty()) {
       LOG.warning("Got empty server set, but not sumbitting to head! " + submittedDelta);
       // Not strictly an invalid hash, but it's a related issue
-      throw new InvalidHashException(HashedVersion.UNSIGNED_VERSION_0, appliedVersion);
+      throw new InvalidHashException(HashedVersion.unsigned(0), appliedVersion);
     }
 
     // Confirm that the target version/hash of this delta is valid.

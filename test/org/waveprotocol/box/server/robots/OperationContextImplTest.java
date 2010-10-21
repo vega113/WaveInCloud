@@ -22,9 +22,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Maps;
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.OperationErrorEvent;
@@ -38,8 +38,8 @@ import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
@@ -91,7 +91,8 @@ public class OperationContextImplTest extends TestCase {
     request = new OperationRequest("wave.setTitle", OPERATION_ID);
     operationContext = new OperationContextImpl(waveletProvider, converter, conversationUtil);
 
-    waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, PARTICIPANT, 0L);
+    waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, PARTICIPANT,
+        HASH_FACTORY.createVersionZero(WAVELET_NAME), 0L);
     waveletData.addParticipant(PARTICIPANT);
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
     wavelet = new RobotWaveletData(waveletData, hashedVersionZero);

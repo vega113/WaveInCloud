@@ -77,7 +77,8 @@ public class OperationServiceHelper {
     EventDataConverter converter = new EventDataConverterV22();
 
     ObservableWaveletData waveletData = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(
-        new EmptyWaveletSnapshot(waveletName.waveId, waveletName.waveletId, participant, 0L));
+        new EmptyWaveletSnapshot(waveletName.waveId, waveletName.waveletId, participant,
+            HASH_FACTORY.createVersionZero(waveletName), 0L));
     waveletData.addParticipant(participant);
 
     BasicWaveletOperationContextFactory CONTEXT_FACTORY =

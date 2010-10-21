@@ -259,9 +259,8 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
         for (ParticipantId p : src.getParticipants()) {
           copied.addParticipant(p);
         }
-        copied.setTitle(src.getTitle());
         copied.setVersion(copied.getVersion());
-        copied.setDistinctVersion(src.getDistinctVersion());
+        copied.setHashedVersion(src.getHashedVersion());
         copied.setLastModifiedTime(src.getLastModifiedTime());
         newData.addWavelet(copied);
       }

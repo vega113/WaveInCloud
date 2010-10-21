@@ -27,6 +27,7 @@ import org.waveprotocol.wave.model.document.util.DocCompare;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -50,7 +51,8 @@ public class TestDataUtil {
     ParticipantId creator = ParticipantId.ofUnsafe("sam@example.com");
     long time = 1234567890;
 
-    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(name, creator, time);
+    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(name, creator,
+        HashedVersion.unsigned(0), time);
 
     DocInitialization content = new DocInitializationBuilder().characters("Hello there").build();
     wavelet.createBlip(

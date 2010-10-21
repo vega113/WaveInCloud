@@ -27,10 +27,9 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
-import org.waveprotocol.wave.model.version.DistinctVersion;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
-import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -69,7 +68,7 @@ public final class WaveletDataUtil {
    *
    * @param delta delta to apply.
    * @param wavelet the wavelet to apply the operations to.
-   * @param endVersion the {@link DistinctVersion} after applying the deltas.
+   * @param endVersion the version after applying the deltas.
    * @param applicationTimestamp timestamp of operation application.
    *
    * @throws OperationException if the operations fail to apply (and are
@@ -78,7 +77,7 @@ public final class WaveletDataUtil {
    *         rolled back.
    */
   public static void applyWaveletDelta(CoreWaveletDelta delta, WaveletData wavelet,
-      DistinctVersion endVersion, long applicationTimestamp) throws OperationException {
+      HashedVersion endVersion, long applicationTimestamp) throws OperationException {
     Preconditions.checkState(wavelet != null, "wavelet may not be null");
     Preconditions.checkState(delta.getTargetVersion().getVersion() == wavelet.getVersion(),
         "Delta targeting version %s doesn't apply to wavelet at %s", delta.getTargetVersion(),
@@ -135,10 +134,10 @@ public final class WaveletDataUtil {
    * @param author the author of the wavelet.
    * @param creationTimeStamp the time at which the wavelet is created.
    */
-  public static ObservableWaveletData createEmptyWavelet(
-      WaveletName waveletName, ParticipantId author, long creationTimeStamp) {
-    return copyWavelet(new EmptyWaveletSnapshot(
-        waveletName.waveId, waveletName.waveletId, author, creationTimeStamp));
+  public static ObservableWaveletData createEmptyWavelet(WaveletName waveletName,
+      ParticipantId author, HashedVersion version, long creationTimeStamp) {
+    return copyWavelet(new EmptyWaveletSnapshot(waveletName.waveId, waveletName.waveletId, author,
+        version, creationTimeStamp));
   }
 
   /**

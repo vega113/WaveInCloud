@@ -36,14 +36,18 @@ import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.waveclient.common.WaveViewServiceImpl;
 import org.waveprotocol.box.webclient.waveclient.common.WebClientBackend;
+import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWaveView.OpenListener;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveBasedConversationView;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.HashMap;
@@ -64,6 +68,10 @@ public class WaveView extends Composite {
   }
 
   private static final Binder BINDER = GWT.create(Binder.class);
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new ClientPercentEncoderDecoder());
+  private static final HashedVersionFactory HASH_FACTORY =
+      new HashedVersionZeroFactoryImpl(URI_CODEC);
 
   private static Log LOG = Log.get(WaveView.class);
 
@@ -127,7 +135,7 @@ public class WaveView extends Composite {
     }
     this.waveView = (WaveViewServiceImpl) backend.getWaveView(waveId, "",
         docFactory);
-    manager = new CcStackManager(this.waveView, docFactory, participant);
+    manager = new CcStackManager(this.waveView, docFactory, HASH_FACTORY, participant);
     conversationView = WaveBasedConversationView.create(manager.view, backend.getIdGenerator());
     conversationView.addListener(new ObservableConversationView.Listener() {
 
@@ -189,7 +197,7 @@ public class WaveView extends Composite {
               int location) {
             log("inline thread added");
           }
-          
+
           @Override
           public void onParticipantAdded(ParticipantId participant) {
             String existingText = participants.getText();

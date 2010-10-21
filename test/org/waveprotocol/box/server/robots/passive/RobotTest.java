@@ -136,7 +136,8 @@ public class RobotTest extends TestCase {
   }
 
   public void testUpdateWaveletWithGap() throws Exception {
-    WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX, 0L);
+    WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX,
+        HASH_FACTORY.createVersionZero(WAVELET_NAME), 0L);
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
     List<CoreWaveletDelta> deltas = Collections.emptyList();
     robot.waveletUpdate(waveletData, deltas, hashedVersionZero);
@@ -221,8 +222,9 @@ public class RobotTest extends TestCase {
    * Enqueues an empty wavelet into the {@link Robot}.
    */
   private void enqueueEmptyWavelet() throws Exception {
-    WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX, 0L);
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
+    WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX,
+        hashedVersionZero, 0L);
     List<CoreWaveletDelta> deltas = Collections.emptyList();
     robot.waveletUpdate(waveletData, deltas, hashedVersionZero);
   }

@@ -41,6 +41,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.util.Pair;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -154,7 +155,7 @@ public class ClientTestingUtil {
       throws OperationException {
     long dummyCreationTime = System.currentTimeMillis();
     WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(waveletName, creator,
-        dummyCreationTime);
+        HashedVersion.unsigned(0), dummyCreationTime);
     BlipData manifest = WaveletDataUtil.addEmptyBlip(wavelet, MANIFEST_DOCUMENT_ID, creator, 0L);
     manifest.getContent().consume(ClientUtils.createManifest());
     return wavelet;

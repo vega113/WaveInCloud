@@ -188,7 +188,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
           // Send a snapshot of the current state.
           // TODO(anorth): calculate resync point if the client already knows
           // a snapshot.
-          deltasToSend = DeltaSequence.empty(HashedVersion.UNSIGNED_VERSION_0);
+          deltasToSend = DeltaSequence.empty(HashedVersion.unsigned(0));
           snapshotToSend = waveletProvider.getSnapshot(waveletName);
           endVersion = CoreWaveletOperationSerializer.deserialize(
               snapshotToSend.snapshot.getVersion());

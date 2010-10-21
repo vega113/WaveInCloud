@@ -100,7 +100,8 @@ public class RobotOperationApplicatorTest extends TestCase {
     applicator = new RobotOperationApplicator(
         converterManager, waveletProvider, operationRegistry, conversationUtil);
 
-    waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ROBOT_PARTICIPANT, 0L);
+    waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ROBOT_PARTICIPANT,
+        HASH_FACTORY.createVersionZero(WAVELET_NAME), 0L);
     hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
   }
 

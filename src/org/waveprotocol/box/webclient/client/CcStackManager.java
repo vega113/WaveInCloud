@@ -50,6 +50,7 @@ import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFa
 import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 import org.waveprotocol.wave.model.util.ImmediateExcecutionScheduler;
 import org.waveprotocol.wave.model.util.Scheduler;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
@@ -113,15 +114,20 @@ class CcStackManager {
 
   private static final Log LOG = Log.get(CcStackManager.class);
 
-  final WaveViewServiceImpl viewService;
-  final OperationChannelMultiplexer mux;
+  private final WaveViewServiceImpl viewService;
+  private final HashedVersionFactory hashFactory;
+  private final OperationChannelMultiplexer mux;
+  // TODO(anorth): Make this private when WaveView stops touching it.
   final CcBasedWaveView view;
-  final LoggerBundle loggerBundle;
-  final CcBasedWaveViewImpl.CcDocumentFactory<CcDocument> docFactory;
+  private final LoggerBundle loggerBundle;
+  private final CcBasedWaveViewImpl.CcDocumentFactory<CcDocument> docFactory;
+
 
   public CcStackManager(final WaveViewServiceImpl viewService,
-      final SimpleCcDocumentFactory docFactory, ParticipantId participant) {
+      final SimpleCcDocumentFactory docFactory, HashedVersionFactory hashFactory,
+      ParticipantId participant) {
     this.viewService = viewService;
+    this.hashFactory = hashFactory;
     loggerBundle = new AbstractLogger(new LogSink() {
 
       @Override
@@ -167,12 +173,9 @@ class CcStackManager {
 
     Factory dataFactory = WaveletDataImpl.Factory.create(docFactory);
 
-    mux = new OperationChannelMultiplexerImpl(viewService.getWaveId(),
-        viewFactory,
-        dataFactory,
-        new LoggerContext(loggerBundle, loggerBundle, loggerBundle, loggerBundle),
-        null,
-        scheduler);
+    mux = new OperationChannelMultiplexerImpl(viewService.getWaveId(), viewFactory, dataFactory,
+            new LoggerContext(loggerBundle, loggerBundle, loggerBundle, loggerBundle), null,
+            scheduler, hashFactory);
 
     IdGenerator idGen = new IdGeneratorImpl(participant.getDomain(), new Seed() {
       Random r = new Random();

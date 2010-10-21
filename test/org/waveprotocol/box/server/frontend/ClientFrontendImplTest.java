@@ -159,7 +159,7 @@ public class ClientFrontendImplTest extends TestCase {
     assertEquals(0, subscriptions.size());
     verifyIfChannelIdAndMarkerSent(listener, dummyWaveletName, null);
 
-    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, 0L);
+    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, VERSION_0, 0L);
     clientFrontend.waveletUpdate(wavelet, DELTAS.getEndVersion(), DELTAS);
     verify(listener, Mockito.never()).onUpdate(eq(WAVELET_NAME),
         any(WaveletSnapshotAndVersion.class), anyListOf(CoreWaveletDelta.class),
@@ -294,7 +294,7 @@ public class ClientFrontendImplTest extends TestCase {
     UpdateListener listener = new UpdateListener();
     clientFrontend.openRequest(USER, INDEX_WAVE_ID, IdFilters.ALL_IDS, NO_KNOWN_WAVELETS, listener);
 
-    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, 0L);
+    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, VERSION_0, 0L);
     BlipData blip = WaveletDataUtil.addEmptyBlip(wavelet, "default", USER, 0L);
     blip.getContent().consume(makeAppend(0, "Hello, world\nignored text"));
 
@@ -322,7 +322,7 @@ public class ClientFrontendImplTest extends TestCase {
     UpdateListener oldListener = new UpdateListener();
     clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, NO_KNOWN_WAVELETS, oldListener);
 
-    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, 0L);
+    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, VERSION_0, 0L);
     BufferedDocOp addTextOp = makeAppend(0, "Hello, world");
     waveletUpdate(VERSION_0, VERSION_1, wavelet, new CoreAddParticipant(USER),
         new CoreWaveletDocumentOperation("docId", addTextOp));

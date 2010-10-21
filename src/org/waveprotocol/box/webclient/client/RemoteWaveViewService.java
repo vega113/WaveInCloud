@@ -45,7 +45,6 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.CollectionUtils;
-import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
@@ -58,7 +57,6 @@ import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 /**
  * Implements the {@link WaveViewService} using RPCs.
@@ -98,8 +96,8 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     }
 
     @Override
-    public DistinctVersion getCurrentVersion() {
-      return convert(deserialize(update.getResultingVersion()));
+    public HashedVersion getCurrentVersion() {
+      return deserialize(update.getResultingVersion());
     }
 
     @Override
@@ -120,8 +118,8 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     }
 
     @Override
-    public DistinctVersion getLastCommittedVersion() {
-      return convert(deserialize(update.getResultingVersion()));
+    public HashedVersion getLastCommittedVersion() {
+      return deserialize(update.getResultingVersion());
     }
 
     @Override
@@ -224,12 +222,6 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   private final DocumentFactory<?> docFactory;
   private final VersionSignatureManager versions = new VersionSignatureManager();
 
-  /** Distinction generator.  */
-  // Distinctions are obsolete in the new protocol provided by the server, but
-  // client model code still expects them, so random numbers are used as a
-  // stop-gap until the model code no longer uses DistinctVersion.
-  private final Random distinction = new Random();
-
   /** Filter for client-side filtering. */
   private IdFilter filter;
 
@@ -256,7 +248,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
   @Override
   public void viewOpen(final IdFilter filter,
-      final Map<WaveletId, List<DistinctVersion>> knownWavelets, final OpenCallback callback) {
+      final Map<WaveletId, List<HashedVersion>> knownWavelets, final OpenCallback callback) {
     LOG.info("viewOpen called on " + waveId + " with " + filter);
     this.filter = filter;
     this.callback = callback;
@@ -275,12 +267,13 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     mux.submit(submitRequest, new SubmitResponseCallback() {
       @Override
       public void run(ProtocolSubmitResponse response) {
+        HashedVersion resultVersion = HashedVersion.unsigned(0);
         if (response.hasHashedVersionAfterApplication()) {
+          resultVersion = CoreWaveletOperationSerializer.deserialize(
+              response.getHashedVersionAfterApplication());
           versions.updateHistory(wavelet, response.getHashedVersionAfterApplication());
         }
-        callback.onSuccess(DistinctVersion.of(
-            (long) response.getHashedVersionAfterApplication().getVersion(), distinction.nextInt()),
-            response.getOperationsApplied(), null, ResponseCode.OK);
+        callback.onSuccess(resultVersion, response.getOperationsApplied(), null, ResponseCode.OK);
       }
     });
 
@@ -354,11 +347,6 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     return IdFilter.accepts(filter, getTarget(update).waveletId);
   }
 
-  /** Converts from the box server's versions to the wave protocol's versions. */
-  private static DistinctVersion convert(HashedVersion version) {
-    return WaveletOperationSerializer.newDistinctVersion(version);
-  }
-
   //
   // Serialization.
   //
@@ -398,7 +386,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
   private ObservableWaveletData deserialize(WaveId waveId, WaveletSnapshot snapshot) {
     ParticipantId creator = new ParticipantId(snapshot.getParticipantId(0));
-    DistinctVersion version = convert(deserialize(snapshot.getVersion()));
+    HashedVersion version = deserialize(snapshot.getVersion());
     long lmt = (long) snapshot.getLastModifiedTime();
     long ctime = (long) snapshot.getCreationTime();
     WaveletId id = WaveletIdSerializer.INSTANCE.fromString(snapshot.getWaveletId());

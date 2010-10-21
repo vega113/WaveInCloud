@@ -66,7 +66,8 @@ public class WaveletAndDeltasTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX, 0L);
+    waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX, HashedVersion.unsigned(0),
+        0L);
     DocInitialization content = new DocInitializationBuilder().build();
     waveletData.addParticipant(ALEX);
 

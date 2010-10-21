@@ -19,7 +19,7 @@ package org.waveprotocol.box.webclient.waveclient.common;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.Delta;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.version.DistinctVersion;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 
 import java.util.List;
@@ -32,8 +32,8 @@ class WebClientWaveViewUpdate implements WaveViewService.WaveViewServiceUpdate {
 
   String channelId = null;
   WaveletId waveletId = null;
-  DistinctVersion lastCommittedVersion = null;
-  DistinctVersion currentVersion = null;
+  HashedVersion lastCommittedVersion = null;
+  HashedVersion currentVersion = null;
   ObservableWaveletData waveletSnapshot = null;
   List<Delta> deltaList = null;
   public boolean marker = false;
@@ -77,12 +77,12 @@ class WebClientWaveViewUpdate implements WaveViewService.WaveViewServiceUpdate {
   }
 
   @Override
-  public DistinctVersion getLastCommittedVersion() {
+  public HashedVersion getLastCommittedVersion() {
     return lastCommittedVersion;
   }
 
   public WebClientWaveViewUpdate setLastCommittedVersion(
-      final DistinctVersion lastCommittedVersion) {
+      final HashedVersion lastCommittedVersion) {
     this.lastCommittedVersion = lastCommittedVersion;
     return this;
   }
@@ -93,11 +93,11 @@ class WebClientWaveViewUpdate implements WaveViewService.WaveViewServiceUpdate {
   }
 
   @Override
-  public DistinctVersion getCurrentVersion() {
+  public HashedVersion getCurrentVersion() {
     return currentVersion;
   }
 
-  public WebClientWaveViewUpdate setCurrentVersion(final DistinctVersion currentVersion) {
+  public WebClientWaveViewUpdate setCurrentVersion(HashedVersion currentVersion) {
     this.currentVersion = currentVersion;
     return this;
   }
