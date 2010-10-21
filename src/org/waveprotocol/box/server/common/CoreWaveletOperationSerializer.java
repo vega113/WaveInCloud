@@ -50,7 +50,6 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
-import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
@@ -440,9 +439,6 @@ public class CoreWaveletOperationSerializer {
     // We need something simpler when operations and the protocol have been
     // edited.
 
-    // TODO(ljvderijk): should be sent along in the new protocol
-    DistinctVersion distinctVersion = DistinctVersion.of(version.getVersion(), 0);
-
     // Creating a CoreWaveletData because the current protocol lacks the
     // meta-data required to construct an ObservableWaveletData directly.
     // But this results in unnecessary object creation and copies.
@@ -460,8 +456,9 @@ public class CoreWaveletOperationSerializer {
       coreWavelet.modifyDocument(document.getDocumentId(), op);
     }
 
+    HashedVersion hashedVersion = CoreWaveletOperationSerializer.deserialize(version);
     ObservableWaveletData immutableWaveletData =
-        DataUtil.fromCoreWaveletData(coreWavelet, distinctVersion, SchemaCollection.empty());
+        DataUtil.fromCoreWaveletData(coreWavelet, hashedVersion, SchemaCollection.empty());
 
     ObservableWaveletData wavelet = WaveletDataUtil.copyWavelet(immutableWaveletData);
 

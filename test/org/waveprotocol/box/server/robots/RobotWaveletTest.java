@@ -61,7 +61,8 @@ public class RobotWaveletTest extends TestCase {
 
   @Override
   protected void setUp() {
-    ObservableWaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX, 0L);
+    ObservableWaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX,
+        HASH_FACTORY.createVersionZero(WAVELET_NAME), 0L);
     DocInitialization content = new DocInitializationBuilder().characters("Hello there").build();
     waveletData.createBlip("b+example", ALEX, Collections.singletonList(ALEX), content, 0L, 0);
 

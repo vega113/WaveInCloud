@@ -107,7 +107,8 @@ public class FakeWaveServer extends FakeClientFrontend {
     if (wavelet == null) {
       long dummyCreationTime = System.currentTimeMillis();
       wavelet = WaveletDataUtil.createEmptyWavelet(
-          waveletName, ParticipantId.ofUnsafe(delta.getAuthor()), dummyCreationTime);
+          waveletName, ParticipantId.ofUnsafe(delta.getAuthor()),
+          HashedVersion.unsigned(0), dummyCreationTime);
       wavelets.put(waveletName.waveletId, wavelet);
     }
 
@@ -173,7 +174,8 @@ public class FakeWaveServer extends FakeClientFrontend {
     indexDelta.setHashedVersion(CoreWaveletOperationSerializer.serialize(targetVersion));
     long dummyCreationTime = System.currentTimeMillis();
     WaveletData fakeIndexWavelet = WaveletDataUtil.createEmptyWavelet(
-        indexWaveletName, ParticipantId.ofUnsafe(delta.getAuthor()), dummyCreationTime);
+        indexWaveletName, ParticipantId.ofUnsafe(delta.getAuthor()),
+        targetVersion, dummyCreationTime);
     HashedVersion resultingVersion =
       updateAndGetVersion(indexWaveletName, indexDelta.getOperationCount());
     waveletUpdate(fakeIndexWavelet, resultingVersion,

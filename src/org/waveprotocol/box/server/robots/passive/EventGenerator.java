@@ -34,8 +34,8 @@ import com.google.wave.api.impl.EventMessageBundle;
 import com.google.wave.api.robot.Capability;
 import com.google.wave.api.robot.RobotName;
 
-import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
+import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationListenerImpl;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
@@ -47,7 +47,7 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
-import org.waveprotocol.wave.model.version.DistinctVersion;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
@@ -303,12 +303,13 @@ public class EventGenerator {
     try {
       for (CoreWaveletDelta delta : waveletAndDeltas.getDeltas()) {
 
-        // TODO(ljvderijk): Set correct timestamp once wavebus sends them along
+        // TODO(ljvderijk): Set correct timestamp and hashed version once
+        // wavebus sends them along
         long timestamp = 0L;
         conversationListener.deltaBegin(delta.getAuthor(), timestamp);
 
-        DistinctVersion endVersion = DistinctVersion.of(
-            delta.getTargetVersion().getVersion() + delta.getOperations().size(), -1);
+        HashedVersion endVersion = HashedVersion.unsigned(
+            delta.getTargetVersion().getVersion() + delta.getOperations().size());
         List<WaveletOperation> ops =
             ConversionUtil.fromCoreWaveletDelta(delta, timestamp, endVersion);
         for (WaveletOperation op : ops) {

@@ -164,8 +164,8 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
       }
     });
     long dummyCreationTime = System.currentTimeMillis();
-    WaveletData wavelet =
-        WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, PARTICIPANT, dummyCreationTime);
+    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, PARTICIPANT,
+        HASHED_VERSION, dummyCreationTime);
     frontend.waveletUpdate(wavelet, RESULTING_VERSION, POJO_DELTAS);
     assertEquals(1, counter);
     assertFalse(controller.failed());

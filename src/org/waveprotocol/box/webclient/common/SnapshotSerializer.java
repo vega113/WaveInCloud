@@ -104,7 +104,8 @@ public class SnapshotSerializer {
     long creationTime = (long) snapshot.getCreationTime();
 
     ObservableWaveletData wavelet = factory.create(new EmptyWaveletSnapshot(waveId, waveletId,
-            author, creationTime));
+            author, CoreWaveletOperationSerializer.deserialize(snapshot.getVersion()),
+            creationTime));
 
     for (String participant : snapshot.getParticipantIdList()) {
       wavelet.addParticipant(ParticipantId.of(participant));

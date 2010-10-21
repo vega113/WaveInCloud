@@ -42,7 +42,6 @@ import org.waveprotocol.wave.model.operation.wave.SubmitBlip;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
-import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -272,25 +271,14 @@ public class WaveletOperationSerializer {
    */
   public static Delta deserialize(ProtocolWaveletDelta protocolDelta, HashedVersion postVersion,
       WaveletOperationContext ctx) {
-    Delta delta =
-        new Delta((long)protocolDelta.getHashedVersion().getVersion(), newDistinctVersion(postVersion));
+    Delta delta = new Delta((long) protocolDelta.getHashedVersion().getVersion(),
+            postVersion);
 
     for (ProtocolWaveletOperation op : protocolDelta.getOperationList()) {
       delta.add(deserialize(op, ctx));
     }
 
     return delta;
-  }
-
-  public static DistinctVersion newDistinctVersion(final HashedVersion postVersion) {
-    if (postVersion.getHistoryHash().length == 0) {
-      return DistinctVersion.NO_DISTINCT_VERSION;
-    }
-    byte[] hash = postVersion.getHistoryHash();
-    // NOTE(arb): The hash is actually b64(hash), but the distinction just
-    // needs to be distinct.
-    int signature = (hash[0] << 24) & (hash[1] << 16) & (hash[2] << 8) & (hash[3]);
-    return DistinctVersion.of(postVersion.getVersion(), signature);
   }
 
   /**

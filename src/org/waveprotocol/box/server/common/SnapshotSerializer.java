@@ -97,13 +97,13 @@ public class SnapshotSerializer {
       throws OperationException, InvalidParticipantAddress {
     ObservableWaveletData.Factory<? extends ObservableWaveletData> factory
         = WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
-    
+
     ParticipantId author = ParticipantId.of(snapshot.getCreator());
     WaveletId waveletId = WaveletId.deserialise(snapshot.getWaveletId());
     long creationTime = snapshot.getCreationTime();
-    
+
     ObservableWaveletData wavelet = factory.create(new EmptyWaveletSnapshot(waveId, waveletId,
-            author, creationTime));
+        author, CoreWaveletOperationSerializer.deserialize(snapshot.getVersion()), creationTime));
 
     for (String participant : snapshot.getParticipantIdList()) {
       wavelet.addParticipant(getParticipantId(participant));
@@ -123,7 +123,7 @@ public class SnapshotSerializer {
 
   /**
    * Serializes a document to a document snapshot.
-   * 
+   *
    * @param document The document to serialize
    * @return A snapshot of the given document
    */

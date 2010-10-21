@@ -120,7 +120,8 @@ public class EventGeneratorTest extends TestCase {
     versionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
 
     waveletData = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(
-        new EmptyWaveletSnapshot(WAVELET_NAME.waveId, WAVELET_NAME.waveletId, ALEX, 0L));
+        new EmptyWaveletSnapshot(WAVELET_NAME.waveId, WAVELET_NAME.waveletId, ALEX,
+            HASH_FACTORY.createVersionZero(WAVELET_NAME), 0L));
     waveletData.addParticipant(ALEX);
 
     SilentOperationSink<WaveletOperation> executor =

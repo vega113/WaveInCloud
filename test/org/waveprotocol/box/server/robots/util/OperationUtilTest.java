@@ -167,11 +167,12 @@ public class OperationUtilTest extends TestCase {
   }
 
   public void testSubmitDeltas() {
-    ObservableWaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX, 0L);
+    HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
+    ObservableWaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX,
+        hashedVersionZero, 0L);
     DocInitialization content = new DocInitializationBuilder().build();
     waveletData.createBlip("b+example", BOB, Collections.singletonList(BOB), content, 0L, 0);
 
-    HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
     RobotWaveletData wavelet = new RobotWaveletData(waveletData, hashedVersionZero);
 
     // Perform an operation that will be put into a delta

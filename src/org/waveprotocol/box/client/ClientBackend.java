@@ -63,7 +63,6 @@ import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.util.Pair;
-import org.waveprotocol.wave.model.version.DistinctVersion;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
@@ -717,17 +716,20 @@ public class ClientBackend {
         // TODO(ljvderijk): This should never happen, but it currently does.
         // Snapshot should be received first.
         // Instantiate a new wavelet
-        wavelet = WaveletDataUtil.createEmptyWavelet(waveletName, delta.getAuthor(),
+        HashedVersion zero = hashedVersionFactory.createVersionZero(waveletName);
+        wavelet = WaveletDataUtil.createEmptyWavelet(waveletName, delta.getAuthor(), zero,
                 Constants.NO_TIMESTAMP);
-        wave.addWavelet(wavelet, hashedVersionFactory.createVersionZero(waveletName));
+        wave.addWavelet(wavelet, zero);
       }
 
       Preconditions.checkState(delta.getTargetVersion().getVersion() == wavelet.getVersion(),
           "Delta at version %s doesn't apply to wavelet %s at %s", delta.getTargetVersion(),
           waveletName, wavelet.getVersion());
 
-      DistinctVersion dummyEndVersion =
-          DistinctVersion.of(wavelet.getVersion() + delta.getOperations().size(), 0);
+      // TODO(anorth): Plumb a TransformedWaveletDelta to here when the
+      // protocol is fixed.
+      HashedVersion dummyEndVersion =
+          HashedVersion.unsigned(wavelet.getVersion() + delta.getOperations().size());
       try {
         WaveletDataUtil.applyWaveletDelta(delta, wavelet, dummyEndVersion, Constants.NO_TIMESTAMP);
       } catch (OperationException e) {

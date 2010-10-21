@@ -58,7 +58,7 @@ public class UserManagerTest extends TestCase {
   private static final ParticipantId USER = ParticipantId.ofUnsafe("user@host.com");
 
   private static final CoreWaveletDelta DELTA = new CoreWaveletDelta(USER,
-      HashedVersion.UNSIGNED_VERSION_0, ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE));
+      HashedVersion.unsigned(0), ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE));
 
   private static final HashedVersion END_VERSION = HashedVersion.unsigned(2);
 
@@ -157,7 +157,7 @@ public class UserManagerTest extends TestCase {
     OpenListener listener = mock(OpenListener.class, "1");
     String channelId = "ch";
     m.subscribe(W1, IdFilters.ALL_IDS, channelId, listener);
-    m.onUpdate(W1A, DeltaSequence.empty(HashedVersion.UNSIGNED_VERSION_0));
+    m.onUpdate(W1A, DeltaSequence.empty(HashedVersion.unsigned(0)));
     Mockito.verifyZeroInteractions(listener);
     m.onUpdate(W1A, DELTAS);
     Mockito.verify(listener).onUpdate(Mockito.eq(W1A), (WaveletSnapshotAndVersion)Matchers.isNull(),
