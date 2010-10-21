@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module rename-to='webclient'>
+<module>
   <!-- Inherit the core Web Toolkit stuff.                        -->
   <inherits name="com.google.common.base.Base"/>
   <inherits name='com.google.gwt.user.User'/>
@@ -31,13 +31,8 @@
   <!-- Specify the app entry point class.                         -->
   <entry-point class='org.waveprotocol.box.webclient.client.WebClient'/>
 
-  <set-property name="compiler.emulatedStack" value="true"/>
-
   <set-configuration-property name="CssResource.obfuscationPrefix" value="SWC" />
-  <set-configuration-property name="compiler.emulatedStack.recordFileNames" value="true" />
-  <set-configuration-property name="compiler.emulatedStack.recordLineNumbers" value="true" />
-
-  <!-- Uncomment the line below to restrict to safari for faster compile in development -->
-  <!-- <set-property name="user.agent" value="safari" /> -->
+  <!-- TODO: Remove the ClientTypes package -->
+  <set-property name="client.type" value="default"/>
 
 </module>
