@@ -46,7 +46,8 @@ import javax.servlet.Servlet;
  */
 public class ClientAuthenticatorTest extends TestCase {
   private static final String HOSTNAME = "localhost";
-  private static final int PORT = 8887;
+
+  private String endpoint;
 
   private Server server;
 
@@ -73,24 +74,21 @@ public class ClientAuthenticatorTest extends TestCase {
   }
 
   public void testAuthenticate() throws Exception {
-    ClientAuthenticator authenticator =
-        new ClientAuthenticator("http://localhost:8889" + SessionManager.SIGN_IN_URL);
+    ClientAuthenticator authenticator = new ClientAuthenticator(endpoint);
 
     HttpCookie token = authenticator.authenticate("user@example.com", "pwd".toCharArray());
     assertNotNull(token);
   }
 
   public void testAuthenticationFailReturnsNull() throws Exception {
-    ClientAuthenticator authenticator =
-        new ClientAuthenticator("http://localhost:8889" + SessionManager.SIGN_IN_URL);
+    ClientAuthenticator authenticator = new ClientAuthenticator(endpoint);
 
     HttpCookie token = authenticator.authenticate("nonexistent@example.com", "pwd".toCharArray());
     assertNull(token);
   }
 
   public void testAuthenticationWorksWithEmptyPassword() throws Exception {
-    ClientAuthenticator authenticator =
-        new ClientAuthenticator("http://localhost:8889" + SessionManager.SIGN_IN_URL);
+    ClientAuthenticator authenticator = new ClientAuthenticator(endpoint);
 
     HttpCookie token = authenticator.authenticate("emptypwd@example.com", "".toCharArray());
     assertNotNull(token);
@@ -102,7 +100,6 @@ public class ClientAuthenticatorTest extends TestCase {
     server = new Server();
     SelectChannelConnector connector = new SelectChannelConnector();
     connector.setHost(HOSTNAME);
-    connector.setPort(PORT);
     server.addConnector(connector);
 
     ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -110,5 +107,6 @@ public class ClientAuthenticatorTest extends TestCase {
     server.setHandler(handler);
 
     server.start();
+    endpoint = "http://" + HOSTNAME + ":" + connector.getLocalPort() + SessionManager.SIGN_IN_URL;
   }
 }
