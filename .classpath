@@ -16,7 +16,6 @@
 	<classpathentry kind="lib" path="third_party/runtime/commons_cli/commons-cli-1.2.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/dom4j/dom4j-1.6.1.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/gson/gson-1.4.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/guava/guava-r06.jar" sourcepath="third_party/runtime/guava/guava-src-r06.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/guice/guice-assistedinject-snapshot.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/guice/guice-snapshot.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/gxp/gxp-0.2.4-beta.jar"/>
@@ -87,5 +86,6 @@
 	<classpathentry kind="lib" path="third_party/runtime/stringtemplate/antlr.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/stringtemplate/stringtemplate.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/communication.jar" sourcepath="third_party/runtime/wave-libraries/communication-src.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/guava/guava-r07.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
