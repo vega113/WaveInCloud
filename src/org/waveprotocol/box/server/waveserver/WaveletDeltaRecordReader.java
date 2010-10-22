@@ -18,12 +18,11 @@
 package org.waveprotocol.box.server.waveserver;
 
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.core.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.io.IOException;
-import java.util.Collection;
 
 /**
  * Reads wavelet deltas for a wavelet.
@@ -34,6 +33,9 @@ public interface WaveletDeltaRecordReader {
 
   /** @return the name of the wavelet whose deltas this reader reads */
   WaveletName getWaveletName();
+
+  /** @return true if the collection contains no deltas */
+  boolean isEmpty();
 
   /** @return the resulting version of the last delta */
   HashedVersion getEndVersion();
