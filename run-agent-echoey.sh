@@ -6,7 +6,7 @@
 if [ -f run-config.sh ] ; then
   . run-config.sh
 else
-  echo "You need to copy run-config.sh.example to run-config.sh and configure" ; exit 1
+  . run-nofed-config.sh
 fi
 
 if [ -z "$WEBSOCKET_SERVER_PORT" -o -z "$WEBSOCKET_SERVER_HOSTNAME" ]; then

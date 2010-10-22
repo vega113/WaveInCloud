@@ -48,7 +48,7 @@ public interface TestingConstants {
 
   public static final String USER = "user@" + DOMAIN;
 
-  public static final String PASSWORD = "password";
+  public static final char[] PASSWORD = "password".toCharArray();
 
   public static final ParticipantId PARTICIPANT = new ParticipantId(USER);
 

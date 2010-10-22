@@ -47,6 +47,7 @@ import java.util.Set;
 public class Echoey extends AbstractAgent {
   static final String FAREWELL = "Goodbye.";
   static final String GREETING = "I'm listening.";
+  static final char[] PASSWORD = "".toCharArray();
 
   private static final Log LOG = Log.get(Echoey.class);
 
@@ -105,7 +106,7 @@ public class Echoey extends AbstractAgent {
           throw new IllegalArgumentException("Must provide valid port.");
         }
 
-        Echoey agent = new Echoey(AgentConnection.newConnection(args[0], args[1], port));
+        Echoey agent = new Echoey(AgentConnection.newConnection(args[0], PASSWORD, args[1], port));
         agent.run();
       } else {
         System.out.println("usage: java Echoey <username> <hostname> <port>");

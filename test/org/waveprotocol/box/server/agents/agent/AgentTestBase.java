@@ -54,7 +54,7 @@ public abstract class AgentTestBase<A extends AbstractAgent> extends TestCase
 
   @Override
   public void setUp() {
-    agent = createAgent(new AgentConnection(USER, DOMAIN, PORT,
+    agent = createAgent(new AgentConnection(USER, PASSWORD, DOMAIN, PORT,
         ClientTestingUtil.backendSpyFactory));
     agent.connect();
 

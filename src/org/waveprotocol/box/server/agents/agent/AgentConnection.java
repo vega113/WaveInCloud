@@ -48,8 +48,10 @@ public class AgentConnection {
    * @param port the server port.
    * @return an agent connection.
    */
-  public static AgentConnection newConnection(String participantId, String hostname, int port) {
-    return new AgentConnection(participantId, hostname, port, new ClientBackend.DefaultFactory());
+  public static AgentConnection newConnection(
+      String participantId, char[] password, String hostname, int port) {
+    return new AgentConnection(
+        participantId, password, hostname, port, new ClientBackend.DefaultFactory());
   }
 
   /**
@@ -67,20 +69,24 @@ public class AgentConnection {
    */
   private ClientBackend backend = null;
 
+  private char[] password;
+
   /**
    * Default constructor.
    *
    * @param participantId the participant address (user@domain) of the agent.
+   * @param password the agent's password
    * @param hostname of the server.
    * @param port number of the server.
    * @param backendFactory the factory to use to create a backend for this
    * connection.
    */
   @VisibleForTesting
-  AgentConnection(String participantId, String hostname, int port,
+  AgentConnection(String participantId, char[] password, String hostname, int port,
       ClientBackend.Factory backendFactory) {
     this.backendFactory = backendFactory;
     this.participantId = participantId;
+    this.password = password;
     this.hostname = hostname;
     this.port = port;
   }
@@ -103,6 +109,9 @@ public class AgentConnection {
    */
   void connect() throws IOException {
     backend = backendFactory.create(participantId, hostname, port);
+    if (!backend.authenticate(password)) {
+      throw new IOException("Authentication failure");
+    }
   }
 
   /**
