@@ -278,7 +278,9 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       } else {
         try {
           Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> deltaHistory =
-              wc.requestHistory(startVersion, endVersion);
+              wc.requestHistory(
+                  CoreWaveletOperationSerializer.deserialize(startVersion),
+                  CoreWaveletOperationSerializer.deserialize(endVersion));
           List<ByteString> deltaHistoryBytes = Lists.newArrayList();
           for (ByteStringMessage<ProtocolAppliedWaveletDelta> d : deltaHistory) {
             deltaHistoryBytes.add(d.getByteString());
@@ -287,10 +289,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // Now determine whether we received the entire requested wavelet history.
           LOG.info("Found deltaHistory between " + startVersion + " - " + endVersion
               + ", returning to requester domain " + domain + " -- " + deltaHistory);
-          ProtocolHashedVersion hashedEndVersion =
-              ProtocolHashedVersion.newBuilder().setHistoryHash(endVersion.getHistoryHash())
-                  .setVersion(endVersion.getVersion()).build();
-          listener.onSuccess(deltaHistoryBytes, hashedEndVersion, endVersion.getVersion());
+          listener.onSuccess(deltaHistoryBytes, endVersion, endVersion.getVersion());
           // TODO: ### check length limit ??
 //           else {
 //            ProtocolAppliedWaveletDelta lastDelta = deltaHistory.last();

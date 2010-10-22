@@ -30,6 +30,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.SignatureException;
@@ -38,12 +39,12 @@ import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider.DeltaSignerInfoResponseListener;
@@ -204,7 +205,7 @@ public class CertificateManagerImpl implements CertificateManager {
 
   @Override
   public synchronized void prefetchDeltaSignerInfo(WaveletFederationProvider provider,
-      ByteString signerId, WaveletName waveletName, ProtocolHashedVersion deltaEndVersion,
+      ByteString signerId, WaveletName waveletName, HashedVersion deltaEndVersion,
       SignerInfoPrefetchResultListener callback) {
     ProtocolSignerInfo signerInfo = retrieveSignerInfo(signerId);
 
@@ -220,7 +221,7 @@ public class CertificateManagerImpl implements CertificateManager {
    */
   private synchronized void enqueueSignerInfoRequest(final WaveletFederationProvider provider,
       final ByteString signerId, final WaveletName waveletName,
-      ProtocolHashedVersion deltaEndVersion, SignerInfoPrefetchResultListener callback) {
+      HashedVersion deltaEndVersion, SignerInfoPrefetchResultListener callback) {
     final String domain = waveletName.waveletId.getDomain();
     Multimap<String, SignerInfoPrefetchResultListener> domainCallbacks =
         signerInfoRequests.get(signerId);
@@ -235,7 +236,9 @@ public class CertificateManagerImpl implements CertificateManager {
     domainCallbacks.put(domain, callback);
 
     if (domainCallbacks.get(domain).size() == 1) {
-        provider.getDeltaSignerInfo(signerId, waveletName, deltaEndVersion,
+        provider.getDeltaSignerInfo(signerId, waveletName,
+            (deltaEndVersion == null)
+                ? null : CoreWaveletOperationSerializer.serialize(deltaEndVersion),
             new DeltaSignerInfoResponseListener() {
               @Override public void onFailure(FederationError error) {
                 LOG.warning("getDeltaSignerInfo failed: " + error);

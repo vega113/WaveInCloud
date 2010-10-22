@@ -19,7 +19,6 @@ package org.waveprotocol.box.server.waveserver;
 
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -67,8 +66,7 @@ interface WaveletContainer {
    *         the requested version boundaries, it will be included.
    */
   Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> requestHistory(
-      ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd)
-      throws WaveletStateException;
+      HashedVersion versionStart, HashedVersion versionEnd) throws WaveletStateException;
 
   /**
    * Retrieve the wavelet history of deltas applied to the wavelet, with
@@ -103,7 +101,7 @@ interface WaveletContainer {
    * @throws WaveletStateException if the wavelet is in a state unsuitable for
    *         getting LCV.
    */
-  ProtocolHashedVersion getLastCommittedVersion() throws WaveletStateException;
+  HashedVersion getLastCommittedVersion() throws WaveletStateException;
 
   /** A set of participants currently on the wave */
   Set<ParticipantId> getParticipants();

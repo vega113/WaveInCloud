@@ -101,7 +101,7 @@ public class CertificateManagerImplTest extends TestCase {
    */
   public void testSignature() throws Exception {
     ProtocolWaveletDelta delta = ProtocolWaveletDelta.newBuilder()
-        .setHashedVersion(getHashedVersion())
+        .setHashedVersion(getProtocolHashedVersion())
         .setAuthor("bob@example.com")
         .build();
     ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.serializeMessage(delta);
@@ -116,7 +116,7 @@ public class CertificateManagerImplTest extends TestCase {
 
   public void testSignature_missingSignerInfo() throws Exception {
     ProtocolWaveletDelta delta = ProtocolWaveletDelta.newBuilder()
-        .setHashedVersion(getHashedVersion())
+        .setHashedVersion(getProtocolHashedVersion())
         .setAuthor("bob@example.com")
         .build();
     ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.serializeMessage(delta);
@@ -135,7 +135,7 @@ public class CertificateManagerImplTest extends TestCase {
 
   public void testSignature_authorNotMatching() throws Exception {
     ProtocolWaveletDelta delta = ProtocolWaveletDelta.newBuilder()
-        .setHashedVersion(getHashedVersion())
+        .setHashedVersion(getProtocolHashedVersion())
         .setAuthor("bob@someotherdomain.com")
         .build();
     ByteStringMessage<ProtocolWaveletDelta> canonicalDelta = ByteStringMessage.serializeMessage(delta);
@@ -325,8 +325,12 @@ public class CertificateManagerImplTest extends TestCase {
    * UTILITIES
    */
 
-  private ProtocolHashedVersion getHashedVersion() {
-    return CoreWaveletOperationSerializer.serialize(HashedVersion.unsigned(3L));
+  private HashedVersion getHashedVersion() {
+    return HashedVersion.unsigned(3L);
+  }
+
+  private ProtocolHashedVersion getProtocolHashedVersion() {
+    return CoreWaveletOperationSerializer.serialize(getHashedVersion());
   }
 
   private WaveSignatureVerifier getRealVerifier(CertPathStore store) throws Exception {
@@ -403,7 +407,7 @@ public class CertificateManagerImplTest extends TestCase {
 
   private ByteStringMessage<ProtocolWaveletDelta> getFakeDelta() throws Exception {
     ProtocolWaveletDelta delta = ProtocolWaveletDelta.newBuilder()
-        .setHashedVersion(getHashedVersion())
+        .setHashedVersion(getProtocolHashedVersion())
         .setAuthor("bob@initech-corp.com")
         .build();
     return ByteStringMessage.serializeMessage(delta);

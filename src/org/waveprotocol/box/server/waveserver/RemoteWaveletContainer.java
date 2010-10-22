@@ -18,8 +18,8 @@
 package org.waveprotocol.box.server.waveserver;
 
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
 import java.util.List;
@@ -63,5 +63,5 @@ interface RemoteWaveletContainer extends WaveletContainer {
    * @param hashedVersion version that was committed.
    * @return whether to inform clients of the commit.
    */
-  boolean committed(ProtocolHashedVersion hashedVersion) throws WaveletStateException;
+  boolean committed(HashedVersion hashedVersion) throws WaveletStateException;
 }

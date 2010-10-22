@@ -29,7 +29,6 @@ import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -79,7 +78,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   private WaveletData waveletData;
   protected WaveletName waveletName;
   protected HashedVersion currentVersion;
-  protected ProtocolHashedVersion lastCommittedVersion;
+  protected HashedVersion lastCommittedVersion;
   protected State state;
 
   /**
@@ -157,7 +156,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public ProtocolHashedVersion getLastCommittedVersion() throws WaveletStateException {
+  public HashedVersion getLastCommittedVersion() throws WaveletStateException {
     acquireReadLock();
     try {
       assertStateOk();
@@ -181,10 +180,10 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       // that could be lost for ever.
 //      Preconditions.checkState(waveletData.getVersion() == lastCommittedVersion.getVersion(),
 //          "Snapshot version doesn't match committed version");
-      ProtocolHashedVersion committedVersion =
-          CoreWaveletOperationSerializer.serialize(currentVersion);
-      return new WaveletSnapshotAndVersion(SnapshotSerializer.serializeWavelet(waveletData,
-          currentVersion), committedVersion);
+      HashedVersion committedVersion = currentVersion;
+      return new WaveletSnapshotAndVersion(
+          SnapshotSerializer.serializeWavelet(waveletData, currentVersion),
+          CoreWaveletOperationSerializer.serialize(committedVersion));
     } finally {
       releaseWriteLock();
     }
@@ -355,7 +354,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   @Override
   public Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> requestHistory(
-      ProtocolHashedVersion versionStart, ProtocolHashedVersion versionEnd)
+      HashedVersion versionStart, HashedVersion versionEnd)
       throws WaveletStateException {
     acquireReadLock();
     try {
@@ -364,10 +363,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       // TODO: #### make immutable.
 
       Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> result =
-          appliedDeltas.subMap(
-              CoreWaveletOperationSerializer.deserialize(versionStart),
-              CoreWaveletOperationSerializer.deserialize(versionEnd))
-          .values();
+          appliedDeltas.subMap(versionStart, versionEnd).values();
       LOG.info("### HR " + versionStart.getVersion() + " - " + versionEnd.getVersion() + ", " +
           result.size() + " deltas");
       return result;
