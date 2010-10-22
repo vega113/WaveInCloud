@@ -76,8 +76,18 @@ public class WaveClientServlet extends HttpServlet {
   }
 
   @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws IOException {
     ParticipantId id = sessionManager.getLoggedInUser(request.getSession(false));
+
+    // Eventually, it would be nice to show users who aren't logged in the public waves.
+    // However, public waves aren't implemented yet. For now, we'll just redirect users
+    // who haven't signed in to the sign in page.
+    if (id == null) {
+      response.sendRedirect(sessionManager.getLoginUrl("/"));
+      return;
+    }
+
     String username = null;
     String userDomain = null;
     if (id != null) {
@@ -90,12 +100,14 @@ public class WaveClientServlet extends HttpServlet {
       WaveClientPage.write(response.getWriter(), new GxpContext(request.getLocale()),
           getSessionJson(request.getSession(false)), getClientFlags(request),
           LoginBar.getGxpClosure(username, userDomain));
-      response.setContentType("text/html");
-      response.setStatus(HttpServletResponse.SC_OK);
     } catch (IOException e) {
       LOG.warning("Failed to write GXP for request " + request, e);
       response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      return;
     }
+
+    response.setContentType("text/html");
+    response.setStatus(HttpServletResponse.SC_OK);
   }
 
   private JSONObject getClientFlags(HttpServletRequest request) {
