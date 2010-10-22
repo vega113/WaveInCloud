@@ -16,13 +16,17 @@
 
 package org.waveprotocol.box.server.rpc;
 
+import org.mockito.Mockito;
+import org.waveprotocol.box.server.authentication.SessionManager;
+
 import java.io.IOException;
 
 public class WebSocketRpcTest extends RpcTest {
 
   @Override
   protected void startServer() {
-    server = new ServerRpcProvider(null, "localhost", 0);
+    SessionManager sessionManager = Mockito.mock(SessionManager.class);
+    server = new ServerRpcProvider(null, "localhost", 0, sessionManager, null);
     server.startWebSocketServer();
   }
 

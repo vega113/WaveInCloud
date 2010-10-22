@@ -138,10 +138,17 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   }
 
   @Override
-  public void openRequest(ParticipantId participant, WaveId waveId, IdFilter waveletIdFilter,
+  public void openRequest(ParticipantId loggedInUser, WaveId waveId, IdFilter waveletIdFilter,
       Collection<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener) {
-    LOG.info("received openRequest from " + participant + " for " + waveId + ", filter "
+    LOG.info("received openRequest from " + loggedInUser + " for " + waveId + ", filter "
         + waveletIdFilter + ", known wavelets: " + knownWavelets);
+
+    // TODO(josephg): Make it possible for this to succeed & return public waves.
+    if (loggedInUser == null) {
+      openListener.onFailure("Not logged in");
+      return;
+    }
+
     if (!knownWavelets.isEmpty()) {
       openListener.onFailure("Known wavelets not supported");
       return;
@@ -149,11 +156,11 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
 
     String channelId = generateChannelID();
     boolean isIndexWave = IndexWave.isIndexWave(waveId);
-    UserManager userManager = perUser.get(participant);
+    UserManager userManager = perUser.get(loggedInUser);
     synchronized (userManager) {
       WaveViewSubscription subscription =
           userManager.subscribe(waveId, waveletIdFilter, channelId, openListener);
-      LOG.info("Subscribed " + participant + " to " + waveId + " channel " + channelId);
+      LOG.info("Subscribed " + loggedInUser + " to " + waveId + " channel " + channelId);
 
       Set<WaveletId> waveletIds = visibleWaveletsFor(subscription);
       for (WaveletId waveletId : waveletIds) {
@@ -230,9 +237,16 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   }
 
   @Override
-  public void submitRequest(final WaveletName waveletName, final ProtocolWaveletDelta delta,
-      final String channelId, final SubmitRequestListener listener) {
+  public void submitRequest(ParticipantId loggedInUser, final WaveletName waveletName,
+      final ProtocolWaveletDelta delta, final String channelId,
+      final SubmitRequestListener listener) {
     final ParticipantId author = new ParticipantId(delta.getAuthor());
+
+    if (!author.equals(loggedInUser)) {
+      listener.onFailure("Author field on delta must match logged in user");
+      return;
+    }
+
     if (!isWaveletWritable(waveletName)) {
       listener.onFailure("Wavelet " + waveletName + " is readonly");
     } else {

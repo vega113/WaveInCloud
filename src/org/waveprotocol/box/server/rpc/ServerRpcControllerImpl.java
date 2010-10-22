@@ -20,16 +20,17 @@ package org.waveprotocol.box.server.rpc;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
-import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
+
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
  * Implements the server end-point of a wave server RPC connection. This is a
  * single-use RPC controller.
- * 
+ *
  *
  */
-class ServerRpcController implements RpcController, Runnable {
+public class ServerRpcControllerImpl implements ServerRpcController {
   private final Message requestMessage;
   private final Service backingService;
   private final Descriptors.MethodDescriptor serviceMethod;
@@ -38,18 +39,20 @@ class ServerRpcController implements RpcController, Runnable {
 
   // The following variables represent the current status of this instance, and
   // must all only be accessed or modified while synchronised on statusLock.
-  private final Object statusLock = new Object();  
-  private boolean complete = false;  
+  private final Object statusLock = new Object();
+  private boolean complete = false;
   private RpcCallback<Object> cancelCallback = null;
   private boolean cancelled = false;
+  private final ParticipantId loggedInUser;
 
   /**
    * Instantiate a new ServerRpcController that may later be completely invoked
    * by calling {#link run}.
-   * 
+   *
    * @param requestMessage the request being handled
    * @param backingService the backing service type
    * @param serviceMethod the specific method within the backing service type
+   * @param loggedInUser the currently logged in user
    * @param callback the destination where responses may be passed - may be
    *        called once (normal RPC) or 1-n times (streaming RPC), and will pass
    *        instances of RpcFinished as required (error cases, or streaming RPC
@@ -57,11 +60,12 @@ class ServerRpcController implements RpcController, Runnable {
    *        statusLock to ensure that consecutive calls (in the streaming case)
    *        are called in series
    */
-  ServerRpcController(Message requestMessage, Service backingService,
-      Descriptors.MethodDescriptor serviceMethod, RpcCallback<Message> callback) {
+  ServerRpcControllerImpl(Message requestMessage, Service backingService,
+      Descriptors.MethodDescriptor serviceMethod, ParticipantId loggedInUser, RpcCallback<Message> callback) {
     this.requestMessage = requestMessage;
     this.backingService = backingService;
     this.serviceMethod = serviceMethod;
+    this.loggedInUser = loggedInUser;
     this.isStreamingRpc = serviceMethod.getOptions().getExtension(Rpc.isStreamingRpc);
     this.callback = callback;
   }
@@ -85,7 +89,7 @@ class ServerRpcController implements RpcController, Runnable {
    * Registers a cancellation callback. This will always be called as part of
    * this RPC, and always at most once; either when the client asks to cancel
    * it, or when the RPC finishes (regardless of error case).
-   * 
+   *
    * This callback will be called outside normal locks on ServerRpcController
    * state, i.e., not within a block synchronised on statusLock.
    */
@@ -136,11 +140,8 @@ class ServerRpcController implements RpcController, Runnable {
     throw new UnsupportedOperationException("Client-side method of RpcController only.");
   }
 
-  /**
-   * Mark this controller as cancelled, i.e., as the result of a client request.
-   * Call the pending cancellation callback, if there is one.
-   */
-  void cancel() {
+  @Override
+  public void cancel() {
     RpcCallback<Object> runCallback = null;
     synchronized (statusLock) {
       if (cancelled) {
@@ -204,5 +205,10 @@ class ServerRpcController implements RpcController, Runnable {
         setFailed(e.toString());
       }
     }
+  }
+
+  @Override
+  public ParticipantId getLoggedInUser() {
+    return loggedInUser;
   }
 }

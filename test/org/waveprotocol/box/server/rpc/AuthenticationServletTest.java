@@ -63,12 +63,17 @@ public class AuthenticationServletTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+
     AccountStore store = new MemoryStore();
     HumanAccountData account = new HumanAccountDataImpl(
         ParticipantId.ofUnsafe("frodo@example.com"), new PasswordDigest("password".toCharArray()));
     store.putAccount(account);
+
+    org.eclipse.jetty.server.SessionManager jettySessionManager =
+        mock(org.eclipse.jetty.server.SessionManager.class);
     servlet = new AuthenticationServlet(
-        AuthTestUtil.make(), new SessionManagerImpl(store), "example.com");
+        AuthTestUtil.make(), new SessionManagerImpl(store, jettySessionManager), "example.com");
+
     AccountStoreHolder.init(store, "example.com");
   }
 
@@ -83,7 +88,7 @@ public class AuthenticationServletTest extends TestCase {
     PrintWriter writer = mock(PrintWriter.class);
     when(resp.getWriter()).thenReturn(writer);
     when(req.getLocale()).thenReturn(Locale.ENGLISH);
-    
+
     servlet.doGet(req, resp);
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);

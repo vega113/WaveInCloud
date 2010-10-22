@@ -37,10 +37,15 @@ public final class SessionManagerImpl implements SessionManager {
   private static final String USER_FIELD = "user";
 
   private final AccountStore accountStore;
+  private final org.eclipse.jetty.server.SessionManager jettySessionManager;
 
   @Inject
-  public SessionManagerImpl(AccountStore accountStore) {
+  public SessionManagerImpl(
+      AccountStore accountStore, org.eclipse.jetty.server.SessionManager jettySessionManager) {
+    Preconditions.checkNotNull(accountStore, "Null account store");
+    Preconditions.checkNotNull(jettySessionManager, "Null jetty session manager");
     this.accountStore = accountStore;
+    this.jettySessionManager = jettySessionManager;
   }
 
   @Override
@@ -89,5 +94,11 @@ public final class SessionManagerImpl implements SessionManager {
       String queryStr = "?r=" + escaper.escape(redirect);
       return SIGN_IN_URL + queryStr;
     }
+  }
+
+  @Override
+  public HttpSession getSessionFromToken(String token) {
+    Preconditions.checkNotNull(token);
+    return jettySessionManager.getHttpSession(token);
   }
 }

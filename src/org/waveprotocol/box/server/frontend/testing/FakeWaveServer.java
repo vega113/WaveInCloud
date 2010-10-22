@@ -91,11 +91,11 @@ public class FakeWaveServer extends FakeClientFrontend {
   }
 
   @Override
-  public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
-      @Nullable String channelId, SubmitRequestListener listener) {
+  public void submitRequest(ParticipantId loggedInUser, WaveletName waveletName,
+      ProtocolWaveletDelta delta, @Nullable String channelId, SubmitRequestListener listener) {
     Preconditions.checkArgument(
         !IndexWave.isIndexWave(waveletName.waveId), "Cannot modify index wave");
-    super.submitRequest(waveletName, delta, channelId, listener);
+    super.submitRequest(loggedInUser, waveletName, delta, channelId, listener);
 
     Map<WaveletId, WaveletData> wavelets = waves.get(waveletName.waveId);
     if (wavelets == null) {

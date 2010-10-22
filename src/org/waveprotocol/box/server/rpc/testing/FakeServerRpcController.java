@@ -16,14 +16,18 @@
 
 package org.waveprotocol.box.server.rpc.testing;
 
+import static org.waveprotocol.box.server.util.testing.TestingConstants.USER;
+
 import com.google.protobuf.RpcCallback;
-import com.google.protobuf.RpcController;
+
+import org.waveprotocol.box.server.rpc.ServerRpcController;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 
 /**
   * An {@code RpcController} that just handles error text and failure condition.
   */
-public class FakeRpcController implements RpcController {
+public class FakeServerRpcController implements ServerRpcController {
   private boolean failed = false;
   private String errorText = null;
 
@@ -60,5 +64,18 @@ public class FakeRpcController implements RpcController {
 
   @Override
   public void startCancel() {
+  }
+
+  @Override
+  public ParticipantId getLoggedInUser() {
+    return ParticipantId.ofUnsafe(USER);
+  }
+
+  @Override
+  public void cancel() {
+  }
+
+  @Override
+  public void run() {
   }
 }

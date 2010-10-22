@@ -3,6 +3,7 @@
     <inherits name="org.waveprotocol.wave.federation.Federation"/>
     <source path="">
         <include name="DocumentSnapshot.java"/>
+        <include name="ProtocolAuthenticate.java"/>
         <include name="ProtocolOpenRequest.java"/>
         <include name="ProtocolSubmitRequest.java"/>
         <include name="ProtocolSubmitResponse.java"/>

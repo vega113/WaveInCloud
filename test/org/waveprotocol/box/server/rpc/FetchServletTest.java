@@ -70,7 +70,9 @@ public class FetchServletTest extends TestCase {
     waveletProvider = new WaveletProviderStub();
     AccountStore accountStore = new MemoryStore();
     accountStore.putAccount(new HumanAccountDataImpl(ParticipantId.ofUnsafe("fred@example.com")));
-    SessionManager sessionManager = new SessionManagerImpl(accountStore);
+    org.eclipse.jetty.server.SessionManager jettySessionManager =
+        mock(org.eclipse.jetty.server.SessionManager.class);
+    SessionManager sessionManager = new SessionManagerImpl(accountStore, jettySessionManager);
     servlet = new FetchServlet(waveletProvider, protoSerializer, sessionManager);
   }
 
@@ -82,10 +84,10 @@ public class FetchServletTest extends TestCase {
     servlet.doGet(request, response);
     verify(response, times(1)).sendError(HttpServletResponse.SC_NOT_FOUND);
   }
-  
+
   public void testDisallowedUserReturnsForbidden() throws Exception {
     waveletProvider.setAllowsAccess(false);
-    
+
     WaveletData wavelet = waveletProvider.getHostedWavelet();
     WaveRef waveref = WaveRef.of(wavelet.getWaveId(), wavelet.getWaveletId());
     verifyServletReturnsForbiddenForWaveref(waveref);

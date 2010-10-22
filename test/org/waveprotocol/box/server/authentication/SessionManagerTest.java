@@ -22,6 +22,9 @@ import static org.mockito.Mockito.when;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.waveprotocol.box.server.account.HumanAccountData;
 import org.waveprotocol.box.server.account.HumanAccountDataImpl;
 import org.waveprotocol.box.server.persistence.AccountStore;
@@ -36,15 +39,19 @@ import javax.servlet.http.HttpSession;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class SessionManagerTest extends TestCase {
+  @Mock private org.eclipse.jetty.server.SessionManager jettySessionManager;
+
   private SessionManager sessionManager;
   private HumanAccountData account;
 
   @Override
   protected void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+
     AccountStore store = new MemoryStore();
     account = new HumanAccountDataImpl(ParticipantId.ofUnsafe("tubes@example.com"));
     store.putAccount(account);
-    sessionManager = new SessionManagerImpl(store);
+    sessionManager = new SessionManagerImpl(store, jettySessionManager);
   }
 
   public void testSessionFetchesAddress() {
@@ -82,5 +89,17 @@ public class SessionManagerTest extends TestCase {
     String encoded_url = "/abc123?nested%3Dquery%26string";
     assertEquals(
         SessionManager.SIGN_IN_URL + "?r=" + encoded_url, sessionManager.getLoginUrl(url));
+  }
+
+  public void testGetSessionFromToken() {
+    HttpSession session = mock(HttpSession.class);
+    Mockito.when(jettySessionManager.getHttpSession("abc123")).thenReturn(session);
+    assertSame(session, sessionManager.getSessionFromToken("abc123"));
+  }
+
+  public void testGetSessionFromUnknownToken() {
+    HttpSession session = mock(HttpSession.class);
+    Mockito.when(jettySessionManager.getHttpSession("abc123")).thenReturn(null);
+    assertNull(sessionManager.getSessionFromToken("abc123"));
   }
 }

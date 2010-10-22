@@ -55,6 +55,21 @@ service ProtocolWaveClientRpc {
     option (rpc.is_streaming_rpc) = true;
   };
   rpc Submit (ProtocolSubmitRequest) returns (ProtocolSubmitResponse);
+  rpc Authenticate (ProtocolAuthenticate) returns (ProtocolAuthenticationResult);
+}
+
+// A workaround for clients which do not support sending cookies over a websocket
+// connection. See: http://code.google.com/p/wave-protocol/issues/detail?id=119
+message ProtocolAuthenticate {
+  required string token = 1;
+}
+
+// RPCs require a return type, although in this case no return data is desired.
+// We don't want to return anything here because clients which implement
+// websockets correctly (and thus don't use ProtocolAuthenticate) cannot
+// recieve the authentication related information.
+// If the client's authentication is not valid, the connection will be closed.
+message ProtocolAuthenticationResult {
 }
 
 /**

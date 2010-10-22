@@ -26,12 +26,14 @@ import org.waveprotocol.wave.federation.Proto;
 
 /**
  * A wrapper around the json protobuf serialization.
- * 
+ *
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class ProtoSerializer extends ReflectionNumericJSON {
   @SuppressWarnings("unchecked")
   public static final Class<? extends Message>[] MODULE_CLASSES = new Class[]{
+    WaveClientRpc.ProtocolAuthenticate.class,
+    WaveClientRpc.ProtocolAuthenticationResult.class,
     WaveClientRpc.ProtocolOpenRequest.class,
     WaveClientRpc.ProtocolSubmitRequest.class,
     WaveClientRpc.ProtocolSubmitResponse.class,
@@ -59,7 +61,7 @@ public class ProtoSerializer extends ReflectionNumericJSON {
     Rpc.CancelRpc.class,
     Rpc.RpcFinished.class,
   };
-  
+
   public ProtoSerializer() {
     super(MODULE_CLASSES);
   }

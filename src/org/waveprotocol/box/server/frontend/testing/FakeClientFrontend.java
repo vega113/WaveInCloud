@@ -20,7 +20,6 @@ package org.waveprotocol.box.server.frontend.testing;
 import org.waveprotocol.box.server.frontend.ClientFrontend;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
-import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
@@ -36,8 +35,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Nullable;
 
 /**
   * Implementation of a ClientFrontend which only records requests and will make callbacks when it
@@ -94,8 +91,8 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
   }
 
   @Override
-  public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
-      @Nullable String channelId, WaveletProvider.SubmitRequestListener listener) {
+  public void submitRequest(ParticipantId loggedInUser, WaveletName waveletName,
+      ProtocolWaveletDelta delta, String channelId, SubmitRequestListener listener) {
     submitRecords.put(waveletName, new SubmitRecord(delta.getOperationCount(), listener));
   }
 

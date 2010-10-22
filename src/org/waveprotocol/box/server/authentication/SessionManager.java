@@ -88,4 +88,11 @@ public interface SessionManager {
    */
   String getLoginUrl(String redirect);
 
+  /**
+   * Get a user's HttpSession from their session token.
+   *
+   * @param token the session token. Eg, "JSESSION=abcdef123567890"
+   * @return the user's HttpSession, or null if the token is invalid.
+   */
+  HttpSession getSessionFromToken(String token);
 }

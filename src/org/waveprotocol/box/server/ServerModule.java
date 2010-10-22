@@ -25,9 +25,11 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
+import org.eclipse.jetty.server.session.HashSessionManager;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.authentication.SessionManagerImpl;
 import org.waveprotocol.box.server.rpc.ProtoSerializer;
+import org.waveprotocol.box.server.rpc.ServerRpcProvider;
 import org.waveprotocol.box.server.waveserver.WaveServerImpl;
 import org.waveprotocol.box.server.waveserver.WaveServerModule;
 import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
@@ -39,8 +41,8 @@ import org.waveprotocol.wave.federation.xmpp.XmppFederationRemote;
 import org.waveprotocol.wave.federation.xmpp.XmppManager;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
-import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl.Seed;
+import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.id.TokenGeneratorImpl;
 import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
 import org.waveprotocol.wave.waveserver.federation.FederationRemoteBridge;
@@ -97,6 +99,11 @@ public class ServerModule extends AbstractModule {
 
     bind(Configuration.class).toInstance(Configuration.getConfiguration());
     bind(SessionManager.class).to(SessionManagerImpl.class).in(Singleton.class);
+
+    bind(org.eclipse.jetty.server.SessionManager.class).to(HashSessionManager.class)
+        .in(Singleton.class);
+
+    bind(ServerRpcProvider.class).in(Singleton.class);
   }
 
   @Provides

@@ -8,6 +8,539 @@ public final class WaveClientRpc {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
+  public static final class ProtocolAuthenticate extends
+      com.google.protobuf.GeneratedMessage {
+    // Use ProtocolAuthenticate.newBuilder() to construct.
+    private ProtocolAuthenticate() {
+      initFields();
+    }
+    private ProtocolAuthenticate(boolean noInit) {}
+    
+    private static final ProtocolAuthenticate defaultInstance;
+    public static ProtocolAuthenticate getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public ProtocolAuthenticate getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.waveprotocol.box.server.waveserver.WaveClientRpc.internal_static_waveserver_ProtocolAuthenticate_descriptor;
+    }
+    
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.waveprotocol.box.server.waveserver.WaveClientRpc.internal_static_waveserver_ProtocolAuthenticate_fieldAccessorTable;
+    }
+    
+    // required string token = 1;
+    public static final int TOKEN_FIELD_NUMBER = 1;
+    private boolean hasToken;
+    private java.lang.String token_ = "";
+    public boolean hasToken() { return hasToken; }
+    public java.lang.String getToken() { return token_; }
+    
+    private void initFields() {
+    }
+    public final boolean isInitialized() {
+      if (!hasToken) return false;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (hasToken()) {
+        output.writeString(1, getToken());
+      }
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (hasToken()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeStringSize(1, getToken());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> {
+      private org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate result;
+      
+      // Construct using org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate.newBuilder()
+      private Builder() {}
+      
+      private static Builder create() {
+        Builder builder = new Builder();
+        builder.result = new org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate();
+        return builder;
+      }
+      
+      protected org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate internalGetResult() {
+        return result;
+      }
+      
+      public Builder clear() {
+        if (result == null) {
+          throw new IllegalStateException(
+            "Cannot call clear() after build().");
+        }
+        result = new org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate();
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(result);
+      }
+      
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate.getDescriptor();
+      }
+      
+      public org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate getDefaultInstanceForType() {
+        return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate.getDefaultInstance();
+      }
+      
+      public boolean isInitialized() {
+        return result.isInitialized();
+      }
+      public org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate build() {
+        if (result != null && !isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return buildPartial();
+      }
+      
+      private org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        if (!isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return buildPartial();
+      }
+      
+      public org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate buildPartial() {
+        if (result == null) {
+          throw new IllegalStateException(
+            "build() has already been called on this Builder.");
+        }
+        org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate returnMe = result;
+        result = null;
+        return returnMe;
+      }
+      
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate) {
+          return mergeFrom((org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate other) {
+        if (other == org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate.getDefaultInstance()) return this;
+        if (other.hasToken()) {
+          setToken(other.getToken());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              setToken(input.readString());
+              break;
+            }
+          }
+        }
+      }
+      
+      
+      // required string token = 1;
+      public boolean hasToken() {
+        return result.hasToken();
+      }
+      public java.lang.String getToken() {
+        return result.getToken();
+      }
+      public Builder setToken(java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  result.hasToken = true;
+        result.token_ = value;
+        return this;
+      }
+      public Builder clearToken() {
+        result.hasToken = false;
+        result.token_ = getDefaultInstance().getToken();
+        return this;
+      }
+      
+      // @@protoc_insertion_point(builder_scope:waveserver.ProtocolAuthenticate)
+    }
+    
+    static {
+      defaultInstance = new ProtocolAuthenticate(true);
+      org.waveprotocol.box.server.waveserver.WaveClientRpc.internalForceInit();
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:waveserver.ProtocolAuthenticate)
+  }
+  
+  public static final class ProtocolAuthenticationResult extends
+      com.google.protobuf.GeneratedMessage {
+    // Use ProtocolAuthenticationResult.newBuilder() to construct.
+    private ProtocolAuthenticationResult() {
+      initFields();
+    }
+    private ProtocolAuthenticationResult(boolean noInit) {}
+    
+    private static final ProtocolAuthenticationResult defaultInstance;
+    public static ProtocolAuthenticationResult getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public ProtocolAuthenticationResult getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.waveprotocol.box.server.waveserver.WaveClientRpc.internal_static_waveserver_ProtocolAuthenticationResult_descriptor;
+    }
+    
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.waveprotocol.box.server.waveserver.WaveClientRpc.internal_static_waveserver_ProtocolAuthenticationResult_fieldAccessorTable;
+    }
+    
+    private void initFields() {
+    }
+    public final boolean isInitialized() {
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> {
+      private org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult result;
+      
+      // Construct using org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.newBuilder()
+      private Builder() {}
+      
+      private static Builder create() {
+        Builder builder = new Builder();
+        builder.result = new org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult();
+        return builder;
+      }
+      
+      protected org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult internalGetResult() {
+        return result;
+      }
+      
+      public Builder clear() {
+        if (result == null) {
+          throw new IllegalStateException(
+            "Cannot call clear() after build().");
+        }
+        result = new org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult();
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(result);
+      }
+      
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.getDescriptor();
+      }
+      
+      public org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult getDefaultInstanceForType() {
+        return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.getDefaultInstance();
+      }
+      
+      public boolean isInitialized() {
+        return result.isInitialized();
+      }
+      public org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult build() {
+        if (result != null && !isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return buildPartial();
+      }
+      
+      private org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        if (!isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return buildPartial();
+      }
+      
+      public org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult buildPartial() {
+        if (result == null) {
+          throw new IllegalStateException(
+            "build() has already been called on this Builder.");
+        }
+        org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult returnMe = result;
+        result = null;
+        return returnMe;
+      }
+      
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult) {
+          return mergeFrom((org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult other) {
+        if (other == org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                return this;
+              }
+              break;
+            }
+          }
+        }
+      }
+      
+      
+      // @@protoc_insertion_point(builder_scope:waveserver.ProtocolAuthenticationResult)
+    }
+    
+    static {
+      defaultInstance = new ProtocolAuthenticationResult(true);
+      org.waveprotocol.box.server.waveserver.WaveClientRpc.internalForceInit();
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:waveserver.ProtocolAuthenticationResult)
+  }
+  
   public static final class ProtocolOpenRequest extends
       com.google.protobuf.GeneratedMessage {
     // Use ProtocolOpenRequest.newBuilder() to construct.
@@ -3900,6 +4433,11 @@ public final class WaveClientRpc {
           org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest request,
           com.google.protobuf.RpcCallback<org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse> done);
       
+      public abstract void authenticate(
+          com.google.protobuf.RpcController controller,
+          org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate request,
+          com.google.protobuf.RpcCallback<org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult> done);
+      
     }
     
     public static com.google.protobuf.Service newReflectiveService(
@@ -3919,6 +4457,14 @@ public final class WaveClientRpc {
             org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest request,
             com.google.protobuf.RpcCallback<org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse> done) {
           impl.submit(controller, request, done);
+        }
+        
+        @Override
+        public  void authenticate(
+            com.google.protobuf.RpcController controller,
+            org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate request,
+            com.google.protobuf.RpcCallback<org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult> done) {
+          impl.authenticate(controller, request, done);
         }
         
       };
@@ -3947,6 +4493,8 @@ public final class WaveClientRpc {
               return impl.open(controller, (org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolOpenRequest)request);
             case 1:
               return impl.submit(controller, (org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest)request);
+            case 2:
+              return impl.authenticate(controller, (org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate)request);
             default:
               throw new java.lang.AssertionError("Can't get here.");
           }
@@ -3965,6 +4513,8 @@ public final class WaveClientRpc {
               return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolOpenRequest.getDefaultInstance();
             case 1:
               return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest.getDefaultInstance();
+            case 2:
+              return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate.getDefaultInstance();
             default:
               throw new java.lang.AssertionError("Can't get here.");
           }
@@ -3983,6 +4533,8 @@ public final class WaveClientRpc {
               return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveletUpdate.getDefaultInstance();
             case 1:
               return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse.getDefaultInstance();
+            case 2:
+              return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.getDefaultInstance();
             default:
               throw new java.lang.AssertionError("Can't get here.");
           }
@@ -4000,6 +4552,11 @@ public final class WaveClientRpc {
         com.google.protobuf.RpcController controller,
         org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest request,
         com.google.protobuf.RpcCallback<org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse> done);
+    
+    public abstract void authenticate(
+        com.google.protobuf.RpcController controller,
+        org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate request,
+        com.google.protobuf.RpcCallback<org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult> done);
     
     public static final
         com.google.protobuf.Descriptors.ServiceDescriptor
@@ -4033,6 +4590,11 @@ public final class WaveClientRpc {
             com.google.protobuf.RpcUtil.<org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse>specializeCallback(
               done));
           return;
+        case 2:
+          this.authenticate(controller, (org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate)request,
+            com.google.protobuf.RpcUtil.<org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult>specializeCallback(
+              done));
+          return;
         default:
           throw new java.lang.AssertionError("Can't get here.");
       }
@@ -4051,6 +4613,8 @@ public final class WaveClientRpc {
           return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolOpenRequest.getDefaultInstance();
         case 1:
           return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest.getDefaultInstance();
+        case 2:
+          return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate.getDefaultInstance();
         default:
           throw new java.lang.AssertionError("Can't get here.");
       }
@@ -4069,6 +4633,8 @@ public final class WaveClientRpc {
           return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveletUpdate.getDefaultInstance();
         case 1:
           return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse.getDefaultInstance();
+        case 2:
+          return org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.getDefaultInstance();
         default:
           throw new java.lang.AssertionError("Can't get here.");
       }
@@ -4119,6 +4685,21 @@ public final class WaveClientRpc {
             org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse.class,
             org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse.getDefaultInstance()));
       }
+      
+      public  void authenticate(
+          com.google.protobuf.RpcController controller,
+          org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate request,
+          com.google.protobuf.RpcCallback<org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult> done) {
+        channel.callMethod(
+          getDescriptor().getMethods().get(2),
+          controller,
+          request,
+          org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.getDefaultInstance(),
+          com.google.protobuf.RpcUtil.generalizeCallback(
+            done,
+            org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.class,
+            org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.getDefaultInstance()));
+      }
     }
     
     public static BlockingInterface newBlockingStub(
@@ -4135,6 +4716,11 @@ public final class WaveClientRpc {
       public org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse submit(
           com.google.protobuf.RpcController controller,
           org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest request)
+          throws com.google.protobuf.ServiceException;
+      
+      public org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult authenticate(
+          com.google.protobuf.RpcController controller,
+          org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate request)
           throws com.google.protobuf.ServiceException;
     }
     
@@ -4168,9 +4754,31 @@ public final class WaveClientRpc {
           org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse.getDefaultInstance());
       }
       
+      
+      public org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult authenticate(
+          com.google.protobuf.RpcController controller,
+          org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate request)
+          throws com.google.protobuf.ServiceException {
+        return (org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult) channel.callBlockingMethod(
+          getDescriptor().getMethods().get(2),
+          controller,
+          request,
+          org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.getDefaultInstance());
+      }
+      
     }
   }
   
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_waveserver_ProtocolAuthenticate_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_waveserver_ProtocolAuthenticate_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_waveserver_ProtocolAuthenticationResult_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_waveserver_ProtocolAuthenticationResult_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_waveserver_ProtocolOpenRequest_descriptor;
   private static
@@ -4224,55 +4832,75 @@ public final class WaveClientRpc {
       "/waveclient-rpc.proto\022\nwaveserver\032)org/w" +
       "aveprotocol/box/server/rpc/rpc.proto\0326or" +
       "g/waveprotocol/wave/federation/federatio" +
-      "n.protodevel\"\214\001\n\023ProtocolOpenRequest\022\026\n\016" +
-      "participant_id\030\001 \002(\t\022\017\n\007wave_id\030\002 \002(\t\022\031\n" +
-      "\021wavelet_id_prefix\030\003 \003(\t\0221\n\rknown_wavele" +
-      "t\030\004 \003(\0132\032.waveserver.WaveletVersion\"_\n\016W" +
-      "aveletVersion\022\022\n\nwavelet_id\030\001 \002(\t\0229\n\016has" +
-      "hed_version\030\002 \002(\0132!.federation.ProtocolH",
-      "ashedVersion\"\312\001\n\020DocumentSnapshot\022\023\n\013doc" +
-      "ument_id\030\001 \002(\t\022A\n\022document_operation\030\002 \002" +
-      "(\0132%.federation.ProtocolDocumentOperatio" +
-      "n\022\016\n\006author\030\003 \002(\t\022\023\n\013contributor\030\004 \003(\t\022\035" +
-      "\n\025last_modified_version\030\005 \002(\003\022\032\n\022last_mo" +
-      "dified_time\030\006 \002(\003\"\345\001\n\017WaveletSnapshot\022\022\n" +
-      "\nwavelet_id\030\001 \002(\t\022\026\n\016participant_id\030\002 \003(" +
-      "\t\022.\n\010document\030\003 \003(\0132\034.waveserver.Documen" +
-      "tSnapshot\0222\n\007version\030\004 \002(\0132!.federation." +
-      "ProtocolHashedVersion\022\032\n\022last_modified_t",
-      "ime\030\005 \002(\003\022\017\n\007creator\030\006 \002(\t\022\025\n\rcreation_t" +
-      "ime\030\007 \002(\003\"Q\n\020WaveViewSnapshot\022\017\n\007wave_id" +
-      "\030\001 \002(\t\022,\n\007wavelet\030\002 \003(\0132\033.waveserver.Wav" +
-      "eletSnapshot\"\270\002\n\025ProtocolWaveletUpdate\022\024" +
-      "\n\014wavelet_name\030\001 \002(\t\0227\n\rapplied_delta\030\002 " +
-      "\003(\0132 .federation.ProtocolWaveletDelta\0228\n" +
-      "\rcommit_notice\030\003 \001(\0132!.federation.Protoc" +
-      "olHashedVersion\022<\n\021resulting_version\030\004 \001" +
-      "(\0132!.federation.ProtocolHashedVersion\022-\n" +
-      "\010snapshot\030\005 \001(\0132\033.waveserver.WaveletSnap",
-      "shot\022\025\n\006marker\030\006 \001(\010:\005false\022\022\n\nchannel_i" +
-      "d\030\007 \001(\t\"r\n\025ProtocolSubmitRequest\022\024\n\014wave" +
-      "let_name\030\001 \002(\t\022/\n\005delta\030\002 \002(\0132 .federati" +
-      "on.ProtocolWaveletDelta\022\022\n\nchannel_id\030\003 " +
-      "\001(\t\"\230\001\n\026ProtocolSubmitResponse\022\032\n\022operat" +
-      "ions_applied\030\001 \002(\005\022\025\n\rerror_message\030\002 \001(" +
-      "\t\022K\n hashed_version_after_application\030\003 " +
-      "\001(\0132!.federation.ProtocolHashedVersion2\271" +
-      "\001\n\025ProtocolWaveClientRpc\022O\n\004Open\022\037.waves" +
-      "erver.ProtocolOpenRequest\032!.waveserver.P",
-      "rotocolWaveletUpdate\"\003\330>\001\022O\n\006Submit\022!.wa" +
-      "veserver.ProtocolSubmitRequest\032\".waveser" +
-      "ver.ProtocolSubmitResponseB7\n&org.wavepr" +
-      "otocol.box.server.waveserverB\rWaveClient" +
-      "Rpc"
+      "n.protodevel\"%\n\024ProtocolAuthenticate\022\r\n\005" +
+      "token\030\001 \002(\t\"\036\n\034ProtocolAuthenticationRes" +
+      "ult\"\214\001\n\023ProtocolOpenRequest\022\026\n\016participa" +
+      "nt_id\030\001 \002(\t\022\017\n\007wave_id\030\002 \002(\t\022\031\n\021wavelet_" +
+      "id_prefix\030\003 \003(\t\0221\n\rknown_wavelet\030\004 \003(\0132\032" +
+      ".waveserver.WaveletVersion\"_\n\016WaveletVer",
+      "sion\022\022\n\nwavelet_id\030\001 \002(\t\0229\n\016hashed_versi" +
+      "on\030\002 \002(\0132!.federation.ProtocolHashedVers" +
+      "ion\"\312\001\n\020DocumentSnapshot\022\023\n\013document_id\030" +
+      "\001 \002(\t\022A\n\022document_operation\030\002 \002(\0132%.fede" +
+      "ration.ProtocolDocumentOperation\022\016\n\006auth" +
+      "or\030\003 \002(\t\022\023\n\013contributor\030\004 \003(\t\022\035\n\025last_mo" +
+      "dified_version\030\005 \002(\003\022\032\n\022last_modified_ti" +
+      "me\030\006 \002(\003\"\345\001\n\017WaveletSnapshot\022\022\n\nwavelet_" +
+      "id\030\001 \002(\t\022\026\n\016participant_id\030\002 \003(\t\022.\n\010docu" +
+      "ment\030\003 \003(\0132\034.waveserver.DocumentSnapshot",
+      "\0222\n\007version\030\004 \002(\0132!.federation.ProtocolH" +
+      "ashedVersion\022\032\n\022last_modified_time\030\005 \002(\003" +
+      "\022\017\n\007creator\030\006 \002(\t\022\025\n\rcreation_time\030\007 \002(\003" +
+      "\"Q\n\020WaveViewSnapshot\022\017\n\007wave_id\030\001 \002(\t\022,\n" +
+      "\007wavelet\030\002 \003(\0132\033.waveserver.WaveletSnaps" +
+      "hot\"\270\002\n\025ProtocolWaveletUpdate\022\024\n\014wavelet" +
+      "_name\030\001 \002(\t\0227\n\rapplied_delta\030\002 \003(\0132 .fed" +
+      "eration.ProtocolWaveletDelta\0228\n\rcommit_n" +
+      "otice\030\003 \001(\0132!.federation.ProtocolHashedV" +
+      "ersion\022<\n\021resulting_version\030\004 \001(\0132!.fede",
+      "ration.ProtocolHashedVersion\022-\n\010snapshot" +
+      "\030\005 \001(\0132\033.waveserver.WaveletSnapshot\022\025\n\006m" +
+      "arker\030\006 \001(\010:\005false\022\022\n\nchannel_id\030\007 \001(\t\"r" +
+      "\n\025ProtocolSubmitRequest\022\024\n\014wavelet_name\030" +
+      "\001 \002(\t\022/\n\005delta\030\002 \002(\0132 .federation.Protoc" +
+      "olWaveletDelta\022\022\n\nchannel_id\030\003 \001(\t\"\230\001\n\026P" +
+      "rotocolSubmitResponse\022\032\n\022operations_appl" +
+      "ied\030\001 \002(\005\022\025\n\rerror_message\030\002 \001(\t\022K\n hash" +
+      "ed_version_after_application\030\003 \001(\0132!.fed" +
+      "eration.ProtocolHashedVersion2\225\002\n\025Protoc",
+      "olWaveClientRpc\022O\n\004Open\022\037.waveserver.Pro" +
+      "tocolOpenRequest\032!.waveserver.ProtocolWa" +
+      "veletUpdate\"\003\330>\001\022O\n\006Submit\022!.waveserver." +
+      "ProtocolSubmitRequest\032\".waveserver.Proto" +
+      "colSubmitResponse\022Z\n\014Authenticate\022 .wave" +
+      "server.ProtocolAuthenticate\032(.waveserver" +
+      ".ProtocolAuthenticationResultB7\n&org.wav" +
+      "eprotocol.box.server.waveserverB\rWaveCli" +
+      "entRpc"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(
             com.google.protobuf.Descriptors.FileDescriptor root) {
           descriptor = root;
-          internal_static_waveserver_ProtocolOpenRequest_descriptor =
+          internal_static_waveserver_ProtocolAuthenticate_descriptor =
             getDescriptor().getMessageTypes().get(0);
+          internal_static_waveserver_ProtocolAuthenticate_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_waveserver_ProtocolAuthenticate_descriptor,
+              new java.lang.String[] { "Token", },
+              org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate.class,
+              org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate.Builder.class);
+          internal_static_waveserver_ProtocolAuthenticationResult_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_waveserver_ProtocolAuthenticationResult_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_waveserver_ProtocolAuthenticationResult_descriptor,
+              new java.lang.String[] { },
+              org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.class,
+              org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult.Builder.class);
+          internal_static_waveserver_ProtocolOpenRequest_descriptor =
+            getDescriptor().getMessageTypes().get(2);
           internal_static_waveserver_ProtocolOpenRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_ProtocolOpenRequest_descriptor,
@@ -4280,7 +4908,7 @@ public final class WaveClientRpc {
               org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolOpenRequest.class,
               org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolOpenRequest.Builder.class);
           internal_static_waveserver_WaveletVersion_descriptor =
-            getDescriptor().getMessageTypes().get(1);
+            getDescriptor().getMessageTypes().get(3);
           internal_static_waveserver_WaveletVersion_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_WaveletVersion_descriptor,
@@ -4288,7 +4916,7 @@ public final class WaveClientRpc {
               org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletVersion.class,
               org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletVersion.Builder.class);
           internal_static_waveserver_DocumentSnapshot_descriptor =
-            getDescriptor().getMessageTypes().get(2);
+            getDescriptor().getMessageTypes().get(4);
           internal_static_waveserver_DocumentSnapshot_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_DocumentSnapshot_descriptor,
@@ -4296,7 +4924,7 @@ public final class WaveClientRpc {
               org.waveprotocol.box.server.waveserver.WaveClientRpc.DocumentSnapshot.class,
               org.waveprotocol.box.server.waveserver.WaveClientRpc.DocumentSnapshot.Builder.class);
           internal_static_waveserver_WaveletSnapshot_descriptor =
-            getDescriptor().getMessageTypes().get(3);
+            getDescriptor().getMessageTypes().get(5);
           internal_static_waveserver_WaveletSnapshot_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_WaveletSnapshot_descriptor,
@@ -4304,7 +4932,7 @@ public final class WaveClientRpc {
               org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot.class,
               org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot.Builder.class);
           internal_static_waveserver_WaveViewSnapshot_descriptor =
-            getDescriptor().getMessageTypes().get(4);
+            getDescriptor().getMessageTypes().get(6);
           internal_static_waveserver_WaveViewSnapshot_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_WaveViewSnapshot_descriptor,
@@ -4312,7 +4940,7 @@ public final class WaveClientRpc {
               org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveViewSnapshot.class,
               org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveViewSnapshot.Builder.class);
           internal_static_waveserver_ProtocolWaveletUpdate_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(7);
           internal_static_waveserver_ProtocolWaveletUpdate_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_ProtocolWaveletUpdate_descriptor,
@@ -4320,7 +4948,7 @@ public final class WaveClientRpc {
               org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveletUpdate.class,
               org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveletUpdate.Builder.class);
           internal_static_waveserver_ProtocolSubmitRequest_descriptor =
-            getDescriptor().getMessageTypes().get(6);
+            getDescriptor().getMessageTypes().get(8);
           internal_static_waveserver_ProtocolSubmitRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_ProtocolSubmitRequest_descriptor,
@@ -4328,7 +4956,7 @@ public final class WaveClientRpc {
               org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest.class,
               org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest.Builder.class);
           internal_static_waveserver_ProtocolSubmitResponse_descriptor =
-            getDescriptor().getMessageTypes().get(7);
+            getDescriptor().getMessageTypes().get(9);
           internal_static_waveserver_ProtocolSubmitResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_waveserver_ProtocolSubmitResponse_descriptor,

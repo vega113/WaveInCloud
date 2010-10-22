@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.frontend.testing.FakeClientFrontend;
-import org.waveprotocol.box.server.rpc.testing.FakeRpcController;
+import org.waveprotocol.box.server.rpc.testing.FakeServerRpcController;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.util.testing.TestingConstants;
@@ -93,7 +93,7 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
   protected void setUp() throws Exception {
     super.setUp();
     counter = 0;
-    controller = new FakeRpcController();
+    controller = new FakeServerRpcController();
     frontend = new FakeClientFrontend();
     rpcImpl = new WaveClientRpcImpl(frontend);
   }

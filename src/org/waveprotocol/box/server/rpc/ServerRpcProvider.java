@@ -17,17 +17,18 @@
 
 package org.waveprotocol.box.server.rpc;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.Service;
 import com.google.protobuf.UnknownFieldSet;
-import com.google.protobuf.Descriptors.MethodDescriptor;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -37,8 +38,12 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
+import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult;
 import org.waveprotocol.wave.model.util.Pair;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -57,6 +62,7 @@ import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 /**
  * ServerRpcProvider can provide instances of type Service over an incoming
@@ -72,6 +78,8 @@ public class ServerRpcProvider {
   private final Integer httpPort;
   private final Set<Connection> incomingConnections = Sets.newHashSet();
   private final ExecutorService threadPool;
+  private final SessionManager sessionManager;
+  private final org.eclipse.jetty.server.SessionManager jettySessionManager;
   private ServerSocketChannel rpcServer = null;
   private Server httpServer = null;
   private Future<?> acceptorThread = null;
@@ -99,6 +107,8 @@ public class ServerRpcProvider {
     private final SocketChannel channel;
 
     SequencedProtoChannelConnection(SocketChannel channel) {
+      super(null);
+
       this.channel = channel;
       LOG.info("New Connection set up from " + this.channel);
 
@@ -119,9 +129,10 @@ public class ServerRpcProvider {
   class WebSocketConnection extends Connection {
     private final WebSocketServerChannel socketChannel;
 
-    WebSocketConnection() {
+    WebSocketConnection(ParticipantId loggedInUser) {
+      super(loggedInUser);
       socketChannel = new WebSocketServerChannel(this);
-      LOG.info("New websocket connection set up.");
+      LOG.info("New websocket connection set up for user " + loggedInUser);
       expectMessages(socketChannel);
     }
 
@@ -139,6 +150,18 @@ public class ServerRpcProvider {
     private final Map<Long, ServerRpcController> activeRpcs =
         new ConcurrentHashMap<Long, ServerRpcController>();
 
+    // The logged in user.
+    // Note: Due to this bug: http://code.google.com/p/wave-protocol/issues/detail?id=119,
+    // the field may be null on first connect and then set later using an RPC.
+    private ParticipantId loggedInUser;
+
+    /**
+     * @param loggedInUser The currently logged in user, or null if no user is logged in.
+     */
+    public Connection(ParticipantId loggedInUser) {
+      this.loggedInUser = loggedInUser;
+    }
+
     protected void expectMessages(MessageExpectingChannel channel) {
       synchronized (registeredServices) {
         for (RegisteredServiceMethod serviceMethod : registeredServices.values()) {
@@ -151,6 +174,12 @@ public class ServerRpcProvider {
 
     protected abstract void sendMessage(long sequenceNo, Message message);
 
+    private ParticipantId authenticate(String token) {
+      HttpSession session = sessionManager.getSessionFromToken(token);
+      ParticipantId user = sessionManager.getLoggedInUser(session);
+      return user;
+    }
+
     @Override
     public void message(final long sequenceNo, Message message) {
       if (message instanceof Rpc.CancelRpc) {
@@ -161,6 +190,24 @@ public class ServerRpcProvider {
           LOG.info("Cancelling open RPC " + sequenceNo);
           controller.cancel();
         }
+      } else if (message instanceof ProtocolAuthenticate) {
+        // Workaround for bug: http://codereview.waveprotocol.org/224001/
+
+        // When we get this message, either the connection will not be logged in
+        // (loggedInUser == null) or the connection will have been authenticated via cookies
+        // (in which case loggedInUser must match the authenticated user, and this message has no
+        // effect).
+
+        ProtocolAuthenticate authMessage = (ProtocolAuthenticate) message;
+        ParticipantId authenticatedAs = authenticate(authMessage.getToken());
+
+        Preconditions.checkArgument(authenticatedAs != null, "Auth token invalid");
+        Preconditions.checkState(loggedInUser == null || loggedInUser.equals(authenticatedAs),
+            "Session already authenticated as a different user");
+
+        loggedInUser = authenticatedAs;
+        LOG.info("Session authenticated as " + loggedInUser);
+        sendMessage(sequenceNo, ProtocolAuthenticationResult.getDefaultInstance());
       } else if (registeredServices.containsKey(message.getDescriptorForType())) {
         if (activeRpcs.containsKey(sequenceNo)) {
           throw new IllegalStateException(
@@ -170,8 +217,9 @@ public class ServerRpcProvider {
               registeredServices.get(message.getDescriptorForType());
 
           // Create the internal ServerRpcController used to invoke the call.
-          final ServerRpcController controller = new ServerRpcController(
-              message, serviceMethod.service, serviceMethod.method, new RpcCallback<Message>() {
+          final ServerRpcController controller = new ServerRpcControllerImpl(
+              message, serviceMethod.service, serviceMethod.method, loggedInUser,
+              new RpcCallback<Message>() {
                 @Override
                 synchronized public void run(Message message) {
                   if (message instanceof Rpc.RpcFinished
@@ -228,26 +276,34 @@ public class ServerRpcProvider {
    * @param threadPool the service used to create threads
    */
   public ServerRpcProvider(SocketAddress rpcHost, String httpHost, Integer httpPort,
-      ExecutorService threadPool) {
+      ExecutorService threadPool, SessionManager sessionManager,
+      org.eclipse.jetty.server.SessionManager jettySessionManager) {
     rpcHostingAddress = rpcHost;
     this.httpHost = httpHost;
     this.httpPort = httpPort;
     this.threadPool = threadPool;
+    this.sessionManager = sessionManager;
+    this.jettySessionManager = jettySessionManager;
   }
 
   /**
-   * Constructs a new ServerRpcProvider with a default ExecutorService.
+   * Constructs a new ServerRpcProvider with a default ExecutorService and session manager.
    */
-  public ServerRpcProvider(SocketAddress rpcHost, String httpHost, Integer httpPort) {
-    this(rpcHost, httpHost, httpPort, Executors.newCachedThreadPool());
+  public ServerRpcProvider(SocketAddress rpcHost, String httpHost, Integer httpPort,
+      SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager) {
+    this(rpcHost, httpHost, httpPort, Executors.newCachedThreadPool(), sessionManager,
+        jettySessionManager);
   }
 
   @Inject
   public ServerRpcProvider(@Named("client_frontend_hostname") String rpcHost,
       @Named("client_frontend_port") Integer rpcPort,
       @Named("http_frontend_hostname") String httpHost,
-      @Named("http_frontend_port") Integer httpPort) {
-    this(new InetSocketAddress(rpcHost, rpcPort), httpHost, httpPort);
+      @Named("http_frontend_port") Integer httpPort,
+      SessionManager sessionManager,
+      org.eclipse.jetty.server.SessionManager jettySessionManager) {
+    this(new InetSocketAddress(rpcHost, rpcPort), httpHost, httpPort, sessionManager,
+        jettySessionManager);
   }
 
   /**
@@ -281,7 +337,7 @@ public class ServerRpcProvider {
 
   public void startWebSocketServer() {
     httpServer = new Server();
-    
+
     // Listen on httpHost and localhost.
     httpServer.addConnector(createSelectChannelConnector(httpHost, httpPort));
     if (!httpHost.equals("localhost")) {
@@ -289,6 +345,9 @@ public class ServerRpcProvider {
     }
 
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+    if (jettySessionManager != null) {
+      context.getSessionHandler().setSessionManager(jettySessionManager);
+    }
     context.setResourceBase("./war");
 
     // Servlet where the websocket connection is served from.
@@ -306,7 +365,7 @@ public class ServerRpcProvider {
     for (Pair<String, HttpServlet> servlet : servletRegistry) {
       context.addServlet(new ServletHolder(servlet.getSecond()), servlet.getFirst());
     }
-    
+
     httpServer.setHandler(context);
 
     try {
@@ -317,7 +376,7 @@ public class ServerRpcProvider {
     }
     LOG.fine("WebSocket server running.");
   }
-  
+
   /**
    * @return a {@link SelectChannelConnector} bound to a given host and port
    */
@@ -331,7 +390,9 @@ public class ServerRpcProvider {
   public class WaveWebSocketServlet extends WebSocketServlet {
     @Override
     protected WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
-      WebSocketConnection connection = new WebSocketConnection();
+      ParticipantId loggedInUser = sessionManager.getLoggedInUser(request.getSession(false));
+
+      WebSocketConnection connection = new WebSocketConnection(loggedInUser);
       return connection.getWebSocketServerChannel();
     }
   }
@@ -393,16 +454,16 @@ public class ServerRpcProvider {
       }
     }
   }
-  
+
   /**
    * Set of servlets
    */
   List<Pair<String, HttpServlet> > servletRegistry = Lists.newArrayList();
-  
+
   /**
    * Add a servlet to the servlet registry. This servlet will be attached to the
    * specified URL pattern when the server is started up.
-   * 
+   *
    * @param urlPattern URL pattern for paths. Eg, '/foo', '/foo/*'
    * @param servlet The servlet object to bind to the specified paths
    */

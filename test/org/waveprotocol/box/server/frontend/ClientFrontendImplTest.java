@@ -18,12 +18,15 @@ package org.waveprotocol.box.server.frontend;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNotNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -44,9 +47,9 @@ import org.waveprotocol.box.server.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveBus;
-import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletVersion;
+import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -94,7 +97,8 @@ public class ClientFrontendImplTest extends TestCase {
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final WaveletName INDEX_WAVELET_NAME =
       WaveletName.of(INDEX_WAVE_ID, new WaveletId("domain", "waveId"));
-  private static final ParticipantId USER = new ParticipantId("user@host.com");
+  private static final ParticipantId USER = new ParticipantId("user@example.com");
+  private static final ParticipantId USER_2 = new ParticipantId("user2@example.com");
   private static final HashedVersion VERSION_0 = HASH_FACTORY.createVersionZero(WAVELET_NAME);
   private static final HashedVersion VERSION_1 = HashedVersion.unsigned(1L);
   private static final HashedVersion VERSION_2 = HashedVersion.unsigned(2L);
@@ -173,7 +177,8 @@ public class ClientFrontendImplTest extends TestCase {
    */
   public void testSubmitGetsForwardedToWaveletProvider() {
     SubmitRequestListener listener = mock(SubmitRequestListener.class);
-    clientFrontend.submitRequest(WAVELET_NAME, SERIALIZED_DELTA, null /* channelid */, listener);
+    clientFrontend.submitRequest(USER, WAVELET_NAME, SERIALIZED_DELTA, null /* channelid */,
+        listener);
     verify(waveletProvider).submitRequest(
         eq(WAVELET_NAME), eq(SERIALIZED_DELTA), (SubmitRequestListener) isNotNull());
     verifyZeroInteractions(listener);
@@ -186,9 +191,18 @@ public class ClientFrontendImplTest extends TestCase {
   public void testCannotSubmitToIndexWave() {
     SubmitRequestListener listener = mock(SubmitRequestListener.class);
 
-    clientFrontend.submitRequest(INDEX_WAVELET_NAME, SERIALIZED_DELTA, null /* channelid */,
+    clientFrontend.submitRequest(USER, INDEX_WAVELET_NAME, SERIALIZED_DELTA, "channelid",
         listener);
-    verify(listener).onFailure("Wavelet " + INDEX_WAVELET_NAME + " is readonly");
+    verify(listener).onFailure(anyString());
+  }
+
+  public void testCannotSubmitAsDifferentUser() {
+    SubmitRequestListener listener = mock(SubmitRequestListener.class);
+
+    clientFrontend.submitRequest(USER_2, INDEX_WAVELET_NAME, SERIALIZED_DELTA, "channelid",
+        listener);
+    verify(listener).onFailure(anyString());
+    verify(listener, never()).onSuccess(anyInt(), (HashedVersion) any(), anyLong());
   }
 
   /**
@@ -201,6 +215,13 @@ public class ClientFrontendImplTest extends TestCase {
     clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "");
     verify(listener).onUpdate(eq(WAVELET_NAME), isNullSnapshot(), eq(DELTAS),
         eq(DELTAS.getEndVersion()), isNullVersion(), eq(false), anyString());
+  }
+
+  public void testCannotOpenWavesWhenNotLoggedIn() {
+    OpenListener listener = mock(OpenListener.class);
+    clientFrontend.openRequest(null, WAVE_ID, IdFilters.ALL_IDS, NO_KNOWN_WAVELETS, listener);
+    clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "");
+    verify(listener).onFailure("Not logged in");
   }
 
   /**

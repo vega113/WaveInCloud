@@ -20,7 +20,7 @@ package org.waveprotocol.box.server.frontend;
 import com.google.inject.internal.Nullable;
 
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
-import org.waveprotocol.box.server.waveserver.WaveletProvider;
+import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -61,25 +61,26 @@ public interface ClientFrontend {
   /**
    * Request submission of a delta.
    *
+   * @param loggedInUser which is doing the requesting.
    * @param waveletName name of wavelet.
    * @param delta the wavelet delta to submit.
    * @param channelId the client's channel ID
    * @param listener callback for the result.
    */
-  void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta, String channelId,
-      WaveletProvider.SubmitRequestListener listener);
+  void submitRequest(ParticipantId loggedInUser, WaveletName waveletName,
+      ProtocolWaveletDelta delta, String channelId, SubmitRequestListener listener);
 
   /**
    * Request to open a Wave. Optional waveletIdPrefixes allows the requester to
    * constrain which wavelets to include in the updates.
    *
-   * @param participant which is doing the requesting.
+   * @param loggedInUser which is doing the requesting.
    * @param waveId the wave id.
    * @param waveletIdFilter filter over wavelets to open
    * @param knownWavelets a collection of wavelet versions the client already
    *        knows
    * @param openListener callback for updates.
    */
-  void openRequest(ParticipantId participant, WaveId waveId, IdFilter waveletIdFilter,
+  void openRequest(ParticipantId loggedInUser, WaveId waveId, IdFilter waveletIdFilter,
       Collection<WaveClientRpc.WaveletVersion> knownWavelets, OpenListener openListener);
 }

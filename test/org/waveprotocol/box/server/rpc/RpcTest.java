@@ -24,6 +24,8 @@ import com.google.protobuf.RpcController;
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse;
@@ -38,7 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Test case for ClientRpcChannelImpl and ServerRpcProvider.
- * 
+ *
  *
  */
 public class RpcTest extends TestCase {
@@ -51,7 +53,7 @@ public class RpcTest extends TestCase {
   }
 
   protected void startServer() throws IOException {
-    server = new ServerRpcProvider(null, null, null);
+    server = new ServerRpcProvider(null, null, null, null, null);
     server.startRpcServer();
   }
 
@@ -72,7 +74,7 @@ public class RpcTest extends TestCase {
   /**
    * Asserts that the streaming RPC option is being parsed correctly.
    */
-  public void testIsStreamingRpc() throws Exception {    
+  public void testIsStreamingRpc() throws Exception {
     Descriptors.ServiceDescriptor serviceDescriptor =
         WaveClientRpc.ProtocolWaveClientRpc.getDescriptor();
     assertTrue(serviceDescriptor.findMethodByName("Open").getOptions()
@@ -80,7 +82,7 @@ public class RpcTest extends TestCase {
     assertFalse(serviceDescriptor.findMethodByName("Submit").getOptions()
         .getExtension(Rpc.isStreamingRpc));
   }
-  
+
   /**
    * Tests a complete, simple end-to-end RPC.
    */
@@ -117,6 +119,12 @@ public class RpcTest extends TestCase {
               RpcCallback<ProtocolSubmitResponse> callback) {
             throw new UnsupportedOperationException();
           }
+
+          @Override
+          public void authenticate(RpcController controller, ProtocolAuthenticate request,
+              RpcCallback<ProtocolAuthenticationResult> done) {
+            throw new UnsupportedOperationException();
+          }
         };
 
     // Register the RPC implementation with the ServerRpcProvider.
@@ -140,7 +148,7 @@ public class RpcTest extends TestCase {
         responseLatch.countDown();
       }
     });
-    
+
     // Wait for both responses to be received and assert their equality.
     responseLatch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
     assertEquals(Arrays.asList(cannedResponse, null), responses);
@@ -168,6 +176,12 @@ public class RpcTest extends TestCase {
           @Override
           public void submit(RpcController controller, ProtocolSubmitRequest request,
               RpcCallback<ProtocolSubmitResponse> callback) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          public void authenticate(RpcController controller, ProtocolAuthenticate request,
+              RpcCallback<ProtocolAuthenticationResult> done) {
             throw new UnsupportedOperationException();
           }
         };
@@ -223,7 +237,7 @@ public class RpcTest extends TestCase {
             for (int m = 0; m < MESSAGES_BEFORE_CANCEL; ++m) {
               callback.run(cannedResponse);
             }
-              
+
             // Register a callback to handle cancellation. There is no race
             // condition here with sending responses, since there are no
             // contracts on the timing/response to cancellation requests.
@@ -242,8 +256,14 @@ public class RpcTest extends TestCase {
               RpcCallback<ProtocolSubmitResponse> callback) {
             throw new UnsupportedOperationException();
           }
+
+          @Override
+          public void authenticate(RpcController controller, ProtocolAuthenticate request,
+              RpcCallback<ProtocolAuthenticationResult> done) {
+            throw new UnsupportedOperationException();
+          }
         };
-  
+
     // Register the RPC implementation with the ServerRpcProvider.
     server.registerService(WaveClientRpc.ProtocolWaveClientRpc.newReflectiveService(rpcImpl));
 

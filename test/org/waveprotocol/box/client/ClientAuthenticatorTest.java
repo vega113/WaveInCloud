@@ -23,6 +23,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.mockito.Mockito;
 import org.waveprotocol.box.server.account.HumanAccountDataImpl;
 import org.waveprotocol.box.server.authentication.AccountStoreHolder;
 import org.waveprotocol.box.server.authentication.AuthTestUtil;
@@ -54,8 +55,10 @@ public class ClientAuthenticatorTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     AccountStore store = new MemoryStore();
+    org.eclipse.jetty.server.SessionManager jettySessionManager =
+        Mockito.mock(org.eclipse.jetty.server.SessionManager.class);
     AuthenticationServlet servlet = new AuthenticationServlet(
-        AuthTestUtil.make(), new SessionManagerImpl(store), "example.com");
+        AuthTestUtil.make(), new SessionManagerImpl(store, jettySessionManager), "example.com");
 
     store.putAccount(new HumanAccountDataImpl(
         ParticipantId.ofUnsafe("user@example.com"), new PasswordDigest("pwd".toCharArray())));

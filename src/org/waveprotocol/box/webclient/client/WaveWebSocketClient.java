@@ -26,9 +26,11 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONString;
 import com.google.gwt.json.client.JSONValue;
+import com.google.gwt.user.client.Cookies;
 import com.google.gwt.websockets.client.WebSocket;
 import com.google.gwt.websockets.client.WebSocketCallback;
 
+import org.waveprotocol.box.server.waveserver.ProtocolAuthenticate;
 import org.waveprotocol.box.server.waveserver.ProtocolOpenRequest;
 import org.waveprotocol.box.server.waveserver.ProtocolSubmitRequest;
 import org.waveprotocol.box.server.waveserver.ProtocolSubmitResponse;
@@ -50,6 +52,7 @@ public class WaveWebSocketClient implements WebSocketCallback {
   private static final Log LOG = Log.get(WaveWebSocketClient.class);
   private static final int RECONNECT_TIME_MS = 5000;
   private static final int VERSION = 1;
+  private static final String JETTY_SESSION_TOKEN_NAME = "JSESSIONID";
 
   private final WebSocket client;
   private final Map<Integer, SubmitResponseCallback> submitRequestCallbacks;
@@ -115,6 +118,14 @@ public class WaveWebSocketClient implements WebSocketCallback {
   @Override
   public void onConnect() {
     connected = ConnectState.CONNECTED;
+
+    // Sends the session cookie to the server via an RPC to work around browser bugs.
+    // See: http://code.google.com/p/wave-protocol/issues/detail?id=119
+    String token = Cookies.getCookie(JETTY_SESSION_TOKEN_NAME);
+    if (token != null) {
+      sendMessage(ProtocolAuthenticate.create().setToken(token), null);
+    }
+
     ClientEvents.get().fireEvent(new NetworkStatusEvent(ConnectionStatus.CONNECTED));
   }
 
@@ -171,6 +182,9 @@ public class WaveWebSocketClient implements WebSocketCallback {
       wrapper.put("messageJson",
           new JSONString(ProtocolSubmitRequest.stringify((ProtocolSubmitRequest) message)));
       submitRequestCallbacks.put(seqNo, callback);
+    } else if (protocolBufferName.equals("ProtocolAuthenticate")) {
+      wrapper.put("messageJson",
+          new JSONString(ProtocolAuthenticate.stringify((ProtocolAuthenticate) message)));
     }
     String json = wrapper.toString();
     LOG.info("Sending JSON data " + json);
