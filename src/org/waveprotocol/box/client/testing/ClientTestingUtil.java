@@ -18,13 +18,17 @@
 package org.waveprotocol.box.client.testing;
 
 import static junit.framework.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 import static org.waveprotocol.box.common.DocumentConstants.MANIFEST_DOCUMENT_ID;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import org.waveprotocol.box.client.ClientAuthenticator;
 import org.waveprotocol.box.client.ClientBackend;
 import org.waveprotocol.box.client.ClientUtils;
 import org.waveprotocol.box.client.ClientWaveView;
@@ -50,6 +54,7 @@ import org.waveprotocol.wave.model.wave.data.ReadableBlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.io.IOException;
+import java.net.HttpCookie;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,8 +87,12 @@ public class ClientTestingUtil {
       @Override
       public ClientBackend create(String userAtDomain, String server, int port)
           throws IOException {
+        ClientAuthenticator authenticator = mock(ClientAuthenticator.class);
+        HttpCookie cookie = new HttpCookie("anything", "token");
+        when(authenticator.authenticate(anyString(), any(char[].class))).thenReturn(cookie);
+
         return spy(new ClientBackend(userAtDomain, server, port, new FakeRpcObjectFactory(),
-            HASH_FACTORY));
+            HASH_FACTORY, authenticator));
       }
     };
 

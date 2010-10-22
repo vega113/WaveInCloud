@@ -21,11 +21,17 @@ import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
+import org.mockito.Mockito;
 import org.waveprotocol.box.client.ClientBackend;
+import org.waveprotocol.box.server.authentication.SessionManager;
+import org.waveprotocol.box.server.authentication.SessionManagerImpl;
 import org.waveprotocol.box.server.frontend.WaveClientRpcImpl;
 import org.waveprotocol.box.server.frontend.testing.FakeWaveServer;
+import org.waveprotocol.box.server.persistence.memory.MemoryStore;
 import org.waveprotocol.box.server.rpc.ClientRpcChannel;
 import org.waveprotocol.box.server.rpc.testing.FakeServerRpcController;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 
 /**
@@ -62,6 +68,15 @@ public class FakeRpcObjectFactory implements ClientBackend.RpcObjectFactory {
    */
   @Override
   public ProtocolWaveClientRpc.Interface createServerInterface(ClientRpcChannel channel) {
-    return new WaveClientRpcImpl(new FakeWaveServer());
+    org.eclipse.jetty.server.SessionManager jettySessionManager =
+        Mockito.mock(org.eclipse.jetty.server.SessionManager.class);
+    SessionManager sessionManager = new SessionManagerImpl(new MemoryStore(), jettySessionManager);
+    return new WaveClientRpcImpl(new FakeWaveServer()){
+      @Override
+      public void authenticate(RpcController controller, ProtocolAuthenticate request,
+          RpcCallback<ProtocolAuthenticationResult> done) {
+        done.run(ProtocolAuthenticationResult.getDefaultInstance());
+      }
+    };
   }
 }

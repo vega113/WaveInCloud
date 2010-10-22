@@ -48,6 +48,8 @@ public interface TestingConstants {
 
   public static final String USER = "user@" + DOMAIN;
 
+  public static final String PASSWORD = "password";
+
   public static final ParticipantId PARTICIPANT = new ParticipantId(USER);
 
   public static final WaveId WAVE_ID = new WaveId(DOMAIN, "w+wave");

@@ -31,6 +31,7 @@ import com.google.protobuf.RpcController;
 import org.waveprotocol.box.common.DocumentConstants;
 import org.waveprotocol.box.common.IndexEntry;
 import org.waveprotocol.box.common.IndexWave;
+import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.rpc.ClientRpcChannel;
 import org.waveprotocol.box.server.rpc.WebSocketClientRpcChannel;
@@ -39,6 +40,8 @@ import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.SuccessFailCallback;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate;
+import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolOpenRequest;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse;
@@ -51,10 +54,10 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreNoOp;
@@ -74,6 +77,7 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.HttpCookie;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Collections;
@@ -82,6 +86,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
@@ -255,6 +260,12 @@ public class ClientBackend {
   /** RPC channel for communicating with server. */
   private final ClientRpcChannel rpcChannel;
 
+  /** RPC utility for authenticating the user. */
+  private final ClientAuthenticator authenticator;
+
+  /** The user's authentication token. Null until authentication is complete. */
+  private HttpCookie authenticationToken;
+
   /** Producer/consumer event queue. */
   private final BlockingQueue<WaveletEventData> eventQueue =
       new LinkedBlockingQueue<WaveletEventData>();
@@ -287,7 +298,8 @@ public class ClientBackend {
           public ProtocolWaveClientRpc.Interface createServerInterface(ClientRpcChannel channel) {
             return ProtocolWaveClientRpc.newStub(channel);
           }
-        }, new HashedVersionZeroFactoryImpl(URI_CODEC));
+        }, new HashedVersionZeroFactoryImpl(URI_CODEC),
+        new ClientAuthenticator("http://" + server + ":" + port + SessionManager.SIGN_IN_URL));
   }
 
   /**
@@ -302,7 +314,8 @@ public class ClientBackend {
    */
   @Inject
   public ClientBackend(final String userAtDomain, String server, int port,
-      RpcObjectFactory rpcObjectFactory, HashedVersionFactory hashedVersionFactory)
+      RpcObjectFactory rpcObjectFactory, HashedVersionFactory hashedVersionFactory,
+      ClientAuthenticator authenticator)
       throws IOException {
     Preconditions.checkNotNull(server, "Server not specified");
     Preconditions.checkArgument(port >= 0, "Port number must be greater than 0");
@@ -320,6 +333,7 @@ public class ClientBackend {
 
     });
     this.hashedVersionFactory = hashedVersionFactory;
+    this.authenticator = authenticator;
 
     // Start pushing events to listeners in a separate thread.
     new Thread() {
@@ -350,9 +364,54 @@ public class ClientBackend {
     // Connect to the specfied server and port.
     this.rpcChannel = rpcObjectFactory.createClientChannel(server, port);
     this.rpcServer = rpcObjectFactory.createServerInterface(rpcChannel);
+  }
+
+  /**
+   * Authenticate the user and pass the authentication information through the websocket
+   * connection. This is required before sending authenticated RPCs to the backend.
+   *
+   * This RPC blocks until authentication is complete.
+   *
+   * @param password the user's password
+   * @throws IOException
+   * @return true if authentication succeeded, false otherwise.
+   */
+  public boolean authenticate(char[] password) throws IOException {
+    authenticationToken = authenticator.authenticate(userId.getAddress(), password);
+    if (authenticationToken == null) {
+      // The server rejected our authentication attempt.
+      return false;
+    }
+
+    // Sending the auth token to the server is asynchronous. We'll use a latch to block until its
+    // complete.
+    final CountDownLatch latch = new CountDownLatch(1);
+
+    final RpcController rpcController = rpcChannel.newRpcController();
+    ProtocolAuthenticate request = ProtocolAuthenticate.newBuilder()
+        .setToken(authenticationToken.getValue())
+        .build();
+    rpcServer.authenticate(rpcController, request, new RpcCallback<ProtocolAuthenticationResult>() {
+      @Override
+      public void run(ProtocolAuthenticationResult result) {
+        // The result is meaningless. We've authenticated.
+        latch.countDown();
+      }
+    });
+
+    try {
+      latch.await();
+    } catch (InterruptedException e) {
+      // This should never happen.
+      throw new RuntimeException(e);
+    }
+
+    LOG.info("Authenticated.");
 
     // Opening the index wave will kickstart the process of receiving waves.
     openWave(INDEX_WAVE_ID, "");
+
+    return true;
   }
 
   /**
