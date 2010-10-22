@@ -41,15 +41,17 @@ import java.util.Map;
  * @author josephg@google.com (Joseph Gentle)
  */
 public class MemoryDeltaCollection implements DeltasAccess {
-  final Map<Long, WaveletDeltaRecord> deltas = CollectionUtils.newHashMap();
-  final WaveletName waveletName;
+  private final Map<Long, WaveletDeltaRecord> deltas = CollectionUtils.newHashMap();
+  private final WaveletName waveletName;
+
+  private HashedVersion endVersion = null;
 
   public MemoryDeltaCollection(WaveletName waveletName) {
     Preconditions.checkNotNull(waveletName);
     this.waveletName = waveletName;
   }
 
-  /** @return true if the collection is empty */
+  @Override
   public boolean isEmpty() {
     return deltas.isEmpty();
   }
@@ -61,7 +63,7 @@ public class MemoryDeltaCollection implements DeltasAccess {
 
   @Override
   public HashedVersion getEndVersion() {
-    return getResultingVersion(deltas.size() - 1);
+    return endVersion;
   }
 
   @Override
@@ -73,13 +75,17 @@ public class MemoryDeltaCollection implements DeltasAccess {
   public HashedVersion getAppliedAtVersion(long version) throws IOException {
     WaveletDeltaRecord record = getDelta(version);
 
-    if (record != null) {
-      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = record.applied;
-      ProtocolHashedVersion protoVersion = AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
-      return CoreWaveletOperationSerializer.deserialize(protoVersion);
-    } else {
+    if (record == null) {
       return null;
     }
+
+    ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = record.applied;
+    if (appliedDelta == null) {
+      return null;
+    }
+
+    ProtocolHashedVersion protoVersion = AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
+    return CoreWaveletOperationSerializer.deserialize(protoVersion);
   }
 
   @Override
@@ -114,6 +120,7 @@ public class MemoryDeltaCollection implements DeltasAccess {
   public void append(Collection<WaveletDeltaRecord> newDeltas) {
     for (WaveletDeltaRecord delta : newDeltas) {
       deltas.put(delta.transformed.getAppliedAtVersion(), delta);
+      endVersion = delta.transformed.getResultingVersion();
     }
   }
 }

@@ -41,7 +41,8 @@ public class MemoryDeltaStore implements DeltaStore {
    * Note: We don't remove map entries in the top-level map when all wavelets in a wave are deleted.
    * This is a very small memory leak that won't cause problems in practice.
    */
-  final Map<WaveId, Map<WaveletId, MemoryDeltaCollection>> data = CollectionUtils.newHashMap();
+  private final Map<WaveId, Map<WaveletId, MemoryDeltaCollection>> data =
+      CollectionUtils.newHashMap();
 
   private Map<WaveletId, MemoryDeltaCollection> getOrCreateWaveData(WaveId waveId) {
     Map<WaveletId, MemoryDeltaCollection> waveData = data.get(waveId);
