@@ -20,6 +20,7 @@ package org.waveprotocol.box.server.persistence.memory;
 import com.google.gxp.com.google.common.base.Preconditions;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.box.server.waveserver.AppliedDeltaUtil;
 import org.waveprotocol.box.server.waveserver.ByteStringMessage;
 import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
 import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
@@ -30,8 +31,9 @@ import org.waveprotocol.wave.model.operation.core.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * An in-memory implementation of DeltasAccess
@@ -39,7 +41,7 @@ import java.util.Collection;
  * @author josephg@google.com (Joseph Gentle)
  */
 public class MemoryDeltaCollection implements DeltasAccess {
-  final ArrayList<WaveletDeltaRecord> records = CollectionUtils.newArrayList();
+  final Map<Long, WaveletDeltaRecord> deltas = CollectionUtils.newHashMap();
   final WaveletName waveletName;
 
   public MemoryDeltaCollection(WaveletName waveletName) {
@@ -47,13 +49,9 @@ public class MemoryDeltaCollection implements DeltasAccess {
     this.waveletName = waveletName;
   }
 
-  private boolean hasVersion(long version) {
-    return version >= 0 && version < records.size();
-  }
-
   /** @return true if the collection is empty */
   public boolean isEmpty() {
-    return records.isEmpty();
+    return deltas.isEmpty();
   }
 
   @Override
@@ -63,25 +61,21 @@ public class MemoryDeltaCollection implements DeltasAccess {
 
   @Override
   public HashedVersion getEndVersion() {
-    return getResultingVersion(records.size() - 1);
+    return getResultingVersion(deltas.size() - 1);
   }
 
   @Override
   public WaveletDeltaRecord getDelta(long version) {
-    if (hasVersion(version)) {
-      return records.get((int) version);
-    } else {
-      return null;
-    }
+    return deltas.get(version);
   }
 
   @Override
-  public HashedVersion getAppliedAtVersion(long version) {
-    if (hasVersion(version)) {
-      ByteStringMessage<ProtocolAppliedWaveletDelta> delta =
-        records.get((int) version).applied;
-      ProtocolHashedVersion protoVersion =
-        delta.getMessage().getHashedVersionAppliedAt();
+  public HashedVersion getAppliedAtVersion(long version) throws IOException {
+    WaveletDeltaRecord record = getDelta(version);
+
+    if (record != null) {
+      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = record.applied;
+      ProtocolHashedVersion protoVersion = AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
       return CoreWaveletOperationSerializer.deserialize(protoVersion);
     } else {
       return null;
@@ -90,8 +84,10 @@ public class MemoryDeltaCollection implements DeltasAccess {
 
   @Override
   public HashedVersion getResultingVersion(long version) {
-    if (hasVersion(version)) {
-      return records.get((int) version).transformed.getResultingVersion();
+    WaveletDeltaRecord delta = getDelta(version);
+
+    if (delta != null) {
+      return delta.transformed.getResultingVersion();
     } else {
       return null;
     }
@@ -115,8 +111,9 @@ public class MemoryDeltaCollection implements DeltasAccess {
   }
 
   @Override
-  public void append(
-      Collection<org.waveprotocol.box.server.waveserver.WaveletDeltaRecord> deltas) {
-    records.addAll(deltas);
+  public void append(Collection<WaveletDeltaRecord> newDeltas) {
+    for (WaveletDeltaRecord delta : newDeltas) {
+      deltas.put(delta.transformed.getAppliedAtVersion(), delta);
+    }
   }
 }

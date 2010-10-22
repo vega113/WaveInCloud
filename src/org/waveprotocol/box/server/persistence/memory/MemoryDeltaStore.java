@@ -17,7 +17,8 @@
 
 package org.waveprotocol.box.server.persistence.memory;
 
-import com.google.gxp.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 
 import org.waveprotocol.box.server.waveserver.DeltaStore;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -35,6 +36,11 @@ import java.util.Set;
  * @author josephg@google.com (Joseph Gentle)
  */
 public class MemoryDeltaStore implements DeltaStore {
+  /**
+   * The actual data.
+   * Note: We don't remove map entries in the top-level map when all wavelets in a wave are deleted.
+   * This is a very small memory leak that won't cause problems in practice.
+   */
   final Map<WaveId, Map<WaveletId, MemoryDeltaCollection>> data = CollectionUtils.newHashMap();
 
   private Map<WaveletId, MemoryDeltaCollection> getOrCreateWaveData(WaveId waveId) {
@@ -66,13 +72,13 @@ public class MemoryDeltaStore implements DeltaStore {
     if (waveData == null) {
       return ImmutableSet.of();
     } else {
-      Set<WaveletId> wavelets = CollectionUtils.newHashSet();
+      Builder<WaveletId> builder = ImmutableSet.builder();
       for (MemoryDeltaCollection collection : waveData.values()) {
         if (!collection.isEmpty()) {
-          wavelets.add(collection.getWaveletName().waveletId);
+          builder.add(collection.getWaveletName().waveletId);
         }
       }
-      return wavelets;
+      return builder.build();
     }
   }
 
