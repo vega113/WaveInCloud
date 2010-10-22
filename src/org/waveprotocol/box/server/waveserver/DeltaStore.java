@@ -60,24 +60,10 @@ public interface DeltaStore {
   }
 
   /**
-   * Creates a {@link DeltasAccess} instance which can be used to
-   * to store deltas beginning from version zero. Only when one or
-   * more deltas are appended will this wavelet "exist" in the
-   * sense that it will be returned if {@link #lookup(WaveId)}
-   * is called with {@code waveletName.waveId}.
-   *
-   * @throws IOException if anything goes wrong with the underlying storage
-   *         or if this wavelet already exists in the delta store.
-   */
-  DeltasAccess create(WaveletName waveletName) throws IOException;
-
-  /**
-   * Opens a non-empty wavelet, i.e., a wavelet with one or more deltas in
-   * the delta store.
+   * Opens a wavelet, which can be used to store deltas. If the wavelet doesn't
+   * exist, it is implicitly created when the first op is appended to it.
    *
    * @throws IOException if anything goes wrong with the underlying storage.
-   * @throws FileNotFoundException if this wavelet doesn't exist in the delta
-   *         store.
    */
   DeltasAccess open(WaveletName waveletName) throws FileNotFoundException, IOException;
 
@@ -91,7 +77,8 @@ public interface DeltaStore {
   void delete(WaveletName waveletName) throws FileNotFoundException, IOException;
 
   /**
-   * Looks up all wavelets with deltas in the delta store.
+   * Looks up all wavelets with deltas in the delta store. This only returns
+   * wavelets to which ops have been applied.
    *
    * @throws IOException if anything goes wrong with the underlying storage.
    */
