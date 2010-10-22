@@ -40,6 +40,7 @@
         Password: <input name="password" type="password"/><br/>
         <input type="submit"/>
       </form>
+      <i><a href="/auth/register">Register a new account</a></i>
     </body>
   </html>
 </gxp:template>
