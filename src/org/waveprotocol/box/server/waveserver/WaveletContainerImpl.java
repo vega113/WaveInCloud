@@ -320,7 +320,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * @param transformedDelta of the applied delta
    * @return result of the application
    */
-  protected DeltaApplicationResult commitAppliedDelta(
+  protected WaveletDeltaRecord commitAppliedDelta(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
       WaveletDelta transformedDelta) {
     int operationsApplied = appliedDelta.getMessage().getOperationsApplied();
@@ -337,7 +337,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     transformedDeltas.put(currentVersion, transformed);
     appliedDeltas.put(currentVersion, appliedDelta);
     currentVersion = versionAfterApplication;
-    return new DeltaApplicationResult(appliedDelta, transformed);
+    return new WaveletDeltaRecord(appliedDelta, transformed);
   }
 
   /**

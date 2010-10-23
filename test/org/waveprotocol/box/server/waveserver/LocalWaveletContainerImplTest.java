@@ -94,15 +94,15 @@ public class LocalWaveletContainerImplTest extends TestCase {
   public void testDuplicateOperations() throws Exception {
 
     // create the wavelet.
-    DeltaApplicationResult v0Response = wavelet.submitRequest(
+    WaveletDeltaRecord v0Response = wavelet.submitRequest(
         WAVELET_NAME, createProtocolSignedDelta(addParticipantOp, HASHED_VERSION_ZERO));
 
     ProtocolSignedDelta psd = createProtocolSignedDelta(
-        addBlipOp, v0Response.getHashedVersionAfterApplication());
+        addBlipOp, v0Response.getResultingVersion());
 
-    DeltaApplicationResult dar1 = wavelet.submitRequest(WAVELET_NAME, psd);
-    DeltaApplicationResult dar2 = wavelet.submitRequest(WAVELET_NAME, psd);
-    assertEquals(dar1.getHashedVersionAfterApplication(), dar2.getHashedVersionAfterApplication());
+    WaveletDeltaRecord dar1 = wavelet.submitRequest(WAVELET_NAME, psd);
+    WaveletDeltaRecord dar2 = wavelet.submitRequest(WAVELET_NAME, psd);
+    assertEquals(dar1.getResultingVersion(), dar2.getResultingVersion());
   }
 
   private ProtocolSignedDelta createProtocolSignedDelta(ProtocolWaveletOperation operation,

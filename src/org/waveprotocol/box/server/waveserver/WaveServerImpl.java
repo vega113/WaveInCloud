@@ -609,17 +609,17 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // Get the host domains before applying the delta in case
           // the delta contains a removeParticipant operation.
           Set<String> hostDomains = Sets.newHashSet(getParticipantDomains(wc));
-          DeltaApplicationResult submitResult = wc.submitRequest(waveletName, signedDelta);
+          WaveletDeltaRecord submitResult = wc.submitRequest(waveletName, signedDelta);
           ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDeltaBytes =
               submitResult.getAppliedDelta();
           ProtocolAppliedWaveletDelta appliedDelta = appliedDeltaBytes.getMessage();
 
           // return result to caller.
-          HashedVersion resultingVersion = submitResult.getHashedVersionAfterApplication();
+          HashedVersion resultingVersion = submitResult.getResultingVersion();
           ProtocolHashedVersion resultVersionProto =
               CoreWaveletOperationSerializer.serialize(resultingVersion);
           LOG.info("Submit result for " + waveletName + " by "
-              + submitResult.getDelta().getAuthor() + " applied "
+              + submitResult.getTransformedDelta().getAuthor() + " applied "
               + appliedDelta.getOperationsApplied() + " ops at v: "
               + appliedDelta.getHashedVersionAppliedAt().getVersion() + " t: "
               + appliedDelta.getApplicationTimestamp());
@@ -634,7 +634,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // Send the results to subscribers.
           try {
             dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(),
-                ImmutableList.of(submitResult.getDelta()));
+                ImmutableList.of(submitResult.getTransformedDelta()));
           } catch (RuntimeException e) {
             LOG.severe("Runtime exception in wave bus subscriber", e);
           }

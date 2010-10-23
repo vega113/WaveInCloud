@@ -19,9 +19,12 @@ package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.internal.Nullable;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
  * Bundles an applied delta (an original signed delta with information about how
@@ -43,5 +46,40 @@ public class WaveletDeltaRecord {
     Preconditions.checkNotNull(transformed, "null transformed delta");
     this.applied = applied;
     this.transformed = transformed;
+  }
+
+  public ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDelta() {
+    return applied;
+  }
+
+  public TransformedWaveletDelta getTransformedDelta() {
+    return transformed;
+  }
+
+  // Convenience methods:
+
+  /**
+   * @return the hashed version which this delta was applied at
+   * @throws NullPointerException if the record has no applied delta
+   * @throws InvalidProtocolBufferException if the applied delta is ill-formed
+   */
+  public HashedVersion getAppliedAtVersion() throws InvalidProtocolBufferException {
+    Preconditions.checkNotNull(applied, "no applied delta");
+    return AppliedDeltaUtil.getHashedVersionAppliedAt(applied);
+  }
+
+  /** @return the author of the delta */
+  public ParticipantId getAuthor() {
+    return transformed.getAuthor();
+  }
+
+  /** @return the hashed version after the delta is applied */
+  public HashedVersion getResultingVersion() {
+    return transformed.getResultingVersion();
+  }
+
+  /** @return the timestamp when this delta was applied */
+  public long getApplicationTimestamp() {
+    return transformed.getApplicationTimestamp();
   }
 }

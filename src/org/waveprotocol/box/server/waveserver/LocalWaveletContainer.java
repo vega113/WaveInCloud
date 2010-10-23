@@ -50,7 +50,7 @@ interface LocalWaveletContainer extends WaveletContainer {
    * @throws InvalidProtocolBufferException
    * @throws InvalidHashException
    */
-  public DeltaApplicationResult submitRequest(WaveletName waveletName, ProtocolSignedDelta delta)
+  public WaveletDeltaRecord submitRequest(WaveletName waveletName, ProtocolSignedDelta delta)
       throws OperationException, WaveletStateException, InvalidProtocolBufferException,
       InvalidHashException;
 

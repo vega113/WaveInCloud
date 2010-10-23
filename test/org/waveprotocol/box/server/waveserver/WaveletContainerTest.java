@@ -316,8 +316,7 @@ public class WaveletContainerTest extends TestCase {
 
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
         LocalWaveletContainerImpl.buildAppliedDelta(signedDelta, delta, 0L);
-    DeltaApplicationResult applicationResult = wavelet.commitAppliedDelta(appliedDelta,
-        delta);
+    WaveletDeltaRecord applicationResult = wavelet.commitAppliedDelta(appliedDelta, delta);
   }
 
   private static WaveletDelta addParticipantDelta(WaveletContainer target) {

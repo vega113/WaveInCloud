@@ -294,8 +294,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
 
           LOG.info("Applying delta for version " + appliedAt.getVersion());
           try {
-            DeltaApplicationResult applicationResult = transformAndApplyRemoteDelta(appliedDelta);
-            long opsApplied = applicationResult.getHashedVersionAfterApplication().getVersion()
+            WaveletDeltaRecord applicationResult = transformAndApplyRemoteDelta(appliedDelta);
+            long opsApplied = applicationResult.getResultingVersion().getVersion()
                     - expectedVersion.getVersion();
             if (opsApplied != appliedDelta.getMessage().getOperationsApplied()) {
               throw new OperationException("Operations applied here do not match the authoritative"
@@ -303,7 +303,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                   + appliedDelta.getMessage().getOperationsApplied() + ".");
             }
             // Add transformed result to return list.
-            result.add(applicationResult.getDelta());
+            result.add(applicationResult.getTransformedDelta());
             LOG.fine("Applied delta: " + appliedDelta);
           } catch (OperationException e) {
             state = State.CORRUPTED;
@@ -352,12 +352,12 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
    * applied to the wavelet. Must be called with writelock held.
    *
    * @param appliedDelta that is to be applied to the wavelet in its serialised form
-   * @return transformed operations are applied to this delta
+   * @return the transformed and applied delta.
    * @throws AccessControlException if the supplied Delta's historyHash does not
    *         match the canonical history.
    * @throws WaveServerException if the delta transforms away.
    */
-  private DeltaApplicationResult transformAndApplyRemoteDelta(
+  private WaveletDeltaRecord transformAndApplyRemoteDelta(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta) throws OperationException,
       AccessControlException, InvalidHashException, InvalidProtocolBufferException,
       WaveServerException {

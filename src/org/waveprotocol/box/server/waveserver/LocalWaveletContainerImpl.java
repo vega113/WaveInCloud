@@ -54,7 +54,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
   }
 
   @Override
-  public DeltaApplicationResult submitRequest(WaveletName waveletName,
+  public WaveletDeltaRecord submitRequest(WaveletName waveletName,
       ProtocolSignedDelta signedDelta) throws OperationException,
       InvalidProtocolBufferException, InvalidHashException {
     acquireWriteLock();
@@ -71,13 +71,13 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
    * the wavelet. Must be called with writelock held.
    *
    * @param signedDelta the delta that is to be applied to wavelet.
-   * @return transformed operations are applied to this delta.
+   * @return the transformed and applied delta.
    * @throws OperationException if an error occurs during transformation or
    *         application
    * @throws InvalidProtocolBufferException if the signed delta did not contain a valid delta
    * @throws InvalidHashException if delta hash sanity checks fail
    */
-  private DeltaApplicationResult transformAndApplyLocalDelta(ProtocolSignedDelta signedDelta)
+  private WaveletDeltaRecord transformAndApplyLocalDelta(ProtocolSignedDelta signedDelta)
       throws OperationException, InvalidProtocolBufferException, InvalidHashException {
     ProtocolWaveletDelta protocolDelta =
         ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta()).getMessage();
@@ -101,7 +101,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       // commitAppliedDelta(), because empty deltas cannot be part of the delta history.
       TransformedWaveletDelta emptyDelta = new TransformedWaveletDelta(transformed.getAuthor(),
           transformed.getTargetVersion(), applicationTimeStamp, transformed);
-      return new DeltaApplicationResult(buildAppliedDelta(signedDelta, transformed,
+      return new WaveletDeltaRecord(buildAppliedDelta(signedDelta, transformed,
           applicationTimeStamp), emptyDelta);
     }
 
@@ -123,7 +123,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
           "Duplicate delta detected but mismatched ops, expected %s found %s",
           transformed, dupDelta.getOperations());
 
-      return new DeltaApplicationResult(existingDeltaBytes, dupDelta);
+      return new WaveletDeltaRecord(existingDeltaBytes, dupDelta);
     }
 
     applyWaveletOperations(transformed, applicationTimeStamp);
@@ -132,11 +132,11 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
         buildAppliedDelta(signedDelta, transformed, applicationTimeStamp);
 
-    DeltaApplicationResult applicationResult = commitAppliedDelta(appliedDelta, transformed);
+    WaveletDeltaRecord applicationResult = commitAppliedDelta(appliedDelta, transformed);
 
     // Associate this hashed version with its signers.
     for (ProtocolSignature signature : signedDelta.getSignatureList()) {
-      deltaSigners.put(applicationResult.getHashedVersionAfterApplication(),
+      deltaSigners.put(applicationResult.getResultingVersion(),
           signature.getSignerId());
     }
 
