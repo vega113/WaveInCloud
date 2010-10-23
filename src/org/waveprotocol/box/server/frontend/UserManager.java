@@ -71,7 +71,7 @@ final class UserManager {
     if (deltas.isEmpty()) {
       return;
     }
-    long deltaVersion = deltas.getStartVersion().getVersion();
+    long deltaVersion = deltas.getStartVersion();
     List<WaveViewSubscription> subscriptions = matchSubscriptions(waveletName);
     for (WaveViewSubscription subscription : subscriptions) {
       try {
@@ -92,7 +92,7 @@ final class UserManager {
     Preconditions.checkNotNull(version);
     List<WaveViewSubscription> listeners = matchSubscriptions(waveletName);
     for (WaveViewSubscription listener : listeners) {
-      listener.onUpdate(waveletName, null, DeltaSequence.empty(version), null, version, false);
+      listener.onUpdate(waveletName, null, DeltaSequence.empty(), null, version, false);
     }
   }
 

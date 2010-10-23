@@ -41,8 +41,8 @@ import org.waveprotocol.wave.model.id.URIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.CharBase64;
@@ -272,13 +272,17 @@ public class WebClientBackend {
             WaveletOperationSerializer.deserialize(protobufDelta,
                 CoreWaveletOperationSerializer.deserialize(protobufDelta.getHashedVersion()), woc);
 
-        final CoreWaveletDelta oldDelta = CoreWaveletOperationSerializer.deserialize(protobufDelta);
+        // TODO(anorth): Use the right timestamp when the protocol supplies it.
+        long applicationTimestamp = 0L;
+        final TransformedWaveletDelta oldDelta = CoreWaveletOperationSerializer.deserialize(
+            protobufDelta,
+            CoreWaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()),
+            applicationTimestamp);
 
         if (isIndexWave(waveletName)) { // only apply the hacky ops to index wave.
-          for (CoreWaveletOperation op : oldDelta.getOperations()) {
-
+          for (WaveletOperation op : oldDelta.getOperations()) {
             try {
-              op.apply(oldWaveletData);
+              ConversionUtil.toCoreWaveletOperation(op).apply(oldWaveletData);
             } catch (OperationException e) {
               LOG.severe("OperationException when applying " + op + " to " + oldWaveletData, e);
             }

@@ -29,11 +29,11 @@ import org.waveprotocol.box.server.agents.agent.AbstractAgent;
 import org.waveprotocol.box.server.agents.agent.AgentConnection;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.BlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -131,7 +131,7 @@ public class Echoey extends AbstractAgent {
   }
 
   @Override
-  public void onDocumentChanged(WaveletData wavelet, String docId, BufferedDocOp docOp) {
+  public void onDocumentChanged(WaveletData wavelet, String docId, BlipOperation docOp) {
     WaveletName waveletName = WaveletDataUtil.waveletNameOf(wavelet);
     LOG.info("onDocumentChanged: " + waveletName + ", " + docId);
 
@@ -143,16 +143,16 @@ public class Echoey extends AbstractAgent {
       String echoDocId = docId + getEchoeyDocumentSuffix();
 
       // Echo the change to the other document documentOperation.
-      CoreWaveletOperation[] ops = new CoreWaveletOperation[] {
-          new CoreWaveletDocumentOperation(echoDocId, docOp)
+      WaveletOperation[] ops = new WaveletOperation[] {
+          new WaveletBlipOperation(echoDocId, docOp)
       };
 
       // Write the document into the manifest if it isn't already there
       if (documentsSeen.get(waveletName).add(docId)) {
         BlipData manifest = wavelet.getDocument(DocumentConstants.MANIFEST_DOCUMENT_ID);
-        ops = new CoreWaveletOperation[] {
+        ops = new WaveletOperation[] {
           ops[0],
-          ClientUtils.appendToManifest(manifest, echoDocId)
+          ClientUtils.appendToManifest(manifest, echoDocId, contextFactory.createContext())
         };
 
       }
@@ -166,9 +166,10 @@ public class Echoey extends AbstractAgent {
    */
   private void appendText(WaveletData wavelet, String text) {
     String docId = getNewDocumentId() + getEchoeyDocumentSuffix();
-    CoreWaveletOperation[] ops = ClientUtils.createAppendBlipOps(
+    WaveletOperation[] ops = ClientUtils.createAppendBlipOps(
         wavelet.getDocument(DocumentConstants.MANIFEST_DOCUMENT_ID), docId,
-        text);
+        text,
+        contextFactory.createContext());
     sendAndAwaitWaveletOperations(WaveletDataUtil.waveletNameOf(wavelet), ops);
   }
 

@@ -25,14 +25,14 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
 /**
@@ -42,8 +42,6 @@ import org.waveprotocol.wave.model.version.HashedVersion;
  */
 class LocalWaveletContainerImpl extends WaveletContainerImpl
     implements LocalWaveletContainer {
-
-  private static final Log LOG = Log.get(LocalWaveletContainerImpl.class);
 
   /**
    * Associates a delta (represented by the hashed version of the wavelet state after its
@@ -86,14 +84,14 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
     Preconditions.checkArgument(protocolDelta.getOperationCount() > 0, "empty delta");
 
-    CoreWaveletDelta transformed = maybeTransformSubmittedDelta(
+    WaveletDelta transformed = maybeTransformSubmittedDelta(
         CoreWaveletOperationSerializer.deserialize(protocolDelta));
 
     // TODO(ljvderijk): a Clock needs to be injected here (Issue 104)
     long applicationTimeStamp = System.currentTimeMillis();
 
     // This is always false right now because the current algorithm doesn't transform ops away.
-    if (transformed.getOperations().isEmpty()) {
+    if (transformed.size() == 0) {
       Preconditions.checkState(currentVersion.getVersion() != 0,
           "currentVersion can not be 0 if delta was transformed");
       Preconditions.checkState(
@@ -101,8 +99,10 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       // The delta was transformed away. That's OK but we don't call either
       // applyWaveletOperations(), because that will throw IllegalArgumentException, or
       // commitAppliedDelta(), because empty deltas cannot be part of the delta history.
+      TransformedWaveletDelta emptyDelta = new TransformedWaveletDelta(transformed.getAuthor(),
+          transformed.getTargetVersion(), applicationTimeStamp, transformed);
       return new DeltaApplicationResult(buildAppliedDelta(signedDelta, transformed,
-          applicationTimeStamp), transformed, transformed.getTargetVersion());
+          applicationTimeStamp), emptyDelta);
     }
 
     if (!transformed.getTargetVersion().equals(currentVersion)) {
@@ -111,14 +111,19 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       // The delta was a duplicate of an existing server delta.
       // We duplicate-eliminate it (don't apply it to the wavelet state and don't store it in
       // the delta history) and return the server delta which it was a duplicate of
-      // (so delta submission becomes idem-potent).
-      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
+      // (so delta submission becomes idempotent).
+      ByteStringMessage<ProtocolAppliedWaveletDelta> existingDeltaBytes =
           lookupAppliedDelta(transformed.getTargetVersion());
-      // TODO: look this up (in appliedDeltas or currentVersion) rather than compute it?
-      HashedVersion hashedVersionAfterApplication = HASH_FACTORY.create(
-        appliedDelta.getByteArray(), transformed.getTargetVersion(),
-        transformed.getOperations().size());
-      return new DeltaApplicationResult(appliedDelta, transformed, hashedVersionAfterApplication);
+      TransformedWaveletDelta dupDelta = lookupTransformedDelta(transformed.getTargetVersion());
+      // TODO(anorth): Replace these comparisons with methods on delta classes.
+      Preconditions.checkState(dupDelta.getAuthor().equals(transformed.getAuthor()),
+          "Duplicate delta detected but mismatched author, expected %s found %s",
+          transformed.getAuthor(), dupDelta.getAuthor());
+      Preconditions.checkState(dupDelta.getOperations().equals(transformed.getOperations()),
+          "Duplicate delta detected but mismatched ops, expected %s found %s",
+          transformed, dupDelta.getOperations());
+
+      return new DeltaApplicationResult(existingDeltaBytes, dupDelta);
     }
 
     applyWaveletOperations(transformed, applicationTimeStamp);
@@ -140,12 +145,11 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
   @VisibleForTesting
   static ByteStringMessage<ProtocolAppliedWaveletDelta> buildAppliedDelta(
-      ProtocolSignedDelta signedDelta, CoreWaveletDelta transformed,
-      long applicationTimeStamp) {
+      ProtocolSignedDelta signedDelta, WaveletDelta transformed, long applicationTimeStamp) {
     ProtocolAppliedWaveletDelta.Builder appliedDeltaBuilder = ProtocolAppliedWaveletDelta
         .newBuilder()
         .setSignedOriginalDelta(signedDelta)
-        .setOperationsApplied(transformed.getOperations().size())
+        .setOperationsApplied(transformed.size())
         .setApplicationTimestamp(applicationTimeStamp);
     // TODO: re-enable this condition for version 0.3 of the spec
     if (/* opsWereTransformed */true) {

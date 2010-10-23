@@ -15,7 +15,7 @@ import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.util.List;
@@ -110,18 +110,18 @@ final class WaveViewSubscription {
       @Nullable final HashedVersion committedVersion, final boolean hasMarker) {
     checkUpdateVersion(waveletName, snapshot, deltas);
     if (deltas.isEmpty()) {
-      openListener.onUpdate(waveletName, snapshot, deltas, endVersion, committedVersion, hasMarker,
+      openListener.onUpdate(waveletName, snapshot, deltas, committedVersion, hasMarker,
           channelId);
     }
     WaveletId waveletId = waveletName.waveletId;
-    List<CoreWaveletDelta> filteredDeltas;
+    List<TransformedWaveletDelta> filteredDeltas;
     if (!submittedVersions.isEmpty() && !submittedVersions.get(waveletId).isEmpty()) {
       // Walk through the deltas, removing any that are from this client.
       filteredDeltas = Lists.newArrayList();
       Set<Long> mySubmits = submittedVersions.get(waveletId);
 
-      for (CoreWaveletDelta delta : deltas) {
-        long deltaEndVersion = delta.getTargetVersion().getVersion() + delta.getOperations().size();
+      for (TransformedWaveletDelta delta : deltas) {
+        long deltaEndVersion = delta.getAppliedAtVersion() + delta.getOperations().size();
         if (mySubmits.contains(deltaEndVersion)) {
           submittedVersions.remove(waveletId, deltaEndVersion);
         } else {
@@ -132,7 +132,7 @@ final class WaveViewSubscription {
       filteredDeltas = deltas;
     }
     if (!filteredDeltas.isEmpty()) {
-      openListener.onUpdate(waveletName, snapshot, filteredDeltas, endVersion, committedVersion,
+      openListener.onUpdate(waveletName, snapshot, filteredDeltas, committedVersion,
           hasMarker, channelId);
     }
   }
@@ -149,9 +149,9 @@ final class WaveViewSubscription {
           CoreWaveletOperationSerializer.deserialize(snapshot.snapshot.getVersion()));
     } else if (!deltas.isEmpty()) {
       if (currentVersions.containsKey(waveletName.waveletId)) {
-        HashedVersion expectedVersion = currentVersions.get(waveletName.waveletId);
-        HashedVersion targetVersion = deltas.getStartVersion();
-        Preconditions.checkState(targetVersion.equals(expectedVersion),
+        long expectedVersion = currentVersions.get(waveletName.waveletId).getVersion();
+        long targetVersion = deltas.getStartVersion();
+        Preconditions.checkState(targetVersion == expectedVersion,
             "Subscription expected delta for %s targetting %s, was %s", waveletName,
             expectedVersion, targetVersion);
       }

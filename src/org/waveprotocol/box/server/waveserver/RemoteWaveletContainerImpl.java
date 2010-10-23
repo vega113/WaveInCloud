@@ -38,7 +38,8 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider.HistoryResponseListener;
@@ -217,7 +218,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       }
 
       // Traverse pendingDeltas while we have any to process.
-      List<CoreWaveletDelta> result = Lists.newLinkedList();
+      List<TransformedWaveletDelta> result = Lists.newLinkedList();
       while (pendingDeltas.size() > 0) {
         Map.Entry<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>> first =
             pendingDeltas.firstEntry();
@@ -330,7 +331,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       }
 
       if (!haveRequestedHistory) {
-        DeltaSequence deltaSequence = new DeltaSequence(result, expectedVersion);
+        DeltaSequence deltaSequence = new DeltaSequence(result);
         if (LOG.isFineLoggable()) {
           LOG.fine("Returning contiguous block: " + deltaSequence);
         }
@@ -372,10 +373,10 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta =
         ByteStringMessage.parseProtocolWaveletDelta(
             appliedDelta.getMessage().getSignedOriginalDelta().getDelta());
-    CoreWaveletDelta delta = CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
+    WaveletDelta delta = CoreWaveletOperationSerializer.deserialize(protocolDelta.getMessage());
 
     // Transform operations against earlier deltas, if necessary
-    CoreWaveletDelta transformed = maybeTransformSubmittedDelta(delta);
+    WaveletDelta transformed = maybeTransformSubmittedDelta(delta);
     if (transformed.getTargetVersion().equals(delta.getTargetVersion())) {
       // No transformation took place.
       // As a sanity check, the hash from the applied delta should NOT be set (an optimisation, but
@@ -387,7 +388,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       }
     }
 
-    if (transformed.getOperations().isEmpty()) {
+    if (transformed.size() == 0) {
       // The host shouldn't be forwarding empty deltas!
       state = State.CORRUPTED;
       throw new WaveServerException("Couldn't apply authoritative delta, " +

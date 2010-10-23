@@ -45,10 +45,9 @@ import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.CapturingOperationSink;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
-import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -61,6 +60,7 @@ import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -91,8 +91,17 @@ public class EventGeneratorTest extends TestCase {
   private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
   private static final ParticipantId BOB = ParticipantId.ofUnsafe("bob@example.com");
   private static final ParticipantId ROBOT = ParticipantId.ofUnsafe("robot@example.com");
-  private static final BasicWaveletOperationContextFactory CONTEXT_FACTORY =
-      new BasicWaveletOperationContextFactory(ALEX);
+  private static final WaveletOperationContext.Factory CONTEXT_FACTORY =
+      new WaveletOperationContext.Factory() {
+        @Override
+        public WaveletOperationContext createContext() {
+          return new WaveletOperationContext(ALEX, 1234567890L, 1);
+        }
+
+        @Override
+        public WaveletOperationContext createContext(ParticipantId creator) {
+          throw new UnsupportedOperationException();
+        }};
 
   /** Map containing a subscription to all possible events */
   private static final Map<EventType, Capability> ALL_CAPABILITIES;
@@ -107,7 +116,6 @@ public class EventGeneratorTest extends TestCase {
   }
 
   private EventGenerator eventGenerator;
-  private HashedVersion versionZero;
   private ObservableWaveletData waveletData;
   private OpBasedWavelet wavelet;
   private CapturingOperationSink<WaveletOperation> output;
@@ -117,12 +125,12 @@ public class EventGeneratorTest extends TestCase {
   protected void setUp() throws Exception {
     conversationUtil = new ConversationUtil(FakeIdGenerator.create());
     eventGenerator = new EventGenerator(ROBOT_NAME, conversationUtil);
-    versionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
 
     waveletData = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(
         new EmptyWaveletSnapshot(WAVELET_NAME.waveId, WAVELET_NAME.waveletId, ALEX,
             HASH_FACTORY.createVersionZero(WAVELET_NAME), 0L));
     waveletData.addParticipant(ALEX);
+    waveletData.setVersion(1);
 
     SilentOperationSink<WaveletOperation> executor =
         SilentOperationSink.Executor.build(waveletData);
@@ -205,10 +213,12 @@ public class EventGeneratorTest extends TestCase {
    *         robot is subscribed to all possible events.
    */
   private EventMessageBundle generateAndCheckEvents(EventType eventType) throws Exception {
+    List<WaveletOperation> ops = output.getOps();
+    HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
     // Create the delta
-    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(output.getOps(), ALEX, versionZero);
+    TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, endVersion, 0L, ops);
     WaveletAndDeltas waveletAndDeltas =
-        WaveletAndDeltas.create(waveletData, Collections.singletonList(delta), versionZero);
+        WaveletAndDeltas.create(waveletData, Collections.singletonList(delta));
 
     // Put the wanted event in the capabilities map
     Map<EventType, Capability> capabilities = Maps.newHashMap();

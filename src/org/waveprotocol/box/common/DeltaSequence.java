@@ -20,83 +20,75 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.wave.Constants;
 
 import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.List;
 
 /**
- * A sequence of deltas along with the end version (after application of the
- * deltas).
+ * An immutable sequence of transformed deltas.
+ *
+ * This class enforces that the deltas are contiguous.
  */
-public final class DeltaSequence extends AbstractList<CoreWaveletDelta> {
-  private final ImmutableList<CoreWaveletDelta> deltas;
-  private final HashedVersion endVersion;
+public final class DeltaSequence extends AbstractList<TransformedWaveletDelta> {
+  private final ImmutableList<TransformedWaveletDelta> deltas;
 
-  public static DeltaSequence empty(HashedVersion version) {
-    return new DeltaSequence(ImmutableList.<CoreWaveletDelta>of(), version);
+  /**
+   * Creates an empty delta sequence. This sequence will not have an end version.
+   */
+  public static DeltaSequence empty() {
+    return new DeltaSequence(ImmutableList.<TransformedWaveletDelta>of());
   }
 
   /**
    * @param deltas to apply to a wavelet
-   * @param endVersion the version of the wavelet after all deltas were applied
    */
-  public DeltaSequence(Iterable<CoreWaveletDelta> deltas, HashedVersion endVersion) {
+  public DeltaSequence(Iterable<TransformedWaveletDelta> deltas) {
     this.deltas = ImmutableList.copyOf(deltas);
-    this.endVersion = endVersion;
-    Preconditions.checkArgument(endVersion.getVersion() >= 0,
-        "Expected endVersion >= 0, got %s", endVersion.getVersion());
     checkDeltaVersions();
   }
 
   /**
    * @throws IllegalArgumentException if any of the deltas' end version disagrees
-   *         with the next delta's version or (if it's the last delta), endVersion.
+   *         with the next delta's version.
    */
   private void checkDeltaVersions() {
     for (int i = 0; i < deltas.size(); i++) {
-      CoreWaveletDelta delta = deltas.get(i);
-      long deltaEndVersion = delta.getTargetVersion().getVersion() + delta.getOperations().size();
-      long nextVersion;
+      TransformedWaveletDelta delta = deltas.get(i);
+      long deltaEndVersion = delta.getResultingVersion().getVersion();
       if (i + 1 < deltas.size()) {
-        nextVersion = deltas.get(i + 1).getTargetVersion().getVersion();
-      } else {
-        nextVersion = endVersion.getVersion();
+        long nextVersion = deltas.get(i + 1).getAppliedAtVersion();
+        Preconditions.checkArgument(deltaEndVersion == nextVersion,
+            "Delta %s / %s ends at version %s, expected %s",
+            i + 1, deltas.size(), deltaEndVersion, nextVersion);
       }
-      Preconditions.checkArgument(deltaEndVersion == nextVersion,
-          "Delta %s / %s ends at version %s, expected %s",
-          i + 1, deltas.size(), deltaEndVersion, nextVersion);
     }
   }
 
   @Override
   public DeltaSequence subList(int start, int end) {
-    List<CoreWaveletDelta> subDeltas = deltas.subList(start, end);
-    HashedVersion subEndVersion = (end == deltas.size()) ?
-        endVersion : deltas.get(end).getTargetVersion();
-    return new DeltaSequence(subDeltas, subEndVersion);
+    List<TransformedWaveletDelta> subDeltas = deltas.subList(start, end);
+    return new DeltaSequence(subDeltas);
   }
 
   /**
    * Constructs a DeltaSequence which consists of the specified deltas
    * followed by this sequence's deltas.
    */
-  public DeltaSequence prepend(Iterable<CoreWaveletDelta> prefixDeltas) {
-    return new DeltaSequence(Iterables.concat(prefixDeltas, deltas), endVersion);
+  public DeltaSequence prepend(Iterable<TransformedWaveletDelta> prefixDeltas) {
+    return new DeltaSequence(Iterables.concat(prefixDeltas, deltas));
   }
 
-  public List<CoreWaveletDelta> getDeltas() {
-    return deltas;
-  }
-
-  public HashedVersion getStartVersion() {
-    return deltas.isEmpty() ? endVersion : deltas.get(0).getTargetVersion();
+  public long getStartVersion() {
+    return deltas.isEmpty() ? Constants.NO_VERSION : deltas.get(0).getAppliedAtVersion();
   }
 
   public HashedVersion getEndVersion() {
-    return endVersion;
+    Preconditions.checkState(!deltas.isEmpty(), "Empty delta sequence has no end version");
+    return deltas.get(deltas.size() - 1).getResultingVersion();
   }
 
   @Override
@@ -110,12 +102,12 @@ public final class DeltaSequence extends AbstractList<CoreWaveletDelta> {
   }
 
   @Override
-  public CoreWaveletDelta get(int index) {
+  public TransformedWaveletDelta get(int index) {
     return deltas.get(index);
   }
 
   @Override
-  public Iterator<CoreWaveletDelta> iterator() {
+  public Iterator<TransformedWaveletDelta> iterator() {
     return deltas.iterator();
   }
 

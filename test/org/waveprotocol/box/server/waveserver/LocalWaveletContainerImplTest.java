@@ -23,17 +23,19 @@ import junit.framework.TestCase;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
-import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
+import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation.MutateDocument;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 
 /**
@@ -70,9 +72,12 @@ public class LocalWaveletContainerImplTest extends TestCase {
         .build();
     // An empty blip operation - creates a new document.
 
-    addBlipOp = CoreWaveletOperationSerializer.serialize(
-        new CoreWaveletDocumentOperation(BLIP_ID, new DocOpBuilder().build()));
+    WaveletOperationContext context =
+        new WaveletOperationContext(ParticipantId.ofUnsafe(AUTHOR), 0, 1);
 
+    addBlipOp = ProtocolWaveletOperation.newBuilder().setMutateDocument(
+        MutateDocument.newBuilder().setDocumentId(BLIP_ID).setDocumentOperation(
+            ProtocolDocumentOperation.newBuilder().build())).build();
     wavelet = new LocalWaveletContainerImpl(WAVELET_NAME);
   }
 

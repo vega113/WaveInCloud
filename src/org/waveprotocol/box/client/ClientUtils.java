@@ -35,7 +35,10 @@ import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorA
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
+import org.waveprotocol.wave.model.operation.wave.BlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -115,45 +118,47 @@ public class ClientUtils {
    * @param newBlipId
    * @param text to place in the new blip
    */
-  public static CoreWaveletDocumentOperation[] createAppendBlipOps(BlipData manifestDocument,
-      String newBlipId, String text) {
+  public static WaveletBlipOperation[] createAppendBlipOps(BlipData manifestDocument,
+      String newBlipId, String text, WaveletOperationContext context) {
     if (text.length() == 0) {
       throw new IllegalArgumentException("Cannot append a empty String");
     } else {
-      // Create new blip to insert at end of document.
-      BufferedDocOp newBlipOp = new DocOpBuilder()
-          .elementStart(DocumentConstants.BODY, Attributes.EMPTY_MAP)
-          .elementStart(DocumentConstants.LINE, Attributes.EMPTY_MAP)
-          .elementEnd() // </line>
-          .characters(text)
-          .elementEnd() // </body>
-          .build();
-
       // An empty doc op to indicate a new blip is being created.
-      BufferedDocOp emptyNewBlipOp = new DocOpBuilder().build();
-      return new CoreWaveletDocumentOperation[] {
-          new CoreWaveletDocumentOperation(newBlipId, emptyNewBlipOp),
-          new CoreWaveletDocumentOperation(newBlipId, newBlipOp),
-          appendToManifest(manifestDocument, newBlipId)};
+      BlipContentOperation emptyBlipOp =
+          new BlipContentOperation(context, new DocOpBuilder().build());
+
+      // Create new blip to insert at end of document.
+      BlipContentOperation newBlipOp = new BlipContentOperation(context,
+          new DocOpBuilder()
+              .elementStart(DocumentConstants.BODY, Attributes.EMPTY_MAP)
+              .elementStart(DocumentConstants.LINE, Attributes.EMPTY_MAP)
+              .elementEnd() // </line>
+              .characters(text)
+              .elementEnd() // </body>
+              .build());
+
+      return new WaveletBlipOperation[] {
+          new WaveletBlipOperation(newBlipId, emptyBlipOp),
+          new WaveletBlipOperation(newBlipId, newBlipOp),
+          appendToManifest(manifestDocument, newBlipId, context)};
     }
   }
 
   /**
    * Add record of a blip to the end of the manifest.
    */
-  public static CoreWaveletDocumentOperation appendToManifest(
-      BlipData manifestDocument, String blipId) {
+  public static WaveletBlipOperation appendToManifest(
+      BlipData manifestDocument, String blipId, WaveletOperationContext context) {
     DocInitialization manifestDocOp = manifestDocument.getContent().asOperation();
-    BufferedDocOp manifestUpdateOp =
+    BlipOperation blipOp = new BlipContentOperation(context,
         new DocOpBuilder()
             .retain(findDocumentSize(manifestDocOp) - 1)
             .elementStart(DocumentConstants.BLIP,
                 new AttributesImpl(ImmutableMap.of(DocumentConstants.BLIP_ID, blipId)))
             .elementEnd() // </blip>
             .retain(1) // retain </conversation>
-            .build();
-    return new CoreWaveletDocumentOperation(
-        DocumentConstants.MANIFEST_DOCUMENT_ID, manifestUpdateOp);
+            .build());
+    return new WaveletBlipOperation(DocumentConstants.MANIFEST_DOCUMENT_ID, blipOp);
   }
 
   /**

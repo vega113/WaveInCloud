@@ -54,17 +54,20 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreNoOp;
-import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
+import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
+import org.waveprotocol.wave.model.operation.wave.NoOp;
+import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
+import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
@@ -151,7 +154,7 @@ public class ClientBackend {
     private final String author;
     private final HashedVersion hashedVersion;
     private final WaveletData waveletData;
-    private final CoreWaveletOperation waveletOperation;
+    private final WaveletOperation waveletOperation;
     // Hack to mark whether this is actually the "end of a delta sequence", in which case the
     // above data is irrelevant.
     private final boolean isDeltaSequenceEnd;
@@ -163,7 +166,7 @@ public class ClientBackend {
      * Standard constructor.
      */
     WaveletEventData(String author, WaveletData waveletData,
-        CoreWaveletOperation waveletOperation) {
+        WaveletOperation waveletOperation) {
       this.author = author;
       this.hashedVersion = null;
       this.waveletData = waveletData;
@@ -208,7 +211,7 @@ public class ClientBackend {
       return waveletData;
     }
 
-    CoreWaveletOperation getWaveletOperation() {
+    WaveletOperation getWaveletOperation() {
       return waveletOperation;
     }
 
@@ -270,11 +273,11 @@ public class ClientBackend {
   private final BlockingQueue<WaveletEventData> eventQueue =
       new LinkedBlockingQueue<WaveletEventData>();
 
-  /**
-   * HashedVersionFactory for creating version 0 hash only, used only when client creates a
-   * wavelet.
-   */
+  /** For creating hashes when the client creates a wavelet. */
   private final HashedVersionFactory hashedVersionFactory;
+
+  /** For creating operation contexts. */
+  private final BasicWaveletOperationContextFactory contextFactory;
 
   /**
    * Create new client backend tied permanently to a given server and user, using a default
@@ -333,6 +336,7 @@ public class ClientBackend {
 
     });
     this.hashedVersionFactory = hashedVersionFactory;
+    this.contextFactory = new BasicWaveletOperationContextFactory(this.userId);
     this.authenticator = authenticator;
 
     // Start pushing events to listeners in a separate thread.
@@ -516,9 +520,10 @@ public class ClientBackend {
 
     // Add ourselves then create a conversation manifest.
     sendWaveletOperations(WaveletName.of(newWaveId, waveletId), callback,
-        new CoreAddParticipant(getUserId()),
-        new CoreWaveletDocumentOperation(
-            DocumentConstants.MANIFEST_DOCUMENT_ID, ClientUtils.createManifest()));
+        new AddParticipant(contextFactory.createContext(), getUserId()),
+        new WaveletBlipOperation(DocumentConstants.MANIFEST_DOCUMENT_ID,
+            new BlipContentOperation(contextFactory.createContext(),
+                ClientUtils.createManifest())));
     return waveView;
   }
 
@@ -545,8 +550,8 @@ public class ClientBackend {
    * @param ops to send
    */
   public void sendWaveletOperations(WaveletName waveletName,
-      SuccessFailCallback<ProtocolSubmitResponse, String> callback, CoreWaveletOperation... ops) {
-    CoreWaveletDelta delta = makeDelta(waveletName, ops);
+      SuccessFailCallback<ProtocolSubmitResponse, String> callback, WaveletOperation... ops) {
+    WaveletDelta delta = makeDelta(waveletName, ops);
     sendWaveletDelta(waveletName, delta, callback);
   }
 
@@ -562,8 +567,8 @@ public class ClientBackend {
    * @return true if the roundtrip trip was successful, false otherwise
    */
   public boolean sendAndAwaitWaveletOperations(WaveletName waveletName, long timeout,
-      TimeUnit unit, CoreWaveletOperation... ops) {
-    CoreWaveletDelta delta = makeDelta(waveletName, ops);
+      TimeUnit unit, WaveletOperation... ops) {
+    WaveletDelta delta = makeDelta(waveletName, ops);
     return sendAndAwaitWaveletDelta(waveletName, delta, timeout, unit);
   }
 
@@ -574,7 +579,7 @@ public class ClientBackend {
    * @param delta to send
    * @param callback callback invoked when the server rpc is complete
    */
-  private void sendWaveletDelta(WaveletName waveletName, CoreWaveletDelta delta,
+  private void sendWaveletDelta(WaveletName waveletName, WaveletDelta delta,
       final SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
     // Build the submit request.
     ProtocolSubmitRequest.Builder submitRequest = ProtocolSubmitRequest.newBuilder();
@@ -614,7 +619,7 @@ public class ClientBackend {
    * @param unit of timeout
    * @return true if the roundtrip trip was successful, false otherwise
    */
-  public boolean sendAndAwaitWaveletDelta(WaveletName waveletName, CoreWaveletDelta delta,
+  public boolean sendAndAwaitWaveletDelta(WaveletName waveletName, WaveletDelta delta,
       long timeout, TimeUnit unit) {
     BlockingSuccessFailCallback<ProtocolSubmitResponse, String> callback =
         BlockingSuccessFailCallback.create();
@@ -719,7 +724,7 @@ public class ClientBackend {
     ObservableWaveletData wavelet = wave.getWavelet(waveletName.waveletId);
     Preconditions.checkState(wavelet == null, "Wavelet must be null");
 
-    final WaveletSnapshot snapshot = waveletUpdate.getSnapshot();
+    WaveletSnapshot snapshot = waveletUpdate.getSnapshot();
     try {
       wavelet = CoreWaveletOperationSerializer.deserializeSnapshot(
           snapshot, waveletUpdate.getResultingVersion(), waveletName);
@@ -727,16 +732,19 @@ public class ClientBackend {
           wavelet, CoreWaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()));
 
       // Push the snapshot as operations to the event list
+      SnapshotOperationContextFactory contextFactory = new SnapshotOperationContextFactory(wavelet);
       for (ParticipantId participant : wavelet.getParticipants()) {
         events.add(new WaveletEventData(
-            wavelet.getCreator().getAddress(), wavelet, new CoreAddParticipant(participant)));
+            wavelet.getCreator().getAddress(), wavelet,
+            new AddParticipant(contextFactory.createContext(), participant)));
       }
       for (String documentId : wavelet.getDocumentIds()) {
         BlipData doc = wavelet.getDocument(documentId);
         BufferedDocOp docOp = DocOpUtil.buffer(doc.getContent().asOperation());
         events.add(
             new WaveletEventData(wavelet.getCreator().getAddress(), wavelet,
-                new CoreWaveletDocumentOperation(documentId, docOp)));
+                new WaveletBlipOperation(documentId,
+                    new BlipContentOperation(contextFactory.createContext(), docOp))));
       }
     } catch (OperationException e) {
       // It should be okay (if cheeky) for the client to just ignore failed
@@ -770,7 +778,7 @@ public class ClientBackend {
     // Preconditions.checkState(wavelet != null, "Wavelet must be present!");
 
     for (ProtocolWaveletDelta protobufDelta : waveletUpdate.getAppliedDeltaList()) {
-      CoreWaveletDelta delta = CoreWaveletOperationSerializer.deserialize(protobufDelta);
+      WaveletDelta delta = CoreWaveletOperationSerializer.deserialize(protobufDelta);
       if (wavelet == null) {
         // TODO(ljvderijk): This should never happen, but it currently does.
         // Snapshot should be received first.
@@ -796,7 +804,7 @@ public class ClientBackend {
       }
 
       // All operations were successful so put them in the list of events.
-      for (CoreWaveletOperation op : delta.getOperations()) {
+      for (WaveletOperation op : delta.getOperations()) {
         events.add(new WaveletEventData(delta.getAuthor().getAddress(), wavelet, op));
       }
     }
@@ -873,19 +881,18 @@ public class ClientBackend {
    * @param op the operation
    */
   private void notifyWaveletOperationListeners(String author, WaveletData wavelet,
-      CoreWaveletOperation op) {
+      WaveletOperation op) {
     for (WaveletOperationListener listener : waveletOperationListeners) {
       try {
-        if (op instanceof CoreWaveletDocumentOperation) {
-          CoreWaveletDocumentOperation waveletDocOp = (CoreWaveletDocumentOperation) op;
-          listener.waveletDocumentUpdated(author, wavelet, waveletDocOp.getDocumentId(),
-              waveletDocOp.getOperation());
-        } else if (op instanceof CoreAddParticipant) {
-          listener.participantAdded(author, wavelet, ((CoreAddParticipant) op).getParticipantId());
-        } else if (op instanceof CoreRemoveParticipant) {
-          listener.participantRemoved(author, wavelet,
-              ((CoreRemoveParticipant) op).getParticipantId());
-        } else if (op instanceof CoreNoOp) {
+        if (op instanceof WaveletBlipOperation) {
+          WaveletBlipOperation waveletBlipOp = (WaveletBlipOperation) op;
+          listener.waveletDocumentUpdated(author, wavelet, waveletBlipOp.getBlipId(),
+              waveletBlipOp.getBlipOp());
+        } else if (op instanceof AddParticipant) {
+          listener.participantAdded(author, wavelet, ((AddParticipant) op).getParticipantId());
+        } else if (op instanceof RemoveParticipant) {
+          listener.participantRemoved(author, wavelet, ((RemoveParticipant) op).getParticipantId());
+        } else if (op instanceof NoOp) {
           listener.noOp(author, wavelet);
         }
       } catch (RuntimeException e) {
@@ -937,6 +944,11 @@ public class ClientBackend {
     return Collections.unmodifiableSet(waveIds);
   }
 
+  /** Creates a context for a client-generated operation. */
+  public WaveletOperationContext createOperationContext() {
+    return contextFactory.createContext();
+  }
+
   /**
    * @return the list of currently registered operation listeners
    */
@@ -971,9 +983,9 @@ public class ClientBackend {
     }
   }
 
-  private CoreWaveletDelta makeDelta(WaveletName wavelet, CoreWaveletOperation... ops) {
+  private WaveletDelta makeDelta(WaveletName wavelet, WaveletOperation... ops) {
     ClientWaveView wave = waves.get(wavelet.waveId);
     HashedVersion targetVersion = wave.getWaveletVersion(wavelet.waveletId);
-    return new CoreWaveletDelta(getUserId(), targetVersion, Arrays.asList(ops));
+    return new WaveletDelta(getUserId(), targetVersion, Arrays.asList(ops));
   }
 }

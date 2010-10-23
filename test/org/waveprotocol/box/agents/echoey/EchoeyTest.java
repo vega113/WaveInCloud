@@ -43,10 +43,12 @@ import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
+import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
+import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -59,6 +61,9 @@ import java.util.concurrent.TimeUnit;
  * @author mk.mateng@gmail.com (Michael Kuntzman)
  */
 public class EchoeyTest extends AgentTestBase<Echoey> {
+  private static final WaveletOperationContext OP_CONTEXT = new WaveletOperationContext(
+      PARTICIPANT, 1234567890L, 1);
+
   // Tests
 
   /** Should ignore changes to the manifest document. */
@@ -68,11 +73,11 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
 
     WaveletData wavelet = util.createWavelet();
     BlipData manifest = wavelet.getDocument(MANIFEST_DOCUMENT_ID);
-    CoreWaveletDocumentOperation docOp = ClientUtils.appendToManifest(manifest, BLIP_ID);
+    WaveletBlipOperation docOp = ClientUtils.appendToManifest(manifest, BLIP_ID, OP_CONTEXT);
 
     // Forget "connect" interactions from setUp.
     reset(backend);
-    agent.onDocumentChanged(wavelet, docOp.getDocumentId(), docOp.getOperation());
+    agent.onDocumentChanged(wavelet, docOp.getBlipId(), docOp.getBlipOp());
 
     verifyZeroInteractions(backend);
   }
@@ -83,12 +88,13 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     // Otherwise it may ignore changes for the wrong reason.
 
     String echoeyDocId = BLIP_ID + agent.getEchoeyDocumentSuffix();
-    CoreWaveletDocumentOperation docOp = new CoreWaveletDocumentOperation(echoeyDocId,
-        ClientUtils.createTextInsertion(MESSAGE, 0, 0));
+    WaveletBlipOperation docOp = new WaveletBlipOperation(echoeyDocId,
+        new BlipContentOperation(OP_CONTEXT,
+        ClientUtils.createTextInsertion(MESSAGE, 0, 0)));
 
     // Forget "connect" interactions from setUp.
     reset(backend);
-    agent.onDocumentChanged(util.createWavelet(), docOp.getDocumentId(), docOp.getOperation());
+    agent.onDocumentChanged(util.createWavelet(), docOp.getBlipId(), docOp.getBlipOp());
 
     // Should be at most 1 call to getUserId to identify own changes, and no other calls on the
     // backend.
@@ -100,21 +106,22 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
   public void testMirrorsChangesInSeparateBlip() {
     // Create the wavelet in the backend, otherwise Echoey can't send the delta.
     WaveletData wavelet = util.createWaveletInBackend();
-    CoreWaveletDocumentOperation docOp =
-        new CoreWaveletDocumentOperation(BLIP_ID, ClientUtils.createTextInsertion(MESSAGE, 0, 0));
+    WaveletBlipOperation docOp = new WaveletBlipOperation(BLIP_ID,
+        new BlipContentOperation(OP_CONTEXT,
+        ClientUtils.createTextInsertion(MESSAGE, 0, 0)));
     String echoeyDocId = BLIP_ID + agent.getEchoeyDocumentSuffix();
 
     // Forget interactions from creating the wavelet.
     reset(backend);
-    agent.onDocumentChanged(wavelet, docOp.getDocumentId(), docOp.getOperation());
+    agent.onDocumentChanged(wavelet, docOp.getBlipId(), docOp.getBlipOp());
 
-    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet);
+    List<WaveletBlipOperation> ops = verifySendDelta(wavelet);
 
     // The sent opration should have the same changes as we injected, but in
     // echoey's own blip.
-    CoreWaveletDocumentOperation sentOp = ops.get(0);
-    assertEquals(echoeyDocId, sentOp.getDocumentId());
-    assertEquals(docOp.getOperation(), sentOp.getOperation());
+    WaveletBlipOperation sentOp = ops.get(0);
+    assertEquals(echoeyDocId, sentOp.getBlipId());
+    assertEquals(docOp.getBlipOp(), sentOp.getBlipOp());
   }
 
   /** Should create a notification blip when a participant is added. */
@@ -127,7 +134,7 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     reset(backend);
     agent.onParticipantAdded(wavelet, OTHER_PARTICIPANT);
 
-    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet);
+    List<WaveletBlipOperation> ops = verifySendDelta(wavelet);
     String resultingContent = util.getText(ops);
 
     assertEquals(addedMessage, resultingContent);
@@ -143,7 +150,7 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     reset(backend);
     agent.onParticipantRemoved(wavelet, OTHER_PARTICIPANT);
 
-    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet);
+    List<WaveletBlipOperation> ops = verifySendDelta(wavelet);
     String resultingContent = util.getText(ops);
 
     assertEquals(removedMessage, resultingContent);
@@ -158,7 +165,7 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     reset(backend);
     agent.onSelfAdded(wavelet);
 
-    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet);
+    List<WaveletBlipOperation> ops = verifySendDelta(wavelet);
     String resultingContent = util.getText(ops);
 
     assertEquals(Echoey.GREETING, resultingContent);
@@ -173,7 +180,7 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     reset(backend);
     agent.onSelfRemoved(wavelet);
 
-    List<CoreWaveletDocumentOperation> ops = verifySendDelta(wavelet);
+    List<WaveletBlipOperation> ops = verifySendDelta(wavelet);
     String resultingContent = util.getText(ops);
 
     assertEquals(Echoey.FAREWELL, resultingContent);
@@ -199,7 +206,8 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
 
     // Add another participant.
     callback = BlockingSuccessFailCallback.create();
-    backend.sendWaveletOperations(waveletName, callback, new CoreAddParticipant(OTHER_PARTICIPANT));
+    backend.sendWaveletOperations(waveletName, callback,
+        new AddParticipant(OP_CONTEXT, OTHER_PARTICIPANT));
     util.assertOperationComplete(callback);
 
     // Append a blip by the other participant.
@@ -216,7 +224,7 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     // Remove the other participant.
     callback = BlockingSuccessFailCallback.create();
     backend.sendWaveletOperations(waveletName, callback,
-        new CoreRemoveParticipant(OTHER_PARTICIPANT));
+        new RemoveParticipant(OP_CONTEXT, OTHER_PARTICIPANT));
     util.assertOperationComplete(callback);
 
     // Check for the standard Echoey responses to make sure we really did the complete round-trips.
@@ -245,10 +253,10 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
    * @param wavelet the wavelet on which we expect a delta.
    * @return the list of operations in the delta.
    */
-  private List<CoreWaveletDocumentOperation> verifySendDelta(WaveletData wavelet) {
+  private List<WaveletBlipOperation> verifySendDelta(WaveletData wavelet) {
     WaveletName waveletName = WaveletDataUtil.waveletNameOf(wavelet);
-    ArgumentCaptor<CoreWaveletOperation> opCaptor =
-        ArgumentCaptor.forClass(CoreWaveletOperation.class);
+    ArgumentCaptor<WaveletOperation> opCaptor =
+        ArgumentCaptor.forClass(WaveletOperation.class);
 
     verify(backend, atMost(1)).sendAndAwaitWaveletOperations(eq(waveletName), anyLong(),
         any(TimeUnit.class), opCaptor.capture());
@@ -257,10 +265,10 @@ public class EchoeyTest extends AgentTestBase<Echoey> {
     verify(backend, atMost(1)).sendAndAwaitWaveletOperations(eq(waveletName), anyLong(),
         any(TimeUnit.class), opCaptor.capture(), opCaptor.capture(), opCaptor.capture());
 
-    List<CoreWaveletDocumentOperation> ops = Lists.newArrayList();
-    for (CoreWaveletOperation op : opCaptor.getAllValues()) {
-      assertThat(op, is(instanceOf(CoreWaveletDocumentOperation.class)));
-      ops.add((CoreWaveletDocumentOperation) op);
+    List<WaveletBlipOperation> ops = Lists.newArrayList();
+    for (WaveletOperation op : opCaptor.getAllValues()) {
+      assertThat(op, is(instanceOf(WaveletBlipOperation.class)));
+      ops.add((WaveletBlipOperation) op);
     }
     return ops;
   }

@@ -21,8 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.internal.Nullable;
 
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.TransformedWaveletDelta;
-import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 
 /**
  * Bundles an applied delta (an original signed delta with information about how

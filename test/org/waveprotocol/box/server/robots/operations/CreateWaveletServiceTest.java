@@ -37,9 +37,9 @@ import org.waveprotocol.box.server.robots.RobotWaveletData;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -105,13 +105,12 @@ public class CreateWaveletServiceTest extends TestCase {
     RobotWaveletData newWavelet = context.getOpenWavelets().get(WaveletName.of(waveId, waveletId));
     assertNotNull("A new wavelet must be open", newWavelet);
 
-    List<CoreWaveletDelta> deltas = newWavelet.getDeltas();
-    List<? extends CoreWaveletOperation> operations = deltas.get(0).getOperations();
+    List<WaveletDelta> deltas = newWavelet.getDeltas();
     boolean seenAddAlex = false;
     boolean seenAddBob = false;
-    for (CoreWaveletOperation op : operations) {
-      if (op instanceof CoreAddParticipant) {
-        CoreAddParticipant addParticipant = (CoreAddParticipant) op;
+    for (WaveletOperation op : deltas.get(0)) {
+      if (op instanceof AddParticipant) {
+        AddParticipant addParticipant = (AddParticipant) op;
         if (addParticipant.getParticipantId().equals(ALEX)) {
           seenAddAlex = true;
         } else if (addParticipant.getParticipantId().equals(BOB)) {

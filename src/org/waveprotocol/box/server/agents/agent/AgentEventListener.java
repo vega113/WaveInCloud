@@ -17,7 +17,7 @@
 
 package org.waveprotocol.box.server.agents.agent;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.operation.wave.BlipOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -32,7 +32,7 @@ interface AgentEventListener {
    * @param docId the id of the document in the wavelet that changed.
    * @param docOp the operation that caused the change.
    */
-  void onDocumentChanged(WaveletData wavelet, String docId, BufferedDocOp docOp);
+  void onDocumentChanged(WaveletData wavelet, String docId, BlipOperation docOp);
 
   /**
    * Invoked when a participant is added to the wavelet.

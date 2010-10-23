@@ -18,7 +18,7 @@
 package org.waveprotocol.box.server.waveserver;
 
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -45,10 +45,9 @@ public final class WaveBusDispatcher implements WaveBus, WaveBus.Subscriber {
   }
 
   @Override
-  public void waveletUpdate(ReadableWaveletData wavelet, HashedVersion resultingVersion,
-      List<CoreWaveletDelta> deltas) {
+  public void waveletUpdate(ReadableWaveletData wavelet, List<TransformedWaveletDelta> deltas) {
     for (WaveBus.Subscriber s : subscribers) {
-      s.waveletUpdate(wavelet, resultingVersion, deltas);
+      s.waveletUpdate(wavelet, deltas);
     }
   }
 

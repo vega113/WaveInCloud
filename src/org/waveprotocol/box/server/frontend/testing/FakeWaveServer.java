@@ -35,7 +35,7 @@ import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -59,7 +59,8 @@ public class FakeWaveServer extends FakeClientFrontend {
   private final Map<WaveId, Map<WaveletId, WaveletData>> waves = Maps.newHashMap();
 
   /** A history of submitted deltas, per wavelet. Does not store generated index deltas. */
-  private final ListMultimap<WaveletName, CoreWaveletDelta> deltas = ArrayListMultimap.create();
+  private final ListMultimap<WaveletName, TransformedWaveletDelta> deltas =
+      ArrayListMultimap.create();
 
   /** The current versions of the user's wavelets, including index wavelets */
   private final Map<WaveletName, HashedVersion> versions = Maps.newHashMap();
@@ -85,7 +86,7 @@ public class FakeWaveServer extends FakeClientFrontend {
       // them.
       for (WaveletData wavelet : wavelets.values()) {
         WaveletName name = WaveletName.of(wavelet.getWaveId(), wavelet.getWaveletId());
-        waveletUpdate(wavelet, versions.get(name), deltas.get(name));
+        waveletUpdate(wavelet, deltas.get(name));
       }
     }
   }
@@ -113,15 +114,16 @@ public class FakeWaveServer extends FakeClientFrontend {
     }
 
     // Add the delta to the history and update the wavelet's version.
-    CoreWaveletDelta versionedDelta = CoreWaveletOperationSerializer.deserialize(delta);
-    deltas.put(waveletName, versionedDelta);
     HashedVersion resultingVersion = updateAndGetVersion(waveletName, delta.getOperationCount());
+    TransformedWaveletDelta versionedDelta = CoreWaveletOperationSerializer.deserialize(delta,
+        resultingVersion, APP_TIMESTAMP);
+    deltas.put(waveletName, versionedDelta);
 
     // Confirm submit success.
     doSubmitSuccess(waveletName, resultingVersion, APP_TIMESTAMP);
     // Send an update echoing the submitted delta. Note: the document state is
     // ignored.
-    waveletUpdate(wavelet, resultingVersion, ImmutableList.of(versionedDelta));
+    waveletUpdate(wavelet, ImmutableList.of(versionedDelta));
     // Send a corresponding update of the index wave.
     doIndexUpdate(wavelet, delta);
   }
@@ -178,8 +180,9 @@ public class FakeWaveServer extends FakeClientFrontend {
         targetVersion, dummyCreationTime);
     HashedVersion resultingVersion =
       updateAndGetVersion(indexWaveletName, indexDelta.getOperationCount());
-    waveletUpdate(fakeIndexWavelet, resultingVersion,
-        Lists.newArrayList(CoreWaveletOperationSerializer.deserialize(indexDelta.build())));
+    waveletUpdate(fakeIndexWavelet, Lists.newArrayList(
+        CoreWaveletOperationSerializer.deserialize(indexDelta.build(),
+            resultingVersion, APP_TIMESTAMP)));
   }
 
   /**

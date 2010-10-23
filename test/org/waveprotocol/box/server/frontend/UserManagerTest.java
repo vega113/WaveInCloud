@@ -32,8 +32,9 @@ import org.waveprotocol.wave.model.id.IdFilters;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreNoOp;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.NoOp;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -57,13 +58,13 @@ public class UserManagerTest extends TestCase {
 
   private static final ParticipantId USER = ParticipantId.ofUnsafe("user@host.com");
 
-  private static final CoreWaveletDelta DELTA = new CoreWaveletDelta(USER,
-      HashedVersion.unsigned(0), ImmutableList.of(CoreNoOp.INSTANCE, CoreNoOp.INSTANCE));
-
+  private static final WaveletOperationContext CONTEXT = new WaveletOperationContext(USER, 0L, 1);
   private static final HashedVersion END_VERSION = HashedVersion.unsigned(2);
+  private static final TransformedWaveletDelta DELTA = new TransformedWaveletDelta(USER,
+      END_VERSION, 0L, ImmutableList.of(new NoOp(CONTEXT), new NoOp(CONTEXT)));
 
-  private static final DeltaSequence DELTAS =
-      new DeltaSequence(ImmutableList.of(DELTA), END_VERSION);
+
+  private static final DeltaSequence DELTAS = new DeltaSequence(ImmutableList.of(DELTA));
 
   private UserManager m;
 
@@ -135,18 +136,19 @@ public class UserManagerTest extends TestCase {
     // Check that test was set up correctly
     assertEquals(2, DELTA.getOperations().size());
 
-    HashedVersion v2 = HashedVersion.unsigned(2);
-    CoreWaveletDelta delta2 = new CoreWaveletDelta(USER, v2, Arrays.asList(CoreNoOp.INSTANCE));
+    HashedVersion v3 = HashedVersion.unsigned(3);
+    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(USER, v3, 0L,
+        Arrays.asList(new NoOp(CONTEXT)));
 
     m.subscribe(W1, IdFilters.ALL_IDS, "ch1", mock(OpenListener.class));
 
     HashedVersion endVersion2 = HashedVersion.unsigned(3);
-    m.onUpdate(W1A, new DeltaSequence(ImmutableList.of(DELTA, delta2), endVersion2)); // success
+    m.onUpdate(W1A, new DeltaSequence(ImmutableList.of(DELTA, delta2))); // success
 
     // Also succeeds when sending the two deltas via separate onUpdates()
     m.subscribe(W2, IdFilters.ALL_IDS, "ch2", mock(OpenListener.class));
     m.onUpdate(W2A, DELTAS); // success
-    m.onUpdate(W2A, new DeltaSequence(ImmutableList.of(delta2), endVersion2)); // success
+    m.onUpdate(W2A, new DeltaSequence(ImmutableList.of(delta2))); // success
   }
 
   /**
@@ -157,11 +159,11 @@ public class UserManagerTest extends TestCase {
     OpenListener listener = mock(OpenListener.class, "1");
     String channelId = "ch";
     m.subscribe(W1, IdFilters.ALL_IDS, channelId, listener);
-    m.onUpdate(W1A, DeltaSequence.empty(HashedVersion.unsigned(0)));
+    m.onUpdate(W1A, DeltaSequence.empty());
     Mockito.verifyZeroInteractions(listener);
     m.onUpdate(W1A, DELTAS);
     Mockito.verify(listener).onUpdate(Mockito.eq(W1A), (WaveletSnapshotAndVersion)Matchers.isNull(),
-        Mockito.eq(DELTAS.getDeltas()), Mockito.eq(DELTAS.getEndVersion()),
-        Mockito.any(HashedVersion.class), Mockito.eq(false), Mockito.eq(channelId));
+        Mockito.eq(DELTAS), Mockito.any(HashedVersion.class), Mockito.eq(false),
+        Mockito.eq(channelId));
   }
 }

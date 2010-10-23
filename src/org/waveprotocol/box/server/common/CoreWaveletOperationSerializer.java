@@ -43,14 +43,22 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreNoOp;
-import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
+import org.waveprotocol.wave.model.operation.wave.BlipOperationVisitor;
+import org.waveprotocol.wave.model.operation.wave.NoOp;
+import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
+import org.waveprotocol.wave.model.operation.wave.SubmitBlip;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
@@ -72,50 +80,80 @@ public class CoreWaveletOperationSerializer {
   }
 
   /**
-   * Serialize a {@link CoreWaveletDelta} as a {@link ProtocolWaveletDelta} at a
-   * specific version.
+   * Serializes an untransformed delta as a {@link ProtocolWaveletDelta}.
    *
-   * @param waveletDelta to serialize
+   * @param delta to serialize
    * @return serialized protocol buffer wavelet delta
    */
-  public static ProtocolWaveletDelta serialize(CoreWaveletDelta waveletDelta) {
+  public static ProtocolWaveletDelta serialize(WaveletDelta delta) {
    ProtocolWaveletDelta.Builder protobufDelta = ProtocolWaveletDelta.newBuilder();
 
-   for (CoreWaveletOperation waveletOp : waveletDelta.getOperations()) {
+   for (WaveletOperation waveletOp : delta) {
      protobufDelta.addOperation(serialize(waveletOp));
    }
-   protobufDelta.setAuthor(waveletDelta.getAuthor().getAddress());
-   protobufDelta.setHashedVersion(serialize(waveletDelta.getTargetVersion()));
+   protobufDelta.setAuthor(delta.getAuthor().getAddress());
+   protobufDelta.setHashedVersion(serialize(delta.getTargetVersion()));
 
    return protobufDelta.build();
   }
 
   /**
-   * Serialize a {@link CoreWaveletOperation} as a {@link ProtocolWaveletOperation}.
+   * Serializes a transformed delta as a {@link ProtocolWaveletDelta}.
+   *
+   * The target version of the result does not have an accompanying hash;
+   * server delta hashes are redundant in the client/server protocol.
+   *
+   * @param delta to serialize
+   * @return serialized protocol buffer wavelet delta
+   */
+  public static ProtocolWaveletDelta serialize(TransformedWaveletDelta delta) {
+    ProtocolWaveletDelta.Builder protobufDelta = ProtocolWaveletDelta.newBuilder();
+
+    for (WaveletOperation waveletOp : delta.getOperations()) {
+      protobufDelta.addOperation(serialize(waveletOp));
+    }
+    protobufDelta.setAuthor(delta.getAuthor().getAddress());
+    protobufDelta.setHashedVersion(serialize(HashedVersion.unsigned(delta.getAppliedAtVersion())));
+
+    return protobufDelta.build();
+  }
+
+  /**
+   * Serializes a wavelet operation as a {@link ProtocolWaveletOperation}.
    *
    * @param waveletOp wavelet operation to serialize
    * @return serialized protocol buffer wavelet operation
    */
-  public static ProtocolWaveletOperation serialize(CoreWaveletOperation waveletOp) {
+  public static ProtocolWaveletOperation serialize(WaveletOperation waveletOp) {
     ProtocolWaveletOperation.Builder protobufOp = ProtocolWaveletOperation.newBuilder();
 
-    if (waveletOp instanceof CoreNoOp) {
+    if (waveletOp instanceof NoOp) {
       protobufOp.setNoOp(true);
-    } else if (waveletOp instanceof CoreAddParticipant) {
+    } else if (waveletOp instanceof AddParticipant) {
       protobufOp.setAddParticipant(
-          ((CoreAddParticipant) waveletOp).getParticipantId().getAddress());
-    } else if (waveletOp instanceof CoreRemoveParticipant) {
+          ((AddParticipant) waveletOp).getParticipantId().getAddress());
+    } else if (waveletOp instanceof RemoveParticipant) {
       protobufOp.setRemoveParticipant(
-          ((CoreRemoveParticipant) waveletOp).getParticipantId().getAddress());
-    } else if (waveletOp instanceof CoreWaveletDocumentOperation) {
-      ProtocolWaveletOperation.MutateDocument.Builder mutation =
+          ((RemoveParticipant) waveletOp).getParticipantId().getAddress());
+    } else if (waveletOp instanceof WaveletBlipOperation) {
+      final WaveletBlipOperation wbOp = (WaveletBlipOperation) waveletOp;
+      final ProtocolWaveletOperation.MutateDocument.Builder mutation =
         ProtocolWaveletOperation.MutateDocument.newBuilder();
-      mutation.setDocumentId(((CoreWaveletDocumentOperation) waveletOp).getDocumentId());
-      mutation.setDocumentOperation(
-          serialize(((CoreWaveletDocumentOperation) waveletOp).getOperation()));
+      mutation.setDocumentId(wbOp.getBlipId());
+      wbOp.getBlipOp().acceptVisitor(new BlipOperationVisitor() {
+        @Override
+        public void visitBlipContentOperation(BlipContentOperation blipOp) {
+          mutation.setDocumentOperation(serialize(blipOp.getContentOp()));
+        }
+
+        @Override
+        public void visitSubmitBlip(SubmitBlip op) {
+          throw new IllegalArgumentException("Unsupported blip operation: " + wbOp.getBlipOp());
+        }
+      });
       protobufOp.setMutateDocument(mutation.build());
     } else {
-      throw new IllegalArgumentException("Unsupported operation type: " + waveletOp);
+      throw new IllegalArgumentException("Unsupported wavelet operation: " + waveletOp);
     }
 
     return protobufOp.build();
@@ -256,19 +294,35 @@ public class CoreWaveletOperationSerializer {
   }
 
   /**
-   * Deserializes a {@link ProtocolWaveletDelta} as a {@link CoreWaveletDelta}.
-   *
-   * @param delta protocol buffer wavelet delta to deserialize
-   * @return deserialized wavelet delta and version
+   * Deserializes a {@link ProtocolWaveletDelta} as an untransformed wavelet
+   * delta.
    */
-  public static CoreWaveletDelta deserialize(ProtocolWaveletDelta delta) {
-    List<CoreWaveletOperation> ops = Lists.newArrayList();
+  public static WaveletDelta deserialize(ProtocolWaveletDelta delta) {
+    List<WaveletOperation> ops = Lists.newArrayList();
     for (ProtocolWaveletOperation op : delta.getOperationList()) {
-      ops.add(deserialize(op));
+      WaveletOperationContext context = new WaveletOperationContext(
+          ParticipantId.ofUnsafe(delta.getAuthor()), Constants.NO_TIMESTAMP, 1);
+      ops.add(deserialize(op, context));
     }
     HashedVersion hashedVersion = deserialize(delta.getHashedVersion());
-    return new CoreWaveletDelta(new ParticipantId(delta.getAuthor()),
+    return new WaveletDelta(new ParticipantId(delta.getAuthor()),
         deserialize(delta.getHashedVersion()), ops);
+  }
+
+  /**
+   * Deserializes a {@link ProtocolWaveletDelta} as a transformed wavelet delta.
+   */
+  public static TransformedWaveletDelta deserialize(ProtocolWaveletDelta delta,
+      HashedVersion resultingVersion, long applicationTimestamp) {
+    List<WaveletOperation> ops = Lists.newArrayList();
+    for (ProtocolWaveletOperation op : delta.getOperationList()) {
+      WaveletOperationContext context = new WaveletOperationContext(
+          ParticipantId.ofUnsafe(delta.getAuthor()), Constants.NO_TIMESTAMP, 1);
+      ops.add(deserialize(op, context));
+    }
+    HashedVersion hashedVersion = deserialize(delta.getHashedVersion());
+    return new TransformedWaveletDelta(new ParticipantId(delta.getAuthor()),
+        resultingVersion, applicationTimestamp, ops);
   }
 
   /** Deserializes a protobuf to a HashedVersion POJO. */
@@ -289,17 +343,18 @@ public class CoreWaveletOperationSerializer {
    * @param protobufOp protocol buffer wavelet operation to deserialize
    * @return deserialized wavelet operation
    */
-  public static CoreWaveletOperation deserialize(ProtocolWaveletOperation protobufOp) {
+  public static WaveletOperation deserialize(ProtocolWaveletOperation protobufOp,
+      WaveletOperationContext context) {
     if (protobufOp.hasNoOp()) {
-      return CoreNoOp.INSTANCE;
+      return new NoOp(context);
     } else if (protobufOp.hasAddParticipant()) {
-      return new CoreAddParticipant(new ParticipantId(protobufOp.getAddParticipant()));
+      return new AddParticipant(context, new ParticipantId(protobufOp.getAddParticipant()));
     } else if (protobufOp.hasRemoveParticipant()) {
-      return new CoreRemoveParticipant(new ParticipantId(protobufOp.getRemoveParticipant()));
+      return new RemoveParticipant(context, new ParticipantId(protobufOp.getRemoveParticipant()));
     } else if (protobufOp.hasMutateDocument()) {
-      return new CoreWaveletDocumentOperation(
-          protobufOp.getMutateDocument().getDocumentId(),
-          deserialize(protobufOp.getMutateDocument().getDocumentOperation()));
+      return new WaveletBlipOperation(protobufOp.getMutateDocument().getDocumentId(),
+          new BlipContentOperation(context,
+              deserialize(protobufOp.getMutateDocument().getDocumentOperation())));
     } else {
       throw new IllegalArgumentException("Unsupported operation: " + protobufOp);
     }

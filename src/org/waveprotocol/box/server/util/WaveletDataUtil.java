@@ -23,8 +23,7 @@ import com.google.common.collect.Lists;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuffer;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -76,26 +75,22 @@ public final class WaveletDataUtil {
    * @throws IllegalStateException if the operations have failed and can not be
    *         rolled back.
    */
-  public static void applyWaveletDelta(CoreWaveletDelta delta, WaveletData wavelet,
+  public static void applyWaveletDelta(WaveletDelta delta, WaveletData wavelet,
       HashedVersion endVersion, long applicationTimestamp) throws OperationException {
     Preconditions.checkState(wavelet != null, "wavelet may not be null");
     Preconditions.checkState(delta.getTargetVersion().getVersion() == wavelet.getVersion(),
         "Delta targeting version %s doesn't apply to wavelet at %s", delta.getTargetVersion(),
         wavelet.getVersion());
-    long expectedEndVersion = wavelet.getVersion() + delta.getOperations().size();
+    long expectedEndVersion = wavelet.getVersion() + delta.size();
     Preconditions.checkState(expectedEndVersion == endVersion.getVersion(),
         "Expected end version (" + expectedEndVersion + ") does not match the given end version ("
             + endVersion.getVersion() + ")");
-
-    // Create WaveletOperations from the CoreWaveletOperations in the delta
-    List<WaveletOperation> ops =
-        ConversionUtil.fromCoreWaveletDelta(delta, applicationTimestamp, endVersion);
 
     List<WaveletOperation> reverseOps = new ArrayList<WaveletOperation>();
     WaveletOperation lastOp = null;
     int opsApplied = 0;
     try {
-      for (WaveletOperation op : ops) {
+      for (WaveletOperation op : delta) {
         lastOp = op;
         List<? extends WaveletOperation> reverseOp = op.applyAndReturnReverse(wavelet);
         reverseOps.addAll(reverseOp);
@@ -105,7 +100,7 @@ public final class WaveletDataUtil {
       // Deltas are atomic, so roll back all operations that were successful
       rollbackWaveletOperations(wavelet, reverseOps);
       throw new OperationException(
-          "Only applied " + opsApplied + " of " + ops.size() + " operations at version "
+          "Only applied " + opsApplied + " of " + delta.size() + " operations at version "
               + wavelet.getVersion() + ", rolling back, failed op was " + lastOp, e);
     }
   }

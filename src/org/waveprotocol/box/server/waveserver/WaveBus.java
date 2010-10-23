@@ -18,7 +18,7 @@
 package org.waveprotocol.box.server.waveserver;
 
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
@@ -39,12 +39,9 @@ public interface WaveBus {
      *
      * @param wavelet the state of the wavelet wavelet after the deltas have
      *        been applied.
-     * @param resultingVersion version of the wavelet after deltas
      * @param deltas deltas applied to the wavelet
      */
-    // TODO(anorth): Include application timestamp with deltas.
-    void waveletUpdate(ReadableWaveletData wavelet, HashedVersion resultingVersion,
-        List<CoreWaveletDelta> deltas);
+    void waveletUpdate(ReadableWaveletData wavelet, List<TransformedWaveletDelta> deltas);
 
     /**
      * Notifies the subscriber that a wavelet has been committed to persistent

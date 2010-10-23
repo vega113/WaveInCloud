@@ -25,10 +25,9 @@ import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
-import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -83,10 +82,9 @@ public class WaveletAndDeltasTest extends TestCase {
     hashedVersionTwo = HashedVersion.unsigned(2L);
     hashedVersionThree = HashedVersion.unsigned(3L);
 
-    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionOne);
+    TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, hashedVersionOne, 0L, ops);
 
-    wavelet = WaveletAndDeltas.create(waveletData, Collections.singletonList(delta),
-        hashedVersionOne);
+    wavelet = WaveletAndDeltas.create(waveletData, Collections.singletonList(delta));
 
     addCarolOp = new AddParticipant(context, CAROL);
     removeAlexOp = new RemoveParticipant(context, ALEX);
@@ -113,16 +111,12 @@ public class WaveletAndDeltasTest extends TestCase {
 
   public void testAppendDeltas() throws Exception {
     AddParticipant addCarolOp = new AddParticipant(context, CAROL);
-
     addCarolOp.apply(waveletData);
-
-    List<WaveletOperation> ops = Lists.newArrayList();
-    ops.add(addCarolOp);
-
     HashedVersion hashedVersionTwo = HashedVersion.unsigned(2);
 
-    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionOne);
-    wavelet.appendDeltas(waveletData, Collections.singletonList(delta), hashedVersionTwo);
+    TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, hashedVersionTwo, 0L,
+      Arrays.asList(addCarolOp));
+    wavelet.appendDeltas(waveletData, Collections.singletonList(delta));
 
     ReadableWaveletData firstSnapshot = wavelet.getSnapshotBeforeDeltas();
     assertFalse("Bob should not be a participant", firstSnapshot.getParticipants().contains(BOB));
@@ -139,33 +133,30 @@ public class WaveletAndDeltasTest extends TestCase {
 
   public void testContiguousDeltas() throws Exception {
     addCarolOp.apply(waveletData);
-    List<WaveletOperation> ops = Lists.newArrayList(addCarolOp);
-
-    CoreWaveletDelta deltaAdd = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionOne);
+    TransformedWaveletDelta deltaAdd = new TransformedWaveletDelta(ALEX, hashedVersionTwo, 0L,
+        Arrays.asList(addCarolOp));
 
     removeAlexOp.apply(waveletData);
-    ops = Lists.newArrayList(removeAlexOp);
-    CoreWaveletDelta deltaRemove = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionTwo);
+    TransformedWaveletDelta deltaRemove = new TransformedWaveletDelta(ALEX, hashedVersionThree, 0L,
+        Arrays.asList(removeAlexOp));
 
-    List<CoreWaveletDelta> deltas = Lists.newArrayList(deltaAdd, deltaRemove);
-
-    wavelet.appendDeltas(waveletData, deltas, hashedVersionThree);
+    List<TransformedWaveletDelta> deltas = Arrays.asList(deltaAdd, deltaRemove);
+    wavelet.appendDeltas(waveletData, deltas);
   }
 
   public void testNonContiguousDeltas() throws Exception {
     addCarolOp.apply(waveletData);
-    List<WaveletOperation> ops = Lists.newArrayList(addCarolOp);
-
-    CoreWaveletDelta deltaAdd = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionOne);
+    TransformedWaveletDelta deltaAdd = new TransformedWaveletDelta(ALEX, hashedVersionOne, 0L,
+        Arrays.asList(addCarolOp));
 
     removeAlexOp.apply(waveletData);
-    ops = Lists.newArrayList(removeAlexOp);
-    CoreWaveletDelta deltaRemove = ConversionUtil.toCoreWaveletDelta(ops, ALEX, hashedVersionThree);
+    TransformedWaveletDelta deltaRemove = new TransformedWaveletDelta(ALEX, hashedVersionThree, 0L,
+        Arrays.asList(removeAlexOp));
 
-    List<CoreWaveletDelta> deltas = Lists.newArrayList(deltaAdd, deltaRemove);
+    List<TransformedWaveletDelta> deltas = Arrays.asList(deltaAdd, deltaRemove);
 
     try {
-      wavelet.appendDeltas(waveletData, deltas, hashedVersionThree);
+      wavelet.appendDeltas(waveletData, deltas);
       fail("Expected exception because deltas aren't contiguous");
     } catch (IllegalArgumentException e) {
       // Expected

@@ -19,7 +19,7 @@ package org.waveprotocol.box.server.waveserver;
 
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -66,7 +66,8 @@ interface WaveletContainer {
    *         the requested version boundaries, it will be included.
    */
   Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> requestHistory(
-      HashedVersion versionStart, HashedVersion versionEnd) throws WaveletStateException;
+      HashedVersion versionStart, HashedVersion versionEnd)
+      throws WaveletStateException;
 
   /**
    * Retrieve the wavelet history of deltas applied to the wavelet, with
@@ -82,7 +83,7 @@ interface WaveletContainer {
    *         null if there was an error. If a delta straddles one of the
    *         requested version boundaries, it will be included.
    */
-  Collection<CoreWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
+  Collection<TransformedWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
       HashedVersion versionEnd) throws AccessControlException, WaveletStateException;
 
   /**

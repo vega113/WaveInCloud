@@ -17,50 +17,45 @@
 package org.waveprotocol.box.server.waveserver;
 
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
 /**
- * Composes a ProtocolWaveletDelta and the result of its application, the serialised representation
- * of a {@code ProtocolAppliedWaveletDelta} as a {@code ByteStringMessage}.
- *
- *
+ * Composes a transformed delta and the result of its application, the
+ * serialized representation of a {@code ProtocolAppliedWaveletDelta} as a
+ * {@code ByteStringMessage}.
  */
 public class DeltaApplicationResult {
 
   private final ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta;
-  private final CoreWaveletDelta transformedDelta;
-  private final HashedVersion hashedVersionAfterApplication;
+  private final TransformedWaveletDelta delta;
 
   /**
    * @param appliedDelta result of application, untransformed
    * @param transformedDelta result of application, transformed
-   * @param hashedVersionAfterApplication the version after the wavelet is applied
    */
   public DeltaApplicationResult(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
-      CoreWaveletDelta transformedDelta,
-      HashedVersion hashedVersionAfterApplication) {
+      TransformedWaveletDelta transformedDelta) {
     this.appliedDelta = appliedDelta;
-    this.transformedDelta = transformedDelta;
-    this.hashedVersionAfterApplication = hashedVersionAfterApplication;
+    this.delta = transformedDelta;
   }
 
   public ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDelta() {
     return appliedDelta;
   }
 
-  public CoreWaveletDelta getDelta() {
-    return transformedDelta;
+  public TransformedWaveletDelta getDelta() {
+    return delta;
   }
 
   public HashedVersion getHashedVersionAfterApplication() {
-    return hashedVersionAfterApplication;
+    return delta.getResultingVersion();
   }
 
   @Override
   public int hashCode() {
-    return 31 * appliedDelta.hashCode() + transformedDelta.hashCode();
+    return 31 * appliedDelta.hashCode() + delta.hashCode();
   }
 
   @Override
@@ -70,7 +65,7 @@ public class DeltaApplicationResult {
     } else {
       DeltaApplicationResult that = (DeltaApplicationResult) obj;
       return appliedDelta.equals(that.appliedDelta)
-          && transformedDelta.equals(that.transformedDelta);
+          && delta.equals(that.delta);
     }
   }
 }

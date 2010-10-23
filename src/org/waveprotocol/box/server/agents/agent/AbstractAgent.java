@@ -26,7 +26,9 @@ import org.waveprotocol.box.server.util.SuccessFailCallback;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
@@ -39,6 +41,8 @@ public abstract class AbstractAgent implements AgentEventListener {
 
   private final AgentConnection connection;
   private AgentEventProvider eventProvider;
+  protected WaveletOperationContext.Factory contextFactory;
+
 
   /**
    * Constructor.
@@ -57,6 +61,7 @@ public abstract class AbstractAgent implements AgentEventListener {
       // events:
       eventProvider = new AgentEventProvider(connection);
       eventProvider.addAgentEventListener(this);
+      this.contextFactory = new BasicWaveletOperationContextFactory(getParticipantId());
     } catch (IOException e) {
       throw new RuntimeException("Failed to connect.", e);
     }
@@ -147,7 +152,7 @@ public abstract class AbstractAgent implements AgentEventListener {
    */
   public void sendWaveletOperations(WaveletName waveletName,
       SuccessFailCallback<WaveClientRpc.ProtocolSubmitResponse, String> callback,
-      CoreWaveletOperation... operations) {
+      WaveletOperation... operations) {
     connection.sendWaveletOperations(waveletName, callback, operations);
   }
 
@@ -158,7 +163,7 @@ public abstract class AbstractAgent implements AgentEventListener {
    * @param operations operations to send
    */
   public void sendAndAwaitWaveletOperations(WaveletName waveletName,
-      CoreWaveletOperation... operations) {
+      WaveletOperation... operations) {
     connection.sendAndAwaitWaveletOperations(waveletName, operations);
   }
 }

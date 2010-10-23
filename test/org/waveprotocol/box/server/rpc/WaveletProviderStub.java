@@ -24,7 +24,7 @@ import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -68,7 +68,7 @@ public class WaveletProviderStub implements WaveletProvider {
   }
 
   @Override
-  public Collection<CoreWaveletDelta> getHistory(WaveletName waveletName,
+  public Collection<TransformedWaveletDelta> getHistory(WaveletName waveletName,
       HashedVersion versionStart, HashedVersion versionEnd) {
     throw new UnsupportedOperationException();
   }

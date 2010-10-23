@@ -17,7 +17,7 @@
 
 package org.waveprotocol.box.client;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.operation.wave.BlipOperation;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -39,7 +39,7 @@ public interface WaveletOperationListener {
    * @param docOp operation performed on the document
    */
   public void waveletDocumentUpdated(String author, WaveletData wavelet,
-      String docId, BufferedDocOp docOp);
+      String docId, BlipOperation docOp);
 
   /**
    * Invoked when a participant has been added to a wavelet.

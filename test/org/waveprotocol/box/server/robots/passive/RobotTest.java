@@ -51,9 +51,8 @@ import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
-import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -136,25 +135,26 @@ public class RobotTest extends TestCase {
   }
 
   public void testUpdateWaveletWithGap() throws Exception {
-    WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX,
-        HASH_FACTORY.createVersionZero(WAVELET_NAME), 0L);
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
-    List<CoreWaveletDelta> deltas = Collections.emptyList();
-    robot.waveletUpdate(waveletData, deltas, hashedVersionZero);
+    WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX,
+        hashedVersionZero, 0L);
+    List<TransformedWaveletDelta> deltas = Collections.emptyList();
+    robot.waveletUpdate(waveletData, deltas);
 
     // We are making an delta which applies to version 1, however the robot only
     // knows about version 0.
     ParticipantId bob = ParticipantId.of("bob@exmaple.com");
     WaveletOperation addBob = new AddParticipant(new WaveletOperationContext(ALEX, 0L, 1), bob);
     addBob.apply(waveletData);
-    HashedVersion hashedVersionOne = HashedVersion.unsigned(1);
+    waveletData.setHashedVersion(HashedVersion.unsigned(2));
+    waveletData.setVersion(2);
 
-    CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(
-        Collections.singletonList(addBob), ALEX, hashedVersionOne);
+    TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, HashedVersion.unsigned(2),
+        0L, Collections.singletonList(addBob));
 
     // Send the delta for version 1 to the robot, it should now enqueue a new
     // wavelet since it is missing deltas.
-    robot.waveletUpdate(waveletData, Collections.singletonList(delta), hashedVersionOne);
+    robot.waveletUpdate(waveletData, Collections.singletonList(delta));
 
     WaveletAndDeltas firstWavelet = robot.dequeueWavelet();
     assertNotNull("Expected a wavelet to be dequeued", firstWavelet);
@@ -162,7 +162,7 @@ public class RobotTest extends TestCase {
         firstWavelet.getVersionAfterDeltas());
     WaveletAndDeltas secondWavelet = robot.dequeueWavelet();
     assertNotNull("Expected a wavelet to be dequeued", secondWavelet);
-    assertEquals("The wavelet with version two should be second", hashedVersionOne,
+    assertEquals("The wavelet with version two should be second", HashedVersion.unsigned(2),
         secondWavelet.getVersionAfterDeltas());
     assertNull("Only expected two wavelets to be dequeued", robot.dequeueWavelet());
   }
@@ -225,7 +225,7 @@ public class RobotTest extends TestCase {
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
     WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX,
         hashedVersionZero, 0L);
-    List<CoreWaveletDelta> deltas = Collections.emptyList();
-    robot.waveletUpdate(waveletData, deltas, hashedVersionZero);
+    List<TransformedWaveletDelta> deltas = Collections.emptyList();
+    robot.waveletUpdate(waveletData, deltas);
   }
 }

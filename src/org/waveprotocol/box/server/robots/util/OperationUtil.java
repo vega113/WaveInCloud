@@ -34,7 +34,7 @@ import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.List;
@@ -183,7 +183,7 @@ public class OperationUtil {
     for (Entry<WaveletName, RobotWaveletData> entry : results.getOpenWavelets().entrySet()) {
       WaveletName waveletName = entry.getKey();
       RobotWaveletData w = entry.getValue();
-      for (CoreWaveletDelta delta : w.getDeltas()) {
+      for (WaveletDelta delta : w.getDeltas()) {
         ProtocolWaveletDelta protocolDelta = CoreWaveletOperationSerializer.serialize(delta);
         waveletProvider.submitRequest(waveletName, protocolDelta, requestListener);
       }

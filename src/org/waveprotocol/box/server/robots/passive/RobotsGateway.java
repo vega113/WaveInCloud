@@ -36,7 +36,7 @@ import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -85,8 +85,7 @@ public class RobotsGateway implements WaveBus.Subscriber {
   }
 
   @Override
-  public void waveletUpdate(ReadableWaveletData wavelet, HashedVersion resultingVersion,
-      List<CoreWaveletDelta> deltas) {
+  public void waveletUpdate(ReadableWaveletData wavelet, List<TransformedWaveletDelta> deltas) {
     // TODO(ljvderijk): Determine which robot should receive which deltas,
     // enqueue deltas
     // for these robots
@@ -112,7 +111,7 @@ public class RobotsGateway implements WaveBus.Subscriber {
         RobotAccountData robotAccount = account.asRobot();
         if (robotAccount.isVerified()) {
           Robot robot = getOrCreateRobot(robotName, robotAccount);
-          updateRobot(robot, wavelet, deltas, resultingVersion);
+          updateRobot(robot, wavelet, deltas);
         }
       }
     }
@@ -156,12 +155,11 @@ public class RobotsGateway implements WaveBus.Subscriber {
    * @param robot The robot to process the update for.
    * @param wavelet the wavelet on which the update is occuring.
    * @param deltas the deltas the have been applied to the given wavelet.
-   * @param resultingVersion version after application of deltas
    */
   private void updateRobot(Robot robot, ReadableWaveletData wavelet,
-      List<CoreWaveletDelta> deltas, HashedVersion resultingVersion) {
+      List<TransformedWaveletDelta> deltas) {
     try {
-      robot.waveletUpdate(wavelet, deltas, resultingVersion);
+      robot.waveletUpdate(wavelet, deltas);
       ensureScheduled(robot);
     } catch (OperationException e) {
       LOG.warning("Unable to update robot(" + robot.getRobotName() + ")", e);

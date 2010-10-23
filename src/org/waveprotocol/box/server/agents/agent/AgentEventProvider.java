@@ -23,7 +23,7 @@ import org.waveprotocol.box.client.WaveletOperationListener;
 import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.operation.wave.BlipOperation;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -104,7 +104,7 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
   public void onCommitNotice(WaveletData wavelet, HashedVersion version) {}
 
   @Override
-  public void onDocumentChanged(WaveletData wavelet, String docId, BufferedDocOp docOp) {
+  public void onDocumentChanged(WaveletData wavelet, String docId, BlipOperation docOp) {
     for (AgentEventListener l : listeners) {
       l.onDocumentChanged(wavelet, docId, docOp);
     }
@@ -183,7 +183,7 @@ public class AgentEventProvider implements WaveletOperationListener, AgentEventL
 
   @Override
   public void waveletDocumentUpdated(String author, WaveletData wavelet,
-      String docId, BufferedDocOp docOp) {
+      String docId, BlipOperation docOp) {
     if (isIgnored(author, wavelet) || isSelfGeneratedEvent(author, wavelet)) {
       return;
     }

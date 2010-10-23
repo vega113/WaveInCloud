@@ -38,15 +38,18 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
+import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
+import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -81,15 +84,17 @@ public class WaveletContainerTest extends TestCase {
       .setSignerId(fakeSigner2)
       .setSignatureAlgorithm(ProtocolSignature.SignatureAlgorithm.SHA1_RSA)
       .build();
+  private static final WaveletOperationContext CONTEXT = new WaveletOperationContext(author,
+      0, 1);
 
-  private static final List<CoreWaveletOperation> addParticipantOps = Lists.newArrayList();
-  private static final List<CoreWaveletOperation> removeParticipantOps = Lists.newArrayList();
-  private static final List<CoreWaveletOperation> doubleRemoveParticipantOps;
+  private static final List<WaveletOperation> addParticipantOps = Lists.newArrayList();
+  private static final List<WaveletOperation> removeParticipantOps = Lists.newArrayList();
+  private static final List<WaveletOperation> doubleRemoveParticipantOps;
 
   static {
     for (ParticipantId p : participants) {
-      addParticipantOps.add(new CoreAddParticipant(p));
-      removeParticipantOps.add(new CoreRemoveParticipant(p));
+      addParticipantOps.add(new AddParticipant(CONTEXT, p));
+      removeParticipantOps.add(new RemoveParticipant(CONTEXT, p));
     }
 
     Collections.reverse(removeParticipantOps);
@@ -225,11 +230,9 @@ public class WaveletContainerTest extends TestCase {
   public void testOperationsOfDifferentSizes() throws OperationException {
     String docId = "b+somedoc";
     BufferedDocOp docOp1 = new DocOpBuilder().characters("hi").build();
-    CoreWaveletDelta delta1 =
-        createDelta(Lists.newArrayList(new CoreWaveletDocumentOperation(docId, docOp1)));
+    WaveletDelta delta1 = createDelta(docId, docOp1);
     BufferedDocOp docOp2 = new DocOpBuilder().characters("bye").build();
-    CoreWaveletDelta delta2 =
-        createDelta(Lists.newArrayList(new CoreWaveletDocumentOperation(docId, docOp2)));
+    WaveletDelta delta2 = createDelta(docId, docOp2);
 
     localWavelet.applyWaveletOperations(delta1, 0L);
     try {
@@ -246,11 +249,12 @@ public class WaveletContainerTest extends TestCase {
   // Utilities
 
   /**
-   * Returns a {@link CoreWaveletDelta} for the list of operations performed by
+   * Returns a {@link WaveletDelta} for the list of operations performed by
    * the author set in the constants.
    */
-  private CoreWaveletDelta createDelta(List<CoreWaveletDocumentOperation> ops) {
-    return new CoreWaveletDelta(author, version0, ops);
+  private WaveletDelta createDelta(String docId, BufferedDocOp docOp) {
+    return new WaveletDelta(author, version0, Arrays.asList(new WaveletBlipOperation(
+        docId, new BlipContentOperation(CONTEXT, docOp))));
   }
 
   /**
@@ -299,7 +303,7 @@ public class WaveletContainerTest extends TestCase {
   /**
    * Applies and commits a delta to a wavelet container.
    */
-  private static void applyDeltaToWavelet(WaveletContainerImpl wavelet, CoreWaveletDelta delta)
+  private static void applyDeltaToWavelet(WaveletContainerImpl wavelet, WaveletDelta delta)
       throws OperationException {
     ProtocolWaveletDelta protoDelta = serialize(delta);
     ByteStringMessage<ProtocolWaveletDelta> deltaByteString =
@@ -316,24 +320,24 @@ public class WaveletContainerTest extends TestCase {
         delta);
   }
 
-  private static CoreWaveletDelta addParticipantDelta(WaveletContainer target) {
-    return new CoreWaveletDelta(author, target.getCurrentVersion(), addParticipantOps);
+  private static WaveletDelta addParticipantDelta(WaveletContainer target) {
+    return new WaveletDelta(author, target.getCurrentVersion(), addParticipantOps);
   }
 
   private static ProtocolWaveletDelta addParticipantProtoDelta(WaveletContainer target) {
     return serialize(addParticipantDelta(target));
   }
 
-  private static CoreWaveletDelta removeParticipantDelta(WaveletContainer target) {
-    return new CoreWaveletDelta(author, target.getCurrentVersion(), removeParticipantOps);
+  private static WaveletDelta removeParticipantDelta(WaveletContainer target) {
+    return new WaveletDelta(author, target.getCurrentVersion(), removeParticipantOps);
   }
 
   private static ProtocolWaveletDelta removeParticipantProtoDelta(WaveletContainer target) {
     return serialize(removeParticipantDelta(target));
   }
 
-  private static CoreWaveletDelta doubleRemoveParticipantDelta(WaveletContainer target) {
-    return new CoreWaveletDelta(author, target.getCurrentVersion(),
+  private static WaveletDelta doubleRemoveParticipantDelta(WaveletContainer target) {
+    return new WaveletDelta(author, target.getCurrentVersion(),
         doubleRemoveParticipantOps);
   }
 
@@ -345,7 +349,7 @@ public class WaveletContainerTest extends TestCase {
     return CoreWaveletOperationSerializer.serialize(v);
   }
 
-  private static ProtocolWaveletDelta serialize(CoreWaveletDelta d) {
+  private static ProtocolWaveletDelta serialize(WaveletDelta d) {
     return CoreWaveletOperationSerializer.serialize(d);
   }
 }

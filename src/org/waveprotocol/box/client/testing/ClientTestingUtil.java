@@ -43,7 +43,10 @@ import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
+import org.waveprotocol.wave.model.operation.wave.BlipOperationVisitor;
+import org.waveprotocol.wave.model.operation.wave.BlipOperationVisitorImpl;
+import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
@@ -300,13 +303,20 @@ public class ClientTestingUtil {
    * @param ops to collate.
    * @return the resulting text content.
    */
-  public String getText(List<CoreWaveletDocumentOperation> ops) {
-    List<DocOp> docOps = Lists.newArrayList();
-    for (CoreWaveletDocumentOperation op : ops) {
-      // Skip changes to the manifest document since they may contain "retain" and other components
-      // that can't be collated by ClientUtils, and we don't really care about the manifest anyway.
-      if (!op.getDocumentId().equals(MANIFEST_DOCUMENT_ID)) {
-        docOps.add(op.getOperation());
+  public String getText(List<WaveletBlipOperation> ops) {
+    final List<DocOp> docOps = Lists.newArrayList();
+    BlipOperationVisitor opVisitor = new BlipOperationVisitorImpl() {
+      @Override
+      public void visitBlipContentOperation(BlipContentOperation op) {
+        docOps.add(op.getContentOp());
+      }
+    };
+    for (WaveletBlipOperation op : ops) {
+      // Skip changes to the manifest document since they may contain "retain"
+      // and other components that can't be collated by ClientUtils, and we
+      // don't really care about the manifest anyway.
+      if (!op.getBlipId().equals(MANIFEST_DOCUMENT_ID)) {
+        op.getBlipOp().acceptVisitor(opVisitor);
       }
     }
     return Snippets.collateTextForOps(docOps);

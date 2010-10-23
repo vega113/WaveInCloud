@@ -23,9 +23,8 @@ import com.google.common.collect.Lists;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -51,7 +50,7 @@ public class WaveletAndDeltas {
   /**
    * Contiguous sequence of deltas applying to snapshotBeforeDeltas.
    */
-  private final List<CoreWaveletDelta> deltas;
+  private final List<TransformedWaveletDelta> deltas;
 
   /**
    * Cached result of applying all deltas to the first snapshot.
@@ -59,42 +58,39 @@ public class WaveletAndDeltas {
   private ObservableWaveletData snapshotAfterDeltas;
 
   /**
-   * The version of the snapshot with all deltas applied.
-   */
-  private HashedVersion currentVersion;
-
-  /**
    * The name of the wavelet in this container.
    */
   private final WaveletName waveletName;
 
   /**
-   * Constructs a {@link WaveletAndDeltas} from the given {@link WaveletData}
-   * and {@link CoreWaveletDelta}s. It will construct a copy of the
-   * WaveletData so that operations can happily applied to it.
+   * Constructs a {@link WaveletAndDeltas} from wavelet data and a tail of the
+   * sequence of transformed deltas leading to that snapshot. Takes a copy of
+   * the WaveletData so that operations can happily applied to it.
+   *
+   * The resulting version of the last delta must match the snapshot's version.
    *
    * @param snapshot the state of the wavelet after the deltas have been
    *        applied.
    * @param deltas the deltas in the order they have been applied to the
    *        wavelet.
-   * @param resultingVersion version after application of the deltas, must
-   *        therefore match the version of the snapshot.
    * @throws OperationException if the operations can not be rolled back to
    *         create a snapshot before the deltas have been applied.
    */
   public static WaveletAndDeltas create(ReadableWaveletData snapshot,
-      List<CoreWaveletDelta> deltas, HashedVersion resultingVersion)
+      List<TransformedWaveletDelta> deltas)
       throws OperationException {
-    Preconditions.checkArgument(snapshot.getVersion() == resultingVersion.getVersion(),
-        String.format("Version of snapshot %s doesn't match the HashedVersion %s",
-            snapshot.getVersion(), resultingVersion));
+    HashedVersion endVersion = deltas.isEmpty() ? snapshot.getHashedVersion() :
+        deltas.get(deltas.size() - 1).getResultingVersion();
+    Preconditions.checkArgument(snapshot.getVersion() == endVersion.getVersion(),
+        String.format("Version of snapshot %s doesn't match the end version %s",
+            snapshot.getVersion(), endVersion));
     Preconditions.checkArgument(
         areContiguousDeltas(deltas), "Deltas are not contiguous: " + deltas);
 
     ObservableWaveletData preDeltaWavelet = WaveletDataUtil.copyWavelet(snapshot);
     rollback(preDeltaWavelet, deltas);
     ObservableWaveletData postDeltaWavelet = WaveletDataUtil.copyWavelet(snapshot);
-    return new WaveletAndDeltas(preDeltaWavelet, postDeltaWavelet, deltas, resultingVersion);
+    return new WaveletAndDeltas(preDeltaWavelet, postDeltaWavelet, deltas);
   }
 
   /**
@@ -102,27 +98,26 @@ public class WaveletAndDeltas {
    * wavelet.
    *
    * @param wavelet {@link ObservableWaveletData} to apply operations to
-   * @param deltas the {@link CoreWaveletDelta} containing the operations
+   * @param deltas the {@link WaveletDelta} containing the operations
    *        which we should revert on the given wavelet.
    * @throws OperationException if the operations can not be rolled back.
    */
-  private static void rollback(ObservableWaveletData wavelet, List<CoreWaveletDelta> deltas)
+  private static void rollback(ObservableWaveletData wavelet, List<TransformedWaveletDelta> deltas)
       throws OperationException {
     List<WaveletOperation> inverseOps = Lists.newArrayList();
 
     // Go through everything in reverse order
     for (int i = deltas.size() - 1; i >= 0; i--) {
-      CoreWaveletDelta delta = deltas.get(i);
-      List<? extends CoreWaveletOperation> coreOps = delta.getOperations();
+      TransformedWaveletDelta delta = deltas.get(i);
+      List<? extends WaveletOperation> ops = delta.getOperations();
       // Metadata such as the last modified ts will change due to the rollback
       // of operations.
       long timestamp = 0L;
       WaveletOperationContext context =
           new WaveletOperationContext(delta.getAuthor(), timestamp, -1);
-      for (int j = coreOps.size() - 1; j >= 0; j--) {
-        CoreWaveletOperation coreOp = coreOps.get(j);
-        WaveletOperation inverseOp =
-            ConversionUtil.fromCoreWaveletOperation(context, coreOp.getInverse());
+      for (int j = ops.size() - 1; j >= 0; j--) {
+        WaveletOperation op = ops.get(j);
+        WaveletOperation inverseOp = WaveletOperationInverter.invert(op);
         inverseOps.add(inverseOp);
       }
     }
@@ -146,17 +141,17 @@ public class WaveletAndDeltas {
    * @param deltas the deltas to check to be contiguous.
    * @return true if the deltas are contiguous, false otherwise.
    */
-  private static boolean areContiguousDeltas(List<CoreWaveletDelta> deltas) {
+  private static boolean areContiguousDeltas(List<TransformedWaveletDelta> deltas) {
     if (deltas.size() <= 1) {
       return true;
     }
 
-    CoreWaveletDelta first = deltas.get(0);
-    long nextVersion = first.getTargetVersion().getVersion() + first.getOperations().size();
+    TransformedWaveletDelta first = deltas.get(0);
+    long nextVersion = first.getAppliedAtVersion() + first.getOperations().size();
 
     for (int i = 1; i < deltas.size(); i++) {
-      CoreWaveletDelta delta = deltas.get(i);
-      long version = delta.getTargetVersion().getVersion();
+      TransformedWaveletDelta delta = deltas.get(i);
+      long version = delta.getAppliedAtVersion();
       if (version != nextVersion) {
         return false;
       }
@@ -167,22 +162,19 @@ public class WaveletAndDeltas {
 
   /**
    * Constructs a {@link WaveletAndDeltas} from the given {@link WaveletData}
-   * and {@link CoreWaveletDelta}s.
+   * and {@link WaveletDelta}s.
    *
    * @param preDeltasSnapshot the state of the wavelet before the deltas have
    *        been applied.
    * @param postDeltasSnapshot the state of the wavelet after the deltas have
    *        been applied.
-   * @param deltas deltas in the order they have beenapplied to the wavelet.
-   * @param resultingVersion version after application of the deltas.
+   * @param deltas deltas in the order they have been applied to the wavelet.
    */
   private WaveletAndDeltas(ObservableWaveletData preDeltasSnapshot,
-      ObservableWaveletData postDeltasSnapshot, List<CoreWaveletDelta> deltas,
-      HashedVersion resultingVersion) {
+      ObservableWaveletData postDeltasSnapshot, List<TransformedWaveletDelta> deltas) {
     this.snapshotBeforeDeltas = preDeltasSnapshot;
     this.deltas = Lists.newArrayList(deltas);
     this.snapshotAfterDeltas = postDeltasSnapshot;
-    this.currentVersion = resultingVersion;
     this.waveletName = WaveletDataUtil.waveletNameOf(preDeltasSnapshot);
   }
 
@@ -196,7 +188,7 @@ public class WaveletAndDeltas {
   /**
    * Returns an unmodifiable view of all deltas collected.
    */
-  public List<CoreWaveletDelta> getDeltas() {
+  public List<TransformedWaveletDelta> getDeltas() {
     return Collections.unmodifiableList(deltas);
   }
 
@@ -212,7 +204,8 @@ public class WaveletAndDeltas {
    * applied.
    */
   public HashedVersion getVersionAfterDeltas() {
-    return currentVersion;
+    return deltas.isEmpty() ? snapshotAfterDeltas.getHashedVersion() :
+        deltas.get(deltas.size() - 1).getResultingVersion();
   }
 
   /**
@@ -223,17 +216,17 @@ public class WaveletAndDeltas {
    * @param updatedSnapshot the snapshot after deltas have been applied
    * @param newDeltas the deltas that have been applied since the last call to
    *        appendDeltas.
-   * @param newVersion version after application of the deltas.
    */
   public void appendDeltas(ReadableWaveletData updatedSnapshot,
-      List<CoreWaveletDelta> newDeltas, HashedVersion newVersion) {
+      List<TransformedWaveletDelta> newDeltas) {
+    HashedVersion newEndVersion = newDeltas.get(newDeltas.size() - 1).getResultingVersion();
     Preconditions.checkArgument(
         !newDeltas.isEmpty(), "There were no new deltas passed to appendDeltas");
-    Preconditions.checkArgument(updatedSnapshot.getVersion() == newVersion.getVersion(),
+    Preconditions.checkArgument(updatedSnapshot.getVersion() == newEndVersion.getVersion(),
         String.format("Version of snapshot %s doesn't match the HashedVersion %s",
-            updatedSnapshot.getVersion(), newVersion));
+            updatedSnapshot.getVersion(), newEndVersion));
     Preconditions.checkArgument(areContiguousToCurrentVersion(newDeltas), String.format(
-        "Deltas are not contiguous to the current version(%s) %s", currentVersion, deltas));
+        "Deltas are not contiguous to the current version(%s) %s", getVersionAfterDeltas(), deltas));
     WaveletName updatedWaveletName = WaveletDataUtil.waveletNameOf(updatedSnapshot);
     Preconditions.checkArgument(updatedWaveletName.equals(waveletName),
         String.format(
@@ -244,7 +237,6 @@ public class WaveletAndDeltas {
     // they do not contain a timestamp at this time.
     snapshotAfterDeltas = WaveletDataUtil.copyWavelet(updatedSnapshot);
     deltas.addAll(newDeltas);
-    currentVersion = newVersion;
   }
 
   /**
@@ -253,7 +245,8 @@ public class WaveletAndDeltas {
    *
    * @param deltas the list of deltas to check.
    */
-  public boolean areContiguousToCurrentVersion(List<CoreWaveletDelta> deltas) {
-    return deltas.get(0).getTargetVersion().equals(currentVersion) && areContiguousDeltas(deltas);
+  public boolean areContiguousToCurrentVersion(List<TransformedWaveletDelta> deltas) {
+    return deltas.get(0).getAppliedAtVersion() == getVersionAfterDeltas().getVersion()
+        && areContiguousDeltas(deltas);
   }
 }

@@ -25,9 +25,8 @@ import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.CapturingOperationSink;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
-import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -146,8 +145,8 @@ public class RobotWaveletData {
    * apply to the version given during construction of the
    * {@link RobotWaveletData}.
    */
-  public List<CoreWaveletDelta> getDeltas() {
-    List<CoreWaveletDelta> deltas = Lists.newArrayList();
+  public List<WaveletDelta> getDeltas() {
+    List<WaveletDelta> deltas = Lists.newArrayList();
 
     for (Entry<ParticipantId, CapturingOperationSink<WaveletOperation>> entry :
         sinkMap.entrySet()) {
@@ -158,7 +157,7 @@ public class RobotWaveletData {
         // No ops to generate delta for
         continue;
       }
-      CoreWaveletDelta delta = ConversionUtil.toCoreWaveletDelta(ops, author, snapshotVersion);
+      WaveletDelta delta = new WaveletDelta(author, snapshotVersion, ops);
       deltas.add(delta);
     }
     return deltas;

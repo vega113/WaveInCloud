@@ -23,19 +23,22 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreNoOp;
-import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
+import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
+import org.waveprotocol.wave.model.operation.wave.BlipOperation;
+import org.waveprotocol.wave.model.operation.wave.NoOp;
+import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
@@ -55,9 +58,12 @@ import java.util.List;
 public final class IndexWave {
 
   @VisibleForTesting
-  public static final ParticipantId DIGEST_AUTHOR = new ParticipantId("digest-author");
+  public static final ParticipantId DIGEST_AUTHOR = new ParticipantId("digest-author@example.com");
   @VisibleForTesting
   public static final String DIGEST_DOCUMENT_ID = "digest";
+
+  private static final WaveletOperationContext.Factory contextFactory =
+      new BasicWaveletOperationContextFactory(DIGEST_AUTHOR);
 
   /**
    * @return true if the specified wave can be indexed in an index wave.
@@ -97,12 +103,14 @@ public final class IndexWave {
       String oldDigest, String newDigest) {
     long deltaTargetVersion = targetVersion; // Target for the next delta.
     long numSourceOps = sourceDeltas.getEndVersion().getVersion() - targetVersion;
-    List<CoreWaveletDelta> indexDeltas = createParticipantDeltas(sourceDeltas, deltaTargetVersion);
+    List<TransformedWaveletDelta> indexDeltas =
+        createParticipantDeltas(sourceDeltas, deltaTargetVersion);
     long numIndexOps = numOpsInDeltas(indexDeltas);
     deltaTargetVersion += numIndexOps;
 
     if (numIndexOps < numSourceOps) {
-      indexDeltas.add(createDigestDelta(deltaTargetVersion, oldDigest, newDigest));
+      indexDeltas.add(createDigestDelta(deltaTargetVersion, oldDigest, newDigest,
+          contextFactory.createContext()));
       numIndexOps += 1;
       deltaTargetVersion += 1;
     }
@@ -110,17 +118,17 @@ public final class IndexWave {
     if (numIndexOps < numSourceOps) {
       // Append no-ops.
       long numNoOps = numSourceOps - numIndexOps;
-      List<CoreWaveletOperation> noOps = Lists.newArrayList();
+      List<WaveletOperation> noOps = Lists.newArrayList();
       for (long i = 0; i < numNoOps; ++i) {
-        noOps.add(CoreNoOp.INSTANCE);
+        noOps.add(new NoOp(contextFactory.createContext()));
       }
-      CoreWaveletDelta noOpDelta =
-          new CoreWaveletDelta(DIGEST_AUTHOR, HashedVersion.unsigned(deltaTargetVersion), noOps);
+      TransformedWaveletDelta noOpDelta =
+          new TransformedWaveletDelta(DIGEST_AUTHOR,
+              HashedVersion.unsigned(deltaTargetVersion + noOps.size()), 0L, noOps);
       indexDeltas.add(noOpDelta);
     }
 
-    return new DeltaSequence(indexDeltas,
-        HashedVersion.unsigned(sourceDeltas.getEndVersion().getVersion()));
+    return new DeltaSequence(indexDeltas);
   }
 
   /**
@@ -197,9 +205,9 @@ public final class IndexWave {
   /**
    * Counts the ops in a sequence of deltas
    */
-  private static long numOpsInDeltas(Iterable<CoreWaveletDelta> deltas) {
+  private static long numOpsInDeltas(Iterable<TransformedWaveletDelta> deltas) {
     long sum = 0;
-    for (CoreWaveletDelta d : deltas) {
+    for (TransformedWaveletDelta d : deltas) {
       sum += d.getOperations().size();
     }
     return sum;
@@ -209,17 +217,18 @@ public final class IndexWave {
    * Constructs a delta with one op which transforms the digest document from
    * one digest string to another.
    */
-  private static CoreWaveletDelta createDigestDelta(long targetVersion, String oldDigest,
-      String newDigest) {
-    CoreWaveletOperation op =
-        new CoreWaveletDocumentOperation(DIGEST_DOCUMENT_ID, createEditOp(oldDigest, newDigest));
-    CoreWaveletDelta delta = new CoreWaveletDelta(DIGEST_AUTHOR,
-        HashedVersion.unsigned(targetVersion), ImmutableList.of(op));
+  private static TransformedWaveletDelta createDigestDelta(long targetVersion, String oldDigest,
+      String newDigest, WaveletOperationContext context) {
+    WaveletOperation op =
+        new WaveletBlipOperation(DIGEST_DOCUMENT_ID, createEditOp(oldDigest, newDigest, context));
+    TransformedWaveletDelta delta = new TransformedWaveletDelta(DIGEST_AUTHOR,
+        HashedVersion.unsigned(targetVersion + 1), 0L, ImmutableList.of(op));
     return delta;
   }
 
   /** Constructs a BufferedDocOp that transforms source into target. */
-  private static BufferedDocOp createEditOp(String source, String target) {
+  private static BlipOperation createEditOp(String source, String target,
+      WaveletOperationContext context) {
     int commonPrefixLength = lengthOfCommonPrefix(source, target);
     DocOpBuilder builder = new DocOpBuilder();
     if (commonPrefixLength > 0) {
@@ -231,25 +240,25 @@ public final class IndexWave {
     if (target.length() > commonPrefixLength) {
       builder.characters(target.substring(commonPrefixLength));
     }
-    return builder.build();
+    return new BlipContentOperation(context, builder.build());
   }
 
   /** Extracts participant change operations from a delta sequence. */
-  private static List<CoreWaveletDelta> createParticipantDeltas(
-      Iterable<CoreWaveletDelta> deltas, long targetVersion) {
-    List<CoreWaveletDelta> participantDeltas = Lists.newArrayList();
-    for (CoreWaveletDelta delta : deltas) {
-      List<CoreWaveletOperation> participantOps = Lists.newArrayList();
-      for (CoreWaveletOperation op : delta.getOperations()) {
-        if (op instanceof CoreAddParticipant || op instanceof CoreRemoveParticipant) {
+  private static List<TransformedWaveletDelta> createParticipantDeltas(
+      Iterable<TransformedWaveletDelta> deltas, long targetVersion) {
+    List<TransformedWaveletDelta> participantDeltas = Lists.newArrayList();
+    for (TransformedWaveletDelta delta : deltas) {
+      List<WaveletOperation> participantOps = Lists.newArrayList();
+      for (WaveletOperation op : delta.getOperations()) {
+        if (op instanceof AddParticipant || op instanceof RemoveParticipant) {
           participantOps.add(op);
         }
       }
       if (!participantOps.isEmpty()) {
-        HashedVersion hashedVersion = HashedVersion.unsigned(targetVersion);
         targetVersion += participantOps.size();
-        participantDeltas.add(new CoreWaveletDelta(delta.getAuthor(), hashedVersion,
-            participantOps));
+        HashedVersion endVersion = HashedVersion.unsigned(targetVersion);
+        participantDeltas.add(new TransformedWaveletDelta(delta.getAuthor(), endVersion,
+            delta.getApplicationTimestamp(), participantOps));
       }
     }
     return participantDeltas;

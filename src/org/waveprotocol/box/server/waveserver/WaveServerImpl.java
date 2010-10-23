@@ -50,7 +50,7 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
@@ -162,9 +162,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
               new RemoteWaveletDeltaCallback() {
                 @Override
                 public void onSuccess(DeltaSequence result) {
-                  HashedVersion version = result.getEndVersion();
-                  dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(), version,
-                      result);
+                  dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(), result);
                 }
 
                 @Override
@@ -278,8 +276,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       } else {
         try {
           Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> deltaHistory =
-              wc.requestHistory(
-                  CoreWaveletOperationSerializer.deserialize(startVersion),
+              wc.requestHistory(CoreWaveletOperationSerializer.deserialize(startVersion),
                   CoreWaveletOperationSerializer.deserialize(endVersion));
           List<ByteString> deltaHistoryBytes = Lists.newArrayList();
           for (ByteStringMessage<ProtocolAppliedWaveletDelta> d : deltaHistory) {
@@ -359,14 +356,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   //
 
   @Override
-  public Collection<CoreWaveletDelta> getHistory(WaveletName waveletName,
+  public Collection<TransformedWaveletDelta> getHistory(WaveletName waveletName,
       HashedVersion startVersion, HashedVersion endVersion) {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
       LOG.info("Client request for history made for non-existent wavelet: " + waveletName);
       return null;
     } else {
-      Collection<CoreWaveletDelta> deltaHistory = null;
+      Collection<TransformedWaveletDelta> deltaHistory = null;
       try {
         deltaHistory = wc.requestTransformedHistory(startVersion, endVersion);
       } catch (AccessControlException e) {
@@ -636,7 +633,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
 
           // Send the results to subscribers.
           try {
-            dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(), resultingVersion,
+            dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(),
                 ImmutableList.of(submitResult.getDelta()));
           } catch (RuntimeException e) {
             LOG.severe("Runtime exception in wave bus subscriber", e);

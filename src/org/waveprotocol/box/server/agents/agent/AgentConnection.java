@@ -28,7 +28,7 @@ import org.waveprotocol.box.server.util.SuccessFailCallback;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
@@ -179,7 +179,7 @@ public class AgentConnection {
    */
   public void sendWaveletOperations(WaveletName waveletName,
       SuccessFailCallback<ProtocolSubmitResponse, String> callback,
-      CoreWaveletOperation... operations) {
+      WaveletOperation... operations) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
     }
@@ -194,7 +194,7 @@ public class AgentConnection {
    * @param operations the operation to apply to the wavelet.
    */
   public void sendAndAwaitWaveletOperations(WaveletName waveletName,
-      CoreWaveletOperation... operations) {
+      WaveletOperation... operations) {
     if (!isConnected()) {
       throw new IllegalStateException("Not connected.");
     }

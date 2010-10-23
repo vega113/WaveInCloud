@@ -25,7 +25,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -49,8 +49,8 @@ public interface ClientFrontend {
      * Called when an update is received.
      */
     void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
-        List<CoreWaveletDelta> deltas, @Nullable HashedVersion endVersion,
-        @Nullable HashedVersion committedVersion, boolean hasMarker, String channel_id);
+        List<TransformedWaveletDelta> deltas, @Nullable HashedVersion committedVersion,
+        boolean hasMarker, String channel_id);
 
     /**
      * Called when the stream fails. No further updates will be received.

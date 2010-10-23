@@ -43,8 +43,7 @@ import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -301,7 +300,7 @@ public class EventGenerator {
     wavelet.addListener(waveletListener);
 
     try {
-      for (CoreWaveletDelta delta : waveletAndDeltas.getDeltas()) {
+      for (TransformedWaveletDelta delta : waveletAndDeltas.getDeltas()) {
 
         // TODO(ljvderijk): Set correct timestamp and hashed version once
         // wavebus sends them along
@@ -309,10 +308,8 @@ public class EventGenerator {
         conversationListener.deltaBegin(delta.getAuthor(), timestamp);
 
         HashedVersion endVersion = HashedVersion.unsigned(
-            delta.getTargetVersion().getVersion() + delta.getOperations().size());
-        List<WaveletOperation> ops =
-            ConversionUtil.fromCoreWaveletDelta(delta, timestamp, endVersion);
-        for (WaveletOperation op : ops) {
+            delta.getAppliedAtVersion() + delta.getOperations().size());
+        for (WaveletOperation op : delta.getOperations()) {
           op.apply(snapshot);
         }
         conversationListener.deltaEnd();

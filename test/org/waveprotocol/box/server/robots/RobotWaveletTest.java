@@ -25,9 +25,8 @@ import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
@@ -87,10 +86,10 @@ public class RobotWaveletTest extends TestCase {
     // Bob doesn't perform any operations but we do retrieve his wavelet
     wavelet.getOpBasedWavelet(BOB);
 
-    List<CoreWaveletDelta> deltas = wavelet.getDeltas();
+    List<WaveletDelta> deltas = wavelet.getDeltas();
     assertTrue("Only one participant has performed operations", deltas.size() == 1);
 
-    CoreWaveletDelta delta = deltas.get(0);
+    WaveletDelta delta = deltas.get(0);
 
     HashedVersion version = delta.getTargetVersion();
     assertEquals(
@@ -98,12 +97,11 @@ public class RobotWaveletTest extends TestCase {
 
     assertEquals(ALEX, delta.getAuthor());
 
-    List<? extends CoreWaveletOperation> operations = delta.getOperations();
-    assertTrue(operations.size() == 1);
+    assertTrue(delta.size() == 1);
 
-    CoreAddParticipant addParticipantOp = new CoreAddParticipant(TRIXIE);
-    assertEquals(
-        "Expected operation that adds Trixie to the wavelet", addParticipantOp, operations.get(0));
+    AddParticipant addParticipantOp = new AddParticipant(null, TRIXIE);
+    assertEquals("Expected operation that adds Trixie to the wavelet", addParticipantOp,
+        delta.iterator().next());
   }
 
   public void testDeltasAreReturnedInOrder() {
@@ -115,7 +113,7 @@ public class RobotWaveletTest extends TestCase {
     OpBasedWavelet waveletBob = wavelet.getOpBasedWavelet(BOB);
     waveletBob.getDocument("r+randomDocument").insertText(0, "/nHello");
 
-    List<CoreWaveletDelta> deltas = wavelet.getDeltas();
+    List<WaveletDelta> deltas = wavelet.getDeltas();
     assertTrue(deltas.size() == 2);
 
     assertEquals("Expected Alex to be first", ALEX, deltas.get(0).getAuthor());

@@ -34,8 +34,7 @@ import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
-import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.util.Iterator;
@@ -152,12 +151,11 @@ public class Robot implements Runnable {
    *
    * @param wavelet the wavelet this update is taking place on.
    * @param deltas the deltas that have been applied to the given wavelet.
-   * @param resultingVersion version after application of deltas.
    * @throws OperationException if an update for a new wavelet could not be
    *         processed.
    */
-  void waveletUpdate(ReadableWaveletData wavelet, List<CoreWaveletDelta> deltas,
-      HashedVersion resultingVersion) throws OperationException {
+  void waveletUpdate(ReadableWaveletData wavelet, List<TransformedWaveletDelta> deltas)
+      throws OperationException {
     WaveletName waveletName = WaveletDataUtil.waveletNameOf(wavelet);
 
     synchronized (waveletAndDeltasMap) {
@@ -165,16 +163,15 @@ public class Robot implements Runnable {
       List<WaveletAndDeltas> wavelets = waveletAndDeltasMap.get(waveletName);
 
       if (wavelets.isEmpty()) {
-        WaveletAndDeltas waveletAndDeltas =
-            WaveletAndDeltas.create(wavelet, deltas, resultingVersion);
+        WaveletAndDeltas waveletAndDeltas = WaveletAndDeltas.create(wavelet, deltas);
         wavelets.add(waveletAndDeltas);
       } else {
         WaveletAndDeltas waveletAndDeltas = wavelets.get(wavelets.size() - 1);
         if (waveletAndDeltas.areContiguousToCurrentVersion(deltas)) {
-          waveletAndDeltas.appendDeltas(wavelet, deltas, resultingVersion);
+          waveletAndDeltas.appendDeltas(wavelet, deltas);
         } else {
           // We are missing deltas, create a new collection.
-          waveletAndDeltas = WaveletAndDeltas.create(wavelet, deltas, resultingVersion);
+          waveletAndDeltas = WaveletAndDeltas.create(wavelet, deltas);
           wavelets.add(waveletAndDeltas);
         }
       }

@@ -37,11 +37,11 @@ import org.waveprotocol.box.consoleclient.ScrollableWaveView.RenderMode;
 import org.waveprotocol.box.server.util.BlockingSuccessFailCallback;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
+import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.BlipOperation;
+import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
@@ -689,8 +689,8 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void sendAppendBlipDelta(String text) {
     if (isWaveOpen()) {
-      CoreWaveletOperation[] ops = ClientUtils.createAppendBlipOps(getManifestDocument(),
-          backend.getIdGenerator().newBlipId(), text);
+      WaveletOperation[] ops = ClientUtils.createAppendBlipOps(getManifestDocument(),
+          backend.getIdGenerator().newBlipId(), text, backend.createOperationContext());
       backend.sendAndAwaitWaveletOperations(WaveletDataUtil.waveletNameOf(getOpenWavelet()), 1,
           TimeUnit.MINUTES, ops);
     } else {
@@ -780,7 +780,7 @@ public class ConsoleClient implements WaveletOperationListener {
       // to deal with it
       if (!getOpenWavelet().getParticipants().contains(addId)) {
         backend.sendAndAwaitWaveletOperations(WaveletDataUtil.waveletNameOf(getOpenWavelet()),
-            1, TimeUnit.MINUTES, new CoreAddParticipant(addId));
+            1, TimeUnit.MINUTES, new AddParticipant(backend.createOperationContext(), addId));
       } else {
         out.println("Error: " + name + " is already a participant on this wave");
       }
@@ -801,7 +801,7 @@ public class ConsoleClient implements WaveletOperationListener {
 
       if (getOpenWavelet().getParticipants().contains(removeId)) {
         backend.sendAndAwaitWaveletOperations(WaveletDataUtil.waveletNameOf(getOpenWavelet()),
-            1, TimeUnit.MINUTES, new CoreRemoveParticipant(removeId));
+            1, TimeUnit.MINUTES, new RemoveParticipant(backend.createOperationContext(), removeId));
       } else {
         out.println("Error: " + name + " is not a participant on this wave");
       }
@@ -988,7 +988,7 @@ public class ConsoleClient implements WaveletOperationListener {
 
   @Override
   public void waveletDocumentUpdated(String author, WaveletData wavelet, String docId,
-      BufferedDocOp docOp) {
+      BlipOperation docOp) {
     // TODO(arb): record the author??
   }
 

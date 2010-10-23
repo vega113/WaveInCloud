@@ -26,7 +26,9 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.client.ClientUtils;
 import org.waveprotocol.box.server.util.testing.TestingConstants;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
+import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -40,8 +42,11 @@ public class AgentEventProviderTest extends TestCase implements TestingConstants
 
   private static final String SELF_USER = USER;
 
-  private static final CoreWaveletDocumentOperation OPERATION =
-      new CoreWaveletDocumentOperation(BLIP_ID, ClientUtils.createEmptyDocument());
+  private static final WaveletOperationContext OP_CONTEXT = new WaveletOperationContext(
+      SELF_PARTICIPANT, 1234567890L, 1);
+
+  private static final WaveletBlipOperation OPERATION = new WaveletBlipOperation(BLIP_ID,
+      new BlipContentOperation(OP_CONTEXT, ClientUtils.createEmptyDocument()));
 
   /** A stubbed connection for the event provider */
   private AgentConnection connection;
@@ -139,10 +144,10 @@ public class AgentEventProviderTest extends TestCase implements TestingConstants
 
   /** Should forward DocumentUpdated events. */
   public void testForwardsDocumentUpdated() {
-    provider.waveletDocumentUpdated(OTHER_USER, wavelet, OPERATION.getDocumentId(),
-        OPERATION.getOperation());
-    verify(listener).onDocumentChanged(wavelet, OPERATION.getDocumentId(),
-        OPERATION.getOperation());
+    provider.waveletDocumentUpdated(OTHER_USER, wavelet, OPERATION.getBlipId(),
+        OPERATION.getBlipOp());
+    verify(listener).onDocumentChanged(wavelet, OPERATION.getBlipId(),
+        OPERATION.getBlipOp());
   }
 
   /**
@@ -153,8 +158,8 @@ public class AgentEventProviderTest extends TestCase implements TestingConstants
    */
   public void testIgnoresDocumentUpdatedWhenNotConnected() {
     when(connection.isConnected()).thenReturn(false);
-    provider.waveletDocumentUpdated(OTHER_USER, wavelet, OPERATION.getDocumentId(),
-        OPERATION.getOperation());
+    provider.waveletDocumentUpdated(OTHER_USER, wavelet, OPERATION.getBlipId(),
+        OPERATION.getBlipOp());
     verifyZeroInteractions(listener);
   }
 }

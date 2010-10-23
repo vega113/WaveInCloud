@@ -36,11 +36,11 @@ import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveletUpdat
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -60,6 +60,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
   private static final Log LOG = Log.get(WaveClientRpcImpl.class);
 
   private final ClientFrontend frontend;
+
   private final IdURIEncoderDecoder uriCodec = new IdURIEncoderDecoder(
       new URLEncoderDecoderBasedPercentEncoderDecoder());
 
@@ -85,7 +86,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
       return;
     }
     IdFilter waveletIdFilter =
-        IdFilter.of(Collections.<WaveletId> emptySet(), request.getWaveletIdPrefixList());
+        IdFilter.of(Collections.<WaveletId>emptySet(), request.getWaveletIdPrefixList());
 
     ParticipantId loggedInUser = asBoxController(controller).getLoggedInUser();
     frontend.openRequest(loggedInUser, waveId, waveletIdFilter, request.getKnownWaveletList(),
@@ -98,8 +99,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
 
           @Override
           public void onUpdate(WaveletName waveletName,
-              @Nullable WaveletSnapshotAndVersion snapshot,
-              List<CoreWaveletDelta> deltas, @Nullable HashedVersion endVersion,
+              @Nullable WaveletSnapshotAndVersion snapshot, List<TransformedWaveletDelta> deltas,
               @Nullable HashedVersion committedVersion, final boolean hasMarker,
               final String channel_id) {
             ProtocolWaveletUpdate.Builder builder = ProtocolWaveletUpdate.newBuilder();
@@ -109,8 +109,14 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
             }
             try {
               builder.setWaveletName(uriCodec.waveletNameToURI(waveletName));
-              for (CoreWaveletDelta d : deltas) {
+              for (TransformedWaveletDelta d : deltas) {
+                // TODO(anorth): Add delta application metadata to the result
+                // when the c/s protocol supports it.
                 builder.addAppliedDelta(CoreWaveletOperationSerializer.serialize(d));
+              }
+              if (!deltas.isEmpty()) {
+                builder.setResultingVersion(CoreWaveletOperationSerializer.serialize(
+                    deltas.get((deltas.size() - 1)).getResultingVersion()));
               }
               if (snapshot != null) {
                 Preconditions.checkState(committedVersion.equals(
@@ -121,10 +127,6 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
                 builder.setResultingVersion(snapshot.snapshot.getVersion());
                 builder.setCommitNotice(snapshot.committedVersion);
               } else {
-                if (endVersion != null) {
-                  builder.setResultingVersion(
-                      CoreWaveletOperationSerializer.serialize(endVersion));
-                }
                 if (committedVersion != null) {
                   builder.setCommitNotice(
                       CoreWaveletOperationSerializer.serialize(committedVersion));

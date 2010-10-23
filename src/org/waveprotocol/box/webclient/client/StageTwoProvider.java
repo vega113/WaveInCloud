@@ -28,7 +28,6 @@ import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.account.testing.FakeProfile;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
-import org.waveprotocol.wave.client.wave.RegistriesHolder;
 import org.waveprotocol.wave.client.wavepanel.impl.reader.Reader;
 import org.waveprotocol.wave.client.wavepanel.render.FullDomWaveRendererImpl;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.WaveRenderer;
@@ -42,6 +41,7 @@ import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
+import org.waveprotocol.wave.model.schema.SchemaProvider;
 import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 import org.waveprotocol.wave.model.testing.BasicFactories;
 import org.waveprotocol.wave.model.testing.FakeDocument;
@@ -146,8 +146,8 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
   }
 
   @Override
-  protected ContentDocumentSinkFactory createDocumentRegistry() {
-    return ContentDocumentSinkFactory.create(new ConversationSchemas(), RegistriesHolder.get());
+  protected SchemaProvider createSchemas() {
+    return new ConversationSchemas();
   }
 
   @Override
