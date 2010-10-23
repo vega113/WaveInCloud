@@ -31,8 +31,8 @@ import java.util.Set;
  * Stores wavelet deltas.
  *
  * <p>
- * Callers must serialize all calls to
- * {@code create, open, delete} on the same wavelet.
+ * Callers must serialize all calls to {@link #open(WaveletName)} and
+ * {@link #delete(WaveletName)} on the same wavelet.
  *
  * @author soren@google.com (Soren Lassen)
  */
