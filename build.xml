@@ -298,7 +298,7 @@
   </target>
 
   <!-- target name="dist" depends="test, dist-api, dist-server, dist-client-console, dist-agent-echoey, dist-agent-probey" description="Compiles, tests and assembles artifacts" -->
-  <target name="dist" depends="test, dist-server, dist-client-console, dist-agent-echoey, dist-agent-probey" description="Compiles, tests and assembles artifacts">
+  <target name="dist" depends="test, dist-server, dist-client-console, dist-agent-echoey, dist-agent-probey, compile_gwt" description="Compiles, tests and assembles artifacts">
   </target>
 
   <!-- dist-api is broken due to non-runnable dependencies in the waveserver directory.  TODO: fix. -->
