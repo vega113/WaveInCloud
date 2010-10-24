@@ -218,28 +218,6 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   /**
-   * Apply the operations from a single delta to the wavelet container.
-   *
-   * @param delta {@link WaveletDelta} to apply, must be non-empty.
-   * @param applicationTimeStamp timestamp of the application.
-   */
-  protected void applyWaveletOperations(WaveletDelta delta, long applicationTimeStamp)
-      throws OperationException {
-    Preconditions.checkArgument(delta.size() != 0, "empty delta");
-
-    if (waveletData == null) {
-      Preconditions.checkState(currentVersion.getVersion() == 0L, "CurrentVersion must be 0");
-      waveletData = WaveletDataUtil.createEmptyWavelet(waveletName, delta.getAuthor(),
-          currentVersion, applicationTimeStamp);
-    }
-
-    // TODO(anorth): Plumb a TransformedWaveletDelta with the right hashed version.
-    HashedVersion endVersion = HashedVersion.unsigned(
-        waveletData.getVersion() + delta.size());
-    WaveletDataUtil.applyWaveletDelta(delta, waveletData, endVersion, applicationTimeStamp);
-  }
-
-  /**
    * Finds range of server deltas needed to transform against, then transforms all client
    * ops against the server ops.
    */
@@ -314,30 +292,37 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   /**
-   * Commit an applied delta to this wavelet container.
+   * Apply the operations from a single delta to the wavelet container.
    *
-   * @param appliedDelta to commit
-   * @param transformedDelta of the applied delta
-   * @return result of the application
+   * @param delta to apply, must be non-empty.
    */
-  protected WaveletDeltaRecord commitAppliedDelta(
-      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
-      WaveletDelta transformedDelta) {
-    int operationsApplied = appliedDelta.getMessage().getOperationsApplied();
-    // Sanity check.
-    Preconditions.checkState(currentVersion.equals(transformedDelta.getTargetVersion()));
-    Preconditions.checkArgument(operationsApplied == transformedDelta.size());
+  protected void applyDelta(WaveletDeltaRecord delta) throws OperationException {
+    ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDeltaBytes = delta.getAppliedDelta();
+    ProtocolAppliedWaveletDelta appliedDelta = appliedDeltaBytes.getMessage();
+    TransformedWaveletDelta transformedDelta = delta.getTransformedDelta();
 
-    HashedVersion versionAfterApplication = HASH_FACTORY.create(
-        appliedDelta.getByteArray(), currentVersion, operationsApplied);
-    TransformedWaveletDelta transformed = new TransformedWaveletDelta(transformedDelta.getAuthor(),
-        versionAfterApplication, appliedDelta.getMessage().getApplicationTimestamp(),
-        transformedDelta);
+    // Sanity checks.
+    HashedVersion appliedAtVersion = delta.getAppliedAtVersion();
+    Preconditions.checkState(currentVersion.equals(appliedAtVersion),
+        "current version %s != applied at version %s", currentVersion, appliedAtVersion);
+    Preconditions.checkArgument(
+        appliedDelta.getOperationsApplied() == transformedDelta.getOperations().size());
+    Preconditions.checkArgument(
+        transformedDelta.getOperations().size() != 0, "empty delta");
 
-    transformedDeltas.put(currentVersion, transformed);
-    appliedDeltas.put(currentVersion, appliedDelta);
-    currentVersion = versionAfterApplication;
-    return new WaveletDeltaRecord(appliedDelta, transformed);
+    if (waveletData == null) {
+      Preconditions.checkState(currentVersion.getVersion() == 0L, "CurrentVersion must be 0");
+      waveletData = WaveletDataUtil.createEmptyWavelet(waveletName, transformedDelta.getAuthor(),
+          currentVersion, transformedDelta.getApplicationTimestamp());
+    }
+    Preconditions.checkState(waveletData.getHashedVersion().equals(currentVersion));
+
+    WaveletDataUtil.applyWaveletDelta(transformedDelta, waveletData);
+
+    transformedDeltas.put(currentVersion, transformedDelta);
+    appliedDeltas.put(currentVersion, appliedDeltaBytes);
+
+    currentVersion = transformedDelta.getResultingVersion();
   }
 
   /**

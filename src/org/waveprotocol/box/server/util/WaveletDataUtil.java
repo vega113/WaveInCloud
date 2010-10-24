@@ -23,7 +23,7 @@ import com.google.common.collect.Lists;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuffer;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -67,30 +67,24 @@ public final class WaveletDataUtil {
    *
    * @param delta delta to apply.
    * @param wavelet the wavelet to apply the operations to.
-   * @param endVersion the version after applying the deltas.
-   * @param applicationTimestamp timestamp of operation application.
    *
    * @throws OperationException if the operations fail to apply (and are
    *         successfully rolled back).
    * @throws IllegalStateException if the operations have failed and can not be
    *         rolled back.
    */
-  public static void applyWaveletDelta(WaveletDelta delta, WaveletData wavelet,
-      HashedVersion endVersion, long applicationTimestamp) throws OperationException {
+  public static void applyWaveletDelta(TransformedWaveletDelta delta, WaveletData wavelet)
+      throws OperationException {
     Preconditions.checkState(wavelet != null, "wavelet may not be null");
-    Preconditions.checkState(delta.getTargetVersion().getVersion() == wavelet.getVersion(),
-        "Delta targeting version %s doesn't apply to wavelet at %s", delta.getTargetVersion(),
+    Preconditions.checkState(delta.getAppliedAtVersion() == wavelet.getVersion(),
+        "Delta's version %s doesn't apply to wavelet at %s", delta.getAppliedAtVersion(),
         wavelet.getVersion());
-    long expectedEndVersion = wavelet.getVersion() + delta.size();
-    Preconditions.checkState(expectedEndVersion == endVersion.getVersion(),
-        "Expected end version (" + expectedEndVersion + ") does not match the given end version ("
-            + endVersion.getVersion() + ")");
 
     List<WaveletOperation> reverseOps = new ArrayList<WaveletOperation>();
     WaveletOperation lastOp = null;
     int opsApplied = 0;
     try {
-      for (WaveletOperation op : delta) {
+      for (WaveletOperation op : delta.getOperations()) {
         lastOp = op;
         List<? extends WaveletOperation> reverseOp = op.applyAndReturnReverse(wavelet);
         reverseOps.addAll(reverseOp);
@@ -99,9 +93,9 @@ public final class WaveletDataUtil {
     } catch (OperationException e) {
       // Deltas are atomic, so roll back all operations that were successful
       rollbackWaveletOperations(wavelet, reverseOps);
-      throw new OperationException(
-          "Only applied " + opsApplied + " of " + delta.size() + " operations at version "
-              + wavelet.getVersion() + ", rolling back, failed op was " + lastOp, e);
+      throw new OperationException("Only applied " + opsApplied + " of "
+          + delta.getOperations().size() + " operations at version " + wavelet.getVersion()
+          + ", rolling back, failed op was " + lastOp, e);
     }
   }
 
@@ -127,12 +121,12 @@ public final class WaveletDataUtil {
    *
    * @param waveletName the name of the wavelet.
    * @param author the author of the wavelet.
-   * @param creationTimeStamp the time at which the wavelet is created.
+   * @param creationTimestamp the time at which the wavelet is created.
    */
   public static ObservableWaveletData createEmptyWavelet(WaveletName waveletName,
-      ParticipantId author, HashedVersion version, long creationTimeStamp) {
+      ParticipantId author, HashedVersion version, long creationTimestamp) {
     return copyWavelet(new EmptyWaveletSnapshot(waveletName.waveId, waveletName.waveletId, author,
-        version, creationTimeStamp));
+        version, creationTimestamp));
   }
 
   /**

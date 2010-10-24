@@ -41,6 +41,7 @@ import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
@@ -230,18 +231,15 @@ public class WaveletContainerTest extends TestCase {
   public void testOperationsOfDifferentSizes() throws OperationException {
     String docId = "b+somedoc";
     BufferedDocOp docOp1 = new DocOpBuilder().characters("hi").build();
-    WaveletDelta delta1 = createDelta(docId, docOp1);
+    WaveletDelta delta1 = createDelta(docId, docOp1, version0);
     BufferedDocOp docOp2 = new DocOpBuilder().characters("bye").build();
-    WaveletDelta delta2 = createDelta(docId, docOp2);
+    WaveletDelta delta2 = createDelta(docId, docOp2, HashedVersion.unsigned(1));
 
-    localWavelet.applyWaveletOperations(delta1, 0L);
+    applyDeltaToWavelet(localWavelet, delta1);
     try {
-      // Version will still be 0 (applyWaveletOperations doesn't affect it) so
-      // "hi" and "bye"
-      // won't compose properly.
-      localWavelet.applyWaveletOperations(delta2, 0L);
+      applyDeltaToWavelet(localWavelet, delta2);
       fail("Composition of \"hi\" and \"bye\" did not throw OperationException");
-    } catch (IllegalStateException expected) {
+    } catch (OperationException expected) {
       // Correct
     }
   }
@@ -252,8 +250,8 @@ public class WaveletContainerTest extends TestCase {
    * Returns a {@link WaveletDelta} for the list of operations performed by
    * the author set in the constants.
    */
-  private WaveletDelta createDelta(String docId, BufferedDocOp docOp) {
-    return new WaveletDelta(author, version0, Arrays.asList(new WaveletBlipOperation(
+  private WaveletDelta createDelta(String docId, BufferedDocOp docOp, HashedVersion version) {
+    return new WaveletDelta(author, version, Arrays.asList(new WaveletBlipOperation(
         docId, new BlipContentOperation(CONTEXT, docOp))));
   }
 
@@ -306,17 +304,21 @@ public class WaveletContainerTest extends TestCase {
   private static void applyDeltaToWavelet(WaveletContainerImpl wavelet, WaveletDelta delta)
       throws OperationException {
     ProtocolWaveletDelta protoDelta = serialize(delta);
-    ByteStringMessage<ProtocolWaveletDelta> deltaByteString =
+    ByteStringMessage<ProtocolWaveletDelta> deltaBytes =
         ByteStringMessage.serializeMessage(protoDelta);
-    ProtocolSignedDelta.Builder signedDeltaBuilder = ProtocolSignedDelta.newBuilder();
-    signedDeltaBuilder.setDelta(deltaByteString.getByteString());
-    ProtocolSignedDelta signedDelta = signedDeltaBuilder.build();
-
-    wavelet.applyWaveletOperations(delta, 0L);
-
+    ProtocolSignedDelta signedDelta =
+        ProtocolSignedDelta.newBuilder().setDelta(deltaBytes.getByteString()).build();
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
-        LocalWaveletContainerImpl.buildAppliedDelta(signedDelta, delta, 0L);
-    WaveletDeltaRecord applicationResult = wavelet.commitAppliedDelta(appliedDelta, delta);
+        LocalWaveletContainerImpl.buildAppliedDelta(
+            signedDelta, delta.getTargetVersion(), delta.size(), 0L);
+    HashedVersion resultingVersion = HASH_FACTORY.create(
+        appliedDelta.getByteArray(), delta.getTargetVersion(), delta.size());
+    TransformedWaveletDelta transformedDelta =
+        new TransformedWaveletDelta(delta.getAuthor(), resultingVersion, 0L, delta);
+    WaveletDeltaRecord applicationResult = new WaveletDeltaRecord(appliedDelta, transformedDelta);
+
+    // Apply the delta to the local wavelet state.
+    wavelet.applyDelta(applicationResult);
   }
 
   private static WaveletDelta addParticipantDelta(WaveletContainer target) {

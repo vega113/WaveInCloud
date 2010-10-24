@@ -361,7 +361,6 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta) throws OperationException,
       AccessControlException, InvalidHashException, InvalidProtocolBufferException,
       WaveServerException {
-
     // The serialised hashed version should actually match the currentVersion at this point, since
     // the caller of transformAndApply delta will have made sure the applied deltas are ordered
     HashedVersion hashedVersion = AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
@@ -395,10 +394,17 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           "it transformed away at version " + transformed.getTargetVersion().getVersion());
     }
 
-    // Apply operations.  These shouldn't fail since they're the authoritative versions, so if they
-    // do then the wavelet is corrupted (and the caller of this method will sort it out).
-    applyWaveletOperations(transformed, appliedDelta.getMessage().getApplicationTimestamp());
+    HashedVersion versionAfterApplication = HASH_FACTORY.create(
+        appliedDelta.getByteArray(), currentVersion, transformed.size());
+    TransformedWaveletDelta transformedDelta = new TransformedWaveletDelta(transformed.getAuthor(),
+        versionAfterApplication, appliedDelta.getMessage().getApplicationTimestamp(), transformed);
+    WaveletDeltaRecord applicationResult = new WaveletDeltaRecord(appliedDelta, transformedDelta);
 
-    return commitAppliedDelta(appliedDelta, transformed);
+    // Apply the delta to the local wavelet state.
+    // This shouldn't fail since the delta is from the authoritative server, so if it fails
+    // then the wavelet is corrupted (and the caller of this method will sort it out).
+    applyDelta(applicationResult);
+
+    return applicationResult;
   }
 }

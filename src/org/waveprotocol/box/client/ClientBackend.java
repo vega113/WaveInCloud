@@ -64,6 +64,7 @@ import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFa
 import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
@@ -778,27 +779,28 @@ public class ClientBackend {
     // Preconditions.checkState(wavelet != null, "Wavelet must be present!");
 
     for (ProtocolWaveletDelta protobufDelta : waveletUpdate.getAppliedDeltaList()) {
-      WaveletDelta delta = CoreWaveletOperationSerializer.deserialize(protobufDelta);
+      // TODO(anorth): Plumb timestamp, hash to here when the protocol is fixed.
+      HashedVersion dummyEndVersion = HashedVersion.unsigned(
+              protobufDelta.getHashedVersion().getVersion() + protobufDelta.getOperationCount());
+      long dummyTimestamp = Constants.NO_TIMESTAMP;
+      TransformedWaveletDelta delta = CoreWaveletOperationSerializer.deserialize(protobufDelta,
+          dummyEndVersion, dummyTimestamp);
       if (wavelet == null) {
         // TODO(ljvderijk): This should never happen, but it currently does.
         // Snapshot should be received first.
         // Instantiate a new wavelet
         HashedVersion zero = hashedVersionFactory.createVersionZero(waveletName);
         wavelet = WaveletDataUtil.createEmptyWavelet(waveletName, delta.getAuthor(), zero,
-                Constants.NO_TIMESTAMP);
+            delta.getApplicationTimestamp());
         wave.addWavelet(wavelet, zero);
       }
 
-      Preconditions.checkState(delta.getTargetVersion().getVersion() == wavelet.getVersion(),
-          "Delta at version %s doesn't apply to wavelet %s at %s", delta.getTargetVersion(),
+      Preconditions.checkState(delta.getAppliedAtVersion() == wavelet.getVersion(),
+          "Delta at version %s doesn't apply to wavelet %s at %s", delta.getAppliedAtVersion(),
           waveletName, wavelet.getVersion());
 
-      // TODO(anorth): Plumb a TransformedWaveletDelta to here when the
-      // protocol is fixed.
-      HashedVersion dummyEndVersion =
-          HashedVersion.unsigned(wavelet.getVersion() + delta.getOperations().size());
       try {
-        WaveletDataUtil.applyWaveletDelta(delta, wavelet, dummyEndVersion, Constants.NO_TIMESTAMP);
+        WaveletDataUtil.applyWaveletDelta(delta, wavelet);
       } catch (OperationException e) {
         LOG.severe("Operations failed to apply", e);
       }

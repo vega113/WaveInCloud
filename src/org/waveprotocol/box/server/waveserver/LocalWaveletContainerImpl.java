@@ -88,7 +88,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
         CoreWaveletOperationSerializer.deserialize(protocolDelta));
 
     // TODO(ljvderijk): a Clock needs to be injected here (Issue 104)
-    long applicationTimeStamp = System.currentTimeMillis();
+    long applicationTimestamp = System.currentTimeMillis();
 
     // This is always false right now because the current algorithm doesn't transform ops away.
     if (transformed.size() == 0) {
@@ -100,9 +100,8 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       // applyWaveletOperations(), because that will throw IllegalArgumentException, or
       // commitAppliedDelta(), because empty deltas cannot be part of the delta history.
       TransformedWaveletDelta emptyDelta = new TransformedWaveletDelta(transformed.getAuthor(),
-          transformed.getTargetVersion(), applicationTimeStamp, transformed);
-      return new WaveletDeltaRecord(buildAppliedDelta(signedDelta, transformed,
-          applicationTimeStamp), emptyDelta);
+          transformed.getTargetVersion(), applicationTimestamp, transformed);
+      return new WaveletDeltaRecord(null, emptyDelta);
     }
 
     if (!transformed.getTargetVersion().equals(currentVersion)) {
@@ -126,18 +125,21 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       return new WaveletDeltaRecord(existingDeltaBytes, dupDelta);
     }
 
-    applyWaveletOperations(transformed, applicationTimeStamp);
-
     // Build the applied delta to commit
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
-        buildAppliedDelta(signedDelta, transformed, applicationTimeStamp);
+        buildAppliedDelta(signedDelta, currentVersion, transformed.size(), applicationTimestamp);
+    HashedVersion resultingVersion = HASH_FACTORY.create(
+        appliedDelta.getByteArray(), currentVersion, transformed.size());
+    TransformedWaveletDelta transformedDelta = new TransformedWaveletDelta(transformed.getAuthor(),
+        resultingVersion, applicationTimestamp, transformed);
+    WaveletDeltaRecord applicationResult = new WaveletDeltaRecord(appliedDelta, transformedDelta);
 
-    WaveletDeltaRecord applicationResult = commitAppliedDelta(appliedDelta, transformed);
+    // Apply the delta to the local wavelet state.
+    applyDelta(applicationResult);
 
     // Associate this hashed version with its signers.
     for (ProtocolSignature signature : signedDelta.getSignatureList()) {
-      deltaSigners.put(applicationResult.getResultingVersion(),
-          signature.getSignerId());
+      deltaSigners.put(resultingVersion, signature.getSignerId());
     }
 
     return applicationResult;
@@ -145,19 +147,19 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
   @VisibleForTesting
   static ByteStringMessage<ProtocolAppliedWaveletDelta> buildAppliedDelta(
-      ProtocolSignedDelta signedDelta, WaveletDelta transformed, long applicationTimeStamp) {
+      ProtocolSignedDelta signedDelta, HashedVersion appliedAtVersion, int operationsApplied,
+      long applicationTimestamp) {
     ProtocolAppliedWaveletDelta.Builder appliedDeltaBuilder = ProtocolAppliedWaveletDelta
         .newBuilder()
         .setSignedOriginalDelta(signedDelta)
-        .setOperationsApplied(transformed.size())
-        .setApplicationTimestamp(applicationTimeStamp);
+        .setOperationsApplied(operationsApplied)
+        .setApplicationTimestamp(applicationTimestamp);
     // TODO: re-enable this condition for version 0.3 of the spec
     if (/* opsWereTransformed */true) {
       // This is set to indicate the head version of the wavelet was different
-      // to the intended
-      // version of the wavelet (so the hash will have changed)
+      // to the intended version of the wavelet (so the hash will have changed)
       appliedDeltaBuilder.setHashedVersionAppliedAt(
-          CoreWaveletOperationSerializer.serialize(transformed.getTargetVersion()));
+          CoreWaveletOperationSerializer.serialize(appliedAtVersion));
     }
     return ByteStringMessage.serializeMessage(appliedDeltaBuilder.build());
   }

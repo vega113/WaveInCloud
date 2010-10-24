@@ -610,31 +610,28 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // the delta contains a removeParticipant operation.
           Set<String> hostDomains = Sets.newHashSet(getParticipantDomains(wc));
           WaveletDeltaRecord submitResult = wc.submitRequest(waveletName, signedDelta);
-          ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDeltaBytes =
-              submitResult.getAppliedDelta();
-          ProtocolAppliedWaveletDelta appliedDelta = appliedDeltaBytes.getMessage();
+          TransformedWaveletDelta transformedDelta = submitResult.getTransformedDelta();
 
-          // return result to caller.
-          HashedVersion resultingVersion = submitResult.getResultingVersion();
+          // Return result to caller.
           ProtocolHashedVersion resultVersionProto =
-              CoreWaveletOperationSerializer.serialize(resultingVersion);
+              CoreWaveletOperationSerializer.serialize(transformedDelta.getResultingVersion());
           LOG.info("Submit result for " + waveletName + " by "
-              + submitResult.getTransformedDelta().getAuthor() + " applied "
-              + appliedDelta.getOperationsApplied() + " ops at v: "
-              + appliedDelta.getHashedVersionAppliedAt().getVersion() + " t: "
-              + appliedDelta.getApplicationTimestamp());
-          resultListener.onSuccess(appliedDelta.getOperationsApplied(),
-              resultVersionProto, appliedDelta.getApplicationTimestamp());
+              + transformedDelta.getAuthor() + " applied "
+              + transformedDelta.getOperations().size() + " ops at v: "
+              + transformedDelta.getAppliedAtVersion() + " t: "
+              + transformedDelta.getApplicationTimestamp());
+          resultListener.onSuccess(transformedDelta.getOperations().size(), resultVersionProto,
+              transformedDelta.getApplicationTimestamp());
 
           // This is always false right now since the current algorithm doesn't transform ops away.
-          if (appliedDelta.getOperationsApplied() == 0) {
+          if (transformedDelta.getOperations().isEmpty()) {
             return; // ignore the delta (don't publish it), it was transformed away
           }
 
           // Send the results to subscribers.
           try {
             dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(),
-                ImmutableList.of(submitResult.getTransformedDelta()));
+                ImmutableList.of(transformedDelta));
           } catch (RuntimeException e) {
             LOG.severe("Runtime exception in wave bus subscriber", e);
           }
@@ -645,7 +642,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // Broadcast results to the remote servers, but make sure they all have our signatures
           for (final String hostDomain : hostDomains) {
             final WaveletFederationListener host = federationHosts.get(hostDomain);
-            host.waveletDeltaUpdate(waveletName, ImmutableList.of(appliedDeltaBytes.getByteString()),
+            host.waveletDeltaUpdate(waveletName,
+                ImmutableList.of(submitResult.getAppliedDelta().getByteString()),
                 new WaveletFederationListener.WaveletUpdateCallback() {
                   @Override
                   public void onSuccess() {

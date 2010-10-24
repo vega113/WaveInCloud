@@ -317,7 +317,7 @@ public class CoreWaveletOperationSerializer {
     List<WaveletOperation> ops = Lists.newArrayList();
     for (ProtocolWaveletOperation op : delta.getOperationList()) {
       WaveletOperationContext context = new WaveletOperationContext(
-          ParticipantId.ofUnsafe(delta.getAuthor()), Constants.NO_TIMESTAMP, 1);
+          ParticipantId.ofUnsafe(delta.getAuthor()), applicationTimestamp, 1);
       ops.add(deserialize(op, context));
     }
     HashedVersion hashedVersion = deserialize(delta.getHashedVersion());
