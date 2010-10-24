@@ -60,7 +60,6 @@ public class Echoey extends AbstractRobot {
   @Capability(contexts = {Context.ALL})
   @Override
   public void onWaveletBlipCreated(WaveletBlipCreatedEvent event) {
-    Wavelet wavelet = event.getWavelet();
     Blip blip = event.getNewBlip();
 
     if (!isShadowBlip(blip)) {
