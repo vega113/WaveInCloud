@@ -14,13 +14,12 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.box.server.waveserver;
+package org.waveprotocol.box.common;
 
 import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
@@ -73,9 +72,9 @@ public class DeltaSequenceTest extends TestCase {
 
   public void testInvalidIntermediateVersion() {
     // Repeated version.
-    assertSequenceInvalid(ImmutableList.of(delta1, delta1));
+    assertSequenceInvalid(delta1, delta1);
     // Skipped version.
-    assertSequenceInvalid(ImmutableList.of(delta1, delta3));
+    assertSequenceInvalid(delta1, delta3);
   }
 
   /**
@@ -100,9 +99,9 @@ public class DeltaSequenceTest extends TestCase {
     assertEquals(deltaseq.getStartVersion(), subDeltas.getStartVersion());
   }
 
-  private static void assertSequenceInvalid(List<TransformedWaveletDelta> deltas) {
+  private static void assertSequenceInvalid(TransformedWaveletDelta... deltas) {
     try {
-      new DeltaSequence(ImmutableList.of(deltas.get(0), deltas.get(0)));
+      new DeltaSequence(ImmutableList.copyOf(deltas));
       fail("Expected delta sequence construction to fail");
     } catch (IllegalArgumentException expected) {
     }
