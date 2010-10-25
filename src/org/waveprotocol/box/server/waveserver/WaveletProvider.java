@@ -68,12 +68,15 @@ public interface WaveletProvider {
    * @param waveletName name of wavelet.
    * @param versionStart start version (inclusive), minimum 0.
    * @param versionEnd end version (exclusive).
-   * @return deltas in the range as requested, ordered by applied version, or
-   *         null if there was an error. If a delta straddles one of the
-   *         requested version boundaries, it will be included.
+   * @return deltas in the range as requested, ordered by applied version.
+   * @throws AccessControlException if {@code versionStart} or
+   *         {@code versionEnd} are not in the wavelet history.
+   * @throws WaveletStateException if the wavelet is in a state unsuitable for
+   *         retrieving history.
    */
   Collection<TransformedWaveletDelta> getHistory(WaveletName waveletName,
-      HashedVersion versionStart, HashedVersion versionEnd);
+      HashedVersion versionStart, HashedVersion versionEnd)
+      throws AccessControlException, WaveletStateException;
 
   /**
    * Check if the specified participantId has access to the named wavelet.

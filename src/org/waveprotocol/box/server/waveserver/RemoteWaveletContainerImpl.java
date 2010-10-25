@@ -77,9 +77,9 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
   }
 
   /** Convenience method to assert state. */
-  protected void assertStateOkOrLoading() throws WaveletStateException {
+  protected void checkStateOkOrLoading() throws WaveletStateException {
     if (state != State.LOADING) {
-      assertStateOk();
+      checkStateOk();
     }
   }
 
@@ -87,7 +87,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
   public boolean committed(HashedVersion hashedVersion) throws WaveletStateException {
     acquireWriteLock();
     try {
-      assertStateOkOrLoading();
+      checkStateOkOrLoading();
       lastCommittedVersion = hashedVersion;
 
       // Pass to clients iff our known version is here or greater.
@@ -174,7 +174,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     LOG.info("Passed signer info check, now applying all " + appliedDeltas.size() + " deltas");
     acquireWriteLock();
     try {
-      assertStateOkOrLoading();
+      checkStateOkOrLoading();
       HashedVersion expectedVersion = currentVersion;
       boolean haveRequestedHistory = false;
 

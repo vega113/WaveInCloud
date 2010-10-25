@@ -18,6 +18,7 @@
 package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -115,9 +116,9 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     writeLock.unlock();
   }
 
-  protected void assertStateOk() throws WaveletStateException {
+  protected void checkStateOk() throws WaveletStateException {
     if (state != State.OK) {
-      throw new WaveletStateException(state, "The wavelet is not in a usable state. ");
+      throw new WaveletStateException(state, "The wavelet is in an unusable state: " + state);
     }
   }
 
@@ -145,7 +146,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   public boolean checkAccessPermission(ParticipantId participantId) throws WaveletStateException {
     acquireReadLock();
     try {
-      assertStateOk();
+      checkStateOk();
       // ParticipantId will be null if the user isn't logged in. A user who isn't logged in should
       // have access to public waves once they've been implemented.
       return participantId != null && waveletData.getParticipants().contains(participantId);
@@ -158,7 +159,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   public HashedVersion getLastCommittedVersion() throws WaveletStateException {
     acquireReadLock();
     try {
-      assertStateOk();
+      checkStateOk();
       return lastCommittedVersion;
     } finally {
       releaseReadLock();
@@ -280,7 +281,6 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       for (WaveletOperation s : serverOps) {
         OperationPair<WaveletOperation> pair;
         try {
-
           pair = Transform.transform(c, s);
         } catch (TransformException e) {
           throw new OperationException(e);
@@ -346,18 +346,30 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     return transformedDeltas.get(appliedAtVersion);
   }
 
+  /**
+   * @throws AccessControlException with the given message if version does not
+   *         match a delta boundary in the wavelet history.
+   */
+  private void checkVersionIsDeltaBoundary(HashedVersion version, String message)
+      throws AccessControlException {
+    if (!transformedDeltas.containsKey(version) && !version.equals(currentVersion)) {
+      // We omit the hash from the message to avoid leaking it.
+      throw new AccessControlException(
+          "Unrecognized " + message + " at version " + version.getVersion());
+    }
+  }
+
   @Override
   public Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> requestHistory(
       HashedVersion versionStart, HashedVersion versionEnd)
-      throws WaveletStateException {
+      throws AccessControlException, WaveletStateException {
     acquireReadLock();
     try {
-      assertStateOk();
-      // TODO: ### validate requested range.
-      // TODO: #### make immutable.
-
+      checkStateOk();
+      checkVersionIsDeltaBoundary(versionStart, "start version");
+      checkVersionIsDeltaBoundary(versionEnd, "end version");
       Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> result =
-          appliedDeltas.subMap(versionStart, versionEnd).values();
+          ImmutableList.copyOf(appliedDeltas.subMap(versionStart, versionEnd).values());
       LOG.info("### HR " + versionStart.getVersion() + " - " + versionEnd.getVersion() + ", " +
           result.size() + " deltas");
       return result;
@@ -368,15 +380,13 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   @Override
   public Collection<TransformedWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
-      HashedVersion versionEnd) throws WaveletStateException {
-    HashedVersion start = versionStart;
-    HashedVersion end = versionEnd;
+      HashedVersion versionEnd) throws AccessControlException, WaveletStateException {
     acquireReadLock();
     try {
-      assertStateOk();
-      // TODO: ### validate requested range.
-      // TODO: #### make immutable.
-      return transformedDeltas.subMap(transformedDeltas.floorKey(start), end).values();
+      checkStateOk();
+      checkVersionIsDeltaBoundary(versionStart, "start version");
+      checkVersionIsDeltaBoundary(versionEnd, "end version");
+      return ImmutableList.copyOf(transformedDeltas.subMap(versionStart, versionEnd).values());
     } finally {
       releaseReadLock();
     }

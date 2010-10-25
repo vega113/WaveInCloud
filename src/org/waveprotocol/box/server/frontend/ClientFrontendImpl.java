@@ -33,6 +33,7 @@ import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
+import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -180,13 +181,18 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
 
           endVersion = getWavelet(sourceWaveletName).currentVersion;
           HashedVersion startVersion = getWavelet(sourceWaveletName).version0;
-          // Send deltas to bring the wavelet up to date
-          DeltaSequence sourceWaveletDeltas = new DeltaSequence(
-              waveletProvider.getHistory(sourceWaveletName, startVersion, endVersion));
-          // Construct fake index wave deltas from the deltas
-          String newDigest = getWavelet(sourceWaveletName).digest;
-          deltasToSend = IndexWave.createIndexDeltas(startVersion.getVersion(), sourceWaveletDeltas, "",
-              newDigest);
+          try {
+            // Send deltas to bring the wavelet up to date
+            DeltaSequence sourceWaveletDeltas = new DeltaSequence(
+                waveletProvider.getHistory(sourceWaveletName, startVersion, endVersion));
+            // Construct fake index wave deltas from the deltas
+            String newDigest = getWavelet(sourceWaveletName).digest;
+            deltasToSend = IndexWave.createIndexDeltas(
+                startVersion.getVersion(), sourceWaveletDeltas, "", newDigest);
+          } catch (WaveServerException e) {
+            LOG.warning("Failed to retrieve history for wavelet " + sourceWaveletName, e);
+            deltasToSend = DeltaSequence.empty();
+          }
           snapshotToSend = null;
         } else {
           // Send a snapshot of the current state.

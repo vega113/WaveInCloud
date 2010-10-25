@@ -295,9 +295,10 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
 //            listener.onSuccess(deltaHistory, lcv.getVersion(),
 //                lastVersion);
 //          }
-        } catch (WaveletStateException e) {
+        } catch (WaveServerException e) {
           LOG.severe("Error retrieving wavelet history: " + waveletName + " " + startVersion +
               " - " + endVersion);
+          // TODO(soren): choose a better error code (depending on e)
           listener.onFailure(FederationErrors.badRequest(
               "Server error while retrieving wavelet history."));
         }
@@ -357,29 +358,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
 
   @Override
   public Collection<TransformedWaveletDelta> getHistory(WaveletName waveletName,
-      HashedVersion startVersion, HashedVersion endVersion) {
+      HashedVersion startVersion, HashedVersion endVersion)
+      throws AccessControlException, WaveletStateException {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
-      LOG.info("Client request for history made for non-existent wavelet: " + waveletName);
-      return null;
-    } else {
-      Collection<TransformedWaveletDelta> deltaHistory = null;
-      try {
-        deltaHistory = wc.requestTransformedHistory(startVersion, endVersion);
-      } catch (AccessControlException e) {
-        LOG.warning("Client requested history with incorrect hashedVersion: " + waveletName + " " +
-            " startVersion: " + startVersion + " endVersion: " + endVersion);
-      } catch (WaveletStateException e) {
-        if (e.getState() == State.LOADING) {
-          LOG.severe("Client Frontend requested history for a remote wavelet that is not yet" +
-          "available - this should not happen as we have not sent an update for the wavelet.");
-        } else {
-          LOG.severe("Error retrieving wavelet history: " + waveletName + " " + startVersion +
-              " - " + endVersion);
-        }
-      }
-      return deltaHistory;
+      throw new AccessControlException(
+          "Client request for history made for non-existent wavelet: " + waveletName);
     }
+    return wc.requestTransformedHistory(startVersion, endVersion);
   }
 
   @Override

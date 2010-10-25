@@ -59,15 +59,16 @@ interface WaveletContainer {
    *
    * @param versionStart start version (inclusive), minimum 0.
    * @param versionEnd end version (exclusive).
+   * @return serialised {@code ProtocolAppliedWaveletDelta}s in the range as
+   *         requested, ordered by applied version.
+   * @throws AccessControlException if {@code versionStart} or
+   *         {@code versionEnd} are not in the wavelet history.
    * @throws WaveletStateException if the wavelet is in a state unsuitable for
    *         retrieving history.
-   * @return serialised {@code ProtocolAppliedWaveletDelta}s in the range as
-   *         requested, ordered by applied version. If a delta straddles one of
-   *         the requested version boundaries, it will be included.
    */
   Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> requestHistory(
       HashedVersion versionStart, HashedVersion versionEnd)
-      throws WaveletStateException;
+      throws AccessControlException, WaveletStateException;
 
   /**
    * Retrieve the wavelet history of deltas applied to the wavelet, with
@@ -75,13 +76,11 @@ interface WaveletContainer {
    *
    * @param versionStart start version (inclusive), minimum 0.
    * @param versionEnd end version (exclusive).
-   * @throws AccessControlException if the hashedVersion does not match that of
-   *         the wavelet history.
+   * @return deltas in the range as requested, ordered by applied version.
+   * @throws AccessControlException if {@code versionStart} or
+   *         {@code versionEnd} are not in the wavelet history.
    * @throws WaveletStateException if the wavelet is in a state unsuitable for
    *         retrieving history.
-   * @return deltas in the range as requested, ordered by applied version, or
-   *         null if there was an error. If a delta straddles one of the
-   *         requested version boundaries, it will be included.
    */
   Collection<TransformedWaveletDelta> requestTransformedHistory(HashedVersion versionStart,
       HashedVersion versionEnd) throws AccessControlException, WaveletStateException;

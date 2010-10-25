@@ -22,7 +22,7 @@ package org.waveprotocol.box.server.waveserver;
  *
  *
  */
-class WaveServerException extends Exception {
+public class WaveServerException extends Exception {
 
   /** don't use the empty constructor. */
   @SuppressWarnings("unused")
