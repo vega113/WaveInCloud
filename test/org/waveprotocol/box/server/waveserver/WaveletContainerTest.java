@@ -233,11 +233,12 @@ public class WaveletContainerTest extends TestCase {
     String docId = "b+somedoc";
     BufferedDocOp docOp1 = new DocOpBuilder().characters("hi").build();
     WaveletDelta delta1 = createDelta(docId, docOp1, version0);
-    BufferedDocOp docOp2 = new DocOpBuilder().characters("bye").build();
-    WaveletDelta delta2 = createDelta(docId, docOp2, HashedVersion.unsigned(1));
 
     applyDeltaToWavelet(localWavelet, delta1);
     try {
+      BufferedDocOp docOp2 = new DocOpBuilder().characters("bye").build();
+      WaveletDelta delta2 = createDelta(docId, docOp2, localWavelet.getCurrentVersion());
+
       applyDeltaToWavelet(localWavelet, delta2);
       fail("Composition of \"hi\" and \"bye\" did not throw OperationException");
     } catch (OperationException expected) {
