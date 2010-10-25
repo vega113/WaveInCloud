@@ -523,7 +523,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       if (wc == null) {
         wc = localWaveletContainerFactory.create(waveletName);
         // TODO: HACK(Jochen): do we need a namespace policer here ??? ###
-        // TODO(ljvderijk): Do we want to put in a wavelet wich has not been sumbitted yet?
+        // TODO(ljvderijk): Do we want to put in a wavelet wich has not been submitted yet?
         wave.put(waveletName.waveletId, wc);
       } else {
         if (!wc.checkAccessPermission(participantId)) {
@@ -655,13 +655,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
                 });
           }
         }
-      } catch (AccessControlException e) {
-        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
-        return;
       } catch (OperationException e) {
-        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
-        return;
-      } catch (WaveletStateException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       } catch (IllegalArgumentException e) {
@@ -670,7 +664,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       } catch (InvalidProtocolBufferException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
-      } catch (InvalidHashException e) {
+      } catch (WaveServerException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       }

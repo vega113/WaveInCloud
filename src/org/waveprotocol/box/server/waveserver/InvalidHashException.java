@@ -23,7 +23,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
  * Indicates a caller submitted a delta with a mismatched hash.
  *
  */
-public class InvalidHashException extends Exception {
+public class InvalidHashException extends WaveServerException {
   private final HashedVersion expected;
   private final HashedVersion target;
 
