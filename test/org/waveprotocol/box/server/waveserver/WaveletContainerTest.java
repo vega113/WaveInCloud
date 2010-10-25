@@ -20,6 +20,7 @@ package org.waveprotocol.box.server.waveserver;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import junit.framework.TestCase;
 
@@ -228,7 +229,7 @@ public class WaveletContainerTest extends TestCase {
     }
   }
 
-  public void testOperationsOfDifferentSizes() throws OperationException {
+  public void testOperationsOfDifferentSizes() throws Exception {
     String docId = "b+somedoc";
     BufferedDocOp docOp1 = new DocOpBuilder().characters("hi").build();
     WaveletDelta delta1 = createDelta(docId, docOp1, version0);
@@ -302,7 +303,7 @@ public class WaveletContainerTest extends TestCase {
    * Applies and commits a delta to a wavelet container.
    */
   private static void applyDeltaToWavelet(WaveletContainerImpl wavelet, WaveletDelta delta)
-      throws OperationException {
+      throws InvalidProtocolBufferException, OperationException {
     ProtocolWaveletDelta protoDelta = serialize(delta);
     ByteStringMessage<ProtocolWaveletDelta> deltaBytes =
         ByteStringMessage.serializeMessage(protoDelta);
