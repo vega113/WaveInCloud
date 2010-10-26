@@ -43,6 +43,7 @@ import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveBasedConversationView;
+import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -118,13 +119,16 @@ public class WaveView extends Composite {
         });
   }
 
-  public void setBackend(WebClientBackend backend) {
-    this.backend = backend;
-  }
-
   private CcStackManager manager;
 
   private ObservableConversationView conversationView;
+
+  private IdGenerator idGenerator;
+
+  public void setLegacy(WebClientBackend backend, IdGenerator idGenerator) {
+    this.backend = backend;
+    this.idGenerator = idGenerator;
+  }
 
   public void setWave(final WaveId waveId) {
     LOG.info("WaveView opening wavelet " + waveId);
@@ -136,7 +140,7 @@ public class WaveView extends Composite {
     this.waveView = (WaveViewServiceImpl) backend.getWaveView(waveId, "",
         docFactory);
     manager = new CcStackManager(this.waveView, docFactory, HASH_FACTORY, participant);
-    conversationView = WaveBasedConversationView.create(manager.view, backend.getIdGenerator());
+    conversationView = WaveBasedConversationView.create(manager.view, idGenerator);
     conversationView.addListener(new ObservableConversationView.Listener() {
 
       @Override

@@ -34,8 +34,6 @@ import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderD
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.Delta;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.id.IdGenerator;
-import org.waveprotocol.wave.model.id.IdGeneratorImpl;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -45,7 +43,6 @@ import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
-import org.waveprotocol.wave.model.util.CharBase64;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
@@ -96,30 +93,11 @@ public class WebClientBackend {
    */
   private final Map<WaveId, WebClientWaveView> waves = new HashMap<WaveId, WebClientWaveView>();
   final WaveWebSocketClient websocket;
-  private final IdGenerator idGenerator;
 
   public WebClientBackend(final ParticipantId userId, WaveWebSocketClient websocket) {
     connectionStatus = NetworkStatusEvent.ConnectionStatus.CONNECTED;
     this.userId = userId;
     this.websocket = websocket;
-    this.idGenerator = new IdGeneratorImpl(this.userId.getDomain(), new IdGeneratorImpl.Seed() {
-      private final String seed;
-
-      {
-        String start = userId.getAddress() + System.currentTimeMillis();
-        char[] chars = start.toCharArray();
-        byte[] bytes = new byte[chars.length];
-        for (int i = 0, j = chars.length; i < j; i++) {
-          bytes[i] = (byte) chars[i];
-        }
-        seed = CharBase64.encodeWebSafe(bytes, false);
-      }
-
-      @Override
-      public String get() {
-        return seed;
-      }
-    });
     ClientEvents.get().addNetworkStatusEventHandler(new NetworkStatusEventHandler() {
 
       @Override
@@ -352,13 +330,6 @@ public class WebClientBackend {
         waveView.publishMarker(waveletName);
       }
     }
-  }
-
-  /**
-   * @return the id generator which generates wave, wavelet, and document ids
-   */
-  public IdGenerator getIdGenerator() {
-    return idGenerator;
   }
 
   /**

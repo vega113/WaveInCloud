@@ -40,6 +40,7 @@ import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveUpdatedEvent;
 import org.waveprotocol.box.webclient.util.Log;
+import org.waveprotocol.box.webclient.waveclient.common.ClientIdGenerator;
 import org.waveprotocol.box.webclient.waveclient.common.WaveViewServiceImpl;
 import org.waveprotocol.box.webclient.waveclient.common.WebClientBackend;
 import org.waveprotocol.box.webclient.waveclient.common.WebClientUtils;
@@ -52,6 +53,7 @@ import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWavelet;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.id.IdFilters;
+import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -95,6 +97,8 @@ public class WebClient implements EntryPoint {
 
   private ParticipantId loggedInUser;
 
+  private IdGenerator idGenerator;
+
   private RemoteViewServiceMultiplexer channel;
 
   /**
@@ -130,7 +134,7 @@ public class WebClient implements EntryPoint {
               contentPanel.clear();
               Stages stages = new StagesProvider(
                   contentPanel.getElement().appendChild(Document.get().createDivElement()),
-                  contentPanel, id, channel);
+                  contentPanel, id, channel, idGenerator, false);
               stages.load(null);
             }
           });
@@ -153,15 +157,14 @@ public class WebClient implements EntryPoint {
               throw new RuntimeException("Spaghetti attack.  Create occured before login");
             }
 
+            WaveId newWaveId = idGenerator.newWaveId();
+
             if (ClientFlags.get().enableWavePanelHarness()) {
               Stages stages = new StagesProvider(
                   contentPanel.getElement().appendChild(Document.get().createDivElement()),
-                  contentPanel, null, channel);
+                  contentPanel, newWaveId, channel, idGenerator, true);
               stages.load(null);
             } else {
-
-              final WaveId newWaveId = backend.getIdGenerator().newWaveId();
-
               ClientEvents.get().fireEvent(new WaveSelectionEvent(newWaveId));
               ObservableConversation convo = waveView.getConversationView().createRoot();
               CcBasedWavelet rootWavelet = waveView.getCcStackManager().view.getRoot();
@@ -181,6 +184,7 @@ public class WebClient implements EntryPoint {
 
     if (Session.get().isLoggedIn()) {
       loggedInUser = new ParticipantId(Session.get().getAddress());
+      idGenerator = ClientIdGenerator.create();
       loginToServer();
     }
     History.fireCurrentHistoryState();
@@ -204,7 +208,7 @@ public class WebClient implements EntryPoint {
               element.setClassName("offline");
               break;
             case RECONNECTING:
-              element.setInnerText("Connecting ...");
+              element.setInnerText("Connecting...");
               element.setClassName("connecting");
               break;
           }
@@ -228,7 +232,7 @@ public class WebClient implements EntryPoint {
 
     websocket.attachLegacy(backend);
     if (!ClientFlags.get().enableWavePanelHarness()) {
-      waveView.setBackend(backend);
+      waveView.setLegacy(backend, idGenerator);
     }
 
     ClientEvents.get().addNetworkStatusEventHandler(new NetworkStatusEventHandler() {

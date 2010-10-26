@@ -18,10 +18,6 @@
   <inherits name="org.waveprotocol.wave.model.account.Account"/>
   <inherits name='org.waveprotocol.wave.model.conversation.Conversation'/>
 
-  <!-- Temporary dependency that creates fake waves. Once the new wave panel
-  is hooked up to the backend, remove this. -->
-  <inherits name='org.waveprotocol.wave.model.conversation.Testing'/>
-
   <inherits name='org.waveprotocol.box.webclient.common.communication.Communication'/>
   <inherits name='org.waveprotocol.box.webclient.util.Util'/>
   <inherits name='org.waveprotocol.box.webclient.waveclient.common.Common'/>

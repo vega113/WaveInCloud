@@ -55,8 +55,10 @@ import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Implements the {@link WaveViewService} using RPCs.
@@ -218,6 +220,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   private final VersionSignatureManager versions = new VersionSignatureManager();
 
   /** Filter for client-side filtering. */
+  // TODO: remove after bug 124 is addressed.
   private IdFilter filter;
 
   /** Callback once opened. */
@@ -245,7 +248,12 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   public void viewOpen(final IdFilter filter,
       final Map<WaveletId, List<HashedVersion>> knownWavelets, final OpenCallback callback) {
     LOG.info("viewOpen called on " + waveId + " with " + filter);
-    this.filter = filter;
+
+    // Some legacy hack.
+    // TODO: Remove after bug 125 is fixed.
+    Set<String> newPrefixes = new HashSet<String>(filter.getPrefixes());
+    newPrefixes.add("dummy");
+    this.filter = IdFilter.of(filter.getIds(), newPrefixes);
     this.callback = callback;
 
     mux.open(waveId, filter, this);
