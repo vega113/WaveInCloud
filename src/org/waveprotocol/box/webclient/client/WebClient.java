@@ -158,6 +158,7 @@ public class WebClient implements EntryPoint {
             }
 
             WaveId newWaveId = idGenerator.newWaveId();
+            History.newItem(newWaveId.serialise(), false);
 
             if (ClientFlags.get().enableWavePanelHarness()) {
               Stages stages = new StagesProvider(
