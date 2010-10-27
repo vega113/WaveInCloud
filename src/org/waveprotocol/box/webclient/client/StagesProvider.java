@@ -35,6 +35,7 @@ import org.waveprotocol.wave.client.wavepanel.impl.edit.EditSession;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.impl.menu.MenuController;
 import org.waveprotocol.wave.client.wavepanel.impl.toolbar.EditToolbar;
+import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
 import org.waveprotocol.wave.client.widget.common.LogicalPanel;
@@ -127,9 +128,11 @@ public class StagesProvider extends Stages {
 
         // Do the new-wave flow.
         if (isNewWave) {
+          BlipView blipUi = views.getBlipView(
+              stageTwo.getConversations().getRoot().getRootThread().getFirstBlip());
           blipQueue.flush();
-          edit.startEditing(views.getBlipView(
-              stageTwo.getConversations().getRoot().getRootThread().getFirstBlip()));
+          stageOne.getFocusFrame().focus(blipUi);
+          edit.startEditing(blipUi);
         }
       }
     };
