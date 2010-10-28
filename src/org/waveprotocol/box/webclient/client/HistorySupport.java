@@ -1,12 +1,12 @@
 /*
  * Copyright 2010 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -21,7 +21,6 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
 
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
-import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.wave.model.id.WaveId;
 
@@ -47,16 +46,6 @@ public class HistorySupport {
         ClientEvents.get().fireEvent(new WaveSelectionEvent(id));
       }
     });
-
-    ClientEvents.get().addWaveSelectionEventHandler(
-        new WaveSelectionEventHandler() {
-          @Override
-          public void onSelection(WaveId id) {
-            String encoded = id.serialise();
-            History.newItem(encoded, false);
-            LOG.info("Added new history token state");
-          }
-        });
   }
 
   private HistorySupport() {

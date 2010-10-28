@@ -23,6 +23,7 @@ import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
@@ -130,7 +131,7 @@ public class WaveView extends Composite {
     this.idGenerator = idGenerator;
   }
 
-  public void setWave(final WaveId waveId) {
+  private void setWave(final WaveId waveId) {
     LOG.info("WaveView opening wavelet " + waveId);
     docFactory = new SimpleCcDocumentFactory();
     if (this.manager != null) {
@@ -265,6 +266,8 @@ public class WaveView extends Composite {
     panel.clear();
     blipsById.clear();
     blipsToNext.clear();
+
+    History.newItem(waveId.serialise(), false);
   }
 
   public ObservableConversationView getConversationView() {

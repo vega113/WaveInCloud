@@ -32,8 +32,6 @@ import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
 import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
 import org.waveprotocol.wave.client.wavepanel.impl.reader.Reader;
 import org.waveprotocol.wave.client.wavepanel.render.FullDomWaveRendererImpl;
-import org.waveprotocol.wave.client.wavepanel.view.ModelIdMapper;
-import org.waveprotocol.wave.client.wavepanel.view.ModelIdMapperImpl;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.WaveRenderer;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.model.conversation.Conversation;
@@ -172,17 +170,6 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
     return new RemoteWaveViewService(waveId, channel, getDocumentRegistry());
   }
 
-  /** @return the id mangler for model objects. Subclasses may override. */
-  private static int n;
-  @Override
-  protected ModelIdMapper createModelIdMapper() {
-    // Note: for some reason, detached elements still retain presence in
-    // document.getElementById(). So all per-wave id generation need to have a
-    // seed that is unique across the entire client session.
-    return ModelIdMapperImpl.create(getConversations(), "U" + n++);
-  }
-
-
   /**
    * Swaps order of open and render.
    */
@@ -196,7 +183,9 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
       super.install();
       whenReady.use(StageTwoProvider.this);
     } else {
-
+      // Use deferred command to work around Issue 126.
+      // http://code.google.com/p/wave-protocol/issues/detail?id=126
+      // TODO: make synchronous again after that bug is fixed.
       SchedulerInstance.getLowPriorityTimer().scheduleDelayed(new Task() {
         @Override
         public void execute() {

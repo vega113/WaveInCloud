@@ -26,21 +26,11 @@ import org.waveprotocol.wave.client.StageTwo;
 import org.waveprotocol.wave.client.StageZero;
 import org.waveprotocol.wave.client.Stages;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
-import org.waveprotocol.wave.client.editor.EditorStaticDeps;
-import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
-import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
-import org.waveprotocol.wave.client.wavepanel.impl.edit.Actions;
-import org.waveprotocol.wave.client.wavepanel.impl.edit.EditActionsBuilder;
-import org.waveprotocol.wave.client.wavepanel.impl.edit.EditSession;
-import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
-import org.waveprotocol.wave.client.wavepanel.impl.menu.MenuController;
-import org.waveprotocol.wave.client.wavepanel.impl.toolbar.EditToolbar;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
 import org.waveprotocol.wave.client.widget.common.LogicalPanel;
-import org.waveprotocol.wave.client.widget.popup.PopupChromeFactory;
-import org.waveprotocol.wave.client.widget.popup.PopupFactory;
+import org.waveprotocol.wave.model.conversation.ConversationView;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.WaveId;
 
@@ -99,41 +89,33 @@ public class StagesProvider extends Stages {
   }
 
   @Override
-  protected AsyncHolder<StageThree> createStageThreeLoader(StageTwo two) {
+  protected AsyncHolder<StageThree> createStageThreeLoader(final StageTwo two) {
     return new StageThree.DefaultProvider(two) {
+
       @Override
-      protected void install() {
-        // This is a verbatim copy of the super method, with extra code below.
-        // It is not done as super.install() purely because that requires a
-        // change to the libraries repository (to retain a reference to the edit
-        // controller), and patches to the libraries repository take too long.
+      protected void create(final Accessor<StageThree> whenReady) {
+        // Prepend an init wave flow onto the stage continuation.
+        super.create(new Accessor<StageThree>() {
+          @Override
+          public void use(StageThree x) {
+            if (isNewWave) {
+              initNewWave(x);
+            }
+            whenReady.use(x);
+          }
+        });
+      }
 
-        // Start copy.
-        EditorStaticDeps.setPopupProvider(PopupFactory.getProvider());
-        EditorStaticDeps.setPopupChromeProvider(PopupChromeFactory.getProvider());
-
-        // Eagerly install some features.
-        StageOne stageOne = stageTwo.getStageOne();
-        WavePanelImpl panel = stageOne.getWavePanel();
-        FocusFramePresenter focus = stageOne.getFocusFrame();
-        ModelAsViewProvider views = stageTwo.getModelAsViewProvider();
-        ContentDocumentSinkFactory documents = stageTwo.getDocumentRegistry();
-        BlipQueueRenderer blipQueue = stageTwo.getBlipQueue();
-
-        EditSession edit = new EditSession(views, documents, panel.getGwtPanel());
-        Actions actions = EditActionsBuilder.createAndInstall(panel, views, edit, blipQueue, focus);
-        MenuController.install(actions, panel);
-        EditToolbar.install(panel, edit);
-        // End copy.
-
+      private void initNewWave(StageThree three) {
         // Do the new-wave flow.
-        if (isNewWave) {
-          BlipView blipUi = views.getBlipView(
-              stageTwo.getConversations().getRoot().getRootThread().getFirstBlip());
-          blipQueue.flush();
-          stageOne.getFocusFrame().focus(blipUi);
-          edit.startEditing(blipUi);
-        }
+        ModelAsViewProvider views = two.getModelAsViewProvider();
+        BlipQueueRenderer blipQueue = two.getBlipQueue();
+        ConversationView wave = two.getConversations();
+
+        // Force rendering to finish.
+        blipQueue.flush();
+        BlipView blipUi = views.getBlipView(wave.getRoot().getRootThread().getFirstBlip());
+        three.getEditActions().startEditing(blipUi);
       }
     };
   }

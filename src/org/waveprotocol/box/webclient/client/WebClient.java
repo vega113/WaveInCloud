@@ -44,7 +44,6 @@ import org.waveprotocol.box.webclient.waveclient.common.ClientIdGenerator;
 import org.waveprotocol.box.webclient.waveclient.common.WaveViewServiceImpl;
 import org.waveprotocol.box.webclient.waveclient.common.WebClientBackend;
 import org.waveprotocol.box.webclient.waveclient.common.WebClientUtils;
-import org.waveprotocol.wave.client.Stages;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.widget.common.ImplPanel;
@@ -131,11 +130,7 @@ public class WebClient implements EntryPoint {
           new WaveSelectionEventHandler() {
             @Override
             public void onSelection(WaveId id) {
-              contentPanel.clear();
-              Stages stages = new StagesProvider(
-                  contentPanel.getElement().appendChild(Document.get().createDivElement()),
-                  contentPanel, id, channel, idGenerator, false);
-              stages.load(null);
+              openWave(id, false);
             }
           });
       waveView = null;
@@ -157,15 +152,10 @@ public class WebClient implements EntryPoint {
               throw new RuntimeException("Spaghetti attack.  Create occured before login");
             }
 
-            WaveId newWaveId = idGenerator.newWaveId();
-            History.newItem(newWaveId.serialise(), false);
-
             if (ClientFlags.get().enableWavePanelHarness()) {
-              Stages stages = new StagesProvider(
-                  contentPanel.getElement().appendChild(Document.get().createDivElement()),
-                  contentPanel, newWaveId, channel, idGenerator, true);
-              stages.load(null);
+              openWave(idGenerator.newWaveId(), true);
             } else {
+              WaveId newWaveId = idGenerator.newWaveId();
               ClientEvents.get().fireEvent(new WaveSelectionEvent(newWaveId));
               ObservableConversation convo = waveView.getConversationView().createRoot();
               CcBasedWavelet rootWavelet = waveView.getCcStackManager().view.getRoot();
@@ -280,5 +270,20 @@ public class WebClient implements EntryPoint {
                     WebClientUtils.getIndexEntries(indexWave)));
           }
         });
+  }
+
+  /**
+   * Shows a wave in a wave panel.
+   *
+   * @param id wave id to open
+   * @param isNewWave whether the wave is being created by this client session.
+   */
+  private void openWave(WaveId id, boolean isNewWave) {
+    LOG.info("WebClient.openWave()");
+
+    contentPanel.clear();
+    new StagesProvider(contentPanel.getElement().appendChild(Document.get().createDivElement()),
+        contentPanel, id, channel, idGenerator, isNewWave).load(null);
+    History.newItem(id.serialise(), false);
   }
 }
