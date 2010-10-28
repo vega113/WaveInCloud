@@ -146,25 +146,6 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
     @Override
     public boolean hasMarker() {
-      // Note that the WaveViewService API and the current server-provided
-      // protocol do not agree on the meaning of this method.
-      //
-      // Wave-in-a-box server provides:
-      // If present and true, then there are no wavelets in the wave matching
-      // the wavelet prefixes in the ViewOpenRequest. When the client receives
-      // an empty wave view, it can consult this boolean value to determine if
-      // the wave is truly empty (e.g., has no conversation wavelets) or if
-      // there are wavelets but the user has no access.
-      //
-      // WaveViewService provides:
-      // The marker is not a boolean. It is an opaque token that is either
-      // present or absent. Its presence indicates that the initial set of
-      // snapshots has been delivered.
-      //
-      // Given those, the wave-in-a-box server protocol is an extension of the
-      // WaveViewService. The presence of the marker in its protocol corresponds
-      // to the presence of the marker in WaveViewService.
-      //
       return update.hasMarker();
     }
   }
@@ -220,7 +201,8 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   private final VersionSignatureManager versions = new VersionSignatureManager();
 
   /** Filter for client-side filtering. */
-  // TODO: remove after bug 124 is addressed.
+  // TODO: remove after Issue 124 is addressed.
+  // http://code.google.com/p/wave-protocol/issues/detail?id=124
   private IdFilter filter;
 
   /** Callback once opened. */
@@ -249,8 +231,9 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
       final Map<WaveletId, List<HashedVersion>> knownWavelets, final OpenCallback callback) {
     LOG.info("viewOpen called on " + waveId + " with " + filter);
 
-    // Some legacy hack.
-    // TODO: Remove after bug 125 is fixed.
+    // Some legacy hack.  Important updates are sent to a "dummy+root" wavelet.
+    // TODO: remove this once Issue 125 is fixed.
+    // http://code.google.com/p/wave-protocol/issues/detail?id=125
     Set<String> newPrefixes = new HashSet<String>(filter.getPrefixes());
     newPrefixes.add("dummy");
     this.filter = IdFilter.of(filter.getIds(), newPrefixes);
