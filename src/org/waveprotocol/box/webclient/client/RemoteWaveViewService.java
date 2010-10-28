@@ -146,7 +146,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
     @Override
     public boolean hasMarker() {
-      return update.hasMarker();
+      return update.hasMarker() && update.getMarker();
     }
   }
 
