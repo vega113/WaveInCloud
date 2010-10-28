@@ -177,8 +177,7 @@ public class WaveViewServiceImpl implements WaveViewService {
     } else {
       waveletVersion = versionToHistoryHashMap.get(waveletName).get(delta.getVersion());
     }
-    LOG.severe("VERSION IN SUBMIT IS " + waveletVersion.getVersion() + " " +
-        waveletVersion.getHistoryHash());
+    LOG.info("Submitting to " + waveletName + " version " + waveletVersion);
     ProtocolSubmitRequest submitRequest = ProtocolSubmitRequest.create();
     String waveletNameString;
     try {
@@ -249,7 +248,7 @@ public class WaveViewServiceImpl implements WaveViewService {
     final List<OpenCallback> listeners = lookupListenersForWavelet(waveletName);
 
     for (OpenCallback listener : listeners) {
-      LOG.info("PUBLISHING MARKER FOR " + waveletName + " to listener " + listener);
+      LOG.info("Publishing marker for " + waveletName + " to listener " + listener);
       listener.onUpdate(markerUpdate);
     }
   }
@@ -273,7 +272,7 @@ public class WaveViewServiceImpl implements WaveViewService {
       updateVersionMap(waveletName, deltaEndVersion);
       deltaList.add(delta);
     }
-    LOG.info("Publishing deltas: "+deltaList.toString());
+    LOG.info("publishing deltas: " + deltaList.toString());
 
     HashedVersion resultingHashedVersion =
         CoreWaveletOperationSerializer.deserialize(resultingVersion);
@@ -305,7 +304,6 @@ public class WaveViewServiceImpl implements WaveViewService {
   void publishSnapshot(final WaveletName waveletName, final ProtocolWaveletUpdate waveletUpdate) {
     final ObservableWaveletData waveletSnapshot = deserializeSnapshot(waveletName, waveletUpdate);
     LOG.info("publishing snapshot for " + waveletName);
-    final long version = (long) waveletUpdate.getResultingVersion().getVersion();
     final WebClientWaveViewUpdate snapshotUpdate =
         new WebClientWaveViewUpdate().setWaveletId(waveletName.waveletId)
             .setWaveletSnapshot(waveletSnapshot)
@@ -319,7 +317,7 @@ public class WaveViewServiceImpl implements WaveViewService {
     updateVersionMap(waveletName, waveletUpdate.getResultingVersion());
 
     if (waveletUpdate.hasChannelId()) {
-      LOG.severe("saw channelId " + waveletUpdate.getChannelId());
+      LOG.info("saw channelId " + waveletUpdate.getChannelId());
       publishChannelId(waveletName, waveletUpdate.getChannelId());
     }
     final List<OpenCallback> listeners = lookupListenersForWavelet(waveletName);
