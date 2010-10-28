@@ -17,7 +17,6 @@
 package org.waveprotocol.box.server.frontend;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
@@ -169,7 +168,7 @@ public class ClientFrontendImplTest extends TestCase {
     clientFrontend.waveletUpdate(wavelet, DELTAS);
     verify(listener, Mockito.never()).onUpdate(eq(WAVELET_NAME),
         any(WaveletSnapshotAndVersion.class), anyListOf(TransformedWaveletDelta.class),
-        any(HashedVersion.class), anyBoolean(), anyString());
+        any(HashedVersion.class), isNullMarker(), anyString());
   }
 
   /**
@@ -215,7 +214,7 @@ public class ClientFrontendImplTest extends TestCase {
     clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, NO_KNOWN_WAVELETS, listener);
     clientFrontend.participantUpdate(WAVELET_NAME, USER, DELTAS, true, false, "", "");
     verify(listener).onUpdate(eq(WAVELET_NAME), isNullSnapshot(), eq(DELTAS),
-        isNullVersion(), eq(false), anyString());
+        isNullVersion(), isNullMarker(), anyString());
   }
 
   public void testCannotOpenWavesWhenNotLoggedIn() {
@@ -249,7 +248,7 @@ public class ClientFrontendImplTest extends TestCase {
     verify(listener, Mockito.never()).onUpdate(eq(dummyWaveletName),
         any(WaveletSnapshotAndVersion.class),
         argThat(new IsNonEmptyList<TransformedWaveletDelta>()),
-        any(HashedVersion.class), anyBoolean(), anyString());
+        any(HashedVersion.class), isNullMarker(), anyString());
   }
 
   private static class IsNonEmptyList<T> extends ArgumentMatcher<List<T>> {
@@ -278,8 +277,8 @@ public class ClientFrontendImplTest extends TestCase {
     public void onUpdate(WaveletName wn,
         @Nullable WaveletSnapshotAndVersion snapshot,
         List<TransformedWaveletDelta> newDeltas,
-        @Nullable HashedVersion committedVersion, final boolean hasMarker,
-        @Nullable final String channelId) {
+        @Nullable HashedVersion committedVersion, Boolean hasMarker,
+        @Nullable  String channelId) {
 
       if (snapshot == null && newDeltas.isEmpty()) {
         // Ignore marker/channel id updates
@@ -399,7 +398,7 @@ public class ClientFrontendImplTest extends TestCase {
     // First the channel id
     verify(listener).onUpdate(eq(dummyWaveletName), isNullSnapshot(),
         eq(DeltaSequence.empty()), isNullVersion(),
-        eq(false), channelId == null ? anyString() : eq(channelId));
+        isNullMarker(), channelId == null ? anyString() : eq(channelId));
     // Secondly get the marker
     verify(listener).onUpdate(dummyWaveletName, null, DeltaSequence.empty(),
         null, true, null);
@@ -413,4 +412,7 @@ public class ClientFrontendImplTest extends TestCase {
     return (HashedVersion) Mockito.isNull();
   }
 
+  private static Boolean isNullMarker() {
+    return (Boolean) Mockito.isNull();
+  }
 }

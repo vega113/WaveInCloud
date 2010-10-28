@@ -104,10 +104,9 @@ final class WaveViewSubscription {
    * from this client, don't send that delta. If there's outstanding submits
    * waiting, just queue the updates.
    */
-  public void onUpdate(final WaveletName waveletName,
-      @Nullable final WaveletSnapshotAndVersion snapshot, final DeltaSequence deltas,
-      @Nullable final HashedVersion endVersion,
-      @Nullable final HashedVersion committedVersion, final boolean hasMarker) {
+  public void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
+      DeltaSequence deltas, @Nullable HashedVersion endVersion,
+      @Nullable HashedVersion committedVersion, @Nullable Boolean hasMarker) {
     checkUpdateVersion(waveletName, snapshot, deltas);
     if (deltas.isEmpty()) {
       openListener.onUpdate(waveletName, snapshot, deltas, committedVersion, hasMarker,

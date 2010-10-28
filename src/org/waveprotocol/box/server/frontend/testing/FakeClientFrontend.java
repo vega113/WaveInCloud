@@ -100,7 +100,7 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
   public void waveletCommitted(WaveletName waveletName, HashedVersion version) {
     OpenListener listener = openListeners.get(waveletName.waveId);
     if (listener != null) {
-      listener.onUpdate(waveletName, null, DeltaSequence.empty(), version, false, null);
+      listener.onUpdate(waveletName, null, DeltaSequence.empty(), version, null, null);
     }
   }
 
@@ -109,7 +109,7 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
     OpenListener listener = openListeners.get(wavelet.getWaveId());
     if (listener != null) {
       WaveletName waveletName = WaveletName.of(wavelet.getWaveId(), wavelet.getWaveletId());
-      listener.onUpdate(waveletName, null, newDeltas, null, false, null);
+      listener.onUpdate(waveletName, null, newDeltas, null, null, null);
     }
   }
 }

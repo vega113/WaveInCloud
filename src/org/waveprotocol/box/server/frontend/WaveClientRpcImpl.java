@@ -100,10 +100,11 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
           @Override
           public void onUpdate(WaveletName waveletName,
               @Nullable WaveletSnapshotAndVersion snapshot, List<TransformedWaveletDelta> deltas,
-              @Nullable HashedVersion committedVersion, final boolean hasMarker,
-              final String channel_id) {
+              @Nullable HashedVersion committedVersion, Boolean hasMarker, String channel_id) {
             ProtocolWaveletUpdate.Builder builder = ProtocolWaveletUpdate.newBuilder();
-            builder.setMarker(hasMarker);
+            if (hasMarker != null) {
+              builder.setMarker(hasMarker.booleanValue());
+            }
             if (channel_id != null) {
               builder.setChannelId(channel_id);
             }

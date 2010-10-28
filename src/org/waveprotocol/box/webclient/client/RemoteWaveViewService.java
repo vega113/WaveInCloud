@@ -163,12 +163,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
       // WaveViewService. The presence of the marker in its protocol corresponds
       // to the presence of the marker in WaveViewService.
       //
-      // return update.hasMarker();
-
-      // Code above disabled due to server bug, that sets the marker as false on
-      // every update.  The client synthesizes the marker until that is fixed.
-      // Issue: 116.
-      return update.hasMarker() && update.getMarker();
+      return update.hasMarker();
     }
   }
 
@@ -319,14 +314,6 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
         callback.onUpdate(deserialize(update));
       } else {
         callback.onUpdate(deserialize(update));
-      }
-
-      // HACK: synthesize open-finished marker after a conv-root wavelet is seen.
-      // This should be removed once the server stops setting the marker on
-      // every update.
-      if (update.hasSnapshot()
-          && getTarget(update).waveletId.getId().startsWith("conv+root")) {
-        callback.onUpdate(deserialize(ProtocolWaveletUpdate.create().setMarker(true)));
       }
     }
   }

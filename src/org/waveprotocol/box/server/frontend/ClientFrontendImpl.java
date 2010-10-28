@@ -31,9 +31,9 @@ import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
+import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
-import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -206,7 +206,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         if (snapshotToSend == null) {
           // Send deltas.
           openListener.onUpdate(waveletName, snapshotToSend, deltasToSend,
-              null, false, channelId);
+              null, null, channelId);
         } else {
           // Send the snapshot.
           openListener.onUpdate(waveletName, snapshotToSend, deltasToSend,
@@ -219,7 +219,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
       if (waveletIds.size() == 0) {
         // Send message with just the channel id.
         LOG.info("sending just a channel id for " + dummyWaveletName);
-        openListener.onUpdate(dummyWaveletName, null, DeltaSequence.empty(), null, false,
+        openListener.onUpdate(dummyWaveletName, null, DeltaSequence.empty(), null, null,
             channelId);
       }
 

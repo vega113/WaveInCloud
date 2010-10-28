@@ -50,7 +50,7 @@ public interface ClientFrontend {
      */
     void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
         List<TransformedWaveletDelta> deltas, @Nullable HashedVersion committedVersion,
-        boolean hasMarker, String channel_id);
+        @Nullable Boolean hasMarker, String channel_id);
 
     /**
      * Called when the stream fails. No further updates will be received.

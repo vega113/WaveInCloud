@@ -163,7 +163,7 @@ public class UserManagerTest extends TestCase {
     Mockito.verifyZeroInteractions(listener);
     m.onUpdate(W1A, DELTAS);
     Mockito.verify(listener).onUpdate(Mockito.eq(W1A), (WaveletSnapshotAndVersion)Matchers.isNull(),
-        Mockito.eq(DELTAS), Mockito.any(HashedVersion.class), Mockito.eq(false),
+        Mockito.eq(DELTAS), Mockito.any(HashedVersion.class), (Boolean) Mockito.isNull(),
         Mockito.eq(channelId));
   }
 }
