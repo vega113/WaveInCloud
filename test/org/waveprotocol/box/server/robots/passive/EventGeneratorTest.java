@@ -22,6 +22,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.data.converter.v22.EventDataConverterV22;
+import com.google.wave.api.event.AnnotatedTextChangedEvent;
+import com.google.wave.api.event.DocumentChangedEvent;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.EventType;
 import com.google.wave.api.event.WaveletBlipCreatedEvent;
@@ -37,10 +39,13 @@ import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.robots.util.WaveletPluginDocumentFactory;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
+import org.waveprotocol.wave.model.document.util.LineContainers;
+import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.CapturingOperationSink;
@@ -200,6 +205,50 @@ public class EventGeneratorTest extends TestCase {
     WaveletBlipRemovedEvent event = WaveletBlipRemovedEvent.as(messages.getEvents().get(1));
     assertEquals(
         "Expected the same id as the removed blip", newBlip.getId(), event.getRemovedBlipId());
+  }
+
+  public void testGenerateDocumentChangedEvent() throws Exception {
+    ConversationBlip rootBlip =
+        conversationUtil.getConversation(wavelet).getRoot().getRootThread().getFirstBlip();
+
+    XmlStringBuilder builder = XmlStringBuilder.createText("some random content");
+    LineContainers.appendToLastLine(rootBlip.getContent(), builder);
+
+    EventMessageBundle messages = generateAndCheckEvents(EventType.DOCUMENT_CHANGED);
+    assertEquals("Expected one event", 1, messages.getEvents().size());
+    // Can not check the blip id because it is not accessible, however the line
+    // here below will confirm that there was actually a real
+    // DocumentChangedEvent put into the message bundle.
+    DocumentChangedEvent event = DocumentChangedEvent.as(messages.getEvents().get(0));
+    assertEquals(ALEX.getAddress(), event.getModifiedBy());
+  }
+
+  public void testGenerateDocumentChangedEventOnlyOnce() throws Exception {
+    ConversationBlip rootBlip =
+        conversationUtil.getConversation(wavelet).getRoot().getRootThread().getFirstBlip();
+
+    // Change the document twice
+    XmlStringBuilder builder = XmlStringBuilder.createText("some random content");
+    LineContainers.appendToLastLine(rootBlip.getContent(), builder);
+    LineContainers.appendToLastLine(rootBlip.getContent(), builder);
+
+    EventMessageBundle messages = generateAndCheckEvents(EventType.DOCUMENT_CHANGED);
+    assertEquals("Expected one event only", 1, messages.getEvents().size());
+  }
+
+  public void testGenerateAnnotatedTextChangedEvent() throws Exception {
+    ConversationBlip rootBlip =
+        conversationUtil.getConversation(wavelet).getRoot().getRootThread().getFirstBlip();
+
+    String annotationKey = "key";
+    String annotationValue = "value";
+    rootBlip.getContent().setAnnotation(0, 1, annotationKey, annotationValue);
+
+    EventMessageBundle messages = generateAndCheckEvents(EventType.ANNOTATED_TEXT_CHANGED);
+    assertEquals("Expected one event only", 1, messages.getEvents().size());
+    AnnotatedTextChangedEvent event = AnnotatedTextChangedEvent.as(messages.getEvents().get(0));
+    assertEquals("Expected the key of the annotation", annotationKey, event.getName());
+    assertEquals("Expected the value of the annotation", annotationValue, event.getValue());
   }
 
   // Helper Methods
