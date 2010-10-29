@@ -121,7 +121,7 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
           // For an existing wave, while we're still using the old protocol,
           // rendering must be delayed until the channel is opened, because the
           // initial state snapshots come from the channel.
-          createUpgrader().connect(new Command() {
+          getConnector().connect(new Command() {
             @Override
             public void execute() {
               WaveRenderer waveRenderer =
