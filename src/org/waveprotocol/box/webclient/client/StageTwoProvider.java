@@ -23,10 +23,6 @@ import com.google.gwt.user.client.Command;
 
 import org.waveprotocol.wave.client.StageOne;
 import org.waveprotocol.wave.client.StageTwo;
-import org.waveprotocol.wave.client.account.Profile;
-import org.waveprotocol.wave.client.account.ProfileListener;
-import org.waveprotocol.wave.client.account.ProfileManager;
-import org.waveprotocol.wave.client.account.testing.FakeProfile;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
 import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
@@ -49,68 +45,6 @@ import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
  * @author zdwang@google.com (David Wang)
  */
 public class StageTwoProvider extends StageTwo.DefaultProvider {
-
-  static class ProfileImpl implements Profile {
-
-    private final ParticipantId id;
-
-    public ProfileImpl(ParticipantId id) {
-      this.id = id;
-    }
-
-    @Override
-    public ParticipantId getParticipantId() {
-      return id;
-    }
-
-    @Override
-    public String getAddress() {
-      return id.getAddress();
-    }
-
-    @Override
-    public String getFullName() {
-      return capitalize(id.getAddress());
-    }
-
-    @Override
-    public String getFirstName() {
-      return capitalize(id.getAddress());
-    }
-
-    private String capitalize(String s) {
-      return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-    }
-
-    @Override
-    public String getImageUrl() {
-      return "static/images/unknown.jpg";
-    }
-  }
-
-  /**
-   * Placeholder for proper profile management.
-   */
-  static class ProfileManagerImpl implements ProfileManager {
-    @Override
-    public FakeProfile getProfile(ParticipantId participantId) {
-      return new FakeProfile(participantId);
-    }
-
-    @Override
-    public boolean shouldIgnore(ParticipantId participant) {
-      return false;
-    }
-
-    @Override
-    public void addListener(ParticipantId profile, ProfileListener listener) {
-    }
-
-    @Override
-    public void removeListener(ParticipantId profile, ProfileListener listener) {
-    }
-
-  }
 
   private final WaveId waveId;
   private final RemoteViewServiceMultiplexer channel;
@@ -143,11 +77,6 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
   @Override
   protected SchemaProvider createSchemas() {
     return new ConversationSchemas();
-  }
-
-  @Override
-  protected ProfileManager createProfileManager() {
-    return new ProfileManagerImpl();
   }
 
   @Override
