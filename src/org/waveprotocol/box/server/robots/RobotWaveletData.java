@@ -118,7 +118,7 @@ public class RobotWaveletData {
         WaveletDataImpl.Factory.create(waveletPluginFactory).create(snapshot);
 
     SilentOperationSink<WaveletOperation> executor =
-        SilentOperationSink.Executor.build<WaveletOperation, WaveletData>(perAuthorWavelet);
+        SilentOperationSink.Executor.<WaveletOperation, WaveletData>build(perAuthorWavelet);
     // Build sink that gathers these ops
     CapturingOperationSink<WaveletOperation> output =
         new CapturingOperationSink<WaveletOperation>();
