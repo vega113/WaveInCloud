@@ -48,6 +48,10 @@ public class StagesProvider extends Stages {
   private final IdGenerator idGenerator;
   private final boolean isNewWave;
 
+  private StageOne one;
+  private StageTwo two;
+  private StageThree three;
+
   /**
    * @param wavePanelElement The dom element to become the wave panel
    * @param rootPanel A panel that this an ancestor of wavePanelElement. This is
@@ -85,12 +89,12 @@ public class StagesProvider extends Stages {
 
   @Override
   protected AsyncHolder<StageTwo> createStageTwoLoader(StageOne one) {
-    return new StageTwoProvider(one, waveId, channel, isNewWave, idGenerator);
+    return new StageTwoProvider(this.one = one, waveId, channel, isNewWave, idGenerator);
   }
 
   @Override
   protected AsyncHolder<StageThree> createStageThreeLoader(final StageTwo two) {
-    return new StageThree.DefaultProvider(two) {
+    return new StageThree.DefaultProvider(this.two = two) {
 
       @Override
       protected void create(final Accessor<StageThree> whenReady) {
@@ -98,6 +102,7 @@ public class StagesProvider extends Stages {
         super.create(new Accessor<StageThree>() {
           @Override
           public void use(StageThree x) {
+            StagesProvider.this.three = x;
             if (isNewWave) {
               initNewWave(x);
             }
@@ -105,18 +110,33 @@ public class StagesProvider extends Stages {
           }
         });
       }
-
-      private void initNewWave(StageThree three) {
-        // Do the new-wave flow.
-        ModelAsViewProvider views = two.getModelAsViewProvider();
-        BlipQueueRenderer blipQueue = two.getBlipQueue();
-        ConversationView wave = two.getConversations();
-
-        // Force rendering to finish.
-        blipQueue.flush();
-        BlipView blipUi = views.getBlipView(wave.getRoot().getRootThread().getFirstBlip());
-        three.getEditActions().startEditing(blipUi);
-      }
     };
+  }
+
+  private void initNewWave(StageThree three) {
+    // Do the new-wave flow.
+    ModelAsViewProvider views = two.getModelAsViewProvider();
+    BlipQueueRenderer blipQueue = two.getBlipQueue();
+    ConversationView wave = two.getConversations();
+
+    // Force rendering to finish.
+    blipQueue.flush();
+    BlipView blipUi = views.getBlipView(wave.getRoot().getRootThread().getFirstBlip());
+    three.getEditActions().startEditing(blipUi);
+  }
+
+  public void destroy() {
+    if (three != null) {
+      three.getEditActions().stopEditing();
+      three = null;
+    }
+    if (two != null) {
+      two.getConnector().close();
+      two = null;
+    }
+    if (one != null) {
+      one.getWavePanel().destroy();
+      one = null;
+    }
   }
 }

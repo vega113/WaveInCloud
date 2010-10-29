@@ -86,6 +86,9 @@ public class WebClient implements EntryPoint {
 
   private WebClientBackend backend = null;
 
+  /** The wave panel, if a wave is open. */
+  private StagesProvider wave;
+
   /** The old wave panel */
   private WaveView waveView = null;
 
@@ -281,9 +284,15 @@ public class WebClient implements EntryPoint {
   private void openWave(WaveId id, boolean isNewWave) {
     LOG.info("WebClient.openWave()");
 
-    contentPanel.clear();
-    new StagesProvider(contentPanel.getElement().appendChild(Document.get().createDivElement()),
-        contentPanel, id, channel, idGenerator, isNewWave).load(null);
+    if (wave != null) {
+      wave.destroy();
+      // contentPanel.clear();
+      wave = null;
+    }
+
+    wave = new StagesProvider(contentPanel.getElement().appendChild(Document.get().createDivElement()),
+        contentPanel, id, channel, idGenerator, isNewWave);
+    wave.load(null);
     History.newItem(id.serialise(), false);
   }
 }

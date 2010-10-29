@@ -44,6 +44,20 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
   /** Per-wave streams. */
   private final Map<WaveId, WaveWebSocketCallback> streams = CollectionUtils.newHashMap();
 
+  //
+  // Workaround for issue 128.
+  // http://code.google.com/p/wave-protocol/issues/detail?id=128
+  //
+  // Filtering logic is as follows. Since not every update has a channel id, but
+  // all updates have a wavelet name, wave ids remain the primary key. This
+  // map's domain is a subset of streams' domain, and is monotonically set with
+  // the first channel id observed for an open wave. Only updates that have no
+  // channel id, or an equal channel id, are passed through to the stream.
+  // Closing the stream removes any known channel id from this map (this follows
+  // from the contraint that this maps's domain is a subset of streams' domain).
+  //
+  private final Map<WaveId, String> knownChannels = CollectionUtils.newHashMap();
+
   /** Underlying socket. */
   private final WaveWebSocketClient socket;
 
@@ -75,7 +89,22 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
     // Route to the appropriate stream handler.
     WaveWebSocketCallback stream = streams.get(wavelet.waveId);
     if (stream != null) {
-      stream.onWaveletUpdate(message);
+      boolean drop;
+
+      String knownChannelId = knownChannels.get(wavelet.waveId);
+      if (knownChannelId != null) {
+      // Drop updates with known mismatched channel ids.
+        drop = message.hasChannelId() && !message.getChannelId().equals(knownChannelId);
+      } else {
+        if (message.hasChannelId()) {
+          knownChannels.put(wavelet.waveId, message.getChannelId());
+        }
+        drop = false;
+      }
+
+      if (!drop) {
+        stream.onWaveletUpdate(message);
+      }
     } else {
       // This is either a server error, or a message after a stream has been
       // locally closed (there is no way to tell the server to stop sending
@@ -112,6 +141,7 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
   public void close(WaveId id, WaveWebSocketCallback stream) {
     if (streams.get(id) == stream) {
       streams.remove(id);
+      knownChannels.remove(id);
     }
 
     // Issue 117: the client server protocol does not support closing a wave stream.
