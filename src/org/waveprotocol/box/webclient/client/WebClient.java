@@ -286,7 +286,6 @@ public class WebClient implements EntryPoint {
 
     if (wave != null) {
       wave.destroy();
-      // contentPanel.clear();
       wave = null;
     }
 
