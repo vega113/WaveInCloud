@@ -44,6 +44,7 @@ import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
@@ -85,7 +86,7 @@ public class OperationServiceHelper {
         new BasicWaveletOperationContextFactory(participant);
 
     SilentOperationSink<WaveletOperation> executor =
-        SilentOperationSink.Executor.build(waveletData);
+        SilentOperationSink.Executor.<WaveletOperation, WaveletData>build(waveletData);
     OpBasedWavelet wavelet =
         new OpBasedWavelet(waveletData.getWaveId(), waveletData, CONTEXT_FACTORY,
             ParticipationHelper.IGNORANT, executor, SilentOperationSink.VOID);

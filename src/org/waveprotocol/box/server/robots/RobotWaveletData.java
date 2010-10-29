@@ -34,6 +34,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
@@ -117,7 +118,7 @@ public class RobotWaveletData {
         WaveletDataImpl.Factory.create(waveletPluginFactory).create(snapshot);
 
     SilentOperationSink<WaveletOperation> executor =
-        SilentOperationSink.Executor.build(perAuthorWavelet);
+        SilentOperationSink.Executor.<WaveletOperation, WaveletData>build(perAuthorWavelet);
     // Build sink that gathers these ops
     CapturingOperationSink<WaveletOperation> output =
         new CapturingOperationSink<WaveletOperation>();

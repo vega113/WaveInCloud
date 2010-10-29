@@ -60,6 +60,7 @@ import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
@@ -138,7 +139,7 @@ public class EventGeneratorTest extends TestCase {
     waveletData.setVersion(1);
 
     SilentOperationSink<WaveletOperation> executor =
-        SilentOperationSink.Executor.build(waveletData);
+        SilentOperationSink.Executor.<WaveletOperation, WaveletData>build(waveletData);
     output = new CapturingOperationSink<WaveletOperation>();
     wavelet =
         new OpBasedWavelet(waveletData.getWaveId(), waveletData, CONTEXT_FACTORY,
