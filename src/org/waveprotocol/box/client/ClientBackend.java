@@ -671,10 +671,14 @@ public class ClientBackend {
     }
 
     ClientWaveView wave = getExistingWaveView(waveletName);
-
     if (waveletUpdate.hasResultingVersion()) {
       wave.setWaveletVersion(waveletName.waveletId,
           CoreWaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()));
+    }
+
+    if (wavelet == null) {
+      // The update is not associated with any wavelet (e.g. a channel id).
+      return;
     }
 
     // If we have been removed from this wavelet then remove the data too,
