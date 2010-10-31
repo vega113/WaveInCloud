@@ -85,6 +85,7 @@ public class WaveServerModule extends AbstractModule {
     bind(TrustRootsProvider.class).to(DefaultTrustRootsProvider.class).in(Singleton.class);
     bind(CertificateManager.class).to(CertificateManagerImpl.class).in(Singleton.class);
     bind(WaveletProvider.class).to(WaveServerImpl.class).in(Singleton.class);
+    bind(SearchProvider.class).to(WaveServerImpl.class).in(Singleton.class);
     bind(WaveBus.class).to(WaveServerImpl.class).in(Singleton.class);
     bind(HashedVersionFactory.class).toInstance(HASH_FACTORY);
     bind(ClientFrontend.class).to(ClientFrontendImpl.class).in(Singleton.class);

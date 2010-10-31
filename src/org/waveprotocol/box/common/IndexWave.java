@@ -41,7 +41,7 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.util.List;
 
@@ -137,10 +137,10 @@ public final class IndexWave {
    * @param wavelets wavelets to retrieve the index from.
    * @return list of index entries.
    */
-  public static List<IndexEntry> getIndexEntries(Iterable<? extends WaveletData> wavelets) {
+  public static List<IndexEntry> getIndexEntries(Iterable<? extends ReadableWaveletData> wavelets) {
     List<IndexEntry> indexEntries = Lists.newArrayList();
 
-    for (WaveletData wavelet : wavelets) {
+    for (ReadableWaveletData wavelet : wavelets) {
       WaveId waveId = waveIdFromIndexWavelet(wavelet);
       String digest = Snippets.collateTextForWavelet(wavelet);
       indexEntries.add(new IndexEntry(waveId, digest));
@@ -175,7 +175,7 @@ public final class IndexWave {
    * @return the wave id.
    * @throws IllegalArgumentException if the wavelet is not from an index wave.
    */
-  public static WaveId waveIdFromIndexWavelet(WaveletData indexWavelet) {
+  public static WaveId waveIdFromIndexWavelet(ReadableWaveletData indexWavelet) {
     return waveIdFromIndexWavelet(
         WaveletName.of(indexWavelet.getWaveId(), indexWavelet.getWaveletId()));
   }

@@ -51,8 +51,13 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.WaveViewData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.impl.UnmodifiableWaveletData;
+import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
 import org.waveprotocol.wave.waveserver.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
@@ -63,6 +68,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -70,7 +76,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Singleton
 public class WaveServerImpl implements WaveBus, WaveletProvider,
-    WaveletFederationProvider, WaveletFederationListener.Factory {
+    WaveletFederationProvider, WaveletFederationListener.Factory, SearchProvider {
 
   private static final Log LOG = Log.get(WaveServerImpl.class);
 
@@ -750,5 +756,46 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       }
     }
     return ImmutableSet.copyOf(hosts);
+  }
+
+  @Override
+  public Collection<WaveViewData> search(ParticipantId user, String query, int startAt,
+      int numResults) {
+    LOG.info("Search query '" + query + "' from user: " + user);
+
+    if (!query.equals("in:inbox") && !query.equals("with:me")) {
+      throw new AssertionError("Only queries for the inbox work");
+    }
+
+    Map<WaveId, WaveViewData> results = CollectionUtils.newHashMap();
+
+    synchronized (waveMap) {
+      int resultIndex = 0;
+      for (Entry<WaveId, Map<WaveletId, WaveletContainer>> entry : waveMap.entrySet()) {
+        WaveId waveId = entry.getKey();
+        for (WaveletContainer c : entry.getValue().values()) {
+          if (c.getParticipants().contains(user)) {
+            if (resultIndex >= startAt && resultIndex < (startAt + numResults)) {
+              WaveletData wavelet = c.getWaveletData();
+
+              WaveViewData wave = results.get(waveId);
+              if (wave == null) {
+                wave = WaveViewDataImpl.create(waveId);
+                results.put(waveId, wave);
+              }
+
+              wave.addWavelet(UnmodifiableWaveletData.FACTORY.create(wavelet));
+            }
+
+            resultIndex++;
+            if (resultIndex > startAt + numResults) {
+              return results.values();
+            }
+          }
+        }
+      }
+    }
+
+    return results.values();
   }
 }

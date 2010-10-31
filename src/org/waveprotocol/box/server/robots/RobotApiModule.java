@@ -38,6 +38,7 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.waveprotocol.box.server.robots.active.ActiveApiOperationServiceRegistry;
 import org.waveprotocol.box.server.robots.dataapi.DataApiOAuthServlet;
 import org.waveprotocol.box.server.robots.dataapi.DataApiOperationServiceRegistry;
+import org.waveprotocol.box.server.robots.operations.SearchService;
 import org.waveprotocol.box.server.robots.passive.RobotConnector;
 
 import java.util.concurrent.Executor;
@@ -107,9 +108,10 @@ public class RobotApiModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Inject
   @Named("DataApiRegistry")
-  protected OperationServiceRegistry provideDataApiRegistry() {
-    return new DataApiOperationServiceRegistry();
+  protected OperationServiceRegistry provideDataApiRegistry(SearchService searchService) {
+    return new DataApiOperationServiceRegistry(searchService);
   }
 
   @Provides
