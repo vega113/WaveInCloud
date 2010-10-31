@@ -17,13 +17,11 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
-
-import java.util.List;
 
 /**
  * Dispatches messages to a collection of wave bus subscribers.
@@ -45,7 +43,7 @@ public final class WaveBusDispatcher implements WaveBus, WaveBus.Subscriber {
   }
 
   @Override
-  public void waveletUpdate(ReadableWaveletData wavelet, List<TransformedWaveletDelta> deltas) {
+  public void waveletUpdate(ReadableWaveletData wavelet, DeltaSequence deltas) {
     for (WaveBus.Subscriber s : subscribers) {
       s.waveletUpdate(wavelet, deltas);
     }

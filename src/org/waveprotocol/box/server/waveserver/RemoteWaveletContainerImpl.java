@@ -331,7 +331,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       }
 
       if (!haveRequestedHistory) {
-        DeltaSequence deltaSequence = new DeltaSequence(result);
+        DeltaSequence deltaSequence = DeltaSequence.of(result);
         if (LOG.isFineLoggable()) {
           LOG.fine("Returning contiguous block: " + deltaSequence);
         }

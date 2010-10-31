@@ -27,6 +27,7 @@ import com.google.wave.api.impl.EventMessageBundle;
 import com.google.wave.api.robot.CapabilityFetchException;
 import com.google.wave.api.robot.RobotName;
 
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
 import org.waveprotocol.box.server.util.Log;
@@ -34,7 +35,6 @@ import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.util.Iterator;
@@ -154,7 +154,7 @@ public class Robot implements Runnable {
    * @throws OperationException if an update for a new wavelet could not be
    *         processed.
    */
-  void waveletUpdate(ReadableWaveletData wavelet, List<TransformedWaveletDelta> deltas)
+  void waveletUpdate(ReadableWaveletData wavelet, DeltaSequence deltas)
       throws OperationException {
     WaveletName waveletName = WaveletDataUtil.waveletNameOf(wavelet);
 

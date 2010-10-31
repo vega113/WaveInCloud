@@ -42,6 +42,7 @@ import junit.framework.TestCase;
 
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.account.RobotAccountDataImpl;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
@@ -138,8 +139,7 @@ public class RobotTest extends TestCase {
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
     WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX,
         hashedVersionZero, 0L);
-    List<TransformedWaveletDelta> deltas = Collections.emptyList();
-    robot.waveletUpdate(waveletData, deltas);
+    robot.waveletUpdate(waveletData, DeltaSequence.empty());
 
     // We are making an delta which applies to version 1, however the robot only
     // knows about version 0.
@@ -154,7 +154,7 @@ public class RobotTest extends TestCase {
 
     // Send the delta for version 1 to the robot, it should now enqueue a new
     // wavelet since it is missing deltas.
-    robot.waveletUpdate(waveletData, Collections.singletonList(delta));
+    robot.waveletUpdate(waveletData, DeltaSequence.of(delta));
 
     WaveletAndDeltas firstWavelet = robot.dequeueWavelet();
     assertNotNull("Expected a wavelet to be dequeued", firstWavelet);
@@ -225,7 +225,6 @@ public class RobotTest extends TestCase {
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
     WaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX,
         hashedVersionZero, 0L);
-    List<TransformedWaveletDelta> deltas = Collections.emptyList();
-    robot.waveletUpdate(waveletData, deltas);
+    robot.waveletUpdate(waveletData, DeltaSequence.empty());
   }
 }

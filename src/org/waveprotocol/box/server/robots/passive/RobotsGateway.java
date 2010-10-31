@@ -27,6 +27,7 @@ import com.google.wave.api.data.converter.EventDataConverterManager;
 import com.google.wave.api.robot.CapabilityFetchException;
 import com.google.wave.api.robot.RobotName;
 
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
@@ -36,12 +37,10 @@ import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -85,7 +84,7 @@ public class RobotsGateway implements WaveBus.Subscriber {
   }
 
   @Override
-  public void waveletUpdate(ReadableWaveletData wavelet, List<TransformedWaveletDelta> deltas) {
+  public void waveletUpdate(ReadableWaveletData wavelet, DeltaSequence deltas) {
     // TODO(ljvderijk): Determine which robot should receive which deltas,
     // enqueue deltas
     // for these robots
@@ -157,7 +156,7 @@ public class RobotsGateway implements WaveBus.Subscriber {
    * @param deltas the deltas the have been applied to the given wavelet.
    */
   private void updateRobot(Robot robot, ReadableWaveletData wavelet,
-      List<TransformedWaveletDelta> deltas) {
+      DeltaSequence deltas) {
     try {
       robot.waveletUpdate(wavelet, deltas);
       ensureScheduled(robot);

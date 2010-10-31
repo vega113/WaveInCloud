@@ -131,8 +131,8 @@ final class WaveViewSubscription {
       filteredDeltas = deltas;
     }
     if (!filteredDeltas.isEmpty()) {
-      openListener.onUpdate(waveletName, snapshot, filteredDeltas, committedVersion,
-          hasMarker, channelId);
+      openListener.onUpdate(waveletName, snapshot, DeltaSequence.of(filteredDeltas),
+          committedVersion, hasMarker, channelId);
     }
   }
 

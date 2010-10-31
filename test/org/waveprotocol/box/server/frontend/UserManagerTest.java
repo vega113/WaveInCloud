@@ -64,7 +64,7 @@ public class UserManagerTest extends TestCase {
       END_VERSION, 0L, ImmutableList.of(new NoOp(CONTEXT), new NoOp(CONTEXT)));
 
 
-  private static final DeltaSequence DELTAS = new DeltaSequence(ImmutableList.of(DELTA));
+  private static final DeltaSequence DELTAS = DeltaSequence.of(DELTA);
 
   private UserManager m;
 
@@ -142,13 +142,12 @@ public class UserManagerTest extends TestCase {
 
     m.subscribe(W1, IdFilters.ALL_IDS, "ch1", mock(OpenListener.class));
 
-    HashedVersion endVersion2 = HashedVersion.unsigned(3);
-    m.onUpdate(W1A, new DeltaSequence(ImmutableList.of(DELTA, delta2))); // success
+    m.onUpdate(W1A, DeltaSequence.of(DELTA, delta2)); // success
 
     // Also succeeds when sending the two deltas via separate onUpdates()
     m.subscribe(W2, IdFilters.ALL_IDS, "ch2", mock(OpenListener.class));
     m.onUpdate(W2A, DELTAS); // success
-    m.onUpdate(W2A, new DeltaSequence(ImmutableList.of(delta2))); // success
+    m.onUpdate(W2A, DeltaSequence.of(delta2)); // success
   }
 
   /**

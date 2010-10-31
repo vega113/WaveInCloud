@@ -50,7 +50,6 @@ import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -183,7 +182,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
           HashedVersion startVersion = getWavelet(sourceWaveletName).version0;
           try {
             // Send deltas to bring the wavelet up to date
-            DeltaSequence sourceWaveletDeltas = new DeltaSequence(
+            DeltaSequence sourceWaveletDeltas = DeltaSequence.of(
                 waveletProvider.getHistory(sourceWaveletName, startVersion, endVersion));
             // Construct fake index wave deltas from the deltas
             String newDigest = getWavelet(sourceWaveletName).digest;
@@ -319,7 +318,6 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
       WaveletName indexWaveletName = IndexWave.indexWaveletNameFor(waveletName.waveId);
       long startVersion = newDeltas.getStartVersion();
       if (add) {
-        HashedVersion v0 = hashedVersionFactory.createVersionZero(waveletName);
         participantAddedToWavelet(indexWaveletName, participant);
         startVersion = 0;
       }
@@ -340,7 +338,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
    * corresponding index wave wavelets on to the UserManagers.
    */
   @Override
-  public void waveletUpdate(ReadableWaveletData wavelet, List<TransformedWaveletDelta> newDeltas) {
+  public void waveletUpdate(ReadableWaveletData wavelet, DeltaSequence newDeltas) {
     if (newDeltas.isEmpty()) {
       return;
     }
@@ -357,7 +355,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
       remainingParticipants = Sets.newHashSet(waveletInfo.participants);
     }
 
-    DeltaSequence deltaSequence = new DeltaSequence(newDeltas);
+    DeltaSequence deltaSequence = DeltaSequence.of(newDeltas);
     Preconditions.checkState(expectedVersion.getVersion() == deltaSequence.getStartVersion(),
         "Expected deltas starting at version %s, got %s",
         expectedVersion, deltaSequence.getStartVersion());

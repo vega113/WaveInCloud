@@ -19,18 +19,17 @@ package org.waveprotocol.box.server.frontend;
 
 import com.google.inject.internal.Nullable;
 
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collection;
-import java.util.List;
 
 
 /**
@@ -49,7 +48,7 @@ public interface ClientFrontend {
      * Called when an update is received.
      */
     void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
-        List<TransformedWaveletDelta> deltas, @Nullable HashedVersion committedVersion,
+        DeltaSequence deltas, @Nullable HashedVersion committedVersion,
         @Nullable Boolean hasMarker, String channel_id);
 
     /**
