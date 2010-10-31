@@ -26,14 +26,12 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -105,7 +103,7 @@ public class FakeClientFrontend implements ClientFrontend, WaveBus.Subscriber {
   }
 
   @Override
-  public void waveletUpdate(ReadableWaveletData wavelet, List<TransformedWaveletDelta> newDeltas) {
+  public void waveletUpdate(ReadableWaveletData wavelet, DeltaSequence newDeltas) {
     OpenListener listener = openListeners.get(wavelet.getWaveId());
     if (listener != null) {
       WaveletName waveletName = WaveletName.of(wavelet.getWaveId(), wavelet.getWaveletId());

@@ -17,12 +17,10 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
-
-import java.util.List;
 
 /**
  * Provides a subscription service for changes to wavelets.
@@ -41,7 +39,7 @@ public interface WaveBus {
      *        been applied.
      * @param deltas deltas applied to the wavelet
      */
-    void waveletUpdate(ReadableWaveletData wavelet, List<TransformedWaveletDelta> deltas);
+    void waveletUpdate(ReadableWaveletData wavelet, DeltaSequence deltas);
 
     /**
      * Notifies the subscriber that a wavelet has been committed to persistent

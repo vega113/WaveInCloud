@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.rpc.ServerRpcController;
 import org.waveprotocol.box.server.util.Log;
@@ -45,7 +46,6 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collections;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -99,7 +99,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
 
           @Override
           public void onUpdate(WaveletName waveletName,
-              @Nullable WaveletSnapshotAndVersion snapshot, List<TransformedWaveletDelta> deltas,
+              @Nullable WaveletSnapshotAndVersion snapshot, DeltaSequence deltas,
               @Nullable HashedVersion committedVersion, Boolean hasMarker, String channel_id) {
             ProtocolWaveletUpdate.Builder builder = ProtocolWaveletUpdate.newBuilder();
             if (hasMarker != null) {

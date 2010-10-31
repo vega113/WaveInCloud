@@ -55,26 +55,47 @@ public class DeltaSequenceTest extends TestCase {
 
   public void testEmptySequence() {
     DeltaSequence empty = DeltaSequence.empty();
-    assertEquals(-1, empty.getStartVersion());
+    assertEquals(ImmutableList.<ProtocolWaveletDelta>of(), empty);
+    assertTrue(empty.isEmpty());
+    assertEquals(0, empty.size());
+    try {
+      empty.getStartVersion();
+      fail("Expected illegal state exception");
+    } catch (IllegalStateException expected) {
+    }
     try {
       empty.getEndVersion();
       fail("Expected illegal state exception");
     } catch (IllegalStateException expected) {
     }
-    assertEquals(ImmutableList.<ProtocolWaveletDelta>of(), empty);
   }
 
-  public void testValidSequence() {
-    DeltaSequence deltaseq = new DeltaSequence(twoDeltas);
+  public void testValidSequenceAllowed() {
+    DeltaSequence deltaseq = DeltaSequence.of(twoDeltas);
+    assertEquals(2, deltaseq.size());
     assertEquals(START_VERSION, deltaseq.getStartVersion());
     assertEquals(delta2.getResultingVersion(), deltaseq.getEndVersion());
   }
 
-  public void testInvalidIntermediateVersion() {
+  public void testInvalidSequencesRejected() {
     // Repeated version.
     assertSequenceInvalid(delta1, delta1);
     // Skipped version.
     assertSequenceInvalid(delta1, delta3);
+  }
+
+  public void testJoinValidSequencesAllowed() {
+    DeltaSequence s1 = DeltaSequence.of(delta1);
+    DeltaSequence s2 = DeltaSequence.of(delta2, delta3);
+    DeltaSequence joined = DeltaSequence.join(s1, s2);
+    assertEquals(delta1.getAppliedAtVersion(), joined.getStartVersion());
+    assertEquals(delta3.getResultingVersion(), joined.getEndVersion());
+    assertEquals(ImmutableList.of(delta1, delta2, delta3), joined);
+  }
+
+  public void testJoinInvalidSequencesRejected() {
+    assertJoinInvalid(DeltaSequence.of(delta1), DeltaSequence.of(delta1));
+    assertJoinInvalid(DeltaSequence.of(delta1), DeltaSequence.of(delta3));
   }
 
   /**
@@ -84,25 +105,30 @@ public class DeltaSequenceTest extends TestCase {
     DeltaSequence empty = DeltaSequence.empty();
     assertEquals(empty, empty.subList(0, 0));
 
-    DeltaSequence deltaseq = new DeltaSequence(twoDeltas);
+    DeltaSequence deltaseq = DeltaSequence.of(twoDeltas);
     assertEquals(twoDeltas, deltaseq.subList(0, twoDeltas.size()));
 
     assertEquals(empty, deltaseq.subList(0, 0));
 
-    // Check test data set up as expected by the test below
-    assertEquals(2, deltaseq.size());
-    assertTrue(deltaseq.getEndVersion().getVersion() > ops.size());
-
-    // Now construct a sublist with just the first delta
+    // Construct a sublist with just the first delta.
     DeltaSequence subDeltas = deltaseq.subList(0, 1);
     assertEquals(START_VERSION + ops.size(), subDeltas.getEndVersion().getVersion());
     assertEquals(deltaseq.getStartVersion(), subDeltas.getStartVersion());
+    assertEquals(ImmutableList.of(delta1), subDeltas);
   }
 
   private static void assertSequenceInvalid(TransformedWaveletDelta... deltas) {
     try {
-      new DeltaSequence(ImmutableList.copyOf(deltas));
+      DeltaSequence.of(deltas);
       fail("Expected delta sequence construction to fail");
+    } catch (IllegalArgumentException expected) {
+    }
+  }
+
+  private static void assertJoinInvalid(DeltaSequence first, DeltaSequence... rest) {
+    try {
+      DeltaSequence.join(first, rest);
+      fail("Expected delta sequence join to fail");
     } catch (IllegalArgumentException expected) {
     }
   }

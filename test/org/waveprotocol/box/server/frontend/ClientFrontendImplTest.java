@@ -18,7 +18,6 @@ package org.waveprotocol.box.server.frontend;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
@@ -105,8 +104,7 @@ public class ClientFrontendImplTest extends TestCase {
   private static final WaveletOperationContext CONTEXT = new WaveletOperationContext(USER, 0, 1);
   private static final TransformedWaveletDelta DELTA = new TransformedWaveletDelta(USER, VERSION_1,
       0, ImmutableList.of(new AddParticipant(CONTEXT, USER)));
-  private static final DeltaSequence DELTAS =
-      new DeltaSequence(ImmutableList.of(DELTA));
+  private static final DeltaSequence DELTAS = DeltaSequence.of(DELTA);
   private static final ProtocolWaveletDelta SERIALIZED_DELTA =
       CoreWaveletOperationSerializer.serialize(DELTA);
   private static final Collection<WaveletVersion> NO_KNOWN_WAVELETS =
@@ -167,7 +165,7 @@ public class ClientFrontendImplTest extends TestCase {
     WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, VERSION_0, 0L);
     clientFrontend.waveletUpdate(wavelet, DELTAS);
     verify(listener, Mockito.never()).onUpdate(eq(WAVELET_NAME),
-        any(WaveletSnapshotAndVersion.class), anyListOf(TransformedWaveletDelta.class),
+        any(WaveletSnapshotAndVersion.class), any(DeltaSequence.class),
         any(HashedVersion.class), isNullMarker(), anyString());
   }
 
@@ -242,20 +240,19 @@ public class ClientFrontendImplTest extends TestCase {
     List<? extends WaveletOperation> ops = ImmutableList.of(new NoOp(CONTEXT));
     TransformedWaveletDelta delta =
         new TransformedWaveletDelta(USER, HashedVersion.unsigned(1L), 0L, ops);
-    DeltaSequence deltas = new DeltaSequence(ImmutableList.of(delta));
+    DeltaSequence deltas = DeltaSequence.of(delta);
     clientFrontend.participantUpdate(WAVELET_NAME, USER, deltas, true, false, "", "");
 
     verify(listener, Mockito.never()).onUpdate(eq(dummyWaveletName),
         any(WaveletSnapshotAndVersion.class),
-        argThat(new IsNonEmptyList<TransformedWaveletDelta>()),
+        argThat(new IsNonEmptySequence()),
         any(HashedVersion.class), isNullMarker(), anyString());
   }
 
-  private static class IsNonEmptyList<T> extends ArgumentMatcher<List<T>> {
+  private static class IsNonEmptySequence extends ArgumentMatcher<DeltaSequence> {
     @Override
-    @SuppressWarnings("unchecked")
-    public boolean matches(Object list) {
-      return list != null && ((List<T>)list).size() > 0;
+    public boolean matches(Object sequence) {
+      return sequence != null && ((DeltaSequence)sequence).size() > 0;
     }
   }
 
@@ -274,11 +271,9 @@ public class ClientFrontendImplTest extends TestCase {
     }
 
     @Override
-    public void onUpdate(WaveletName wn,
-        @Nullable WaveletSnapshotAndVersion snapshot,
-        List<TransformedWaveletDelta> newDeltas,
-        @Nullable HashedVersion committedVersion, Boolean hasMarker,
-        @Nullable  String channelId) {
+    public void onUpdate(WaveletName wn, @Nullable WaveletSnapshotAndVersion snapshot,
+        DeltaSequence newDeltas, @Nullable HashedVersion committedVersion, Boolean hasMarker,
+        @Nullable String channelId) {
 
       if (snapshot == null && newDeltas.isEmpty()) {
         // Ignore marker/channel id updates
@@ -289,7 +284,7 @@ public class ClientFrontendImplTest extends TestCase {
       // TODO(arb): check the committedVersion field correctly
       this.waveletName = wn;
       this.snapshot = snapshot;
-      this.deltas = new DeltaSequence(newDeltas);
+      this.deltas = DeltaSequence.of(newDeltas);
     }
 
     void clear() {
@@ -321,10 +316,10 @@ public class ClientFrontendImplTest extends TestCase {
     WaveletOperation expectedDigestOp =
         makeAppendOp(IndexWave.DIGEST_DOCUMENT_ID, 0, "Hello, world");
 
-    DeltaSequence expectedDeltas = new DeltaSequence(ImmutableList.of(
+    DeltaSequence expectedDeltas = DeltaSequence.of(
         makeDelta(USER, HashedVersion.unsigned(1), 0L, new AddParticipant(CONTEXT, USER)),
         makeDelta(IndexWave.DIGEST_AUTHOR, HashedVersion.unsigned(2), 0L, expectedDigestOp)
-        ));
+        );
     assertEquals(expectedDeltas, listener.deltas);
   }
 
@@ -375,7 +370,7 @@ public class ClientFrontendImplTest extends TestCase {
   private void waveletUpdate(long startVersion, HashedVersion endVersion,
       long timestamp, WaveletData wavelet, WaveletOperation... operations) {
     TransformedWaveletDelta delta = makeDelta(USER, endVersion, timestamp, operations);
-    DeltaSequence deltas = new DeltaSequence(ImmutableList.of(delta));
+    DeltaSequence deltas = DeltaSequence.of(delta);
     clientFrontend.waveletUpdate(wavelet, deltas);
   }
 

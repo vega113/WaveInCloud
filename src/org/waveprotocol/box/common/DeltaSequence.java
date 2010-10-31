@@ -17,38 +17,61 @@
 package org.waveprotocol.box.common;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ForwardingList;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.model.wave.Constants;
 
-import java.util.AbstractList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.RandomAccess;
 
 /**
  * An immutable sequence of transformed deltas.
  *
  * This class enforces that the deltas are contiguous.
  */
-public final class DeltaSequence extends AbstractList<TransformedWaveletDelta> {
+public final class DeltaSequence extends ForwardingList<TransformedWaveletDelta>
+    implements RandomAccess {
   private final ImmutableList<TransformedWaveletDelta> deltas;
 
   /**
    * Creates an empty delta sequence. This sequence will not have an end version.
    */
   public static DeltaSequence empty() {
-    return new DeltaSequence(ImmutableList.<TransformedWaveletDelta>of());
+    return new DeltaSequence(ImmutableList.<TransformedWaveletDelta>of(), false);
   }
 
-  /**
-   * @param deltas to apply to a wavelet
-   */
-  public DeltaSequence(Iterable<TransformedWaveletDelta> deltas) {
-    this.deltas = ImmutableList.copyOf(deltas);
-    checkDeltaVersions();
+  /** Creates a delta sequence from contiguous deltas. */
+  public static DeltaSequence of(Iterable<TransformedWaveletDelta> deltas) {
+    return new DeltaSequence(ImmutableList.copyOf(deltas), true);
+  }
+
+  /** Creates a delta sequence from contiguous deltas. */
+  public static DeltaSequence of(TransformedWaveletDelta... deltas) {
+    return new DeltaSequence(ImmutableList.copyOf(deltas), true);
+  }
+
+  /** Creates a delta sequence by concatenating contiguous sequences. */
+  public static DeltaSequence join(DeltaSequence first, DeltaSequence... rest) {
+    ImmutableList.Builder<TransformedWaveletDelta> builder = ImmutableList.builder();
+    builder.addAll(first);
+    long expectedBeginVersion = first.getEndVersion().getVersion();
+    for (DeltaSequence s : rest) {
+      Preconditions.checkArgument(s.getStartVersion() == expectedBeginVersion,
+          "Sequences are not contiguous, expected start version %s for sequence %s",
+          expectedBeginVersion, s);
+      builder.addAll(s);
+      expectedBeginVersion = s.getEndVersion().getVersion();
+    }
+    return new DeltaSequence(builder.build(), false);
+  }
+
+  private DeltaSequence(ImmutableList<TransformedWaveletDelta> deltas, boolean checkVersions) {
+    this.deltas = deltas;
+    if (checkVersions) {
+      checkDeltaVersions();
+    }
   }
 
   /**
@@ -69,46 +92,33 @@ public final class DeltaSequence extends AbstractList<TransformedWaveletDelta> {
   }
 
   @Override
+  protected List<TransformedWaveletDelta> delegate() {
+    return deltas;
+  }
+
+  @Override
   public DeltaSequence subList(int start, int end) {
-    List<TransformedWaveletDelta> subDeltas = deltas.subList(start, end);
-    return new DeltaSequence(subDeltas);
+    return new DeltaSequence(deltas.subList(start, end), false);
   }
 
   /**
-   * Constructs a DeltaSequence which consists of the specified deltas
-   * followed by this sequence's deltas.
+   * Gets the version at which the first delta applied.
+   *
+   * @precondition the sequence is non-empty
    */
-  public DeltaSequence prepend(Iterable<TransformedWaveletDelta> prefixDeltas) {
-    return new DeltaSequence(Iterables.concat(prefixDeltas, deltas));
-  }
-
   public long getStartVersion() {
-    return deltas.isEmpty() ? Constants.NO_VERSION : deltas.get(0).getAppliedAtVersion();
+    Preconditions.checkState(!deltas.isEmpty(), "Empty delta sequence has no start version");
+    return deltas.get(0).getAppliedAtVersion();
   }
 
+  /**
+   * Gets the resulting version of this sequence.
+   *
+   * @precondition the sequence is non-empty
+   */
   public HashedVersion getEndVersion() {
     Preconditions.checkState(!deltas.isEmpty(), "Empty delta sequence has no end version");
     return deltas.get(deltas.size() - 1).getResultingVersion();
-  }
-
-  @Override
-  public boolean isEmpty() {
-    return deltas.isEmpty();
-  }
-
-  @Override
-  public int size() {
-    return deltas.size();
-  }
-
-  @Override
-  public TransformedWaveletDelta get(int index) {
-    return deltas.get(index);
-  }
-
-  @Override
-  public Iterator<TransformedWaveletDelta> iterator() {
-    return deltas.iterator();
   }
 
   @Override

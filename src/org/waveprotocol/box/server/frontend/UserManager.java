@@ -71,7 +71,6 @@ final class UserManager {
     if (deltas.isEmpty()) {
       return;
     }
-    long deltaVersion = deltas.getStartVersion();
     List<WaveViewSubscription> subscriptions = matchSubscriptions(waveletName);
     for (WaveViewSubscription subscription : subscriptions) {
       try {

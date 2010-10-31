@@ -23,6 +23,7 @@ import com.google.protobuf.RpcController;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.frontend.testing.FakeClientFrontend;
 import org.waveprotocol.box.server.rpc.testing.FakeServerRpcController;
@@ -38,7 +39,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -58,8 +58,8 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
     .addOperation(ProtocolWaveletOperation.newBuilder().setNoOp(true).build()).build();
 
   private static final ImmutableList<ProtocolWaveletDelta> DELTAS = ImmutableList.of(DELTA);
-  private static final ImmutableList<TransformedWaveletDelta> POJO_DELTAS =
-      ImmutableList.of(CoreWaveletOperationSerializer.deserialize(DELTA, END_VERSION, 0L));
+  private static final DeltaSequence POJO_DELTAS =
+      DeltaSequence.of(CoreWaveletOperationSerializer.deserialize(DELTA, END_VERSION, 0L));
 
   private RpcController controller;
 

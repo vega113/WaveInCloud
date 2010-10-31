@@ -21,9 +21,8 @@ import com.google.common.collect.Lists;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
-import org.waveprotocol.wave.model.document.operation.DocInitialization;
-import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
@@ -67,7 +66,6 @@ public class WaveletAndDeltasTest extends TestCase {
   protected void setUp() throws Exception {
     waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX, HashedVersion.unsigned(0),
         0L);
-    DocInitialization content = new DocInitializationBuilder().build();
     waveletData.addParticipant(ALEX);
 
     context = new WaveletOperationContext(ALEX, 0L, 1);
@@ -84,7 +82,7 @@ public class WaveletAndDeltasTest extends TestCase {
 
     TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, hashedVersionOne, 0L, ops);
 
-    wavelet = WaveletAndDeltas.create(waveletData, Collections.singletonList(delta));
+    wavelet = WaveletAndDeltas.create(waveletData, DeltaSequence.of(delta));
 
     addCarolOp = new AddParticipant(context, CAROL);
     removeAlexOp = new RemoveParticipant(context, ALEX);
@@ -116,7 +114,7 @@ public class WaveletAndDeltasTest extends TestCase {
 
     TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, hashedVersionTwo, 0L,
       Arrays.asList(addCarolOp));
-    wavelet.appendDeltas(waveletData, Collections.singletonList(delta));
+    wavelet.appendDeltas(waveletData, DeltaSequence.of(delta));
 
     ReadableWaveletData firstSnapshot = wavelet.getSnapshotBeforeDeltas();
     assertFalse("Bob should not be a participant", firstSnapshot.getParticipants().contains(BOB));
@@ -140,7 +138,7 @@ public class WaveletAndDeltasTest extends TestCase {
     TransformedWaveletDelta deltaRemove = new TransformedWaveletDelta(ALEX, hashedVersionThree, 0L,
         Arrays.asList(removeAlexOp));
 
-    List<TransformedWaveletDelta> deltas = Arrays.asList(deltaAdd, deltaRemove);
+    DeltaSequence deltas = DeltaSequence.of(deltaAdd, deltaRemove);
     wavelet.appendDeltas(waveletData, deltas);
   }
 
@@ -150,10 +148,10 @@ public class WaveletAndDeltasTest extends TestCase {
         Arrays.asList(addCarolOp));
 
     removeAlexOp.apply(waveletData);
-    TransformedWaveletDelta deltaRemove = new TransformedWaveletDelta(ALEX, hashedVersionThree, 0L,
+    TransformedWaveletDelta deltaRemove = new TransformedWaveletDelta(ALEX, hashedVersionTwo, 0L,
         Arrays.asList(removeAlexOp));
 
-    List<TransformedWaveletDelta> deltas = Arrays.asList(deltaAdd, deltaRemove);
+    DeltaSequence deltas = DeltaSequence.of(deltaAdd, deltaRemove);
 
     try {
       wavelet.appendDeltas(waveletData, deltas);

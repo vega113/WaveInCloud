@@ -623,7 +623,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // Send the results to subscribers.
           try {
             dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(),
-                ImmutableList.of(transformedDelta));
+                DeltaSequence.of(transformedDelta));
           } catch (RuntimeException e) {
             LOG.severe("Runtime exception in wave bus subscriber", e);
           }

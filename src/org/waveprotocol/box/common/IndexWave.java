@@ -128,7 +128,7 @@ public final class IndexWave {
       indexDeltas.add(noOpDelta);
     }
 
-    return new DeltaSequence(indexDeltas);
+    return DeltaSequence.of(indexDeltas);
   }
 
   /**

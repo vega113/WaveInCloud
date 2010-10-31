@@ -35,6 +35,7 @@ import com.google.wave.api.robot.RobotName;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.robots.util.WaveletPluginDocumentFactory;
@@ -65,7 +66,6 @@ import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -268,7 +268,7 @@ public class EventGeneratorTest extends TestCase {
     // Create the delta
     TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, endVersion, 0L, ops);
     WaveletAndDeltas waveletAndDeltas =
-        WaveletAndDeltas.create(waveletData, Collections.singletonList(delta));
+        WaveletAndDeltas.create(waveletData, DeltaSequence.of(delta));
 
     // Put the wanted event in the capabilities map
     Map<EventType, Capability> capabilities = Maps.newHashMap();

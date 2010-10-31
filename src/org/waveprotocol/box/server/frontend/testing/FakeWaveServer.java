@@ -19,11 +19,10 @@ package org.waveprotocol.box.server.frontend.testing;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
@@ -86,7 +85,7 @@ public class FakeWaveServer extends FakeClientFrontend {
       // them.
       for (WaveletData wavelet : wavelets.values()) {
         WaveletName name = WaveletName.of(wavelet.getWaveId(), wavelet.getWaveletId());
-        waveletUpdate(wavelet, deltas.get(name));
+        waveletUpdate(wavelet, DeltaSequence.of(deltas.get(name)));
       }
     }
   }
@@ -123,7 +122,7 @@ public class FakeWaveServer extends FakeClientFrontend {
     doSubmitSuccess(waveletName, resultingVersion, APP_TIMESTAMP);
     // Send an update echoing the submitted delta. Note: the document state is
     // ignored.
-    waveletUpdate(wavelet, ImmutableList.of(versionedDelta));
+    waveletUpdate(wavelet, DeltaSequence.of(versionedDelta));
     // Send a corresponding update of the index wave.
     doIndexUpdate(wavelet, delta);
   }
@@ -180,7 +179,7 @@ public class FakeWaveServer extends FakeClientFrontend {
         targetVersion, dummyCreationTime);
     HashedVersion resultingVersion =
       updateAndGetVersion(indexWaveletName, indexDelta.getOperationCount());
-    waveletUpdate(fakeIndexWavelet, Lists.newArrayList(
+    waveletUpdate(fakeIndexWavelet, DeltaSequence.of(
         CoreWaveletOperationSerializer.deserialize(indexDelta.build(),
             resultingVersion, APP_TIMESTAMP)));
   }
