@@ -17,6 +17,7 @@
 
 package org.waveprotocol.box.server.robots.dataapi;
 
+import com.google.inject.Inject;
 import com.google.wave.api.OperationType;
 
 import org.waveprotocol.box.server.robots.AbstractOperationServiceRegistry;
@@ -25,6 +26,7 @@ import org.waveprotocol.box.server.robots.operations.CreateWaveletService;
 import org.waveprotocol.box.server.robots.operations.DoNothingService;
 import org.waveprotocol.box.server.robots.operations.FetchWaveService;
 import org.waveprotocol.box.server.robots.operations.OperationService;
+import org.waveprotocol.box.server.robots.operations.SearchService;
 
 /**
  * A registry of {@link OperationService}s for the data API.
@@ -32,11 +34,11 @@ import org.waveprotocol.box.server.robots.operations.OperationService;
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public final class DataApiOperationServiceRegistry extends AbstractOperationServiceRegistry {
-
   // Suppressing warnings about operations that are deprecated but still used by
   // the default client libraries
   @SuppressWarnings("deprecation")
-  public DataApiOperationServiceRegistry() {
+  @Inject
+  public DataApiOperationServiceRegistry(SearchService searchService) {
     super();
 
     // Register all the OperationProviders
@@ -45,5 +47,6 @@ public final class DataApiOperationServiceRegistry extends AbstractOperationServ
     register(OperationType.WAVELET_APPEND_BLIP, AppendBlipService.create());
     register(OperationType.ROBOT_CREATE_WAVELET, CreateWaveletService.create());
     register(OperationType.ROBOT_FETCH_WAVE, FetchWaveService.create());
+    register(OperationType.ROBOT_SEARCH, searchService);
   }
 }

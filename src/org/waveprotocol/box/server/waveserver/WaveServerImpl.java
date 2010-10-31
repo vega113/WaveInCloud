@@ -38,8 +38,8 @@ import org.waveprotocol.box.server.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
-import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -51,8 +51,13 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDelta;
+import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.WaveViewData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.impl.UnmodifiableWaveletData;
+import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
 import org.waveprotocol.wave.waveserver.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
@@ -62,15 +67,17 @@ import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * The main class that services the FederationHost, FederationRemote and ClientFrontend.
+ * The main class that services the FederationHost, FederationRemote and
+ * ClientFrontend.
  */
 @Singleton
-public class WaveServerImpl implements WaveBus, WaveletProvider,
-    WaveletFederationProvider, WaveletFederationListener.Factory {
+public class WaveServerImpl implements WaveBus, WaveletProvider, WaveletFederationProvider,
+    WaveletFederationListener.Factory, SearchProvider {
 
   private static final Log LOG = Log.get(WaveServerImpl.class);
 
@@ -85,33 +92,30 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
 
   /** Wavelet states */
   private final Map<WaveId, Map<WaveletId, WaveletContainer>> waveMap =
-    new MapMaker().makeComputingMap(
-        new Function<WaveId, Map<WaveletId, WaveletContainer>>() {
-          @Override
-          public Map<WaveletId, WaveletContainer> apply(WaveId from) {
-            return Maps.newHashMap();
-          }
-        });
+      new MapMaker().makeComputingMap(new Function<WaveId, Map<WaveletId, WaveletContainer>>() {
+        @Override
+        public Map<WaveletId, WaveletContainer> apply(WaveId from) {
+          return Maps.newHashMap();
+        }
+      });
 
   /** List of federation hosts for which we have listeners */
   private final Map<String, WaveletFederationListener> federationHosts =
-      // Add a new entry to the map on demand.
-      new MapMaker().makeComputingMap(
-        new Function<String, WaveletFederationListener>() {
-          @Override
-          public WaveletFederationListener apply(String domain) {
-            return federationHostFactory.listenerForDomain(domain);
-          }
+  // Add a new entry to the map on demand.
+      new MapMaker().makeComputingMap(new Function<String, WaveletFederationListener>() {
+        @Override
+        public WaveletFederationListener apply(String domain) {
+          return federationHostFactory.listenerForDomain(domain);
         }
-      );
+      });
 
   //
   // WaveletFederationListener.Factory implementation.
   //
 
   /**
-   * Listener for notifications coming from the Federation Remote. For now we accept updates
-   * for wavelets on any domain.
+   * Listener for notifications coming from the Federation Remote. For now we
+   * accept updates for wavelets on any domain.
    */
   public WaveletFederationListener listenerForDomain(final String domain) {
     return new WaveletFederationListener() {
@@ -144,7 +148,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           } catch (InvalidProtocolBufferException e) {
             LOG.info("Invalid applied delta protobuf for incoming " + waveletName, e);
             safeMarkWaveletCorrupted(wavelet);
-            callback.onFailure(FederationErrors.badRequest("Invalid applied delta protocol buffer"));
+            callback.onFailure(
+                FederationErrors.badRequest("Invalid applied delta protocol buffer"));
             return;
           }
         }
@@ -163,8 +168,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
                 @Override
                 public void onSuccess(DeltaSequence result) {
                   HashedVersion version = result.getEndVersion();
-                  dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(), version,
-                      result);
+                  dispatcher.waveletUpdate(
+                      getWavelet(waveletName).getWaveletData(), version, result);
                 }
 
                 @Override
@@ -173,7 +178,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
                   callback.onFailure(FederationErrors.badRequest(errorMessage));
                 }
               });
-          // TODO: when we support federated groups, forward to federationHosts too.
+          // TODO: when we support federated groups, forward to federationHosts
+          // too.
         } catch (WaveletStateException e) {
           // HACK(jochen): TODO: fix the case of the missing history! ###
           LOG.severe("DANGER WILL ROBINSON, WAVELET HISTORY IS INCOMPLETE!!!", e);
@@ -195,8 +201,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       public void waveletCommitUpdate(WaveletName waveletName,
           ProtocolHashedVersion committedVersion, WaveletUpdateCallback callback) {
         Preconditions.checkNotNull(committedVersion);
-        dispatcher.waveletCommitted(waveletName,
-            CoreWaveletOperationSerializer.deserialize(committedVersion));
+        dispatcher.waveletCommitted(
+            waveletName, CoreWaveletOperationSerializer.deserialize(committedVersion));
         // Pretend we've committed it, there is no persistence
         LOG.fine("Responding with success to wavelet commit on " + waveletName);
         callback.onSuccess();
@@ -220,8 +226,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   //
 
   @Override
-  public void submitRequest(WaveletName waveletName, ProtocolSignedDelta signedDelta,
-      SubmitResultListener listener) {
+  public void submitRequest(
+      WaveletName waveletName, ProtocolSignedDelta signedDelta, SubmitResultListener listener) {
     if (!isLocalWavelet(waveletName)) {
       LOG.warning("Remote tried to submit to non-local wavelet " + waveletName);
       listener.onFailure(FederationErrors.badRequest("Non-local wavelet update"));
@@ -248,33 +254,35 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       certificateManager.verifyDelta(signedDelta);
       submitDelta(waveletName, delta, signedDelta, listener);
     } catch (SignatureException e) {
-      LOG.warning("Submit request: Delta failed verification. WaveletName: " + waveletName +
-          " delta: " + signedDelta, e);
+      LOG.warning(
+          "Submit request: Delta failed verification. WaveletName: " + waveletName + " delta: "
+              + signedDelta, e);
       listener.onFailure(FederationErrors.badRequest("Remote verification failed"));
     } catch (UnknownSignerException e) {
-      LOG.warning("Submit request: unknown signer.  WaveletName: " + waveletName +
-          "delta: " + signedDelta, e);
+      LOG.warning(
+          "Submit request: unknown signer.  WaveletName: " + waveletName + "delta: " + signedDelta,
+          e);
       listener.onFailure(FederationErrors.badRequest("Unknown signer"));
     }
   }
 
   @Override
   public void requestHistory(WaveletName waveletName, String domain,
-      ProtocolHashedVersion startVersion, ProtocolHashedVersion endVersion,
-      long lengthLimit, HistoryResponseListener listener) {
+      ProtocolHashedVersion startVersion, ProtocolHashedVersion endVersion, long lengthLimit,
+      HistoryResponseListener listener) {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
-      listener.onFailure(FederationErrors.badRequest("Wavelet " + waveletName
-          + " does not exist."));
+      listener.onFailure(
+          FederationErrors.badRequest("Wavelet " + waveletName + " does not exist."));
       LOG.info("Request history: " + domain + " requested non-existent wavelet: " + waveletName);
     } else {
       // TODO: once we support federated groups, expand support to request
       // remote wavelets too.
       if (!isLocalWavelet(waveletName)) {
-        listener.onFailure(FederationErrors.badRequest(
-            "Wavelet " + waveletName + " not hosted here."));
-        LOG.info("Federation remote for domain: " + domain + " requested a remote wavelet: " +
-            waveletName);
+        listener.onFailure(
+            FederationErrors.badRequest("Wavelet " + waveletName + " not hosted here."));
+        LOG.info("Federation remote for domain: " + domain + " requested a remote wavelet: "
+            + waveletName);
       } else {
         try {
           Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> deltaHistory =
@@ -284,7 +292,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
             deltaHistoryBytes.add(d.getByteString());
           }
 
-          // Now determine whether we received the entire requested wavelet history.
+          // Now determine whether we received the entire requested wavelet
+          // history.
           LOG.info("Found deltaHistory between " + startVersion + " - " + endVersion
               + ", returning to requester domain " + domain + " -- " + deltaHistory);
           ProtocolHashedVersion hashedEndVersion =
@@ -292,27 +301,27 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
                   .setVersion(endVersion.getVersion()).build();
           listener.onSuccess(deltaHistoryBytes, hashedEndVersion, endVersion.getVersion());
           // TODO: ### check length limit ??
-//           else {
-//            ProtocolAppliedWaveletDelta lastDelta = deltaHistory.last();
-//            long lastVersion = lastDelta.getHashedVersionAppliedAt().getVersion() +
-//                lastDelta.getOperationsApplied();
-//            listener.onSuccess(deltaHistory, lcv.getVersion(),
-//                lastVersion);
-//          }
+          // else {
+          // ProtocolAppliedWaveletDelta lastDelta = deltaHistory.last();
+          // long lastVersion =
+          // lastDelta.getHashedVersionAppliedAt().getVersion() +
+          // lastDelta.getOperationsApplied();
+          // listener.onSuccess(deltaHistory, lcv.getVersion(),
+          // lastVersion);
+          // }
         } catch (WaveletStateException e) {
-          LOG.severe("Error retrieving wavelet history: " + waveletName + " " + startVersion +
-              " - " + endVersion);
-          listener.onFailure(FederationErrors.badRequest(
-              "Server error while retrieving wavelet history."));
+          LOG.severe("Error retrieving wavelet history: " + waveletName + " " + startVersion + " - "
+              + endVersion);
+          listener.onFailure(
+              FederationErrors.badRequest("Server error while retrieving wavelet history."));
         }
       }
     }
   }
 
   @Override
-  public void getDeltaSignerInfo(ByteString signerId,
-      WaveletName waveletName, ProtocolHashedVersion deltaEndVersion,
-      DeltaSignerInfoResponseListener listener) {
+  public void getDeltaSignerInfo(ByteString signerId, WaveletName waveletName,
+      ProtocolHashedVersion deltaEndVersion, DeltaSignerInfoResponseListener listener) {
     WaveletContainer wavelet = getWavelet(waveletName);
     HashedVersion endVersion = CoreWaveletOperationSerializer.deserialize(deltaEndVersion);
 
@@ -327,15 +336,17 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       if (localWavelet.isDeltaSigner(endVersion, signerId)) {
         ProtocolSignerInfo signerInfo = certificateManager.retrieveSignerInfo(signerId);
         if (signerInfo == null) {
-          // Oh no!  We are supposed to store it, and we already know they did sign this delta.
+          // Oh no! We are supposed to store it, and we already know they did
+          // sign this delta.
           LOG.severe("No stored signer info for valid getDeltaSignerInfo on " + waveletName);
           listener.onFailure(FederationErrors.badRequest("Unknown signer info"));
         } else {
           listener.onSuccess(signerInfo);
         }
       } else {
-        LOG.info("getDeltaSignerInfo was not authrorised for wavelet " + waveletName
-            + ", end version " + deltaEndVersion);
+        LOG.info(
+            "getDeltaSignerInfo was not authrorised for wavelet " + waveletName + ", end version "
+                + deltaEndVersion);
         listener.onFailure(FederationErrors.badRequest("Not authorised to get signer info"));
       }
     }
@@ -360,8 +371,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   //
 
   @Override
-  public Collection<CoreWaveletDelta> getHistory(WaveletName waveletName,
-      HashedVersion startVersion, HashedVersion endVersion) {
+  public Collection<CoreWaveletDelta> getHistory(
+      WaveletName waveletName, HashedVersion startVersion, HashedVersion endVersion) {
     WaveletContainer wc = getWavelet(waveletName);
     if (wc == null) {
       LOG.info("Client request for history made for non-existent wavelet: " + waveletName);
@@ -371,15 +382,17 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       try {
         deltaHistory = wc.requestTransformedHistory(startVersion, endVersion);
       } catch (AccessControlException e) {
-        LOG.warning("Client requested history with incorrect hashedVersion: " + waveletName + " " +
-            " startVersion: " + startVersion + " endVersion: " + endVersion);
+        LOG.warning("Client requested history with incorrect hashedVersion: " + waveletName + " "
+            + " startVersion: " + startVersion + " endVersion: " + endVersion);
       } catch (WaveletStateException e) {
         if (e.getState() == State.LOADING) {
-          LOG.severe("Client Frontend requested history for a remote wavelet that is not yet" +
-          "available - this should not happen as we have not sent an update for the wavelet.");
+          LOG
+              .severe(
+                      "Client Frontend requested history for a remote wavelet that is not yet"
+                      + "available - this should not happen as we have not sent an update for the wavelet.");
         } else {
-          LOG.severe("Error retrieving wavelet history: " + waveletName + " " + startVersion +
-              " - " + endVersion);
+          LOG.severe("Error retrieving wavelet history: " + waveletName + " " + startVersion + " - "
+              + endVersion);
         }
       }
       return deltaHistory;
@@ -398,14 +411,15 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   }
 
   @Override
-  public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
-      final SubmitRequestListener listener) {
+  public void submitRequest(
+      WaveletName waveletName, ProtocolWaveletDelta delta, final SubmitRequestListener listener) {
     if (delta.getOperationCount() == 0) {
       listener.onFailure("Empty delta at version " + delta.getHashedVersion().getVersion());
       return;
     }
 
-    // The serialised version of this delta happens now.  This should be the only place, ever!
+    // The serialised version of this delta happens now. This should be the only
+    // place, ever!
     ProtocolSignedDelta signedDelta =
         certificateManager.signDelta(ByteStringMessage.serializeMessage(delta));
 
@@ -453,10 +467,10 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   /**
    * Constructor.
    *
-   * @param certificateManager provider of certificates; it also determines which
-   *        domains this wave server regards as local wavelets.
-   * @param federationHostFactory factory that returns federation host instance listening
-   *        on a given domain.
+   * @param certificateManager provider of certificates; it also determines
+   *        which domains this wave server regards as local wavelets.
+   * @param federationHostFactory factory that returns federation host instance
+   *        listening on a given domain.
    * @param federationRemote federation remote interface
    * @param localWaveletContainerFactory factory for local WaveletContainers
    * @param remoteWaveletContainerFactory factory for remote WaveletContainers
@@ -474,8 +488,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
     this.localWaveletContainerFactory = localWaveletContainerFactory;
     this.remoteWaveletContainerFactory = remoteWaveletContainerFactory;
 
-    LOG.info("Wave Server configured to host local domains: "
-        + certificateManager.getLocalDomains());
+    LOG.info(
+        "Wave Server configured to host local domains: " + certificateManager.getLocalDomains());
 
     // Preemptively add our own signer info to the certificate manager
     SignerInfo signerInfo = certificateManager.getLocalSigner().getSignerInfo();
@@ -489,16 +503,16 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   }
 
   private boolean isLocalWavelet(WaveletName waveletName) {
-    boolean isLocal = certificateManager.getLocalDomains().
-        contains(waveletName.waveletId.getDomain());
+    boolean isLocal =
+        certificateManager.getLocalDomains().contains(waveletName.waveletId.getDomain());
     LOG.info("### WS is local? " + waveletName + " = " + isLocal);
     return isLocal;
   }
 
   /**
-   * Returns a container for a remote wavelet. If it doesn't exist, it will be created.
-   * This method is only called in response to a Federation Remote doing an update
-   * or commit on this wavelet.
+   * Returns a container for a remote wavelet. If it doesn't exist, it will be
+   * created. This method is only called in response to a Federation Remote
+   * doing an update or commit on this wavelet.
    *
    * @param waveletName name of wavelet
    * @return an existing or new instance.
@@ -508,7 +522,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
     Preconditions.checkArgument(!isLocalWavelet(waveletName), "%s is local", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
-      // This will blow up if we messed up and put a local wavelet in by mistake.
+      // This will blow up if we messed up and put a local wavelet in by
+      // mistake.
       RemoteWaveletContainer wc = (RemoteWaveletContainer) wave.get(waveletName.waveletId);
       if (wc == null) {
         wc = remoteWaveletContainerFactory.create(waveletName);
@@ -519,29 +534,33 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   }
 
   /**
-   * Returns a container for a local wavelet. If it doesn't exist, it will be created.
-   * Local wavelets are retrieved or created by a federation host or client on behalf
-   * of a participant. The participant must have permission to access the wavelet if
-   * it already exists.
+   * Returns a container for a local wavelet. If it doesn't exist, it will be
+   * created. Local wavelets are retrieved or created by a federation host or
+   * client on behalf of a participant. The participant must have permission to
+   * access the wavelet if it already exists.
    *
    * @param waveletName name of wavelet
    * @param participantId on who's behalf this wavelet is to be accessed.
    * @return an existing or new instance.
-   * @throws AccessControlException if the participant may not access the wavelet.
+   * @throws AccessControlException if the participant may not access the
+   *         wavelet.
    * @throws IllegalArgumentException if the name refers to a remote wavelet.
    * @throws WaveletStateException if the wavelet is in a bad state.
    */
-  private LocalWaveletContainer getOrCreateLocalWavelet(WaveletName waveletName,
-      ParticipantId participantId) throws AccessControlException, WaveletStateException {
+  private LocalWaveletContainer getOrCreateLocalWavelet(
+      WaveletName waveletName, ParticipantId participantId)
+      throws AccessControlException, WaveletStateException {
     Preconditions.checkArgument(isLocalWavelet(waveletName), "%s is remote", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
-      // This will blow up if we messed up and put a remote wavelet in by mistake.
+      // This will blow up if we messed up and put a remote wavelet in by
+      // mistake.
       LocalWaveletContainer wc = (LocalWaveletContainer) wave.get(waveletName.waveletId);
       if (wc == null) {
         wc = localWaveletContainerFactory.create(waveletName);
         // TODO: HACK(Jochen): do we need a namespace policer here ??? ###
-        // TODO(ljvderijk): Do we want to put in a wavelet wich has not been sumbitted yet?
+        // TODO(ljvderijk): Do we want to put in a wavelet wich has not been
+        // sumbitted yet?
         wave.put(waveletName.waveletId, wc);
       } else {
         if (!wc.checkAccessPermission(participantId)) {
@@ -553,8 +572,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   }
 
   /**
-   * Returns a generic wavelet container, when the caller doesn't need to validate whether
-   * its a local or remote wavelet.
+   * Returns a generic wavelet container, when the caller doesn't need to
+   * validate whether its a local or remote wavelet.
    *
    * @param waveletName name of wavelet.
    * @return an wavelet container or null if it doesn't exist.
@@ -582,9 +601,9 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    * @param signedDelta the signed delta
    * @param resultListener callback
    *
-   * TODO: for now a the WaveletFederationProvider will have
-   *               made sure this is a local wavelet. Once we support
-   *               federated groups, that test should be removed.
+   *         TODO: for now a the WaveletFederationProvider will have made sure
+   *        this is a local wavelet. Once we support federated groups, that test
+   *        should be removed.
    */
   private void submitDelta(final WaveletName waveletName, ProtocolWaveletDelta delta,
       final ProtocolSignedDelta signedDelta, final SubmitResultListener resultListener) {
@@ -599,13 +618,13 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
             getOrCreateLocalWavelet(waveletName, new ParticipantId(delta.getAuthor()));
 
         /*
-         * Synchronise on the wavelet container so that updates passed to clientListener and
-         * Federation listeners are ordered correctly. The application of deltas can happen in any
-         * order (due to OT).
-         *
-         * TODO(thorogood): This basically creates a second write lock (like the one held within
-         * wc.submitRequest) and extends it out around the broadcast code. Ideally what should
-         * happen is the update is pushed onto a queue which is handled in another thread.
+         * Synchronise on the wavelet container so that updates passed to
+         * clientListener and Federation listeners are ordered correctly. The
+         * application of deltas can happen in any order (due to OT).
+         * TODO(thorogood): This basically creates a second write lock (like the
+         * one held within wc.submitRequest) and extends it out around the
+         * broadcast code. Ideally what should happen is the update is pushed
+         * onto a queue which is handled in another thread.
          */
         synchronized (wc) {
           // Get the host domains before applying the delta in case
@@ -623,9 +642,11 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           resultListener.onSuccess(appliedDelta.getMessage().getOperationsApplied(),
               resultVersionProto, appliedDelta.getMessage().getApplicationTimestamp());
 
-          // This is always false right now since the current algorithm doesn't transform ops away.
+          // This is always false right now since the current algorithm doesn't
+          // transform ops away.
           if (appliedDelta.getMessage().getOperationsApplied() == 0) {
-            return; // ignore the delta (don't publish it), it was transformed away
+            return; // ignore the delta (don't publish it), it was transformed
+                    // away
           }
 
           // Send the results to subscribers.
@@ -636,7 +657,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // Capture any new domains from addParticipant operations.
           hostDomains.addAll(getParticipantDomains(wc));
 
-          // Broadcast results to the remote servers, but make sure they all have our signatures
+          // Broadcast results to the remote servers, but make sure they all
+          // have our signatures
           for (final String hostDomain : hostDomains) {
             final WaveletFederationListener host = federationHosts.get(hostDomain);
             host.waveletDeltaUpdate(waveletName, ImmutableList.of(appliedDelta.getByteString()),
@@ -685,13 +707,16 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         return;
       }
     } else {
-      // For remote wavelets post required signatures to the authorative server then send delta
+      // For remote wavelets post required signatures to the authorative server
+      // then send delta
       postAllSignerInfo(signedDelta.getSignatureList(), waveletName.waveletId.getDomain(),
           new PostSignerInfoCallback() {
-            @Override public void done(int successCount) {
-              LOG.info("Remote: successfully sent " + successCount + " of "
-                  + signedDelta.getSignatureCount() + " certs to "
-                  + waveletName.waveletId.getDomain());
+            @Override
+            public void done(int successCount) {
+              LOG.info(
+                  "Remote: successfully sent " + successCount + " of "
+                      + signedDelta.getSignatureCount() + " certs to "
+                      + waveletName.waveletId.getDomain());
               federationRemote.submitRequest(waveletName, signedDelta, resultListener);
             }
           });
@@ -699,12 +724,13 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   }
 
   /**
-   * Post a list of certificates to a domain and run a callback when all are finished.  The
-   * callback will run whether or not all posts succeed.
+   * Post a list of certificates to a domain and run a callback when all are
+   * finished. The callback will run whether or not all posts succeed.
    *
    * @param sigs list of signatures to post signer info for
    * @param domain to post signature to
-   * @param callback to run when all signatures have been posted, successfully or unsuccessfully
+   * @param callback to run when all signatures have been posted, successfully
+   *        or unsuccessfully
    */
   private void postAllSignerInfo(final List<ProtocolSignature> sigs, final String domain,
       final PostSignerInfoCallback callback) {
@@ -766,5 +792,46 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       }
     }
     return ImmutableSet.copyOf(hosts);
+  }
+
+  @Override
+  public Collection<WaveViewData> search(
+      ParticipantId user, String query, int startAt, int numResults) {
+    LOG.info("Search query '" + query + "' from user: " + user);
+
+    if (!query.equals("in:inbox") && !query.equals("with:me")) {
+      throw new AssertionError("Only queries for the inbox work");
+    }
+
+    Map<WaveId, WaveViewData> results = CollectionUtils.newHashMap();
+
+    synchronized (waveMap) {
+      int resultIndex = 0;
+      for (Entry<WaveId, Map<WaveletId, WaveletContainer>> entry : waveMap.entrySet()) {
+        WaveId waveId = entry.getKey();
+        for (WaveletContainer c : entry.getValue().values()) {
+          if (c.getParticipants().contains(user)) {
+            if (resultIndex >= startAt && resultIndex < (startAt + numResults)) {
+              WaveletData wavelet = c.getWaveletData();
+
+              WaveViewData wave = results.get(waveId);
+              if (wave == null) {
+                wave = WaveViewDataImpl.create(waveId);
+                results.put(waveId, wave);
+              }
+
+              wave.addWavelet(UnmodifiableWaveletData.FACTORY.create(wavelet));
+            }
+
+            resultIndex++;
+            if (resultIndex > startAt + numResults) {
+              return results.values();
+            }
+          }
+        }
+      }
+    }
+
+    return results.values();
   }
 }
