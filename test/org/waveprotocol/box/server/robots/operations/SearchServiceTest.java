@@ -58,6 +58,7 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.testing.BasicFactories;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -66,6 +67,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.ReadOnlyWaveView;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
@@ -102,7 +104,7 @@ public class SearchServiceTest extends TestCase {
     public final ConversationView conversationView;
     public final Conversation conversation;
     public final WaveViewData waveViewData;
-  
+
     public TestingWaveletData(
         WaveId waveId, WaveletId waveletId, ParticipantId author, boolean isConversational) {
       waveletData =
@@ -110,25 +112,26 @@ public class SearchServiceTest extends TestCase {
               waveId, BasicFactories.muteDocumentFactory());
       wavelet =
         new OpBasedWavelet(waveId, waveletData, new BasicWaveletOperationContextFactory(author),
-            ParticipationHelper.IGNORANT, SilentOperationSink.Executor.build(waveletData),
+            ParticipationHelper.IGNORANT,
+            SilentOperationSink.Executor.<WaveletOperation, WaveletData>build(waveletData),
             SilentOperationSink.VOID);
       waveView = new ReadOnlyWaveView(waveId);
       waveView.addWavelet(wavelet);
-  
+
       if (isConversational) {
         conversationView = WaveBasedConversationView.create(waveView, FakeIdGenerator.create());
         WaveletBasedConversation.makeWaveletConversational(wavelet);
         conversation = conversationView.getRoot();
-  
+
         conversation.addParticipant(author);
       } else {
         conversationView = null;
         conversation = null;
       }
-  
+
       waveViewData = WaveViewDataImpl.create(waveId, ImmutableList.of(waveletData));
     }
-  
+
     public void appendBlipWithText(String text) {
       ConversationBlip blip = conversation.getRootThread().appendBlip();
       LineContainers.appendToLastLine(blip.getContent(), XmlStringBuilder.createText(text));
@@ -144,7 +147,7 @@ public class SearchServiceTest extends TestCase {
     IdGenerator idGenerator = mock(IdGenerator.class);
     service = new SearchService(searchProvider, new ConversationUtil(idGenerator));
   }
-  
+
   public void testSearchWrapsSearchProvidersResult() throws InvalidRequestException {
     TestingWaveletData data =
         new TestingWaveletData(WAVE_ID, CONVERSATION_WAVELET_ID, PARTICIPANT, true);
@@ -233,29 +236,29 @@ public class SearchServiceTest extends TestCase {
       public boolean matches(Object item) {
         Map<ParamsProperty, Object> map = (Map<ParamsProperty, Object>) item;
         assertTrue(map.containsKey(ParamsProperty.SEARCH_RESULTS));
-  
+
         Object resultsObj = map.get(ParamsProperty.SEARCH_RESULTS);
         SearchResult results = (SearchResult) resultsObj;
-  
+
         assertEquals(query, results.getQuery());
         assertEquals(1, results.getNumResults());
-  
+
         Digest digest = results.getDigests().get(0);
         assertEquals(title, digest.getTitle());
         assertEquals(waveId.serialise(), digest.getWaveId());
-  
+
         Builder<ParticipantId> participantIds = ImmutableSet.builder();
         for (String name : digest.getParticipants()) {
           participantIds.add(ParticipantId.ofUnsafe(name));
         }
         assertEquals(participants, participantIds.build());
-  
+
         assertEquals(unreadCount, digest.getUnreadCount());
         assertEquals(blipCount, digest.getBlipCount());
-  
+
         return true;
       }
-  
+
       @Override
       public void describeTo(Description description) {
         description.appendText("Check digests match expected data");
