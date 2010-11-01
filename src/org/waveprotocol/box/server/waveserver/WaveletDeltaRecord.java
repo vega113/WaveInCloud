@@ -18,13 +18,14 @@
 package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Preconditions;
-import com.google.inject.internal.Nullable;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+
+import javax.annotation.Nullable;
 
 /**
  * Bundles an applied delta (an original signed delta with information about how

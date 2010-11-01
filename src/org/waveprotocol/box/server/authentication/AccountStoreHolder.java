@@ -17,7 +17,7 @@
 
 package org.waveprotocol.box.server.authentication;
 
-import com.google.gxp.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import org.waveprotocol.box.server.persistence.AccountStore;
 

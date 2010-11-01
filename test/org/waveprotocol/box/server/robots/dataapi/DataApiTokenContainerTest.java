@@ -21,7 +21,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.gxp.com.google.common.base.Objects;
+import com.google.common.base.Objects;
 
 import junit.framework.TestCase;
 

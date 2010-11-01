@@ -17,7 +17,7 @@
 
 package org.waveprotocol.box.server.robots.operations;
 
-import com.google.gxp.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 

@@ -17,8 +17,6 @@
 
 package org.waveprotocol.box.server.frontend;
 
-import com.google.inject.internal.Nullable;
-
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
@@ -30,7 +28,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collection;
-
+import javax.annotation.Nullable;
 
 /**
  * The client front-end handles requests from clients and directs them to

@@ -18,7 +18,7 @@
 package org.waveprotocol.box.server.robots.operations;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.gxp.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.JsonRpcConstant.ParamsProperty;
