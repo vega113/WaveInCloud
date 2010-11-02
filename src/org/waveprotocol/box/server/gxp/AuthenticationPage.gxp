@@ -20,27 +20,178 @@
   Author: gentle@google.com (Joseph Gentle)
 -->
 
-<gxp:template
-    name='org.waveprotocol.box.server.gxp.AuthenticationPage'
-    xmlns='http://www.w3.org/1999/xhtml'
-    xmlns:gxp='http://google.com/2001/gxp'>
+<gxp:template name='org.waveprotocol.box.server.gxp.AuthenticationPage'
+  xmlns='http://www.w3.org/1999/xhtml'
+  xmlns:gxp='http://google.com/2001/gxp'>
 
   <gxp:param name='domain' type='String' />
+  <gxp:param name='message' type='String' />
+  <gxp:param name='responseType' type='String' />
 
-  <html>
-    <head>
-      <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-      <title>Login</title>
-      <link rel="shortcut icon" href="/static/favicon.ico" />
-    </head>
-
-    <body>
-      <form method="post" action="">
-        Username: <input name="address" type="text"/><br/>
-        Password: <input name="password" type="password"/><br/>
-        <input type="submit"/>
+  <html dir="ltr">
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <link type="text/css" rel="stylesheet" href="/static/auth.css" />
+  <link rel="shortcut icon" href="static/favicon.ico" />
+  <title>Wave in a Box login</title>
+  </head>
+  <body onload="init()">
+  <table width="100%" border="0" align="center" cellpadding="0"
+    cellspacing="0" style="margin-top: 15px">
+    <tr>
+      <td valign="top" style="padding-left: 20px; padding-right: 10px">
+      <img src="/static/logo.png" border="0" width="45px" height="30"
+        align="left" vspace="10" alt='Wave in a Box logo' /></td>
+      <td width="95%" bgcolor="#ffffff">
+      <table width="100%" align="right" cellspacing="0" dir="ltr">
+        <tr>
+          <td class="bubble"
+            style='font-family: arial; text-align: left; font-weight: bold; padding-right: 10px;'
+            dir="ltr"><b>Welcome to Wave in a Box </b> @<gxp:eval
+            expr='domain' /></td>
+        </tr>
+      </table>
+      </td>
+    </tr>
+  </table>
+  <table border="0" width="100%" cellpadding="1" cellspacing="1"
+    style="margin-top: 10px;">
+    <tr>
+      <td valign="top">
+      <table>
+        <td>
+        <div style="margin: 0 0 0 25px;"><b> Wave
+        lets you communicate and collaborate in real time </b>
+        <p><font size="-1"> <span> <a
+          href="http://www.waveprotocol.org" target="_blank"> Wave
+        in a Box</a> project lets developers and enterprise users run wave
+        servers and host waves on their own hardware. </span> </font></p>
+        </div>
+        </td>
+      </table>
+      </td>
+      <td valign="top" align="center" style="padding-right: 30px">
+      <form id="wiab_loginform" action="" method="post">
+      <table class="form-noindent" style="padding: 1;" border="0"
+        align="right">
+        <tr>
+          <td valign="top" style="text-align: center" class="loginBox"
+            width="260px">
+          <table align="center" border="0" cellpadding="1"
+            cellspacing="0" style="margin: auto;">
+            <tr>
+              <td class="smallfont" colspan="2" align="center">Sign
+              in
+              <h2>Wave in a Box</h2>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" align="center"></td>
+            </tr>
+            <tr>
+              <td>
+              <div align="right"><span class="wiab le lbl">
+              Username: </span></div>
+              </td>
+              <td><input type="text" name="address" id="address"
+                size="22" value="" class='wiab le val' /></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td align="right"
+                style="color: #444444; font-size: 75%; overflow: hidden; padding-top: 0px"
+                dir="ltr">@<gxp:eval expr='domain' /></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td align="right"></td>
+            </tr>
+            <tr class="enabled">
+              <td align="right"><span class="wiab le lbl">
+              Password: </span></td>
+              <td><input type="password" name="password"
+                id="password" size="22" class="wiab le val" /></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td align="center"
+                style="font-size: 75%; overflow: hidden;" width="40px"><label
+                id="messageLbl" style="display: none;"></label></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td align="left"><input type="submit"
+                class="wiab le button" name="signIn" id="signIn"
+                value="Sign in" /></td>
+            </tr>
+          </table>
+          <table align="center" border="0" cellpadding="0"
+            cellspacing="0">
+            <tr>
+              <td colspan="2" height="20" align="center" valign="bottom">
+              <div
+                style="font-size: 12px; margin-left: 15px; margin-top: 5px; background-color: d3d4d6; text-align: center;">
+              Don't have a Wave in a Box @<gxp:eval expr='domain' />
+              account?</div>
+              <div><span> <a
+                style="color: #0066cc; margin-left: 15px;"
+                href="/auth/register">Register a new account</a> </span></div>
+              </td>
+            </tr>
+          </table>
+          </td>
+        </tr>
+      </table>
       </form>
-      <i><a href="/auth/register">Register a new account</a></i>
-    </body>
+      </td>
+    </tr>
+  </table>
+  <table width="100%" border="0" align="center" cellpadding="0"
+    cellspacing="0" style="margin-top: 10px">
+    <tr>
+      <td width="95%" bgcolor="#ffffff">
+      <table width="100%" align="right" cellspacing="0"
+        bgcolor="#C3D9FF" dir="ltr">
+        <tr>
+          <td class="bubble"
+            style='font-family: arial; text-align: left; font-weight: bold; padding-right: 10px;'
+            dir="ltr"></td>
+        </tr>
+      </table>
+      </td>
+    </tr>
+  </table>
+  <br />
+  <br />
+  <script type="text/javascript">
+    var RESPONSE_STATUS_NONE = "NONE";
+    var RESPONSE_STATUS_FAILED = "FAILED";
+    var RESPONSE_STATUS_SUCCESS = "SUCCESS";
+    
+    var message = <gxp:eval expr='message'/>;
+    var responseType = <gxp:eval expr='responseType'/>;
+    
+    function init() {
+        setFocus();
+        handleResponse(responseType, message);
+    }
+    
+    function setFocus() {
+        document.getElementById("address").focus();
+    }
+    
+    function handleResponse(responseType, message) {
+        var messageLbl = document.getElementById("messageLbl");
+        if (responseType == RESPONSE_STATUS_NONE) {
+            messageLbl.style.display = "none";
+        } else if (responseType == RESPONSE_STATUS_FAILED) {
+            messageLbl.style.display = "inline";
+            messageLbl.style.color = "red";
+            messageLbl.innerHTML = message;
+        }
+    }
+  </script>
+  </body>
   </html>
+
 </gxp:template>

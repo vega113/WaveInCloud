@@ -97,14 +97,14 @@ public class AuthenticationServletTest extends TestCase {
   public void testValidLoginWorks() throws IOException {
     attemptLogin("frodo@example.com", "password", null);
 
-    verify(resp).setStatus(HttpServletResponse.SC_OK);
+    verify(resp).sendRedirect("/");
     verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
   }
 
   public void testUserWithNoDomainGetsDomainAutomaticallyAdded() throws Exception {
     attemptLogin("frodo", "password", null);
 
-    verify(resp).setStatus(HttpServletResponse.SC_OK);
+    verify(resp).sendRedirect("/");
     verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
   }
 
@@ -134,14 +134,14 @@ public class AuthenticationServletTest extends TestCase {
   public void testIncorrectPasswordReturns403() throws IOException {
     attemptLogin("frodo@example.com", "incorrect", null);
 
-    verify(resp).sendError(HttpServletResponse.SC_FORBIDDEN);
+    verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
     verify(session, never()).setAttribute(eq("user"), anyString());
   }
 
   public void testInvalidUsernameReturns403() throws IOException {
     attemptLogin("madeup@example.com", "incorrect", null);
 
-    verify(resp).sendError(HttpServletResponse.SC_FORBIDDEN);
+    verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
     verify(session, never()).setAttribute(eq("address"), anyString());
   }
 
@@ -153,13 +153,14 @@ public class AuthenticationServletTest extends TestCase {
     String data =
         "address=" + escaper.escape(address) + "&" + "password=" + escaper.escape(password);
 
-    when(req.getSession(false)).thenReturn(null);
     Reader reader = new StringReader(data);
     when(req.getReader()).thenReturn(new BufferedReader(reader));
     when(req.getQueryString()).thenReturn(queryString);
     PrintWriter writer = mock(PrintWriter.class);
     when(resp.getWriter()).thenReturn(writer);
+    when(req.getSession(false)).thenReturn(null);
     when(req.getSession(true)).thenReturn(session);
+    when(req.getLocale()).thenReturn(Locale.ENGLISH);
 
     servlet.doPost(req, resp);
   }

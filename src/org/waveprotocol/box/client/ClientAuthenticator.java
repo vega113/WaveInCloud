@@ -70,6 +70,7 @@ public class ClientAuthenticator {
       connection.setRequestMethod("POST");
       connection.setDoOutput(true);
       connection.setAllowUserInteraction(false);
+      connection.setInstanceFollowRedirects(false);
 
       PercentEscaper escaper = new PercentEscaper(PercentEscaper.SAFECHARS_URLENCODER, true);
       String data = "address=" + escaper.escape(address) + "&" + "password="

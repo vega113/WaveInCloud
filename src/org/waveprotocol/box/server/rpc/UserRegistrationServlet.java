@@ -38,7 +38,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * The user registration servlet allows new users to register accounts.
- *
+ * 
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public final class UserRegistrationServlet extends HttpServlet {
@@ -46,33 +46,36 @@ public final class UserRegistrationServlet extends HttpServlet {
   private final String domain;
 
   @Inject
-  public UserRegistrationServlet(
-      AccountStore accountStore, @Named("wave_server_domain") String domain) {
+  public UserRegistrationServlet(AccountStore accountStore,
+      @Named("wave_server_domain") String domain) {
     this.accountStore = accountStore;
     this.domain = domain;
   }
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    writeRegistrationPage("", req.getLocale(), resp);
+    writeRegistrationPage("", AuthenticationServlet.RESPONSE_STATUS_NONE, req.getLocale(), resp);
   }
 
   @SuppressWarnings("unchecked")
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    String message = tryCreateUser(req.getParameter(HttpRequestBasedCallbackHandler.ADDRESS_FIELD),
-        req.getParameter(HttpRequestBasedCallbackHandler.PASSWORD_FIELD));
+    String message =
+        tryCreateUser(req.getParameter(HttpRequestBasedCallbackHandler.ADDRESS_FIELD),
+            req.getParameter(HttpRequestBasedCallbackHandler.PASSWORD_FIELD));
+    String responseType = AuthenticationServlet.RESPONSE_STATUS_SUCCESS;
 
     if (message != null) {
       resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+      responseType = AuthenticationServlet.RESPONSE_STATUS_FAILED;
     } else {
       message = "Registration complete.";
       resp.setStatus(HttpServletResponse.SC_OK);
     }
 
-    writeRegistrationPage(message, req.getLocale(), resp);
+    writeRegistrationPage(message, responseType, req.getLocale(), resp);
   }
-  
+
   /**
    * Try to create a user with the provided username and password. On error,
    * returns a string containing an error message. On success, returns null.
@@ -83,7 +86,10 @@ public final class UserRegistrationServlet extends HttpServlet {
 
     try {
       // First, some cleanup on the parameters.
-      username = username.trim();
+      if (username == null) {
+        return "Username portion of address cannot be less than 2 characters";
+      }
+      username = username.trim().toLowerCase();
       if (username.contains(ParticipantId.DOMAIN_PREFIX)) {
         id = ParticipantId.of(username);
       } else {
@@ -91,6 +97,10 @@ public final class UserRegistrationServlet extends HttpServlet {
       }
       if (id.getAddress().indexOf("@") < 2) {
         return "Username portion of address cannot be less than 2 characters";
+      }
+      String[] usernameSplit = id.getAddress().split("@");
+      if (usernameSplit.length != 2 || !usernameSplit[0].matches("[\\w\\.]+")) {
+        return "Only letters (a-z), numbers (0-9), and periods (.) are allowed in Username";
       }
       if (!id.getDomain().equals(domain)) {
         return "You can only create users at the " + domain + " domain";
@@ -115,9 +125,10 @@ public final class UserRegistrationServlet extends HttpServlet {
     return null;
   }
 
-  private void writeRegistrationPage(String message, Locale locale, HttpServletResponse dest)
-      throws IOException {
+  private void writeRegistrationPage(String message, String responseType, Locale locale,
+      HttpServletResponse dest) throws IOException {
     dest.setContentType("text/html");
-    UserRegistrationPage.write(dest.getWriter(), new GxpContext(locale), domain, message);
+    UserRegistrationPage.write(dest.getWriter(), new GxpContext(locale), domain, message,
+        responseType);
   }
 }

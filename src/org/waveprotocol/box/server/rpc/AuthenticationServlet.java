@@ -57,6 +57,10 @@ import javax.servlet.http.HttpSession;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class AuthenticationServlet extends HttpServlet {
+  public static final String RESPONSE_STATUS_NONE = "NONE";
+  public static final String RESPONSE_STATUS_FAILED = "FAILED";
+  public static final String RESPONSE_STATUS_SUCCESS = "SUCCESS";
+
   private static final Log LOG = Log.get(AuthenticationServlet.class);
 
   private final Configuration configuration;
@@ -95,8 +99,12 @@ public class AuthenticationServlet extends HttpServlet {
     try {
       context = login(req.getReader());
     } catch (LoginException e) {
-      resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+      String message = "The username or password you entered is incorrect.";
+      String responseType = RESPONSE_STATUS_FAILED;
       LOG.info("User authentication failed: " + e.getLocalizedMessage());
+      resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+      AuthenticationPage.write(resp.getWriter(), new GxpContext(req.getLocale()), domain, message,
+          responseType);
       return;
     }
 
@@ -161,16 +169,15 @@ public class AuthenticationServlet extends HttpServlet {
         resp.sendRedirect(path);
       }
     } else {
-      resp.setStatus(HttpServletResponse.SC_OK);
-      resp.setContentType("text/plain");
-      resp.getWriter().println("Authenticated as " + loggedInAddress);
+      // redirect back to the entry page - this time the user is logged in
+      resp.sendRedirect("/");
     }
   }
 
   /**
    * Get the participant id of the given subject.
    *
-   *  The subject is searched for compatible principals. When other
+   * The subject is searched for compatible principals. When other
    * authentication types are added, this method will need to be updated to
    * support their principal types.
    *
@@ -180,8 +187,10 @@ public class AuthenticationServlet extends HttpServlet {
     String address = null;
 
     for (Principal p : subject.getPrincipals()) {
-      // TODO(josephg): When we support other authentication types (LDAP, etc),
-      // this method will need to read the address portion out of the other
+      // TODO(josephg): When we support other authentication types (LDAP,
+      // etc),
+      // this method will need to read the address portion out of the
+      // other
       // principal types.
       if (p instanceof ParticipantPrincipal) {
         address = ((ParticipantPrincipal) p).getName();
@@ -204,9 +213,11 @@ public class AuthenticationServlet extends HttpServlet {
     ParticipantId user = sessionManager.getLoggedInUser(session);
 
     if (user != null) {
-      resp.getWriter().print("<html><body>Already authenticated as " + user + "</body></html>");
+      // user already logged in - redirect to entry page.
+      resp.sendRedirect("/");
     } else {
-      AuthenticationPage.write(resp.getWriter(), new GxpContext(req.getLocale()), domain);
+      AuthenticationPage.write(resp.getWriter(), new GxpContext(req.getLocale()), domain, "",
+          RESPONSE_STATUS_NONE);
     }
   }
 }

@@ -44,4 +44,4 @@ ATTACHMENT_STORE_TYPE=disk
 ATTACHMENT_STORE_DIRECTORY=_attachments
 
 # Currently supported Account store types: memory
-ACCOUNT_STORE_TYPE=fake
+ACCOUNT_STORE_TYPE=mongodb
