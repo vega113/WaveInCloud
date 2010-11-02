@@ -57,6 +57,7 @@ import javax.servlet.http.HttpSession;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class AuthenticationServlet extends HttpServlet {
+  private static final String DEFAULT_REDIRECT_URL = "/";
   public static final String RESPONSE_STATUS_NONE = "NONE";
   public static final String RESPONSE_STATUS_FAILED = "FAILED";
   public static final String RESPONSE_STATUS_SUCCESS = "SUCCESS";
@@ -137,41 +138,7 @@ public class AuthenticationServlet extends HttpServlet {
     session.setAttribute("context", context);
     LOG.info("Authenticated user " + loggedInAddress);
 
-    // If the user specified a redirect location (/auth?r=/some/other/place)
-    // then redirect them to that URL.
-    String query = req.getQueryString();
-
-    // Not using req.getParameter() for this because calling that method might
-    // parse the password
-    // sitting in POST data into a String, where it could be read by another
-    // process after the
-    // string is garbage collected.
-    if (query != null && query.startsWith("r=")) {
-      String encoded_url = query.substring("r=".length());
-      String path = URLDecoder.decode(encoded_url, "UTF-8");
-
-      // For security reasons, the URL must not be an absolute URL. (We don't
-      // want people using this as a generic redirection service).
-
-      URI uri;
-      try {
-        uri = new URI(path);
-      } catch (URISyntaxException e) {
-        // The redirect URL is invalid.
-        resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        return;
-      }
-
-      if (Strings.isNullOrEmpty(uri.getHost()) == false) {
-        // The URL includes a host component. Disallow it.
-        resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-      } else {
-        resp.sendRedirect(path);
-      }
-    } else {
-      // redirect back to the entry page - this time the user is logged in
-      resp.sendRedirect("/");
-    }
+    redirectLoggedInUser(req, resp);
   }
 
   /**
@@ -187,11 +154,8 @@ public class AuthenticationServlet extends HttpServlet {
     String address = null;
 
     for (Principal p : subject.getPrincipals()) {
-      // TODO(josephg): When we support other authentication types (LDAP,
-      // etc),
-      // this method will need to read the address portion out of the
-      // other
-      // principal types.
+      // TODO(josephg): When we support other authentication types (LDAP, etc),
+      // this method will need to read the address portion out of the other principal types.
       if (p instanceof ParticipantPrincipal) {
         address = ((ParticipantPrincipal) p).getName();
         break;
@@ -206,18 +170,62 @@ public class AuthenticationServlet extends HttpServlet {
    */
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    resp.setStatus(HttpServletResponse.SC_OK);
-    resp.setContentType("text/html");
-
+    // If the user is already logged in, we'll try to redirect them immediately.
     HttpSession session = req.getSession(false);
     ParticipantId user = sessionManager.getLoggedInUser(session);
 
     if (user != null) {
-      // user already logged in - redirect to entry page.
-      resp.sendRedirect("/");
+      redirectLoggedInUser(req, resp);
     } else {
+      resp.setStatus(HttpServletResponse.SC_OK);
+      resp.setContentType("text/html");
       AuthenticationPage.write(resp.getWriter(), new GxpContext(req.getLocale()), domain, "",
           RESPONSE_STATUS_NONE);
+    }
+  }
+
+  /**
+   * Redirect the user back to DEFAULT_REDIRECT_URL, unless a custom redirect
+   * URL has been specified in the query string; in which case redirect there.
+   *
+   * Only redirects to local URLs are allowed.
+   *
+   * @throws IOException
+   */
+  private void redirectLoggedInUser(HttpServletRequest req, HttpServletResponse resp)
+      throws IOException {
+    Preconditions.checkState(sessionManager.getLoggedInUser(req.getSession(false)) != null,
+        "The user is not logged in");
+
+    String query = req.getQueryString();
+
+    // Not using req.getParameter() for this because calling that method might parse the password
+    // sitting in POST data into a String, where it could be read by another process after the
+    // string is garbage collected.
+    if (query == null || !query.startsWith("r=")) {
+      resp.sendRedirect(DEFAULT_REDIRECT_URL);
+      return;
+    }
+
+    String encoded_url = query.substring("r=".length());
+    String path = URLDecoder.decode(encoded_url, "UTF-8");
+
+    // The URL must not be an absolute URL to prevent people using this as a
+    // generic redirection service.
+    URI uri;
+    try {
+      uri = new URI(path);
+    } catch (URISyntaxException e) {
+      // The redirect URL is invalid.
+      resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      return;
+    }
+
+    if (Strings.isNullOrEmpty(uri.getHost()) == false) {
+      // The URL includes a host component. Disallow it.
+      resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    } else {
+      resp.sendRedirect(path);
     }
   }
 }

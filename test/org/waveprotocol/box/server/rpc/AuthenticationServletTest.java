@@ -54,6 +54,8 @@ import javax.servlet.http.HttpSession;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class AuthenticationServletTest extends TestCase {
+  private static final ParticipantId USER = ParticipantId.ofUnsafe("frodo@example.com");
+
   private AuthenticationServlet servlet;
 
   @Mock private HttpServletRequest req;
@@ -65,8 +67,8 @@ public class AuthenticationServletTest extends TestCase {
     MockitoAnnotations.initMocks(this);
 
     AccountStore store = new MemoryStore();
-    HumanAccountData account = new HumanAccountDataImpl(
-        ParticipantId.ofUnsafe("frodo@example.com"), new PasswordDigest("password".toCharArray()));
+    HumanAccountData account =
+        new HumanAccountDataImpl(USER, new PasswordDigest("password".toCharArray()));
     store.putAccount(account);
 
     org.eclipse.jetty.server.SessionManager jettySessionManager =
@@ -94,52 +96,56 @@ public class AuthenticationServletTest extends TestCase {
     verify(resp).setStatus(HttpServletResponse.SC_OK);
   }
 
+  public void testGetRedirects() throws IOException {
+    String location = "/abc123?nested=query&string";
+    when(req.getSession(false)).thenReturn(session);
+    when(session.getAttribute("user")).thenReturn(USER);
+    configureRedirectString(location);
+
+    servlet.doGet(req, resp);
+
+    verify(resp).sendRedirect(location);
+  }
+
   public void testValidLoginWorks() throws IOException {
-    attemptLogin("frodo@example.com", "password", null);
+    attemptLogin("frodo@example.com", "password");
 
     verify(resp).sendRedirect("/");
-    verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
+    verify(session).setAttribute("user", USER);
   }
 
   public void testUserWithNoDomainGetsDomainAutomaticallyAdded() throws Exception {
-    attemptLogin("frodo", "password", null);
+    attemptLogin("frodo", "password");
 
     verify(resp).sendRedirect("/");
-    verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
+    verify(session).setAttribute("user", USER);
   }
 
   public void testLoginRedirects() throws IOException {
-    String redirect_location = "/abc123?nested=query&string";
-    PercentEscaper escaper =
-        new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
-    String query_str = "r=" + escaper.escape(redirect_location);
+    String redirect = "/abc123?nested=query&string";
+    configureRedirectString(redirect);
+    attemptLogin("frodo@example.com", "password");
 
-    attemptLogin("frodo@example.com", "password", query_str);
-
-    verify(resp).sendRedirect(redirect_location);
-    verify(session).setAttribute("user", ParticipantId.ofUnsafe("frodo@example.com"));
+    verify(resp).sendRedirect(redirect);
+    verify(session).setAttribute("user", USER);
   }
 
   public void testLoginDoesNotRedirectToRemoteSite() throws IOException {
-    String redirect_location = "http://example.com/other/site";
-    PercentEscaper escaper =
-        new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
-    String query_str = "r=" + escaper.escape(redirect_location);
-
-    attemptLogin("frodo@example.com", "password", query_str);
+    configureRedirectString("http://example.com/other/site");
+    attemptLogin("frodo@example.com", "password");
 
     verify(resp, never()).sendRedirect(anyString());
   }
 
   public void testIncorrectPasswordReturns403() throws IOException {
-    attemptLogin("frodo@example.com", "incorrect", null);
+    attemptLogin("frodo@example.com", "incorrect");
 
     verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
     verify(session, never()).setAttribute(eq("user"), anyString());
   }
 
   public void testInvalidUsernameReturns403() throws IOException {
-    attemptLogin("madeup@example.com", "incorrect", null);
+    attemptLogin("madeup@example.com", "incorrect");
 
     verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
     verify(session, never()).setAttribute(eq("address"), anyString());
@@ -147,7 +153,14 @@ public class AuthenticationServletTest extends TestCase {
 
   // *** Utility methods
 
-  public void attemptLogin(String address, String password, String queryString) throws IOException {
+  private void configureRedirectString(String location) {
+    PercentEscaper escaper =
+        new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER, false);
+    String queryStr = "r=" + escaper.escape(location);
+    when(req.getQueryString()).thenReturn(queryStr);
+  }
+
+  public void attemptLogin(String address, String password) throws IOException {
     // The query string is escaped.
     PercentEscaper escaper = new PercentEscaper(PercentEscaper.SAFECHARS_URLENCODER, true);
     String data =
@@ -155,7 +168,6 @@ public class AuthenticationServletTest extends TestCase {
 
     Reader reader = new StringReader(data);
     when(req.getReader()).thenReturn(new BufferedReader(reader));
-    when(req.getQueryString()).thenReturn(queryString);
     PrintWriter writer = mock(PrintWriter.class);
     when(resp.getWriter()).thenReturn(writer);
     when(req.getSession(false)).thenReturn(null);
