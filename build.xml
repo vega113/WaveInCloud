@@ -22,9 +22,6 @@
 
   <!-- Classpath of external dependencies -->
   <path id="waveinabox.classpath">
-    <fileset dir="${lib}">
-      <include name="*.jar"/>
-    </fileset>
     <fileset dir="${lib.runtime}">
       <include name="*/*.jar"/>
     </fileset>
@@ -60,19 +57,52 @@
     <mkdir dir="${instr.classes}"/>
     <mkdir dir="${dir.distribute}"/>
     <mkdir dir="${staging}"/>
+    <mkdir dir="${dep}"/>
     <mkdir dir="${dir.testout}"/>
   </target>
 
-  <!-- compiles pre-generated proto sources; does NOT generate protos -->
-  <target name="proto_compile" depends="init">
+  <!-- compiles pre-generated proto sources; does NOT generate protos --> 
+  <target name="proto_src_dep">
+    <uptodate targetfile="${dep}/proto_compile" property="skip.proto_compile">
+      <srcfiles dir="proto_src" includes="**/*.java"/>
+    </uptodate>
+  </target>
+  <target name="proto_compile" depends="init, proto_src_dep" unless="skip.proto_compile">
     <javac sourcepath="" srcdir="proto_src" destdir="${core.classes}" debug="on"
         target="1.5">
       <include name="**/*.java"/>
       <classpath refid="waveinabox.classpath"/>
     </javac>
+    <touch file="${dep}/proto_compile"/>
   </target>
 
-  <target name="compile" depends="proto_compile, gen_gxp">
+  <target name="gen_gxp_dep">
+    <uptodate targetfile="${dep}/gen_gxp" property="skip.gen_gxp">
+      <srcfiles dir="${src}" includes="org/waveprotocol/box/server/gxp/*.gxp"/>
+    </uptodate>
+  </target>
+  <target name="gen_gxp" description="Generates GXP files" depends="init, gen_gxp_dep" unless="skip.gen_gxp">
+    <taskdef
+        name="gxpc"
+        classname="com.google.gxp.compiler.ant.GxpcTask"
+        classpath="${lib.runtime}/gxp/gxp-0.2.4-beta.jar" />
+
+    <!-- Generates the java files in a parallel directory under gen/ -->
+    <gxpc
+        srcdir="${src}"
+        srcpaths="${src}"
+        destdir="${gen}"
+        target="org.waveprotocol.box.server.gxp" />
+    <touch file="${dep}/gen_gxp"/>
+  </target>
+
+  <target name="compile_dep">
+    <uptodate targetfile="${dep}/compile" property="skip.compile">
+      <srcfiles dir="${src}" includes="**/*.java"/>
+      <srcfiles dir="${gen}" includes="**/*.java"/>
+    </uptodate>
+  </target>
+  <target name="compile" depends="proto_compile, gen_gxp, compile_dep" unless="skip.compile">
     <depend srcdir="${src}" destdir="${core.classes}" closure="yes"/>
     <javac sourcepath="" destdir="${core.classes}" debug="on" target="1.5"
       includeAntRuntime="false">
@@ -100,20 +130,8 @@
         <include name="**/*.proto"/>
       </fileset>
     </copy>
-  </target>
 
-  <target name="gen_gxp" description="Generates GXP files">
-    <taskdef
-        name="gxpc"
-        classname="com.google.gxp.compiler.ant.GxpcTask"
-        classpath="${lib.runtime}/gxp/gxp-0.2.4-beta.jar" />
-
-    <!-- Generates the java files in a parallel directory under gen/ -->
-    <gxpc
-        srcdir="${src}"
-        srcpaths="${src}"
-        destdir="${gen}"
-        target="org.waveprotocol.box.server.gxp" />
+    <touch file="${dep}/compile"/>
   </target>
 
   <target name="compile_tests" depends="compile" description="Compiles all the unit tests in the project">
@@ -217,15 +235,27 @@
     </target>
 
   <!-- compiles pre-generated gwt proto sources; does NOT generate protos -->
-  <target name="proto_gwt_compile" depends="init">
+  <target name="compile_proto_gwt_dep">
+    <uptodate targetfile="${dep}/compile_proto_gwt_dep" property="skip.compile_proto_gwt">
+      <srcfiles dir="proto_gwt_src" includes="**/*.java"/>
+    </uptodate>
+  </target>
+  <target name="compile_proto_gwt" depends="init, compile_proto_gwt_dep" unless="skip.compile_proto_gwt">
     <javac sourcepath="" srcdir="proto_gwt_src" destdir="${core.classes}" debug="on"
         target="1.6">
       <include name="**/*.java"/>
       <classpath refid="waveinabox.classpath"/>
     </javac>
+    <touch file="${dep}/compile_proto_gwt_dep"/>
   </target>
 
-  <target name="compile_gwt" depends="compile,proto_gwt_compile" description="GWT compile to production JavaScript">
+  <target name="compile_gwt_dep">
+    <uptodate targetfile="${dep}/compile_gwt" property="skip.compile_gwt">
+      <srcfiles dir="src" includes="**/*"/>
+      <srcfiles dir="proto_gwt_src" includes="**/*"/>
+    </uptodate>
+  </target>
+  <target name="compile_gwt" depends="compile, compile_proto_gwt, compile_gwt_dep" description="GWT compile to production JavaScript" unless="skip.compile_gwt">    
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
       <classpath>
         <pathelement location="proto_gwt_src"/>
@@ -242,9 +272,18 @@
       <arg line="${gwt.args}"/>
       <arg value="org.waveprotocol.box.webclient.WebClientProd"/>
     </java>
+    <!-- Only one GWT compile output is valid at any one time. -->
+    <rm file="${dep}/compile_gwt_dev"/>
+    <touch file="${dep}/compile_gwt"/>
   </target>
 
-  <target name="compile_gwt_dev" depends="compile,proto_gwt_compile" description="GWT compile of a restricted set of permutations suitable for development.">
+  <target name="compile_gwt_dev_dep">
+    <uptodate targetfile="${dep}/compile_gwt_dev" property="skip.compile_gwt_dev">
+      <srcfiles dir="src" includes="**/*"/>
+      <srcfiles dir="proto_gwt_src" includes="**/*"/>
+    </uptodate>
+  </target>
+  <target name="compile_gwt_dev" depends="compile, compile_proto_gwt, compile_gwt_dev_dep" description="GWT compile of a restricted set of permutations suitable for development." unless="skip.compile_gwt_dev">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
       <classpath>
         <pathelement location="proto_gwt_src"/>
@@ -262,9 +301,12 @@
       <arg line="${gwt.args}"/>
       <arg value="org.waveprotocol.box.webclient.WebClientDev"/>
     </java>
+    <!-- Only one GWT compile output is valid at any one time. -->
+    <rm file="${dep}/compile_gwt"/>
+    <touch file="${dep}/compile_gwt_dev"/>
   </target>
 
-  <target name="hosted_gwt" depends="compile,proto_gwt_compile" description="Runs the hosted mode server, for debugging the GWT client in a JVM.">
+  <target name="hosted_gwt" depends="compile,compile_proto_gwt" description="Runs the hosted mode server, for debugging the GWT client in a JVM.">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
       <classpath>
         <pathelement location="proto_gwt_src"/>
@@ -280,12 +322,15 @@
     </java>
   </target>
 
-  <target name="stage" depends="compile" description="Copy classes and runtime depenencies to the staging directory">
+  <target name="stage_dep">
+    <uptodate targetfile="${dep}/stage" property="skip.stage">
+      <srcfiles dir="${lib.runtime}" includes="**/*.jar"/>
+      <srcfiles dir="${core.classes}" includes="**/*"/>
+    </uptodate>
+  </target>
+  <target name="stage" depends="compile, stage_dep" description="Copy classes and runtime depenencies to the staging directory" unless="skip.stage">
     <!-- we unzip and copy all the runtime deps into a staging dir first -->
     <unzip dest="${staging}">
-      <fileset dir="${lib}">
-        <include name="*.jar"/>
-      </fileset>
       <fileset dir="${lib.runtime}">
         <include name="*/*.jar"/>
       </fileset>
@@ -295,6 +340,7 @@
         <include name="**/*"/>
       </fileset>
     </copy>
+    <touch file="${dep}/stage"/>
   </target>
 
   <!-- target name="dist" depends="test, dist-api, dist-server, dist-client-console, dist-agent-echoey, dist-agent-probey" description="Compiles, tests and assembles artifacts" -->
@@ -320,7 +366,14 @@
     </jar>
   </target>
 
-  <target name="dist-server" depends="stage" description="Assembles the Wave in a Box server">
+  <!-- A healthy mix of hyphens and underscores never hurt anyone.  Sigh. -->
+  <target name="dist-server_dep">
+    <!-- Note: this check is still very slow (~30secs) -->
+    <uptodate targetfile="${dep}/dist-server" property="skip.dist-server">
+      <srcfiles dir="${staging}" includes="**/*"/>
+    </uptodate>
+  </target>
+  <target name="dist-server" depends="stage, dist-server_dep" description="Assembles the Wave in a Box server" unless="skip.dist-server">
     <jar destfile="${jar.outfile-server}">
       <fileset dir="${staging}">
         <include name="META-INF/services/*" />
@@ -363,6 +416,7 @@
         <attribute name="Implementation-Version" value="${waveinabox.version}"/>
       </manifest>
     </jar>
+    <touch file="${dep}/dist-server"/>
   </target>
 
   <target name="dist-client-console" depends="stage" description="Assembles the Wave in a Box console client">
