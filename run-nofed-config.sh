@@ -10,9 +10,10 @@ WAVE_SERVER_DOMAIN_NAME=`hostname`
 WAVE_SERVER_HOSTNAME=`hostname`
 WAVE_SERVER_PORT=9876
 
-# Host name and port the wave server's websocket frontend listens on
-WEBSOCKET_SERVER_HOSTNAME=`hostname`
-WEBSOCKET_SERVER_PORT=9898
+# A comma separated list of address on which to listen for connections.
+# Each address is a comma separated host:port pair.
+HTTP_SERVER_PUBLIC_ADDRESS=`hostname`:9898
+HTTP_SERVER_ADDRESSES=${HTTP_SERVER_PUBLIC_ADDRESS}
 
 # The version of Wave in a Box, extracted from the build.properties file
 WAVEINABOX_VERSION=`grep ^waveinabox.version= build.properties | cut -f2 -d=`

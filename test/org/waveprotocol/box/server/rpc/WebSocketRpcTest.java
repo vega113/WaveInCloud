@@ -26,7 +26,7 @@ public class WebSocketRpcTest extends RpcTest {
   @Override
   protected void startServer() {
     SessionManager sessionManager = Mockito.mock(SessionManager.class);
-    server = new ServerRpcProvider(null, "localhost", 0, sessionManager, null);
+    server = new ServerRpcProvider(null, new String[] {"localhost:9898"}, sessionManager, null);
     server.startWebSocketServer();
   }
 

@@ -50,11 +50,16 @@ public class FlagSettings {
   @Flag(name = "client_frontend_port")
   private static String clientFrontEndPort;
 
-  @Flag(name = "http_frontend_hostname", defaultValue = "localhost")
-  private static String httpFrontendHost;
+  @Flag(name = "http_frontend_public_address",
+      defaultValue = "localhost:9898",
+      description = "The server's public address.")
+  private static String httpFrontEndPublicAddress;
 
-  @Flag(name = "http_frontend_port", defaultValue = "9898")
-  private static int httpFrontEndPort;
+  @Flag(name = "http_frontend_addresses",
+      defaultValue = "localhost:9898",
+      description = "A comman seperated list of address on which to listen for connections."+
+                    " Each address is a host or ip and port seperated by a colon.")
+  private static String httpFrontEndAddresses;
 
   @Flag(name = "certificate_private_key")
   private static String certificatePrivKey;

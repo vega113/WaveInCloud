@@ -46,11 +46,15 @@ import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,9 +77,10 @@ import javax.servlet.http.HttpSession;
 public class ServerRpcProvider {
   private static final Log LOG = Log.get(ServerRpcProvider.class);
 
+  private static final short HTTP_DEFAULT_PORT = 80;
+  
   private final SocketAddress rpcHostingAddress;
-  private final String httpHost;
-  private final Integer httpPort;
+  private final String[] httpAddresses;
   private final Set<Connection> incomingConnections = Sets.newHashSet();
   private final ExecutorService threadPool;
   private final SessionManager sessionManager;
@@ -275,12 +280,11 @@ public class ServerRpcProvider {
    * @param httpPort port for http server
    * @param threadPool the service used to create threads
    */
-  public ServerRpcProvider(SocketAddress rpcHost, String httpHost, Integer httpPort,
+  public ServerRpcProvider(SocketAddress rpcHost, String[] httpAddresses,
       ExecutorService threadPool, SessionManager sessionManager,
       org.eclipse.jetty.server.SessionManager jettySessionManager) {
     rpcHostingAddress = rpcHost;
-    this.httpHost = httpHost;
-    this.httpPort = httpPort;
+    this.httpAddresses = httpAddresses;
     this.threadPool = threadPool;
     this.sessionManager = sessionManager;
     this.jettySessionManager = jettySessionManager;
@@ -289,20 +293,19 @@ public class ServerRpcProvider {
   /**
    * Constructs a new ServerRpcProvider with a default ExecutorService and session manager.
    */
-  public ServerRpcProvider(SocketAddress rpcHost, String httpHost, Integer httpPort,
+  public ServerRpcProvider(SocketAddress rpcHost, String[] httpAddresses,
       SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager) {
-    this(rpcHost, httpHost, httpPort, Executors.newCachedThreadPool(), sessionManager,
+    this(rpcHost, httpAddresses, Executors.newCachedThreadPool(), sessionManager,
         jettySessionManager);
   }
 
   @Inject
   public ServerRpcProvider(@Named("client_frontend_hostname") String rpcHost,
       @Named("client_frontend_port") Integer rpcPort,
-      @Named("http_frontend_hostname") String httpHost,
-      @Named("http_frontend_port") Integer httpPort,
+      @Named("http_frontend_addresses") String httpAddresses,
       SessionManager sessionManager,
       org.eclipse.jetty.server.SessionManager jettySessionManager) {
-    this(new InetSocketAddress(rpcHost, rpcPort), httpHost, httpPort, sessionManager,
+    this(new InetSocketAddress(rpcHost, rpcPort), httpAddresses.split("\\s*,\\s*"), sessionManager,
         jettySessionManager);
   }
 
@@ -338,10 +341,12 @@ public class ServerRpcProvider {
   public void startWebSocketServer() {
     httpServer = new Server();
 
-    // Listen on httpHost and localhost.
-    httpServer.addConnector(createSelectChannelConnector(httpHost, httpPort));
-    if (!httpHost.equals("localhost")) {
-      httpServer.addConnector(createSelectChannelConnector("localhost", httpPort));
+    List<SelectChannelConnector> connectors = getSelectChannelConnectors(httpAddresses);
+    if (connectors.isEmpty()) {
+      LOG.severe("No valid http end point address provided!");
+    }
+    for (SelectChannelConnector connector: connectors) {
+      httpServer.addConnector(connector);
     }
 
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -378,13 +383,53 @@ public class ServerRpcProvider {
   }
 
   /**
-   * @return a {@link SelectChannelConnector} bound to a given host and port
+   * @return a list of {@link SelectChannelConnector} each bound to a host:port pair form the list
+   * addresses.
    */
-  private SelectChannelConnector createSelectChannelConnector(String host, int port) {
-    SelectChannelConnector connector = new SelectChannelConnector();
-    connector.setHost(host);
-    connector.setPort(port);
-    return connector;
+  private List<SelectChannelConnector> getSelectChannelConnectors(String[] httpAddresses) {
+    List<SelectChannelConnector> list = Lists.newArrayList();
+    Set<InetSocketAddress> addresses = Sets.newHashSet();
+    for (String str: httpAddresses) {
+      if (str.length() == 0) {
+        LOG.warning("Encountered empty address in http addresses list.");
+      } else {
+        String[] parts = str.split(":");
+        String host = parts[0];
+        short port = HTTP_DEFAULT_PORT;
+        if (parts.length > 1) {
+          try {
+            port = Short.parseShort(parts[1]);
+            if (port <= 0) {
+              LOG.severe("Invalid port number: " + parts[1]);
+              continue;
+            }
+          } catch (NumberFormatException e) {
+            LOG.severe("Invalid port number: " + parts[1], e);
+            continue;
+          }
+        }
+        InetSocketAddress address = null;
+        try {
+          InetAddress addr = InetAddress.getByName(host);
+          address = new InetSocketAddress(addr, port);
+        } catch (UnknownHostException e) {
+          LOG.severe("Unable to resolve hostname/IP: " + host, e);
+          continue;
+        }
+        if (!addresses.contains(address)) {
+          addresses.add(address);
+          SelectChannelConnector connector = new SelectChannelConnector();
+          connector.setHost(address.getAddress().getHostAddress());
+          connector.setPort(address.getPort());
+          list.add(connector);
+        } else {
+          LOG.warning("Ignoring duplicate address in http addresses list. Duplicate entry '" + str
+              + "' resolved to " + address.getAddress().getHostAddress());
+        }
+      }
+    }
+    
+    return list;
   }
 
   public class WaveWebSocketServlet extends WebSocketServlet {

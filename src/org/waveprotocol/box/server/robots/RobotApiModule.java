@@ -125,13 +125,13 @@ public class RobotApiModule extends AbstractModule {
   @Provides
   @Singleton
   protected OAuthServiceProvider provideOAuthServiceProvider(
-      @Named("http_frontend_hostname") String domain, @Named("http_frontend_port") int port) {
+      @Named("http_frontend_public_address") String public_address) {
     // Three urls, first is to get an unauthorized request token, second is to
     // authorize the request token, third is to exchange the authorized request
     // token with an access token.
-    String requestTokenUrl = getOAuthUrl(domain, port, REQUEST_TOKEN_PATH);
-    String authorizeTokenUrl = getOAuthUrl(domain, port, AUTHORIZE_TOKEN_PATH);
-    String accessTokenUrl = getOAuthUrl(domain, port, ACCESS_TOKEN_PATH);
+    String requestTokenUrl = getOAuthUrl(public_address, REQUEST_TOKEN_PATH);
+    String authorizeTokenUrl = getOAuthUrl(public_address, AUTHORIZE_TOKEN_PATH);
+    String accessTokenUrl = getOAuthUrl(public_address, ACCESS_TOKEN_PATH);
 
     return new OAuthServiceProvider(requestTokenUrl, authorizeTokenUrl, accessTokenUrl);
   }
@@ -143,8 +143,7 @@ public class RobotApiModule extends AbstractModule {
    * @param port the port of the http frontend
    * @param postFix the end part of the url
    */
-  private String getOAuthUrl(String domain, int port, String postFix) {
-    String host = (port == 80) ? domain : (domain + ":" + port);
-    return String.format("http://%s/%s%s", host, DataApiOAuthServlet.DATA_API_OAUTH_PATH, postFix);
+  private String getOAuthUrl(String public_address, String postFix) {
+    return String.format("http://%s/%s%s", public_address, DataApiOAuthServlet.DATA_API_OAUTH_PATH, postFix);
   }
 }

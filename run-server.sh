@@ -31,8 +31,8 @@ exec java $DEBUG_FLAGS \
   --certificate_domain=$CERTIFICATE_DOMAIN_NAME \
   --waveserver_disable_verification=$WAVESERVER_DISABLE_VERIFICATION \
   --waveserver_disable_signer_verification=$WAVESERVER_DISABLE_SIGNER_VERIFICATION \
-  --http_frontend_hostname=$WEBSOCKET_SERVER_HOSTNAME \
-  --http_frontend_port=$WEBSOCKET_SERVER_PORT \
+  --http_frontend_public_address=$HTTP_SERVER_PUBLIC_ADDRESS \
+  --http_frontend_addresses=$HTTP_SERVER_ADDRESSES \
   --enable_federation=$ENABLE_FEDERATION \
   --cert_path_store_type=$CERT_PATH_STORE_TYPE \
   --attachment_store_type=$ATTACHMENT_STORE_TYPE \
