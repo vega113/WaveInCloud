@@ -18,18 +18,17 @@
 package org.waveprotocol.box.server.persistence.memory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.waveprotocol.box.server.waveserver.AppliedDeltaUtil;
 import org.waveprotocol.box.server.waveserver.ByteStringMessage;
 import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
 import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
-import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -39,7 +38,7 @@ import java.util.Map;
  * @author josephg@google.com (Joseph Gentle)
  */
 public class MemoryDeltaCollection implements DeltasAccess {
-  private final Map<Long, WaveletDeltaRecord> deltas = CollectionUtils.newHashMap();
+  private final Map<Long, WaveletDeltaRecord> deltas = Maps.newHashMap();
   private final WaveletName waveletName;
 
   private HashedVersion endVersion = null;
@@ -70,30 +69,15 @@ public class MemoryDeltaCollection implements DeltasAccess {
   }
 
   @Override
-  public HashedVersion getAppliedAtVersion(long version) throws IOException {
-    WaveletDeltaRecord record = getDelta(version);
-
-    if (record == null) {
-      return null;
-    }
-
-    ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta = record.applied;
-    if (appliedDelta == null) {
-      return null;
-    }
-
-    return AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
+  public HashedVersion getAppliedAtVersion(long version) throws InvalidProtocolBufferException {
+    WaveletDeltaRecord delta = getDelta(version);
+    return (delta != null) ? delta.getAppliedAtVersion() : null;
   }
 
   @Override
   public HashedVersion getResultingVersion(long version) {
     WaveletDeltaRecord delta = getDelta(version);
-
-    if (delta != null) {
-      return delta.transformed.getResultingVersion();
-    } else {
-      return null;
-    }
+    return (delta != null) ? delta.transformed.getResultingVersion() : null;
   }
 
   @Override

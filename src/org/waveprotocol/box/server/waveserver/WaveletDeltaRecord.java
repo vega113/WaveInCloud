@@ -60,13 +60,12 @@ public class WaveletDeltaRecord {
   // Convenience methods:
 
   /**
-   * @return the hashed version which this delta was applied at
-   * @throws NullPointerException if the record has no applied delta
+   * @return the hashed version which this delta was applied at, if this
+   *         record has an applied delta, otherwise null
    * @throws InvalidProtocolBufferException if the applied delta is ill-formed
    */
   public HashedVersion getAppliedAtVersion() throws InvalidProtocolBufferException {
-    Preconditions.checkNotNull(applied, "no applied delta");
-    return AppliedDeltaUtil.getHashedVersionAppliedAt(applied);
+    return (applied == null) ? null : AppliedDeltaUtil.getHashedVersionAppliedAt(applied);
   }
 
   /** @return the author of the delta */
