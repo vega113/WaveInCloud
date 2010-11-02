@@ -24,6 +24,7 @@ import org.waveprotocol.box.server.robots.AbstractOperationServiceRegistry;
 import org.waveprotocol.box.server.robots.operations.BlipOperationServices;
 import org.waveprotocol.box.server.robots.operations.CreateWaveletService;
 import org.waveprotocol.box.server.robots.operations.DoNothingService;
+import org.waveprotocol.box.server.robots.operations.DocumentModifyService;
 import org.waveprotocol.box.server.robots.operations.FetchWaveService;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 import org.waveprotocol.box.server.robots.operations.SearchService;

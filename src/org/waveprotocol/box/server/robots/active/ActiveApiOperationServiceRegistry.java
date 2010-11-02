@@ -23,6 +23,7 @@ import org.waveprotocol.box.server.robots.AbstractOperationServiceRegistry;
 import org.waveprotocol.box.server.robots.operations.BlipOperationServices;
 import org.waveprotocol.box.server.robots.operations.CreateWaveletService;
 import org.waveprotocol.box.server.robots.operations.DoNothingService;
+import org.waveprotocol.box.server.robots.operations.DocumentModifyService;
 import org.waveprotocol.box.server.robots.operations.FetchWaveService;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 
@@ -52,5 +53,6 @@ public final class ActiveApiOperationServiceRegistry extends AbstractOperationSe
         OperationType.DOCUMENT_INSERT_INLINE_BLIP_AFTER_ELEMENT, BlipOperationServices.create());
     register(OperationType.ROBOT_CREATE_WAVELET, CreateWaveletService.create());
     register(OperationType.ROBOT_FETCH_WAVE, FetchWaveService.create());
+    register(OperationType.DOCUMENT_MODIFY, DocumentModifyService.create());
   }
 }

@@ -236,6 +236,8 @@ public class OperationContextImpl implements OperationContext, OperationResults 
 
   @Override
   public ObservableConversationView getConversation(ObservableWavelet wavelet) {
+    // TODO(ljvderijk): Cache the conversation so that it isn't recreated every
+    // time because it isn't garbage collected until the wavelet is.
     return conversationUtil.getConversation(wavelet);
   }
 
