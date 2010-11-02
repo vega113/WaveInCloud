@@ -55,6 +55,7 @@ public final class DataApiOperationServiceRegistry extends AbstractOperationServ
         OperationType.DOCUMENT_INSERT_INLINE_BLIP_AFTER_ELEMENT, BlipOperationServices.create());
     register(OperationType.ROBOT_CREATE_WAVELET, CreateWaveletService.create());
     register(OperationType.ROBOT_FETCH_WAVE, FetchWaveService.create());
+    register(OperationType.DOCUMENT_MODIFY, DocumentModifyService.create());
     register(OperationType.ROBOT_SEARCH, searchService);
   }
 }
