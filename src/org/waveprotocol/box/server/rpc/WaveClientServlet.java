@@ -106,8 +106,12 @@ public class WaveClientServlet extends HttpServlet {
       return;
     }
 
-    response.setContentType("text/html");
     response.setStatus(HttpServletResponse.SC_OK);
+    response.setContentType("text/html");
+
+    // Ensure the session data is never cached by proxies. See:
+    // http://code.google.com/p/wave-protocol/issues/detail?id=139
+    response.setHeader("Cache-Control", "no-store");
   }
 
   private JSONObject getClientFlags(HttpServletRequest request) {
