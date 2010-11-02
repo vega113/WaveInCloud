@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module>
-  <!-- Inherit the core Web Toolkit stuff.                        -->
   <inherits name="com.google.common.base.Base"/>
   <inherits name='com.google.gwt.user.User'/>
   <inherits name="com.google.gwt.event.EventBase"/>
 
   <inherits name='com.google.gwt.user.theme.chrome.Chrome'/>
 
-  <!-- Other module inherits                                      -->
   <inherits name='com.google.gwt.json.JSON'/>
   <inherits name='com.google.gwt.websockets.WebSockets'/>
 
@@ -21,6 +19,7 @@
   <inherits name='org.waveprotocol.box.webclient.common.communication.Communication'/>
   <inherits name='org.waveprotocol.box.webclient.util.Util'/>
   <inherits name='org.waveprotocol.box.webclient.waveclient.common.Common'/>
+  <inherits name='org.waveprotocol.box.webclient.widget.error.Error'/>
   <inherits name="org.waveprotocol.box.common.Common"/>
   <inherits name='org.waveprotocol.box.server.waveserver.WaveClientRpc'/>
 
