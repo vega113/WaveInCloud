@@ -66,11 +66,13 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
 
-  protected static final HashedVersionFactory HASH_FACTORY =
+  private static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionFactoryImpl(URI_CODEC);
 
+  /** Keyed by appliedAtVersion */
   private final NavigableMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>>
       appliedDeltas = Maps.newTreeMap();
+  /** Keyed by appliedAtVersion */
   private final NavigableMap<HashedVersion, TransformedWaveletDelta> transformedDeltas =
       Maps.newTreeMap();
   private final Lock readLock;
@@ -293,11 +295,32 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   /**
-   * Apply the operations from a single delta to the wavelet container.
+   * Builds a {@link WaveletDeltaRecord} and applies it to the wavelet container.
+   * The delta must be non-empty.
+   */
+  protected WaveletDeltaRecord buildAndApplyDelta(ParticipantId author,
+      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
+      Iterable<WaveletOperation> transformedOps)
+      throws InvalidProtocolBufferException, OperationException {
+    ProtocolAppliedWaveletDelta appliedDeltaMessage = appliedDelta.getMessage();
+    HashedVersion resultingVersion = HASH_FACTORY.create(
+        appliedDelta.getByteArray(), currentVersion, appliedDeltaMessage.getOperationsApplied());
+    TransformedWaveletDelta transformedDelta = new TransformedWaveletDelta(author,
+        resultingVersion, appliedDeltaMessage.getApplicationTimestamp(), transformedOps);
+    WaveletDeltaRecord applicationResult = new WaveletDeltaRecord(appliedDelta, transformedDelta);
+
+    // Apply the delta to the local wavelet state.
+    applyDelta(applicationResult);
+
+    return applicationResult;
+  }
+
+  /**
+   * Applies the operations from a single delta to the wavelet container.
    *
    * @param delta to apply, must be non-empty.
    */
-  protected void applyDelta(WaveletDeltaRecord delta)
+  private void applyDelta(WaveletDeltaRecord delta)
       throws InvalidProtocolBufferException, OperationException {
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDeltaBytes = delta.getAppliedDelta();
     ProtocolAppliedWaveletDelta appliedDelta = appliedDeltaBytes.getMessage();
@@ -332,14 +355,30 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   /**
-   * Returns the applied delta that was applied at a given hashed version.
-   *
    * @param versionActuallyAppliedAt the version to look up
    * @return the applied delta applied at the specified hashed version
    */
   protected ByteStringMessage<ProtocolAppliedWaveletDelta> lookupAppliedDelta(
       HashedVersion versionActuallyAppliedAt) {
     return appliedDeltas.get(versionActuallyAppliedAt);
+  }
+
+  /**
+   * @param endVersion the version to look up
+   * @return the applied delta with the given resulting version
+   */
+  protected ByteStringMessage<ProtocolAppliedWaveletDelta> lookupAppliedDeltaByEndVersion(
+      HashedVersion endVersion) {
+    // It's cheaper to find the resulting version of a TransformedWaveletDelta
+    // than a ProtocolAppliedWaveletDelta, therefore we search for the
+    // begin version in the transformedDeltas map.
+    Map.Entry<HashedVersion, TransformedWaveletDelta> lower =
+        transformedDeltas.lowerEntry(endVersion);
+    if (lower == null || !lower.getValue().getResultingVersion().equals(endVersion)) {
+      return null;
+    }
+    // We found the begin version so now we can find the applied delta in the appliedDeltas map.
+    return appliedDeltas.get(lower.getKey());
   }
 
   protected TransformedWaveletDelta lookupTransformedDelta(HashedVersion appliedAtVersion) {

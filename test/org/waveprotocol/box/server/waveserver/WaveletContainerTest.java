@@ -315,12 +315,7 @@ public class WaveletContainerTest extends TestCase {
             signedDelta, delta.getTargetVersion(), delta.size(), 0L);
     HashedVersion resultingVersion = HASH_FACTORY.create(
         appliedDelta.getByteArray(), delta.getTargetVersion(), delta.size());
-    TransformedWaveletDelta transformedDelta =
-        new TransformedWaveletDelta(delta.getAuthor(), resultingVersion, 0L, delta);
-    WaveletDeltaRecord applicationResult = new WaveletDeltaRecord(appliedDelta, transformedDelta);
-
-    // Apply the delta to the local wavelet state.
-    wavelet.applyDelta(applicationResult);
+    wavelet.buildAndApplyDelta(delta.getAuthor(), appliedDelta, delta);
   }
 
   private static WaveletDelta addParticipantDelta(WaveletContainer target) {

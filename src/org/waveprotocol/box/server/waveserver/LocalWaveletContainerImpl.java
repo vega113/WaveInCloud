@@ -19,8 +19,6 @@ package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -42,12 +40,6 @@ import org.waveprotocol.wave.model.version.HashedVersion;
  */
 class LocalWaveletContainerImpl extends WaveletContainerImpl
     implements LocalWaveletContainer {
-
-  /**
-   * Associates a delta (represented by the hashed version of the wavelet state after its
-   * application) with its signers (represented by their signer id)
-   */
-  private final Multimap<HashedVersion, ByteString> deltaSigners = ArrayListMultimap.create();
 
   public LocalWaveletContainerImpl(WaveletName waveletName) {
     super(waveletName);
@@ -128,21 +120,8 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     // Build the applied delta to commit
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
         buildAppliedDelta(signedDelta, currentVersion, transformed.size(), applicationTimestamp);
-    HashedVersion resultingVersion = HASH_FACTORY.create(
-        appliedDelta.getByteArray(), currentVersion, transformed.size());
-    TransformedWaveletDelta transformedDelta = new TransformedWaveletDelta(transformed.getAuthor(),
-        resultingVersion, applicationTimestamp, transformed);
-    WaveletDeltaRecord applicationResult = new WaveletDeltaRecord(appliedDelta, transformedDelta);
 
-    // Apply the delta to the local wavelet state.
-    applyDelta(applicationResult);
-
-    // Associate this hashed version with its signers.
-    for (ProtocolSignature signature : signedDelta.getSignatureList()) {
-      deltaSigners.put(resultingVersion, signature.getSignerId());
-    }
-
-    return applicationResult;
+    return buildAndApplyDelta(transformed.getAuthor(), appliedDelta, transformed);
   }
 
   @VisibleForTesting
@@ -166,6 +145,15 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
   @Override
   public boolean isDeltaSigner(HashedVersion version, ByteString signerId) {
-    return deltaSigners.get(version).contains(signerId);
+    ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
+        lookupAppliedDeltaByEndVersion(version);
+    if (appliedDelta == null) {
+      return false;
+    }
+    ProtocolSignedDelta signedDelta = appliedDelta.getMessage().getSignedOriginalDelta();
+    for (ProtocolSignature signature : signedDelta.getSignatureList()) {
+      if (signature.getSignerId().equals(signerId)) return true;
+    }
+    return false;
   }
 }
