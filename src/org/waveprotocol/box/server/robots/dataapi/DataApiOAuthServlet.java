@@ -145,10 +145,10 @@ public class DataApiOAuthServlet extends HttpServlet {
 
     resp.setContentType(OAuth.FORM_ENCODED);
     ServletOutputStream out = resp.getOutputStream();
-    OAuth.formEncode(OAuth.newList( // ☠
-        OAuth.OAUTH_TOKEN, accessor.requestToken, // ☠
-        OAuth.OAUTH_TOKEN_SECRET, accessor.tokenSecret, // ☠
-        OAuth.OAUTH_CALLBACK_CONFIRMED, "true"), // ☠
+    OAuth.formEncode(OAuth.newList(
+        OAuth.OAUTH_TOKEN, accessor.requestToken,
+        OAuth.OAUTH_TOKEN_SECRET, accessor.tokenSecret,
+        OAuth.OAUTH_CALLBACK_CONFIRMED, "true"),
         out);
     out.close();
     resp.setStatus(HttpServletResponse.SC_OK);
@@ -323,10 +323,10 @@ public class DataApiOAuthServlet extends HttpServlet {
 
     resp.setContentType(OAuth.FORM_ENCODED);
     ServletOutputStream out = resp.getOutputStream();
-    OAuth.formEncode(OAuth.newList( // ☠
-        OAuth.OAUTH_TOKEN, authorizedAccessor.accessToken, // ☠
-        OAuth.OAUTH_TOKEN_SECRET, authorizedAccessor.tokenSecret, // ☠
-        OAuth.OAUTH_CALLBACK_CONFIRMED, "true"), // ☠
+    OAuth.formEncode(OAuth.newList(
+        OAuth.OAUTH_TOKEN, authorizedAccessor.accessToken,
+        OAuth.OAUTH_TOKEN_SECRET, authorizedAccessor.tokenSecret,
+        OAuth.OAUTH_CALLBACK_CONFIRMED, "true"),
         out);
     out.close();
     resp.setStatus(HttpServletResponse.SC_OK);
