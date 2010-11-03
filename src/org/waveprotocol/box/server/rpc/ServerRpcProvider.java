@@ -80,7 +80,7 @@ public class ServerRpcProvider {
   private static final short HTTP_DEFAULT_PORT = 80;
   
   private final SocketAddress rpcHostingAddress;
-  private final String[] httpAddresses;
+  private final InetSocketAddress[] httpAddresses;
   private final Set<Connection> incomingConnections = Sets.newHashSet();
   private final ExecutorService threadPool;
   private final SessionManager sessionManager;
@@ -280,7 +280,7 @@ public class ServerRpcProvider {
    * @param httpPort port for http server
    * @param threadPool the service used to create threads
    */
-  public ServerRpcProvider(SocketAddress rpcHost, String[] httpAddresses,
+  public ServerRpcProvider(SocketAddress rpcHost, InetSocketAddress[] httpAddresses,
       ExecutorService threadPool, SessionManager sessionManager,
       org.eclipse.jetty.server.SessionManager jettySessionManager) {
     rpcHostingAddress = rpcHost;
@@ -293,7 +293,7 @@ public class ServerRpcProvider {
   /**
    * Constructs a new ServerRpcProvider with a default ExecutorService and session manager.
    */
-  public ServerRpcProvider(SocketAddress rpcHost, String[] httpAddresses,
+  public ServerRpcProvider(SocketAddress rpcHost, InetSocketAddress[] httpAddresses,
       SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager) {
     this(rpcHost, httpAddresses, Executors.newCachedThreadPool(), sessionManager,
         jettySessionManager);
@@ -305,7 +305,7 @@ public class ServerRpcProvider {
       @Named("http_frontend_addresses") String httpAddresses,
       SessionManager sessionManager,
       org.eclipse.jetty.server.SessionManager jettySessionManager) {
-    this(new InetSocketAddress(rpcHost, rpcPort), httpAddresses.split("\\s*,\\s*"), sessionManager,
+    this(new InetSocketAddress(rpcHost, rpcPort), parseAddressList(httpAddresses), sessionManager,
         jettySessionManager);
   }
 
@@ -382,51 +382,61 @@ public class ServerRpcProvider {
     LOG.fine("WebSocket server running.");
   }
 
+  private static InetSocketAddress[] parseAddressList(String addressList) {
+    if (addressList == null || addressList.length() == 0) {
+      return null;
+    } else {
+      Set<InetSocketAddress> addresses = Sets.newHashSet();
+      for (String str: addressList.split("\\s*,\\s*")) {
+        if (str.length() == 0) {
+          LOG.warning("Encountered empty address in http addresses list.");
+        } else {
+          String[] parts = str.split(":");
+          String host = parts[0];
+          short port = HTTP_DEFAULT_PORT;
+          if (parts.length > 1) {
+            try {
+              port = Short.parseShort(parts[1]);
+              if (port <= 0) {
+                LOG.severe("Invalid port number: " + parts[1]);
+                continue;
+              }
+            } catch (NumberFormatException e) {
+              LOG.severe("Invalid port number: " + parts[1], e);
+              continue;
+            }
+          }
+          InetSocketAddress address = null;
+          try {
+            InetAddress addr = InetAddress.getByName(host);
+            address = new InetSocketAddress(addr, port);
+          } catch (UnknownHostException e) {
+            LOG.severe("Unable to resolve hostname/IP: " + host, e);
+            continue;
+          }
+          if (!addresses.contains(address)) {
+            addresses.add(address);
+          } else {
+            LOG.warning("Ignoring duplicate address in http addresses list: Duplicate entry '" + str
+                + "' resolved to " + address.getAddress().getHostAddress());
+          }
+        }
+      }
+      return addresses.toArray(new InetSocketAddress[0]);
+    }
+  }
+  
   /**
    * @return a list of {@link SelectChannelConnector} each bound to a host:port pair form the list
    * addresses.
    */
-  private List<SelectChannelConnector> getSelectChannelConnectors(String[] httpAddresses) {
+  private List<SelectChannelConnector> getSelectChannelConnectors(InetSocketAddress[] httpAddresses) {
     List<SelectChannelConnector> list = Lists.newArrayList();
-    Set<InetSocketAddress> addresses = Sets.newHashSet();
-    for (String str: httpAddresses) {
-      if (str.length() == 0) {
-        LOG.warning("Encountered empty address in http addresses list.");
-      } else {
-        String[] parts = str.split(":");
-        String host = parts[0];
-        short port = HTTP_DEFAULT_PORT;
-        if (parts.length > 1) {
-          try {
-            port = Short.parseShort(parts[1]);
-            if (port <= 0) {
-              LOG.severe("Invalid port number: " + parts[1]);
-              continue;
-            }
-          } catch (NumberFormatException e) {
-            LOG.severe("Invalid port number: " + parts[1], e);
-            continue;
-          }
-        }
-        InetSocketAddress address = null;
-        try {
-          InetAddress addr = InetAddress.getByName(host);
-          address = new InetSocketAddress(addr, port);
-        } catch (UnknownHostException e) {
-          LOG.severe("Unable to resolve hostname/IP: " + host, e);
-          continue;
-        }
-        if (!addresses.contains(address)) {
-          addresses.add(address);
-          SelectChannelConnector connector = new SelectChannelConnector();
-          connector.setHost(address.getAddress().getHostAddress());
-          connector.setPort(address.getPort());
-          list.add(connector);
-        } else {
-          LOG.warning("Ignoring duplicate address in http addresses list. Duplicate entry '" + str
-              + "' resolved to " + address.getAddress().getHostAddress());
-        }
-      }
+    for (InetSocketAddress address: httpAddresses) {
+        SelectChannelConnector connector = new SelectChannelConnector();
+        connector.setHost(address.getAddress().getHostAddress());
+        connector.setPort(address.getPort());
+        list.add(connector);
     }
     
     return list;
