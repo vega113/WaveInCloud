@@ -487,7 +487,7 @@ public class EventGenerator {
       return null;
     }
 
-    ObservableConversation conversation = conversationUtil.getConversation(wavelet).getRoot();
+    ObservableConversation conversation = conversationUtil.buildConversation(wavelet).getRoot();
     if (conversation.getRootThread().getFirstBlip() == null) {
       // No root blip is present, this will cause Robot API code
       // to fail when resolving the context of events. This might be fixed later

@@ -18,8 +18,8 @@
 package org.waveprotocol.box.server.robots;
 
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.OperationRequest;
 import com.google.wave.api.JsonRpcConstant.ParamsProperty;
+import com.google.wave.api.OperationRequest;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 
@@ -27,7 +27,6 @@ import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
-import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
@@ -105,12 +104,43 @@ public interface OperationContext {
       throws InvalidRequestException;
 
   /**
-   * Creates a conversation for the given wavelet. The wavelet must be a valid
-   * conversational wavelet.
+   * Opens the wavelet specified in the given operation.
    *
-   * @param wavelet the wavelet to construct a conversation for.
+   * @param operation the operation specifying which wavelet to open.
+   * @param participant the id of the participant that wants to open the
+   *        wavelet.
+   * @throws InvalidRequestException if the wavelet can not be opened or the
+   *         operation does not define the wave and wavelet id.
    */
-  ObservableConversationView getConversation(ObservableWavelet wavelet);
+  OpBasedWavelet openWavelet(OperationRequest operation, ParticipantId participant)
+      throws InvalidRequestException;
+
+  /**
+   * Gets the conversation for of wavelet for the given wave id and wavelet id.
+   * Tries to retrieve and open the wavelet if that has not already been done.
+   *
+   * @param waveId the wave id of the wavelet.
+   * @param waveletId the wavelet id of.
+   * @param participant the id of the participant that wants to operation on the
+   *        conversation.
+   * @throws InvalidRequestException if the wavelet can not be opened.
+   */
+  ObservableConversationView openConversation(
+      String waveId, String waveletId, ParticipantId participant) throws InvalidRequestException;
+
+  /**
+   * Gets the conversation for of wavelet specified in the operation. Tries to
+   * retrieve and open the wavelet if that has not already been done.
+   *
+   * @param operation the operation specifying which wavelet to get the
+   *        conversation for.
+   * @param participant the id of the participant that wants to operation on the
+   *        conversation.
+   * @throws InvalidRequestException if the wavelet can not be opened or the
+   *         operation does not define the wave and wavelet id.
+   */
+  ObservableConversationView openConversation(OperationRequest operation, ParticipantId participant)
+      throws InvalidRequestException;
 
   /**
    * Stores a reference from a temporary blip id to a real blip id. If the given
@@ -136,17 +166,6 @@ public interface OperationContext {
    * @return the converter to convert to API objects
    */
   EventDataConverter getConverter();
-
-  /**
-   * Returns the {@link OpBasedWavelet} as specified by the given operation.
-   *
-   * @param operation the operation which contains the wave and wavelet id.
-   * @return {@link OpBasedWavelet} object for the wavelet specified in this
-   *         context.
-   * @throws InvalidRequestException if the wavelet could not be retrieved.
-   */
-  OpBasedWavelet getWavelet(OperationRequest operation, ParticipantId participant)
-      throws InvalidRequestException;
 
   /**
    * Returns {@link ConversationUtil} which is used to generate conversations

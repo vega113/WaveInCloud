@@ -99,7 +99,7 @@ public class SearchService implements OperationService {
       return null;
     }
 
-    ObservableConversationView conversation = conversationUtil.getConversation(wavelet);
+    ObservableConversationView conversation = conversationUtil.buildConversation(wavelet);
     ObservableConversation rootConversation = conversation.getRoot();
     if (rootConversation == null) {
       // Once again, there's no conversation here. Don't return it in the results.

@@ -81,8 +81,8 @@ public class BlipOperationServicesTest extends TestCase {
 
   public void testContinueThread() throws Exception {
     OperationContextImpl context = helper.getContext();
-    OpBasedWavelet wavelet = context.openWavelet(WAVE_ID, WAVELET_ID, ALEX);
-    ObservableConversation conversation = context.getConversation(wavelet).getRoot();
+    ObservableConversation conversation =
+        context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
 
     // Append a random blip to check that we actually append to the end of this
     // thread.
@@ -110,8 +110,8 @@ public class BlipOperationServicesTest extends TestCase {
 
   public void testCreateChild() throws Exception {
     OperationContextImpl context = helper.getContext();
-    OpBasedWavelet wavelet = context.openWavelet(WAVE_ID, WAVELET_ID, ALEX);
-    ObservableConversation conversation = context.getConversation(wavelet).getRoot();
+    ObservableConversation conversation =
+        context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
 
     // Append a random blip to check that we actually make a new child blip
     conversation.getRootThread().appendBlip();
@@ -147,7 +147,7 @@ public class BlipOperationServicesTest extends TestCase {
     assertFalse(response.isError());
 
     ObservableConversation conversation =
-        context.getConversation(context.openWavelet(WAVE_ID, WAVELET_ID, ALEX)).getRoot();
+        context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
     ConversationBlip newBlip = checkAndGetNewBlip(context, conversation, response);
 
     Iterator<? extends ObservableConversationBlip> it =
@@ -158,8 +158,8 @@ public class BlipOperationServicesTest extends TestCase {
 
   public void testAppendInlineBlip() throws Exception {
     OperationContextImpl context = helper.getContext();
-    OpBasedWavelet wavelet = context.openWavelet(WAVE_ID, WAVELET_ID, ALEX);
-    ObservableConversation conversation = context.getConversation(wavelet).getRoot();
+    ObservableConversation conversation =
+        context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
 
     // Append the inline blip to the root blip
     String rootBlipId = ConversationUtil.getRootBlipId(conversation);
@@ -190,7 +190,8 @@ public class BlipOperationServicesTest extends TestCase {
   public void testInsertInlineBlip() throws Exception {
     OperationContextImpl context = helper.getContext();
     OpBasedWavelet wavelet = context.openWavelet(WAVE_ID, WAVELET_ID, ALEX);
-    ObservableConversation conversation = context.getConversation(wavelet).getRoot();
+    ObservableConversation conversation =
+        context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
 
     int insertAtApiLocation = 2;
     ApiView apiView =
@@ -220,8 +221,8 @@ public class BlipOperationServicesTest extends TestCase {
 
   public void testInsertInlineBlipAfterElement() throws Exception {
     OperationContextImpl context = helper.getContext();
-    OpBasedWavelet wavelet = context.openWavelet(WAVE_ID, WAVELET_ID, ALEX);
-    ObservableConversation conversation = context.getConversation(wavelet).getRoot();
+    ObservableConversation conversation =
+      context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
 
     // Make an inline blip at a certain location, we will then have the
     // BlipOperationService insert one after that blip.
@@ -260,8 +261,8 @@ public class BlipOperationServicesTest extends TestCase {
 
   public void testDeleteBlip() throws Exception {
     OperationContextImpl context = helper.getContext();
-    OpBasedWavelet wavelet = context.openWavelet(WAVE_ID, WAVELET_ID, ALEX);
-    ObservableConversation conversation = context.getConversation(wavelet).getRoot();
+    ObservableConversation conversation =
+      context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
 
     // Delete the root blip
     String rootBlipId = ConversationUtil.getRootBlipId(conversation);

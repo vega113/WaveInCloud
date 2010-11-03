@@ -65,7 +65,7 @@ public class FetchWaveServiceTest extends TestCase {
     service.execute(operation, context, ALEX);
 
     ObservableConversation conversation =
-        context.getConversation(context.openWavelet(WAVE_ID, WAVELET_ID, ALEX)).getRoot();
+        context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
 
     JsonRpcResponse response = context.getResponse(OPERATION_ID);
     assertNotNull("expected a response", response);

@@ -94,7 +94,7 @@ public class OperationServiceHelper {
     // Make a conversation with an empty root blip
     WaveletBasedConversation.makeWaveletConversational(wavelet);
     ConversationUtil conversationUtil = new ConversationUtil(FakeIdGenerator.create());
-    ObservableConversation conversation = conversationUtil.getConversation(wavelet).getRoot();
+    ObservableConversation conversation = conversationUtil.buildConversation(wavelet).getRoot();
     conversation.getRootThread().appendBlip();
 
     context = new OperationContextImpl(waveletProvider, converter, conversationUtil);

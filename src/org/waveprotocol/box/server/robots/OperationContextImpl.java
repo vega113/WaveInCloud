@@ -20,9 +20,9 @@ package org.waveprotocol.box.server.robots;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.wave.api.InvalidRequestException;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.EventSerializationException;
@@ -44,7 +44,6 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
-import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
@@ -92,6 +91,9 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   private final Map<String, String> tempBlipIdMap = Maps.newHashMap();
   /** Stores temporary wavelet names -> real wavelet names */
   private final Map<WaveletName, WaveletName> tempWaveletNameMap = Maps.newHashMap();
+  /** Caches {@link ObservableConversationView}s */
+  private final Map<WaveletName, Map<ParticipantId, ObservableConversationView>>
+      openedConversations;
 
   /** Used to create conversations. */
   private final ConversationUtil conversationUtil;
@@ -126,6 +128,7 @@ public class OperationContextImpl implements OperationContext, OperationResults 
     this.converter = converter;
     this.conversationUtil = conversationUtil;
     this.boundWavelet = boundWavelet;
+    this.openedConversations = Maps.newHashMap();
 
     if (boundWavelet != null) {
       openedWavelets.put(boundWavelet.getWaveletName(), boundWavelet);
@@ -235,19 +238,42 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   }
 
   @Override
-  public ObservableConversationView getConversation(ObservableWavelet wavelet) {
-    // TODO(ljvderijk): Cache the conversation so that it isn't recreated every
-    // time because it isn't garbage collected until the wavelet is.
-    return conversationUtil.getConversation(wavelet);
-  }
-
-  @Override
-  public OpBasedWavelet getWavelet(OperationRequest operation, ParticipantId participant)
+  public OpBasedWavelet openWavelet(OperationRequest operation, ParticipantId participant)
       throws InvalidRequestException {
     String waveId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVE_ID);
     String waveletId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVELET_ID);
     return openWavelet(waveId, waveletId, participant);
   }
+
+  @Override
+  public ObservableConversationView openConversation(
+      String waveId, String waveletId, ParticipantId participant) throws InvalidRequestException {
+    WaveletName waveletName = WaveletName.of(waveId, waveletId);
+
+    if (!openedConversations.containsKey(waveletName)) {
+      openedConversations.put(
+          waveletName, Maps.<ParticipantId, ObservableConversationView> newHashMap());
+    }
+
+    Map<ParticipantId, ObservableConversationView> conversations =
+        openedConversations.get(waveletName);
+
+    if (!conversations.containsKey(participant)) {
+      OpBasedWavelet wavelet = openWavelet(waveId, waveletId, participant);
+      conversations.put(participant, conversationUtil.buildConversation(wavelet));
+    }
+    return conversations.get(participant);
+  }
+
+  @Override
+  public ObservableConversationView openConversation(
+      OperationRequest operation, ParticipantId participant) throws InvalidRequestException {
+    String waveId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVE_ID);
+    String waveletId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVELET_ID);
+    return openConversation(waveId, waveletId, participant);
+  }
+
+  // OperationResults implementation begins here
 
   @Override
   public void putBlip(String blipId, ConversationBlip newBlip) {

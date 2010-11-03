@@ -46,14 +46,16 @@ public class ConversationUtil {
   }
 
   /**
-   * Returns an {@link ObservableConversationView} for the given wavelet.
+   * Builds an {@link ObservableConversationView} for the given wavelet. Note
+   * that this can be expensive since the conversation is not garbage collected
+   * until the wavelet is.
    *
    * @param wavelet The wavelet to return the conversation for, must be a valid
    *        conversation wavelet.
    * @throws IllegalArgumentException if the wavelet is not a valid conversation
    *         wavelet.
    */
-  public ObservableConversationView getConversation(ObservableWavelet wavelet) {
+  public ObservableConversationView buildConversation(ObservableWavelet wavelet) {
     Preconditions.checkArgument(IdUtil.isConversationalId(wavelet.getId()),
         "Expected conversational wavelet, got " + wavelet.getId());
     Preconditions.checkArgument(WaveletBasedConversation.waveletHasConversation(wavelet),

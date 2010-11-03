@@ -68,8 +68,9 @@ public class BlipOperationServices implements OperationService {
   public void execute(
       OperationRequest operation, OperationContext context, ParticipantId participant)
       throws InvalidRequestException {
-    OpBasedWavelet wavelet = context.getWavelet(operation, participant);
-    ObservableConversationView conversationView = context.getConversation(wavelet);
+    OpBasedWavelet wavelet = context.openWavelet(operation, participant);
+    ObservableConversationView conversationView = context.openConversation(operation, participant);
+
     String waveletId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVELET_ID);
     ObservableConversation conversation = conversationView.getConversation(waveletId);
 

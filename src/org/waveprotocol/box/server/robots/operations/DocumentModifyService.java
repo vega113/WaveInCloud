@@ -60,8 +60,9 @@ public class DocumentModifyService implements OperationService {
     DocumentModifyAction modifyAction =
         OperationUtil.getRequiredParameter(operation, ParamsProperty.MODIFY_ACTION);
 
-    OpBasedWavelet wavelet = context.getWavelet(operation, participant);
-    ObservableConversation conversation = context.getConversation(wavelet).getRoot();
+    OpBasedWavelet wavelet = context.openWavelet(operation, participant);
+    ObservableConversation conversation =
+        context.openConversation(operation, participant).getRoot();
     Document doc = context.getBlip(conversation, blipId).getContent();
 
     ApiView view = new ApiView(doc, wavelet);

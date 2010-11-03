@@ -97,15 +97,16 @@ public class CreateWaveletService implements OperationService {
 
     WaveletName waveletName = context.getConversationUtil().generateWaveletName();
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(waveletName);
-    ObservableWaveletData emptyWavelet = WaveletDataUtil.createEmptyWavelet(waveletName,
-        participant, hashedVersionZero, System.currentTimeMillis());
+    ObservableWaveletData emptyWavelet = WaveletDataUtil.createEmptyWavelet(
+        waveletName, participant, hashedVersionZero, System.currentTimeMillis());
 
     RobotWaveletData newWavelet = new RobotWaveletData(emptyWavelet, hashedVersionZero);
     OpBasedWavelet opBasedWavelet = newWavelet.getOpBasedWavelet(participant);
 
     WaveletBasedConversation.makeWaveletConversational(opBasedWavelet);
 
-    ObservableConversationView conversation = context.getConversation(opBasedWavelet);
+    ObservableConversationView conversation =
+        context.getConversationUtil().buildConversation(opBasedWavelet);
     ObservableConversationBlip rootBlip = conversation.getRoot().getRootThread().appendBlip();
 
     for (ParticipantId newParticipant : participants) {

@@ -38,7 +38,6 @@ import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
 import java.util.Collections;
 import java.util.List;
@@ -218,9 +217,9 @@ public class DocumentModifyServiceTest extends TestCase {
   }
 
   private ObservableConversationBlip getRootBlip() throws InvalidRequestException {
-    OpBasedWavelet wavelet = helper.getContext().openWavelet(WAVE_ID, WAVELET_ID, ALEX);
     ObservableConversationBlip rootBlip =
-        helper.getContext().getConversation(wavelet).getRoot().getRootThread().getFirstBlip();
+        helper.getContext().openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot().getRootThread()
+            .getFirstBlip();
     return rootBlip;
   }
 }

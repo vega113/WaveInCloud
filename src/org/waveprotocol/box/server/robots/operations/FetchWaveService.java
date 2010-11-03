@@ -30,6 +30,7 @@ import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.robots.util.OperationUtil;
 import org.waveprotocol.wave.model.conversation.Conversation;
+import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.Wavelet;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
@@ -48,8 +49,9 @@ public class FetchWaveService implements OperationService {
   public void execute(
       OperationRequest operation, OperationContext context, ParticipantId participant)
       throws InvalidRequestException {
-    OpBasedWavelet wavelet = context.getWavelet(operation, participant);
-    Conversation conversation = context.getConversation(wavelet).getRoot();
+    OpBasedWavelet wavelet = context.openWavelet(operation, participant);
+    ObservableConversation conversation =
+        context.openConversation(operation, participant).getRoot();
 
     EventMessageBundle messages =
         mapWaveletToMessageBundle(context.getConverter(), participant, wavelet, conversation);

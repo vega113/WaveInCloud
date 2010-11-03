@@ -148,7 +148,7 @@ public class EventGeneratorTest extends TestCase {
 
     // Make a conversation and clear the sink
     WaveletBasedConversation.makeWaveletConversational(wavelet);
-    conversationUtil.getConversation(wavelet).getRoot().getRootThread().appendBlip();
+    conversationUtil.buildConversation(wavelet).getRoot().getRootThread().appendBlip();
     output.clear();
   }
 
@@ -187,7 +187,7 @@ public class EventGeneratorTest extends TestCase {
   }
 
   public void testGenerateWaveletBlipCreatedEvent() throws Exception {
-    ObservableConversationView conversation = conversationUtil.getConversation(wavelet);
+    ObservableConversationView conversation = conversationUtil.buildConversation(wavelet);
     ObservableConversationBlip newBlip = conversation.getRoot().getRootThread().appendBlip();
     EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_BLIP_CREATED);
     assertEquals("Expected one event", 1, messages.getEvents().size());
@@ -197,7 +197,7 @@ public class EventGeneratorTest extends TestCase {
 
   public void testGenerateWaveletBlipRemovedEvent() throws Exception {
     ObservableConversationThread rootThread =
-        conversationUtil.getConversation(wavelet).getRoot().getRootThread();
+        conversationUtil.buildConversation(wavelet).getRoot().getRootThread();
     ObservableConversationBlip newBlip = rootThread.appendBlip();
     newBlip.delete();
     EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_BLIP_REMOVED);
@@ -210,7 +210,7 @@ public class EventGeneratorTest extends TestCase {
 
   public void testGenerateDocumentChangedEvent() throws Exception {
     ConversationBlip rootBlip =
-        conversationUtil.getConversation(wavelet).getRoot().getRootThread().getFirstBlip();
+        conversationUtil.buildConversation(wavelet).getRoot().getRootThread().getFirstBlip();
 
     XmlStringBuilder builder = XmlStringBuilder.createText("some random content");
     LineContainers.appendToLastLine(rootBlip.getContent(), builder);
@@ -226,7 +226,7 @@ public class EventGeneratorTest extends TestCase {
 
   public void testGenerateDocumentChangedEventOnlyOnce() throws Exception {
     ConversationBlip rootBlip =
-        conversationUtil.getConversation(wavelet).getRoot().getRootThread().getFirstBlip();
+        conversationUtil.buildConversation(wavelet).getRoot().getRootThread().getFirstBlip();
 
     // Change the document twice
     XmlStringBuilder builder = XmlStringBuilder.createText("some random content");
@@ -239,7 +239,7 @@ public class EventGeneratorTest extends TestCase {
 
   public void testGenerateAnnotatedTextChangedEvent() throws Exception {
     ConversationBlip rootBlip =
-        conversationUtil.getConversation(wavelet).getRoot().getRootThread().getFirstBlip();
+        conversationUtil.buildConversation(wavelet).getRoot().getRootThread().getFirstBlip();
 
     String annotationKey = "key";
     String annotationValue = "value";
