@@ -20,13 +20,20 @@ import org.mockito.Mockito;
 import org.waveprotocol.box.server.authentication.SessionManager;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 public class WebSocketRpcTest extends RpcTest {
 
   @Override
   protected void startServer() {
     SessionManager sessionManager = Mockito.mock(SessionManager.class);
-    server = new ServerRpcProvider(null, new String[] {"localhost:9898"}, sessionManager, null);
+    /*
+     * NOTE: Specifying port zero (0) causes the OS to select a random port.
+     * This allows the test to run without clashing with any potentially in-use port.
+     */
+    server = new ServerRpcProvider(null,
+        new InetSocketAddress[] {new InetSocketAddress("localhost", 0)},
+        sessionManager, null);
     server.startWebSocketServer();
   }
 
