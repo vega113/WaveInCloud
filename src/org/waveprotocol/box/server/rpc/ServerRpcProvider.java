@@ -384,7 +384,7 @@ public class ServerRpcProvider {
 
   private static InetSocketAddress[] parseAddressList(String addressList) {
     if (addressList == null || addressList.length() == 0) {
-      return null;
+      return new InetSocketAddress[0];
     } else {
       Set<InetSocketAddress> addresses = Sets.newHashSet();
       for (String str: addressList.split("\\s*,\\s*")) {
