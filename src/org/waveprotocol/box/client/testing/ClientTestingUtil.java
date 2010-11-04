@@ -120,8 +120,6 @@ public class ClientTestingUtil {
    *
    * @param backend to act on.
    */
-  // TODO: Derive the console client and agents from a common base class, then have this util act
-  // on that base class rather than on the backend.
   public ClientTestingUtil(ClientBackend backend) {
     this.backend = backend;
     userId = backend.getUserId();
