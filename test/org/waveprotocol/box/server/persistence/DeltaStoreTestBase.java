@@ -83,7 +83,6 @@ public abstract class DeltaStoreTestBase extends TestCase {
   }
 
   public void testWriteToNewWavelet() throws IOException {
-    System.out.printf("Start TEST\n");
     Pair<DeltaStore,WaveletDeltaRecord> pair = newDeltaStoreWithRecord(WAVE1_WAVELET1);
     DeltaStore store = pair.first;
     WaveletDeltaRecord record = pair.second;

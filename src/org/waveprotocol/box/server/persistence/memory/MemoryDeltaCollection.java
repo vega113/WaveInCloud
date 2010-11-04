@@ -29,7 +29,6 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -112,7 +111,7 @@ public class MemoryDeltaCollection implements DeltasAccess {
       // After:    ... |   D   |  D + 1 |
       //                     start     end
       long startVersion = delta.transformed.getAppliedAtVersion();
-      assert startVersion == endVersion.getVersion();
+      Preconditions.checkState(startVersion == endVersion.getVersion());
       deltas.put(startVersion, delta);
       endVersion = delta.transformed.getResultingVersion();
       endDeltas.put(endVersion.getVersion(), delta);

@@ -19,7 +19,6 @@ package org.waveprotocol.box.server.persistence.file;
 
 import com.google.common.base.Preconditions;
 
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.util.Pair;
 
 import java.io.EOFException;
@@ -36,15 +35,16 @@ import java.io.RandomAccessFile;
  * Internal format:
  * 
  * Let's assume that operations are 10 bytes long. Deltas are separated by |.
- * 
+ * <pre>
  * Deltas:    |  0  1  2 |  3 |  4  5 |
  *    offset  0          30   40      60
  *            
  * Index:        0 -1 -1   30   40 -41
- * 
+ * </pre>
  * The file contains a negative value for any version for which there is not a delta. This will
- * happen whenever the previous delta contains multiple ops. This negative value is -(offset + 1),
- * so that finding the delta leading to a version is easy: just read the previous index entry.
+ * happen whenever the previous delta contains multiple ops. This negative value is ~offset of
+ * the delta containing the op, so that finding the delta leading to a version is easy: just read
+ * the previous index entry.
  *
  * @author josephg@google.com (Joseph Gentle)
  */
@@ -97,8 +97,8 @@ public class DeltaIndex {
 
     file = FileUtils.getOrCreateFile(fileRef);
 
-    for (Pair<TransformedWaveletDelta, Long> pair : collection.getOffsetsIterator()) {
-      addTransformedDelta(pair.first, pair.second);
+    for (Pair<Pair<Long, Integer>, Long> pair : collection.getOffsetsIterator()) {
+      addDelta(pair.first.first, pair.first.second, pair.second);
     }
   }
 
@@ -141,7 +141,7 @@ public class DeltaIndex {
   }
 
   /**
-   * Seek to the corresponding version, if it is valid.
+   * Seeks to the corresponding version, if it is valid.
    * 
    * @param version version to seek to.
    * @return true iff the position is valid
@@ -163,27 +163,25 @@ public class DeltaIndex {
   }
 
   /**
-   * Index a new transformed delta.
-   *
-   * @param delta
-   * @param offset
-   * @throws IOException
+   * Indexes a new delta.
+   * 
+   * @param version the version at which the delta is applied
+   * @param numOperations number of operations in the delta
+   * @param offset offset at which the delta is stored
    */
-  public void addTransformedDelta(TransformedWaveletDelta delta, long offset) throws IOException {
+  public void addDelta(long version, int numOperations, long offset)
+      throws IOException {
     checkOpen();
 
-    long version = delta.getAppliedAtVersion();
     long position = version * RECORD_LENGTH;
     // We're expected to append the new delta
-    assert position == file.length();
+    Preconditions.checkState(position == file.length());
     file.seek(position);
     file.writeLong(offset);
     // fill in the additional positions with the 1-complement of the offset,
     offset = -(offset + 1);
-    long extraVersions = delta.getResultingVersion().getVersion() - version - 1;
-    while (extraVersions > 0) {
+    for (int i = 1; i < numOperations; i++) {
       file.writeLong(offset);
-      extraVersions--;
     }
   }
 
