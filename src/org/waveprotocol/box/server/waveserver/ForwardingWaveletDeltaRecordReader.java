@@ -54,6 +54,11 @@ public abstract class ForwardingWaveletDeltaRecordReader implements WaveletDelta
   }
 
   @Override
+  public WaveletDeltaRecord getDeltaByEndVersion(long version) throws IOException {
+    return delegate().getDeltaByEndVersion(version);
+  }
+
+  @Override
   public HashedVersion getAppliedAtVersion(long version) throws IOException {
     return delegate().getAppliedAtVersion(version);
   }

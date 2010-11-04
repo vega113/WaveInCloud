@@ -29,6 +29,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -66,6 +67,12 @@ public class MemoryDeltaCollection implements DeltasAccess {
   @Override
   public WaveletDeltaRecord getDelta(long version) {
     return deltas.get(version);
+  }
+
+  @Override
+  public WaveletDeltaRecord getDeltaByEndVersion(long version) {
+    // TODO(gobry): implement
+    return null;
   }
 
   @Override

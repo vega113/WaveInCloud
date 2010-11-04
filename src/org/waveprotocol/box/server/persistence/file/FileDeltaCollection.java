@@ -220,6 +220,12 @@ public class FileDeltaCollection implements DeltasAccess {
   }
 
   @Override
+  public WaveletDeltaRecord getDeltaByEndVersion(long version) {
+    // TODO(gobry): implement
+    return null;
+  }
+  
+  @Override
   public ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDelta(long version)
       throws IOException {
     return seekToRecord(version) ? readAppliedDeltaFromRecord() : null;
