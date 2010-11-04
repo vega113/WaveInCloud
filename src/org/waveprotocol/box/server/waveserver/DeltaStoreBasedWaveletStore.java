@@ -26,11 +26,8 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
-import java.io.Closeable;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
@@ -73,7 +70,11 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
 
     @Override
     public boolean hasNext() {
-      return !reader.isEmpty() && nextVersion < reader.getEndVersion().getVersion();
+      try {
+        return !reader.isEmpty() && nextVersion < reader.getEndVersion().getVersion();
+      } catch (IOException e) {
+        throw new RuntimeIOException(e);
+      }
     }
 
     /**

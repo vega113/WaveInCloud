@@ -82,4 +82,42 @@ public class WaveletDeltaRecord {
   public long getApplicationTimestamp() {
     return transformed.getApplicationTimestamp();
   }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((applied == null) ? 0 : applied.hashCode());
+    result = prime * result + ((transformed == null) ? 0 : transformed.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    WaveletDeltaRecord other = (WaveletDeltaRecord) obj;
+    if (applied == null) {
+      if (other.applied != null) {
+        return false;
+      }
+    } else if (!applied.equals(other.applied)) {
+      return false;
+    }
+    if (transformed == null) {
+      if (other.transformed != null) {
+        return false;
+      }
+    } else if (!transformed.equals(other.transformed)) {
+      return false;
+    }
+    return true;
+  }
 }

@@ -39,29 +39,15 @@ import java.util.Date;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class FileAttachmentStore implements AttachmentStore {
-
   /**
-   * The directory in which the attachments are stored
+   * The directory in which the attachments are stored. This directory is created lazily
+   * when the first attachment is stored.
    */
-  private String path;
+  private String basePath;
 
   @Inject
-  public FileAttachmentStore(@Named("attachment_store_directory") String requestedPath) {
-    path = makePath(requestedPath);
-  }
-
-  private static String makePath(String requestedPath) {
-    // Should check the directory exists and create it if it doesn't.
-    File path = new File(requestedPath);
-
-    if (!path.exists()) {
-      boolean succeeded = path.mkdirs();
-      if (!succeeded) {
-        throw new RuntimeException("Cannot create attachment store at path '" + requestedPath + "'");
-      }
-    }
-
-    return path.getAbsolutePath();
+  public FileAttachmentStore(@Named("attachment_store_directory") String basePath) {
+    this.basePath = basePath;
   }
 
   private static String encodeId(String id) {
@@ -73,12 +59,23 @@ public class FileAttachmentStore implements AttachmentStore {
   }
 
   private String getAttachmentPath(String id) {
-    return path + File.separatorChar + encodeId(id);
+    return basePath + File.separatorChar + encodeId(id);
+  }
+
+  /** Gets the file which stores an attachment with the specified ID. */
+  private File getAttachmentFile(String id, boolean createDir) {
+    File file = new File(getAttachmentPath(id));
+    if (!file.exists() && createDir) {
+      file.getParentFile().mkdirs();
+    }
+
+    return file;
   }
 
   @Override
   public AttachmentData getAttachment(String id) {
-    final File file = new File(getAttachmentPath(id));
+    final File file = getAttachmentFile(id, false);
+
     if (!file.exists() || !file.canRead()) {
       return null;
     }
@@ -110,7 +107,7 @@ public class FileAttachmentStore implements AttachmentStore {
 
   @Override
   public boolean storeAttachment(String id, InputStream data) throws IOException {
-    File file = new File(getAttachmentPath(id));
+    File file = getAttachmentFile(id, true);
 
     if (file.exists()) {
       return false;

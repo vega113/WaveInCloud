@@ -35,7 +35,7 @@ public interface WaveletDeltaRecordReader {
   WaveletName getWaveletName();
 
   /** @return true if the collection contains no deltas */
-  boolean isEmpty();
+  boolean isEmpty() throws IOException;
 
   /** @return the resulting version of the last delta */
   HashedVersion getEndVersion();

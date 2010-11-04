@@ -17,16 +17,18 @@
 
 package org.waveprotocol.box.server.persistence.file;
 
-import org.waveprotocol.box.server.persistence.AttachmentStore;
-import org.waveprotocol.box.server.persistence.AttachmentStoreTestBase;
+import org.waveprotocol.box.server.persistence.DeltaStoreTestBase;
+import org.waveprotocol.box.server.waveserver.DeltaStore;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
- * A wrapper for the tests in AttachmentStoreBase which uses a file based
- * attachment store.
+ * Tests for FileDeltaStore.
+ *
+ * @author Joseph Gentle (josephg@gmail.com)
  */
-public class AttachmentStoreTest extends AttachmentStoreTestBase {
+public class DeltaStoreTest extends DeltaStoreTestBase {
   private File path;
 
   @Override
@@ -36,19 +38,18 @@ public class AttachmentStoreTest extends AttachmentStoreTestBase {
   }
 
   @Override
-  protected AttachmentStore newAttachmentStore() {
-    return new FileAttachmentStore(path.getAbsolutePath());
+  protected DeltaStore newDeltaStore() throws IOException {
+    return new FileDeltaStore(path.getAbsolutePath());
   }
 
   @Override
   protected void tearDown() throws Exception {
     super.tearDown();
-
     org.apache.commons.io.FileUtils.deleteDirectory(path);
 
-    // On Linux, it will be impossible to delete the directory until all of the
-    // input streams have been closed. This is annoying, but gives us a nice
-    // check to make sure everyone is behaving themselves.
+    // This assertion may fail if a test hasn't closed all streams.
     assertFalse(path.exists());
   }
+
+  // TODO: Test the delta store strips partially written data.
 }

@@ -65,7 +65,7 @@ public interface DeltaStore {
    *
    * @throws IOException if anything goes wrong with the underlying storage.
    */
-  DeltasAccess open(WaveletName waveletName) throws FileNotFoundException, IOException;
+  DeltasAccess open(WaveletName waveletName) throws IOException;
 
   /**
    * Deletes a non-empty wavelet.
