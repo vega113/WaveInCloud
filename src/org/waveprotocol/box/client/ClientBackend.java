@@ -37,6 +37,7 @@ import org.waveprotocol.box.server.rpc.ClientRpcChannel;
 import org.waveprotocol.box.server.rpc.WebSocketClientRpcChannel;
 import org.waveprotocol.box.server.util.BlockingSuccessFailCallback;
 import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.box.server.util.NetUtils;
 import org.waveprotocol.box.server.util.SuccessFailCallback;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
@@ -112,12 +113,11 @@ public class ClientBackend {
      * and user.
      *
      * @param userAtDomain the user and their domain (for example, foo@bar.org).
-     * @param server to connect to (for example, acmewave.com).
-     * @param port to connect to the server with.
+     * @param server to connect to (for example, acmewave.com:9898).
      * @throws IOException if the client backend can't connect to the server.
      * @return the new ClientBackend.
      */
-    ClientBackend create(String userAtDomain, String server, int port) throws IOException;
+    ClientBackend create(String userAtDomain, String server) throws IOException;
   }
 
   /**
@@ -128,7 +128,7 @@ public class ClientBackend {
      * @return a {@link ClientRpcChannel} connected to the given server and
      *         port.
      */
-    ClientRpcChannel createClientChannel(String server, int port) throws IOException;
+    ClientRpcChannel createClientChannel(InetSocketAddress serverAddress) throws IOException;
 
     /**
      * @return an RPC server interface backed by the given
@@ -142,8 +142,8 @@ public class ClientBackend {
    */
   public static class DefaultFactory implements Factory {
     @Override
-    public ClientBackend create(String userAtDomain, String server, int port) throws IOException {
-      return new ClientBackend(userAtDomain, server, port);
+    public ClientBackend create(String userAtDomain, String server) throws IOException {
+      return new ClientBackend(userAtDomain, server);
     }
   }
 
@@ -252,12 +252,6 @@ public class ClientBackend {
   /** Id generator used for this (server, user) pair. */
   private final IdGenerator idGenerator;
 
-  /** The port number through which this backend should connect to the server */
-  private final int port;
-
-  /** The server address that this backend should connect to */
-  private final String server;
-
   /** RPC interface for communicating with server. */
   private final ProtocolWaveClientRpc.Interface rpcServer;
 
@@ -286,16 +280,15 @@ public class ClientBackend {
    * has access to.
    *
    * @param userAtDomain the user and their domain (for example, foo@bar.org).
-   * @param server to connect to (for example, acmewave.com).
-   * @param port to connect to the server with.
+   * @param server to connect to (for example, acmewave.com:9898).
    * @throws IOException if we can't connect to the server.
    */
-  public ClientBackend(final String userAtDomain, String server, int port) throws IOException {
-    this(userAtDomain, server, port,
+  public ClientBackend(final String userAtDomain, String server) throws IOException {
+    this(userAtDomain, server,
         new RpcObjectFactory() {
           @Override
-          public ClientRpcChannel createClientChannel(String server, int port) throws IOException {
-            return new WebSocketClientRpcChannel(new InetSocketAddress(server, port));
+          public ClientRpcChannel createClientChannel(InetSocketAddress serverAddress) throws IOException {
+            return new WebSocketClientRpcChannel(serverAddress);
           }
 
           @Override
@@ -303,7 +296,7 @@ public class ClientBackend {
             return ProtocolWaveClientRpc.newStub(channel);
           }
         }, new HashedVersionZeroFactoryImpl(URI_CODEC),
-        new ClientAuthenticator("http://" + server + ":" + port + SessionManager.SIGN_IN_URL));
+        new ClientAuthenticator("http://" + server + SessionManager.SIGN_IN_URL));
   }
 
   /**
@@ -311,22 +304,18 @@ public class ClientBackend {
    * that client's index, and begin managing waves it has access to.
    *
    * @param userAtDomain the user and their domain (for example, foo@bar.org).
-   * @param server to connect to (for example, acmewave.com).
-   * @param port to connect to the server with.
+   * @param server to connect to (for example, acmewave.com:9898).
    * @param rpcObjectFactory to use for creating RPC objects.
    * @throws IOException if we can't connect to the server.
    */
   @Inject
-  public ClientBackend(final String userAtDomain, String server, int port,
+  public ClientBackend(final String userAtDomain, String server,
       RpcObjectFactory rpcObjectFactory, HashedVersionFactory hashedVersionFactory,
       ClientAuthenticator authenticator)
       throws IOException {
     Preconditions.checkNotNull(server, "Server not specified");
-    Preconditions.checkArgument(port >= 0, "Port number must be greater than 0");
 
     this.userId = ParticipantId.ofUnsafe(userAtDomain);
-    this.server = server;
-    this.port = port;
     this.idGenerator = new IdGeneratorImpl(userId.getDomain(), new IdGeneratorImpl.Seed() {
       Random r = new Random();
 
@@ -366,8 +355,8 @@ public class ClientBackend {
       }
     }.start();
 
-    // Connect to the specfied server and port.
-    this.rpcChannel = rpcObjectFactory.createClientChannel(server, port);
+    // Connect to the specfied server address.
+    this.rpcChannel = rpcObjectFactory.createClientChannel(NetUtils.parseHttpAddress(server));
     this.rpcServer = rpcObjectFactory.createServerInterface(rpcChannel);
   }
 
@@ -905,20 +894,6 @@ public class ClientBackend {
         LOG.severe("RuntimeException for listener " + listener, e);
       }
     }
-  }
-
-  /**
-   * @return the port number that this client backend is bound to.
-   */
-  public int getPort() {
-    return port;
-  }
-
-  /**
-   * @return the server that this client backend is bound to.
-   */
-  public String getServer() {
-    return server;
   }
 
   /**

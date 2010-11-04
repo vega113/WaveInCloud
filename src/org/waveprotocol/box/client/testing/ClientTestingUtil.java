@@ -88,13 +88,13 @@ public class ClientTestingUtil {
    */
   public static final ClientBackend.Factory backendSpyFactory = new ClientBackend.Factory() {
       @Override
-      public ClientBackend create(String userAtDomain, String server, int port)
+      public ClientBackend create(String userAtDomain, String server)
           throws IOException {
         ClientAuthenticator authenticator = mock(ClientAuthenticator.class);
         HttpCookie cookie = new HttpCookie("anything", "token");
         when(authenticator.authenticate(anyString(), any(char[].class))).thenReturn(cookie);
 
-        return spy(new ClientBackend(userAtDomain, server, port, new FakeRpcObjectFactory(),
+        return spy(new ClientBackend(userAtDomain, server, new FakeRpcObjectFactory(),
             HASH_FACTORY, authenticator));
       }
     };
