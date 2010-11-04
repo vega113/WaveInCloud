@@ -111,7 +111,9 @@ public class MemoryDeltaCollection implements DeltasAccess {
       // After:    ... |   D   |  D + 1 |
       //                     start     end
       long startVersion = delta.transformed.getAppliedAtVersion();
-      Preconditions.checkState(startVersion == endVersion.getVersion());
+      Preconditions.checkState(
+          (startVersion == 0 && endVersion == null) ||
+          (startVersion == endVersion.getVersion()));
       deltas.put(startVersion, delta);
       endVersion = delta.transformed.getResultingVersion();
       endDeltas.put(endVersion.getVersion(), delta);
