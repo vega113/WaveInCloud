@@ -43,7 +43,7 @@ public interface WaveletDeltaRecordReader {
   /** @return the delta applied at this version, if any, otherwise null */
   WaveletDeltaRecord getDelta(long version) throws IOException;
 
-  /** @return the delta applied at this version, if any, otherwise null */
+  /** @return the delta leading to this version, if any, otherwise null */
   WaveletDeltaRecord getDeltaByEndVersion(long version) throws IOException;
 
   /**

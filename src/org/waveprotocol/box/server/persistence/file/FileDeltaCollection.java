@@ -167,7 +167,7 @@ public class FileDeltaCollection implements DeltasAccess {
 
       long numRecords = index.length();
       if (numRecords >= 1) {
-        endVersion = getResultingVersion(numRecords - 1);
+        endVersion = getDeltaByEndVersion(numRecords).getResultingVersion();
       } else {
         endVersion = null;
       }
@@ -220,9 +220,8 @@ public class FileDeltaCollection implements DeltasAccess {
   }
 
   @Override
-  public WaveletDeltaRecord getDeltaByEndVersion(long version) {
-    // TODO(gobry): implement
-    return null;
+  public WaveletDeltaRecord getDeltaByEndVersion(long version) throws IOException {
+    return seekToEndRecord(version) ? readRecord() : null;
   }
   
   @Override
@@ -270,7 +269,7 @@ public class FileDeltaCollection implements DeltasAccess {
     file.seek(file.length());
 
     for (WaveletDeltaRecord delta : deltas) {
-      index.setOffsetForVersion(delta.transformed.getAppliedAtVersion(), file.getFilePointer());
+      index.addTransformedDelta(delta.transformed, file.getFilePointer());
       writeDelta(delta);
       endVersion = delta.transformed.getResultingVersion();
     }
@@ -292,14 +291,14 @@ public class FileDeltaCollection implements DeltasAccess {
    * Each pair returned is <Version, Offset>.
    * @throws IOException
    */
-  Iterable<Pair<Long, Long>> getOffsetsIterator() throws IOException {
+  Iterable<Pair<TransformedWaveletDelta, Long>> getOffsetsIterator() throws IOException {
     openIfNeeded();
 
-    return new Iterable<Pair<Long,Long>>() {
+    return new Iterable<Pair<TransformedWaveletDelta,Long>>() {
       @Override
-      public Iterator<Pair<Long, Long>> iterator() {
-        return new Iterator<Pair<Long, Long>>() {
-          Pair<Long, Long> nextRecord;
+      public Iterator<Pair<TransformedWaveletDelta, Long>> iterator() {
+        return new Iterator<Pair<TransformedWaveletDelta, Long>>() {
+          Pair<TransformedWaveletDelta, Long> nextRecord;
           long nextPosition = FILE_HEADER_LENGTH;
 
           @Override
@@ -308,8 +307,8 @@ public class FileDeltaCollection implements DeltasAccess {
           }
 
           @Override
-          public Pair<Long, Long> next() {
-            Pair<Long, Long> record = nextRecord;
+          public Pair<TransformedWaveletDelta, Long> next() {
+            Pair<TransformedWaveletDelta, Long> record = nextRecord;
             nextRecord = null;
             return record;
           }
@@ -334,8 +333,7 @@ public class FileDeltaCollection implements DeltasAccess {
               try {
                 file.seek(nextPosition);
                 TransformedWaveletDelta transformed = readTransformedDeltaFromRecord();
-
-                nextRecord = new Pair<Long, Long>(transformed.getAppliedAtVersion(), nextPosition);
+                nextRecord = new Pair<TransformedWaveletDelta, Long>(transformed, nextPosition);
                 nextPosition = file.getFilePointer();
               } catch (IOException e) {
                 // The next entry is invalid. There was probably a write error / crash.
@@ -355,7 +353,20 @@ public class FileDeltaCollection implements DeltasAccess {
     Preconditions.checkArgument(version >= 0, "Version can't be negative");
 
     long offset = index.getOffsetForVersion(version);
-    if (offset == -1) {
+    return seekTo(offset);
+  }
+
+  /** Seek to the start of a delta record given its end version. 
+   * Returns false if the record doesn't exist. */
+  private boolean seekToEndRecord(long version) throws IOException {
+    Preconditions.checkArgument(version >= 0, "Version can't be negative");
+
+    long offset = index.getOffsetForEndVersion(version);
+    return seekTo(offset);
+  }
+
+  private boolean seekTo(long offset) throws IOException {
+    if (offset == DeltaIndex.NO_RECORD_FOR_VERSION) {
       // There's no record for the specified version.
       return false;
     } else {
