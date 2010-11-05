@@ -40,16 +40,15 @@ import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.box.server.util.NetUtils;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.UnknownHostException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -76,8 +75,6 @@ import javax.servlet.http.HttpSession;
  */
 public class ServerRpcProvider {
   private static final Log LOG = Log.get(ServerRpcProvider.class);
-
-  private static final short HTTP_DEFAULT_PORT = 80;
   
   private final SocketAddress rpcHostingAddress;
   private final InetSocketAddress[] httpAddresses;
@@ -391,41 +388,23 @@ public class ServerRpcProvider {
         if (str.length() == 0) {
           LOG.warning("Encountered empty address in http addresses list.");
         } else {
-          String[] parts = str.split(":");
-          String host = parts[0];
-          short port = HTTP_DEFAULT_PORT;
-          if (parts.length > 1) {
-            try {
-              port = Short.parseShort(parts[1]);
-              if (port <= 0) {
-                LOG.severe("Invalid port number: " + parts[1]);
-                continue;
-              }
-            } catch (NumberFormatException e) {
-              LOG.severe("Invalid port number: " + parts[1], e);
-              continue;
-            }
-          }
-          InetSocketAddress address = null;
           try {
-            InetAddress addr = InetAddress.getByName(host);
-            address = new InetSocketAddress(addr, port);
-          } catch (UnknownHostException e) {
-            LOG.severe("Unable to resolve hostname/IP: " + host, e);
-            continue;
-          }
-          if (!addresses.contains(address)) {
-            addresses.add(address);
-          } else {
-            LOG.warning("Ignoring duplicate address in http addresses list: Duplicate entry '" + str
-                + "' resolved to " + address.getAddress().getHostAddress());
+            InetSocketAddress address = NetUtils.parseHttpAddress(str);
+            if (!addresses.contains(address)) {
+              addresses.add(address);
+            } else {
+              LOG.warning("Ignoring duplicate address in http addresses list: Duplicate entry '"
+                  + str + "' resolved to " + address.getAddress().getHostAddress());
+            }
+          } catch (IOException e) {
+            LOG.severe("Unable to process address " + str, e);
           }
         }
       }
       return addresses.toArray(new InetSocketAddress[0]);
     }
   }
-  
+
   /**
    * @return a list of {@link SelectChannelConnector} each bound to a host:port pair form the list
    * addresses.

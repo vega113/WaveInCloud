@@ -131,7 +131,7 @@ public class ConsoleClient implements WaveletOperationListener {
    * Commands available to the user.
    */
   private final List<Command> commands = ImmutableList.of(
-      new Command("connect", "user@domain server port [password]",
+      new Command("connect", "user@domain server:port [password]",
                   "connect to server:port as user@domain, optionally with specified password"),
       new Command("open", "entry", "open a wave given an inbox entry"),
       new Command("new", "", "create a new wave"),
@@ -312,10 +312,10 @@ public class ConsoleClient implements WaveletOperationListener {
     out.println(ANSIBuffer.ANSICodes.gotoxy(reader.getTermheight(), 1));
 
     // Immediately establish connection if desired, otherwise the user will need to use "/connect".
-    if (args.length == 3) {
-      connect(args[0], null, args[1], args[2]);
+    if (args.length == 2) {
+      connect(args[0], null, args[1]);
     } else if (args.length != 0) {
-      System.out.println("Usage: java ConsoleClient [user@domain server port]");
+      System.out.println("Usage: java ConsoleClient [user@domain server:port]");
       shutdown(1);
     }
 
@@ -399,11 +399,11 @@ public class ConsoleClient implements WaveletOperationListener {
    */
   private void doCommand(String cmd, List<String> args) {
     if (cmd.equals("connect")) {
-      if (args.size() == 3) {
-        connect(args.get(0), null, args.get(1), args.get(2));
-      } else if (args.size() == 4) {
+      if (args.size() == 2) {
+        connect(args.get(0), null, args.get(1));
+      } else if (args.size() == 3) {
         // This is used in testing to make sure we don't actually bug the user.
-        connect(args.get(0), args.get(3).toCharArray(), args.get(1), args.get(2));
+        connect(args.get(0), args.get(2).toCharArray(), args.get(1));
       } else {
         badArgs(cmd);
       }
@@ -564,24 +564,15 @@ public class ConsoleClient implements WaveletOperationListener {
    *        query the user automatically. If supplied password is set, the user
    *        is never queried.
    */
-  private void connect(
-      final String userAtDomain, char[] suppliedPassword, String server, String portString) {
+  private void connect(final String userAtDomain, char[] suppliedPassword, String serverAddress) {
     // We can only connect to one server at a time (at least, in this simple UI).
     if (isConnected()) {
       out.println("Warning: already connected. Disconnecting.");
       disconnect();
     }
 
-    int port;
     try {
-      port = Integer.parseInt(portString);
-    } catch (NumberFormatException e) {
-      out.println("Error: must provide valid port");
-      return;
-    }
-
-    try {
-      backend = backendFactory.create(userAtDomain, server, port);
+      backend = backendFactory.create(userAtDomain, serverAddress);
       backend.addWaveletOperationListener(this);
     } catch (IOException e) {
       out.println("Error: failed to connect, " + e.getMessage());
@@ -953,7 +944,7 @@ public class ConsoleClient implements WaveletOperationListener {
    * Print error message if user is not connected to a server.
    */
   private void errorNotConnected() {
-    out.println("Error: not connected, run \"/connect user@domain server port\"");
+    out.println("Error: not connected, run \"/connect user@domain server:port\"");
   }
 
   /**

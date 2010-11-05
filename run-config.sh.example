@@ -10,7 +10,7 @@
 # Remove this line after configuring
 echo "You must configure the run-config.sh script" ; exit 1
 
-### Variables common to the server, clients, and agents
+### Variables common to the server and clients
 ###
 
 # Domain name of the wave server 
