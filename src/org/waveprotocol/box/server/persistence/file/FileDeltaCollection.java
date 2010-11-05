@@ -289,7 +289,7 @@ public class FileDeltaCollection implements DeltasAccess {
   /**
    * Creates a new iterator to move over the positions of the deltas in the file.
    *
-   * Each pair returned is &lt;Pair&lt;version,numOperations>, offset>.
+   * Each pair returned is ((version, numOperations), offset).
    * @throws IOException
    */
   Iterable<Pair<Pair<Long,Integer>, Long>> getOffsetsIterator() throws IOException {
@@ -334,8 +334,7 @@ public class FileDeltaCollection implements DeltasAccess {
               try {
                 file.seek(nextPosition);
                 TransformedWaveletDelta transformed = readTransformedDeltaFromRecord();
-                nextRecord = new Pair<Pair<Long, Integer>, Long>(
-                    new Pair<Long, Integer>(transformed.getAppliedAtVersion(),
+                nextRecord = Pair.of(Pair.of(transformed.getAppliedAtVersion(),
                         transformed.getOperations().size()), nextPosition);
                 nextPosition = file.getFilePointer();
               } catch (IOException e) {

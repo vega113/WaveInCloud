@@ -137,7 +137,7 @@ public class DeltaIndex {
     } catch (EOFException e) {
       // it's ok to hit the end of the file, for the last end version
     }
-    return offset < 0 ? -(offset + 1) : offset;
+    return offset < 0 ? ~offset : offset;
   }
 
   /**
@@ -179,9 +179,8 @@ public class DeltaIndex {
     file.seek(position);
     file.writeLong(offset);
     // fill in the additional positions with the 1-complement of the offset,
-    offset = -(offset + 1);
     for (int i = 1; i < numOperations; i++) {
-      file.writeLong(offset);
+      file.writeLong(~offset);
     }
   }
 
