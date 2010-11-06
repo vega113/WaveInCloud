@@ -23,6 +23,8 @@ import com.google.protobuf.RpcController;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult;
@@ -32,6 +34,7 @@ import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRespon
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -45,22 +48,25 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class RpcTest extends TestCase {
 
-  protected ServerRpcProvider server = null;
-  protected ClientRpcChannel client = null;
+  private ServerRpcProvider server = null;
+  private ClientRpcChannel client = null;
 
-  protected ClientRpcChannel newClient() throws IOException {
-     return new ClientRpcChannelImpl(server.getBoundAddress());
-  }
-
-  protected void startServer() throws IOException {
-    server = new ServerRpcProvider(null, null, null, null);
-    server.startRpcServer();
+  private ClientRpcChannel newClient() throws IOException {
+     return new WebSocketClientRpcChannel(server.getWebSocketAddress());
   }
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    startServer();
+    SessionManager sessionManager = Mockito.mock(SessionManager.class);
+    /*
+     * NOTE: Specifying port zero (0) causes the OS to select a random port.
+     * This allows the test to run without clashing with any potentially in-use port.
+     */
+    server = new ServerRpcProvider(
+        new InetSocketAddress[] {new InetSocketAddress("localhost", 0)},
+        sessionManager, null);
+    server.startWebSocketServer();
   }
 
   @Override

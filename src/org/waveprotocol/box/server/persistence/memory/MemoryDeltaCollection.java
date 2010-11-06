@@ -39,10 +39,11 @@ import java.util.Map;
  */
 public class MemoryDeltaCollection implements DeltasAccess {
   private final Map<Long, WaveletDeltaRecord> deltas = Maps.newHashMap();
+  private final Map<Long, WaveletDeltaRecord> endDeltas = Maps.newHashMap();
   private final WaveletName waveletName;
 
   private HashedVersion endVersion = null;
-
+  
   public MemoryDeltaCollection(WaveletName waveletName) {
     Preconditions.checkNotNull(waveletName);
     this.waveletName = waveletName;
@@ -66,6 +67,11 @@ public class MemoryDeltaCollection implements DeltasAccess {
   @Override
   public WaveletDeltaRecord getDelta(long version) {
     return deltas.get(version);
+  }
+
+  @Override
+  public WaveletDeltaRecord getDeltaByEndVersion(long version) {
+    return endDeltas.get(version);
   }
 
   @Override
@@ -100,8 +106,17 @@ public class MemoryDeltaCollection implements DeltasAccess {
   @Override
   public void append(Collection<WaveletDeltaRecord> newDeltas) {
     for (WaveletDeltaRecord delta : newDeltas) {
-      deltas.put(delta.transformed.getAppliedAtVersion(), delta);
+      // Before:   ... |   D   |
+      //            start     end
+      // After:    ... |   D   |  D + 1 |
+      //                     start     end
+      long startVersion = delta.transformed.getAppliedAtVersion();
+      Preconditions.checkState(
+          (startVersion == 0 && endVersion == null) ||
+          (startVersion == endVersion.getVersion()));
+      deltas.put(startVersion, delta);
       endVersion = delta.transformed.getResultingVersion();
+      endDeltas.put(endVersion.getVersion(), delta);
     }
   }
 }

@@ -89,7 +89,7 @@ public class ServerMain {
     server.addServlet("/fetch/*", injector.getInstance(FetchServlet.class));
 
     server.addServlet("/robot/dataapi", injector.getInstance(DataApiServlet.class));
-    server.addServlet(DataApiOAuthServlet.DATA_API_OAUTH_PATH + "*",
+    server.addServlet(DataApiOAuthServlet.DATA_API_OAUTH_PATH + "/*",
         injector.getInstance(DataApiOAuthServlet.class));
     server.addServlet("/robot/dataapi/rpc", injector.getInstance(DataApiServlet.class));
     server.addServlet("/robot/register/*", injector.getInstance(RobotRegistrationServlet.class));
@@ -110,7 +110,6 @@ public class ServerMain {
       System.err.println("couldn't connect to XMPP server:" + e);
     }
     LOG.info("Starting server");
-    server.startRpcServer();
     server.startWebSocketServer();
   }
 }

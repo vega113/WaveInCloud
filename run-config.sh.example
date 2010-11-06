@@ -16,10 +16,6 @@ echo "You must configure the run-config.sh script" ; exit 1
 # Domain name of the wave server 
 WAVE_SERVER_DOMAIN_NAME=example.com
 
-# Host name and port the wave server's client frontend listens on
-WAVE_SERVER_HOSTNAME=`hostname`
-WAVE_SERVER_PORT=9876
-
 # A comma separated list of address on which to listen for connections.
 # Each address is a comma separated host:port pair.
 HTTP_SERVER_PUBLIC_ADDRESS=`hostname`:9898

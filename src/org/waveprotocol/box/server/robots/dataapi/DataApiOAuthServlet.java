@@ -58,7 +58,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class DataApiOAuthServlet extends HttpServlet {
 
-  public static final String DATA_API_OAUTH_PATH = "/robot/dataapi/oauth/";
+  public static final String DATA_API_OAUTH_PATH = "/robot/dataapi/oauth";
   private static final Log LOG = Log.get(DataApiOAuthServlet.class);
   private static final String ANONYMOUS_TOKEN = "anonymous";
   private static final String ANONYMOUS_TOKEN_SECRET = "anonymous";

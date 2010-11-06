@@ -167,7 +167,7 @@ public class FileDeltaCollection implements DeltasAccess {
 
       long numRecords = index.length();
       if (numRecords >= 1) {
-        endVersion = getResultingVersion(numRecords - 1);
+        endVersion = getDeltaByEndVersion(numRecords).getResultingVersion();
       } else {
         endVersion = null;
       }
@@ -220,6 +220,11 @@ public class FileDeltaCollection implements DeltasAccess {
   }
 
   @Override
+  public WaveletDeltaRecord getDeltaByEndVersion(long version) throws IOException {
+    return seekToEndRecord(version) ? readRecord() : null;
+  }
+  
+  @Override
   public ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDelta(long version)
       throws IOException {
     return seekToRecord(version) ? readAppliedDeltaFromRecord() : null;
@@ -264,7 +269,8 @@ public class FileDeltaCollection implements DeltasAccess {
     file.seek(file.length());
 
     for (WaveletDeltaRecord delta : deltas) {
-      index.setOffsetForVersion(delta.transformed.getAppliedAtVersion(), file.getFilePointer());
+      index.addDelta(delta.transformed.getAppliedAtVersion(),
+          delta.transformed.getOperations().size(), file.getFilePointer());
       writeDelta(delta);
       endVersion = delta.transformed.getResultingVersion();
     }
@@ -283,17 +289,17 @@ public class FileDeltaCollection implements DeltasAccess {
   /**
    * Creates a new iterator to move over the positions of the deltas in the file.
    *
-   * Each pair returned is <Version, Offset>.
+   * Each pair returned is ((version, numOperations), offset).
    * @throws IOException
    */
-  Iterable<Pair<Long, Long>> getOffsetsIterator() throws IOException {
+  Iterable<Pair<Pair<Long,Integer>, Long>> getOffsetsIterator() throws IOException {
     openIfNeeded();
 
-    return new Iterable<Pair<Long,Long>>() {
+    return new Iterable<Pair<Pair<Long, Integer>, Long>>() {
       @Override
-      public Iterator<Pair<Long, Long>> iterator() {
-        return new Iterator<Pair<Long, Long>>() {
-          Pair<Long, Long> nextRecord;
+      public Iterator<Pair<Pair<Long, Integer>, Long>> iterator() {
+        return new Iterator<Pair<Pair<Long, Integer>, Long>>() {
+          Pair<Pair<Long, Integer>, Long> nextRecord;
           long nextPosition = FILE_HEADER_LENGTH;
 
           @Override
@@ -302,8 +308,8 @@ public class FileDeltaCollection implements DeltasAccess {
           }
 
           @Override
-          public Pair<Long, Long> next() {
-            Pair<Long, Long> record = nextRecord;
+          public Pair<Pair<Long, Integer>, Long> next() {
+            Pair<Pair<Long, Integer>, Long> record = nextRecord;
             nextRecord = null;
             return record;
           }
@@ -328,8 +334,8 @@ public class FileDeltaCollection implements DeltasAccess {
               try {
                 file.seek(nextPosition);
                 TransformedWaveletDelta transformed = readTransformedDeltaFromRecord();
-
-                nextRecord = new Pair<Long, Long>(transformed.getAppliedAtVersion(), nextPosition);
+                nextRecord = Pair.of(Pair.of(transformed.getAppliedAtVersion(),
+                        transformed.getOperations().size()), nextPosition);
                 nextPosition = file.getFilePointer();
               } catch (IOException e) {
                 // The next entry is invalid. There was probably a write error / crash.
@@ -344,12 +350,29 @@ public class FileDeltaCollection implements DeltasAccess {
     };
   }
 
-  /** Seek to the start of a delta record. Returns false if the record doesn't exist. */
+  /** 
+   * Seek to the start of a delta record. Returns false if the record doesn't exist.
+   */
   private boolean seekToRecord(long version) throws IOException {
     Preconditions.checkArgument(version >= 0, "Version can't be negative");
 
     long offset = index.getOffsetForVersion(version);
-    if (offset == -1) {
+    return seekTo(offset);
+  }
+
+  /** 
+   * Seek to the start of a delta record given its end version. 
+   * Returns false if the record doesn't exist. 
+   */
+  private boolean seekToEndRecord(long version) throws IOException {
+    Preconditions.checkArgument(version >= 0, "Version can't be negative");
+
+    long offset = index.getOffsetForEndVersion(version);
+    return seekTo(offset);
+  }
+
+  private boolean seekTo(long offset) throws IOException {
+    if (offset == DeltaIndex.NO_RECORD_FOR_VERSION) {
       // There's no record for the specified version.
       return false;
     } else {

@@ -125,13 +125,13 @@ public class RobotApiModule extends AbstractModule {
   @Provides
   @Singleton
   protected OAuthServiceProvider provideOAuthServiceProvider(
-      @Named("http_frontend_public_address") String public_address) {
+      @Named("http_frontend_public_address") String publicAddress) {
     // Three urls, first is to get an unauthorized request token, second is to
     // authorize the request token, third is to exchange the authorized request
     // token with an access token.
-    String requestTokenUrl = getOAuthUrl(public_address, REQUEST_TOKEN_PATH);
-    String authorizeTokenUrl = getOAuthUrl(public_address, AUTHORIZE_TOKEN_PATH);
-    String accessTokenUrl = getOAuthUrl(public_address, ACCESS_TOKEN_PATH);
+    String requestTokenUrl = getOAuthUrl(publicAddress, REQUEST_TOKEN_PATH);
+    String authorizeTokenUrl = getOAuthUrl(publicAddress, AUTHORIZE_TOKEN_PATH);
+    String accessTokenUrl = getOAuthUrl(publicAddress, ACCESS_TOKEN_PATH);
 
     return new OAuthServiceProvider(requestTokenUrl, authorizeTokenUrl, accessTokenUrl);
   }
@@ -139,11 +139,11 @@ public class RobotApiModule extends AbstractModule {
   /**
    * Returns the full url used to do 3-legged OAuth in the data api.
    *
-   * @param domain the domain of the http frontend
-   * @param port the port of the http frontend
+   * @param publicAddress the address of the http frontend
    * @param postFix the end part of the url
    */
-  private String getOAuthUrl(String public_address, String postFix) {
-    return String.format("http://%s/%s%s", public_address, DataApiOAuthServlet.DATA_API_OAUTH_PATH, postFix);
+  private String getOAuthUrl(String publicAddress, String postFix) {
+    return String.format(
+        "http://%s/%s%s", publicAddress, DataApiOAuthServlet.DATA_API_OAUTH_PATH, postFix);
   }
 }

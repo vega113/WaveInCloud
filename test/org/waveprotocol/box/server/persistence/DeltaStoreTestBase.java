@@ -73,6 +73,7 @@ public abstract class DeltaStoreTestBase extends TestCase {
     assertEquals(WAVE1_WAVELET1, wavelet.getWaveletName());
     assertNull(wavelet.getEndVersion());
     assertNull(wavelet.getDelta(0));
+    assertNull(wavelet.getDeltaByEndVersion(0));
     assertNull(wavelet.getAppliedAtVersion(0));
     assertNull(wavelet.getResultingVersion(0));
     assertNull(wavelet.getAppliedDelta(0));
@@ -92,6 +93,7 @@ public abstract class DeltaStoreTestBase extends TestCase {
     assertEquals(WAVE1_WAVELET1, wavelet.getWaveletName());
     assertEquals(record.getResultingVersion(), wavelet.getEndVersion());
     assertEquals(record, wavelet.getDelta(0));
+    assertEquals(record, wavelet.getDeltaByEndVersion(record.getResultingVersion().getVersion()));
     assertEquals(record.getAppliedAtVersion(), wavelet.getAppliedAtVersion(0));
     assertEquals(record.getAppliedDelta(), wavelet.getAppliedDelta(0));
     assertEquals(record.getTransformedDelta(), wavelet.getTransformedDelta(0));

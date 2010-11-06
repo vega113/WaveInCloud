@@ -34,6 +34,8 @@ import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 
+import java.net.InetSocketAddress;
+
 /**
  * A factory of fake RPC objects for the client backend.
  *
@@ -59,7 +61,7 @@ public class FakeRpcObjectFactory implements ClientBackend.RpcObjectFactory {
    * @return a fake {@code ClientRpcChannel} implementation.
    */
   @Override
-  public ClientRpcChannel createClientChannel(String server, int port) {
+  public ClientRpcChannel createClientChannel(InetSocketAddress serverAddress) {
     return new FakeClientRpcChannel();
   }
 

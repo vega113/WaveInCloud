@@ -85,13 +85,11 @@ public class ConsoleClientTest extends TestCase implements TestingConstants {
   }
 
   /** "connect" command should connect the client to the correct user, server, and port */
-  public void testConnectConnectsWithCorrectUserServerAndPort() {
+  public void testConnectConnectsWithCorrectUser() {
     connect();
 
     assertTrue(client.isConnected());
     assertEquals(USER, backend.getUserId().getAddress());
-    assertEquals(DOMAIN, backend.getServer());
-    assertEquals(PORT, backend.getPort());
   }
 
   /** "connect" command should open the index wave */
@@ -412,7 +410,7 @@ public class ConsoleClientTest extends TestCase implements TestingConstants {
   /** Connect the client (run the "/connect" command) */
   private void connect() {
     assertFalse(client.isConnected());
-    client.processLine(String.format("/connect %s %s %d %s", USER, DOMAIN, PORT, PASSWORD));
+    client.processLine(String.format("/connect %s %s:%d %s", USER, DOMAIN, PORT, PASSWORD));
     client.getBackend().waitForAccumulatedEventsToProcess();
 
     // We can now use the client backend and testing utility for the rest of the test:
