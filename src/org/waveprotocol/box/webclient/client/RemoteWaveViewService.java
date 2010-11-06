@@ -17,6 +17,7 @@
 package org.waveprotocol.box.webclient.client;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.gwt.core.client.JsArray;
 
 import org.waveprotocol.box.server.waveserver.DocumentSnapshot;
@@ -38,6 +39,7 @@ import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletIdSerializer;
@@ -363,7 +365,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   }
 
   private ObservableWaveletData deserialize(WaveId waveId, WaveletSnapshot snapshot) {
-    ParticipantId creator = new ParticipantId(snapshot.getParticipantId(0));
+    ParticipantId creator = ParticipantId.ofUnsafe(snapshot.getParticipantId(0));
     HashedVersion version = deserialize(snapshot.getVersion());
     long lmt = (long) snapshot.getLastModifiedTime();
     long ctime = (long) snapshot.getCreationTime();
@@ -377,12 +379,28 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     }
     for (int i = 0; i < snapshot.getDocumentCount(); i++) {
       DocumentSnapshot docSnapshot = snapshot.getDocument(i);
-      DocInitialization docOp = DocOpUtil.asInitialization(
-          WaveletOperationSerializer.deserialize(docSnapshot.getDocumentOperation()));
-      String docId = docSnapshot.getDocumentId();
-      waveletData.createDocument(docId, docOp);
+      deserialize(waveletData, docSnapshot);
     }
     return waveletData;
+  }
+
+  private static void deserialize(WaveletDataImpl waveletData, DocumentSnapshot docSnapshot) {
+    DocInitialization content = DocOpUtil.asInitialization(
+        WaveletOperationSerializer.deserialize(docSnapshot.getDocumentOperation()));
+    String docId = docSnapshot.getDocumentId();
+    if (IdUtil.isBlipId(docId)) {
+      ParticipantId author = ParticipantId.ofUnsafe(docSnapshot.getAuthor());
+      List<ParticipantId> contributors = Lists.newArrayList();
+      for (String contributor : docSnapshot.getContributorList()) {
+        contributors.add(ParticipantId.ofUnsafe(contributor));
+      }
+      long lmt = (long) docSnapshot.getLastModifiedTime();
+      long lmv = (long) docSnapshot.getLastModifiedVersion();
+      waveletData.createBlip(docId, author, contributors, content, lmt, lmv);
+    } else {
+      // TODO(anorth): Remove this case when data documents are not special.
+      waveletData.createDocument(docId, content);
+    }
   }
 
   private static String serialize(WaveletName wavelet) {
