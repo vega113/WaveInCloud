@@ -44,12 +44,6 @@ public class FlagSettings {
   @Flag(name = "wave_server_domain")
   private static String waveServerDomain;
 
-  @Flag(name = "client_frontend_hostname")
-  private static String clientFrontendHost;
-
-  @Flag(name = "client_frontend_port")
-  private static String clientFrontEndPort;
-
   @Flag(name = "http_frontend_public_address",
       defaultValue = "localhost:9898",
       description = "The server's public address.")

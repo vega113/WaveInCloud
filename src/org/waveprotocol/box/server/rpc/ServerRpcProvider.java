@@ -76,15 +76,12 @@ import javax.servlet.http.HttpSession;
 public class ServerRpcProvider {
   private static final Log LOG = Log.get(ServerRpcProvider.class);
   
-  private final SocketAddress rpcHostingAddress;
   private final InetSocketAddress[] httpAddresses;
   private final Set<Connection> incomingConnections = Sets.newHashSet();
   private final ExecutorService threadPool;
   private final SessionManager sessionManager;
   private final org.eclipse.jetty.server.SessionManager jettySessionManager;
-  private ServerSocketChannel rpcServer = null;
   private Server httpServer = null;
-  private Future<?> acceptorThread = null;
 
   // Mapping from incoming protocol buffer type -> specific handler.
   private final Map<Descriptors.Descriptor, RegisteredServiceMethod> registeredServices =
@@ -101,30 +98,6 @@ public class ServerRpcProvider {
     RegisteredServiceMethod(Service service, MethodDescriptor method) {
       this.service = service;
       this.method = method;
-    }
-  }
-
-  class SequencedProtoChannelConnection extends Connection {
-    private final SequencedProtoChannel protoChannel;
-    private final SocketChannel channel;
-
-    SequencedProtoChannelConnection(SocketChannel channel) {
-      super(null);
-
-      this.channel = channel;
-      LOG.info("New Connection set up from " + this.channel);
-
-      // Set up protoChannel, let it know to expect messages of all the
-      // registered service/method types.
-      // TODO: dynamic lookup for these types instead
-      protoChannel = new SequencedProtoChannel(channel, this, threadPool);
-      expectMessages(protoChannel);
-      protoChannel.startAsyncRead();
-    }
-
-    @Override
-    protected void sendMessage(long sequenceNo, Message message) {
-      protoChannel.sendMessage(sequenceNo, message);
     }
   }
 
@@ -266,21 +239,14 @@ public class ServerRpcProvider {
   }
 
   /**
-   * Construct a new ServerRpcProvider, hosting on the passed SocketAddress and
-   * WebSocket host and port. (The http address isn't passed in as a
-   * SocketAddress because Jetty requires host + port.)
+   * Construct a new ServerRpcProvider, hosting on the specified
+   * WebSocket addresses.
    *
    * Also accepts an ExecutorService for spawning managing threads.
-   *
-   * @param rpcHost the hosting socket
-   * @param httpHost host for http server
-   * @param httpPort port for http server
-   * @param threadPool the service used to create threads
    */
-  public ServerRpcProvider(SocketAddress rpcHost, InetSocketAddress[] httpAddresses,
+  public ServerRpcProvider(InetSocketAddress[] httpAddresses,
       ExecutorService threadPool, SessionManager sessionManager,
       org.eclipse.jetty.server.SessionManager jettySessionManager) {
-    rpcHostingAddress = rpcHost;
     this.httpAddresses = httpAddresses;
     this.threadPool = threadPool;
     this.sessionManager = sessionManager;
@@ -288,51 +254,18 @@ public class ServerRpcProvider {
   }
 
   /**
-   * Constructs a new ServerRpcProvider with a default ExecutorService and session manager.
+   * Constructs a new ServerRpcProvider with a default ExecutorService.
    */
-  public ServerRpcProvider(SocketAddress rpcHost, InetSocketAddress[] httpAddresses,
-      SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager) {
-    this(rpcHost, httpAddresses, Executors.newCachedThreadPool(), sessionManager,
-        jettySessionManager);
+  public ServerRpcProvider(InetSocketAddress[] httpAddresses, SessionManager sessionManager,
+      org.eclipse.jetty.server.SessionManager jettySessionManager) {
+    this(httpAddresses, Executors.newCachedThreadPool(), sessionManager, jettySessionManager);
   }
 
   @Inject
-  public ServerRpcProvider(@Named("client_frontend_hostname") String rpcHost,
-      @Named("client_frontend_port") Integer rpcPort,
-      @Named("http_frontend_addresses") String httpAddresses,
+  public ServerRpcProvider(@Named("http_frontend_addresses") String httpAddresses,
       SessionManager sessionManager,
       org.eclipse.jetty.server.SessionManager jettySessionManager) {
-    this(new InetSocketAddress(rpcHost, rpcPort), parseAddressList(httpAddresses), sessionManager,
-        jettySessionManager);
-  }
-
-  /**
-   * Starts this server, binding to the previously passed SocketAddress.
-   */
-  public void startRpcServer() throws IOException {
-    rpcServer = ServerSocketChannel.open();
-    rpcServer.socket().setReuseAddress(true);
-    rpcServer.socket().bind(rpcHostingAddress);
-    rpcServer.configureBlocking(true);
-
-    // Spawn a new server acceptor thread, which must accept incoming
-    // connections indefinitely - until a ClosedChannelException is thrown.
-    acceptorThread = threadPool.submit(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          LOG.fine("ServerRpcProvider acceptorThread waiting for connections.");
-          while (true) {
-            SocketChannel serverSocket = rpcServer.accept();
-            incomingConnections.add(new SequencedProtoChannelConnection(serverSocket));
-          }
-        } catch (ClosedChannelException e) {
-          return;
-        } catch (IOException e) {
-          throw new IllegalStateException("Server should not throw a misunderstood IOException", e);
-        }
-      }
-    });
+    this(parseAddressList(httpAddresses), sessionManager, jettySessionManager);
   }
 
   public void startWebSocketServer() {
@@ -432,13 +365,6 @@ public class ServerRpcProvider {
   }
 
   /**
-   * Returns the bound socket. This is null if this server is not running.
-   */
-  public SocketAddress getBoundAddress() {
-    return rpcServer != null ? rpcServer.socket().getLocalSocketAddress() : null;
-  }
-
-  /**
    * Returns the socket the WebSocket server is listening on.
    */
   public SocketAddress getWebSocketAddress() {
@@ -454,25 +380,10 @@ public class ServerRpcProvider {
    * Stops this server.
    */
   public void stopServer() throws IOException {
-    if (rpcServer != null) {
-      rpcServer.close();
-    }
     try {
       httpServer.stop(); // yes, .stop() throws "Exception"
     } catch (Exception e) {
       LOG.warning("Fatal error stopping http server.", e);
-    }
-    if (acceptorThread != null) {
-      try {
-        acceptorThread.get();
-      } catch (InterruptedException e) {
-        throw new IllegalStateException();
-      } catch (ExecutionException e) {
-        throw new IllegalStateException("Server thread threw an exception", e.getCause());
-      }
-      if (!acceptorThread.isDone()) {
-        throw new IllegalStateException("Server acceptor thread has not stopped.");
-      }
     }
     LOG.fine("server shutdown.");
   }

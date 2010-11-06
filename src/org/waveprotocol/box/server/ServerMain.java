@@ -110,7 +110,6 @@ public class ServerMain {
       System.err.println("couldn't connect to XMPP server:" + e);
     }
     LOG.info("Starting server");
-    server.startRpcServer();
     server.startWebSocketServer();
   }
 }
