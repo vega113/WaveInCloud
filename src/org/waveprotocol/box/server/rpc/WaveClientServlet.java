@@ -63,6 +63,7 @@ public class WaveClientServlet extends HttpServlet {
   }
 
   private final String domain;
+  private final Boolean useSocketIO;
   private final SessionManager sessionManager;
 
   /**
@@ -70,8 +71,11 @@ public class WaveClientServlet extends HttpServlet {
    */
   @Inject
   public WaveClientServlet(
-      @Named("wave_server_domain") String domain, SessionManager sessionManager) {
+      @Named("wave_server_domain") String domain,
+      @Named("use_socketio") Boolean useSocketIO,
+      SessionManager sessionManager) {
     this.domain = domain;
+    this.useSocketIO = useSocketIO;
     this.sessionManager = sessionManager;
   }
 
@@ -99,7 +103,7 @@ public class WaveClientServlet extends HttpServlet {
     try {
       WaveClientPage.write(response.getWriter(), new GxpContext(request.getLocale()),
           getSessionJson(request.getSession(false)), getClientFlags(request),
-          LoginBar.getGxpClosure(username, userDomain));
+          LoginBar.getGxpClosure(username, userDomain), useSocketIO);
     } catch (IOException e) {
       LOG.warning("Failed to write GXP for request " + request, e);
       response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

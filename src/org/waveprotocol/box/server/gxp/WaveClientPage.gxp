@@ -30,6 +30,7 @@
   <gxp:param name='sessionJson' type='JSONObject' />
   <gxp:param name='clientFlags' type='JSONObject' />
   <gxp:param name='loginBar' type='HtmlClosure' />
+  <gxp:param name='useSocketIO' type='boolean' />
   
   <html>
     <head>
@@ -41,6 +42,7 @@
       <script type="text/javascript" language="javascript">
         var __session = <gxp:eval expr='sessionJson' />;
         var __client_flags = <gxp:eval expr='clientFlags' />;
+        var __useSocketIO = <gxp:eval expr='useSocketIO' />;
       </script>
       
       <link href="/static/client.css" rel="stylesheet" type="text/css" />

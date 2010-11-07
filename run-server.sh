@@ -35,4 +35,5 @@ exec java $DEBUG_FLAGS \
   --cert_path_store_type=$CERT_PATH_STORE_TYPE \
   --attachment_store_type=$ATTACHMENT_STORE_TYPE \
   --attachment_store_directory=$ATTACHMENT_STORE_DIRECTORY \
-  --account_store_type=$ACCOUNT_STORE_TYPE
+  --account_store_type=$ACCOUNT_STORE_TYPE \
+  --use_socketio=$USE_SOCKETIO

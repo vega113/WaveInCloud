@@ -107,4 +107,14 @@ public class FlagSettings {
       description = "Type of persistence to use for the Account Storage",
       defaultValue = "memory")
   private static String accountStoreType;
+
+  @Flag(name = "flashsocket_policy_port",
+      description = "Port on which to listen for Flashsocket policy requests.",
+      defaultValue = "843")
+  private static int flashsocketPolicyPort;
+
+  @Flag(name = "use_socketio",
+      description = "Enable use of Socket.IO instead of native WebSockets",
+      defaultValue = "false")
+  private static boolean useSocketIO;
 }

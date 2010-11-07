@@ -42,3 +42,6 @@ ATTACHMENT_STORE_DIRECTORY=_attachments
 
 # Currently supported Account store types: memory
 ACCOUNT_STORE_TYPE=mongodb
+
+# Set true to use Socket.IO instead of raw WebSockets in the webclient.
+USE_SOCKETIO=false

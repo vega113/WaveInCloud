@@ -30,6 +30,10 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.Service;
 import com.google.protobuf.UnknownFieldSet;
 
+import com.glines.socketio.server.SocketIOInbound;
+import com.glines.socketio.server.SocketIOServlet;
+import com.glines.socketio.server.transport.FlashSocketTransport;
+
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
@@ -63,6 +67,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -77,6 +82,7 @@ public class ServerRpcProvider {
   private static final Log LOG = Log.get(ServerRpcProvider.class);
   
   private final InetSocketAddress[] httpAddresses;
+  private final Integer flashsocketPolicyPort;
   private final Set<Connection> incomingConnections = Sets.newHashSet();
   private final ExecutorService threadPool;
   private final SessionManager sessionManager;
@@ -117,6 +123,26 @@ public class ServerRpcProvider {
     }
 
     public WebSocketServerChannel getWebSocketServerChannel() {
+      return socketChannel;
+    }
+  }
+
+  class SocketIOConnection extends Connection {
+    private final SocketIOServerChannel socketChannel;
+
+    SocketIOConnection(ParticipantId loggedInUser) {
+      super(loggedInUser);
+      socketChannel = new SocketIOServerChannel(this);
+      LOG.info("New websocket connection set up for user " + loggedInUser);
+      expectMessages(socketChannel);
+    }
+
+    @Override
+    protected void sendMessage(long sequenceNo, Message message) {
+      socketChannel.sendMessage(sequenceNo, message);
+    }
+
+    public SocketIOServerChannel getWebSocketServerChannel() {
       return socketChannel;
     }
   }
@@ -245,9 +271,10 @@ public class ServerRpcProvider {
    * Also accepts an ExecutorService for spawning managing threads.
    */
   public ServerRpcProvider(InetSocketAddress[] httpAddresses,
-      ExecutorService threadPool, SessionManager sessionManager,
+      Integer flashsocketPolicyPort, ExecutorService threadPool, SessionManager sessionManager,
       org.eclipse.jetty.server.SessionManager jettySessionManager) {
     this.httpAddresses = httpAddresses;
+    this.flashsocketPolicyPort = flashsocketPolicyPort;
     this.threadPool = threadPool;
     this.sessionManager = sessionManager;
     this.jettySessionManager = jettySessionManager;
@@ -256,16 +283,18 @@ public class ServerRpcProvider {
   /**
    * Constructs a new ServerRpcProvider with a default ExecutorService.
    */
-  public ServerRpcProvider(InetSocketAddress[] httpAddresses, SessionManager sessionManager,
-      org.eclipse.jetty.server.SessionManager jettySessionManager) {
-    this(httpAddresses, Executors.newCachedThreadPool(), sessionManager, jettySessionManager);
+  public ServerRpcProvider(InetSocketAddress[] httpAddresses, Integer flashsocketPolicyPort,
+      SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager) {
+    this(httpAddresses, flashsocketPolicyPort, Executors.newCachedThreadPool(),
+        sessionManager, jettySessionManager);
   }
 
   @Inject
   public ServerRpcProvider(@Named("http_frontend_addresses") String httpAddresses,
+      @Named("flashsocket_policy_port") Integer flashsocketPolicyPort,
       SessionManager sessionManager,
       org.eclipse.jetty.server.SessionManager jettySessionManager) {
-    this(parseAddressList(httpAddresses), sessionManager, jettySessionManager);
+    this(parseAddressList(httpAddresses), flashsocketPolicyPort, sessionManager, jettySessionManager);
   }
 
   public void startWebSocketServer() {
@@ -286,10 +315,41 @@ public class ServerRpcProvider {
     context.setResourceBase("./war");
 
     // Servlet where the websocket connection is served from.
-    ServletHolder holder = new ServletHolder(new WaveWebSocketServlet());
-    context.addServlet(holder, "/socket");
+    ServletHolder wsholder = new ServletHolder(new WaveWebSocketServlet());
+    context.addServlet(wsholder, "/socket");
     // TODO(zamfi): fix to let messages span frames.
-    holder.setInitParameter("bufferSize", "" + 1024 * 1024); // 1M buffer
+    wsholder.setInitParameter("bufferSize", "" + 1024 * 1024); // 1M buffer
+
+    // Servlet where the websocket connection is served from.
+    ServletHolder sioholder = new ServletHolder(new WaveSocketIOServlet());
+    context.addServlet(sioholder, "/socket.io/*");
+    // TODO(zamfi): fix to let messages span frames.
+    sioholder.setInitParameter("bufferSize", "" + 1024 * 1024); // 1M buffer
+    // Set flash policy server parameters
+    String flashPolicyServerHost = "localhost";
+    StringBuilder flashPolicyAllowedPorts = new StringBuilder();
+    /*
+     * Loop through addresses, collect list of ports, and determine if we are to use "localhost"
+     * of the AnyHost wildcard.
+     */
+    for (InetSocketAddress addr: httpAddresses) {
+      if (flashPolicyAllowedPorts.length() > 0) {
+        flashPolicyAllowedPorts.append(",");
+      }
+      flashPolicyAllowedPorts.append(addr.getPort());
+      if (!addr.getAddress().isLoopbackAddress()) {
+        // Until it's possible to pass a list of address, this is the only valid alternative.
+        flashPolicyServerHost = "0.0.0.0";
+      }
+    }
+    sioholder.setInitParameter(FlashSocketTransport.FLASHPOLICY_SERVER_HOST_KEY,
+        flashPolicyServerHost);
+    sioholder.setInitParameter(FlashSocketTransport.FLASHPOLICY_SERVER_PORT_KEY,
+        ""+flashsocketPolicyPort);
+    // TODO: Change to use the public http address and all other bound addresses.
+    sioholder.setInitParameter(FlashSocketTransport.FLASHPOLICY_DOMAIN_KEY, "*");
+    sioholder.setInitParameter(FlashSocketTransport.FLASHPOLICY_PORTS_KEY,
+        flashPolicyAllowedPorts.toString());
 
     // Serve the static content and GWT web client with the default servlet
     // (acts like a standard file-based web server).
@@ -360,6 +420,16 @@ public class ServerRpcProvider {
       ParticipantId loggedInUser = sessionManager.getLoggedInUser(request.getSession(false));
 
       WebSocketConnection connection = new WebSocketConnection(loggedInUser);
+      return connection.getWebSocketServerChannel();
+    }
+  }
+
+  public class WaveSocketIOServlet extends SocketIOServlet {
+    @Override
+    protected SocketIOInbound doSocketIOConnect(HttpServletRequest request, String[] protocols) {
+      ParticipantId loggedInUser = sessionManager.getLoggedInUser(request.getSession(false));
+
+      SocketIOConnection connection = new SocketIOConnection(loggedInUser);
       return connection.getWebSocketServerChannel();
     }
   }
