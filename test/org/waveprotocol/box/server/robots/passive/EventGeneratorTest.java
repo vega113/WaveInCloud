@@ -18,8 +18,10 @@
 package org.waveprotocol.box.server.robots.passive;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ImmutableMap.Builder;
+import com.google.inject.internal.Sets;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.data.converter.v22.EventDataConverterV22;
 import com.google.wave.api.event.AnnotatedTextChangedEvent;
@@ -50,6 +52,7 @@ import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.CapturingOperationSink;
+import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
@@ -68,6 +71,7 @@ import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Unit tests for the {@link EventGenerator}.
@@ -107,7 +111,8 @@ public class EventGeneratorTest extends TestCase {
         @Override
         public WaveletOperationContext createContext(ParticipantId creator) {
           throw new UnsupportedOperationException();
-        }};
+        }
+      };
 
   /** Map containing a subscription to all possible events */
   private static final Map<EventType, Capability> ALL_CAPABILITIES;
@@ -135,11 +140,15 @@ public class EventGeneratorTest extends TestCase {
     waveletData = WaveletDataImpl.Factory.create(DOCUMENT_FACTORY).create(
         new EmptyWaveletSnapshot(WAVELET_NAME.waveId, WAVELET_NAME.waveletId, ALEX,
             HASH_FACTORY.createVersionZero(WAVELET_NAME), 0L));
+
+    // Robot should be participant in snapshot before deltas
+    // otherwise events will be filtered out.
+    waveletData.addParticipant(ROBOT);
     waveletData.addParticipant(ALEX);
     waveletData.setVersion(1);
 
     SilentOperationSink<WaveletOperation> executor =
-        SilentOperationSink.Executor.<WaveletOperation, WaveletData>build(waveletData);
+        SilentOperationSink.Executor.<WaveletOperation, WaveletData> build(waveletData);
     output = new CapturingOperationSink<WaveletOperation>();
     wavelet =
         new OpBasedWavelet(waveletData.getWaveId(), waveletData, CONTEXT_FACTORY,
@@ -151,8 +160,6 @@ public class EventGeneratorTest extends TestCase {
     conversationUtil.buildConversation(wavelet).getRoot().getRootThread().appendBlip();
     output.clear();
   }
-
-  // Actual Testing Code starts here ^_^
 
   public void testGenerateWaveletParticipantsChangedEventOnAdd() throws Exception {
     wavelet.addParticipant(BOB);
@@ -168,22 +175,96 @@ public class EventGeneratorTest extends TestCase {
     EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_PARTICIPANTS_CHANGED);
     assertEquals("Expected one event", 1, messages.getEvents().size());
     WaveletParticipantsChangedEvent event =
-        WaveletParticipantsChangedEvent.as(messages.getEvents().get(0));
+      WaveletParticipantsChangedEvent.as(messages.getEvents().get(0));
     assertTrue(
         "Alex should be removed", event.getParticipantsRemoved().contains(ALEX.getAddress()));
   }
 
   public void testGenerateWaveletSelfAddedEvent() throws Exception {
+    waveletData.removeParticipant(ROBOT);
     wavelet.addParticipant(ROBOT);
     EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_SELF_ADDED);
     assertEquals("Expected two events", 2, messages.getEvents().size());
   }
 
   public void testGenerateWaveletSelfRemovedEvent() throws Exception {
-    wavelet.addParticipant(ROBOT);
     wavelet.removeParticipant(ROBOT);
     EventMessageBundle messages = generateAndCheckEvents(EventType.WAVELET_SELF_REMOVED);
-    assertEquals("Expected three events", 3, messages.getEvents().size());
+    // Participant changed event,  after self removed event is filtered.
+    assertEquals("Expected only one event", 1, messages.getEvents().size());
+  }
+
+  /**
+   * Tests that events from a robot delta are filtered, after events from a
+   * human delta are received.
+   */
+  public void testRobotSelfEventsFilteredAfterHuman() throws Exception {
+    // Robot receives two deltas, it is participant in wavelet before deltas.
+    ObservableConversationView conversation = conversationUtil.buildConversation(wavelet);
+    // Delta1 start events: event #1.
+    ObservableConversationBlip newBlip = conversation.getRoot().getRootThread().appendBlip();
+    // Delta1 event #2.
+    XmlStringBuilder builder = XmlStringBuilder.createText("some random content by alex");
+    LineContainers.appendToLastLine(newBlip.getContent(), builder);
+
+    List<WaveletOperation> ops1 = Lists.newArrayList(output.getOps());
+    HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
+    TransformedWaveletDelta delta1 = new TransformedWaveletDelta(ALEX, endVersion, 0L, ops1);
+    output.clear();
+
+    // Delta2 event #1.
+    conversation = conversationUtil.buildConversation(wavelet);
+    newBlip = conversation.getRoot().getRootThread().appendBlip();
+    // Delta2 event #2.
+    wavelet.addParticipant(BOB);
+    // Delta2 event #3.
+    builder = XmlStringBuilder.createText("some random content by robot");
+    LineContainers.appendToLastLine(newBlip.getContent(), builder);
+    List<WaveletOperation> ops2 = Lists.newArrayList(output.getOps());
+    HashedVersion endVersion2 = HashedVersion.unsigned(waveletData.getVersion());
+    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(ROBOT, endVersion2, 0L, ops2);
+    output.clear();
+
+    assertTrue("Ops should not be empty", (!ops1.isEmpty()) && (!ops2.isEmpty()));
+
+    EventMessageBundle messages = generateEventsFromDeltas(delta1, delta2);
+    assertEquals("Expected two events", 2, messages.getEvents().size());
+  }
+
+  /**
+   * Tests that events from a robot delta are filtered, before events from a
+   * human delta are received.
+   */
+  public void testRobotSelfEventsFilteredBeforeHuman() throws Exception {
+    // Robot receives two deltas, it is participant in wavelet before deltas.
+    ObservableConversationView conversation = conversationUtil.buildConversation(wavelet);
+    // Delta1 start events: event #1.
+    ObservableConversationBlip rootBlip = conversation.getRoot().getRootThread().getFirstBlip();
+    // Delta1 event #2.
+    XmlStringBuilder builder = XmlStringBuilder.createText("some random content by robot");
+    LineContainers.appendToLastLine(rootBlip.getContent(), builder);
+    // Delta1 event #3.
+    wavelet.addParticipant(BOB);
+
+    List<WaveletOperation> ops1 = Lists.newArrayList(output.getOps());
+    HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
+    TransformedWaveletDelta delta1 = new TransformedWaveletDelta(ROBOT, endVersion, 0L, ops1);
+    output.clear();
+
+    // Delta2 event #1.
+    conversation = conversationUtil.buildConversation(wavelet);
+    ObservableConversationBlip newBlip = conversation.getRoot().getRootThread().appendBlip();
+    // Delta2 event #2.
+    builder = XmlStringBuilder.createText("some random content by alex");
+    LineContainers.appendToLastLine(newBlip.getContent(), builder);
+
+    List<WaveletOperation> ops2 = Lists.newArrayList(output.getOps());
+    HashedVersion endVersion2 = HashedVersion.unsigned(waveletData.getVersion());
+    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(ALEX, endVersion2, 0L, ops2);
+    output.clear();
+
+    EventMessageBundle messages = generateEventsFromDeltas(delta1, delta2);
+    assertEquals("Expected two events", 2, messages.getEvents().size());
   }
 
   public void testGenerateWaveletBlipCreatedEvent() throws Exception {
@@ -204,8 +285,8 @@ public class EventGeneratorTest extends TestCase {
     assertEquals("Expected two events", 2, messages.getEvents().size());
     // Blip removed should be the second event.
     WaveletBlipRemovedEvent event = WaveletBlipRemovedEvent.as(messages.getEvents().get(1));
-    assertEquals(
-        "Expected the same id as the removed blip", newBlip.getId(), event.getRemovedBlipId());
+    assertEquals("Expected the same id as the removed blip", newBlip.getId(),
+        event.getRemovedBlipId());
   }
 
   public void testGenerateDocumentChangedEvent() throws Exception {
@@ -252,21 +333,134 @@ public class EventGeneratorTest extends TestCase {
     assertEquals("Expected the value of the annotation", annotationValue, event.getValue());
   }
 
-  // Helper Methods
+  public void testSelfEventsAreFiltered() throws Exception {
+    // Robot receives two deltas, it is not participant in wavelet before deltas.
+    waveletData.removeParticipant(ROBOT);
+    // Delta1 event #1.
+    wavelet.addParticipant(ROBOT);
+    // Delta1 event #2.
+    wavelet.addParticipant(BOB);
+    HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
+    List<WaveletOperation> ops1 = Lists.newArrayList(output.getOps());
+    TransformedWaveletDelta delta1 = new TransformedWaveletDelta(ALEX, endVersion, 0L, ops1);
+    output.clear();
+
+    // Delta2 event #1.
+    ObservableConversationView conversation = conversationUtil.buildConversation(wavelet);
+    ObservableConversationBlip newBlip = conversation.getRoot().getRootThread().appendBlip();
+    XmlStringBuilder builder = XmlStringBuilder.createText("some random content");
+    // Delta2 event #2.
+    LineContainers.appendToLastLine(newBlip.getContent(), builder);
+    // Delta2 event #3.
+    XmlStringBuilder.createText("some more random content by robot");
+    LineContainers.appendToLastLine(newBlip.getContent(), builder);
+
+    List<WaveletOperation> ops2 = Lists.newArrayList(output.getOps());
+    HashedVersion endVersion2 = HashedVersion.unsigned(waveletData.getVersion());
+    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(ROBOT, endVersion2, 0L, ops2);
+    output.clear();
+
+    EventMessageBundle messages = generateEventsFromDeltas(delta1, delta2);
+    assertEquals("Expected two events", 2, messages.getEvents().size());
+    checkEventTypeWasGenerated(messages, EventType.WAVELET_SELF_ADDED,
+        EventType.WAVELET_PARTICIPANTS_CHANGED);
+  }
+
+  public void testEventsFromFirstDeltaAreFiltered() throws Exception {
+    // Robot receives two deltas, it is participant in wavelet before deltas.
+    wavelet.addParticipant(BOB);
+    HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
+    List<WaveletOperation> ops1 = Lists.newArrayList(output.getOps());
+    TransformedWaveletDelta delta1 = new TransformedWaveletDelta(ROBOT, endVersion, 0L, ops1);
+    output.clear();
+
+    // Delta2 event #1.
+    ObservableConversationView conversation = conversationUtil.buildConversation(wavelet);
+    ObservableConversationBlip newBlip = conversation.getRoot().getRootThread().appendBlip();
+
+    XmlStringBuilder builder = XmlStringBuilder.createText("some random content");
+    // Delta2 event #2.
+    LineContainers.appendToLastLine(newBlip.getContent(), builder);
+    // Delta2 event #3.
+    wavelet.removeParticipant(BOB);
+
+    List<WaveletOperation> ops2 = Lists.newArrayList(output.getOps());
+    HashedVersion endVersion2 = HashedVersion.unsigned(waveletData.getVersion());
+    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(ALEX, endVersion2, 0L, ops2);
+    output.clear();
+
+    EventMessageBundle messages = generateEventsFromDeltas(delta1, delta2);
+    assertEquals("Expected three events", 3, messages.getEvents().size());
+    checkEventTypeWasGenerated(messages, EventType.WAVELET_BLIP_CREATED,
+        EventType.DOCUMENT_CHANGED, EventType.WAVELET_PARTICIPANTS_CHANGED);
+  }
+
+  public void testEventsFromSecondDeltaAreFiltered() throws Exception {
+    // Robot receives two deltas, it is participant in wavelet before deltas
+    // Delta1 event #1 - should be delivered to robot.
+    wavelet.addParticipant(BOB);
+
+    List<WaveletOperation> ops = output.getOps();
+    HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
+    TransformedWaveletDelta delta1 = new TransformedWaveletDelta(ALEX, endVersion, 0L, ops);
+    output.clear();
+
+    ObservableConversationView conversation = conversationUtil.buildConversation(wavelet);
+    // Delta2 event #1.
+    ObservableConversationBlip newBlip = conversation.getRoot().getRootThread().appendBlip();
+    // Delta2 event #2.
+    wavelet.removeParticipant(ROBOT);
+    // Delta2 event #3 - should be filtered.
+    XmlStringBuilder builder = XmlStringBuilder.createText("some random content");
+    LineContainers.appendToLastLine(newBlip.getContent(), builder);
+
+
+    List<WaveletOperation> ops2 = output.getOps();
+    HashedVersion endVersion2 = HashedVersion.unsigned(waveletData.getVersion());
+    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(ALEX, endVersion2, 0L, ops2);
+    output.clear();
+
+    EventMessageBundle messages = generateEventsFromDeltas(delta1, delta2);
+    assertEquals("Expected three events", 3, messages.getEvents().size());
+    checkEventTypeWasGenerated(messages, EventType.WAVELET_PARTICIPANTS_CHANGED,
+        EventType.WAVELET_BLIP_CREATED, EventType.WAVELET_SELF_REMOVED);
+  }
+
+  // Helper Methods.
+
+  /**
+   * Collects the ops applied to wavelet and creates a delta for processing in
+   * the event generator. The delta author is default human participantId
+   *
+   * @param eventType the type of event that should have been generated.
+   * @return the {@link EventMessageBundle} with the events generated when a
+   *         robot is subscribed to all possible events.
+   *
+   * @see generateAndCheckEvents(EventType eventType, ParticipantId
+   *      participantId)
+   */
+  private EventMessageBundle generateAndCheckEvents(EventType eventType) throws Exception {
+    EventMessageBundle eventMessageBundle = generateAndCheckEvents(eventType, ALEX);
+    return eventMessageBundle;
+  }
 
   /**
    * Collects the ops applied to wavelet and creates a delta for processing in
    * the event generator.
    *
    * @param eventType the type of event that should have been generated.
+   * @param participantId the delta author (modifier)
    * @return the {@link EventMessageBundle} with the events generated when a
    *         robot is subscribed to all possible events.
+   *
+   * @see generateAndCheckEvents(EventType eventType)
    */
-  private EventMessageBundle generateAndCheckEvents(EventType eventType) throws Exception {
+  private EventMessageBundle generateAndCheckEvents(EventType eventType,
+      ParticipantId participantId) throws Exception {
     List<WaveletOperation> ops = output.getOps();
     HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
-    // Create the delta
-    TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, endVersion, 0L, ops);
+    // Create the delta.
+    TransformedWaveletDelta delta = new TransformedWaveletDelta(participantId, endVersion, 0L, ops);
     WaveletAndDeltas waveletAndDeltas =
         WaveletAndDeltas.create(waveletData, DeltaSequence.of(delta));
 
@@ -279,34 +473,59 @@ public class EventGeneratorTest extends TestCase {
         eventGenerator.generateEvents(waveletAndDeltas, capabilities, CONVERTER);
 
     // Check that the event was generated and that no other types were generated
-    checkGeneratedEvent(messages, eventType);
+    checkEventTypeWasGenerated(messages, eventType);
     checkAllEventsAreInCapabilites(messages, capabilities);
 
     // Generate events with all capabilities
     messages = eventGenerator.generateEvents(waveletAndDeltas, ALL_CAPABILITIES, CONVERTER);
-    checkGeneratedEvent(messages, eventType);
+    checkEventTypeWasGenerated(messages, eventType);
 
     return messages;
   }
 
   /**
-   * Checks whether an event of the given type has been put in the bundle.
+   * Checks whether events of the given types were put in the bundle.
    */
-  private void checkGeneratedEvent(EventMessageBundle messages, EventType type) {
+  private void checkEventTypeWasGenerated(EventMessageBundle messages, EventType... types) {
+    Set<EventType> eventsTypeSet = Sets.newHashSet();
+    for (EventType eventType : types) {
+      eventsTypeSet.add(eventType);
+    }
+
     for (Event event : messages.getEvents()) {
-      if (event.getType().equals(type)) {
-        // Success
-        return;
+      if (eventsTypeSet.contains(event.getType())) {
+        eventsTypeSet.remove(event.getType());
       }
     }
-    fail("Event of type " + type + " has not been generated");
+    if (eventsTypeSet.size() != 0) {
+      fail("Event of type " + eventsTypeSet.iterator().next() + " has not been generated");
+    }
+  }
+
+  /**
+   * Generate events from deltas
+   * @param delta1
+   * @param delta2
+   * @return messages generated from all deltas
+   * @throws OperationException
+   */
+  private EventMessageBundle generateEventsFromDeltas(TransformedWaveletDelta... deltas)
+      throws OperationException {
+    WaveletAndDeltas waveletAndDeltas =
+        WaveletAndDeltas.create(waveletData, DeltaSequence.of(deltas));
+
+    Map<EventType, Capability> capabilities = ALL_CAPABILITIES;
+    // Generate the events
+    EventMessageBundle messages =
+        eventGenerator.generateEvents(waveletAndDeltas, capabilities, CONVERTER);
+    return messages;
   }
 
   /**
    * Checks whether all events generated are in the capabilities map.
    */
-  private void checkAllEventsAreInCapabilites(
-      EventMessageBundle messages, Map<EventType, Capability> capabilities) {
+  private void checkAllEventsAreInCapabilites(EventMessageBundle messages,
+      Map<EventType, Capability> capabilities) {
     for (Event event : messages.getEvents()) {
       if (!capabilities.containsKey(event.getType())) {
         fail("Generated event of type" + event.getType() + " which is not in the capabilities");

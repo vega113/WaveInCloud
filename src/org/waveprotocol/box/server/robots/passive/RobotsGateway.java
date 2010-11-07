@@ -37,6 +37,9 @@ import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -44,6 +47,7 @@ import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
+
 
 /**
  * Gateway for the Passive Robot API, this class can be subscribed to the
@@ -80,26 +84,27 @@ public class RobotsGateway implements WaveBus.Subscriber {
 
   @Override
   public void waveletCommitted(WaveletName waveletName, HashedVersion version) {
-    // We ignore this event
+    // We ignore this event.
   }
 
   @Override
   public void waveletUpdate(ReadableWaveletData wavelet, DeltaSequence deltas) {
-    // TODO(ljvderijk): Determine which robot should receive which deltas,
-    // enqueue deltas
-    // for these robots
-    // TODO(ljvderijk): Determine in face of participant remove and add which
-    // robots should
-    // receive which deltas
-    // TODO(ljvderijk): What should happen when the given list of deltas does
-    // (removeRobotDelta, randomOpsDelta, addRobotDelta)?
-    // TODO(ljvderijk): Operations made by robots may not cause events for
-    // itself
-    for (ParticipantId participant : wavelet.getParticipants()) {
+    Set<ParticipantId> currentAndNewParticipants = Sets.newHashSet(wavelet.getParticipants());
+    for (TransformedWaveletDelta delta : deltas) {
+      // Participants added or removed in this delta get the whole delta.
+      for (WaveletOperation op : delta.getOperations()) {
+        if (op instanceof AddParticipant) {
+          ParticipantId p = ((AddParticipant) op).getParticipantId();
+          currentAndNewParticipants.add(p);
+        }
+      }
+    }
+    // Robot should receive also deltas that contain AddParticipant ops.
+    // EventGenerator will take care to filter out events before the add.
+    for (ParticipantId participant : currentAndNewParticipants) {
       RobotName robotName = RobotName.fromAddress(participant.getAddress());
-
       if (robotName == null) {
-        // Not a valid robot name, next
+        // Not a valid robot name, next.
         continue;
       }
 

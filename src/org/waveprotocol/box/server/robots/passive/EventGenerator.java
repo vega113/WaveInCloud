@@ -45,11 +45,11 @@ import org.waveprotocol.wave.model.conversation.ConversationListenerImpl;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
+import org.waveprotocol.wave.model.document.DocHandler;
+import org.waveprotocol.wave.model.document.ObservableDocument;
 import org.waveprotocol.wave.model.document.Doc.E;
 import org.waveprotocol.wave.model.document.Doc.N;
 import org.waveprotocol.wave.model.document.Doc.T;
-import org.waveprotocol.wave.model.document.DocHandler;
-import org.waveprotocol.wave.model.document.ObservableDocument;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent.AnnotationChanged;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -110,11 +110,10 @@ public class EventGenerator {
     // IdConstants.ROBOT_PREFIX
   }
 
-  private static class EventGeneratingConversationListener extends ConversationListenerImpl {
+  private class EventGeneratingConversationListener extends ConversationListenerImpl {
     private final Map<EventType, Capability> capabilities;
     private final Conversation conversation;
     private final EventMessageBundle messages;
-    private final ParticipantId robotId;
 
     // Event collectors
     private final List<String> participantsAdded = Lists.newArrayList();
@@ -137,7 +136,6 @@ public class EventGenerator {
       this.conversation = conversation;
       this.capabilities = capabilities;
       this.messages = messages;
-      this.robotId = ParticipantId.ofUnsafe(robotName.toParticipantAddress());
     }
 
     /**
@@ -238,7 +236,7 @@ public class EventGenerator {
     }
   }
 
-  private static class EventGeneratingDocumentHandler implements DocHandler {
+  private class EventGeneratingDocumentHandler implements DocHandler {
 
     /** Public so we can manage the subscription */
     public final ObservableDocument doc;
@@ -322,23 +320,54 @@ public class EventGenerator {
    * @param blipId id of the blip this event is related to, may be null.
    * @param messages {@link EventMessageBundle} to edit.
    */
-  private static void addEvent(Event event, Map<EventType, Capability> capabilities, String blipId,
+  private void addEvent(Event event, Map<EventType, Capability> capabilities, String blipId,
       EventMessageBundle messages) {
-    // Add the given blip to the required blip lists with the context specified
-    // by the robot's capabilities.
-    if (!Strings.isNullOrEmpty(blipId)) {
-      Capability capability = capabilities.get(event.getType());
-
-      List<Context> contexts;
-      if (capability == null) {
-        contexts = Capability.DEFAULT_CONTEXT;
-      } else {
-        contexts = capability.getContexts();
+    if (!isEventFilteredOut(event)) {
+      // Add the given blip to the required blip lists with the context
+      // specified by the robot's capabilities.
+      if (!Strings.isNullOrEmpty(blipId)) {
+        Capability capability = capabilities.get(event.getType());
+        List<Context> contexts;
+        if (capability == null) {
+          contexts = Capability.DEFAULT_CONTEXT;
+        } else {
+          contexts = capability.getContexts();
+        }
+        messages.requireBlip(blipId, contexts);
       }
-      messages.requireBlip(blipId, contexts);
+      // Add the event to the bundle.
+      messages.addEvent(event);
     }
-    // Add the event to the bundle.
-    messages.addEvent(event);
+  }
+
+  /**
+   * Checks whether the event should be filtered out. It can happen
+   * if the robot received several deltas where in some delta it is added to
+   * the wavelet but it didn't receive the WAVELET_SELF_ADDED event yet.
+   * Or if robot already received WAVELET_SELF_REMOVED
+   * event - then it should not receive events after that.
+   *
+   * @param event  the event to filter.
+   * @return true if the event should be filtered out
+   */
+  protected boolean isEventFilteredOut(Event event) {
+    boolean isEventSuspensionOveriden = false;
+    if (event.getType().equals(EventType.WAVELET_SELF_REMOVED)) {
+      // Stop processing events.
+      isEventProcessingSuspended = true;
+      // Allow robot receive WAVELET_SELF_REMOVED event, but suspend after that.
+      isEventSuspensionOveriden = true;
+    }
+    if (event.getType().equals(EventType.WAVELET_SELF_ADDED)) {
+      // Start processing events.
+      isEventProcessingSuspended = false;
+    }
+    if ((isEventProcessingSuspended && !isEventSuspensionOveriden)
+        || event.getModifiedBy().equals(robotName.toParticipantAddress())) {
+      // Robot was removed from wave or this is self generated event.
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -351,6 +380,14 @@ public class EventGenerator {
   private final ConversationUtil conversationUtil;
 
   /**
+   * Indicates that robot was removed from wavelet and thus event processing
+   * should be suspended.
+   */
+  private boolean isEventProcessingSuspended;
+
+  private final ParticipantId robotId;
+
+  /**
    * Constructs a new {@link EventGenerator} for the robot with the given name.
    *
    * @param robotName the name of the robot.
@@ -359,6 +396,7 @@ public class EventGenerator {
   public EventGenerator(RobotName robotName, ConversationUtil conversationUtil) {
     this.robotName = robotName;
     this.conversationUtil = conversationUtil;
+    this.robotId = ParticipantId.ofUnsafe(robotName.toParticipantAddress());
   }
 
   /**
@@ -373,13 +411,14 @@ public class EventGenerator {
   public EventMessageBundle generateEvents(WaveletAndDeltas waveletAndDeltas,
       Map<EventType, Capability> capabilities, EventDataConverter converter) {
     EventMessageBundle messages = new EventMessageBundle(robotName.toEmailAddress(), "");
+    ObservableWaveletData snapshot =
+        WaveletDataUtil.copyWavelet(waveletAndDeltas.getSnapshotBeforeDeltas());
+    isEventProcessingSuspended = !snapshot.getParticipants().contains(robotId);
+
     if (robotName.hasProxyFor()) {
       // This robot is proxying so set the proxy field.
       messages.setProxyingFor(robotName.getProxyFor());
     }
-
-    ObservableWaveletData snapshot =
-        WaveletDataUtil.copyWavelet(waveletAndDeltas.getSnapshotBeforeDeltas());
 
     OpBasedWavelet wavelet =
         new OpBasedWavelet(snapshot.getWaveId(), snapshot, WaveletOperationContext.Factory.READONLY,
