@@ -376,6 +376,7 @@
         <include name="META-INF/services/*" />
         <include name="com/dyuproject/protostuff/**/*" />
         <include name="com/mongodb/**/*" />
+        <include name="com/glines/socketio/**/*" />
         <include name="com/google/common/**/*" />
         <include name="com/google/gson/**/*" />
         <include name="com/google/gxp/**/*" />

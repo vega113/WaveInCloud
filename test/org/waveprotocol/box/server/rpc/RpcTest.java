@@ -65,7 +65,7 @@ public class RpcTest extends TestCase {
      */
     server = new ServerRpcProvider(
         new InetSocketAddress[] {new InetSocketAddress("localhost", 0)},
-        sessionManager, null);
+        0, sessionManager, null);
     server.startWebSocketServer();
   }
 

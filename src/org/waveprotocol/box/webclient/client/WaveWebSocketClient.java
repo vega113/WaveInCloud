@@ -27,8 +27,6 @@ import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONString;
 import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.Cookies;
-import com.google.gwt.websockets.client.WebSocket;
-import com.google.gwt.websockets.client.WebSocketCallback;
 
 import org.waveprotocol.box.server.waveserver.ProtocolAuthenticate;
 import org.waveprotocol.box.server.waveserver.ProtocolOpenRequest;
@@ -46,15 +44,15 @@ import java.util.Map;
 
 
 /**
- * Wrapper around Websocket that handles the FedOne client-server protocol.
+ * Wrapper around SocketIO that handles the FedOne client-server protocol.
  */
-public class WaveWebSocketClient implements WebSocketCallback {
+public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   private static final Log LOG = Log.get(WaveWebSocketClient.class);
   private static final int RECONNECT_TIME_MS = 5000;
   private static final int VERSION = 1;
   private static final String JETTY_SESSION_TOKEN_NAME = "JSESSIONID";
 
-  private final WebSocket client;
+  private final WaveSocket client;
   private final Map<Integer, SubmitResponseCallback> submitRequestCallbacks;
 
   private enum ConnectState {
@@ -62,7 +60,6 @@ public class WaveWebSocketClient implements WebSocketCallback {
   }
 
   private ConnectState connected = ConnectState.DISCONNECTED;
-  private String url;
   private WebClientBackend legacy;
   private WaveWebSocketCallback callback;
   private int sequenceNo;
@@ -72,15 +69,15 @@ public class WaveWebSocketClient implements WebSocketCallback {
       if (connected == ConnectState.DISCONNECTED) {
         LOG.info("Attemping to reconnect");
         connected = ConnectState.CONNECTING;
-        client.connect(url);
+        client.connect();
       }
       return true;
     }
   };
 
-  public WaveWebSocketClient() {
+  public WaveWebSocketClient(boolean useSocketIO, String urlBase) {
     submitRequestCallbacks = new HashMap<Integer, SubmitResponseCallback>();
-    client = new WebSocket(this);
+    client = WaveSocketFactory.create(useSocketIO, urlBase, this);
   }
 
   /**
@@ -108,9 +105,7 @@ public class WaveWebSocketClient implements WebSocketCallback {
    *
    * @param url
    */
-  public void connect(String url) {
-    this.url = url;
-
+  public void connect() {
     reconnectCommand.execute();
     Scheduler.get().scheduleFixedDelay(reconnectCommand, RECONNECT_TIME_MS);
   }
@@ -188,7 +183,7 @@ public class WaveWebSocketClient implements WebSocketCallback {
     }
     String json = wrapper.toString();
     LOG.info("Sending JSON data " + json);
-    client.send(json);
+    client.sendMessage(json);
   }
 
   // TODO(arb): filthy filthy hack. make this not necessary
