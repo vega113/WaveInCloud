@@ -295,6 +295,11 @@ public class WebClient implements EntryPoint {
     History.newItem(id.serialise(), false);
   }
 
+  /**
+   * An exception handler that reports exceptions using a <em>shiny banner</em>
+   * (an alert placed on the top of the screen). Once the stack trace is
+   * prepared, it is revealed in the banner via a link.
+   */
   static class ErrorHandler implements UncaughtExceptionHandler {
     private final UncaughtExceptionHandler next;
 

@@ -46,7 +46,7 @@
     <span class="{style.alert}">
       <em>"Everything's shiny, Cap'n. Not to fret!"</em>
       An error has occurred, please
-      <a href="#" onclick="$wnd.location.replace($wnd.location.href.replace(/#.*/, ''));">
+      <a href="#" onclick="window.location.replace(window.location.href.replace(/#.*/, ''));">
       refresh</a>.
       <gwt:Anchor href="javascript:;" ui:field="showDetail" visible="false">
         Show error detail

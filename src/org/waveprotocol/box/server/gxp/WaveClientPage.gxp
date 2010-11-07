@@ -26,10 +26,10 @@
     xmlns:gxp='http://google.com/2001/gxp'>
 
   <gxp:import class="org.json.JSONObject" />
-  <gxp:import class="org.waveprotocol.box.server.gxp.LoginBar" />
+  <gxp:import class="org.waveprotocol.box.server.gxp.TopBar" />
   <gxp:param name='sessionJson' type='JSONObject' />
   <gxp:param name='clientFlags' type='JSONObject' />
-  <gxp:param name='loginBar' type='HtmlClosure' />
+  <gxp:param name='topBar' type='HtmlClosure' />
 
   <html>
     <head>
@@ -112,7 +112,7 @@
     <body>
       <!-- GWT history support. -->
       <iframe src="javascript:''" id="__gwt_historyFrame" style="position:absolute;width:0;height:0;border:0" />
-      <gxp:eval expr='loginBar'/>
+      <gxp:eval expr='topBar'/>
       <div id="app" style="position:fixed; top:33px; right:0px; bottom:0px; left:0px;" />
       <noscript>
         <div style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
