@@ -51,8 +51,6 @@ import org.waveprotocol.wave.client.common.safehtml.SafeHtml;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.common.util.AsyncHolder.Accessor;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
-import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
-import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.widget.common.ImplPanel;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
@@ -218,7 +216,7 @@ public class WebClient implements EntryPoint {
   private native String getWebSocketBaseUrl(String moduleBase) /*-{return "ws" + /:\/\/[^\/]+/.exec(moduleBase)[0] + "/";}-*/;
 
   private native boolean useSocketIO() /*-{ return !!$wnd.__useSocketIO }-*/;
-  
+
   /**
    */
   private void loginToServer() {
@@ -311,7 +309,6 @@ public class WebClient implements EntryPoint {
 
     public static void install() {
       GWT.setUncaughtExceptionHandler(new ErrorHandler(GWT.getUncaughtExceptionHandler()));
-      scheduleException();
     }
 
     @Override
@@ -363,17 +360,6 @@ public class WebClient implements EntryPoint {
           whenReady.use(stack.toSafeHtml());
         }
       });
-    }
-
-    static void scheduleException() {
-      SchedulerInstance.getLowPriorityTimer().scheduleDelayed(new Task() {
-
-        @Override
-        public void execute() {
-          throw new RuntimeException("test");
-        }
-
-      }, 1000);
     }
   }
 }
