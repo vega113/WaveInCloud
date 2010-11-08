@@ -26,12 +26,12 @@
     xmlns:gxp='http://google.com/2001/gxp'>
 
   <gxp:import class="org.json.JSONObject" />
-  <gxp:import class="org.waveprotocol.box.server.gxp.LoginBar" />
+  <gxp:import class="org.waveprotocol.box.server.gxp.TopBar" />
   <gxp:param name='sessionJson' type='JSONObject' />
   <gxp:param name='clientFlags' type='JSONObject' />
-  <gxp:param name='loginBar' type='HtmlClosure' />
+  <gxp:param name='topBar' type='HtmlClosure' />
   <gxp:param name='useSocketIO' type='boolean' />
-  
+
   <html>
     <head>
       <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
@@ -44,8 +44,69 @@
         var __client_flags = <gxp:eval expr='clientFlags' />;
         var __useSocketIO = <gxp:eval expr='useSocketIO' />;
       </script>
-      
-      <link href="/static/client.css" rel="stylesheet" type="text/css" />
+      <style type="text/css">
+        /* TODO: Minimize this. */
+        body {
+          /* Override UA defaults. */
+          margin: 0;
+        }
+
+        .topbar {
+          height: 32px;
+          /* Line-height set to full height, in order to get vertical text alignment. */
+          line-height: 32px;
+          border-bottom: solid 1px black;
+          overflow: visible;  /* Let banner detail flow over. */
+          font-family: "Gill Sans", "Lucida Grande", Verdana, Arial, sans-serif;
+          font-size: 16px;
+
+          /* Left/right padding to keep content off the screen edges. */
+          padding: 0 0.5em;
+
+          /* Z-index to ensure topbar sits on top of the app body. */
+          position: relative;
+          z-index: 1;
+        }
+
+        .logo {
+          /* Logo image is 30px high.  1px padding brings it to 32px, which is the topbar height. */
+          padding: 1px;
+          float: left;
+        }
+
+        .title {
+          float: left;
+          margin-left: 0.5em;
+        }
+
+        .banner {
+          float: left;
+          margin-left: 0.5em;
+        }
+
+        .domain {
+          color: #606060;
+        }
+
+        .info {
+          float: right;
+        }
+
+        .online {
+          color: green;
+        }
+
+        .connecting {
+          color: #ff7f00;
+          font-weight: bold;
+        }
+
+        .offline {
+          color: red;
+          font-weight: bold;
+        }
+
+      </style>
       <!-- GWT-compiled JS. -->
       <script type="text/javascript" language="javascript" src="webclient/webclient.nocache.js" />
     </head>
@@ -53,10 +114,8 @@
     <body>
       <!-- GWT history support. -->
       <iframe src="javascript:''" id="__gwt_historyFrame" style="position:absolute;width:0;height:0;border:0" />
-
-      <gxp:eval expr='loginBar'/>
+      <gxp:eval expr='topBar'/>
       <div id="app" style="position:fixed; top:33px; right:0px; bottom:0px; left:0px;" />
-
       <noscript>
         <div style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
           Your web browser must have JavaScript enabled

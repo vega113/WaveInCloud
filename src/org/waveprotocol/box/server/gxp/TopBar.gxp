@@ -20,31 +20,28 @@
 -->
 
 <gxp:template
-    name='org.waveprotocol.box.server.gxp.LoginBar'
+    name='org.waveprotocol.box.server.gxp.TopBar'
     xmlns='http://www.w3.org/1999/xhtml'
     xmlns:gxp='http://google.com/2001/gxp'>
 
   <gxp:param name='username' type='String' />
   <gxp:param name='domain' type='String' />
 
-  <div class="loginbar">
-    <div class="loginbarLeft">
-      <img src="/static/logo.png" alt="logo" class="logo" />
-      <span class="loginbarLeftText">Wave in a box</span>
-    </div>
-    <span class="loginbarRight">
+  <div class="topbar">
+    <img src="/static/logo.png" alt="logo" class="logo" />
+    <div class="title">Wave in a box</div>
+    <div class="banner" id="banner"></div>
+    <div class="info">
       <gxp:if cond='username == null'>
-        <span class="loginbarRightMainText">Not logged in</span> |
+        Not logged in |
         <a href="/auth/register">Register</a> |
         <a href="/auth/signin?r=/">Sign In</a>
       </gxp:if>
       <gxp:if cond='username != null'>
-        <span class="loginbarRightMainText">
-          <gxp:eval expr='username' /><span class="loginbarDomain">@<gxp:eval expr='domain' /></span>
-        </span> | 
+        <gxp:eval expr='username' /><span class="domain">@<gxp:eval expr='domain' /></span> |
         <span id="netstatus" class="offline">Offline</span> | 
         <a href="/auth/signout?r=/">Sign out</a>
       </gxp:if>
-    </span>
+    </div>
   </div>
 </gxp:template>

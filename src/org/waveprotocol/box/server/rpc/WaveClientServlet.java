@@ -26,7 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.waveprotocol.box.common.SessionConstants;
 import org.waveprotocol.box.server.authentication.SessionManager;
-import org.waveprotocol.box.server.gxp.LoginBar;
+import org.waveprotocol.box.server.gxp.TopBar;
 import org.waveprotocol.box.server.gxp.WaveClientPage;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.RandomBase64Generator;
@@ -103,19 +103,15 @@ public class WaveClientServlet extends HttpServlet {
     try {
       WaveClientPage.write(response.getWriter(), new GxpContext(request.getLocale()),
           getSessionJson(request.getSession(false)), getClientFlags(request),
-          LoginBar.getGxpClosure(username, userDomain), useSocketIO);
+          TopBar.getGxpClosure(username, userDomain), useSocketIO);
     } catch (IOException e) {
       LOG.warning("Failed to write GXP for request " + request, e);
       response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
       return;
     }
 
-    response.setStatus(HttpServletResponse.SC_OK);
     response.setContentType("text/html");
-
-    // Ensure the session data is never cached by proxies. See:
-    // http://code.google.com/p/wave-protocol/issues/detail?id=139
-    response.setHeader("Cache-Control", "no-store");
+    response.setStatus(HttpServletResponse.SC_OK);
   }
 
   private JSONObject getClientFlags(HttpServletRequest request) {
