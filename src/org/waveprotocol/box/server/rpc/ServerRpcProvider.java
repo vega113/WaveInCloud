@@ -53,22 +53,14 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServlet;
+import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -152,12 +144,14 @@ public class ServerRpcProvider {
         new ConcurrentHashMap<Long, ServerRpcController>();
 
     // The logged in user.
-    // Note: Due to this bug: http://code.google.com/p/wave-protocol/issues/detail?id=119,
+    // Note: Due to this bug:
+    // http://code.google.com/p/wave-protocol/issues/detail?id=119,
     // the field may be null on first connect and then set later using an RPC.
     private ParticipantId loggedInUser;
 
     /**
-     * @param loggedInUser The currently logged in user, or null if no user is logged in.
+     * @param loggedInUser The currently logged in user, or null if no user is
+     *        logged in.
      */
     public Connection(ParticipantId loggedInUser) {
       this.loggedInUser = loggedInUser;
@@ -195,8 +189,10 @@ public class ServerRpcProvider {
         // Workaround for bug: http://codereview.waveprotocol.org/224001/
 
         // When we get this message, either the connection will not be logged in
-        // (loggedInUser == null) or the connection will have been authenticated via cookies
-        // (in which case loggedInUser must match the authenticated user, and this message has no
+        // (loggedInUser == null) or the connection will have been authenticated
+        // via cookies
+        // (in which case loggedInUser must match the authenticated user, and
+        // this message has no
         // effect).
 
         ProtocolAuthenticate authMessage = (ProtocolAuthenticate) message;
@@ -218,25 +214,25 @@ public class ServerRpcProvider {
               registeredServices.get(message.getDescriptorForType());
 
           // Create the internal ServerRpcController used to invoke the call.
-          final ServerRpcController controller = new ServerRpcControllerImpl(
-              message, serviceMethod.service, serviceMethod.method, loggedInUser,
-              new RpcCallback<Message>() {
-                @Override
-                synchronized public void run(Message message) {
-                  if (message instanceof Rpc.RpcFinished
-                      || !serviceMethod.method.getOptions().getExtension(Rpc.isStreamingRpc)) {
-                    // This RPC is over - remove it from the map.
-                    boolean failed = message instanceof Rpc.RpcFinished
-                        ? ((Rpc.RpcFinished) message).getFailed() : false;
-                    LOG.fine("RPC " + sequenceNo + " is now finished, failed = " + failed);
-                    if (failed) {
-                      LOG.info("error = " + ((Rpc.RpcFinished) message).getErrorText());
+          final ServerRpcController controller =
+              new ServerRpcControllerImpl(message, serviceMethod.service, serviceMethod.method,
+                  loggedInUser, new RpcCallback<Message>() {
+                    @Override
+                    synchronized public void run(Message message) {
+                      if (message instanceof Rpc.RpcFinished
+                          || !serviceMethod.method.getOptions().getExtension(Rpc.isStreamingRpc)) {
+                        // This RPC is over - remove it from the map.
+                        boolean failed = message instanceof Rpc.RpcFinished
+                            ? ((Rpc.RpcFinished) message).getFailed() : false;
+                        LOG.fine("RPC " + sequenceNo + " is now finished, failed = " + failed);
+                        if (failed) {
+                          LOG.info("error = " + ((Rpc.RpcFinished) message).getErrorText());
+                        }
+                        activeRpcs.remove(sequenceNo);
+                      }
+                      sendMessage(sequenceNo, message);
                     }
-                    activeRpcs.remove(sequenceNo);
-                  }
-                  sendMessage(sequenceNo, message);
-                }
-              });
+                  });
 
           // Kick off a new thread specific to this RPC.
           activeRpcs.put(sequenceNo, controller);
@@ -304,7 +300,7 @@ public class ServerRpcProvider {
     if (connectors.isEmpty()) {
       LOG.severe("No valid http end point address provided!");
     }
-    for (SelectChannelConnector connector: connectors) {
+    for (SelectChannelConnector connector : connectors) {
       httpServer.addConnector(connector);
     }
 
@@ -357,8 +353,8 @@ public class ServerRpcProvider {
     context.addServlet(defaultServlet, "/static/*");
     context.addServlet(defaultServlet, "/webclient/*");
 
-    for (Pair<String, HttpServlet> servlet : servletRegistry) {
-      context.addServlet(new ServletHolder(servlet.getSecond()), servlet.getFirst());
+    for (Pair<String, ServletHolder> servlet : servletRegistry) {
+      context.addServlet(servlet.getSecond(), servlet.getFirst());
     }
 
     httpServer.setHandler(context);
@@ -377,7 +373,7 @@ public class ServerRpcProvider {
       return new InetSocketAddress[0];
     } else {
       Set<InetSocketAddress> addresses = Sets.newHashSet();
-      for (String str: addressList.split("\\s*,\\s*")) {
+      for (String str : addressList.split("\\s*,\\s*")) {
         if (str.length() == 0) {
           LOG.warning("Encountered empty address in http addresses list.");
         } else {
@@ -386,8 +382,9 @@ public class ServerRpcProvider {
             if (!addresses.contains(address)) {
               addresses.add(address);
             } else {
-              LOG.warning("Ignoring duplicate address in http addresses list: Duplicate entry '"
-                  + str + "' resolved to " + address.getAddress().getHostAddress());
+              LOG.warning(
+                  "Ignoring duplicate address in http addresses list: Duplicate entry '" + str
+                      + "' resolved to " + address.getAddress().getHostAddress());
             }
           } catch (IOException e) {
             LOG.severe("Unable to process address " + str, e);
@@ -399,18 +396,19 @@ public class ServerRpcProvider {
   }
 
   /**
-   * @return a list of {@link SelectChannelConnector} each bound to a host:port pair form the list
-   * addresses.
+   * @return a list of {@link SelectChannelConnector} each bound to a host:port
+   *         pair form the list addresses.
    */
-  private List<SelectChannelConnector> getSelectChannelConnectors(InetSocketAddress[] httpAddresses) {
+  private List<SelectChannelConnector> getSelectChannelConnectors(
+      InetSocketAddress[] httpAddresses) {
     List<SelectChannelConnector> list = Lists.newArrayList();
-    for (InetSocketAddress address: httpAddresses) {
-        SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setHost(address.getAddress().getHostAddress());
-        connector.setPort(address.getPort());
-        list.add(connector);
+    for (InetSocketAddress address : httpAddresses) {
+      SelectChannelConnector connector = new SelectChannelConnector();
+      connector.setHost(address.getAddress().getHostAddress());
+      connector.setPort(address.getPort());
+      list.add(connector);
     }
-    
+
     return list;
   }
 
@@ -473,7 +471,7 @@ public class ServerRpcProvider {
   /**
    * Set of servlets
    */
-  List<Pair<String, HttpServlet> > servletRegistry = Lists.newArrayList();
+  List<Pair<String, ServletHolder>> servletRegistry = Lists.newArrayList();
 
   /**
    * Add a servlet to the servlet registry. This servlet will be attached to the
@@ -481,8 +479,11 @@ public class ServerRpcProvider {
    *
    * @param urlPattern URL pattern for paths. Eg, '/foo', '/foo/*'
    * @param servlet The servlet object to bind to the specified paths
+   * @return the {@link ServletHolder} that holds the servlet.
    */
-  public void addServlet(String urlPattern, HttpServlet servlet) {
-    servletRegistry.add(new Pair<String, HttpServlet>(urlPattern, servlet));
+  public ServletHolder addServlet(String urlPattern, Servlet servlet) {
+    ServletHolder servletHolder = new ServletHolder(servlet);
+    servletRegistry.add(new Pair<String, ServletHolder>(urlPattern, servletHolder));
+    return servletHolder;
   }
 }

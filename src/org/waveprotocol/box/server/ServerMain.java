@@ -24,6 +24,8 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 
 import org.apache.commons.cli.ParseException;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.ProxyServlet;
 import org.waveprotocol.box.server.authentication.AccountStoreHolder;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.persistence.AccountStore;
@@ -71,8 +73,9 @@ public class ServerMain {
   public static void run(Module flags) throws IOException {
     Injector flagInjector = Guice.createInjector(flags);
     PersistenceModule persistenceModule = flagInjector.getInstance(PersistenceModule.class);
-    Injector injector = flagInjector.createChildInjector(
-        new ServerModule(), new RobotApiModule(), persistenceModule);
+    Injector injector =
+        flagInjector.createChildInjector(new ServerModule(), new RobotApiModule(),
+            persistenceModule);
     ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
 
@@ -81,8 +84,8 @@ public class ServerMain {
 
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
 
-    server.addServlet(
-        SessionManager.SIGN_IN_URL, injector.getInstance(AuthenticationServlet.class));
+    server
+        .addServlet(SessionManager.SIGN_IN_URL, injector.getInstance(AuthenticationServlet.class));
     server.addServlet("/auth/signout", injector.getInstance(SignOutServlet.class));
     server.addServlet("/auth/register", injector.getInstance(UserRegistrationServlet.class));
 
@@ -94,6 +97,14 @@ public class ServerMain {
     server.addServlet("/robot/dataapi/rpc", injector.getInstance(DataApiServlet.class));
     server.addServlet("/robot/register/*", injector.getInstance(RobotRegistrationServlet.class));
     server.addServlet("/robot/rpc", injector.getInstance(ActiveApiServlet.class));
+
+    String gadgetServerHostname =
+        injector.getInstance(Key.get(String.class, Names.named("gadget_server_hostname")));
+    ProxyServlet.Transparent proxyServlet =
+        new ProxyServlet.Transparent("/gadgets", "http", gadgetServerHostname,
+            injector.getInstance(Key.get(int.class, Names.named("gadget_server_port"))), "/gadgets");
+    ServletHolder proxyServletHolder = server.addServlet("/gadgets/*", proxyServlet);
+    proxyServletHolder.setInitParameter("HostHeader", gadgetServerHostname);
 
     server.addServlet("/", injector.getInstance(WaveClientServlet.class));
 

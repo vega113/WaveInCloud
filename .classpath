@@ -66,6 +66,8 @@
 	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/testing.jar" sourcepath="third_party/runtime/wave-libraries/testing-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/commons_httpclient/commons-httpclient-3.1.jar" sourcepath="third_party/runtime/commons_httpclient/commons-httpclient-3.1-src.zip"/>
 	<classpathentry kind="lib" path="third_party/runtime/commons_logging/commons-logging-1.1.1.jar" sourcepath="third_party/runtime/commons_logging/commons-logging-1.1.1-sources.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/jetty/jetty-client-7.1.6.v20100715.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/jetty/jetty-servlets-7.1.6.v20100715.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="third_party/runtime/mongo-driver/mongo-2.1.jar" sourcepath="third_party/runtime/mongo-driver/mongo-java-driver-r2.1-0-src.zip"/>
 	<classpathentry kind="lib" path="third_party/runtime/commons_codec/commons-codec-1.4.jar" sourcepath="third_party/runtime/commons_codec/commons-codec-1.4-sources.jar"/>

@@ -44,15 +44,13 @@ public class FlagSettings {
   @Flag(name = "wave_server_domain")
   private static String waveServerDomain;
 
-  @Flag(name = "http_frontend_public_address",
-      defaultValue = "localhost:9898",
+  @Flag(name = "http_frontend_public_address", defaultValue = "localhost:9898",
       description = "The server's public address.")
   private static String httpFrontEndPublicAddress;
 
-  @Flag(name = "http_frontend_addresses",
-      defaultValue = "localhost:9898",
-      description = "A comman seperated list of address on which to listen for connections."+
-                    " Each address is a host or ip and port seperated by a colon.")
+  @Flag(name = "http_frontend_addresses", defaultValue = "localhost:9898",
+      description = "A comman seperated list of address on which to listen for connections."
+          + " Each address is a host or ip and port seperated by a colon.")
   private static String httpFrontEndAddresses;
 
   @Flag(name = "certificate_private_key")
@@ -91,10 +89,9 @@ public class FlagSettings {
       description = "Type of persistence to use for the Certificate Storage",
       defaultValue = "memory")
   private static String certPathStoreType;
-  
+
   @Flag(name = "attachment_store_type",
-      description = "Type of persistence store to use for attachments",
-      defaultValue = "disk")
+      description = "Type of persistence store to use for attachments", defaultValue = "disk")
   private static String attachmentStoreType;
 
   @Flag(name = "attachment_store_directory",
@@ -104,8 +101,7 @@ public class FlagSettings {
   private static String attachmentStoreDirectory;
 
   @Flag(name = "account_store_type",
-      description = "Type of persistence to use for the Account Storage",
-      defaultValue = "memory")
+      description = "Type of persistence to use for the Account Storage", defaultValue = "memory")
   private static String accountStoreType;
 
   @Flag(name = "flashsocket_policy_port",
@@ -114,7 +110,14 @@ public class FlagSettings {
   private static int flashsocketPolicyPort;
 
   @Flag(name = "use_socketio",
-      description = "Enable use of Socket.IO instead of native WebSockets",
-      defaultValue = "false")
+      description = "Enable use of Socket.IO instead of native WebSockets", defaultValue = "false")
   private static boolean useSocketIO;
+
+  @Flag(name = "gadget_server_hostname", description = "The hostname of the gadget server.",
+      defaultValue = "gmodules.com")
+  private static String gadgetServerHostname;
+
+  @Flag(name = "gadget_server_port", description = "The port of the gadget server.",
+      defaultValue = "80")
+  private static int gadgetServerPort;
 }
