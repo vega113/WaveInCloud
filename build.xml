@@ -49,6 +49,8 @@
   <target name="clean" description="Cleans up the build artifacts and temporary directories">
     <delete dir="${build}"/>
     <delete dir="${gen}"/>
+    <delete dir="war/waveharness"/>
+    <delete dir="war/webclient"/>
   </target>
 
   <target name="init">
@@ -319,6 +321,22 @@
       <arg line="-bindAddress 0.0.0.0" />
       <arg line="${gwt.args}"/>
       <arg value="org.waveprotocol.box.webclient.WebClientDev"/>
+    </java>
+  </target>
+
+  <target name="uc_hosted_gwt" depends="compile,compile_proto_gwt" description="Runs the hosted mode server, for debugging the GWT client in a JVM.">
+    <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
+      <classpath>
+        <pathelement location="proto_gwt_src"/>
+        <pathelement location="src"/>
+        <path refid="waveinabox.classpath"/>
+      </classpath>
+      <jvmarg value="-Xmx512M"/>
+      <jvmarg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8001"/>
+      <arg line="${gwt.args}"/>
+      <arg line="-war war"/>
+      <arg line="-startupUrl waveharness/UndercurrentHarness.html"/>
+      <arg value="org.waveprotocol.wave.client.testing.UndercurrentHarness"/>
     </java>
   </target>
 

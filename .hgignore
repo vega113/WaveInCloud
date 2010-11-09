@@ -15,6 +15,7 @@ run-config\.sh
 \.git
 out
 *~
+war/waveharness
 war/webclient
 _attachments
 gen
