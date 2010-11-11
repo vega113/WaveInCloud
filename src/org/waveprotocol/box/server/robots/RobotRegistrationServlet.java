@@ -127,12 +127,18 @@ public class RobotRegistrationServlet extends HttpServlet {
     try {
       uri = URI.create(location);
     } catch (IllegalArgumentException e) {
-      doRegisterGet(
-          req, resp, "Invalid Location specified, please specify a location in URI format.");
+      doRegisterGet(req, resp,
+          "Invalid Location specified, please specify a location in URI format.");
       return;
     }
 
-    String robotLocation = "http://" + uri.getHost() + uri.getPath();
+    String robotLocation;
+    if (uri.getPort() != -1) {
+      robotLocation = "http://" + uri.getHost() + ":" + uri.getPort() + uri.getPath();
+    } else {
+      robotLocation = "http://" + uri.getHost() + uri.getPath();
+    }
+
     if (robotLocation.endsWith("/")) {
       robotLocation = robotLocation.substring(0, robotLocation.length() - 1);
     }
@@ -154,9 +160,8 @@ public class RobotRegistrationServlet extends HttpServlet {
    *
    * @param robotAccount the newly registered robot account.
    */
-  private void onRegisterSuccess(
-      HttpServletRequest req, HttpServletResponse resp, RobotAccountData robotAccount)
-      throws IOException {
+  private void onRegisterSuccess(HttpServletRequest req, HttpServletResponse resp,
+      RobotAccountData robotAccount) throws IOException {
     RobotRegistrationSuccessPage.write(resp.getWriter(), new GxpContext(req.getLocale()),
         robotAccount.getId().getAddress(), robotAccount.getConsumerSecret());
     resp.setContentType("text/html");
