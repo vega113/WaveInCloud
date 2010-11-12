@@ -396,10 +396,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
       }
       long lmt = (long) docSnapshot.getLastModifiedTime();
       long lmv = (long) docSnapshot.getLastModifiedVersion();
-      waveletData.createBlip(docId, author, contributors, content, lmt, lmv);
-    } else {
-      // TODO(anorth): Remove this case when data documents are not special.
-      waveletData.createDocument(docId, content);
+      waveletData.createDocument(docId, author, contributors, content, lmt, lmv);
     }
   }
 

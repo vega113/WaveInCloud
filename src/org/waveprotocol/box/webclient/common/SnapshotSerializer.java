@@ -155,7 +155,7 @@ public class SnapshotSerializer {
     for (String p : snapshot.getContributorList()) {
       contributors.add(ParticipantId.of(p));
     }
-    container.createBlip(
+    container.createDocument(
         snapshot.getDocumentId(),
         new ParticipantId(snapshot.getAuthor()),  // We trust the server's snapshot
         contributors,

@@ -150,7 +150,7 @@ public final class WaveletDataUtil {
    */
   public static BlipData addEmptyBlip(
       WaveletData wavelet, String blipId, ParticipantId author, long time) {
-    return wavelet.createBlip(blipId,
+    return wavelet.createDocument(blipId,
         author,
         Lists.newArrayList(author),
         new DocInitializationBuffer().finish(),

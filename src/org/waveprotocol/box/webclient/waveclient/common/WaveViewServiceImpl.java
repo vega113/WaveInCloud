@@ -399,7 +399,15 @@ public class WaveViewServiceImpl implements WaveViewService {
       BufferedDocOp docOp =
           WaveletOperationSerializer.deserialize(docSnapshot.getDocumentOperation());
       String docId = docSnapshot.getDocumentId();
-      waveletData.createDocument(docId, DocOpUtil.asInitialization(docOp));
+
+      ArrayList<ParticipantId> contributors = new ArrayList<ParticipantId>();
+      for (int j = 0; j < docSnapshot.getContributorCount(); j++) {
+        contributors.add(new ParticipantId(docSnapshot.getContributor(j)));
+      }
+
+      waveletData.createDocument(docId, new ParticipantId(docSnapshot.getAuthor()),
+          contributors, DocOpUtil.asInitialization(docOp), (long) docSnapshot.getLastModifiedTime(),
+          (long) docSnapshot.getLastModifiedVersion());
     }
     return waveletData;
   }

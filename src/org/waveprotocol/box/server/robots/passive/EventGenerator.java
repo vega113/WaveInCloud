@@ -45,19 +45,19 @@ import org.waveprotocol.wave.model.conversation.ConversationListenerImpl;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
-import org.waveprotocol.wave.model.document.DocHandler;
-import org.waveprotocol.wave.model.document.ObservableDocument;
 import org.waveprotocol.wave.model.document.Doc.E;
 import org.waveprotocol.wave.model.document.Doc.N;
 import org.waveprotocol.wave.model.document.Doc.T;
+import org.waveprotocol.wave.model.document.DocHandler;
+import org.waveprotocol.wave.model.document.ObservableDocument;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent.AnnotationChanged;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
+import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
@@ -420,8 +420,11 @@ public class EventGenerator {
       messages.setProxyingFor(robotName.getProxyFor());
     }
 
+    // Sending any operations will cause an exception.
     OpBasedWavelet wavelet =
-        new OpBasedWavelet(snapshot.getWaveId(), snapshot, WaveletOperationContext.Factory.READONLY,
+        new OpBasedWavelet(snapshot.getWaveId(), snapshot,
+            // This doesn't thrown an exception, the sinks will
+            new BasicWaveletOperationContextFactory(null),
             ParticipationHelper.IGNORANT, SilentOperationSink.VOID, SilentOperationSink.VOID);
 
     ObservableConversation conversation = getRootConversation(wavelet);

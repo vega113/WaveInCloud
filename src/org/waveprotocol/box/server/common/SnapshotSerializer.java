@@ -28,7 +28,6 @@ import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
@@ -146,11 +145,7 @@ public class SnapshotSerializer {
 
   // TODO(ljvderijk): Should be removed once the AbstractWaveletData changes
   private static ParticipantId getParticipantId(String address) throws InvalidParticipantAddress {
-    if (address.equals(Constants.DATA_AUTHOR.getAddress())) {
-      return Constants.DATA_AUTHOR;
-    } else {
-      return ParticipantId.of(address);
-    }
+    return ParticipantId.of(address);
   }
 
   private static void addDocumentSnapshotToWavelet(
@@ -162,7 +157,7 @@ public class SnapshotSerializer {
     for (String p : snapshot.getContributorList()) {
       contributors.add(getParticipantId(p));
     }
-    container.createBlip(
+    container.createDocument(
         snapshot.getDocumentId(),
         getParticipantId(snapshot.getAuthor()),
         contributors,

@@ -55,7 +55,7 @@ public class TestDataUtil {
         HashedVersion.unsigned(0), time);
 
     DocInitialization content = new DocInitializationBuilder().characters("Hello there").build();
-    wavelet.createBlip(
+    wavelet.createDocument(
         "b+abc123", creator, Collections.<ParticipantId> emptySet(), content, time, 0);
 
     return wavelet;
@@ -97,7 +97,7 @@ public class TestDataUtil {
     // & check that the documents the wavelets contain are also the same.
     assertEquals(expected.getDocumentIds(), actual.getDocumentIds());
     for (String docId : expected.getDocumentIds()) {
-      checkSerializedDocument(expected.getBlip(docId), actual.getBlip(docId));
+      checkSerializedDocument(expected.getDocument(docId), actual.getDocument(docId));
     }
   }
 }

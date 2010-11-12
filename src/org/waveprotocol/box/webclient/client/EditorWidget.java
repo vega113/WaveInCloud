@@ -61,7 +61,7 @@ class EditorWidget extends Composite {
 
     ElementHandlerRegistry testHandlerRegistry = testEditorRegistries.getElementHandlerRegistry();
 
-    LineRendering.registerContainer(null, TOPLEVEL_CONTAINER_TAGNAME,
+    LineRendering.registerContainer(TOPLEVEL_CONTAINER_TAGNAME,
         Editor.ROOT_HANDLER_REGISTRY);
 
     StyleAnnotationHandler.register(Editor.ROOT_REGISTRIES);

@@ -24,11 +24,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.wave.api.InvalidRequestException;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
+import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.OperationType;
 import com.google.wave.api.ProtocolVersion;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
-import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.data.converter.EventDataConverter;
 
 import junit.framework.TestCase;
@@ -171,7 +171,7 @@ public class OperationUtilTest extends TestCase {
     ObservableWaveletData waveletData = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, ALEX,
         hashedVersionZero, 0L);
     DocInitialization content = new DocInitializationBuilder().build();
-    waveletData.createBlip("b+example", BOB, Collections.singletonList(BOB), content, 0L, 0);
+    waveletData.createDocument("b+example", BOB, Collections.singletonList(BOB), content, 0L, 0);
 
     RobotWaveletData wavelet = new RobotWaveletData(waveletData, hashedVersionZero);
 

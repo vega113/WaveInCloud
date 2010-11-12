@@ -139,7 +139,7 @@ public class FetchServletTest extends TestCase {
       // serialize the expected document and compare with what we get from the
       // fetch servlet.
       StringWriter writer = new StringWriter();
-      BlipData expectedDoc = wavelet.getBlip(docId);
+      BlipData expectedDoc = wavelet.getDocument(docId);
       protoSerializer.writeTo(writer, SnapshotSerializer.serializeDocument(expectedDoc));
       String expectedResult = writer.toString();
 
