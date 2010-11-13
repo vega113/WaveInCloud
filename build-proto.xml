@@ -53,6 +53,13 @@
       <arg value="--java_out=proto_src" />
       <arg value="${proto.stage}/org/waveprotocol/box/server/waveserver/waveclient-rpc.proto" />
     </exec>
+
+    <exec executable="${protoc}">
+      <arg value="--proto_path=${proto.stage}/" />
+      <arg value="--proto_path=${protoc_dist}/src" />
+      <arg value="--java_out=proto_src" />
+      <arg value="${proto.stage}/org/waveprotocol/box/server/persistence/protos/ProtoDeltaStore.proto" />
+    </exec>
   </target>
 
   <!-- Requires all proto files to be on the same path! -->

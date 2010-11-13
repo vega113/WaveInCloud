@@ -22,7 +22,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.protobuf.ByteString;
 
-import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreData.ProtoTransformedWaveletDelta;
+import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreDataSerializer;
 import org.waveprotocol.box.server.waveserver.AppliedDeltaUtil;
 import org.waveprotocol.box.server.waveserver.ByteStringMessage;
 import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
@@ -32,12 +33,10 @@ import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
-import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,7 +48,6 @@ import java.nio.channels.Channels;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * A flat file based implementation of DeltasAccess. This class provides a storage backend for the
@@ -475,84 +473,24 @@ public class FileDeltaCollection implements DeltasAccess {
     }
   }
 
+  /**
+   * Read a {@link TransformedWaveletDelta} from the current location in the file.
+   */
   private TransformedWaveletDelta readTransformedWaveletDelta() throws IOException {
-    // The data is:
-    // - author (string)
-    // - resultingVersion (ProtoHashedVersion)
-    // - timestamp (long)
-    // - number of ops (int)
-    // - ops (list of ProtocolWaveletOperation)
-
-    // Read the author
-    String authorStr = file.readUTF();
-    ParticipantId author;
-    try {
-      author = ParticipantId.of(authorStr);
-    } catch (InvalidParticipantAddress e) {
-      throw new IOException("Author field invalid", e);
-    }
-
-    // Read the resultingVersion
     InputStream stream = Channels.newInputStream(file.getChannel());
-    ProtocolHashedVersion resultingVersionProto = ProtocolHashedVersion.parseDelimitedFrom(stream);
-    HashedVersion resultingVersion =
-        CoreWaveletOperationSerializer.deserialize(resultingVersionProto);
-
-    // Read the application timestamp
-    long timestamp = file.readLong();
-
-    // Read the ops.
-    int num = file.readInt();
-    Builder<ProtocolWaveletOperation> protoOpBuilder = ImmutableList.builder();
-    for (int i = 0; i < num; i++) {
-      ProtocolWaveletOperation protoOp = ProtocolWaveletOperation.parseDelimitedFrom(stream);
-      protoOpBuilder.add(protoOp);
-    }
-    ImmutableList<ProtocolWaveletOperation> protoOps = protoOpBuilder.build();
-
-    Builder<WaveletOperation> opBuilder = ImmutableList.builder();
-    for (int i = 0; i < protoOps.size(); i++) {
-      ProtocolWaveletOperation protoOp = protoOps.get(i);
-      WaveletOperationContext context;
-      if (i == protoOps.size() - 1) {
-        // The last op has its hashedVersion set to the resultingVersion of the op stream.
-        context = new WaveletOperationContext(author, timestamp, 1, resultingVersion);
-      } else {
-        context = new WaveletOperationContext(author, timestamp, 1);
-      }
-
-      opBuilder.add(CoreWaveletOperationSerializer.deserialize(protoOp, context));
-    }
-
-    return new TransformedWaveletDelta(
-        author, resultingVersion, timestamp, opBuilder.build());
+    ProtoTransformedWaveletDelta delta = ProtoTransformedWaveletDelta.parseDelimitedFrom(stream);
+    return ProtoDeltaStoreDataSerializer.deserialize(delta);
   }
 
-  // Returns length of written data
+  /**
+   * Write a {@link TransformedWaveletDelta} to the file at the current location.
+   * @return length of written data
+   */
   private int writeTransformedWaveletDelta(TransformedWaveletDelta delta) throws IOException {
     long startingPosition = file.getFilePointer();
-
-    // Write author
-    file.writeUTF(delta.getAuthor().getAddress());
-
-    // Write resulting version
-    HashedVersion resultingVersion = delta.getResultingVersion();
-    ProtocolHashedVersion protoHashedVersion =
-        CoreWaveletOperationSerializer.serialize(resultingVersion);
+    ProtoTransformedWaveletDelta protoDelta = ProtoDeltaStoreDataSerializer.serialize(delta);
     OutputStream stream = Channels.newOutputStream(file.getChannel());
-    protoHashedVersion.writeDelimitedTo(stream);
-
-    // Write timestamp
-    file.writeLong(delta.getApplicationTimestamp());
-
-    // Write ops
-    List<? extends WaveletOperation> ops = delta.getOperations();
-    file.writeInt(ops.size());
-    for (WaveletOperation op : ops) {
-      ProtocolWaveletOperation protoOp = CoreWaveletOperationSerializer.serialize(op);
-      protoOp.writeDelimitedTo(stream);
-    }
-
+    protoDelta.writeDelimitedTo(stream);
     return (int) (file.getFilePointer() - startingPosition);
   }
 
