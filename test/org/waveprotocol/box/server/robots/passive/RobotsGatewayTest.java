@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.robots.operations.NotifyOperationService;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.testing.DeferredExecutor;
@@ -50,6 +51,7 @@ public class RobotsGatewayTest extends TestCase {
   private RobotsGateway gateway;
   private DeferredExecutor executor;
   private ConversationUtil conversationUtil;
+  private NotifyOperationService notifyOpService;
 
   @Override
   protected void setUp() {
@@ -60,13 +62,16 @@ public class RobotsGatewayTest extends TestCase {
     converterManager = mock(EventDataConverterManager.class);
     executor = new DeferredExecutor();
     conversationUtil = mock(ConversationUtil.class);
+    notifyOpService = mock(NotifyOperationService.class);
 
-    gateway = new RobotsGateway(waveletProvider, robotConnector, accountStore, serializer,
-        converterManager, executor, conversationUtil);
+    gateway =
+        new RobotsGateway(waveletProvider, robotConnector, accountStore, serializer,
+            converterManager, executor, conversationUtil, notifyOpService);
   }
 
   public void testWaveletUpdate() throws Exception {
-    // TODO(ljvderijk): Update this test once this method properly sends updates to robots.
+    // TODO(ljvderijk): Update this test once this method properly sends updates
+    // to robots.
     // Test: gateway.waveletUpdate(wavelet, resultingVersion, deltas);
   }
 

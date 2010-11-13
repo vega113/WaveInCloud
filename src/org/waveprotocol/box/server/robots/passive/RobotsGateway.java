@@ -31,6 +31,7 @@ import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.robots.operations.NotifyOperationService;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveBus;
@@ -67,19 +68,21 @@ public class RobotsGateway implements WaveBus.Subscriber {
   private final Set<RobotName> runnableRobots = Sets.newHashSet();
   private final Executor executor;
   private final ConversationUtil conversationUtil;
+  private final NotifyOperationService notifyOpService;
 
   @Inject
   @VisibleForTesting
   RobotsGateway(WaveletProvider waveletProvider, RobotConnector connector,
       AccountStore accountStore, RobotSerializer serializer,
       EventDataConverterManager converterManager, @Named("GatewayExecutor") Executor executor,
-      ConversationUtil conversationUtil) {
+      ConversationUtil conversationUtil, NotifyOperationService notifyOpService) {
     this.waveletProvider = waveletProvider;
     this.accountStore = accountStore;
     this.converterManager = converterManager;
     this.connector = connector;
     this.executor = executor;
     this.conversationUtil = conversationUtil;
+    this.notifyOpService = notifyOpService;
   }
 
   @Override
@@ -147,8 +150,9 @@ public class RobotsGateway implements WaveBus.Subscriber {
    */
   private Robot createNewRobot(RobotName robotName, RobotAccountData account) {
     EventGenerator eventGenerator = new EventGenerator(robotName, conversationUtil);
-    RobotOperationApplicator operationApplicator = new RobotOperationApplicator(
-        converterManager, waveletProvider, new OperationServiceRegistryImpl(), conversationUtil);
+    RobotOperationApplicator operationApplicator =
+        new RobotOperationApplicator(converterManager, waveletProvider,
+            new OperationServiceRegistryImpl(notifyOpService), conversationUtil);
     return new Robot(robotName, account, this, connector, converterManager, waveletProvider,
         eventGenerator, operationApplicator);
   }
@@ -160,8 +164,7 @@ public class RobotsGateway implements WaveBus.Subscriber {
    * @param wavelet the wavelet on which the update is occuring.
    * @param deltas the deltas the have been applied to the given wavelet.
    */
-  private void updateRobot(Robot robot, ReadableWaveletData wavelet,
-      DeltaSequence deltas) {
+  private void updateRobot(Robot robot, ReadableWaveletData wavelet, DeltaSequence deltas) {
     try {
       robot.waveletUpdate(wavelet, deltas);
       ensureScheduled(robot);

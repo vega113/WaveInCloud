@@ -17,13 +17,14 @@
 
 package org.waveprotocol.box.server.robots.passive;
 
+import com.google.inject.Inject;
 import com.google.wave.api.OperationType;
 
 import org.waveprotocol.box.server.robots.AbstractOperationServiceRegistry;
 import org.waveprotocol.box.server.robots.operations.BlipOperationServices;
 import org.waveprotocol.box.server.robots.operations.CreateWaveletService;
-import org.waveprotocol.box.server.robots.operations.DoNothingService;
 import org.waveprotocol.box.server.robots.operations.DocumentModifyService;
+import org.waveprotocol.box.server.robots.operations.NotifyOperationService;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 
 /**
@@ -37,20 +38,21 @@ public final class OperationServiceRegistryImpl extends AbstractOperationService
   // Suppressing warnings about operations that are deprecated but still used by
   // the default client libraries.
   @SuppressWarnings("deprecation")
-  OperationServiceRegistryImpl() {
+  @Inject
+  OperationServiceRegistryImpl(NotifyOperationService notifyOpService) {
     super();
 
     // Register all the OperationProviders
-    register(OperationType.ROBOT_NOTIFY, DoNothingService.create());
-    register(OperationType.ROBOT_NOTIFY_CAPABILITIES_HASH, DoNothingService.create());
+    register(OperationType.ROBOT_NOTIFY, notifyOpService);
+    register(OperationType.ROBOT_NOTIFY_CAPABILITIES_HASH, notifyOpService);
     register(OperationType.WAVELET_APPEND_BLIP, BlipOperationServices.create());
     register(OperationType.BLIP_CONTINUE_THREAD, BlipOperationServices.create());
     register(OperationType.BLIP_CREATE_CHILD, BlipOperationServices.create());
     register(OperationType.BLIP_DELETE, BlipOperationServices.create());
     register(OperationType.DOCUMENT_APPEND_INLINE_BLIP, BlipOperationServices.create());
     register(OperationType.DOCUMENT_INSERT_INLINE_BLIP, BlipOperationServices.create());
-    register(
-        OperationType.DOCUMENT_INSERT_INLINE_BLIP_AFTER_ELEMENT, BlipOperationServices.create());
+    register(OperationType.DOCUMENT_INSERT_INLINE_BLIP_AFTER_ELEMENT,
+        BlipOperationServices.create());
     register(OperationType.WAVELET_CREATE, CreateWaveletService.create());
     register(OperationType.DOCUMENT_MODIFY, DocumentModifyService.create());
   }

@@ -17,14 +17,15 @@
 
 package org.waveprotocol.box.server.robots.active;
 
+import com.google.inject.Inject;
 import com.google.wave.api.OperationType;
 
 import org.waveprotocol.box.server.robots.AbstractOperationServiceRegistry;
 import org.waveprotocol.box.server.robots.operations.BlipOperationServices;
 import org.waveprotocol.box.server.robots.operations.CreateWaveletService;
-import org.waveprotocol.box.server.robots.operations.DoNothingService;
 import org.waveprotocol.box.server.robots.operations.DocumentModifyService;
 import org.waveprotocol.box.server.robots.operations.FetchWaveService;
+import org.waveprotocol.box.server.robots.operations.NotifyOperationService;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 
 /**
@@ -37,12 +38,13 @@ public final class ActiveApiOperationServiceRegistry extends AbstractOperationSe
   // Suppressing warnings about operations that are deprecated but still used by
   // the default client libraries
   @SuppressWarnings("deprecation")
-  public ActiveApiOperationServiceRegistry() {
+  @Inject
+  public ActiveApiOperationServiceRegistry(NotifyOperationService notifyOpService) {
     super();
 
     // Register all the OperationProviders
-    register(OperationType.ROBOT_NOTIFY, DoNothingService.create());
-    register(OperationType.ROBOT_NOTIFY_CAPABILITIES_HASH, DoNothingService.create());
+    register(OperationType.ROBOT_NOTIFY, notifyOpService);
+    register(OperationType.ROBOT_NOTIFY_CAPABILITIES_HASH, notifyOpService);
     register(OperationType.WAVELET_APPEND_BLIP, BlipOperationServices.create());
     register(OperationType.BLIP_CONTINUE_THREAD, BlipOperationServices.create());
     register(OperationType.BLIP_CREATE_CHILD, BlipOperationServices.create());
