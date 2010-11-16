@@ -17,6 +17,7 @@
 
 package org.waveprotocol.box.server.persistence;
 
+import com.google.wave.api.Context;
 import com.google.wave.api.ProtocolVersion;
 import com.google.wave.api.event.EventType;
 import com.google.wave.api.robot.Capability;
@@ -62,16 +63,14 @@ public abstract class AccountStoreTestBase extends TestCase {
     // For the updatedRobotAccount, we'll put a few capabilities in with a mix
     // of field values.
     Map<EventType, Capability> capabilities = CollectionUtils.newHashMap();
-    // Currently, capabilities can't be compared by .equals.
-//    capabilities.put(
-//        EventType.WAVELET_BLIP_CREATED, new Capability(EventType.WAVELET_BLIP_CREATED));
-//    capabilities.put(EventType.DOCUMENT_CHANGED,
-//        new Capability(EventType.DOCUMENT_CHANGED, CollectionUtils.newArrayList(Context.SIBLINGS)));
+    capabilities.put(
+        EventType.WAVELET_BLIP_CREATED, new Capability(EventType.WAVELET_BLIP_CREATED));
+    capabilities.put(EventType.DOCUMENT_CHANGED,
+        new Capability(EventType.DOCUMENT_CHANGED, CollectionUtils.newArrayList(Context.SIBLINGS)));
     
-    // Currently, the pattern isn't persisted.
-//    capabilities.put(EventType.BLIP_SUBMITTED,
-//        new Capability(EventType.BLIP_SUBMITTED,
-//            CollectionUtils.newArrayList(Context.SIBLINGS, Context.PARENT), "blah"));
+    capabilities.put(EventType.BLIP_SUBMITTED,
+        new Capability(EventType.BLIP_SUBMITTED,
+            CollectionUtils.newArrayList(Context.SIBLINGS, Context.PARENT), "blah"));
     
     updatedRobotAccount =
         new RobotAccountDataImpl(ROBOT_ID, "example.com", "secret", new RobotCapabilities(

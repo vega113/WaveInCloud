@@ -90,6 +90,12 @@ public class FlagSettings {
       defaultValue = "memory")
   private static String certPathStoreType;
 
+  @Flag(name = "cert_path_store_directory",
+      description = "Location on disk where the certificate store lives. Must be writeable by the "
+          + "wave-in-a-box process. Only used by file-based certificate store.",
+      defaultValue = "_certificates")
+  private static String certPathStoreDirectory;
+
   @Flag(name = "attachment_store_type",
       description = "Type of persistence store to use for attachments", defaultValue = "disk")
   private static String attachmentStoreType;
@@ -103,6 +109,12 @@ public class FlagSettings {
   @Flag(name = "account_store_type",
       description = "Type of persistence to use for the Account Storage", defaultValue = "memory")
   private static String accountStoreType;
+
+  @Flag(name = "account_store_directory",
+      description = "Location on disk where the account store lives. Must be writeable by the "
+          + "wave-in-a-box process. Only used by file-based account store.",
+      defaultValue = "_accounts")
+  private static String accountStoreDirectory;
 
   @Flag(name = "flashsocket_policy_port",
       description = "Port on which to listen for Flashsocket policy requests.",

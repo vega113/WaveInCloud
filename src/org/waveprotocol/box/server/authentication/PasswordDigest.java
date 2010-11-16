@@ -20,6 +20,8 @@ package org.waveprotocol.box.server.authentication;
 
 import com.google.common.base.Preconditions;
 
+import org.waveprotocol.box.server.account.HumanAccountDataImpl;
+
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -155,5 +157,16 @@ public class PasswordDigest implements Serializable {
    */
   public byte[] getDigest() {
     return digest.clone();
+  }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!(obj instanceof PasswordDigest)) return false;
+    PasswordDigest other = (PasswordDigest) obj;
+    if (!Arrays.equals(this.salt, other.salt)) return false;
+    if (!Arrays.equals(this.digest, other.digest)) return false;
+    return true;
   }
 }

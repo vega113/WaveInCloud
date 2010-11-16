@@ -22,7 +22,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import org.waveprotocol.box.server.persistence.file.FileAccountStore;
 import org.waveprotocol.box.server.persistence.file.FileAttachmentStore;
+import org.waveprotocol.box.server.persistence.file.FileCertPathStore;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
 import org.waveprotocol.box.server.persistence.mongodb.MongoDbProvider;
 import org.waveprotocol.wave.crypto.CertPathStore;
@@ -31,13 +33,13 @@ import org.waveprotocol.wave.crypto.CertPathStore;
  * Module for setting up the different persistence stores.
  *
  *<p>
- * The valid names for the cert store are 'memory' and 'mongodb'
+ * The valid names for the cert store are 'memory', 'file' and 'mongodb'
  *
  *<p>
  *The valid names for the attachment store are 'disk' and 'mongodb'
  *
  *<p>
- *The valid names for the account store are 'memory'.
+ *The valid names for the account store are 'memory', 'file' and 'mongodb'.
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
@@ -84,6 +86,8 @@ public class PersistenceModule extends AbstractModule {
   private void bindCertPathStore() {
     if (certPathStoreType.equalsIgnoreCase("memory")) {
       bind(CertPathStore.class).to(MemoryStore.class).in(Singleton.class);
+    } else if (accountStoreType.equalsIgnoreCase("file")) {
+      bind(CertPathStore.class).to(FileCertPathStore.class).in(Singleton.class);
     } else if (certPathStoreType.equalsIgnoreCase("mongodb")) {
       MongoDbProvider mongoDbProvider = getMongoDbProvider();
       bind(CertPathStore.class).toInstance(mongoDbProvider.provideMongoDbStore());
@@ -107,6 +111,8 @@ public class PersistenceModule extends AbstractModule {
   private void bindAccountStore() {
     if (accountStoreType.equalsIgnoreCase("memory")) {
       bind(AccountStore.class).to(MemoryStore.class).in(Singleton.class);
+    } else if (accountStoreType.equalsIgnoreCase("file")) {
+      bind(AccountStore.class).to(FileAccountStore.class).in(Singleton.class);
     } else if (accountStoreType.equalsIgnoreCase("fake")) {
       bind(AccountStore.class).to(FakePermissiveAccountStore.class).in(Singleton.class);
     } else if (accountStoreType.equalsIgnoreCase("mongodb")) {
