@@ -66,6 +66,7 @@
   <!-- compiles pre-generated proto sources; does NOT generate protos --> 
   <target name="proto_src_dep">
     <uptodate targetfile="${dep}/proto_compile" property="skip.proto_compile">
+      <srcfiles dir="${lib}" includes="**/*"/>
       <srcfiles dir="proto_src" includes="**/*.java"/>
     </uptodate>
   </target>
@@ -80,6 +81,7 @@
 
   <target name="compile_dep">
     <uptodate targetfile="${dep}/compile" property="skip.compile">
+      <srcfiles dir="${lib}" includes="**/*"/>
       <srcfiles dir="${src}" includes="**/*.java"/>
       <srcfiles dir="${gen}" includes="**/*.java"/>
     </uptodate>
@@ -118,6 +120,7 @@
 
   <target name="gen_gxp_dep">
     <uptodate targetfile="${dep}/gen_gxp" property="skip.gen_gxp">
+      <srcfiles dir="${lib.runtime}/gxp" includes="*"/>
       <srcfiles dir="${src}" includes="org/waveprotocol/box/server/gxp/*.gxp"/>
     </uptodate>
   </target>
@@ -239,6 +242,7 @@
   <!-- compiles pre-generated gwt proto sources; does NOT generate protos -->
   <target name="compile_proto_gwt_dep">
     <uptodate targetfile="${dep}/compile_proto_gwt_dep" property="skip.compile_proto_gwt">
+      <srcfiles dir="${lib}" includes="**/*"/>
       <srcfiles dir="proto_gwt_src" includes="**/*.java"/>
     </uptodate>
   </target>
@@ -253,6 +257,7 @@
 
   <target name="compile_gwt_dep">
     <uptodate targetfile="${dep}/compile_gwt" property="skip.compile_gwt">
+      <srcfiles dir="${lib}" includes="**/*"/>
       <srcfiles dir="src" includes="**/*"/>
       <srcfiles dir="proto_gwt_src" includes="**/*"/>
     </uptodate>
@@ -281,6 +286,7 @@
 
   <target name="compile_gwt_dev_dep">
     <uptodate targetfile="${dep}/compile_gwt_dev" property="skip.compile_gwt_dev">
+      <srcfiles dir="${lib}" includes="**/*"/>
       <srcfiles dir="src" includes="**/*"/>
       <srcfiles dir="proto_gwt_src" includes="**/*"/>
     </uptodate>
