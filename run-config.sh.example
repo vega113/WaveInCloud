@@ -57,6 +57,11 @@ WAVESERVER_DISABLE_SIGNER_VERIFICATION=true
 # Settings for the different persistence stores. Currently supported: memory, file, mongodb
 CERT_PATH_STORE_TYPE=memory
 
+# The location where signer info certificate data is stored on disk. This should be changed.
+# Note: This is only used when using the file certificate store. It is ignored
+# for other data store types.
+CERT_PATH_STORE_DIRECTORY=_certificates
+
 # Currently supported attachment types: mongodb, disk
 ATTACHMENT_STORE_TYPE=disk
 
@@ -67,6 +72,11 @@ ATTACHMENT_STORE_DIRECTORY=_attachments
 
 # Currently supported Account store types: memory, file, mongodb
 ACCOUNT_STORE_TYPE=memory
+
+# The location where accounts are stored on disk. This should be changed.
+# Note: This is only used when using the file account store. It is ignored
+# for other data store types.
+ACCOUNT_STORE_DIRECTORY=_accounts
 
 # Set true to use Socket.IO instead of raw WebSockets in the webclient.
 USE_SOCKETIO=false

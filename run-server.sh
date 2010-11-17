@@ -33,7 +33,9 @@ exec java $DEBUG_FLAGS \
   --http_frontend_addresses=$HTTP_SERVER_ADDRESSES \
   --enable_federation=$ENABLE_FEDERATION \
   --cert_path_store_type=$CERT_PATH_STORE_TYPE \
+  --cert_path_store_directory=$CERT_PATH_STORE_DIRECTORY \
   --attachment_store_type=$ATTACHMENT_STORE_TYPE \
   --attachment_store_directory=$ATTACHMENT_STORE_DIRECTORY \
   --account_store_type=$ACCOUNT_STORE_TYPE \
+  --account_store_directory=$ACCOUNT_STORE_DIRECTORY \
   --use_socketio=$USE_SOCKETIO

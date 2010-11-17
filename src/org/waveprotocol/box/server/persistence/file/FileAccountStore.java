@@ -89,22 +89,32 @@ public class FileAccountStore implements AccountStore {
           + accountStoreBasePath + ") does not appear to be readable!");
     }
 
-    // Open first file in list and try to read on byte from it.
-    try {
-      FileInputStream file = new FileInputStream(files[0]);
-      file.read();
-    } catch (IOException e) {
-      throw new PersistenceException("Configured account store directory ("
-          + accountStoreBasePath + ") does not appear to be readable!");
+    /*
+     * If file list isn't empty, try opening the first file in the list to make sure it
+     * is readable. If the first file is readable, then it is likely that the rest will
+     * be readable as well.
+     */
+    if (files.length > 0) {
+      try {
+        FileInputStream file = new FileInputStream(files[0]);
+        file.read();
+      } catch (IOException e) {
+        throw new PersistenceException("Failed to read '" + files[0].getName()
+            + "' in configured account store directory '" + accountStoreBasePath
+            + "'. The directory's contents do not appear to be readable.", e);
+      }
     }
     
     // Make sure accountStoreBasePath is a writable.
     try {
       File tmp = File.createTempFile("tempInitialization", ".bugus_account", baseDir);
+      FileOutputStream stream = new FileOutputStream(tmp);
+      stream.write(new byte[]{'H','e','l','l','o'});
+      stream.close();
       tmp.delete();
     } catch (IOException e) {
       throw new PersistenceException("Configured account store directory ("
-          + accountStoreBasePath + ") does not appear to be writable!");
+          + accountStoreBasePath + ") does not appear to be writable!", e);
     }
   }
   
