@@ -69,7 +69,7 @@ public class ServerMain {
     } catch (IOException e) {
       LOG.severe("IOException when running server:", e);
     } catch (PersistenceException e) {
-      LOG.severe("PersistenceInitializationException when running server:", e);
+      LOG.severe("PersistenceException when running server:", e);
     }
   }
 

@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -51,6 +52,8 @@ public class AccountStoreLoginModule implements LoginModule {
   private CallbackHandler callbackHandler;
   private AccountStore accountStore;
 
+  private final Log LOG = Log.get(AccountStoreLoginModule.class);
+  
   enum Status {
     NOT, OK, COMMIT
   }
@@ -116,6 +119,7 @@ public class AccountStoreLoginModule implements LoginModule {
       // The supplied user address is invalid. Auth failed.
       success = false;
     } catch (PersistenceException e) {
+      LOG.severe("Failed to retreive account data for " + id, e);
       throw new LoginException(
           "An unexpected error occured while trying to retrieve account information!");
     }

@@ -117,7 +117,7 @@ public class RobotsGateway implements WaveBus.Subscriber {
       try {
         account = accountStore.getAccount(robotId);
       } catch (PersistenceException e) {
-        LOG.severe("Failed to retrieve the account data for " + robotId.getAddress());
+        LOG.severe("Failed to retrieve the account data for " + robotId.getAddress(), e);
         continue;
       }
 
