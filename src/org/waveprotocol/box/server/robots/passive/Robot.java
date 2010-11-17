@@ -29,6 +29,7 @@ import com.google.wave.api.robot.RobotName;
 
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.account.RobotAccountData;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
@@ -243,6 +244,13 @@ public class Robot implements Runnable {
         LOG.info(robotName + ": Initializing capabilities");
         gateway.updateRobotAccount(this);
       } catch (CapabilityFetchException e) {
+        ReadableWaveletData snapshot = wavelet.getSnapshotAfterDeltas();
+        LOG.info(
+            "Couldn't initialize the capabilities of robot(" + robotName
+                + "), dropping its wavelet(" + WaveletDataUtil.waveletNameOf(snapshot)
+                + ") at version " + wavelet.getVersionAfterDeltas(), e);
+        return;
+      } catch (PersistenceException e) {
         ReadableWaveletData snapshot = wavelet.getSnapshotAfterDeltas();
         LOG.info(
             "Couldn't initialize the capabilities of robot(" + robotName

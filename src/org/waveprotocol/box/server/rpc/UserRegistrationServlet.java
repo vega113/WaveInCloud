@@ -26,6 +26,8 @@ import org.waveprotocol.box.server.authentication.HttpRequestBasedCallbackHandle
 import org.waveprotocol.box.server.authentication.PasswordDigest;
 import org.waveprotocol.box.server.gxp.UserRegistrationPage;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -44,6 +46,8 @@ import javax.servlet.http.HttpServletResponse;
 public final class UserRegistrationServlet extends HttpServlet {
   private final AccountStore accountStore;
   private final String domain;
+  
+  private final Log LOG = Log.get(UserRegistrationServlet.class);
 
   @Inject
   public UserRegistrationServlet(AccountStore accountStore,
@@ -109,8 +113,13 @@ public final class UserRegistrationServlet extends HttpServlet {
       return "Invalid username";
     }
 
-    if (accountStore.getAccount(id) != null) {
-      return "Account already exists";
+    try {
+      if (accountStore.getAccount(id) != null) {
+        return "Account already exists";
+      }
+    } catch (PersistenceException e) {
+      LOG.severe("Failed to retreive account data for " + id, e);
+      return "An unexpected error occured while trying to retrieve account status";
     }
 
     if (password == null) {
@@ -120,7 +129,12 @@ public final class UserRegistrationServlet extends HttpServlet {
 
     HumanAccountDataImpl account =
         new HumanAccountDataImpl(id, new PasswordDigest(password.toCharArray()));
-    accountStore.putAccount(account);
+    try {
+      accountStore.putAccount(account);
+    } catch (PersistenceException e) {
+      LOG.severe("Failed to create new account for " + id, e);
+      return "An unexpected error occured while trying to create the account";
+    }
 
     return null;
   }

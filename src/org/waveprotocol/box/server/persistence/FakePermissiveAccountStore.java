@@ -50,6 +50,11 @@ public class FakePermissiveAccountStore implements AccountStore {
   }
 
   @Override
+  public void initializeAccountStore() {
+    // Nothing to initialize.
+  }
+
+  @Override
   public void putAccount(AccountData account) {
     accounts.put(account.getId(), account);
   }

@@ -23,6 +23,8 @@ import com.google.inject.Inject;
 
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.common.util.PercentEscaper;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -38,6 +40,8 @@ public final class SessionManagerImpl implements SessionManager {
 
   private final AccountStore accountStore;
   private final org.eclipse.jetty.server.SessionManager jettySessionManager;
+
+  private static final Log LOG = Log.get(SessionManagerImpl.class);
 
   @Inject
   public SessionManagerImpl(
@@ -62,7 +66,12 @@ public final class SessionManagerImpl implements SessionManager {
     // Consider caching the account data in the session object.
     ParticipantId user = getLoggedInUser(session);
     if (user != null) {
-      return accountStore.getAccount(user);
+      try {
+        return accountStore.getAccount(user);
+      } catch (PersistenceException e) {
+        LOG.warning("Failed to retrieve account data for " + user, e);
+        return null;
+      }
     } else {
       return null;
     }

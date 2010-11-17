@@ -31,6 +31,7 @@ import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.robots.operations.NotifyOperationService;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.util.Log;
@@ -112,7 +113,13 @@ public class RobotsGateway implements WaveBus.Subscriber {
       }
 
       ParticipantId robotId = ParticipantId.ofUnsafe(robotName.toEmailAddress());
-      AccountData account = accountStore.getAccount(robotId);
+      AccountData account;
+      try {
+        account = accountStore.getAccount(robotId);
+      } catch (PersistenceException e) {
+        LOG.severe("Failed to retrieve the account data for " + robotId.getAddress());
+        continue;
+      }
 
       if (account != null && account.isRobot()) {
         RobotAccountData robotAccount = account.asRobot();
@@ -209,7 +216,8 @@ public class RobotsGateway implements WaveBus.Subscriber {
    * @throws CapabilityFetchException if the capabilities could not be fetched
    *         or parsed.
    */
-  public void updateRobotAccount(Robot robot) throws CapabilityFetchException {
+  public void updateRobotAccount(Robot robot) throws CapabilityFetchException,
+      PersistenceException {
     // TODO: Pass in activeAPIUrl
     String activeApiUrl = "";
     RobotAccountData newAccount = connector.fetchCapabilities(robot.getAccount(), activeApiUrl);

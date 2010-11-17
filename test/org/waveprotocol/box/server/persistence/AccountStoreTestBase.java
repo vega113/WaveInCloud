@@ -83,7 +83,7 @@ public abstract class AccountStoreTestBase extends TestCase {
    */
   protected abstract AccountStore newAccountStore();
 
-  public final void testRoundtripHumanAccount() {
+  public final void testRoundtripHumanAccount() throws Exception {
     AccountStore accountStore = newAccountStore();
 
     HumanAccountDataImpl account = new HumanAccountDataImpl(HUMAN_ID);
@@ -92,7 +92,7 @@ public abstract class AccountStoreTestBase extends TestCase {
     assertEquals(account, retrievedAccount);
   }
   
-  public final void testRoundtripHumanAccountWithPassword() {
+  public final void testRoundtripHumanAccountWithPassword() throws Exception {
     AccountStore accountStore = newAccountStore();
     
     accountStore.putAccount(
@@ -101,7 +101,7 @@ public abstract class AccountStoreTestBase extends TestCase {
     assertTrue(retrievedAccount.asHuman().getPasswordDigest().verify("internet".toCharArray()));
   }
 
-  public final void testRoundtripRobotAccount() {
+  public final void testRoundtripRobotAccount() throws Exception {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(robotAccount);
@@ -109,13 +109,13 @@ public abstract class AccountStoreTestBase extends TestCase {
     assertEquals(robotAccount, retrievedAccount);
   }
 
-  public final void testGetMissingAccountReturnsNull() {
+  public final void testGetMissingAccountReturnsNull() throws Exception {
     AccountStore accountStore = newAccountStore();
 
     assertNull(accountStore.getAccount(HUMAN_ID));
   }
 
-  public final void testPutAccountOverrides() {
+  public final void testPutAccountOverrides() throws Exception {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(robotAccount);
@@ -127,7 +127,7 @@ public abstract class AccountStoreTestBase extends TestCase {
     assertEquals(updatedRobotAccount, updatedAccount);
   }
 
-  public final void testPutAccountCanChangeType() {
+  public final void testPutAccountCanChangeType() throws Exception {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(robotAccount);
@@ -139,7 +139,7 @@ public abstract class AccountStoreTestBase extends TestCase {
     assertEquals(convertedRobot, updatedAccount);
   }
 
-  public final void testRemoveAccount() {
+  public final void testRemoveAccount() throws Exception {
     AccountStore accountStore = newAccountStore();
 
     accountStore.putAccount(robotAccount);

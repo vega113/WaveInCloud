@@ -27,6 +27,7 @@ import com.google.wave.api.robot.RobotName;
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
 import org.waveprotocol.box.server.robots.passive.RobotConnector;
@@ -62,7 +63,14 @@ public class NotifyOperationService implements OperationService {
     RobotName robotName = RobotName.fromAddress(participant.getAddress());
 
     ParticipantId robotAccountId = ParticipantId.ofUnsafe(robotName.toEmailAddress());
-    AccountData account = accountStore.getAccount(robotAccountId);
+    AccountData account;
+    try {
+      account = accountStore.getAccount(robotAccountId);
+    } catch (PersistenceException e) {
+      LOG.severe("Failed to retreive account data for " + robotAccountId, e);
+      context.constructErrorResponse(operation, "Unable to retrieve account data");
+      return;
+    }
 
     if (account == null || !account.isRobot()) {
       throw new InvalidRequestException("Can't exectute robot.notify for unknown robot "
@@ -85,7 +93,13 @@ public class NotifyOperationService implements OperationService {
       return;
     }
 
-    accountStore.putAccount(robotAccountData);
+    try {
+      accountStore.putAccount(robotAccountData);
+    } catch (PersistenceException e) {
+      LOG.severe("Failed to update account data for " + robotAccountId, e);
+      context.constructErrorResponse(operation, "Unable to update account data");
+      return;
+    }
 
     // Set empty response to indicate success
     context.constructResponse(operation, Maps.<ParamsProperty, Object> newHashMap());

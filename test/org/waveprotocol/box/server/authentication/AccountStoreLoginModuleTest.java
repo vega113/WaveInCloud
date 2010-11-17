@@ -61,7 +61,7 @@ public class AccountStoreLoginModuleTest extends TestCase {
   }
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
     AccountStore store = new MemoryStore();
     store.putAccount(new HumanAccountDataImpl(
         ParticipantId.ofUnsafe("haspwd@example.com"), new PasswordDigest("pwd".toCharArray())));

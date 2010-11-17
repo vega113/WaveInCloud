@@ -39,6 +39,7 @@ import net.oauth.server.HttpRequestMessage;
 
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.OperationContextImpl;
 import org.waveprotocol.box.server.robots.OperationResults;
@@ -116,7 +117,16 @@ public class ActiveApiServlet extends HttpServlet {
       return;
     }
 
-    AccountData account = accountStore.getAccount(participant);
+    AccountData account;
+    try {
+      account = accountStore.getAccount(participant);
+    } catch (PersistenceException e) {
+      LOG.severe("Failed to retrieve account data for " + participant, e);
+      resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+          "An unexpected error occured while trying to retrieve account data for "
+              + participant.getAddress());
+      return;
+    }
     if (account == null || !account.isRobot()) {
       LOG.info("The account for robot named " + participant + " does not exist");
       resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

@@ -60,7 +60,7 @@ public class UserRegistrationServletTest extends TestCase {
     MockitoAnnotations.initMocks(this);
   }
 
-  public void testRegisterNewUser() throws IOException {
+  public void testRegisterNewUser() throws Exception {
     attemptToRegister(req, resp, "foo@example.com", "internet");
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
@@ -69,14 +69,14 @@ public class UserRegistrationServletTest extends TestCase {
     assertTrue(account.asHuman().getPasswordDigest().verify("internet".toCharArray()));
   }
 
-  public void testDomainInsertedAutomatically() throws IOException {
+  public void testDomainInsertedAutomatically() throws Exception {
     attemptToRegister(req, resp, "sam", "fdsa");
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
     assertNotNull(store.getAccount(ParticipantId.ofUnsafe("sam@example.com")));
   }
 
-  public void testRegisterExistingUserThrowsError() throws IOException {
+  public void testRegisterExistingUserThrowsError() throws Exception {
     attemptToRegister(req, resp, "frodo@example.com", "asdf");
 
     verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -85,21 +85,21 @@ public class UserRegistrationServletTest extends TestCase {
     assertSame(account, store.getAccount(account.getId()));
   }
 
-  public void testRegisterUserAtForeignDomainThrowsError() throws IOException {
+  public void testRegisterUserAtForeignDomainThrowsError() throws Exception {
     attemptToRegister(req, resp, "bilbo@example2.com", "fdsa");
 
     verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
     assertNull(store.getAccount(ParticipantId.ofUnsafe("bilbo@example2.com")));
   }
 
-  public void testUsernameTrimmed() throws IOException {
+  public void testUsernameTrimmed() throws Exception {
     attemptToRegister(req, resp, " ben@example.com ", "beetleguice");
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
     assertNotNull(store.getAccount(ParticipantId.ofUnsafe("ben@example.com")));
   }
 
-  public void testNullPasswordWorks() throws IOException {
+  public void testNullPasswordWorks() throws Exception {
     attemptToRegister(req, resp, "zd@example.com", null);
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);

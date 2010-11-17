@@ -41,6 +41,7 @@ import org.waveprotocol.box.server.account.RobotAccountDataImpl;
 import org.waveprotocol.box.server.authentication.PasswordDigest;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.AttachmentStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.SignatureException;
@@ -93,6 +94,7 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
   private static final String CAPABILITIES_HASH_FIELD = "capabilitiesHash";
   private static final String CAPABILITIES_CAPABILITIES_FIELD = "capabilities";
   private static final String CAPABILITY_CONTEXTS_FIELD = "contexts";
+  private static final String CAPABILITY_FILTER_FIELD = "filter";
 
   private static final Logger LOG = Logger.getLogger(MongoDbStore.class.getName());
 
@@ -236,6 +238,11 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
   // ******** AccountStore
 
   @Override
+  public void initializeAccountStore() throws PersistenceException {
+    // TODO: Sanity checks not handled by MongoDBProvider???
+  }
+
+  @Override
   public AccountData getAccount(ParticipantId id) {
     DBObject query = getDBObjectForParticipant(id);
     DBObject result = getAccountCollection().findOne(query);
@@ -342,8 +349,7 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
       capabilitiesObj.put(capability.getEventType().name(),
           new BasicDBObject()
               .append(CAPABILITY_CONTEXTS_FIELD, contexts)
-              // TODO: Add Capability.filter.
-              );
+              .append(CAPABILITY_FILTER_FIELD, capability.getFilter()));
     }
     
     BasicDBObject object =

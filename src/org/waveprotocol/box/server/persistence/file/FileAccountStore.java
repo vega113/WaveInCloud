@@ -24,14 +24,17 @@ import com.google.inject.name.Named;
 
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.protos.ProtoAccountDataSerializer;
 import org.waveprotocol.box.server.persistence.protos.ProtoAccountStoreData.ProtoAccountData;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
@@ -53,9 +56,60 @@ public class FileAccountStore implements AccountStore {
     Preconditions.checkNotNull(accountStoreBasePath, "Requested path is null");
     this.accountStoreBasePath = accountStoreBasePath;
   }
+
+  @Override
+  public void initializeAccountStore() throws PersistenceException {
+    File baseDir = new File(accountStoreBasePath);
+    
+    // Make sure accountStoreBasePath exists.
+    if (!baseDir.exists()) {
+      // It doesn't so try and create it.
+      if (!baseDir.mkdirs()) {
+        throw new PersistenceException("Configured account store directory ("
+            + accountStoreBasePath + ") doesn't exist and could not be created!");
+      }
+    }
+    
+    // Make sure accountStoreBasePath is a directory.
+    if (!baseDir.isDirectory()) {
+      throw new PersistenceException("Configured account store path ("
+          + accountStoreBasePath + ") isn't a directory!");
+    }
+    
+    // Make sure we can read accounts by trying to read one of the account files.
+    File[] files = baseDir.listFiles(new FilenameFilter() {
+      @Override
+      public boolean accept(File dir, String name) {
+        return name.endsWith(ACCOUNT_FILE_EXTENSION);
+      }
+    });
+
+    if (files == null) {
+      throw new PersistenceException("Configured account store directory ("
+          + accountStoreBasePath + ") does not appear to be readable!");
+    }
+
+    // Open first file in list and try to read on byte from it.
+    try {
+      FileInputStream file = new FileInputStream(files[0]);
+      file.read();
+    } catch (IOException e) {
+      throw new PersistenceException("Configured account store directory ("
+          + accountStoreBasePath + ") does not appear to be readable!");
+    }
+    
+    // Make sure accountStoreBasePath is a writable.
+    try {
+      File tmp = File.createTempFile("tempInitialization", ".bugus_account", baseDir);
+      tmp.delete();
+    } catch (IOException e) {
+      throw new PersistenceException("Configured account store directory ("
+          + accountStoreBasePath + ") does not appear to be writable!");
+    }
+  }
   
   @Override
-  public AccountData getAccount(ParticipantId id) {
+  public AccountData getAccount(ParticipantId id) throws PersistenceException {
     synchronized (accounts) {
       AccountData account = accounts.get(id);
       if (account == null) {
@@ -69,7 +123,7 @@ public class FileAccountStore implements AccountStore {
   }
 
   @Override
-  public void putAccount(AccountData account) {
+  public void putAccount(AccountData account) throws PersistenceException {
     synchronized (accounts) {
       Preconditions.checkNotNull(account);
       writeAccount(account);
@@ -78,11 +132,14 @@ public class FileAccountStore implements AccountStore {
   }
 
   @Override
-  public void removeAccount(ParticipantId id) {
+  public void removeAccount(ParticipantId id) throws PersistenceException {
     synchronized (accounts) {
       File file = new File(participantIdToFileName(id));
       if (file.exists()) {
-        file.delete();
+        if (!file.delete()) {
+          throw new PersistenceException("Failed to delete account data associated with "
+              + id.getAddress());
+        }
       }
       accounts.remove(id);
     }
@@ -93,7 +150,22 @@ public class FileAccountStore implements AccountStore {
         + ACCOUNT_FILE_EXTENSION;
   }
   
-  private AccountData readAccount(ParticipantId id) {
+  /*
+   * This is here instead of in a utility class so that a more useful error message
+   * can be generated.
+   */
+  private void closeAndIgnoreException(Closeable closeable) {
+    if (closeable != null) {
+      try {
+        closeable.close();
+      } catch (IOException e) {
+        // This should never happen in practice. But just in case... log it.
+        LOG.warning("Failed to close account data file!", e);
+      }
+    }
+  }
+  
+  private AccountData readAccount(ParticipantId id) throws PersistenceException {
     FileInputStream file = null;
     try {
       File accountFile = new File(participantIdToFileName(id));
@@ -105,19 +177,13 @@ public class FileAccountStore implements AccountStore {
       return ProtoAccountDataSerializer.deserialize(data);
     } catch (IOException e) {
       LOG.severe("Failed to read account data from disk!", e);
-      throw new RuntimeException(e);
+      throw new PersistenceException(e);
     } finally {
-      if (file != null) {
-        try {
-          file.close();
-        } catch (IOException e) {
-          LOG.warning("Failed to close account data file!", e);
-        }
-      }
+      closeAndIgnoreException(file);
     }
   }
   
-  private void writeAccount(AccountData account) {
+  private void writeAccount(AccountData account) throws PersistenceException {
     OutputStream file = null;
     try {
       File accountFile = new File(participantIdToFileName(account.getId()));
@@ -127,15 +193,9 @@ public class FileAccountStore implements AccountStore {
       file.flush();
     } catch (IOException e) {
       LOG.severe("Failed to write account data to disk!", e);
-      throw new RuntimeException(e);
+      throw new PersistenceException(e);
     } finally {
-      if (file != null) {
-        try {
-          file.close();
-        } catch (IOException e) {
-          LOG.warning("Failed to close account data file!", e);
-        }
-      }
+      closeAndIgnoreException(file);
     }
   }
 }

@@ -69,6 +69,11 @@ public class MemoryStore implements CertPathStore, AccountStore {
   private final Map<ParticipantId, AccountData> accountStore;
 
   @Override
+  public void initializeAccountStore() {
+    // Nothing to initialize
+  }
+
+  @Override
   public AccountData getAccount(ParticipantId id) {
     return accountStore.get(id);
   }

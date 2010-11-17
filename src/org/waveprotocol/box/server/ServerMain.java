@@ -29,6 +29,7 @@ import org.eclipse.jetty.servlets.ProxyServlet;
 import org.waveprotocol.box.server.authentication.AccountStoreHolder;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceModule;
 import org.waveprotocol.box.server.robots.RobotApiModule;
 import org.waveprotocol.box.server.robots.RobotRegistrationServlet;
@@ -66,11 +67,13 @@ public class ServerMain {
       run(flags);
       return;
     } catch (IOException e) {
-      LOG.severe("IOException when running server: " + e.getMessage());
+      LOG.severe("IOException when running server:", e);
+    } catch (PersistenceException e) {
+      LOG.severe("PersistenceInitializationException when running server:", e);
     }
   }
 
-  public static void run(Module flags) throws IOException {
+  public static void run(Module flags) throws IOException, PersistenceException {
     Injector flagInjector = Guice.createInjector(flags);
     PersistenceModule persistenceModule = flagInjector.getInstance(PersistenceModule.class);
     Injector injector =
@@ -79,7 +82,9 @@ public class ServerMain {
     ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
 
-    AccountStoreHolder.init(injector.getInstance(AccountStore.class),
+    AccountStore accountStore = injector.getInstance(AccountStore.class);
+    accountStore.initializeAccountStore();
+    AccountStoreHolder.init(accountStore,
         injector.getInstance(Key.get(String.class, Names.named("wave_server_domain"))));
 
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
@@ -118,7 +123,7 @@ public class ServerMain {
     try {
       xmppComponent.run();
     } catch (ComponentException e) {
-      System.err.println("couldn't connect to XMPP server:" + e);
+      LOG.warning("couldn't connect to XMPP server:", e);
     }
     LOG.info("Starting server");
     server.startWebSocketServer();

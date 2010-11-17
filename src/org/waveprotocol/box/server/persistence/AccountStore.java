@@ -26,6 +26,15 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
 public interface AccountStore {
+  /**
+   * Initialize the account store.
+   * Implementations are expected to validate any configuration values, validate the state of the
+   * store, and perform an start-up action needed (e.g. load list of accounts into memory,
+   * establish connection to database, etc...).
+   * 
+   * @throws PersistenceException
+   */
+  void initializeAccountStore() throws PersistenceException;
 
   /**
    * Returns an {@link AccountData} for the given username or null if not
@@ -33,7 +42,7 @@ public interface AccountStore {
    *
    * @param id participant id of the requested account.
    */
-  AccountData getAccount(ParticipantId id);
+  AccountData getAccount(ParticipantId id) throws PersistenceException;
 
   /**
    * Puts the given {@link AccountData} in the storage, overrides an existing
@@ -41,12 +50,12 @@ public interface AccountStore {
    *
    * @param account to store.
    */
-  void putAccount(AccountData account);
+  void putAccount(AccountData account) throws PersistenceException;
 
   /**
    * Removes an account from storage.
    *
    * @param id the participant id of the account to remove.
    */
-  void removeAccount(ParticipantId id);
+  void removeAccount(ParticipantId id) throws PersistenceException;
 }

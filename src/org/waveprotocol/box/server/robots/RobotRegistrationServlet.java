@@ -28,6 +28,7 @@ import org.waveprotocol.box.server.account.RobotAccountDataImpl;
 import org.waveprotocol.box.server.gxp.robots.RobotRegistrationPage;
 import org.waveprotocol.box.server.gxp.robots.RobotRegistrationSuccessPage;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
@@ -117,7 +118,15 @@ public class RobotRegistrationServlet extends HttpServlet {
       return;
     }
 
-    AccountData account = accountStore.getAccount(id);
+    AccountData account;
+    try {
+      account = accountStore.getAccount(id);
+    } catch (PersistenceException e) {
+      LOG.severe("Failed to retrieve account data for " + id, e);
+      doRegisterGet(req, resp,
+          "Failed to retreive account data for " + username);
+      return;
+    }
     if (account != null) {
       doRegisterGet(req, resp, username + " is already in use, please choose another one.");
       return;
@@ -146,7 +155,14 @@ public class RobotRegistrationServlet extends HttpServlet {
     // TODO(ljvderijk): Implement the verification.
     RobotAccountData robotAccount = new RobotAccountDataImpl(
         id, robotLocation, tokenGenerator.generateToken(TOKEN_LENGTH), null, true);
-    accountStore.putAccount(robotAccount);
+    try {
+      accountStore.putAccount(robotAccount);
+    } catch (PersistenceException e) {
+      LOG.severe("Failed to update account data for " + id, e);
+      doRegisterGet(req, resp,
+          "An unexpected error occured while trying to store the account data for " + username);
+      return;
+    }
     LOG.info(robotAccount.getId() + " is now registered as a RobotAccount with Url "
         + robotAccount.getUrl());
 
