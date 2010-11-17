@@ -39,7 +39,6 @@ import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletIdSerializer;
@@ -388,16 +387,14 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     DocInitialization content = DocOpUtil.asInitialization(
         WaveletOperationSerializer.deserialize(docSnapshot.getDocumentOperation()));
     String docId = docSnapshot.getDocumentId();
-    if (IdUtil.isBlipId(docId)) {
-      ParticipantId author = ParticipantId.ofUnsafe(docSnapshot.getAuthor());
-      List<ParticipantId> contributors = Lists.newArrayList();
-      for (String contributor : docSnapshot.getContributorList()) {
-        contributors.add(ParticipantId.ofUnsafe(contributor));
-      }
-      long lmt = (long) docSnapshot.getLastModifiedTime();
-      long lmv = (long) docSnapshot.getLastModifiedVersion();
-      waveletData.createDocument(docId, author, contributors, content, lmt, lmv);
+    ParticipantId author = ParticipantId.ofUnsafe(docSnapshot.getAuthor());
+    List<ParticipantId> contributors = Lists.newArrayList();
+    for (String contributor : docSnapshot.getContributorList()) {
+      contributors.add(ParticipantId.ofUnsafe(contributor));
     }
+    long lmt = (long) docSnapshot.getLastModifiedTime();
+    long lmv = (long) docSnapshot.getLastModifiedVersion();
+    waveletData.createDocument(docId, author, contributors, content, lmt, lmv);
   }
 
   private static String serialize(WaveletName wavelet) {

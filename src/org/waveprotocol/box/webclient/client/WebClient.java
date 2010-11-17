@@ -301,7 +301,14 @@ public class WebClient implements EntryPoint {
    * prepared, it is revealed in the banner via a link.
    */
   static class ErrorHandler implements UncaughtExceptionHandler {
+    /** Next handler in the handler chain. */
     private final UncaughtExceptionHandler next;
+
+    /**
+     * Indicates whether an error has already been reported (at most one error
+     * is ever reported by this handler).
+     */
+    private boolean hasFired;
 
     private ErrorHandler(UncaughtExceptionHandler next) {
       this.next = next;
@@ -313,13 +320,17 @@ public class WebClient implements EntryPoint {
 
     @Override
     public void onUncaughtException(Throwable e) {
-      final ErrorIndicatorPresenter error = ErrorIndicatorPresenter.create(RootPanel.get("banner"));
-      getStackTraceAsync(e, new Accessor<SafeHtml>() {
-        @Override
-        public void use(SafeHtml stack) {
-          error.addDetail(stack, null);
-        }
-      });
+      if (!hasFired) {
+        hasFired = true;
+        final ErrorIndicatorPresenter error =
+            ErrorIndicatorPresenter.create(RootPanel.get("banner"));
+        getStackTraceAsync(e, new Accessor<SafeHtml>() {
+          @Override
+          public void use(SafeHtml stack) {
+            error.addDetail(stack, null);
+          }
+        });
+      }
 
       if (next != null) {
         next.onUncaughtException(e);
@@ -341,14 +352,13 @@ public class WebClient implements EntryPoint {
 
           Throwable error = t;
           while (error != null) {
-            stack.appendEscaped(error.getMessage()).appendHtmlConstant("<br>");
+            stack.appendEscaped(String.valueOf(error.getMessage())).appendHtmlConstant("<br>");
             for (StackTraceElement elt : error.getStackTrace()) {
-              stack //
-                  .appendHtmlConstant("  ") //
-                  .appendEscaped(elt.getClassName()).appendHtmlConstant(".") //
-                  .appendEscaped(elt.getMethodName()).appendHtmlConstant(" (") //
-                  .appendEscaped(elt.getFileName()).appendHtmlConstant(":") //
-                  .append(elt.getLineNumber()).appendHtmlConstant(")") //
+              stack.appendHtmlConstant("  ")
+                  .appendEscaped(maybe(elt.getClassName(), "??")).appendHtmlConstant(".") //
+                  .appendEscaped(maybe(elt.getMethodName(), "??")).appendHtmlConstant(" (") //
+                  .appendEscaped(maybe(elt.getFileName(), "??")).appendHtmlConstant(":") //
+                  .appendEscaped(maybe(elt.getLineNumber(), "??")).appendHtmlConstant(")") //
                   .appendHtmlConstant("<br>");
             }
             error = error.getCause();
@@ -360,6 +370,14 @@ public class WebClient implements EntryPoint {
           whenReady.use(stack.toSafeHtml());
         }
       });
+    }
+
+    private static String maybe(String value, String otherwise) {
+      return value != null ? value : otherwise;
+    }
+
+    private static String maybe(int value, String otherwise) {
+      return value != -1 ? String.valueOf(value) : otherwise;
     }
   }
 }
