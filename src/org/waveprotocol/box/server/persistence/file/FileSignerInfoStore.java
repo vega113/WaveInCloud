@@ -22,6 +22,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.apache.commons.codec.binary.Hex;
+import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.persistence.SignerInfoStore;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.DefaultCertPathStore;
@@ -31,39 +33,44 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
- * A flat file based implementation of {@link CertPathStore}
+ * A flat file based implementation of {@link SignerInfoStore}
  * 
  * @author tad.glines@gmail.com (Tad Glines)
  */
-public class FileCertPathStore implements CertPathStore {
+public class FileSignerInfoStore implements SignerInfoStore {
   private static final String SIGNER_FILE_EXTENSION = ".signer";
-  private final String certPathStoreBasePath;
+  private final String signerInfoStoreBasePath;
   private final CertPathStore certPathStore = new DefaultCertPathStore();
 
-  private static final Log LOG = Log.get(FileCertPathStore.class);
+  private static final Log LOG = Log.get(FileSignerInfoStore.class);
   
   @Inject
-  public FileCertPathStore(@Named("cert_path_store_directory") String certPathStoreBasePath) {
-    Preconditions.checkNotNull(certPathStoreBasePath, "Requested path is null");
-    this.certPathStoreBasePath = certPathStoreBasePath;
+  public FileSignerInfoStore(@Named("signer_info_store_directory") String signerInfoStoreBasePath) {
+    Preconditions.checkNotNull(signerInfoStoreBasePath, "Requested path is null");
+    this.signerInfoStoreBasePath = signerInfoStoreBasePath;
   }
 
   private String signerIdToFileName(byte[] id) {
-    return certPathStoreBasePath + File.separator + new String(Hex.encodeHex(id))
+    return signerInfoStoreBasePath + File.separator + new String(Hex.encodeHex(id))
         + SIGNER_FILE_EXTENSION;
   }
 
   @Override
-  public SignerInfo getSignerInfo(byte[] signerId) {
+  public void initializeSignerInfoStore() throws PersistenceException {
+    FileUtils.performDirectoryChecks(signerInfoStoreBasePath, SIGNER_FILE_EXTENSION,
+        "signer info store", LOG);
+  }
+
+  @Override
+  public SignerInfo getSignerInfo(byte[] signerId) throws SignatureException {
     synchronized(certPathStore) {
       SignerInfo signerInfo = certPathStore.getSignerInfo(signerId);
+      File signerFile = new File(signerIdToFileName(signerId));
       if (signerInfo == null) {
-        File signerFile = new File(signerIdToFileName(signerId));
         if (signerFile.exists()) {
           FileInputStream file = null;
           try {
@@ -71,22 +78,13 @@ public class FileCertPathStore implements CertPathStore {
             ProtocolSignerInfo data = ProtocolSignerInfo.newBuilder().mergeFrom(file).build();
             signerInfo = new SignerInfo(data);
           } catch (SignatureException e) {
-            LOG.severe("Failed to parse signer info from file!", e);
-            throw new RuntimeException(e);
-          } catch (FileNotFoundException e) {
-            LOG.severe("Failed to open signer info file!", e);
-            throw new RuntimeException(e);
+            throw new SignatureException("Failed to parse signer info from file: "
+                + signerFile.getAbsolutePath(), e);
           } catch (IOException e) {
-            LOG.severe("Failed to read/parse signer info file!", e);
-            throw new RuntimeException(e);
+            throw new SignatureException("Failed to parse signer info from file: "
+                + signerFile.getAbsolutePath(), e);
           } finally {
-            if (file != null) {
-              try {
-                file.close();
-              } catch (IOException e) {
-                LOG.severe("Failed to close signer info file!", e);
-              }
-            }
+            FileUtils.closeAndIgnoreException(file, signerFile, LOG);
           }
         }
       }
@@ -106,16 +104,10 @@ public class FileCertPathStore implements CertPathStore {
         file.flush();
         certPathStore.putSignerInfo(protoSignerInfo);
       } catch (IOException e) {
-        LOG.severe("Failed to write signer info file!", e);
-        throw new RuntimeException(e);
+        throw new SignatureException("Failed to write signer info to file: "
+            + signerFile.getAbsolutePath(), e);
       } finally {
-        if (file != null) {
-          try {
-            file.close();
-          } catch (IOException e) {
-            LOG.severe("Failed to close signer info file!", e);
-          }
-        }
+        FileUtils.closeAndIgnoreException(file, signerFile, LOG);
       }
     }
   }

@@ -31,6 +31,7 @@ import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceModule;
+import org.waveprotocol.box.server.persistence.SignerInfoStore;
 import org.waveprotocol.box.server.robots.RobotApiModule;
 import org.waveprotocol.box.server.robots.RobotRegistrationServlet;
 import org.waveprotocol.box.server.robots.active.ActiveApiServlet;
@@ -47,6 +48,7 @@ import org.waveprotocol.box.server.rpc.WaveClientServlet;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
+import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
 import org.xmpp.component.ComponentException;
 
@@ -86,6 +88,12 @@ public class ServerMain {
     accountStore.initializeAccountStore();
     AccountStoreHolder.init(accountStore,
         injector.getInstance(Key.get(String.class, Names.named("wave_server_domain"))));
+
+    // Initialize the SignerInfoStore
+    CertPathStore certPathStore = injector.getInstance(CertPathStore.class);
+    if (certPathStore instanceof SignerInfoStore) {
+      ((SignerInfoStore)certPathStore).initializeSignerInfoStore();
+    }
 
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
 

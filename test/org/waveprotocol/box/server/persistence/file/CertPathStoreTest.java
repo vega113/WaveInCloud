@@ -43,7 +43,7 @@ public class CertPathStoreTest extends CertPathStoreTestBase {
 
   @Override
   protected CertPathStore newCertPathStore() {
-    return new FileCertPathStore(path.getAbsolutePath());
+    return new FileSignerInfoStore(path.getAbsolutePath());
   }
 
   @Override

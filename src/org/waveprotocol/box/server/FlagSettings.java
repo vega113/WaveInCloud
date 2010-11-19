@@ -85,16 +85,16 @@ public class FlagSettings {
   @Flag(name = "xmpp_jid")
   private static String xmppJid;
 
-  @Flag(name = "cert_path_store_type",
-      description = "Type of persistence to use for the Certificate Storage",
+  @Flag(name = "signer_info_store_type",
+      description = "Type of persistence to use for the SignerInfo Storage",
       defaultValue = "memory")
-  private static String certPathStoreType;
+  private static String signerInfoStoreType;
 
-  @Flag(name = "cert_path_store_directory",
-      description = "Location on disk where the certificate store lives. Must be writeable by the "
-          + "wave-in-a-box process. Only used by file-based certificate store.",
+  @Flag(name = "signer_info_store_directory",
+      description = "Location on disk where the signer info store lives. Must be writeable by the "
+          + "wave-in-a-box process. Only used by file-based signer info store.",
       defaultValue = "_certificates")
-  private static String certPathStoreDirectory;
+  private static String signerInfoStoreDirectory;
 
   @Flag(name = "attachment_store_type",
       description = "Type of persistence store to use for attachments", defaultValue = "disk")

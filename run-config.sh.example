@@ -55,12 +55,12 @@ WAVESERVER_DISABLE_VERIFICATION=false
 WAVESERVER_DISABLE_SIGNER_VERIFICATION=true
 
 # Settings for the different persistence stores. Currently supported: memory, file, mongodb
-CERT_PATH_STORE_TYPE=memory
+SIGNER_INFO_STORE_TYPE=memory
 
 # The location where signer info certificate data is stored on disk. This should be changed.
-# Note: This is only used when using the file certificate store. It is ignored
+# Note: This is only used when using the file signer info store. It is ignored
 # for other data store types.
-CERT_PATH_STORE_DIRECTORY=_certificates
+SIGNER_INFO_STORE_DIRECTORY=_certificates
 
 # Currently supported attachment types: mongodb, disk
 ATTACHMENT_STORE_TYPE=disk

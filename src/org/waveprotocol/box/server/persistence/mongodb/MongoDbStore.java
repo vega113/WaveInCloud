@@ -42,8 +42,8 @@ import org.waveprotocol.box.server.authentication.PasswordDigest;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.AttachmentStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.persistence.SignerInfoStore;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
-import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
@@ -74,7 +74,7 @@ import java.util.logging.Logger;
  * @author josephg@gmail.com (Joseph Gentle)
  *
  */
-public final class MongoDbStore implements CertPathStore, AttachmentStore, AccountStore {
+public final class MongoDbStore implements SignerInfoStore, AttachmentStore, AccountStore {
 
   private static final String ACCOUNT_COLLECTION = "account";
   private static final String ACCOUNT_HUMAN_DATA_FIELD = "human";
@@ -102,6 +102,11 @@ public final class MongoDbStore implements CertPathStore, AttachmentStore, Accou
 
   MongoDbStore(DB database) {
     this.database = database;
+  }
+
+  @Override
+  public void initializeSignerInfoStore() throws PersistenceException {
+    // Nothing to initialize
   }
 
   @Override

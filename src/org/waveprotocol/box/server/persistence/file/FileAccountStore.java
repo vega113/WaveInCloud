@@ -59,63 +59,8 @@ public class FileAccountStore implements AccountStore {
 
   @Override
   public void initializeAccountStore() throws PersistenceException {
-    File baseDir = new File(accountStoreBasePath);
-    
-    // Make sure accountStoreBasePath exists.
-    if (!baseDir.exists()) {
-      // It doesn't so try and create it.
-      if (!baseDir.mkdirs()) {
-        throw new PersistenceException("Configured account store directory ("
-            + accountStoreBasePath + ") doesn't exist and could not be created!");
-      }
-    }
-    
-    // Make sure accountStoreBasePath is a directory.
-    if (!baseDir.isDirectory()) {
-      throw new PersistenceException("Configured account store path ("
-          + accountStoreBasePath + ") isn't a directory!");
-    }
-    
-    // Make sure we can read accounts by trying to read one of the account files.
-    File[] files = baseDir.listFiles(new FilenameFilter() {
-      @Override
-      public boolean accept(File dir, String name) {
-        return name.endsWith(ACCOUNT_FILE_EXTENSION);
-      }
-    });
-
-    if (files == null) {
-      throw new PersistenceException("Configured account store directory ("
-          + accountStoreBasePath + ") does not appear to be readable!");
-    }
-
-    /*
-     * If file list isn't empty, try opening the first file in the list to make sure it
-     * is readable. If the first file is readable, then it is likely that the rest will
-     * be readable as well.
-     */
-    if (files.length > 0) {
-      try {
-        FileInputStream file = new FileInputStream(files[0]);
-        file.read();
-      } catch (IOException e) {
-        throw new PersistenceException("Failed to read '" + files[0].getName()
-            + "' in configured account store directory '" + accountStoreBasePath
-            + "'. The directory's contents do not appear to be readable.", e);
-      }
-    }
-    
-    // Make sure accountStoreBasePath is a writable.
-    try {
-      File tmp = File.createTempFile("tempInitialization", ".bugus_account", baseDir);
-      FileOutputStream stream = new FileOutputStream(tmp);
-      stream.write(new byte[]{'H','e','l','l','o'});
-      stream.close();
-      tmp.delete();
-    } catch (IOException e) {
-      throw new PersistenceException("Configured account store directory ("
-          + accountStoreBasePath + ") does not appear to be writable!", e);
-    }
+    FileUtils.performDirectoryChecks(accountStoreBasePath, ACCOUNT_FILE_EXTENSION, "account store",
+        LOG);
   }
   
   @Override
@@ -160,25 +105,10 @@ public class FileAccountStore implements AccountStore {
         + ACCOUNT_FILE_EXTENSION;
   }
   
-  /*
-   * This is here instead of in a utility class so that a more useful error message
-   * can be generated.
-   */
-  private void closeAndIgnoreException(Closeable closeable) {
-    if (closeable != null) {
-      try {
-        closeable.close();
-      } catch (IOException e) {
-        // This should never happen in practice. But just in case... log it.
-        LOG.warning("Failed to close account data file!", e);
-      }
-    }
-  }
-  
   private AccountData readAccount(ParticipantId id) throws PersistenceException {
+    File accountFile = new File(participantIdToFileName(id));
     FileInputStream file = null;
     try {
-      File accountFile = new File(participantIdToFileName(id));
       if (!accountFile.exists()) {
         return null;
       }
@@ -186,26 +116,26 @@ public class FileAccountStore implements AccountStore {
       ProtoAccountData data = ProtoAccountData.newBuilder().mergeFrom(file).build();
       return ProtoAccountDataSerializer.deserialize(data);
     } catch (IOException e) {
-      LOG.severe("Failed to read account data from disk!", e);
+      LOG.severe("Failed to read account data from file: " + accountFile.getAbsolutePath(), e);
       throw new PersistenceException(e);
     } finally {
-      closeAndIgnoreException(file);
+      FileUtils.closeAndIgnoreException(file, accountFile, LOG);
     }
   }
   
   private void writeAccount(AccountData account) throws PersistenceException {
+    File accountFile = new File(participantIdToFileName(account.getId()));
     OutputStream file = null;
     try {
-      File accountFile = new File(participantIdToFileName(account.getId()));
       file = new FileOutputStream(accountFile);
       ProtoAccountData data = ProtoAccountDataSerializer.serialize(account);
       file.write(data.toByteArray());
       file.flush();
     } catch (IOException e) {
-      LOG.severe("Failed to write account data to disk!", e);
+      LOG.severe("Failed to write account data to file: " + accountFile.getAbsolutePath(), e);
       throw new PersistenceException(e);
     } finally {
-      closeAndIgnoreException(file);
+      FileUtils.closeAndIgnoreException(file, accountFile, LOG);
     }
   }
 }

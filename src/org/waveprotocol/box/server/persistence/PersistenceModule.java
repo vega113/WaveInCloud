@@ -24,7 +24,7 @@ import com.google.inject.name.Named;
 
 import org.waveprotocol.box.server.persistence.file.FileAccountStore;
 import org.waveprotocol.box.server.persistence.file.FileAttachmentStore;
-import org.waveprotocol.box.server.persistence.file.FileCertPathStore;
+import org.waveprotocol.box.server.persistence.file.FileSignerInfoStore;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
 import org.waveprotocol.box.server.persistence.mongodb.MongoDbProvider;
 import org.waveprotocol.wave.crypto.CertPathStore;
@@ -45,7 +45,7 @@ import org.waveprotocol.wave.crypto.CertPathStore;
  */
 public class PersistenceModule extends AbstractModule {
 
-  private final String certPathStoreType;
+  private final String signerInfoStoreType;
 
   private final String attachmentStoreType;
 
@@ -54,10 +54,10 @@ public class PersistenceModule extends AbstractModule {
   private MongoDbProvider mongoDbProvider;
 
   @Inject
-  public PersistenceModule(@Named("cert_path_store_type") String certPathStoreType,
+  public PersistenceModule(@Named("signer_info_store_type") String signerInfoStoreType,
       @Named("attachment_store_type") String attachmentStoreType,
       @Named("account_store_type") String accountStoreType) {
-    this.certPathStoreType = certPathStoreType;
+    this.signerInfoStoreType = signerInfoStoreType;
     this.attachmentStoreType = attachmentStoreType;
     this.accountStoreType = accountStoreType;
   }
@@ -84,16 +84,16 @@ public class PersistenceModule extends AbstractModule {
    * properties.
    */
   private void bindCertPathStore() {
-    if (certPathStoreType.equalsIgnoreCase("memory")) {
+    if (signerInfoStoreType.equalsIgnoreCase("memory")) {
       bind(CertPathStore.class).to(MemoryStore.class).in(Singleton.class);
     } else if (accountStoreType.equalsIgnoreCase("file")) {
-      bind(CertPathStore.class).to(FileCertPathStore.class).in(Singleton.class);
-    } else if (certPathStoreType.equalsIgnoreCase("mongodb")) {
+      bind(CertPathStore.class).to(FileSignerInfoStore.class).in(Singleton.class);
+    } else if (signerInfoStoreType.equalsIgnoreCase("mongodb")) {
       MongoDbProvider mongoDbProvider = getMongoDbProvider();
       bind(CertPathStore.class).toInstance(mongoDbProvider.provideMongoDbStore());
     } else {
       throw new RuntimeException(
-          "Invalid certificate path store type: '" + certPathStoreType + "'");
+          "Invalid certificate path store type: '" + signerInfoStoreType + "'");
     }
   }
 

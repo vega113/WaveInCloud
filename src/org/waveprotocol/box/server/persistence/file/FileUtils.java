@@ -21,13 +21,19 @@ import com.google.gxp.com.google.common.base.Preconditions;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.util.Pair;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
@@ -192,5 +198,87 @@ public class FileUtils {
     }
 
     return dir.getAbsoluteFile();
+  }
+  
+  /**
+   * Close the closeable and log, but ignore, any exception thrown.
+   */
+  public static void closeAndIgnoreException(Closeable closeable, File file, Log LOG) {
+    if (closeable != null) {
+      try {
+        closeable.close();
+      } catch (IOException e) {
+        // This should never happen in practice. But just in case... log it.
+        LOG.warning("Failed to close file: " + file.getAbsolutePath(), e);
+      }
+    }
+  }
+
+  /**
+   * Create dir if it doesn't exist, and perform checks to make sure that the dir's contents are
+   * listable, that files can be created in the dir, and that files in the dir are readable.
+   */
+  public static void performDirectoryChecks(String dir, final String extension, String dirType,
+      Log LOG) throws PersistenceException {
+    File baseDir = new File(dir);
+    
+    // Make sure the dir exists.
+    if (!baseDir.exists()) {
+      // It doesn't so try and create it.
+      if (!baseDir.mkdirs()) {
+        throw new PersistenceException(String.format(
+            "Configured %s directory (%s) doesn't exist and could not be created!", dirType, dir));
+      }
+    }
+    
+    // Make sure the dir is a directory.
+    if (!baseDir.isDirectory()) {
+      throw new PersistenceException(String.format(
+          "Configured %s path (%s) isn't a directory!", dirType, dir));
+    }
+    
+    // Make sure we can read files by trying to read one of the files.
+    File[] files = baseDir.listFiles(new FilenameFilter() {
+      @Override
+      public boolean accept(File dir, String name) {
+        return name.endsWith(extension);
+      }
+    });
+
+    if (files == null) {
+      throw new PersistenceException(String.format(
+          "Configured %s directory (%s) does not appear to be readable!", dirType, dir));
+    }
+
+    /*
+     * If file list isn't empty, try opening the first file in the list to make sure it
+     * is readable. If the first file is readable, then it is likely that the rest will
+     * be readable as well.
+     */
+    if (files.length > 0) {
+      try {
+        FileInputStream file = new FileInputStream(files[0]);
+        file.read();
+      } catch (IOException e) {
+        throw new PersistenceException(
+            String.format(
+              "Failed to read '%s' in configured %s directory '%s'. "
+              + "The directory's contents do not appear to be readable.",
+              dirType, files[0].getName(), dir),
+            e);
+      }
+    }
+    
+    // Make sure the dir is writable.
+    try {
+      File tmp = File.createTempFile("tempInitialization", ".temp", baseDir);
+      FileOutputStream stream = new FileOutputStream(tmp);
+      stream.write(new byte[]{'H','e','l','l','o'});
+      stream.close();
+      tmp.delete();
+    } catch (IOException e) {
+      throw new PersistenceException(String.format(
+          "Configured %s directory (%s) does not appear to be writable!", dirType, dir), e);
+    }
   }
 }

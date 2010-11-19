@@ -32,8 +32,8 @@ exec java $DEBUG_FLAGS \
   --http_frontend_public_address=$HTTP_SERVER_PUBLIC_ADDRESS \
   --http_frontend_addresses=$HTTP_SERVER_ADDRESSES \
   --enable_federation=$ENABLE_FEDERATION \
-  --cert_path_store_type=$CERT_PATH_STORE_TYPE \
-  --cert_path_store_directory=$CERT_PATH_STORE_DIRECTORY \
+  --signer_info_store_type=$SIGNER_INFO_STORE_TYPE \
+  --signer_info_store_directory=$SIGNER_INFO_STORE_DIRECTORY \
   --attachment_store_type=$ATTACHMENT_STORE_TYPE \
   --attachment_store_directory=$ATTACHMENT_STORE_DIRECTORY \
   --account_store_type=$ACCOUNT_STORE_TYPE \

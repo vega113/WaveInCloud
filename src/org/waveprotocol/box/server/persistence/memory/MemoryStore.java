@@ -19,6 +19,8 @@ package org.waveprotocol.box.server.persistence.memory;
 
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.persistence.SignerInfoStore;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.DefaultCertPathStore;
 import org.waveprotocol.wave.crypto.SignatureException;
@@ -42,7 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author ljvderijk@google.com (Lennard de Rijk)
  *
  */
-public class MemoryStore implements CertPathStore, AccountStore {
+public class MemoryStore implements SignerInfoStore, AccountStore {
 
   private final CertPathStore certPathStore;
 
@@ -52,7 +54,12 @@ public class MemoryStore implements CertPathStore, AccountStore {
   }
 
   @Override
-  public SignerInfo getSignerInfo(byte[] signerId) {
+  public void initializeSignerInfoStore() throws PersistenceException {
+    // Nothing to initialize
+  }
+
+  @Override
+  public SignerInfo getSignerInfo(byte[] signerId) throws SignatureException {
     return certPathStore.getSignerInfo(signerId);
   }
 

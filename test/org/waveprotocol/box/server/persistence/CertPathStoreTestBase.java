@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.waveserver.testing.Certificates;
 import org.waveprotocol.wave.crypto.CertPathStore;
+import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 
@@ -64,7 +65,7 @@ public abstract class CertPathStoreTestBase extends TestCase {
     checkCertificateExists(exampleSignerInfo, certPathStore);
   }
 
-  public void testNotExistingSignerIdGivesNull() {
+  public void testNotExistingSignerIdGivesNull() throws SignatureException {
     assertNull("Expected Null for a non-existing Signer Id",
         newCertPathStore().getSignerInfo(new byte[1]));
   }
@@ -78,7 +79,8 @@ public abstract class CertPathStoreTestBase extends TestCase {
    * @param certPathStore the {@link CertPathStore} to retrieve the certificates
    *        from.
    */
-  private void checkCertificateExists(SignerInfo signerInfo, CertPathStore certPathStore) {
+  private void checkCertificateExists(SignerInfo signerInfo, CertPathStore certPathStore)
+      throws SignatureException {
     List<X509Certificate> retrievedCerts =
         certPathStore.getSignerInfo(signerInfo.getSignerId()).getCertificates();
     assertEquals(signerInfo.getCertificates(), retrievedCerts);

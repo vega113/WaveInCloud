@@ -30,6 +30,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.apache.commons.codec.binary.Hex;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.crypto.CertPathStore;
@@ -197,10 +198,21 @@ public class CertificateManagerImpl implements CertificateManager {
 
   @Override
   public synchronized ProtocolSignerInfo retrieveSignerInfo(ByteString signerId) {
-    SignerInfo signerInfo = certPathStore.getSignerInfo(signerId.toByteArray());
-    // null is acceptable for retrieveSignerInfo.  The user of the certificate manager should call
-    // prefetchDeltaSignerInfo for the mechanism to actually populate the certificate manager.
-    return signerInfo == null ? null : signerInfo.toProtoBuf();
+    SignerInfo signerInfo;
+    try {
+      signerInfo = certPathStore.getSignerInfo(signerId.toByteArray());
+      // null is acceptable for retrieveSignerInfo.  The user of the certificate manager should call
+      // prefetchDeltaSignerInfo for the mechanism to actually populate the certificate manager.
+      return signerInfo == null ? null : signerInfo.toProtoBuf();
+    } catch (SignatureException e) {
+      /*
+       * TODO: This may result in the server endlessly requesting the signer info from the
+       * remote server, a more graceful failure needs to be implemented.
+       */
+      LOG.severe("Failed to retreive signer info for "
+          + new String(Hex.encodeHex(signerId.toByteArray())), e);
+      return null;
+    }
   }
 
   @Override
