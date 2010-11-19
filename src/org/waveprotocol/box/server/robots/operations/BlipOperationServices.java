@@ -53,6 +53,7 @@ import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
  * <li>{@link OperationType#BLIP_CREATE_CHILD}</li>
  * <li>{@link OperationType#WAVELET_APPEND_BLIP}</li>
  * <li>{@link OperationType#DOCUMENT_APPEND_INLINE_BLIP}</li>
+ * <li>{@link OperationType#DOCUMENT_APPEND_MARKUP}</li>
  * <li>{@link OperationType#DOCUMENT_INSERT_INLINE_BLIP}</li>
  * <li>{@link OperationType#DOCUMENT_INSERT_INLINE_BLIP_AFTER_ELEMENT}</li>
  * <li>{@link OperationType#BLIP_DELETE}</li>.
@@ -87,6 +88,9 @@ public class BlipOperationServices implements OperationService {
         break;
       case DOCUMENT_APPEND_INLINE_BLIP:
         appendInlineBlip(operation, context, participant, wavelet, conversation);
+        break;
+      case DOCUMENT_APPEND_MARKUP:
+        appendMarkup(operation, context, participant, wavelet, conversation);
         break;
       case DOCUMENT_INSERT_INLINE_BLIP:
         insertInlineBlip(operation, context, participant, wavelet, conversation);
@@ -222,6 +226,40 @@ public class BlipOperationServices implements OperationService {
     processBlipCreatedEvent(operation, context, participant, conversation, newBlip);
   }
 
+  /**
+   * Implementation for the {@link OperationType#DOCUMENT_APPEND_MARKUP}
+   * method. It appends markup within the blip specified in
+   * the operation.
+   *
+   * @param operation the operation to execute.
+   * @param context the context of the operation.
+   * @param participant the participant performing this operation.
+   * @param wavelet the wavelet to operate on.
+   * @param conversation the conversation to operate on.
+   * @throws InvalidRequestException if the operation fails to perform
+   */
+  private void appendMarkup(OperationRequest operation, OperationContext context,
+      ParticipantId participant, ObservableWavelet wavelet, ObservableConversation conversation)
+      throws InvalidRequestException {
+    Preconditions.checkArgument(
+        OperationUtil.getOperationType(operation) == OperationType.DOCUMENT_APPEND_MARKUP,
+        "Unsupported operation " + operation);
+
+    String content = OperationUtil.getRequiredParameter(operation, ParamsProperty.CONTENT);
+    String blipId = OperationUtil.getRequiredParameter(operation, ParamsProperty.BLIP_ID);
+    ConversationBlip convBlip = context.getBlip(conversation, blipId);
+
+    // Create builder from xml content.
+    XmlStringBuilder markupBuilder = XmlStringBuilder.createFromXmlString(content);
+    
+    // Append the new markup to the blip doc.
+    Document doc = convBlip.getContent();
+    LineContainers.appendLine(doc, markupBuilder);
+
+    // Report success.
+    context.constructResponse(operation, Maps.<ParamsProperty, Object> newHashMap());
+  }
+  
   /**
    * Implementation for the {@link OperationType#DOCUMENT_INSERT_INLINE_BLIP}
    * method. It inserts an inline blip at the location specified in the

@@ -41,6 +41,8 @@ import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
 import org.waveprotocol.wave.model.document.Doc;
 import org.waveprotocol.wave.model.document.Document;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 import org.waveprotocol.wave.model.document.util.DocHelper;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.Point;
@@ -156,6 +158,93 @@ public class BlipOperationServicesTest extends TestCase {
     assertEquals("New blip should be the second blip in the root thread", newBlip, it.next());
   }
 
+  public void testAppendBadMarkup() throws Exception {
+    // Set markup with different end tag.
+    String markup = "<custom>"+NEW_BLIP_CONTENT+"</diffcustom>";
+    
+    OperationContextImpl context = helper.getContext();
+    ObservableConversation conversation =
+        context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
+
+    // Append the custom markup to the newly created blip.
+    ConversationBlip markupBlip = conversation.getRootThread().appendBlip();
+
+    OperationRequest operation =
+        new OperationRequest(OperationType.DOCUMENT_APPEND_MARKUP.method(), OPERATION_ID,
+            WAVE_ID, WAVELET_ID, markupBlip.getId(), Parameter.of(ParamsProperty.CONTENT, 
+                markup));
+
+    try {
+      service.execute(operation, context, ALEX);
+      
+      fail("Bad Markup should have generated error in service execution.");
+    } catch(IllegalArgumentException e) {
+      // Good.
+    }
+  }
+  
+  public void testAppendCustomMarkup() throws Exception {
+    String markup = "<custom>this is custom markup</custom>";
+    
+    OperationContextImpl context = helper.getContext();
+    ObservableConversation conversation =
+        context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
+
+    // Append the custom markup to the newly created blip.
+    ConversationBlip markupBlip = conversation.getRootThread().appendBlip();
+
+    OperationRequest operation =
+        new OperationRequest(OperationType.DOCUMENT_APPEND_MARKUP.method(), OPERATION_ID,
+            WAVE_ID, WAVELET_ID, markupBlip.getId(), Parameter.of(ParamsProperty.CONTENT, 
+                markup));
+
+    service.execute(operation, context, ALEX);
+
+    JsonRpcResponse response = context.getResponse(OPERATION_ID);
+    assertFalse("CustomMarkup generated error in service execution.", response.isError());
+
+    // The xml in new blip should match custom markup.
+    String actualContent = markupBlip.getContent().toXmlString();
+    assertTrue("Expected the new blip to contain the custom markup as specified in the " + 
+        "operation. actualcontent: " + actualContent, actualContent.contains(markup));
+  }
+  
+  /**
+   * Validates the behavior when a caller invokes the DOCUMENT_APPEND_MARKUP
+   * without actually passing in xml markup (so just the text).  The behavior
+   * should be to create a default wave line element, so the scenario is:
+   *
+   * input: "Hello World"
+   * output: <line></line>Hello World
+   */
+  public void testAppendLineMarkup() throws Exception {
+    // Just insert text. should create <line></line>Text.
+    String markup = NEW_BLIP_CONTENT;
+    
+    OperationContextImpl context = helper.getContext();
+    ObservableConversation conversation =
+        context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
+
+    // Append the text markup to the newly created blip.
+    DocInitialization blipInitContent = new DocInitializationBuilder().build();
+    ConversationBlip markupBlip = conversation.getRootThread().appendBlip(blipInitContent);
+    
+    OperationRequest operation =
+        new OperationRequest(OperationType.DOCUMENT_APPEND_MARKUP.method(), OPERATION_ID,
+            WAVE_ID, WAVELET_ID, markupBlip.getId(), Parameter.of(ParamsProperty.CONTENT, 
+                markup));
+
+    service.execute(operation, context, ALEX);
+
+    JsonRpcResponse response = context.getResponse(OPERATION_ID);
+    assertFalse("LineMarkup generated error in service execution.", response.isError());
+    
+    // The output should now include the default <line/> element.
+    String lineContent = markupBlip.getContent().toXmlString();
+    assertTrue("Expected the blip to append the default wave <line/> element. " + 
+        "actual content: " + lineContent, lineContent.contains("<line/>"+markup));
+  }  
+  
   public void testAppendInlineBlip() throws Exception {
     OperationContextImpl context = helper.getContext();
     ObservableConversation conversation =
