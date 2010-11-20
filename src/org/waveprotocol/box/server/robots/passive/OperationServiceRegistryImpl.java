@@ -50,6 +50,7 @@ public final class OperationServiceRegistryImpl extends AbstractOperationService
     register(OperationType.BLIP_CREATE_CHILD, BlipOperationServices.create());
     register(OperationType.BLIP_DELETE, BlipOperationServices.create());
     register(OperationType.DOCUMENT_APPEND_INLINE_BLIP, BlipOperationServices.create());
+    register(OperationType.DOCUMENT_APPEND_MARKUP, BlipOperationServices.create());
     register(OperationType.DOCUMENT_INSERT_INLINE_BLIP, BlipOperationServices.create());
     register(OperationType.DOCUMENT_INSERT_INLINE_BLIP_AFTER_ELEMENT,
         BlipOperationServices.create());
