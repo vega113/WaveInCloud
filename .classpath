@@ -63,7 +63,6 @@
 	<classpathentry kind="lib" path="third_party/test/junit/junit.jar"/>
 	<classpathentry kind="lib" path="third_party/test/junit/src.jar"/>
 	<classpathentry kind="lib" path="third_party/test/mockito/mockito-all-1.8.2.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/testing.jar" sourcepath="third_party/runtime/wave-libraries/testing-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/commons_httpclient/commons-httpclient-3.1.jar" sourcepath="third_party/runtime/commons_httpclient/commons-httpclient-3.1-src.zip"/>
 	<classpathentry kind="lib" path="third_party/runtime/commons_logging/commons-logging-1.1.1.jar" sourcepath="third_party/runtime/commons_logging/commons-logging-1.1.1-sources.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/jetty/jetty-client-7.1.6.v20100715.jar"/>
@@ -79,19 +78,8 @@
 	<classpathentry kind="lib" path="third_party/runtime/guava/guava-r07.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/stringtemplate/antlr.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/stringtemplate/stringtemplate.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/api.jar" sourcepath="third_party/runtime/wave-libraries/api-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/client-common.jar" sourcepath="third_party/runtime/wave-libraries/client-common-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/client-scheduler.jar" sourcepath="third_party/runtime/wave-libraries/client-scheduler-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/client.jar" sourcepath="third_party/runtime/wave-libraries/client-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/common.jar" sourcepath="third_party/runtime/wave-libraries/common-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/communication.jar" sourcepath="third_party/runtime/wave-libraries/communication-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/concurrencycontrol.jar" sourcepath="third_party/runtime/wave-libraries/concurrencycontrol-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/crypto.jar" sourcepath="third_party/runtime/wave-libraries/crypto-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/federation.jar" sourcepath="third_party/runtime/wave-libraries/federation-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/media.jar" sourcepath="third_party/runtime/wave-libraries/media-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/model.jar" sourcepath="third_party/runtime/wave-libraries/model-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/proto.jar" sourcepath="third_party/runtime/wave-libraries/proto-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-libraries/waveserver.jar" sourcepath="third_party/runtime/wave-libraries/waveserver-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/socketio/socketio-java.jar" sourcepath="third_party/runtime/socketio/socketio-java-src.jar"/>
+	<classpathentry kind="lib" path="third_party/test/jmock/jmock-2.5.1.jar"/>
+	<classpathentry kind="lib" path="third_party/test/jmock/jmock-junit3-2.5.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

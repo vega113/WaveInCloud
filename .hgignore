@@ -14,11 +14,13 @@ build
 build-proto.properties
 dist
 gen
+junitvmwatcher*.properties
 run-config\.sh
 \.git
 out
 *~
 test_out
 TEST-*\.xml
+war/org.waveprotocol.*
 war/waveharness
 war/webclient

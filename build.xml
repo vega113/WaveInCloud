@@ -12,43 +12,36 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-
-  Author: dhanji@google.com (Dhanji R. Prasanna)
+ *
+ * Author: dhanji@google.com (Dhanji R. Prasanna)
+ *         anorth@google.com (Alex North)
  -->
 <project name="waveinabox" default="dist">
-  <description>Google Wave Reference Implementation</description>
+  <description>Wave in a Box</description>
 
   <property file="build.properties"/>
 
-  <!-- Classpath of external dependencies -->
-  <path id="libpath">
-    <fileset dir="${lib.runtime}">
-      <include name="*/*.jar"/>
-    </fileset>
-    <fileset dir="${lib.codegen}">
-      <include name="*/*.jar"/>
-    </fileset>
-    <!-- Hamcrest, JUnit, and Mockito included for some of the classes in src/**/testing/ . Maybe these shouldn't be in src after all? -->
-    <fileset dir="${lib.test}">
-      <include name="hamcrest/*.jar"/>
-      <include name="junit/*.jar"/>
-      <include name="mockito/*.jar"/>
-    </fileset>
-  </path>
+  <!-- Import common build defs and macros. -->
+  <import file="${build.common.path}"/>
 
-  <!-- Classpath for testing only -->
-  <path id="test.libpath">
-    <fileset dir="${lib.test}">
-      <include name="*.jar"/>
-      <include name="*/*.jar"/>
-    </fileset>
-  </path>
+  <!-- Pull in the Emma tasks -->
+  <taskdef resource="emma_ant.properties" classpathref="test.libpath"/>
+
+  <!-- Import macros -->
+  <import file="${build.macros.path}"/>
 
   <property name="gwt.args" value=""/>
+
+  <!-- Standard time properties and a timestamp pattern -->
+  <tstamp>
+    <format property="DSTAMP_INT" pattern="-yyyy-MM-dd"/>
+  </tstamp>
+  <property name="release.name" value="wave-libraries${DSTAMP_INT}.zip"/>
 
   <target name="clean" description="Cleans up the build artifacts and temporary directories">
     <delete dir="${build.dir}"/>
     <delete dir="${dist.dir}"/>
+    <delete dir="${doc.dir}"/>
     <delete dir="${gen.dir}"/>
     <delete dir="${test.out.dir}"/>
     <delete dir="war/waveharness"/>
@@ -58,7 +51,7 @@
   <target name="init">
     <mkdir dir="${build.src.dir}"/>
     <mkdir dir="${build.test.dir}"/>
-    <mkdir dir="${instr.dir}"/>
+    <mkdir dir="${coverage.dir}"/>
     <mkdir dir="${dist.dir}"/>
     <mkdir dir="${staging.dir}"/>
     <mkdir dir="${dep}"/>
@@ -90,6 +83,8 @@
   </target>
   <target name="compile" depends="proto_compile, gen_gxp, compile_dep" unless="skip.compile">
     <depend srcdir="${src.dir}" destdir="${build.src.dir}" closure="yes"/>
+    <!-- Delegate to libraries build for o.w.wave. -->
+    <ant antfile="build-libraries.xml" target="compile" />
     <javac sourcepath="" destdir="${build.src.dir}" debug="on" target="1.5"
       includeAntRuntime="false">
       <src path="${src.dir}" />
@@ -155,9 +150,10 @@
         <path refid="test.libpath"/>
         <pathelement location="${build.src.dir}"/>
       </classpath>
-      <compilerarg value="-Werror"/>
+      <!-- TODO(anorth): enable -Werror after fixing warnings in o.w.wave. -->
+      <!--compilerarg value="-Werror"/>
       <compilerarg value="-Xlint:all"/>
-      <compilerarg value="-Xlint:-serial"/>
+      <compilerarg value="-Xlint:-serial"/-->
       <!-- Deprecation warnings are generated for .class files for some
            compilers, e.g. org.hamcrest.Matcher -> org.hamcrest.BaseMatcher. -->
       <compilerarg value="-Xlint:-deprecation"/>
@@ -173,73 +169,55 @@
     </copy>
   </target>
 
+  <!-- ===== Tests ==== -->
+
   <target name="test" depends="compile_tests" description=
     "Runs all the unit tests in the project excluding external persistence">
 
     <!-- Tests are run in a single new VM, when forkmode is set to once -->
-    <junit fork="yes" forkmode="once" showoutput="no" failureProperty="test.failed">
-      <classpath>
-        <path refid="libpath"/>
-        <path refid="test.libpath"/>
-        <pathelement location="${build.src.dir}"/>
-        <pathelement location="${build.test.dir}"/>
-      </classpath>
-      <formatter type="xml"/>
-      <batchtest todir="${test.out.dir}">
-        <fileset dir="${test.dir}">
-          <include name="**/*Test.java"/>
-          <!-- Exclude all persistence tests -->
-          <exclude name="**/server/persistence/**"/>
-        </fileset>
-        <fileset dir="${test.dir}">
-          <!-- Include the persistence tests that aren't run elsewhere -->
-          <include name="**/server/persistence/memory/*Test.java"/>
-          <include name="**/server/persistence/file/*Test.java"/>
-        </fileset>
-      </batchtest>
-    </junit>
-
-    <junitreport todir="${test.out.dir}">
-      <fileset dir="${test.out.dir}">
-        <include name="TEST-*.xml"/>
+    <runtests forkmode="once" coverage="true">
+      <fileset dir="${test.dir}">
+        <include name="**/*Test.java"/>
+        <exclude name="**/*GwtTest.java"/>
+        <exclude name="**/*LargeTest.java"/>
+        <!-- Exclude all persistence tests -->
+        <exclude name="**/server/persistence/**"/>
+        <!-- Include the persistence tests that aren't run elsewhere -->
+        <include name="**/server/persistence/memory/*Test.java"/>
+        <include name="**/server/persistence/file/*Test.java"/>
       </fileset>
-      <report format="frames" todir="${test.out.dir}"/>
-    </junitreport>
-
-    <fail message="Tests failed. Check log and/or reports."
-      if="test.failed" />
+    </runtests>
   </target>
 
-  <!-- =================================
-          target: test_mongodb
-         ================================= -->
-    <target name="test_mongodb" depends="compile_tests" description="Runs the MongoDb tests">
-      <junit fork="yes" showoutput="no" failureProperty="test.failed">
-        <classpath>
-          <path refid="libpath"/>
-          <path refid="test.libpath"/>
-          <pathelement location="${build.src.dir}"/>
-          <pathelement location="${build.test.dir}"/>
-        </classpath>
-        <formatter type="xml"/>
-        <batchtest todir="${test.out.dir}">
-          <fileset dir="${test.dir}">
-            <!-- Include the mongoDb tests -->
-            <include name="**/server/persistence/mongodb/**/*Test.java"/>
-          </fileset>
-        </batchtest>
-      </junit>
+  <target name="test_large" depends="compile_tests" description="Runs large tests (slow)">
+    <runtests forkmode="perTest" coverage="true">
+      <fileset dir="${test.dir}">
+        <include name="**/*LargeTest.java"/>
+      </fileset>
+    </runtests>
+  </target>
 
-      <junitreport todir="${test.out.dir}">
-        <fileset dir="${test.out.dir}">
-          <include name="TEST-*.xml"/>
-        </fileset>
-        <report format="frames" todir="${test.out.dir}"/>
-      </junitreport>
+  <target name="test_gwt" depends="compile_tests" description="Runs GWT tests (slow)">
+    <!-- Fork just once due to GWT test failure in shared JVM -->
+    <!-- EMMA disabled due to GWT incompatibility -->
+    <runtests forkmode="once" coverage="false">
+      <fileset dir="${test.dir}">
+        <include name="**/*GwtTest.java"/>
+      </fileset>
+    </runtests>
+  </target>
 
-      <fail message="Tests failed. Check log and/or reports."
-        if="test.failed" />
-    </target>
+  <target name="test_mongodb" depends="compile_tests" description="Runs the MongoDb tests">
+    <runtests forkmode="once" coverage="true">
+      <fileset dir="${test.dir}">
+        <!-- Include the mongoDb tests -->
+        <include name="**/server/persistence/mongodb/**/*Test.java"/>
+      </fileset>
+    </runtests>
+  </target>
+
+  <target name="test_all" depends="compile_tests, test, test_gwt, test_large, test_mongodb"
+      description="Run all tests, including GWT"/>
 
   <!-- compiles pre-generated gwt proto sources; does NOT generate protos -->
   <target name="compile_proto_gwt_dep">
@@ -369,7 +347,12 @@
     <touch file="${dep}/stage"/>
   </target>
 
-  <target name="dist" depends="test, dist-server, dist-client-console, compile_gwt" description="Compiles, tests and assembles artifacts">
+  <target name="dist" depends="test, dist-libraries, dist-server, dist-client-console, compile_gwt"
+      description="Compiles, tests and assembles artifacts">
+  </target>
+
+  <target name="dist-libraries" depends="compile">
+    <ant antfile="build-libraries.xml" target="dist" />
   </target>
 
   <!-- dist-api is broken due to non-runnable dependencies in the waveserver directory.  TODO: fix. -->
@@ -491,12 +474,25 @@
     </junit>
   </target>
 
+  <target name="release" depends="dist" description="Creates a zip for a release">
+    <delete file="${dist.dir}/${release.name}"/>
+    <zip destfile="${dist.dir}/${release.name}">
+      <zipfileset dir="${dist.dir}" includes="*.jar"/>
+      <zipfileset dir="${basedir}" includes="COPYING"/>
+    </zip>
+  </target>
+
   <target name="doc" depends="stage" description="Builds the Java documentation for the mode, protocol, and Wave in a Box">
-    <javadoc sourcepath="${src.dir}" destdir="${docs.dir}" linksource="yes">
+    <javadoc sourcepath="${src.dir}" destdir="${docs.dir}" linksource="yes" author="yes" protected="yes"
+        windowtitle="${ant.project.name} Documentation">
       <classpath>
         <pathelement location="${staging.dir}" />
+        <path refid="libpath"/>
+        <path location="${build.proto.dir}"/>
       </classpath>
-    </javadoc>
+      <doctitle>${ant.project.name}</doctitle>
+      <footer>&lt;a href="http://www.waveprotocol.org/"&gt;Wave Project&lt;a/&gt;</footer>
+    </javadoc> 
   </target>
 
 </project>

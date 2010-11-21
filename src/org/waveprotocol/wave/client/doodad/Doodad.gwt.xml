@@ -1,0 +1,12 @@
+<module>
+<inherits name="com.google.gwt.user.User" />
+<inherits name="org.waveprotocol.wave.client.editor.Editor" />
+<inherits name="org.waveprotocol.wave.model.conversation.Conversation" />
+<inherits name="org.waveprotocol.wave.media.model.Attachment" />
+<inherits name="org.waveprotocol.wave.client.gadget.Gadget" />
+<inherits name="org.waveprotocol.wave.client.widget.button.Button" />
+<inherits name="org.waveprotocol.wave.client.widget.progress.Progress" />
+
+<source path=""/>
+
+</module>

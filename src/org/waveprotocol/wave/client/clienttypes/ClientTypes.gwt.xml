@@ -1,0 +1,45 @@
+<module><inherits name="com.google.gwt.user.User" />
+<!-- Define the property 'client.type' that is used for selecting different entry points -->
+<!-- This code is adapted from GWT's I18N.gwt.xml -->
+<define-property name="client.type" values="default,embedded,small,print"/>
+<property-provider name="client.type">
+<![CDATA[
+// NOTE: UNTESTED.
+try {
+var clientType;
+
+// Look for the client type as a url argument
+if (clientType == null) {
+  var args = location.search;
+  var startValue = args.indexOf("client.type");
+  if (startValue >= 0) {
+    var value = args.substring(startValue);
+    var begin = value.indexOf("=") + 1;
+    var end = value.indexOf("&");
+    if (end == -1) {
+      end = value.length;
+    }
+    clientType = value.substring(begin, end);
+  }
+}
+
+if (clientType == null) {
+  // Look for the client type on the web page
+  clientType = __gwt_getMetaProperty("client.type")
+}
+
+if (clientType == null) {
+  return "default";
+}
+
+if (!__gwt_isKnownPropertyValue("client.type",  clientType)) {
+  clientType = "default";
+}
+return clientType;
+} catch(e) {
+alert("Unexpected exception in client type detection, using default: " + e);
+return "default";
+}
+]]>
+</property-provider>
+</module>
