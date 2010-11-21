@@ -70,7 +70,7 @@ ATTACHMENT_STORE_TYPE=disk
 # for other data store types.
 ATTACHMENT_STORE_DIRECTORY=_attachments
 
-# Currently supported Account store types: memory, file, mongodb
+# Currently supported Account store types: fake, memory, file, mongodb
 ACCOUNT_STORE_TYPE=memory
 
 # The location where accounts are stored on disk. This should be changed.

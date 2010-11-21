@@ -30,7 +30,7 @@ WAVESERVER_DISABLE_VERIFICATION=true
 WAVESERVER_DISABLE_SIGNER_VERIFICATION=true
 
 # Settings for the different persistence stores. Currently supported: 'memory' and 'mongodb'
-CERT_PATH_STORE_TYPE=memory
+SIGNER_INFO_STORE_TYPE=memory
 
 # Currently supported attachment types: mongodb, disk
 ATTACHMENT_STORE_TYPE=disk
@@ -40,7 +40,7 @@ ATTACHMENT_STORE_TYPE=disk
 # for other data store types.
 ATTACHMENT_STORE_DIRECTORY=_attachments
 
-# Currently supported Account store types: memory, mongodb
+# Currently supported Account store types: fake, memory, file, mongodb
 ACCOUNT_STORE_TYPE=memory
 
 # Set true to use Socket.IO instead of raw WebSockets in the webclient.
