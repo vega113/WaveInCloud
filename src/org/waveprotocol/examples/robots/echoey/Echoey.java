@@ -24,6 +24,7 @@ import com.google.wave.api.Annotation;
 import com.google.wave.api.Blip;
 import com.google.wave.api.Context;
 import com.google.wave.api.Wavelet;
+import com.google.wave.api.event.AnnotatedTextChangedEvent;
 import com.google.wave.api.event.DocumentChangedEvent;
 import com.google.wave.api.event.WaveletBlipCreatedEvent;
 
@@ -57,21 +58,28 @@ public class Echoey extends AbstractRobot {
     return "http://www.waveprotocol.org/";
   }
 
-  @Capability(contexts = {Context.ALL})
+  @Capability(contexts = {Context.SELF, Context.SIBLINGS})
   @Override
   public void onWaveletBlipCreated(WaveletBlipCreatedEvent event) {
     Blip blip = event.getNewBlip();
-
     if (!isShadowBlip(blip)) {
       createShadowBlip(blip);
     }
   }
 
-  @Capability(contexts = {Context.ALL})
+  @Capability(contexts = {Context.SELF, Context.SIBLINGS})
   @Override
   public void onDocumentChanged(DocumentChangedEvent event) {
     Blip blip = event.getBlip();
+    if (!isShadowBlip(blip)) {
+      createOrUpdateShadowBlip(blip);
+    }
+  }
 
+  @Capability(contexts = {Context.SELF, Context.SIBLINGS})
+  @Override
+  public void onAnnotatedTextChanged(AnnotatedTextChangedEvent event) {
+    Blip blip = event.getBlip();
     if (!isShadowBlip(blip)) {
       createOrUpdateShadowBlip(blip);
     }
