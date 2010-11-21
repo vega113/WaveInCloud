@@ -208,7 +208,7 @@ public final class IndexWave {
   private static long numOpsInDeltas(Iterable<TransformedWaveletDelta> deltas) {
     long sum = 0;
     for (TransformedWaveletDelta d : deltas) {
-      sum += d.getOperations().size();
+      sum += d.size();
     }
     return sum;
   }
@@ -249,7 +249,7 @@ public final class IndexWave {
     List<TransformedWaveletDelta> participantDeltas = Lists.newArrayList();
     for (TransformedWaveletDelta delta : deltas) {
       List<WaveletOperation> participantOps = Lists.newArrayList();
-      for (WaveletOperation op : delta.getOperations()) {
+      for (WaveletOperation op : delta) {
         if (op instanceof AddParticipant || op instanceof RemoveParticipant) {
           participantOps.add(op);
         }

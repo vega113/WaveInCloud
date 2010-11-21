@@ -32,7 +32,6 @@ import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
-import org.waveprotocol.wave.concurrencycontrol.common.Delta;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder;
@@ -246,7 +245,7 @@ public class WebClientBackend {
         WaveletOperationContext woc =
             new WaveletOperationContext(new ParticipantId(protobufDelta.getAuthor()),
                 Constants.NO_TIMESTAMP, 1);
-        Delta deltaAndVersion =
+        TransformedWaveletDelta deltaAndVersion =
             WaveletOperationSerializer.deserialize(protobufDelta,
                 CoreWaveletOperationSerializer.deserialize(protobufDelta.getHashedVersion()), woc);
 
@@ -258,7 +257,7 @@ public class WebClientBackend {
             applicationTimestamp);
 
         if (isIndexWave(waveletName)) { // only apply the hacky ops to index wave.
-          for (WaveletOperation op : oldDelta.getOperations()) {
+          for (WaveletOperation op : oldDelta) {
             try {
               ConversionUtil.toCoreWaveletOperation(op).apply(oldWaveletData);
             } catch (OperationException e) {

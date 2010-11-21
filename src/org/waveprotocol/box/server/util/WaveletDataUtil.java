@@ -85,7 +85,7 @@ public final class WaveletDataUtil {
     WaveletOperation lastOp = null;
     int opsApplied = 0;
     try {
-      for (WaveletOperation op : delta.getOperations()) {
+      for (WaveletOperation op : delta) {
         lastOp = op;
         List<? extends WaveletOperation> reverseOp = op.applyAndReturnReverse(wavelet);
         reverseOps.addAll(reverseOp);
@@ -95,7 +95,7 @@ public final class WaveletDataUtil {
       // Deltas are atomic, so roll back all operations that were successful
       rollbackWaveletOperations(wavelet, reverseOps);
       throw new OperationException("Only applied " + opsApplied + " of "
-          + delta.getOperations().size() + " operations at version " + wavelet.getVersion()
+          + delta.size() + " operations at version " + wavelet.getVersion()
           + ", rolling back, failed op was " + lastOp, e);
     }
   }

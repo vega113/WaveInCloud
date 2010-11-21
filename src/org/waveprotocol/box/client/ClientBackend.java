@@ -799,7 +799,7 @@ public class ClientBackend {
       }
 
       // All operations were successful so put them in the list of events.
-      for (WaveletOperation op : delta.getOperations()) {
+      for (WaveletOperation op : delta) {
         events.add(new WaveletEventData(delta.getAuthor().getAddress(), wavelet, op));
       }
     }

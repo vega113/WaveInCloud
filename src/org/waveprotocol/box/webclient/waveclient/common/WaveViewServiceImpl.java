@@ -28,7 +28,6 @@ import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
-import org.waveprotocol.wave.concurrencycontrol.common.Delta;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
@@ -40,6 +39,8 @@ import org.waveprotocol.wave.model.id.URIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.Pair;
@@ -166,16 +167,17 @@ public class WaveViewServiceImpl implements WaveViewService {
 
   @Override
   public String viewSubmit(final WaveletName waveletName,
-      final Delta delta,
+      final WaveletDelta delta,
       final String channelId,
       final SubmitCallback callback) {
     ProtocolHashedVersion waveletVersion;
 
-    if (delta.getVersion() == 0) {
+    if (delta.getTargetVersion().getVersion() == 0) {
       waveletVersion = CoreWaveletOperationSerializer.serialize(
           hashedVersionFactory.createVersionZero(waveletName));
     } else {
-      waveletVersion = versionToHistoryHashMap.get(waveletName).get(delta.getVersion());
+      waveletVersion =
+          versionToHistoryHashMap.get(waveletName).get(delta.getTargetVersion().getVersion());
     }
     LOG.info("Submitting to " + waveletName + " version " + waveletVersion);
     ProtocolSubmitRequest submitRequest = ProtocolSubmitRequest.create();
@@ -257,7 +259,7 @@ public class WaveViewServiceImpl implements WaveViewService {
       final ProtocolHashedVersion commitNotice, final ProtocolHashedVersion resultingVersion,
       String channelId) {
 
-    ArrayList<Delta> deltaList = new ArrayList<Delta>();
+    ArrayList<TransformedWaveletDelta> deltaList = new ArrayList<TransformedWaveletDelta>();
     for (int i = 0; i < protobufDeltaList.size(); i++) {
       ProtocolHashedVersion deltaEndVersion = (i < protobufDeltaList.size() - 1)
           ? protobufDeltaList.get(i + 1).getHashedVersion()
@@ -266,7 +268,7 @@ public class WaveViewServiceImpl implements WaveViewService {
       WaveletOperationContext woc =
           new WaveletOperationContext(new ParticipantId(protobufDelta.getAuthor()),
               Constants.NO_TIMESTAMP, 1);
-      Delta delta =
+      TransformedWaveletDelta delta =
           WaveletOperationSerializer.deserialize(protobufDelta,
               CoreWaveletOperationSerializer.deserialize(deltaEndVersion), woc);
       updateVersionMap(waveletName, deltaEndVersion);

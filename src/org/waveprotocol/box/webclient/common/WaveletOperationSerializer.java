@@ -18,7 +18,9 @@
 package org.waveprotocol.box.webclient.common;
 
 
-import org.waveprotocol.wave.concurrencycontrol.common.Delta;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.ProtocolWaveletOperation;
@@ -39,6 +41,7 @@ import org.waveprotocol.wave.model.operation.wave.BlipOperationVisitor;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.SubmitBlip;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
@@ -54,25 +57,6 @@ import java.util.Map;
  */
 public class WaveletOperationSerializer {
   private WaveletOperationSerializer() {
-  }
-
-  /**
-   * Serialize a {@link Delta} as a {@link ProtocolWaveletDelta} at a specific version.
-   *
-   * @param waveletDelta to serialize
-   * @param version version at which the delta applies
-   * @return serialized protocol buffer wavelet delta
-   */
-  public static ProtocolWaveletDelta serialize(Delta waveletDelta, HashedVersion version) {
-    ProtocolWaveletDelta.Builder protobufDelta = ProtocolWaveletDelta.newBuilder();
-
-    for (WaveletOperation waveletOp : waveletDelta) {
-      protobufDelta.addOperation(serialize(waveletOp));
-    }
-
-    protobufDelta.setAuthor(waveletDelta.get(0).getContext().getCreator().getAddress());
-    protobufDelta.setHashedVersion(CoreWaveletOperationSerializer.serialize(version));
-    return protobufDelta.build();
   }
 
   /**
@@ -264,21 +248,25 @@ public class WaveletOperationSerializer {
   }
 
   /**
-   * Deserializes a {@link ProtocolWaveletDelta} as a {@link Delta}
+   * Deserializes a {@link ProtocolWaveletDelta} as a {@link TransformedWaveletDelta}
    *
    * @param protocolDelta protocol buffer wavelet delta to deserialize
    * @return deserialized wavelet delta and version
    */
-  public static Delta deserialize(ProtocolWaveletDelta protocolDelta, HashedVersion postVersion,
-      WaveletOperationContext ctx) {
-    Delta delta = new Delta((long) protocolDelta.getHashedVersion().getVersion(),
-            postVersion);
-
-    for (ProtocolWaveletOperation op : protocolDelta.getOperationList()) {
-      delta.add(deserialize(op, ctx));
-    }
-
-    return delta;
+  public static TransformedWaveletDelta deserialize(final ProtocolWaveletDelta protocolDelta,
+      HashedVersion postVersion, final WaveletOperationContext ctx) {
+    Iterable<WaveletOperation> ops =
+        Iterables.transform(protocolDelta.getOperationList(),
+            new Function<ProtocolWaveletOperation, WaveletOperation>() {
+              @Override
+              public WaveletOperation apply(ProtocolWaveletOperation op) {
+                return deserialize(op, ctx);
+              }
+            });
+    // TODO(anorth) include the application timestamp when it's plumbed
+    // through correctly.
+    return new TransformedWaveletDelta(ParticipantId.ofUnsafe(protocolDelta.getAuthor()),
+        postVersion, 0L, ops);
   }
 
   /**

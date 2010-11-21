@@ -609,14 +609,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
               CoreWaveletOperationSerializer.serialize(transformedDelta.getResultingVersion());
           LOG.info("Submit result for " + waveletName + " by "
               + transformedDelta.getAuthor() + " applied "
-              + transformedDelta.getOperations().size() + " ops at v: "
+              + transformedDelta.size() + " ops at v: "
               + transformedDelta.getAppliedAtVersion() + " t: "
               + transformedDelta.getApplicationTimestamp());
-          resultListener.onSuccess(transformedDelta.getOperations().size(), resultVersionProto,
+          resultListener.onSuccess(transformedDelta.size(), resultVersionProto,
               transformedDelta.getApplicationTimestamp());
 
           // This is always false right now since the current algorithm doesn't transform ops away.
-          if (transformedDelta.getOperations().isEmpty()) {
+          if (transformedDelta.isEmpty()) {
             return; // ignore the delta (don't publish it), it was transformed away
           }
 

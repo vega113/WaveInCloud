@@ -19,6 +19,7 @@ package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.gxp.com.google.common.collect.Iterables;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -110,9 +111,9 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       Preconditions.checkState(dupDelta.getAuthor().equals(transformed.getAuthor()),
           "Duplicate delta detected but mismatched author, expected %s found %s",
           transformed.getAuthor(), dupDelta.getAuthor());
-      Preconditions.checkState(dupDelta.getOperations().equals(transformed.getOperations()),
+      Preconditions.checkState(Iterables.elementsEqual(dupDelta, transformed),
           "Duplicate delta detected but mismatched ops, expected %s found %s",
-          transformed, dupDelta.getOperations());
+          transformed, dupDelta);
 
       return new WaveletDeltaRecord(existingDeltaBytes, dupDelta);
     }

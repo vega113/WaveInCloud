@@ -45,11 +45,11 @@ import org.waveprotocol.wave.model.conversation.ConversationListenerImpl;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
+import org.waveprotocol.wave.model.document.DocHandler;
+import org.waveprotocol.wave.model.document.ObservableDocument;
 import org.waveprotocol.wave.model.document.Doc.E;
 import org.waveprotocol.wave.model.document.Doc.N;
 import org.waveprotocol.wave.model.document.Doc.T;
-import org.waveprotocol.wave.model.document.DocHandler;
-import org.waveprotocol.wave.model.document.ObservableDocument;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent.AnnotationChanged;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -449,7 +449,7 @@ public class EventGenerator {
         long timestamp = 0L;
         conversationListener.deltaBegin(delta.getAuthor(), timestamp);
 
-        for (WaveletOperation op : delta.getOperations()) {
+        for (WaveletOperation op : delta) {
           // Check if we need to attach a doc handler.
           if ((op instanceof WaveletBlipOperation)) {
             attachDocHandler(conversation, op, docHandlers, capabilities, messages,

@@ -17,8 +17,8 @@
 package org.waveprotocol.box.webclient.waveclient.common;
 
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
-import org.waveprotocol.wave.concurrencycontrol.common.Delta;
 import org.waveprotocol.wave.model.id.WaveletId;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 
@@ -35,7 +35,7 @@ class WebClientWaveViewUpdate implements WaveViewService.WaveViewServiceUpdate {
   HashedVersion lastCommittedVersion = null;
   HashedVersion currentVersion = null;
   ObservableWaveletData waveletSnapshot = null;
-  List<Delta> deltaList = null;
+  List<TransformedWaveletDelta> deltaList = null;
   public boolean marker = false;
 
   public WebClientWaveViewUpdate() {
@@ -123,11 +123,11 @@ class WebClientWaveViewUpdate implements WaveViewService.WaveViewServiceUpdate {
   }
 
   @Override
-  public List<Delta> getDeltaList() {
+  public List<TransformedWaveletDelta> getDeltaList() {
     return deltaList;
   }
 
-  public WebClientWaveViewUpdate setDeltaList(final List<Delta> deltaList) {
+  public WebClientWaveViewUpdate setDeltaList(final List<TransformedWaveletDelta> deltaList) {
     this.deltaList = deltaList;
     return this;
   }

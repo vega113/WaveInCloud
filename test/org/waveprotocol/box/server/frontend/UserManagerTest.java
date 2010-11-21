@@ -134,7 +134,7 @@ public class UserManagerTest extends TestCase {
    */
   public void testUpdateSeveralDeltas() {
     // Check that test was set up correctly
-    assertEquals(2, DELTA.getOperations().size());
+    assertEquals(2, DELTA.size());
 
     HashedVersion v3 = HashedVersion.unsigned(3);
     TransformedWaveletDelta delta2 = new TransformedWaveletDelta(USER, v3, 0L,

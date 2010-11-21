@@ -109,7 +109,7 @@ public class CoreWaveletOperationSerializer {
   public static ProtocolWaveletDelta serialize(TransformedWaveletDelta delta) {
     ProtocolWaveletDelta.Builder protobufDelta = ProtocolWaveletDelta.newBuilder();
 
-    for (WaveletOperation waveletOp : delta.getOperations()) {
+    for (WaveletOperation waveletOp : delta) {
       protobufDelta.addOperation(serialize(waveletOp));
     }
     protobufDelta.setAuthor(delta.getAuthor().getAddress());

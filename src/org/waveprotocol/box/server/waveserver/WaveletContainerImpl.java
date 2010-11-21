@@ -257,10 +257,10 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       }
       TransformedWaveletDelta serverDelta = d.getValue();
       ParticipantId serverAuthor = serverDelta.getAuthor();
-      List<WaveletOperation> serverOps = Lists.newArrayList(serverDelta.getOperations());
+      List<WaveletOperation> serverOps = Lists.newArrayList(serverDelta);
       if (clientAuthor.equals(serverAuthor) && clientOps.equals(serverOps)) {
         // This is a duplicate, return the server delta.
-        return new WaveletDelta(serverAuthor, d.getKey(), serverDelta.getOperations());
+        return new WaveletDelta(serverAuthor, d.getKey(), serverDelta);
       }
       clientOps = transformOps(clientOps, serverOps);
     }
@@ -333,9 +333,9 @@ abstract class WaveletContainerImpl implements WaveletContainer {
         // we omit the hashes to avoid leaking them
         currentVersion.getVersion(), appliedAtVersion.getVersion());
     Preconditions.checkArgument(
-        appliedDelta.getOperationsApplied() == transformedDelta.getOperations().size());
+        appliedDelta.getOperationsApplied() == transformedDelta.size());
     Preconditions.checkArgument(
-        transformedDelta.getOperations().size() != 0, "empty delta");
+        transformedDelta.size() != 0, "empty delta");
 
     if (waveletData == null) {
       Preconditions.checkState(currentVersion.getVersion() == 0L, "CurrentVersion must be 0");

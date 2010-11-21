@@ -96,7 +96,7 @@ public class RobotsGateway implements WaveBus.Subscriber {
     Set<ParticipantId> currentAndNewParticipants = Sets.newHashSet(wavelet.getParticipants());
     for (TransformedWaveletDelta delta : deltas) {
       // Participants added or removed in this delta get the whole delta.
-      for (WaveletOperation op : delta.getOperations()) {
+      for (WaveletOperation op : delta) {
         if (op instanceof AddParticipant) {
           ParticipantId p = ((AddParticipant) op).getParticipantId();
           currentAndNewParticipants.add(p);

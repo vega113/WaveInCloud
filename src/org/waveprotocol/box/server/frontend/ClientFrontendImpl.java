@@ -372,7 +372,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
     for (int i = 0; i < newDeltas.size(); i++) {
       TransformedWaveletDelta delta = newDeltas.get(i);
       // Participants added or removed in this delta get the whole delta
-      for (WaveletOperation op : delta.getOperations()) {
+      for (WaveletOperation op : delta) {
         if (op instanceof AddParticipant) {
           ParticipantId p = ((AddParticipant) op).getParticipantId();
           remainingParticipants.add(p);

@@ -30,7 +30,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 /**
  * This class is used to serialize and deserialize {@link TransformedWavelwetDelta}
  * and {@link ProtoTransformedWavelwetDelta}
- * 
+ *
  * @author tad.glines@gmail.com (Tad Glines)
  */
 public class ProtoDeltaStoreDataSerializer {
@@ -44,7 +44,7 @@ public class ProtoDeltaStoreDataSerializer {
     builder.setResultingVersion(
         CoreWaveletOperationSerializer.serialize(delta.getResultingVersion()));
     builder.setApplicationTimestamp(delta.getApplicationTimestamp());
-    for (WaveletOperation op : delta.getOperations()) {
+    for (WaveletOperation op : delta) {
       builder.addOperation(CoreWaveletOperationSerializer.serialize(op));
     }
     return builder.build();

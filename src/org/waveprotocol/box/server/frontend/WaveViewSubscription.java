@@ -120,7 +120,7 @@ final class WaveViewSubscription {
       Set<Long> mySubmits = submittedVersions.get(waveletId);
 
       for (TransformedWaveletDelta delta : deltas) {
-        long deltaEndVersion = delta.getAppliedAtVersion() + delta.getOperations().size();
+        long deltaEndVersion = delta.getAppliedAtVersion() + delta.size();
         if (mySubmits.contains(deltaEndVersion)) {
           submittedVersions.remove(waveletId, deltaEndVersion);
         } else {

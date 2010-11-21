@@ -105,11 +105,10 @@ public class WaveletAndDeltas {
     // Go through everything in reverse order
     for (int i = deltas.size() - 1; i >= 0; i--) {
       TransformedWaveletDelta delta = deltas.get(i);
-      List<? extends WaveletOperation> ops = delta.getOperations();
       // Metadata such as the last modified ts will change due to the rollback
       // of operations.
-      for (int j = ops.size() - 1; j >= 0; j--) {
-        WaveletOperation op = ops.get(j);
+      for (int j = delta.size() - 1; j >= 0; j--) {
+        WaveletOperation op = delta.get(j);
         WaveletOperation inverseOp = WaveletOperationInverter.invert(op);
         inverseOps.add(inverseOp);
       }

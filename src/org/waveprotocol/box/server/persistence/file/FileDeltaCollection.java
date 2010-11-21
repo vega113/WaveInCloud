@@ -18,25 +18,19 @@
 package org.waveprotocol.box.server.persistence.file;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 import com.google.protobuf.ByteString;
 
-import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreData.ProtoTransformedWaveletDelta;
 import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreDataSerializer;
+import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreData.ProtoTransformedWaveletDelta;
 import org.waveprotocol.box.server.waveserver.AppliedDeltaUtil;
 import org.waveprotocol.box.server.waveserver.ByteStringMessage;
 import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
 import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.model.wave.Constants;
-import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -221,7 +215,7 @@ public class FileDeltaCollection implements DeltasAccess {
   public WaveletDeltaRecord getDeltaByEndVersion(long version) throws IOException {
     return seekToEndRecord(version) ? readRecord() : null;
   }
-  
+
   @Override
   public ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDelta(long version)
       throws IOException {
@@ -268,7 +262,7 @@ public class FileDeltaCollection implements DeltasAccess {
 
     for (WaveletDeltaRecord delta : deltas) {
       index.addDelta(delta.transformed.getAppliedAtVersion(),
-          delta.transformed.getOperations().size(), file.getFilePointer());
+          delta.transformed.size(), file.getFilePointer());
       writeDelta(delta);
       endVersion = delta.transformed.getResultingVersion();
     }
@@ -333,7 +327,7 @@ public class FileDeltaCollection implements DeltasAccess {
                 file.seek(nextPosition);
                 TransformedWaveletDelta transformed = readTransformedDeltaFromRecord();
                 nextRecord = Pair.of(Pair.of(transformed.getAppliedAtVersion(),
-                        transformed.getOperations().size()), nextPosition);
+                        transformed.size()), nextPosition);
                 nextPosition = file.getFilePointer();
               } catch (IOException e) {
                 // The next entry is invalid. There was probably a write error / crash.
@@ -348,7 +342,7 @@ public class FileDeltaCollection implements DeltasAccess {
     };
   }
 
-  /** 
+  /**
    * Seek to the start of a delta record. Returns false if the record doesn't exist.
    */
   private boolean seekToRecord(long version) throws IOException {
@@ -358,9 +352,9 @@ public class FileDeltaCollection implements DeltasAccess {
     return seekTo(offset);
   }
 
-  /** 
-   * Seek to the start of a delta record given its end version. 
-   * Returns false if the record doesn't exist. 
+  /**
+   * Seek to the start of a delta record given its end version.
+   * Returns false if the record doesn't exist.
    */
   private boolean seekToEndRecord(long version) throws IOException {
     Preconditions.checkArgument(version >= 0, "Version can't be negative");

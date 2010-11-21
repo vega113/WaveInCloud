@@ -31,7 +31,6 @@ import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.webclient.waveclient.common.SubmitResponseCallback;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
-import org.waveprotocol.wave.concurrencycontrol.common.Delta;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
@@ -43,6 +42,8 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletIdSerializer;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.CollectionUtils;
@@ -76,7 +77,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     private final ProtocolWaveletUpdate update;
 
     // Cache expensive values
-    private List<Delta> deltas;
+    private List<TransformedWaveletDelta> deltas;
     private ObservableWaveletData snapshot;
 
     WaveViewServiceUpdateImpl(ProtocolWaveletUpdate update) {
@@ -109,7 +110,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     }
 
     @Override
-    public List<Delta> getDeltaList() {
+    public List<TransformedWaveletDelta> getDeltaList() {
       return deltas == null //
           ? deltas = deserialize(update.getAppliedDeltaArray(), update.getResultingVersion())
           : deltas;
@@ -177,15 +178,14 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     /**
      * Finds the most recent signed version for a delta.
      */
-    ProtocolHashedVersion getServerVersion(WaveletName wavelet, Delta delta) {
-      HashedVersion version;
-      if (delta.getVersion() == 0) {
+    ProtocolHashedVersion getServerVersion(WaveletName wavelet, WaveletDelta delta) {
+      if (delta.getTargetVersion().getVersion() == 0) {
         return serialize(HASHER.createVersionZero(wavelet));
       } else {
         ProtocolHashedVersion current = versions.get(wavelet);
         Preconditions.checkNotNull(current);
         double prevVersion = current.getVersion();
-        double deltaVersion = delta.getVersion();
+        double deltaVersion = delta.getTargetVersion().getVersion();
         if (deltaVersion != prevVersion) {
           throw new IllegalArgumentException(
               "Client delta expressed against non-server version.  Server version: " + prevVersion
@@ -244,8 +244,8 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   }
 
   @Override
-  public String viewSubmit(
-      final WaveletName wavelet, Delta delta, String channelId, final SubmitCallback callback) {
+  public String viewSubmit(final WaveletName wavelet, WaveletDelta delta, String channelId,
+      final SubmitCallback callback) {
     ProtocolSubmitRequest submitRequest = ProtocolSubmitRequest.create();
     submitRequest.setWaveletName(serialize(wavelet));
     submitRequest.setDelta(serialize(wavelet, delta));
@@ -330,22 +330,22 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   // Serialization.
   //
 
-  private ProtocolWaveletDelta serialize(WaveletName wavelet, Delta delta) {
+  private ProtocolWaveletDelta serialize(WaveletName wavelet, WaveletDelta delta) {
     ProtocolWaveletDelta protocolDelta = ProtocolWaveletDelta.create();
     for (WaveletOperation op : delta) {
       protocolDelta.addOperation(WaveletOperationSerializer.serialize(op));
     }
-    // Swap the signed version for a hashed version.
+    protocolDelta.setAuthor(delta.getAuthor().getAddress());
     protocolDelta.setHashedVersion(versions.getServerVersion(wavelet, delta));
     return protocolDelta;
   }
 
-  private static List<Delta> deserialize(
+  private static List<TransformedWaveletDelta> deserialize(
       JsArray<ProtocolWaveletDelta> deltas, ProtocolHashedVersion end) {
     if (deltas == null) {
       return null;
     } else {
-      List<Delta> parsed = new ArrayList<Delta>();
+      List<TransformedWaveletDelta> parsed = new ArrayList<TransformedWaveletDelta>();
 
       for (int i = 0; i < deltas.length(); i++) {
         ProtocolHashedVersion thisEnd = //
@@ -357,7 +357,8 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     }
   }
 
-  private static Delta deserialize(ProtocolWaveletDelta delta, ProtocolHashedVersion end) {
+  private static TransformedWaveletDelta deserialize(ProtocolWaveletDelta delta,
+      ProtocolHashedVersion end) {
     ParticipantId author = new ParticipantId(delta.getAuthor());
     WaveletOperationContext woc = new WaveletOperationContext(author, Constants.NO_TIMESTAMP, 1);
     return WaveletOperationSerializer.deserialize(delta, deserialize(end), woc);
