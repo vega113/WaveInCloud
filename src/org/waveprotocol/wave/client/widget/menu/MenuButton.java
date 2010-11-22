@@ -20,7 +20,7 @@ package org.waveprotocol.wave.client.widget.menu;
 import com.google.gwt.user.client.Command;
 
 import org.waveprotocol.wave.client.widget.common.ButtonSwitch;
-import org.waveprotocol.wave.client.widget.popup.DropdownPopupPositioner;
+import org.waveprotocol.wave.client.widget.popup.AlignedPopupPositioner;
 import org.waveprotocol.wave.client.widget.popup.PopupEventListener;
 import org.waveprotocol.wave.client.widget.popup.PopupEventSourcer;
 import org.waveprotocol.wave.client.widget.popup.RelativePopupPositioner;
@@ -91,7 +91,7 @@ public final class MenuButton implements ButtonSwitch.Listener, Menu {
     button.setState(false);
 
     if (userPositioner == null) {
-      userPositioner = DropdownPopupPositioner.INSTANCE;
+      userPositioner = AlignedPopupPositioner.BELOW_RIGHT;
     }
 
     menu = new PopupMenu(button.getElement(), userPositioner);

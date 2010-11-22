@@ -21,6 +21,8 @@ package org.waveprotocol.wave.client.wavepanel.view;
  *
  */
 public interface IntrinsicParticipantView {
+  String getId();
+
   void setAvatar(String url);
   void setName(String name);
 }

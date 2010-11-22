@@ -20,6 +20,7 @@ import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
 import org.waveprotocol.wave.model.conversation.ConversationView;
+import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
@@ -60,7 +61,7 @@ public final class ViewIdMapper {
   public String threadOf(ConversationThread t) {
     return modelMapper.threadId(t) + "T";
   }
-  
+
   public String replyIndicatorOf(ConversationThread t) {
     return modelMapper.threadId(t) + "I";
   }
@@ -107,7 +108,7 @@ public final class ViewIdMapper {
     return baseId + "I";
   }
 
-  /** @return the base id of an anchor id. */
+  /** @return the base id of a view id. */
   private static String baseOf(String id) {
     return id.substring(0, id.length() - 1);
   }
@@ -126,5 +127,9 @@ public final class ViewIdMapper {
 
   public Conversation participantsOf(String domId) {
     return modelMapper.locateConversation(baseOf(domId));
+  }
+
+  public Pair<Conversation, ParticipantId> participantOf(String domId) {
+    return modelMapper.locateParticipant(baseOf(domId));
   }
 }

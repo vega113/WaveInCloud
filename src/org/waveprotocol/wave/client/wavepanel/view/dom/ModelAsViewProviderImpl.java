@@ -32,6 +32,7 @@ import org.waveprotocol.wave.client.wavepanel.view.ViewIdMapper;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
+import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
@@ -117,5 +118,10 @@ public class ModelAsViewProviderImpl implements ModelAsViewProvider {
   @Override
   public Conversation getParticipants(ParticipantsView participantsUi) {
     return viewIdMapper.participantsOf(participantsUi.getId());
+  }
+
+  @Override
+  public Pair<Conversation, ParticipantId> getParticipant(ParticipantView participantUi) {
+    return viewIdMapper.participantOf(participantUi.getId());
   }
 }

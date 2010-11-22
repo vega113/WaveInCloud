@@ -34,9 +34,7 @@ public class PositionUtil {
    * @return The s position at which the popup should appear.
    */
   public static int boundToScreenHorizontal(int x, int width) {
-    x = Math.min(x, Window.getClientWidth() - width - SCREEN_EDGE_PADDING_PIXELS);
-    x = Math.max(0, x);
-    return x;
+    return Math.min(Math.max(x, 0), Window.getClientWidth() - width - SCREEN_EDGE_PADDING_PIXELS);
   }
 
   /**
@@ -47,8 +45,6 @@ public class PositionUtil {
    * @return The y position at which the popup should appear.
    */
   public static int boundToScreenVertical(int y, int height) {
-    y = Math.min(y, Window.getClientHeight() - height - SCREEN_EDGE_PADDING_PIXELS);
-    y = Math.max(0, y);
-    return y;
+    return Math.min(Math.max(y, 0), Window.getClientHeight() - height - SCREEN_EDGE_PADDING_PIXELS);
   }
 }

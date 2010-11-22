@@ -25,6 +25,7 @@ import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
 import org.waveprotocol.wave.model.conversation.ConversationView;
 import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
 import org.waveprotocol.wave.model.util.StringMap;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -153,6 +154,20 @@ public final class ModelIdMapperImpl implements ModelIdMapper {
   @Override
   public Conversation locateConversation(String modelId) {
     return model.getConversation(restoreId(modelId));
+  }
+
+  @Override
+  public Pair<Conversation, ParticipantId> locateParticipant(String modelId) {
+    String longId = restoreId(modelId);
+    String[] parts = split(longId);
+
+    if (parts.length != 2) {
+      throw new IllegalArgumentException("Not a participant model id: " + modelId);
+    } else {
+      Conversation c = model.getConversation(parts[0]);
+      ParticipantId p = new ParticipantId(parts[1]);
+      return Pair.of(c, p);
+    }
   }
 
   private static String[] split(String domId) {

@@ -28,6 +28,7 @@ import org.waveprotocol.wave.client.wavepanel.view.ThreadView;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
+import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
@@ -71,4 +72,7 @@ public interface ModelAsViewProvider {
    *         participantsUi}.
    */
   Conversation getParticipants(ParticipantsView participantsUi);
+
+  /** @return the participant represented by {@code participantUi}. */
+  Pair<Conversation, ParticipantId> getParticipant(ParticipantView participantUi);
 }

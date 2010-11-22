@@ -25,7 +25,7 @@ import org.waveprotocol.wave.client.wavepanel.view.IntrinsicParticipantView;
  * DOM implementation of a participant.
  *
  */
-public final class ParticipantDomImpl implements IntrinsicParticipantView {
+public final class ParticipantDomImpl implements DomView, IntrinsicParticipantView {
   private final ImageElement self;
 
   ParticipantDomImpl(Element self) {
@@ -53,5 +53,29 @@ public final class ParticipantDomImpl implements IntrinsicParticipantView {
 
   void remove() {
     self.removeFromParent();
+  }
+
+  //
+  // DomView
+  //
+
+  @Override
+  public Element getElement() {
+    return self;
+  }
+
+  @Override
+  public String getId() {
+    return self.getId();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return DomViewHelper.equals(this, obj);
+  }
+
+  @Override
+  public int hashCode() {
+    return DomViewHelper.hashCode(this);
   }
 }

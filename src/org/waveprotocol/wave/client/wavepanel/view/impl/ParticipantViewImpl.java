@@ -18,6 +18,7 @@ package org.waveprotocol.wave.client.wavepanel.view.impl;
 
 import org.waveprotocol.wave.client.wavepanel.view.IntrinsicParticipantView;
 import org.waveprotocol.wave.client.wavepanel.view.ParticipantView;
+import org.waveprotocol.wave.client.widget.profile.ProfilePopupView;
 
 /**
  * Implements a participant view by delegating primitive state matters to a view
@@ -37,6 +38,8 @@ public final class ParticipantViewImpl<I extends IntrinsicParticipantView> // \u
    */
   public interface Helper<I> {
     void remove(I impl);
+
+    ProfilePopupView showParticipation(I impl);
   }
 
   public ParticipantViewImpl(Helper<? super I> helper, I impl) {
@@ -54,6 +57,11 @@ public final class ParticipantViewImpl<I extends IntrinsicParticipantView> // \u
   }
 
   @Override
+  public String getId() {
+    return impl.getId();
+  }
+
+  @Override
   public void setAvatar(String url) {
     impl.setAvatar(url);
   }
@@ -61,5 +69,10 @@ public final class ParticipantViewImpl<I extends IntrinsicParticipantView> // \u
   @Override
   public void setName(String name) {
     impl.setName(name);
+  }
+
+  @Override
+  public ProfilePopupView showParticipation() {
+    return helper.showParticipation(impl);
   }
 }

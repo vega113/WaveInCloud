@@ -23,7 +23,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.CssResource;
-import com.google.gwt.resources.client.CssResource.NotStrict;
 
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.uibuilder.BuilderHelper.Component;
@@ -42,7 +41,6 @@ public class BlipViewBuilder implements UiBuilder, IntrinsicBlipView {
   public interface Resources extends ClientBundle {
     /** CSS */
     @Source("Blip.css")
-    @NotStrict
     Css css();
   }
 

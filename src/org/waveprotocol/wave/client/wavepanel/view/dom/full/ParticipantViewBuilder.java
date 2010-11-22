@@ -49,6 +49,11 @@ public final class ParticipantViewBuilder implements IntrinsicParticipantView, U
   }
 
   @Override
+  public String getId() {
+    return id;
+  }
+
+  @Override
   public void setAvatar(String avatarUrl) {
     this.avatarUrl = avatarUrl;
   }

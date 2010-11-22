@@ -16,7 +16,11 @@
  */
 package org.waveprotocol.wave.client.wavepanel.view;
 
+import org.waveprotocol.wave.client.widget.profile.ProfilePopupView;
+
 /**
  */
 public interface ParticipantView extends View, IntrinsicParticipantView {
+
+  ProfilePopupView showParticipation();
 }

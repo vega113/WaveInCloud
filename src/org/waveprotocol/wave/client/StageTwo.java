@@ -120,6 +120,10 @@ public interface StageTwo {
   /** @return the provider of view objects given model objects. */
   ModelAsViewProvider getModelAsViewProvider();
 
+  /** @return the profile manager. */
+  ProfileManager getProfileManager();
+
+  /** @return the communication channel connector. */
   MuxConnector getConnector();
 
   /**
@@ -266,7 +270,8 @@ public interface StageTwo {
       return rpcScheduler == null ? rpcScheduler = createRpcScheduler() : rpcScheduler;
     }
 
-    protected final ProfileManager getProfileManager() {
+    @Override
+    public final ProfileManager getProfileManager() {
       return profileManager == null ? profileManager = createProfileManager() : profileManager;
     }
 

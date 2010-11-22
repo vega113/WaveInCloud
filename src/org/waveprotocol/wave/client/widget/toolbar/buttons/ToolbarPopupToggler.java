@@ -17,12 +17,11 @@
 
 package org.waveprotocol.wave.client.widget.toolbar.buttons;
 
-import org.waveprotocol.wave.client.widget.popup.DropdownPopupPositioner;
+import org.waveprotocol.wave.client.widget.popup.AlignedPopupPositioner;
 import org.waveprotocol.wave.client.widget.popup.PopupChromeFactory;
-import org.waveprotocol.wave.client.widget.popup.PopupFactory;
-
 import org.waveprotocol.wave.client.widget.popup.PopupEventListener;
 import org.waveprotocol.wave.client.widget.popup.PopupEventSourcer;
+import org.waveprotocol.wave.client.widget.popup.PopupFactory;
 import org.waveprotocol.wave.client.widget.popup.UniversalPopup;
 
 /**
@@ -90,7 +89,7 @@ public final class ToolbarPopupToggler implements ToolbarToggleButton.Listener, 
     assert activePopup == null;
     activePopup =
         PopupFactory.createPopup(toggleButton.hackGetWidget().getElement(),
-            DropdownPopupPositioner.INSTANCE, PopupChromeFactory.createPopupChrome(), true);
+            AlignedPopupPositioner.BELOW_RIGHT, PopupChromeFactory.createPopupChrome(), true);
     activePopup.associateWidget(toggleButton.hackGetWidget());
     activePopup.addPopupEventListener(this);
     listener.onPopupCreated(activePopup);

@@ -20,6 +20,7 @@ import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
 import org.waveprotocol.wave.model.conversation.ConversationView;
+import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
@@ -59,4 +60,7 @@ public interface ModelIdMapper {
 
   /** @return the conversation identified by {@code modelId}, if there is one. */
   Conversation locateConversation(String modelId);
+
+  /** @return the participant identified by {@code modelId}, if there is one. */
+  Pair<Conversation, ParticipantId> locateParticipant(String modelId);
 }

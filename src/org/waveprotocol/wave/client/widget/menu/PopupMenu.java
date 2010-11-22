@@ -34,7 +34,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 import org.waveprotocol.wave.client.common.webdriver.DebugClassHelper;
-import org.waveprotocol.wave.client.widget.popup.DropdownPopupPositioner;
+import org.waveprotocol.wave.client.widget.popup.AlignedPopupPositioner;
 import org.waveprotocol.wave.client.widget.popup.PopupChromeFactory;
 import org.waveprotocol.wave.client.widget.popup.PopupEventListener;
 import org.waveprotocol.wave.client.widget.popup.PopupFactory;
@@ -222,7 +222,7 @@ public class PopupMenu implements Menu {
   @Override
   public Pair<Menu, MenuItem> createSubMenu(String title, boolean enabled) {
     PopupMenuItem item = addItem(title, null, enabled, false);
-    final PopupMenu menu = new PopupMenu(item.getElement(), DropdownPopupPositioner.INSTANCE);
+    final PopupMenu menu = new PopupMenu(item.getElement(), AlignedPopupPositioner.BELOW_RIGHT);
     item.setCommand(new Command() {
       @Override
       public void execute() {

@@ -16,6 +16,7 @@
  */
 package org.waveprotocol.wave.client.wavepanel.impl.edit;
 
+import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
@@ -36,7 +37,8 @@ public final class EditActionsBuilder {
    * @return the feature.
    */
   public static Actions createAndInstall(WavePanelImpl panel, ModelAsViewProvider views,
-      EditSession edit, BlipQueueRenderer blipQueue, FocusFramePresenter focus) {
+      ProfileManager profiles, EditSession edit, BlipQueueRenderer blipQueue,
+      FocusFramePresenter focus) {
     focus.addListener(edit);
     if (panel.hasContents()) {
       edit.onInit();
@@ -46,7 +48,7 @@ public final class EditActionsBuilder {
 
     Actions actions = new Actions(views, blipQueue, focus, edit);
     EditController.create(actions, panel.getKeyRouter());
-    ParticipantController.install(panel, views);
+    ParticipantController.install(panel, views, profiles);
     return actions;
   }
 }

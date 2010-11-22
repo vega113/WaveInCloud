@@ -76,7 +76,11 @@ class DesktopUniversalPopup extends FlowPanel implements UniversalPopup {
    * Inject the stylesheet only once, and only when the class is used.
    */
   static {
-    StyleInjector.inject(Resources.INSTANCE.css().getText());
+    // Injection must be synchronous (not the default behaviour of
+    // asynchronous), because positioning the popup involves synchronously
+    // measuring its layout properties.
+    boolean synchronous = true;
+    StyleInjector.inject(Resources.INSTANCE.css().getText(), synchronous);
   }
 
   /** Time that the fade-in animation should take */
@@ -351,7 +355,4 @@ class DesktopUniversalPopup extends FlowPanel implements UniversalPopup {
   public void setMaskEnabled(boolean isMaskEnabled) {
     this.isMaskEnabled = isMaskEnabled;
   }
-
-
-
 }

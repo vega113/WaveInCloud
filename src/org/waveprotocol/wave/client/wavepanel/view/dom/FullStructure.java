@@ -63,6 +63,9 @@ import org.waveprotocol.wave.client.wavepanel.view.impl.ParticipantsViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.ReplyBoxViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.RootThreadViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.TopConversationViewImpl;
+import org.waveprotocol.wave.client.widget.popup.AlignedPopupPositioner;
+import org.waveprotocol.wave.client.widget.profile.ProfilePopupView;
+import org.waveprotocol.wave.client.widget.profile.ProfilePopupWidget;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
@@ -429,7 +432,22 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
 
         @Override
         public void remove(ParticipantDomImpl impl) {
+          Element container = impl.getElement().getParentElement();
           impl.remove();
+
+          // Kick Webkit, because of its incremental layout bugs.
+          if (UserAgent.isWebkit()) {
+            // Erase layout. Querying getOffsetParent() forces layout.
+            container.getStyle().setDisplay(Display.NONE);
+            container.getOffsetParent();
+            // Restore layout.
+            container.getStyle().clearDisplay();
+          }
+        }
+
+        @Override
+        public ProfilePopupView showParticipation(ParticipantDomImpl impl) {
+          return new ProfilePopupWidget(impl.getElement(), AlignedPopupPositioner.BELOW_RIGHT);
         }
       };
 
@@ -448,7 +466,7 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
           DomViewHelper.attachBefore(impl.getParticipantContainer(), impl.getSimpleMenu(), t);
           // Kick Webkit, because of its incremental layout bugs.
           if (UserAgent.isWebkit()) {
-            // Erase layout.
+            // Erase layout. Querying getOffsetParent() forces layout.
             impl.getElement().getStyle().setDisplay(Display.NONE);
             impl.getElement().getOffsetParent();
             // Restore layout.
@@ -602,7 +620,7 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
         inlineThreadHelper, InlineThreadDomImpl.of(e)) : null;
   }
 
-  private ContinuationIndicatorViewImpl<ContinuationIndicatorDomImpl> 
+  private ContinuationIndicatorViewImpl<ContinuationIndicatorDomImpl>
       asContinuationIndicatorUnchecked(Element e) {
     return e != null ? new ContinuationIndicatorViewImpl<ContinuationIndicatorDomImpl>(
         inlineThreadIndicatorHelper, ContinuationIndicatorDomImpl.of(e)) : null;

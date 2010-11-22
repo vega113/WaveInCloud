@@ -15,6 +15,7 @@
  */
 package org.waveprotocol.wave.client;
 
+import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
 import org.waveprotocol.wave.client.util.ClientFlags;
@@ -97,9 +98,11 @@ public interface StageThree{
       BlipQueueRenderer blipQueue = stageTwo.getBlipQueue();
       ContentDocumentSinkFactory documents = stageTwo.getDocumentRegistry();
       ParticipantId user = stageTwo.getSignedInUser();
+      ProfileManager profiles = stageTwo.getProfileManager();
 
       EditSession edit = new EditSession(views, documents, panel.getGwtPanel());
-      Actions actions = EditActionsBuilder.createAndInstall(panel, views, edit, blipQueue, focus);
+      Actions actions =
+          EditActionsBuilder.createAndInstall(panel, views, profiles, edit, blipQueue, focus);
       MenuController.install(actions, panel);
       EditToolbar.install(panel, edit, user);
       ReplyIndicatorController.install(actions, edit, panel);
