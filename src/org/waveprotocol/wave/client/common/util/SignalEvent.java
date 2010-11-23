@@ -152,7 +152,7 @@ public interface SignalEvent {
      * Whether the "command" key is the control key (as opposed to the meta key).
      */
     // TODO(danilatos): Reconcile this with the value in SignalKeyLogic.
-    private static final boolean COMMAND_IS_CTRL = !GWT.isScript() && !UserAgent.isMac();
+    private static final boolean COMMAND_IS_CTRL = !UserAgent.isMac();
 
     /**
      * Check if the given event has the enum value's modifiers pressed.
