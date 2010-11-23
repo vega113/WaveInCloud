@@ -82,11 +82,21 @@
 
 .participant {
   float: left;
+  cursor: pointer;
+}
+
+/* Name-based rendering. */
+div.participant {
+  line-height: 42px;
+  margin: 4px 0 0 12px;
+}
+
+/* Avatar-based rendering. */
+img.participant {
   height: 40px;
   width: 40px;
   border: 1px solid #cad0d9;
   margin: 4px 0 0 4px;
-  cursor: pointer;
 }
 
 .toggleGroup {

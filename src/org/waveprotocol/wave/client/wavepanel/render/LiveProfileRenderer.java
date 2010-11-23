@@ -112,11 +112,6 @@ class LiveProfileRenderer implements ProfileListener {
 
   public void addParticipantToMonitor(ParticipantId id) {
     addProfileToMonitor(PARTICIPANT_FAKE_BLIP_ID, id);
-
-    ParticipantView participantUi = viewProvider.getParticipantView(conversation, id);
-    if (participantUi != null) {
-      render(profileManager.getProfile(id), participantUi);
-    }
   }
 
   public void removeParticipantToMonitor(ParticipantId id) {
@@ -202,6 +197,6 @@ class LiveProfileRenderer implements ProfileListener {
    */
   private void render(Profile profile, ParticipantView participantUi) {
     participantUi.setAvatar(profile.getImageUrl());
-    participantUi.setName(profile.getAddress());
+    participantUi.setName(profile.getFullName());
   }
 }

@@ -30,7 +30,7 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.ContinuationIndicatorViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.ReplyBoxViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.InlineThreadViewBuilder;
-import org.waveprotocol.wave.client.wavepanel.view.dom.full.ParticipantViewBuilder;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.ParticipantNameViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.ParticipantsViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.RootThreadViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.ViewFactory;
@@ -137,7 +137,8 @@ public final class FullDomRenderer implements RenderingRules<UiBuilder> {
   public UiBuilder render(Conversation conversation, ParticipantId participant) {
     Profile profile = profileManager.getProfile(participant);
     String id = viewIdMapper.participantOf(conversation, participant);
-    ParticipantViewBuilder participantUi = ParticipantViewBuilder.create(id);
+    // Use ParticipantAvatarViewBuilder for avatars.
+    ParticipantNameViewBuilder participantUi = ParticipantNameViewBuilder.create(id);
     participantUi.setAvatar(profile.getImageUrl());
     participantUi.setName(profile.getFullName());
     return participantUi;

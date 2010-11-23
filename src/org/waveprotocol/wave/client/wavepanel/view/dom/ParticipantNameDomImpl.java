@@ -17,7 +17,6 @@
 package org.waveprotocol.wave.client.wavepanel.view.dom;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.ImageElement;
 
 import org.waveprotocol.wave.client.wavepanel.view.IntrinsicParticipantView;
 
@@ -25,26 +24,24 @@ import org.waveprotocol.wave.client.wavepanel.view.IntrinsicParticipantView;
  * DOM implementation of a participant.
  *
  */
-public final class ParticipantDomImpl implements DomView, IntrinsicParticipantView {
-  private final ImageElement self;
+public final class ParticipantNameDomImpl implements DomView, IntrinsicParticipantView {
+  private final Element self;
 
-  ParticipantDomImpl(Element self) {
+  ParticipantNameDomImpl(Element self) {
     this.self = self.cast();
   }
 
-  static ParticipantDomImpl of(Element e) {
-    return new ParticipantDomImpl(e);
+  static ParticipantNameDomImpl of(Element e) {
+    return new ParticipantNameDomImpl(e);
   }
 
   @Override
   public void setAvatar(String url) {
-    self.setSrc(url);
   }
 
   @Override
   public void setName(String name) {
-    self.setTitle(name);
-    self.setAlt(name);
+    self.setInnerText(name);
   }
 
   //

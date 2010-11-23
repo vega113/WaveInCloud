@@ -30,7 +30,7 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.full.ParticipantsViewBuil
  * UiBuilder for a participant.
  *
  */
-public final class ParticipantViewBuilder implements IntrinsicParticipantView, UiBuilder {
+public final class ParticipantAvatarViewBuilder implements IntrinsicParticipantView, UiBuilder {
 
   private final Css css;
   private final String id;
@@ -39,13 +39,13 @@ public final class ParticipantViewBuilder implements IntrinsicParticipantView, U
   private String name;
 
   @VisibleForTesting
-  ParticipantViewBuilder(String id, Css css) {
+  ParticipantAvatarViewBuilder(String id, Css css) {
     this.id = id;
     this.css = css;
   }
 
-  public static ParticipantViewBuilder create(String id) {
-    return new ParticipantViewBuilder(id, WavePanelResourceLoader.getParticipants().css());
+  public static ParticipantAvatarViewBuilder create(String id) {
+    return new ParticipantAvatarViewBuilder(id, WavePanelResourceLoader.getParticipants().css());
   }
 
   @Override

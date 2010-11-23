@@ -427,11 +427,11 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
         }
       };
 
-  private final ParticipantViewImpl.Helper<ParticipantDomImpl> participantHelper =
-      new ParticipantViewImpl.Helper<ParticipantDomImpl>() {
+  private final ParticipantViewImpl.Helper<ParticipantNameDomImpl> participantHelper =
+      new ParticipantViewImpl.Helper<ParticipantNameDomImpl>() {
 
         @Override
-        public void remove(ParticipantDomImpl impl) {
+        public void remove(ParticipantNameDomImpl impl) {
           Element container = impl.getElement().getParentElement();
           impl.remove();
 
@@ -446,7 +446,7 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
         }
 
         @Override
-        public ProfilePopupView showParticipation(ParticipantDomImpl impl) {
+        public ProfilePopupView showParticipation(ParticipantNameDomImpl impl) {
           return new ProfilePopupWidget(impl.getElement(), AlignedPopupPositioner.BELOW_RIGHT);
         }
       };
@@ -634,9 +634,9 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
     return e != null ? new BlipViewImpl<BlipViewDomImpl>(blipHelper, BlipViewDomImpl.of(e)) : null;
   }
 
-  private ParticipantViewImpl<ParticipantDomImpl> asParticipantUnchecked(Element e) {
-    return e != null ? new ParticipantViewImpl<ParticipantDomImpl>(
-        participantHelper, ParticipantDomImpl.of(e)) : null;
+  private ParticipantViewImpl<ParticipantNameDomImpl> asParticipantUnchecked(Element e) {
+    return e != null ? new ParticipantViewImpl<ParticipantNameDomImpl>(
+        participantHelper, ParticipantNameDomImpl.of(e)) : null;
   }
 
   private ParticipantsViewImpl<ParticipantsDomImpl> asParticipantsUnchecked(Element e) {
