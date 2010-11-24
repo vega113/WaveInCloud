@@ -27,6 +27,7 @@ import org.waveprotocol.box.server.robots.operations.DoNothingService;
 import org.waveprotocol.box.server.robots.operations.DocumentModifyService;
 import org.waveprotocol.box.server.robots.operations.FetchWaveService;
 import org.waveprotocol.box.server.robots.operations.OperationService;
+import org.waveprotocol.box.server.robots.operations.ParticipantServices;
 import org.waveprotocol.box.server.robots.operations.SearchService;
 
 /**
@@ -45,7 +46,9 @@ public final class DataApiOperationServiceRegistry extends AbstractOperationServ
     // Register all the OperationProviders
     register(OperationType.ROBOT_NOTIFY, DoNothingService.create());
     register(OperationType.ROBOT_NOTIFY_CAPABILITIES_HASH, DoNothingService.create());
+    register(OperationType.WAVELET_ADD_PARTICIPANT_NEWSYNTAX, ParticipantServices.create());
     register(OperationType.WAVELET_APPEND_BLIP, BlipOperationServices.create());
+    register(OperationType.WAVELET_REMOVE_PARTICIPANT_NEWSYNTAX, ParticipantServices.create());
     register(OperationType.BLIP_CONTINUE_THREAD, BlipOperationServices.create());
     register(OperationType.BLIP_CREATE_CHILD, BlipOperationServices.create());
     register(OperationType.BLIP_DELETE, BlipOperationServices.create());

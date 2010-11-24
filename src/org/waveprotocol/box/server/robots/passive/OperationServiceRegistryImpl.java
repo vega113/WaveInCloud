@@ -26,6 +26,7 @@ import org.waveprotocol.box.server.robots.operations.CreateWaveletService;
 import org.waveprotocol.box.server.robots.operations.DocumentModifyService;
 import org.waveprotocol.box.server.robots.operations.NotifyOperationService;
 import org.waveprotocol.box.server.robots.operations.OperationService;
+import org.waveprotocol.box.server.robots.operations.ParticipantServices;
 
 /**
  * Class for registering and accessing {@link OperationService} to execute
@@ -45,7 +46,9 @@ public final class OperationServiceRegistryImpl extends AbstractOperationService
     // Register all the OperationProviders
     register(OperationType.ROBOT_NOTIFY, notifyOpService);
     register(OperationType.ROBOT_NOTIFY_CAPABILITIES_HASH, notifyOpService);
+    register(OperationType.WAVELET_ADD_PARTICIPANT_NEWSYNTAX, ParticipantServices.create());
     register(OperationType.WAVELET_APPEND_BLIP, BlipOperationServices.create());
+    register(OperationType.WAVELET_REMOVE_PARTICIPANT_NEWSYNTAX, ParticipantServices.create());
     register(OperationType.BLIP_CONTINUE_THREAD, BlipOperationServices.create());
     register(OperationType.BLIP_CREATE_CHILD, BlipOperationServices.create());
     register(OperationType.BLIP_DELETE, BlipOperationServices.create());
