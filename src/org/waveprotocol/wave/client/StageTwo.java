@@ -77,7 +77,6 @@ import org.waveprotocol.wave.model.schema.SchemaProvider;
 import org.waveprotocol.wave.model.supplement.LiveSupplementedWaveImpl;
 import org.waveprotocol.wave.model.supplement.ObservablePrimitiveSupplement;
 import org.waveprotocol.wave.model.supplement.ObservableSupplementedWave;
-import org.waveprotocol.wave.model.supplement.PrimitiveSupplementImpl;
 import org.waveprotocol.wave.model.supplement.SupplementedWaveImpl.DefaultFollow;
 import org.waveprotocol.wave.model.supplement.WaveletBasedSupplement;
 import org.waveprotocol.wave.model.util.FuzzingBackOffScheduler;
@@ -388,18 +387,10 @@ public interface StageTwo {
     /** @return the user supplement of the wave. Subclasses may override. */
     protected ObservableSupplementedWave createSupplement() {
       Wavelet udw = getWave().getUserData();
-      ObservablePrimitiveSupplement supplement;
-      if (udw != null) {
-        supplement = WaveletBasedSupplement.create(udw);
-      } else {
-        // Either use fake backing, or create UDW.  The latter is racy, but usually what we want.
-        // TODO: restore lines below, after issue 154 has been fixed.  See:
-        // http://code.google.com/p/wave-protocol/issues/detail?id=154
-        // udw = getWave().createUserData();
-        // supplement = WaveletBasedSupplement.create(udw);
-        supplement = new PrimitiveSupplementImpl();
-
+      if (udw == null) {
+         udw = getWave().createUserData();
       }
+      ObservablePrimitiveSupplement supplement = WaveletBasedSupplement.create(udw);
       return new LiveSupplementedWaveImpl(
           supplement, getWave(), getSignedInUser(), DefaultFollow.ALWAYS, getConversations());
     }

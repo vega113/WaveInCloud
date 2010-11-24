@@ -26,6 +26,7 @@ import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 
@@ -128,6 +129,12 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
     request.setParticipantId(userId);
     for (String prefix : filter.getPrefixes()) {
       request.addWaveletIdPrefix(prefix);
+    }
+    // Issue 161: http://code.google.com/p/wave-protocol/issues/detail?id=161
+    // The box protocol does not support explicit wavelet ids in the filter.
+    // As a workaround, include them in the prefix list.
+    for (WaveletId wid : filter.getIds()) {
+      request.addWaveletIdPrefix(wid.getId());
     }
     socket.sendMessage(request, null);
   }

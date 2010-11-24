@@ -65,7 +65,7 @@
       <srcfiles dir="proto_src" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="proto_compile" depends="init, proto_src_dep" unless="skip.proto_compile">
+  <target name="proto_compile" depends="init, proto_src_dep" unless="skip.proto_compile" description="Compiles protocol buffers">
     <javac sourcepath="" srcdir="proto_src" destdir="${build.src.dir}" debug="on"
         target="1.5">
       <include name="**/*.java"/>
@@ -81,7 +81,7 @@
       <srcfiles dir="${gen.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="compile" depends="proto_compile, gen_gxp, compile_dep" unless="skip.compile">
+  <target name="compile" depends="proto_compile, gen_gxp, compile_dep" unless="skip.compile" description="Compiles all source">
     <depend srcdir="${src.dir}" destdir="${build.src.dir}" closure="yes"/>
     <!-- Delegate to libraries build for o.w.wave. -->
     <ant antfile="build-libraries.xml" target="compile" />
@@ -302,11 +302,12 @@
         <path refid="libpath"/>
       </classpath>
       <jvmarg value="-Xmx512M"/>
+      <jvmarg value="-ea"/>
       <jvmarg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8001"/>
       <arg value="-noserver" />
       <arg line="-bindAddress 0.0.0.0" />
       <arg line="${gwt.args}"/>
-      <arg value="org.waveprotocol.box.webclient.WebClientDev"/>
+      <arg value="org.waveprotocol.box.webclient.WebClientProd"/>
     </java>
   </target>
 

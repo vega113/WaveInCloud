@@ -30,7 +30,6 @@ import org.waveprotocol.wave.client.wavepanel.impl.reader.Reader;
 import org.waveprotocol.wave.client.wavepanel.render.FullDomWaveRendererImpl;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.WaveRenderer;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
-import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.schema.SchemaProvider;
@@ -106,9 +105,7 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
   protected void install() {
     if (isNewWave) {
       // For a new wave, initial state comes from local initialization.
-      Conversation c = getConversations().createRoot();
-      c.addParticipant(getSignedInUser());
-      c.getRootThread().appendBlip();
+      getConversations().createRoot().getRootThread().appendBlip();
       super.install();
       whenReady.use(StageTwoProvider.this);
     } else {

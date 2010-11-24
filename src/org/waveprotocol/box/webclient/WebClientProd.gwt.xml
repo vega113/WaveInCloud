@@ -8,6 +8,6 @@
   <!-- Stack emulation is too slow to use in production. -->
   <set-property name="compiler.emulatedStack" value="false"/>
 
-  <!-- Only build communicable clients (websocket-enabled) -->
-  <set-property name="user.agent" value="safari,gecko1_8"/>
+  <!-- Only build supported clients. -->
+  <set-property name="user.agent" value="safari,gecko1_8,ie6"/>
 </module>
