@@ -19,20 +19,15 @@ package org.waveprotocol.wave.client.concurrencycontrol;
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.Command;
 
+import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
 import org.waveprotocol.wave.concurrencycontrol.channel.Accessibility;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannel;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexer;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexer.KnownWavelet;
-import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
 import org.waveprotocol.wave.concurrencycontrol.common.CorruptionDetail;
-import org.waveprotocol.wave.concurrencycontrol.wave.FlushingOperationSink;
-import org.waveprotocol.wave.concurrencycontrol.wave.OperationSucker;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.operation.SilentOperationSink;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.util.CollectionUtils;
-import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.util.StringMap;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.WaveViewListener;
@@ -44,12 +39,15 @@ import java.util.Collection;
 
 /**
  * Binds operation channels from a {@link OperationChannelMultiplexer mux} with
- * the output sinks of wavelets.
+ * the output sinks of wavelets, and keeps binding matching channel/wavelet
+ * pairs while live.
  *
+ * @author hearnden@google.com (David Hearnden)
  */
-public final class WaveChannelBinder
+public final class LiveChannelBinder
     implements WaveViewListener, OperationChannelMultiplexer.Listener {
 
+  private final StaticChannelBinder binder;
   private final WaveletOperationalizer operationalizer;
   private final WaveViewImpl<OpBasedWavelet> wave;
   private final OperationChannelMultiplexer mux;
@@ -83,8 +81,9 @@ public final class WaveChannelBinder
   // step 2.
   //
 
-  private WaveChannelBinder(WaveletOperationalizer operationalizer,
+  private LiveChannelBinder(StaticChannelBinder binder, WaveletOperationalizer operationalizer,
       WaveViewImpl<OpBasedWavelet> wave, OperationChannelMultiplexer mux, Command whenOpened) {
+    this.binder = binder;
     this.operationalizer = operationalizer;
     this.wave = wave;
     this.mux = mux;
@@ -95,9 +94,15 @@ public final class WaveChannelBinder
    * Opens a mux, binding its operation channels with operation-supporting
    * wavelets.
    */
-  public static void openAndBind(WaveletOperationalizer operationalizer, WaveViewImpl<OpBasedWavelet> wave,
-      OperationChannelMultiplexer mux, IdFilter filter, Command whenOpened) {
-    WaveChannelBinder binder = new WaveChannelBinder(operationalizer, wave, mux, whenOpened);
+  public static void openAndBind(WaveletOperationalizer operationalizer,
+      WaveViewImpl<OpBasedWavelet> wave,
+      ContentDocumentSinkFactory docRegistry,
+      OperationChannelMultiplexer mux,
+      IdFilter filter,
+      Command whenOpened) {
+    StaticChannelBinder staticBinder = new StaticChannelBinder(operationalizer, docRegistry);
+    LiveChannelBinder liveBinder =
+        new LiveChannelBinder(staticBinder, operationalizer, wave, mux, whenOpened);
 
     final Collection<KnownWavelet> remoteWavelets = CollectionUtils.createQueue();
     final Collection<ObservableWaveletData> localWavelets = CollectionUtils.createQueue();
@@ -106,20 +111,20 @@ public final class WaveChannelBinder
       // session. They are not to be included in the known-wavelet collection,
       // because the server does not know about them.
       if (wavelet.getVersion() > 0) {
-        remoteWavelets.add(new KnownWavelet(
-            wavelet, wavelet.getHashedVersion(), Accessibility.READ_WRITE));
+        remoteWavelets.add(
+            new KnownWavelet(wavelet, wavelet.getHashedVersion(), Accessibility.READ_WRITE));
       } else {
         localWavelets.add(wavelet);
       }
     }
 
     // Start listening to wave events and channel events.
-    wave.addListener(binder);
+    wave.addListener(liveBinder);
     // This binder only starts getting events once open() has been called, since
     // that is what sets this binder as a mux listener. Since wavelet-to-channel
     // binding occurs through event callbacks, this listener setting must occur
     // before trying to bind localWavelets.
-    mux.open(binder, filter, remoteWavelets);
+    mux.open(liveBinder, filter, remoteWavelets);
     for (ObservableWaveletData local : localWavelets) {
       mux.createOperationChannel(local.getWaveletId(), local.getCreator());
     }
@@ -179,64 +184,8 @@ public final class WaveChannelBinder
     // TODO
   }
 
-  //
-  // Binding methods.
-  //
-
-  /**
-   * Connects a wavelet's operation sinks with an operation channel.
-   *
-   * @param id id of the wavelet/channel pair to bind
-   */
   private void connect(String id) {
-    bind(operationalizer.getSinks(id), removeAndReturn(channels, id));
-  }
-
-  /**
-   * Connects a pair of operation sinks with an operation channel.
-   */
-  public static void bind(
-      Pair<SilentOperationSink<WaveletOperation>, ProxyOperationSink<WaveletOperation>> sinks,
-      OperationChannel channel) {
-    OperationSucker.start(channel, asFlushing(sinks.first));
-    sinks.second.setTarget(asOpSink(channel));
-  }
-
-  /**
-   * Adapts a regular operation sink as a flushing sink, with a vacuous flush.
-   */
-  private static FlushingOperationSink<WaveletOperation> asFlushing(
-      final SilentOperationSink<WaveletOperation> target) {
-    return new FlushingOperationSink<WaveletOperation>() {
-      @Override
-      public void consume(WaveletOperation op) {
-        target.consume(op);
-      }
-
-      @Override
-      public boolean flush(WaveletOperation operation, Runnable resume) {
-        // Editor flushing not supported.
-        return true;
-      }
-    };
-  }
-
-  /**
-   * Adapts an operation channel, making it look like an operation sink. The
-   * only reason a channel is not already a sink is because it has a more
-   * general acceptor that takes a varargs parameter.
-   */
-  private static SilentOperationSink<WaveletOperation> asOpSink(final OperationChannel target) {
-    return new SilentOperationSink<WaveletOperation>() {
-      @Override
-      public void consume(WaveletOperation op) {
-        try {
-          target.send(op);
-        } catch (ChannelException e) {
-          throw new RuntimeException("Send failed, channel is broken", e);
-        }
-      }
-    };
+    binder.bind(id, removeAndReturn(channels, id));
   }
 
   // Something that should have been on StringMap from the beginning.

@@ -631,8 +631,8 @@ public class EditorHarness extends Composite implements KeySignalListener {
    */
   private void outputEditorState(final Editor editor,
       final HTML prettyContent, final HTML prettyHtml) {
-    Command printer = new Command() {
-      public void execute() {
+    Runnable printer = new Runnable() {
+      public void run() {
         if (!quiet) {
           String content = EditorDocFormatter.formatContentDomString(editor);
           String html = EditorDocFormatter.formatImplDomString(editor);
@@ -648,8 +648,8 @@ public class EditorHarness extends Composite implements KeySignalListener {
 
     if (LogLevel.showDebug()) {
       // Flush and update once it's safe
-      if (editor.flushAsync(printer)) {
-        printer.execute(); // note that if true is returned, the command isn't run inside flush.
+      if (editor.getContent().flush(printer)) {
+        printer.run(); // note that if true is returned, the command isn't run inside flush.
       }
     }
   }

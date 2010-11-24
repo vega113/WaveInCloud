@@ -30,7 +30,6 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.resources.client.CssResource.NotStrict;
-import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
@@ -147,8 +146,8 @@ import org.waveprotocol.wave.model.util.ReadableIdentitySet.Proc;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -206,6 +205,30 @@ public class EditorImpl extends LogicalPanel.Impl implements Editor,
 
     RepairListener getRepairListener();
     EditorContext getEditorContext();
+    
+    /**
+     * Brings the editor into a consistent state, possibly asynchronously.
+     *
+     * "Consistent" means that the editor's document state includes the effects of
+     * all browser-events before now, and that that state is consistent with the
+     * operations that this editor has pushed out to the outgoing operation stream
+     * (i.e., no operations are buffered).
+     *
+     * This should be called immediately prior to applying operations to the
+     * document, i.e.
+     * {@link ContentDocument#consume(org.waveprotocol.wave.model.document.operation.DocOp)}
+     *
+     * NOTE(danilatos): While this method is re-entrant, if it returns false,
+     * there is not much point calling it again until the continuation command has
+     * been executed.
+     *
+     * @param resume if the editor's document is not in a consistent state, a
+     *        callback to fire as soon as consistency is reached.
+     * @return true if the editor's document is in a consistent state, false
+     *         otherwise (note: {@code resume} is not called if this method
+     *         returns true).
+     */
+    boolean flush(Runnable resume);
 
     /**
      * Notifies the editor that an external source (i.e. incoming op) has applied
@@ -251,6 +274,11 @@ public class EditorImpl extends LogicalPanel.Impl implements Editor,
     @Override
     public EditorContext getEditorContext() {
       return EditorImpl.this;
+    }
+
+    @Override
+    public boolean flush(Runnable resume) {
+      return EditorImpl.this.flush(resume);
     }
 
     @Override
@@ -376,40 +404,32 @@ public class EditorImpl extends LogicalPanel.Impl implements Editor,
    * deferred command to poll the consistency state and executing queued
    * commands until the queue is empty.
    */
-  private class ConsistentStateCommandRunner implements CommandQueue, Scheduler.Task {
+  private class ConsistentStateCommandRunner implements Scheduler.Task {
     /** Queued commands, FIFO. */
-    private List<Command> commands = new LinkedList<Command>();
+    private Queue<Runnable> commands = CollectionUtils.createQueue();
 
     private ConsistentStateCommandRunner() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void addCommand(Command c) {
+    public void schedule(Runnable c) {
       commands.add(c);
       if (permitOperations) { // Prevent constant rescheduling
         ScheduleCommand.addCommand(this);
       }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void execute() {
-      List<Command> backup = commands;
-      commands = new LinkedList<Command>();
+      Queue<Runnable> backup = commands;
+      commands = CollectionUtils.createQueue();
 
       while (isConsistent() && !backup.isEmpty()) {
-        Command tmp = backup.remove(0);
-        tmp.execute();
+        backup.poll().run();
       }
 
-      // Add any new commands that were scheduled into the copy
-      for (Command c : commands) {
-        backup.add(c);
-      }
+      // Move any unexecuted commands back into the main queue, preserving any
+      // commands that were scheduled during the above execution.
+      backup.addAll(commands);
       // Restore the copy
       commands = backup;
 
@@ -1511,11 +1531,10 @@ public class EditorImpl extends LogicalPanel.Impl implements Editor,
     }
   }
 
-  @Override
-  public boolean flushAsync(Command resume) {
+  private boolean flush(Runnable resume) {
     if (!canApplyIncomingOperations()) {
       EditorStaticDeps.logger.trace().log("Deferring incoming operation");
-      consistencyQueue.addCommand(resume);
+      consistencyQueue.schedule(resume);
       return false;
     } else {
       // In case this event cycle is running before the -continuation command queue's runner,

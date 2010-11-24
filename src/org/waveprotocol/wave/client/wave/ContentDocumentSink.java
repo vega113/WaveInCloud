@@ -141,4 +141,19 @@ public final class ContentDocumentSink extends MutableDocumentProxy<Doc.N, Doc.E
   public void stopRendering() {
     document.setRendering(false);
   }
+
+  /**
+   * Brings the document into a consistent state, possibly asynchronously.
+   * Consistency is required before incoming operations can validly be applied.
+   *
+   * @param resume command to run later once the document has reached
+   *        consistency, only if it is not consistent right now
+   * @return true if the document is already consistent, false otherwise. If
+   *         this method returns true, {@code resume} will not be executed. If
+   *         this method returns {@code false}, {@code resume} will be executed
+   *         once the document is consistent.
+   */
+  public boolean flush(Runnable resume) {
+    return document.flush(resume);
+  }
 }

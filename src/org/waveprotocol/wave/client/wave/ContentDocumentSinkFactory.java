@@ -160,7 +160,21 @@ public final class ContentDocumentSinkFactory implements DocumentFactory<Documen
    * @return document implementation for {@code blip}.
    */
   public ContentDocumentSink get(ConversationBlip blip) {
-    StringMap<ContentDocumentSink> convDocuments = documents.get(blip.getConversation().getId());
-    return convDocuments != null ? convDocuments.get(blip.getId()) : null;
+    return getSpecial(blip.getConversation().getId(), blip.getId());
+  }
+
+  /**
+   * Reveals access to the special document implementation for conversational
+   * blips.
+   *
+   * @param waveletId
+   * @param docId
+   * @return the special document implementation (content-document) for the
+   *         document, if it has one. This returns null either if the document
+   *         does not exist, or it is a regular non-special (data) document.
+   */
+  public ContentDocumentSink getSpecial(String waveletId, String docId) {
+    StringMap<ContentDocumentSink> convDocuments = documents.get(waveletId);
+    return convDocuments != null ? convDocuments.get(docId) : null;
   }
 }

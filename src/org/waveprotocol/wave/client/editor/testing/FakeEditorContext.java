@@ -17,9 +17,9 @@
 package org.waveprotocol.wave.client.editor.testing;
 
 import org.waveprotocol.wave.client.editor.EditorContext;
+import org.waveprotocol.wave.client.editor.EditorUpdateEvent.EditorUpdateListener;
 import org.waveprotocol.wave.client.editor.Responsibility;
 import org.waveprotocol.wave.client.editor.ResponsibilityManagerImpl;
-import org.waveprotocol.wave.client.editor.EditorUpdateEvent.EditorUpdateListener;
 import org.waveprotocol.wave.client.editor.content.CMutableDocument;
 import org.waveprotocol.wave.client.editor.content.misc.CaretAnnotations;
 import org.waveprotocol.wave.client.editor.selection.content.SelectionHelper;

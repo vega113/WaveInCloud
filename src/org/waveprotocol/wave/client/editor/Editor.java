@@ -135,30 +135,6 @@ public interface Editor extends EditorContext {
   Element getDocumentHtmlElement();
 
   /**
-   * Brings the editor into a consistent state, possibly asynchronously.
-   *
-   * "Consistent" means that the editor's document state includes the effects of
-   * all browser-events before now, and that that state is consistent with the
-   * operations that this editor has pushed out to the outgoing operation stream
-   * (i.e., no operations are buffered).
-   *
-   * This should be called immediately prior to applying operations to the
-   * document, i.e.
-   * {@link ContentDocument#consume(org.waveprotocol.wave.model.document.operation.DocOp)}
-   *
-   * NOTE(danilatos): While this method is re-entrant, if it returns false,
-   * there is not much point calling it again until the continuation command has
-   * been executed.
-   *
-   * @param resume if the editor's document is not in a consistent state, a
-   *        callback to fire as soon as consistency is reached.
-   * @return true if the editor's document is in a consistent state, false
-   *         otherwise (note: {@code resume} is not called if this method
-   *         returns true).
-   */
-  boolean flushAsync(Command resume);
-
-  /**
    * Gets the document state as a tree-structured document.
    * The returned document represents (only) the result of the operation
    * history; it does not include transparent decorations or other transient

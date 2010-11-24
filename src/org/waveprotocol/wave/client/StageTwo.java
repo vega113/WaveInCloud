@@ -25,7 +25,7 @@ import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.client.common.util.CountdownLatch;
 import org.waveprotocol.wave.client.concurrencycontrol.MuxConnector;
-import org.waveprotocol.wave.client.concurrencycontrol.WaveChannelBinder;
+import org.waveprotocol.wave.client.concurrencycontrol.LiveChannelBinder;
 import org.waveprotocol.wave.client.concurrencycontrol.WaveletOperationalizer;
 import org.waveprotocol.wave.client.doodad.DoodadInstallers;
 import org.waveprotocol.wave.client.editor.content.Registries;
@@ -442,7 +442,12 @@ public interface StageTwo {
       return new MuxConnector() {
         @Override
         public void connect(Command onOpened) {
-          WaveChannelBinder.openAndBind(wavelets, wave, mux, filter, onOpened);
+          LiveChannelBinder.openAndBind(getWavelets(),
+              wave,
+              getDocumentRegistry(),
+              mux,
+              filter,
+              onOpened);
         }
 
         @Override

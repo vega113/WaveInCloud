@@ -1224,6 +1224,20 @@ public class ContentDocument {
   }
 
   /**
+   * Brings the editor into a consistent state, possibly asynchronously.
+   *
+   * @param resume command to run later once the editor has reached consistency,
+   *        only if it is not consistent right now
+   * @return true if the editor is already consistent, false otherwise. If this
+   *         method returns true, {@code resume} will not be executed. If this
+   *         method returns {@code false}, {@code resume} will be executed once
+   *         the editor is consistent.
+   */
+  public boolean flush(Runnable resume) {
+    return editorPackage != null ? editorPackage.flush(resume) : true;
+  }
+
+  /**
    * Transitions this document to/from a rendering state.
    *
    * @param newRendering if true, the {@link Level level} is increased to be at

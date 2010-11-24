@@ -73,7 +73,7 @@ public final class WaveletOperationalizer {
    * Note that this does not connect the wavelet with concurrency control, which
    * means that local mutations will not be sent out anywhere, and remote
    * mutations will not be routed to this wavelet. Additional work needs to be
-   * done for that (see {@link WaveChannelBinder} for that); this method merely
+   * done for that (see {@link LiveChannelBinder} for that); this method merely
    * associates the passive data wavelet with operation sinks that make it
    * locally mutable. It is safe to mutate the returned wavelet before binding
    * it with an operation channel; local mutations that occur before binding are
