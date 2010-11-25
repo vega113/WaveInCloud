@@ -4,7 +4,6 @@
   <inherits name="org.waveprotocol.wave.client.common.util.useragents"/>
   <inherits name="com.google.common.base.Base"/>
   <inherits name="org.waveprotocol.wave.model.Model"/>
-  <inherits name="org.waveprotocol.wave.common.util.Util"/>
    
   <source path=""/>
     
