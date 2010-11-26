@@ -38,9 +38,11 @@ import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.Connectio
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.waveclient.common.SubmitResponseCallback;
 import org.waveprotocol.box.webclient.waveclient.common.WebClientBackend;
+import org.waveprotocol.wave.model.util.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 
 
 /**
@@ -52,9 +54,13 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   private static final int VERSION = 1;
   private static final String JETTY_SESSION_TOKEN_NAME = "JSESSIONID";
 
-  private final WaveSocket client;
+  private final WaveSocket socket;
   private final Map<Integer, SubmitResponseCallback> submitRequestCallbacks;
 
+  /**
+   * Lifecycle of a socket is:
+   *   (CONNECTING &#8594; CONNECTED &#8594; DISCONNECTED)&#8727;
+   */
   private enum ConnectState {
     CONNECTED, CONNECTING, DISCONNECTED
   }
@@ -63,13 +69,15 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   private WebClientBackend legacy;
   private WaveWebSocketCallback callback;
   private int sequenceNo;
+  
+  private Queue<String> messages = CollectionUtils.createQueue();
 
   private final RepeatingCommand reconnectCommand = new RepeatingCommand() {
     public boolean execute() {
       if (connected == ConnectState.DISCONNECTED) {
         LOG.info("Attemping to reconnect");
         connected = ConnectState.CONNECTING;
-        client.connect();
+        socket.connect();
       }
       return true;
     }
@@ -77,7 +85,7 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
 
   public WaveWebSocketClient(boolean useSocketIO, String urlBase) {
     submitRequestCallbacks = new HashMap<Integer, SubmitResponseCallback>();
-    client = WaveSocketFactory.create(useSocketIO, urlBase, this);
+    socket = WaveSocketFactory.create(useSocketIO, urlBase, this);
   }
 
   /**
@@ -92,7 +100,7 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   /**
    * Attaches the handler for incoming messages. Once the client's workflow has
    * been fixed, this callback attachment will become part of
-   * {@link #connect(String)}.
+   * {@link #connect()}.
    */
   public void attachHandler(WaveWebSocketCallback callback) {
     Preconditions.checkState(this.callback == null);
@@ -102,8 +110,6 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
 
   /**
    * Opens this connection.
-   *
-   * @param url
    */
   public void connect() {
     reconnectCommand.execute();
@@ -121,6 +127,11 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
       sendMessage(ProtocolAuthenticate.create().setToken(token), null);
     }
 
+    // Flush queued messages.
+    while (!messages.isEmpty() && connected == ConnectState.CONNECTED) {
+      send(messages.poll());
+    }
+    
     ClientEvents.get().fireEvent(new NetworkStatusEvent(ConnectionStatus.CONNECTED));
   }
 
@@ -160,7 +171,6 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
    * @param callback callback to invoke for response, or null for none.
    */
   public void sendMessage(JavaScriptObject message, SubmitResponseCallback callback) {
-    Preconditions.checkState(connected == ConnectState.CONNECTED);
     int seqNo = sequenceNo++;
 
     JSONObject wrapper = new JSONObject();
@@ -181,13 +191,22 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
       wrapper.put("messageJson",
           new JSONString(ProtocolAuthenticate.stringify((ProtocolAuthenticate) message)));
     }
-    String json = wrapper.toString();
-    LOG.info("Sending JSON data " + json);
-    client.sendMessage(json);
+    send(wrapper.toString());
   }
 
   // TODO(arb): filthy filthy hack. make this not necessary
-  private native void deleteMessageName(final JavaScriptObject message) /*-{
+  private static native void deleteMessageName(JavaScriptObject message) /*-{
     delete message._protoMessageName;
   }-*/;
+  
+  private void send(String message) {
+    switch (connected) {
+      case CONNECTED:
+        LOG.info("Sending JSON data " + message);
+        socket.sendMessage(message);
+        break;
+      default:
+        messages.add(message);
+    }
+  }
 }
