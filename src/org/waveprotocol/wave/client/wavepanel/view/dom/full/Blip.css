@@ -85,23 +85,23 @@
    */
   border: 1px solid #b3b3b3;
   border-radius: 1px;
-  \-moz-border-radius: 1px;
-  \-webkit-border-radius: 1px;
+  -moz-border-radius: 1px;
+  -webkit-border-radius: 1px;
 }
 
 .metabar {
   /* Add box around the whole thing. */
   border-radius: 0.3em;
-  \-moz-border-radius: 0.3em;
-  \-webkit-border-radius: 0.3em;
+  -moz-border-radius: 0.3em;
+  -webkit-border-radius: 0.3em;
   padding: 0.3em;
 
   margin-left: -0.3em;  /* Make the border not shift the content. */
   margin-bottom: 0.7em; /* 2.5em - (1em + 0.3emx2) - (0.2em aesthetic) */
 
   transition: all 300ms ease-in-out;
-  \-moz-transition: all 300ms ease-in-out;
-  \-webkit-transition: all 300ms ease-in-out;
+  -moz-transition: all 300ms ease-in-out;
+  -webkit-transition: all 300ms ease-in-out;
 }
 
 .metabar.read {

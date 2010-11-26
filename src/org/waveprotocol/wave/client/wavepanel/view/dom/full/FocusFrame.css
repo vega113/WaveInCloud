@@ -16,6 +16,6 @@
   z-index: -1;
   border: 3px solid rgb(114, 135, 27);
   border-radius: 5px;
-  \-moz-border-radius: 5px;
-  \-webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
 }
