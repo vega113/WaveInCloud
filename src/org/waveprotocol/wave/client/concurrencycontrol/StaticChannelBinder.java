@@ -19,6 +19,7 @@ package org.waveprotocol.wave.client.concurrencycontrol;
 import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannel;
 import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
+import org.waveprotocol.wave.concurrencycontrol.wave.CcDocument;
 import org.waveprotocol.wave.concurrencycontrol.wave.FlushingOperationSink;
 import org.waveprotocol.wave.concurrencycontrol.wave.OperationSucker;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
@@ -76,9 +77,14 @@ public final class StaticChannelBinder {
 
       @Override
       public boolean flush(WaveletOperation op, Runnable c) {
-        return (op instanceof WaveletBlipOperation) //
-            ? docRegistry.getSpecial(waveletId, ((WaveletBlipOperation) op).getBlipId()).flush(c) //
-            : true;
+        if (op instanceof WaveletBlipOperation) {
+          CcDocument doc =
+              docRegistry.getSpecial(waveletId, ((WaveletBlipOperation) op).getBlipId());
+          if (doc != null) {
+            return doc.flush(c);
+          }
+        }
+        return true;
       }
     };
   }

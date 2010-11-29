@@ -18,6 +18,7 @@ package org.waveprotocol.wave.client.wave;
 import org.waveprotocol.wave.client.editor.content.AnnotationPainter;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
 import org.waveprotocol.wave.client.editor.content.Registries;
+import org.waveprotocol.wave.concurrencycontrol.wave.CcDocument;
 import org.waveprotocol.wave.model.document.Doc;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.MutableDocument;
@@ -27,7 +28,6 @@ import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.util.MutableDocumentProxy;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
-import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
 
 /**
  * A document implementation that materializes a {@link ContentDocument} on
@@ -35,7 +35,7 @@ import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
  *
  */
 public final class ContentDocumentSink extends MutableDocumentProxy<Doc.N, Doc.E, Doc.T>
-    implements DocumentOperationSink, Document {
+    implements CcDocument, Document {
 
   /** Event handlers. */
   private final Registries base;
@@ -142,17 +142,7 @@ public final class ContentDocumentSink extends MutableDocumentProxy<Doc.N, Doc.E
     document.setRendering(false);
   }
 
-  /**
-   * Brings the document into a consistent state, possibly asynchronously.
-   * Consistency is required before incoming operations can validly be applied.
-   *
-   * @param resume command to run later once the document has reached
-   *        consistency, only if it is not consistent right now
-   * @return true if the document is already consistent, false otherwise. If
-   *         this method returns true, {@code resume} will not be executed. If
-   *         this method returns {@code false}, {@code resume} will be executed
-   *         once the document is consistent.
-   */
+  @Override
   public boolean flush(Runnable resume) {
     return document.flush(resume);
   }
