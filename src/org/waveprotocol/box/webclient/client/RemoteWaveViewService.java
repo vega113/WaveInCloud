@@ -30,9 +30,7 @@ import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.webclient.waveclient.common.SubmitResponseCallback;
-import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
-import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService.WaveViewServiceUpdate;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
@@ -56,7 +54,6 @@ import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
-import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.ArrayList;
@@ -291,10 +288,14 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   @Override
   public void onWaveletUpdate(ProtocolWaveletUpdate update) {
     if (shouldAccept(update)) {
+      // Update last-known-version map, so that outgoing deltas can be appropriately rewritten.
+      if (update.hasResultingVersion()) {
+        versions.updateHistory(getTarget(update), update.getResultingVersion());
+      }
+
       // Adapt broken parts of the box server, to make them speak the proper wave protocol:
       // 1. Channel id must be in its own message.
-      // 2. Synthesize a snapshot for new wavelet channels.
-      // 3. Keep track of last-known versions.
+      // 2. Synthesize the open-finished marker that the box server leaves out.
       if (update.hasChannelId()
           && (update.hasCommitNotice() || update.hasMarker() || update.hasSnapshot()
               || update.getAppliedDeltaArray().length() > 0)) {
@@ -302,103 +303,13 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
             ProtocolWaveletUpdate.create().setChannelId(update.getChannelId());
         update.clearChannelId();
         callback.onUpdate(deserialize(fake));
+        callback.onUpdate(deserialize(update));
+      } else {
+        callback.onUpdate(deserialize(update));
       }
-
-      if (update.hasResultingVersion()) {
-        if (smellsLikeFirstDelta(update)) {
-          callback.onUpdate(createFakeSnapshot(update));
-        }
-        
-        // Update last-known-version map, so that outgoing deltas can be appropriately rewritten.
-        versions.updateHistory(getTarget(update), update.getResultingVersion());
-      }
-
-      
-      callback.onUpdate(deserialize(update));
     }
   }
 
-  private boolean smellsLikeFirstDelta(ProtocolWaveletUpdate update) {
-    return !update.hasSnapshot() && update.getResultingVersion().getVersion() == update.getAppliedDeltaCount();
-  }
-
-  private WaveViewServiceUpdate createFakeSnapshot(ProtocolWaveletUpdate update) {
-    final WaveletId wid = deserialize(update.getWaveletName()).waveletId;
-    IdURIEncoderDecoder uriCodec = new IdURIEncoderDecoder(new ClientPercentEncoderDecoder());
-    HashedVersionFactory hashFactory = new HashedVersionZeroFactoryImpl(uriCodec);
-    ProtocolWaveletDelta delta = update.getAppliedDelta(0);
-    
-    final HashedVersion v0 = hashFactory.createVersionZero(WaveletName.of(waveId, wid));
-    final WaveletDataImpl snapshot = new WaveletDataImpl(wid, ParticipantId.ofUnsafe(delta.getAuthor()), 0L, 0L, v0, 0L, waveId, docFactory);
-    return new WaveViewServiceUpdate() {
-      
-      @Override
-      public boolean hasWaveletSnapshot() {
-        return true;
-      }
-    
-      @Override
-      public boolean hasWaveletId() {
-        return true;
-      }
-    
-      @Override
-      public boolean hasMarker() {
-        return false;
-      }
-    
-      @Override
-      public boolean hasLastCommittedVersion() {
-        return true;
-      }
-    
-      @Override
-      public boolean hasDeltas() {
-        return false;
-      }
-    
-      @Override
-      public boolean hasCurrentVersion() {
-        return true;
-      }
-    
-      @Override
-      public boolean hasChannelId() {
-        return false;
-      }
-    
-      @Override
-      public ObservableWaveletData getWaveletSnapshot() {
-        return snapshot;
-      }
-    
-      @Override
-      public WaveletId getWaveletId() {
-        return wid;
-      }
-    
-      @Override
-      public HashedVersion getLastCommittedVersion() {
-        return v0;
-      }
-    
-      @Override
-      public List<TransformedWaveletDelta> getDeltaList() {
-        return null;
-      }
-    
-      @Override
-      public HashedVersion getCurrentVersion() {
-        return v0;
-      }
-    
-      @Override
-      public String getChannelId() {
-        return null;
-      }
-    };
-  }
-  
   private WaveViewServiceUpdateImpl deserialize(ProtocolWaveletUpdate update) {
     return new WaveViewServiceUpdateImpl(update);
   }
