@@ -16,6 +16,7 @@
 package org.waveprotocol.wave.client.wavepanel.view.dom.full;
 
 import static org.waveprotocol.wave.client.uibuilder.OutputHelper.close;
+import static org.waveprotocol.wave.client.uibuilder.OutputHelper.openWith;
 import static org.waveprotocol.wave.client.uibuilder.OutputHelper.open;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -26,6 +27,7 @@ import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.uibuilder.BuilderHelper.Component;
 import org.waveprotocol.wave.client.uibuilder.HtmlClosure;
 import org.waveprotocol.wave.client.uibuilder.UiBuilder;
+import org.waveprotocol.wave.client.wavepanel.view.IntrinsicThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.View.Type;
 
 /**
@@ -34,7 +36,14 @@ import org.waveprotocol.wave.client.wavepanel.view.View.Type;
  * generator is not ready yet.
  *
  */
-public final class RootThreadViewBuilder implements UiBuilder {
+public final class RootThreadViewBuilder implements IntrinsicThreadView, UiBuilder {
+  
+  /** Name of the attribute that stores the total blips. */
+  public final static String TOTAL_BLIPS_ATTRIBUTE = "t";
+  
+  /** Name of the attribute that stores the number of unread blips. */
+  public final static String UNREAD_BLIPS_ATTRIBUTE = "u";
+  
   /** Resources used by this widget. */
   public interface Resources extends ClientBundle {
     @Source("RootThread.css")
@@ -64,6 +73,9 @@ public final class RootThreadViewBuilder implements UiBuilder {
   private final Css css;
   private final String id;
 
+  private int totalBlipCount;
+  private int unreadBlipCount;
+  
   //
   // Structure.
   //
@@ -89,8 +101,26 @@ public final class RootThreadViewBuilder implements UiBuilder {
   }
 
   @Override
+  public String getId() {
+    return id;
+  }
+
+  @Override
+  public void setTotalBlipCount(int totalBlipCount) {
+    this.totalBlipCount = totalBlipCount;
+  }
+
+  @Override
+  public void setUnreadBlipCount(int unreadBlipCount) {
+    this.unreadBlipCount = unreadBlipCount;
+  }
+  
+  @Override
   public void outputHtml(SafeHtmlBuilder output) {
-    open(output, id, css.thread(), TypeCodes.kind(Type.ROOT_THREAD));
+    String extra = " " + TOTAL_BLIPS_ATTRIBUTE + "='" + totalBlipCount + "'" +
+      " " + UNREAD_BLIPS_ATTRIBUTE + "='" + unreadBlipCount + "'";
+    
+    openWith(output, id, css.thread(), TypeCodes.kind(Type.ROOT_THREAD), extra);
     {
       open(output, Components.BLIPS.getDomId(id), null, null);
       blips.outputHtml(output);

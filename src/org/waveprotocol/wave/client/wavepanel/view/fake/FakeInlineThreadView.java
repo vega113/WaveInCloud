@@ -28,10 +28,12 @@ import org.waveprotocol.wave.client.wavepanel.view.View;
  */
 public final class FakeInlineThreadView extends FakeThreadView implements InlineThreadView {
 
+  private final FakeContinuationIndicatorView continuationIndicator;
   private FakeAnchor container;
   private boolean collapsed;
 
   public FakeInlineThreadView() {
+    this.continuationIndicator = new FakeContinuationIndicatorView(this);
   }
 
   @Override
@@ -77,8 +79,16 @@ public final class FakeInlineThreadView extends FakeThreadView implements Inline
 
   @Override
   public ContinuationIndicatorView getReplyIndicator() {
-    // TODO implement this with the inline continuation feature.
-    throw new UnsupportedOperationException();
+    return continuationIndicator;
   }
 
+  @Override
+  public void setTotalBlipCount(int totalBlipCount) {
+    // no-op
+  }
+
+  @Override
+  public void setUnreadBlipCount(int unreadBlipCount) {
+    // no-op
+  }
 }

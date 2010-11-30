@@ -6,46 +6,73 @@
 
 .toggle {
   cursor: pointer;
-  margin: 0 0.4em;
+  margin: 0 0.3em;
   white-space: nowrap;    /* Keeps bubble and arrow together. */
+  font-size: 0.8em;
+  vertical-align: 0.1em;  /* Keep center alignment with shrinking font. */
+}
+
+.expanded {
+}
+
+.collapsed {
+}
+
+.arrow {
   display: inline-block;  /* Inline, but with background. */
+  height: 7px;
+  width: 7px;
+}
+
+@sprite .expanded.unread .arrow {
+  gwt-image: 'expandedUnread';
+  overflow: visible;
+}
+
+@sprite .collapsed.unread .arrow {
+  gwt-image: 'collapsedUnread';
+  overflow: visible;
+}
+
+@sprite .expanded.read .arrow {
+  gwt-image: 'expandedRead';
+  overflow: visible;
+}
+
+@sprite .collapsed.read .arrow {
+  gwt-image: 'collapsedRead';
+  overflow: visible;
+}
+
+.count {
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  padding: 0 0.5em;
+  margin: 0 0.3em;
+  font-weight: bold;
   position: relative;
 }
 
-@sprite .toggle.expanded {
-  gwt-image: 'expanded';
-  overflow: visible;
+.unread .count {
+  color: white;
+  background-image: literal("-moz-linear-gradient(0% 100% 90deg, rgb(93,140,9), rgb(149,184,0))");
+  background-image: literal("-webkit-gradient(linear, 0% 100%, 0% 0%, from(rgb(93,140,9)), to(rgb(149,184,0)))");
+  border: 1px solid rgb(93,140,9);
 }
 
-@sprite .toggle.collapsed {
-  gwt-image: 'collapsed';
-  overflow: visible;
+.read .count {
+  color: gray;
+  background-image: literal("-moz-linear-gradient(0% 100% 90deg, rgb(220,220,220), white)");
+  background-image: literal("-webkit-gradient(linear, 0% 100%, 0% 0%, from(rgb(220,220,220)), to(white))");
+  border: 1px solid rgb(154,154,154);
 }
 
-.chrome {
-  /*
-   * It is assumed that this box is inside something with a left margin, and
-   * that when the box is expanded, the callout is to creep into that margin.
-   * All other sides go in.
-   */
-  margin: 1em 0.5em 1em -2em;
-  box-shadow: 0px 0px 4px #808080;
-  -moz-box-shadow: 0px 0px 4px #808080;
-  -webkit-box-shadow: 0px 0px 4px #808080;
-  border-radius: 4px;
-  -moz-border-radius: 4px;
-  -webkit-border-radius: 4px;
-}
-
-.chrome.collapsed {
+.collapsed .dropContainer {
   display: none;
 }
 
-.dropContainer.collapsed {
-  display: none;
-}
-
-.dropContainer.expanded {
+.expanded .dropContainer {
   position: absolute;
   text-align: center;
   left: 0;
@@ -56,8 +83,22 @@
 
 @sprite .drop {
   gwt-image: 'callout';
-  background-color: white;
-  display: inline-block;
   vertical-align: bottom;
-  margin-bottom: -1.33em; /* Magic height. */
+  margin-bottom: -14px; /* Magic height. */
+  display: inline-block;
+  background-color: #FFF;
+}
+
+.chrome {
+  margin: 1em 0.5em;
+  box-shadow: 0px 0px 4px #808080;
+  -moz-box-shadow: 0px 0px 4px #808080;
+  -webkit-box-shadow: 0px 0px 4px #808080;
+  border-radius: 4px;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+}
+
+.chrome.collapsed  {
+  display: none;
 }

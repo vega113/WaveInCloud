@@ -21,6 +21,8 @@ import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.getA
 import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.getBefore;
 import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.load;
 import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.COLLAPSED_ATTRIBUTE;
+import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.TOTAL_BLIPS_ATTRIBUTE;
+import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.UNREAD_BLIPS_ATTRIBUTE;
 import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.COLLAPSED_VALUE;
 
 import com.google.gwt.dom.client.Document;
@@ -53,7 +55,8 @@ final class CollapsibleDomImpl implements DomView {
 
   private Element toggle;
   private Element chrome;
-  private Element dropContainer;
+  private Element countTotal;
+  private Element countUnread;
 
   /**
    * Indicates if this thread has been repaired. Since some HTML parsers rip
@@ -83,16 +86,19 @@ final class CollapsibleDomImpl implements DomView {
     return COLLAPSED_VALUE.equals(self.getAttribute(COLLAPSED_ATTRIBUTE));
   }
 
+  public boolean isRead() {
+    boolean read = true;
+    if (self.hasAttribute(UNREAD_BLIPS_ATTRIBUTE)) {
+      String val = self.getAttribute(UNREAD_BLIPS_ATTRIBUTE);
+      int unread = Integer.parseInt(val);
+      read = unread <= 0;
+    }
+    return read;
+  }
+  
   public void setCollapsed(boolean collapsed) {
-    // Because of client/server CSS mismatches, the full set of class names must
-    // be re-set every time. This constraint may go away if/when server-supplied
-    // CSS is done correctly, so that the client's CSS names equal the server's
-    // CSS names.
     if (collapsed) {
-      getToggle().setClassName(CSS.toggle() + " " + CSS.collapsed());
-      getDropContainer().setClassName(CSS.dropContainer() + " " + CSS.collapsed());
-      getChrome().setClassName(CSS.chrome() + " " + CSS.collapsed());
-      self.setAttribute("c", "c");
+      self.setAttribute(COLLAPSED_ATTRIBUTE, COLLAPSED_VALUE);
 
       // Webkit's incremental layout is incorrect, so we have to kick it a bit.
       if (UserAgent.isWebkit()) {
@@ -103,12 +109,23 @@ final class CollapsibleDomImpl implements DomView {
         self.getStyle().clearDisplay();
       }
     } else {
-      getToggle().setClassName(CSS.toggle() + " " + CSS.expanded());
-      getDropContainer().setClassName(CSS.dropContainer() + " " + CSS.expanded());
-      getChrome().setClassName(CSS.chrome() + " " + CSS.expanded());
       self.removeAttribute("c");
     }
+    updatedCssClassNames();
   }
+  
+  /** 
+   * Helper method to update the proper CSS class names on the toggle and
+   * chrome elements after a state change.
+   */
+  private void updatedCssClassNames() {
+    String readStateClass = " " + (isRead() ? CSS.read() : CSS.unread());
+    String collapsedStateClass = " " + (isCollapsed() ? CSS.collapsed() : CSS.expanded());
+    
+    getToggle().setClassName(CSS.toggle() + collapsedStateClass + readStateClass);
+    getChrome().setClassName(CSS.chrome() + collapsedStateClass);
+  }
+  
 
   //
   // Structure exposed for external control.
@@ -127,12 +144,36 @@ final class CollapsibleDomImpl implements DomView {
     }
     return chrome;
   }
-
-  private Element getDropContainer() {
-    if (dropContainer == null) {
-      dropContainer = load(id, Components.DROP_CONTAINER);
+  
+  public Element getCountTotal() {
+    if (countTotal == null) {
+      countTotal = load(id, Components.COUNT_TOTAL);
     }
-    return dropContainer;
+    return countTotal;
+  }
+  
+  public Element getCountUnread() {
+    if (countUnread == null) {
+      countUnread = load(id, Components.COUNT_UNREAD);
+    }
+    return countUnread;
+  }
+  
+  public void setTotalBlipCount(int totalBlipCount) {
+    self.setAttribute(TOTAL_BLIPS_ATTRIBUTE, "" + totalBlipCount);
+    getCountTotal().setInnerText("" + totalBlipCount);
+  }
+  
+  public void setUnreadBlipCount(int unreadBlipCount) {
+    self.setAttribute(UNREAD_BLIPS_ATTRIBUTE, "" + unreadBlipCount);
+    Element unread = getCountUnread();
+    unread.setInnerText("(" + unreadBlipCount + ")");
+    if (unreadBlipCount > 0) {
+      unread.getStyle().clearDisplay();
+    } else {
+      unread.getStyle().setDisplay(Display.NONE);
+    }
+    updatedCssClassNames();
   }
 
   public void remove() {

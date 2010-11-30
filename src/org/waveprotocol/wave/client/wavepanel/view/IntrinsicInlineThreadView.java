@@ -18,7 +18,7 @@ package org.waveprotocol.wave.client.wavepanel.view;
 
 /**
  * Reveals the primitive state exposed in an inline thread view.
- *
+ * 
  * @see InlineThreadView for structural state.
  */
 public interface IntrinsicInlineThreadView extends IntrinsicThreadView {

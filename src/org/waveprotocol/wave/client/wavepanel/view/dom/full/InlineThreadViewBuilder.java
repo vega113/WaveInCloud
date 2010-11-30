@@ -111,6 +111,16 @@ public final class InlineThreadViewBuilder implements IntrinsicInlineThreadView,
   }
 
   @Override
+  public void setTotalBlipCount(int totalBlipCount) {
+    impl.setTotalBlipCount(totalBlipCount);
+  }
+
+  @Override
+  public void setUnreadBlipCount(int unreadBlipCount) {
+    impl.setUnreadBlipCount(unreadBlipCount);
+  }
+  
+  @Override
   public void outputHtml(SafeHtmlBuilder output) {
     impl.outputHtml(output);
   }

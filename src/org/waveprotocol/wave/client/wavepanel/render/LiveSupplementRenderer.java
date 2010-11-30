@@ -15,28 +15,38 @@
  */
 package org.waveprotocol.wave.client.wavepanel.render;
 
+import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
+import org.waveprotocol.wave.client.wavepanel.view.ThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
+import org.waveprotocol.wave.model.conversation.ConversationThread;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.supplement.ObservableSupplementedWave;
+import org.waveprotocol.wave.model.util.IdentitySet;
+import org.waveprotocol.wave.model.util.ReadableIdentitySet.Proc;
 
 /**
  * Listens to supplement updates and update the read state of blips.
- *
+ * 
  */
-public final class LiveSupplementRenderer extends ObservableSupplementedWave.ListenerImpl {
+public final class LiveSupplementRenderer extends ObservableSupplementedWave.ListenerImpl implements
+    ThreadReadStateMonitor.Listener {
   private final ModelAsViewProvider views;
   private final ObservableSupplementedWave supplement;
+  private final ThreadReadStateMonitor readMonitor;
 
-  LiveSupplementRenderer(ObservableSupplementedWave supplement, ModelAsViewProvider views) {
+  LiveSupplementRenderer(ObservableSupplementedWave supplement, ModelAsViewProvider views,
+      ThreadReadStateMonitor readMonitor) {
     this.supplement = supplement;
     this.views = views;
+    this.readMonitor = readMonitor;
+    readMonitor.addListener(this);
   }
 
   public static LiveSupplementRenderer create(ObservableSupplementedWave supplement,
-      ModelAsViewProvider views) {
-    LiveSupplementRenderer renderer = new LiveSupplementRenderer(supplement, views);
+      ModelAsViewProvider views, ThreadReadStateMonitor readMonitor) {
+    LiveSupplementRenderer renderer = new LiveSupplementRenderer(supplement, views, readMonitor);
     supplement.addListener(renderer);
     return renderer;
   }
@@ -53,5 +63,21 @@ public final class LiveSupplementRenderer extends ObservableSupplementedWave.Lis
     if (metaUi != null) {
       metaUi.setRead(!supplement.isUnread(blip));
     }
+  }
+
+  @Override
+  public void onReadStateChanged(IdentitySet<ConversationThread> threads) {
+    threads.each(new Proc<ConversationThread>() {
+      @Override
+      public void apply(ConversationThread thread) {
+        ThreadView threadUi = null;
+        if (thread.isInline()) {
+          threadUi = views.getInlineThreadView(thread);
+        } else {
+          threadUi = views.getRootThreadView(thread);
+        }
+        threadUi.setUnreadBlipCount(readMonitor.getUnreadCount(thread));
+      }
+    });
   }
 }

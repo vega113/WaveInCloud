@@ -75,4 +75,14 @@ public final class InlineThreadViewImpl<I extends IntrinsicInlineThreadView> // 
   public ContinuationIndicatorView getReplyIndicator() {
     return helper.getIndicator(impl);
   }
+
+  @Override
+  public void setTotalBlipCount(int totalBlipCount) {
+    impl.setTotalBlipCount(totalBlipCount);
+  }
+
+  @Override
+  public void setUnreadBlipCount(int unreadBlipCount) {
+    impl.setUnreadBlipCount(unreadBlipCount);
+  }
 }
