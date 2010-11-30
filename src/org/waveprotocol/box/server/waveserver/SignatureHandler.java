@@ -25,7 +25,10 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
  * deltas should be signed.
  */
 public interface SignatureHandler {
-
+  interface Factory {
+   SignatureHandler getInstance();
+  }
+  
   /**
    * @return the domain of this signer.
    */

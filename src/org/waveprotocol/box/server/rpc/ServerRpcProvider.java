@@ -42,6 +42,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.NetUtils;
@@ -286,8 +287,8 @@ public class ServerRpcProvider {
   }
 
   @Inject
-  public ServerRpcProvider(@Named("http_frontend_addresses") String httpAddresses,
-      @Named("flashsocket_policy_port") Integer flashsocketPolicyPort,
+  public ServerRpcProvider(@Named(CoreSettings.HTTP_FRONTEND_ADDRESSES) List<String> httpAddresses,
+      @Named(CoreSettings.FLASHSOCKET_POLICY_PORT) Integer flashsocketPolicyPort,
       SessionManager sessionManager,
       org.eclipse.jetty.server.SessionManager jettySessionManager) {
     this(parseAddressList(httpAddresses), flashsocketPolicyPort, sessionManager, jettySessionManager);
@@ -368,12 +369,12 @@ public class ServerRpcProvider {
     LOG.fine("WebSocket server running.");
   }
 
-  private static InetSocketAddress[] parseAddressList(String addressList) {
-    if (addressList == null || addressList.length() == 0) {
+  private static InetSocketAddress[] parseAddressList(List<String> addressList) {
+    if (addressList == null || addressList.size() == 0) {
       return new InetSocketAddress[0];
     } else {
       Set<InetSocketAddress> addresses = Sets.newHashSet();
-      for (String str : addressList.split("\\s*,\\s*")) {
+      for (String str : addressList) {
         if (str.length() == 0) {
           LOG.warning("Encountered empty address in http addresses list.");
         } else {

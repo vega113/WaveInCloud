@@ -21,6 +21,7 @@ import com.google.gxp.base.GxpContext;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.account.HumanAccountDataImpl;
 import org.waveprotocol.box.server.authentication.HttpRequestBasedCallbackHandler;
 import org.waveprotocol.box.server.authentication.PasswordDigest;
@@ -51,7 +52,7 @@ public final class UserRegistrationServlet extends HttpServlet {
 
   @Inject
   public UserRegistrationServlet(AccountStore accountStore,
-      @Named("wave_server_domain") String domain) {
+      @Named(CoreSettings.WAVE_SERVER_DOMAIN) String domain) {
     this.accountStore = accountStore;
     this.domain = domain;
   }

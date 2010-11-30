@@ -31,6 +31,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.commons.codec.binary.Hex;
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.crypto.CertPathStore;
@@ -76,7 +77,7 @@ public class CertificateManagerImpl implements CertificateManager {
 
   @Inject
   public CertificateManagerImpl(
-      @Named("waveserver_disable_verification") boolean disableVerfication,
+      @Named(CoreSettings.WAVESERVER_DISABLE_VERIFICATION) boolean disableVerfication,
       SignatureHandler signer, WaveSignatureVerifier verifier, CertPathStore certPathStore) {
     this.disableVerfication = disableVerfication;
     this.waveSigner = signer;
@@ -86,7 +87,7 @@ public class CertificateManagerImpl implements CertificateManager {
 
     if (disableVerfication) {
       LOG.warning("** SIGNATURE VERIFICATION DISABLED ** "
-          + "see flag \"waveserver_disable_verification\"");
+          + "see flag \"" + CoreSettings.WAVESERVER_DISABLE_VERIFICATION + "\"");
     }
   }
 

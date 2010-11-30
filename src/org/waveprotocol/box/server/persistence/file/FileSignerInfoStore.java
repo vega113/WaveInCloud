@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.apache.commons.codec.binary.Hex;
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.SignerInfoStore;
 import org.waveprotocol.box.server.util.Log;
@@ -49,7 +50,7 @@ public class FileSignerInfoStore implements SignerInfoStore {
   private static final Log LOG = Log.get(FileSignerInfoStore.class);
   
   @Inject
-  public FileSignerInfoStore(@Named("signer_info_store_directory") String signerInfoStoreBasePath) {
+  public FileSignerInfoStore(@Named(CoreSettings.SIGNER_INFO_STORE_DIRECTORY) String signerInfoStoreBasePath) {
     Preconditions.checkNotNull(signerInfoStoreBasePath, "Requested path is null");
     this.signerInfoStoreBasePath = signerInfoStoreBasePath;
   }

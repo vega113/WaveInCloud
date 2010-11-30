@@ -81,5 +81,8 @@
 	<classpathentry kind="lib" path="third_party/runtime/socketio/socketio-java.jar" sourcepath="third_party/runtime/socketio/socketio-java-src.jar"/>
 	<classpathentry kind="lib" path="third_party/test/jmock/jmock-2.5.1.jar"/>
 	<classpathentry kind="lib" path="third_party/test/jmock/jmock-junit3-2.5.1.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/commons_lang/commons-lang-2.5.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/commons_collections/commons-collections-3.2.1.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/commons_configuration/commons-configuration-1.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

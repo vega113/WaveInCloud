@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
@@ -52,7 +53,7 @@ public class FileAccountStore implements AccountStore {
   private static final Log LOG = Log.get(FileAccountStore.class);
   
   @Inject
-  public FileAccountStore(@Named("account_store_directory") String accountStoreBasePath) {
+  public FileAccountStore(@Named(CoreSettings.ACCOUNT_STORE_DIRECTORY) String accountStoreBasePath) {
     Preconditions.checkNotNull(accountStoreBasePath, "Requested path is null");
     this.accountStoreBasePath = accountStoreBasePath;
   }

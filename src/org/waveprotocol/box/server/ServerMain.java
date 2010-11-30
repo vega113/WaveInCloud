@@ -23,7 +23,7 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.configuration.ConfigurationException;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.ProxyServlet;
 import org.waveprotocol.box.server.authentication.AccountStoreHolder;
@@ -49,8 +49,9 @@ import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.crypto.CertPathStore;
-import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
-import org.xmpp.component.ComponentException;
+import org.waveprotocol.wave.federation.FederationTransport;
+import org.waveprotocol.wave.federation.noop.NoOpFederationModule;
+import org.waveprotocol.wave.federation.xmpp.XmppFederationModule;
 
 import java.io.IOException;
 
@@ -62,38 +63,54 @@ public class ServerMain {
 
   private static final Log LOG = Log.get(ServerMain.class);
 
-  public static void main(String... args) throws ParseException {
-    Module flags = FlagBinder.parseFlags(args, FlagSettings.class);
-
+  public static void main(String... args) {
     try {
-      run(flags);
+      Module coreSettings = SettingsBinder.bindSettings(CoreSettings.class);
+      run(coreSettings);
       return;
     } catch (IOException e) {
       LOG.severe("IOException when running server:", e);
     } catch (PersistenceException e) {
       LOG.severe("PersistenceException when running server:", e);
+    } catch (ConfigurationException e) {
+      LOG.severe("ConfigurationException when running server:", e);
     }
   }
 
-  public static void run(Module flags) throws IOException, PersistenceException {
-    Injector flagInjector = Guice.createInjector(flags);
-    PersistenceModule persistenceModule = flagInjector.getInstance(PersistenceModule.class);
+  public static void run(Module coreSettings) throws IOException, PersistenceException,
+      ConfigurationException {
+    Injector settingsInjector = Guice.createInjector(coreSettings);
+
+    boolean enableFederation =
+        settingsInjector.getInstance(Key.get(Boolean.class,
+            Names.named(CoreSettings.ENABLE_FEDERATION)));
+    Module federationModule;
+    if (enableFederation) {
+      Module federationSettings = SettingsBinder.bindSettings(FederationSettings.class);
+      settingsInjector = settingsInjector.createChildInjector(federationSettings);
+      federationModule = settingsInjector.getInstance(XmppFederationModule.class);
+    } else {
+      federationModule = settingsInjector.getInstance(NoOpFederationModule.class);
+    }
+
+    PersistenceModule persistenceModule = settingsInjector.getInstance(PersistenceModule.class);
+
     Injector injector =
-        flagInjector.createChildInjector(new ServerModule(), new RobotApiModule(),
-            persistenceModule);
-    ComponentPacketTransport xmppComponent = injector.getInstance(ComponentPacketTransport.class);
-    ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
+        settingsInjector.createChildInjector(new ServerModule(enableFederation), new RobotApiModule(),
+            federationModule, persistenceModule);
 
     AccountStore accountStore = injector.getInstance(AccountStore.class);
     accountStore.initializeAccountStore();
     AccountStoreHolder.init(accountStore,
-        injector.getInstance(Key.get(String.class, Names.named("wave_server_domain"))));
+        injector.getInstance(Key.get(String.class, Names.named(CoreSettings.WAVE_SERVER_DOMAIN))));
 
     // Initialize the SignerInfoStore
     CertPathStore certPathStore = injector.getInstance(CertPathStore.class);
     if (certPathStore instanceof SignerInfoStore) {
       ((SignerInfoStore)certPathStore).initializeSignerInfoStore();
     }
+
+    ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
 
     server.addServlet("/attachment/*", injector.getInstance(AttachmentServlet.class));
 
@@ -112,10 +129,10 @@ public class ServerMain {
     server.addServlet("/robot/rpc", injector.getInstance(ActiveApiServlet.class));
 
     String gadgetServerHostname =
-        injector.getInstance(Key.get(String.class, Names.named("gadget_server_hostname")));
+        injector.getInstance(Key.get(String.class, Names.named(CoreSettings.GADGET_SERVER_HOSTNAME)));
     ProxyServlet.Transparent proxyServlet =
         new ProxyServlet.Transparent("/gadgets", "http", gadgetServerHostname,
-            injector.getInstance(Key.get(int.class, Names.named("gadget_server_port"))), "/gadgets");
+            injector.getInstance(Key.get(int.class, Names.named(CoreSettings.GADGET_SERVER_PORT))), "/gadgets");
     ServletHolder proxyServletHolder = server.addServlet("/gadgets/*", proxyServlet);
     proxyServletHolder.setInitParameter("HostHeader", gadgetServerHostname);
 
@@ -128,11 +145,10 @@ public class ServerMain {
     ProtocolWaveClientRpc.Interface rpcImpl =
         injector.getInstance(ProtocolWaveClientRpc.Interface.class);
     server.registerService(ProtocolWaveClientRpc.newReflectiveService(rpcImpl));
-    try {
-      xmppComponent.run();
-    } catch (ComponentException e) {
-      LOG.warning("couldn't connect to XMPP server:", e);
-    }
+    
+    FederationTransport federationManager = injector.getInstance(FederationTransport.class);
+    federationManager.startFederation();
+    
     LOG.info("Starting server");
     server.startWebSocketServer();
   }

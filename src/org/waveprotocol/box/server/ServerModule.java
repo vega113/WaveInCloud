@@ -32,13 +32,6 @@ import org.waveprotocol.box.server.rpc.ProtoSerializer;
 import org.waveprotocol.box.server.rpc.ServerRpcProvider;
 import org.waveprotocol.box.server.waveserver.WaveServerImpl;
 import org.waveprotocol.box.server.waveserver.WaveServerModule;
-import org.waveprotocol.wave.federation.xmpp.ComponentPacketTransport;
-import org.waveprotocol.wave.federation.xmpp.IncomingPacketHandler;
-import org.waveprotocol.wave.federation.xmpp.OutgoingPacketTransport;
-import org.waveprotocol.wave.federation.xmpp.XmppDisco;
-import org.waveprotocol.wave.federation.xmpp.XmppFederationHost;
-import org.waveprotocol.wave.federation.xmpp.XmppFederationRemote;
-import org.waveprotocol.wave.federation.xmpp.XmppManager;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl.Seed;
@@ -61,7 +54,12 @@ import javax.security.auth.login.Configuration;
  *
  */
 public class ServerModule extends AbstractModule {
+  private final boolean enableFederation;
 
+  public ServerModule(boolean enableFederation) {
+    this.enableFederation = enableFederation;
+  }
+  
   @Override
   protected void configure() {
     // Receive updates from the outside world, and push them into our local Wave
@@ -69,29 +67,11 @@ public class ServerModule extends AbstractModule {
     bind(WaveletFederationListener.Factory.class).annotatedWith(FederationRemoteBridge.class).to(
         WaveServerImpl.class);
 
-    // Request history and submit deltas to the outside world *from* our local
-    // Wave Server.
-    bind(WaveletFederationProvider.class).annotatedWith(FederationRemoteBridge.class).to(
-        XmppFederationRemote.class).in(Singleton.class);
-
-    // Serve updates to the outside world about local waves.
-    bind(WaveletFederationListener.Factory.class).annotatedWith(FederationHostBridge.class).to(
-        XmppFederationHost.class).in(Singleton.class);
-
     // Provide history and respond to submits about our own local waves.
     bind(WaveletFederationProvider.class).annotatedWith(FederationHostBridge.class).to(
         WaveServerImpl.class);
 
-    bind(XmppDisco.class).in(Singleton.class);
-    bind(XmppFederationRemote.class).in(Singleton.class);
-    bind(XmppFederationHost.class).in(Singleton.class);
-
-    bind(XmppManager.class).in(Singleton.class);
-    bind(IncomingPacketHandler.class).to(XmppManager.class);
-    bind(ComponentPacketTransport.class).in(Singleton.class);
-    bind(OutgoingPacketTransport.class).to(ComponentPacketTransport.class);
-
-    install(new WaveServerModule());
+    install(new WaveServerModule(enableFederation));
     TypeLiteral<List<String>> certs = new TypeLiteral<List<String>>() {};
     bind(certs).annotatedWith(Names.named("certs")).toInstance(Arrays.<String> asList());
 
@@ -109,7 +89,7 @@ public class ServerModule extends AbstractModule {
   @Provides
   @Singleton
   @Inject
-  public IdGenerator provideIdGenerator(@Named("wave_server_domain") String domain, Seed seed) {
+  public IdGenerator provideIdGenerator(@Named(CoreSettings.WAVE_SERVER_DOMAIN) String domain, Seed seed) {
     return new IdGeneratorImpl(domain, seed);
   }
 

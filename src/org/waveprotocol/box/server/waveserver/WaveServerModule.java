@@ -22,6 +22,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.frontend.ClientFrontend;
 import org.waveprotocol.box.server.frontend.ClientFrontendImpl;
@@ -48,7 +49,12 @@ import org.waveprotocol.wave.model.version.HashedVersionFactory;
  *
  */
 public class WaveServerModule extends AbstractModule {
-
+  private final boolean enableFederation;
+  
+  public WaveServerModule(boolean enableFederation) {
+    this.enableFederation = enableFederation;
+  }
+  
   private static class LocalWaveletContainerFactory implements LocalWaveletContainer.Factory {
     @Override
     public LocalWaveletContainer create(WaveletName waveletName) {
@@ -70,7 +76,14 @@ public class WaveServerModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(TimeSource.class).to(DefaultTimeSource.class).in(Singleton.class);
-    bind(SignatureHandler.class).toProvider(SignatureHandlerProvider.class);
+    
+    if (enableFederation) {
+      bind(SignatureHandler.class)
+      .toProvider(SigningSignatureHandler.SigningSignatureHandlerProvider.class);
+    } else {
+      bind(SignatureHandler.class)
+      .toProvider(NonSigningSignatureHandler.NonSigningSignatureHandlerProvider.class);
+    }
 
     try {
       bind(WaveSignatureVerifier.class).toConstructor(WaveSignatureVerifier.class.getConstructor(
@@ -101,7 +114,7 @@ public class WaveServerModule extends AbstractModule {
    */
   @Provides
   protected WaveCertPathValidator provideWaveCertPathValidator(
-      @Named("waveserver_disable_signer_verification") boolean disableSignerVerification,
+      @Named(CoreSettings.WAVESERVER_DISABLE_SIGNER_VERIFICATION) boolean disableSignerVerification,
       TimeSource timeSource, VerifiedCertChainCache certCache,
       TrustRootsProvider trustRootsProvider) {
     if (disableSignerVerification) {

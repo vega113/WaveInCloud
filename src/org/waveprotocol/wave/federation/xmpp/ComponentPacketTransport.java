@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.jivesoftware.whack.ExternalComponentManager;
+import org.waveprotocol.box.server.FederationSettings;
 import org.xmpp.component.Component;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;
@@ -62,11 +63,11 @@ public class ComponentPacketTransport implements Component, OutgoingPacketTransp
 
   @Inject
   public ComponentPacketTransport(IncomingPacketHandler handler,
-      @Named("xmpp_component_name") String componentName,
-      @Named("xmpp_server_hostname") String serverDomain,
-      @Named("xmpp_server_secret") String serverSecret,
-      @Named("xmpp_server_ip") String serverAddress,
-      @Named("xmpp_server_port") int serverPort) {
+      @Named(FederationSettings.XMPP_COMPONENT_NAME) String componentName,
+      @Named(FederationSettings.XMPP_SERVER_HOSTNAME) String serverDomain,
+      @Named(FederationSettings.XMPP_SERVER_SECRET) String serverSecret,
+      @Named(FederationSettings.XMPP_SERVER_IP) String serverAddress,
+      @Named(FederationSettings.XMPP_SERVER_PORT) int serverPort) {
     this.handler = handler;
     this.componentName = componentName;
     this.serverDomain = serverDomain;

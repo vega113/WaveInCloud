@@ -17,6 +17,12 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -27,7 +33,32 @@ import java.util.Collections;
  * Signature handler that doesn't sign deltas.
  */
 public class NonSigningSignatureHandler implements SignatureHandler {
+  /**
+   * Guice {@link Provider} for the instance of {@link NonSigningSignatureHandler}
+   */
+  @Singleton
+  public static class NonSigningSignatureHandlerProvider implements Provider<SignatureHandler> {
+    private final String waveDomain;
+    private NonSigningSignatureHandler signer = null;
 
+    @Inject
+    public NonSigningSignatureHandlerProvider(
+        @Named(CoreSettings.WAVE_SERVER_DOMAIN) String waveDomain) {
+      this.waveDomain = waveDomain;
+    }
+    
+    @Override
+    public NonSigningSignatureHandler get() {
+      synchronized (this) {
+        if (signer == null) {
+          signer = new NonSigningSignatureHandler(waveDomain);
+        }
+      }
+      return signer;
+    }
+  }
+  
+  
   private final String domain;
 
   public NonSigningSignatureHandler(String domain) {

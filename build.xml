@@ -401,7 +401,10 @@
         <include name="org/aopalliance/**/*" />
         <include name="org/apache/commons/cli/**/*" />
         <include name="org/apache/commons/codec/**/*" />
+        <include name="org/apache/commons/collections/**/*" />
+        <include name="org/apache/commons/configuration/**/*" />
         <include name="org/apache/commons/httpclient/**/*" />
+        <include name="org/apache/commons/lang/**/*" />
         <include name="org/apache/commons/logging/**/*" />
         <include name="org/bson/**/*" />
         <include name="org/codehaus/jackson/**/*" />

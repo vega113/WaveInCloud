@@ -22,6 +22,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 
 import org.dom4j.Element;
+import org.waveprotocol.box.server.FederationSettings;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -54,7 +55,7 @@ class XmppFederationHostForDomain implements WaveletFederationListener {
 
   @Inject
   public XmppFederationHostForDomain(final String domain, XmppManager manager,
-      XmppDisco disco, @Named("xmpp_jid") String jid) {
+      XmppDisco disco, @Named(FederationSettings.XMPP_JID) String jid) {
     this.remoteDomain = domain;
     this.manager = manager;
     this.jid = jid;

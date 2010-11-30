@@ -25,6 +25,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.dom4j.Element;
+import org.waveprotocol.box.server.FederationSettings;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -80,7 +81,7 @@ public class XmppFederationHost implements WaveletFederationListener.Factory {
    */
   @Inject
   public XmppFederationHost(@FederationHostBridge WaveletFederationProvider waveletProvider,
-      XmppDisco disco, @Named("xmpp_jid") String jid) {
+      XmppDisco disco, @Named(FederationSettings.XMPP_JID) String jid) {
     this.waveletProvider = waveletProvider;
     this.disco = disco;
     this.jid = jid;

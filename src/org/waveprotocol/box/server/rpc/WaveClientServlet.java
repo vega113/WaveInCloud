@@ -25,6 +25,7 @@ import com.google.inject.name.Named;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.waveprotocol.box.common.SessionConstants;
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.gxp.TopBar;
 import org.waveprotocol.box.server.gxp.WaveClientPage;
@@ -71,8 +72,8 @@ public class WaveClientServlet extends HttpServlet {
    */
   @Inject
   public WaveClientServlet(
-      @Named("wave_server_domain") String domain,
-      @Named("use_socketio") Boolean useSocketIO,
+      @Named(CoreSettings.WAVE_SERVER_DOMAIN) String domain,
+      @Named(CoreSettings.USE_SOCKETIO) Boolean useSocketIO,
       SessionManager sessionManager) {
     this.domain = domain;
     this.useSocketIO = useSocketIO;

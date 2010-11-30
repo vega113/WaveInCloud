@@ -22,6 +22,7 @@ import com.google.gxp.base.GxpContext;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.account.RobotAccountDataImpl;
@@ -60,7 +61,7 @@ public class RobotRegistrationServlet extends HttpServlet {
 
   @Inject
   private RobotRegistrationServlet(AccountStore accountStore,
-      @Named("wave_server_domain") String domain, TokenGenerator tokenGenerator) {
+      @Named(CoreSettings.WAVE_SERVER_DOMAIN) String domain, TokenGenerator tokenGenerator) {
     this.accountStore = accountStore;
     this.domain = domain;
     this.tokenGenerator = tokenGenerator;

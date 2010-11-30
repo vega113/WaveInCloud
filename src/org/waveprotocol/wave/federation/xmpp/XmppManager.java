@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.dom4j.Element;
+import org.waveprotocol.box.server.FederationSettings;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.xmpp.packet.IQ;
@@ -117,7 +118,7 @@ public class XmppManager implements IncomingPacketHandler {
 
   @Inject
   public XmppManager(XmppFederationHost host, XmppFederationRemote remote, XmppDisco disco,
-      OutgoingPacketTransport transport, @Named("xmpp_jid") String jid) {
+      OutgoingPacketTransport transport, @Named(FederationSettings.XMPP_JID) String jid) {
     this.host = host;
     this.remote = remote;
     this.disco = disco;

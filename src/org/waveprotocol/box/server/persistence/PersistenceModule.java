@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.persistence.file.FileAccountStore;
 import org.waveprotocol.box.server.persistence.file.FileAttachmentStore;
 import org.waveprotocol.box.server.persistence.file.FileSignerInfoStore;
@@ -54,9 +55,9 @@ public class PersistenceModule extends AbstractModule {
   private MongoDbProvider mongoDbProvider;
 
   @Inject
-  public PersistenceModule(@Named("signer_info_store_type") String signerInfoStoreType,
-      @Named("attachment_store_type") String attachmentStoreType,
-      @Named("account_store_type") String accountStoreType) {
+  public PersistenceModule(@Named(CoreSettings.SIGNER_INFO_STORE_TYPE) String signerInfoStoreType,
+      @Named(CoreSettings.ATTACHMENT_STORE_TYPE) String attachmentStoreType,
+      @Named(CoreSettings.ACCOUNT_STORE_TYPE) String accountStoreType) {
     this.signerInfoStoreType = signerInfoStoreType;
     this.attachmentStoreType = attachmentStoreType;
     this.accountStoreType = accountStoreType;

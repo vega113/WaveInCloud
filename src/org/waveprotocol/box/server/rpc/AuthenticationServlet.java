@@ -25,6 +25,7 @@ import com.google.inject.name.Named;
 
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.authentication.HttpRequestBasedCallbackHandler;
 import org.waveprotocol.box.server.authentication.ParticipantPrincipal;
 import org.waveprotocol.box.server.authentication.SessionManager;
@@ -70,7 +71,7 @@ public class AuthenticationServlet extends HttpServlet {
 
   @Inject
   public AuthenticationServlet(Configuration configuration, SessionManager sessionManager,
-      @Named("wave_server_domain") String domain) {
+      @Named(CoreSettings.WAVE_SERVER_DOMAIN) String domain) {
     Preconditions.checkNotNull(configuration, "Configuration is null");
     Preconditions.checkNotNull(sessionManager, "Session manager is null");
     this.configuration = configuration;

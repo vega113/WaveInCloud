@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.dom4j.Element;
+import org.waveprotocol.box.server.FederationSettings;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.xmpp.packet.IQ;
@@ -78,9 +79,9 @@ public class XmppDisco {
    * @param successExpirySecs how long to cache successful disco results
    */
   @Inject
-  public XmppDisco(@Named("xmpp_server_description") String serverDescription,
-      @Named("xmpp_disco_failed_expiry_secs") final int failExpirySecs,
-      @Named("xmpp_disco_successful_expiry_secs") final int successExpirySecs) {
+  public XmppDisco(@Named(FederationSettings.XMPP_SERVER_DESCRIPTION) String serverDescription,
+      @Named(FederationSettings.XMPP_DISCO_FAILED_EXPIRY_SECS) final int failExpirySecs,
+      @Named(FederationSettings.XMPP_DISCO_SUCCESSFUL_EXPIRY_SECS) final int successExpirySecs) {
     this.serverDescription = serverDescription;
     this.failExpirySecs = failExpirySecs;
     this.successExpirySecs = successExpirySecs;

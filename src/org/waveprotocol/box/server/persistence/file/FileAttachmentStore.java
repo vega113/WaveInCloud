@@ -20,6 +20,7 @@ package org.waveprotocol.box.server.persistence.file;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.persistence.AttachmentStore;
 import org.waveprotocol.box.server.persistence.AttachmentUtil;
 import org.waveprotocol.wave.model.util.CharBase64;
@@ -46,7 +47,7 @@ public class FileAttachmentStore implements AttachmentStore {
   private String basePath;
 
   @Inject
-  public FileAttachmentStore(@Named("attachment_store_directory") String basePath) {
+  public FileAttachmentStore(@Named(CoreSettings.ATTACHMENT_STORE_DIRECTORY) String basePath) {
     this.basePath = basePath;
   }
 

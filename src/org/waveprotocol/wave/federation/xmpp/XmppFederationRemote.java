@@ -27,6 +27,7 @@ import com.google.protobuf.ByteString;
 import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
+import org.waveprotocol.box.server.FederationSettings;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -74,7 +75,7 @@ public class XmppFederationRemote implements WaveletFederationProvider {
   @Inject
   public XmppFederationRemote(
       @FederationRemoteBridge WaveletFederationListener.Factory updatesListenerFactory,
-      XmppDisco disco, @Named("xmpp_jid") String jid) {
+      XmppDisco disco, @Named(FederationSettings.XMPP_JID) String jid) {
     this.updatesListenerFactory = updatesListenerFactory;
     this.disco = disco;
     this.jid = jid;

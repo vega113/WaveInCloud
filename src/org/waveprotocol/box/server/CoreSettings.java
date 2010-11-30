@@ -17,119 +17,97 @@
 
 package org.waveprotocol.box.server;
 
+import java.util.List;
+
 /**
- * Flags configuration for FedOne.
+ * Core Wave in a Box settings
  */
-// TODO - add descriptions to all flags.
 @SuppressWarnings("unused") // We inject them by the name of their flag
-public class FlagSettings {
-  @Flag(name = "xmpp_server_hostname")
-  private static String xmppServerHostname;
-
-  @Flag(name = "xmpp_server_secret")
-  private static String xmppServerSecret;
-
-  @Flag(name = "xmpp_component_name")
-  private static String xmppComponentName;
-
-  @Flag(name = "xmpp_server_port")
-  private static int xmppServerPort;
-
-  @Flag(name = "xmpp_server_ip")
-  private static String xmppServerIp;
-
-  @Flag(name = "xmpp_server_ping")
-  private static String xmppServerPing;
-
-  @Flag(name = "wave_server_domain")
+public class CoreSettings {
+  public static final String WAVE_SERVER_DOMAIN = "wave_server_domain";
+  public static final String HTTP_FRONTEND_PUBLIC_ADDRESS = "http_frontend_public_address";
+  public static final String HTTP_FRONTEND_ADDRESSES = "http_frontend_addresses";
+  public static final String WAVESERVER_DISABLE_VERIFICATION = "waveserver_disable_verification";
+  public static final String WAVESERVER_DISABLE_SIGNER_VERIFICATION =
+      "waveserver_disable_signer_verification";
+  public static final String ENABLE_FEDERATION = "enable_federation";
+  public static final String SIGNER_INFO_STORE_TYPE = "signer_info_store_type";
+  public static final String SIGNER_INFO_STORE_DIRECTORY = "signer_info_store_directory";
+  public static final String ATTACHMENT_STORE_TYPE = "attachment_store_type";
+  public static final String ATTACHMENT_STORE_DIRECTORY = "attachment_store_directory";
+  public static final String ACCOUNT_STORE_TYPE = "account_store_type";
+  public static final String ACCOUNT_STORE_DIRECTORY = "account_store_directory";
+  public static final String FLASHSOCKET_POLICY_PORT = "flashsocket_policy_port";
+  public static final String USE_SOCKETIO = "use_socketio";
+  public static final String GADGET_SERVER_HOSTNAME = "gadget_server_hostname";
+  public static final String GADGET_SERVER_PORT = "gadget_server_port";
+  
+  @Setting(name = WAVE_SERVER_DOMAIN)
   private static String waveServerDomain;
 
-  @Flag(name = "http_frontend_public_address", defaultValue = "localhost:9898",
+  @Setting(name = HTTP_FRONTEND_PUBLIC_ADDRESS, defaultValue = "localhost:9898",
       description = "The server's public address.")
   private static String httpFrontEndPublicAddress;
 
-  @Flag(name = "http_frontend_addresses", defaultValue = "localhost:9898",
+  @Setting(name = HTTP_FRONTEND_ADDRESSES, defaultValue = "localhost:9898",
       description = "A comman seperated list of address on which to listen for connections."
           + " Each address is a host or ip and port seperated by a colon.")
-  private static String httpFrontEndAddresses;
+  private static List<String> httpFrontEndAddresses;
 
-  @Flag(name = "certificate_private_key")
-  private static String certificatePrivKey;
-
-  @Flag(name = "certificate_files", description = "comma separated WITH NO SPACES.")
-  private static String certificateFiles;
-
-  @Flag(name = "certificate_domain")
-  private static String certificateDomain;
-
-  @Flag(name = "waveserver_disable_verification")
+  @Setting(name = WAVESERVER_DISABLE_VERIFICATION)
   private static boolean waveserverDisableVerification;
 
-  @Flag(name = "waveserver_disable_signer_verification")
+  @Setting(name = WAVESERVER_DISABLE_SIGNER_VERIFICATION)
   private static boolean waveserverDisableSignerVerification;
 
-  @Flag(name = "enable_federation", defaultValue = "true")
+  @Setting(name = ENABLE_FEDERATION, defaultValue = "false")
   private static boolean enableFederation;
 
-  @Flag(name = "xmpp_server_description")
-  private static String xmppServerDescription;
-
-  // default value is 5 minutes
-  @Flag(name = "xmpp_disco_failed_expiry_secs", defaultValue = "300")
-  private static int xmppDiscoFailedExpirySecs;
-
-  // default value is 2 hours
-  @Flag(name = "xmpp_disco_successful_expiry_secs", defaultValue = "7200")
-  private static int xmppDiscoSuccessfulExpirySecs;
-
-  @Flag(name = "xmpp_jid")
-  private static String xmppJid;
-
-  @Flag(name = "signer_info_store_type",
+  @Setting(name = SIGNER_INFO_STORE_TYPE,
       description = "Type of persistence to use for the SignerInfo Storage",
       defaultValue = "memory")
   private static String signerInfoStoreType;
 
-  @Flag(name = "signer_info_store_directory",
+  @Setting(name = SIGNER_INFO_STORE_DIRECTORY,
       description = "Location on disk where the signer info store lives. Must be writeable by the "
           + "wave-in-a-box process. Only used by file-based signer info store.",
       defaultValue = "_certificates")
   private static String signerInfoStoreDirectory;
 
-  @Flag(name = "attachment_store_type",
+  @Setting(name = ATTACHMENT_STORE_TYPE,
       description = "Type of persistence store to use for attachments", defaultValue = "disk")
   private static String attachmentStoreType;
 
-  @Flag(name = "attachment_store_directory",
+  @Setting(name = ATTACHMENT_STORE_DIRECTORY,
       description = "Location on disk where the attachment store lives. Must be writeable by the "
           + "fedone process. Only used by disk-based attachment store.",
       defaultValue = "_attachments")
   private static String attachmentStoreDirectory;
 
-  @Flag(name = "account_store_type",
+  @Setting(name = ACCOUNT_STORE_TYPE,
       description = "Type of persistence to use for the Account Storage", defaultValue = "memory")
   private static String accountStoreType;
 
-  @Flag(name = "account_store_directory",
+  @Setting(name = ACCOUNT_STORE_DIRECTORY,
       description = "Location on disk where the account store lives. Must be writeable by the "
           + "wave-in-a-box process. Only used by file-based account store.",
       defaultValue = "_accounts")
   private static String accountStoreDirectory;
 
-  @Flag(name = "flashsocket_policy_port",
+  @Setting(name = FLASHSOCKET_POLICY_PORT,
       description = "Port on which to listen for Flashsocket policy requests.",
       defaultValue = "843")
   private static int flashsocketPolicyPort;
 
-  @Flag(name = "use_socketio",
+  @Setting(name = USE_SOCKETIO,
       description = "Enable use of Socket.IO instead of native WebSockets", defaultValue = "false")
   private static boolean useSocketIO;
 
-  @Flag(name = "gadget_server_hostname", description = "The hostname of the gadget server.",
+  @Setting(name = GADGET_SERVER_HOSTNAME, description = "The hostname of the gadget server.",
       defaultValue = "gmodules.com")
   private static String gadgetServerHostname;
 
-  @Flag(name = "gadget_server_port", description = "The port of the gadget server.",
+  @Setting(name = GADGET_SERVER_PORT, description = "The port of the gadget server.",
       defaultValue = "80")
   private static int gadgetServerPort;
 }
