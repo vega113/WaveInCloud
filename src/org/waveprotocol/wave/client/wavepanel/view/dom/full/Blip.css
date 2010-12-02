@@ -61,7 +61,7 @@
   z-index: 0;
 }
 
-@if user.agent ie6 {
+@if user.agent ie6 ie8 {
   /* IE bug: negative margin on avatar does not work unless blip hasLayout. */
   .blip {
     zoom: 1;

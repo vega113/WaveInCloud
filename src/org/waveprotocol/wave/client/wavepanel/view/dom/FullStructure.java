@@ -340,10 +340,6 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
         @Override
         public InlineThreadView getThread(AnchorDomImpl anchor) {
           Element child = anchor.getChild();
-          // IE puts in a phantom P when we move a span that came from a P.
-          if (UserAgent.isIE() && child.getTagName().equals("P")) {
-            child = child.getFirstChildElement();
-          }
           return asInlineThread(child);
         }
 

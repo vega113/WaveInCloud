@@ -22,6 +22,7 @@ import static org.waveprotocol.wave.client.uibuilder.OutputHelper.closeSpan;
 import static org.waveprotocol.wave.client.uibuilder.OutputHelper.open;
 import static org.waveprotocol.wave.client.uibuilder.OutputHelper.openSpan;
 import static org.waveprotocol.wave.client.uibuilder.OutputHelper.openSpanWith;
+import static org.waveprotocol.wave.client.uibuilder.OutputHelper.openWith;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -30,6 +31,7 @@ import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.resources.client.ImageResource;
 
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
+import org.waveprotocol.wave.client.common.util.UserAgent;
 import org.waveprotocol.wave.client.uibuilder.BuilderHelper.Component;
 import org.waveprotocol.wave.client.uibuilder.HtmlClosure;
 import org.waveprotocol.wave.client.uibuilder.UiBuilder;
@@ -45,13 +47,13 @@ public final class CollapsibleBuilder implements UiBuilder {
 
   /** {@link #COLLAPSED_ATTRIBUTE}'s value for collapsed (must be HTML safe). */
   public final static String COLLAPSED_VALUE = "c";
-  
+
   /** Name of the attribute that stores the total blips. */
   public final static String TOTAL_BLIPS_ATTRIBUTE = "t";
-  
+
   /** Name of the attribute that stores the number of unread blips. */
   public final static String UNREAD_BLIPS_ATTRIBUTE = "u";
-  
+
   /** Resources used by this widget. */
   public interface Resources extends ClientBundle {
     @Source("Collapsible.css")
@@ -62,13 +64,13 @@ public final class CollapsibleBuilder implements UiBuilder {
 
     @Source("arrow_read_expanded.png")
     ImageResource expandedRead();
-    
+
     @Source("arrow_unread_expanded.png")
     ImageResource expandedUnread();
-    
+
     @Source("arrow_read_collapsed.png")
     ImageResource collapsedRead();
-    
+
     @Source("arrow_unread_collapsed.png")
     ImageResource collapsedUnread();
   }
@@ -76,17 +78,17 @@ public final class CollapsibleBuilder implements UiBuilder {
   /** CSS class names for this widget. */
   public interface Css extends CssResource {
     String toggle();
-    
+
     String arrow();
-    
+
     String count();
-    
+
     String collapsed();
-    
+
     String expanded();
-    
+
     String read();
-    
+
     String unread();
 
     String chrome();
@@ -176,19 +178,21 @@ public final class CollapsibleBuilder implements UiBuilder {
   public boolean isCollapsed() {
     return collapsed;
   }
-  
+
   public void setTotalBlipCount( int totalBlipCount ) {
     this.totalBlipCount = totalBlipCount;
   }
-  
+
   public void setUnreadBlipCount( int unreadBlipCount ) {
     this.unreadBlipCount = unreadBlipCount;
   }
 
   @Override
   public void outputHtml(SafeHtmlBuilder output) {
+    // All container elements must be block-level HTML elements (styles do not
+    // make a difference) in order to validate with contents that are block level.
     //
-    // <span thread>
+    // <div thread>
     //   <span toggle expanded|collapsed unread|read >
     //     <span arrow />
     //     <span count>
@@ -202,17 +206,17 @@ public final class CollapsibleBuilder implements UiBuilder {
     //   <div chrome expanded|collapsed>
     // ...
     //   </div>
-    // </span>
+    // </div>
     String readStateCss = " " + ((unreadBlipCount > 0) ? css.unread() : css.read());
     String collapsedStateCss = " " + (collapsed ? css.collapsed() : css.expanded());
-    
+    String unselectable = UserAgent.isIE() ? "unselectable='on'" : null;
     String extra = " " + (collapsed ? COLLAPSED_ATTRIBUTE + "='" + COLLAPSED_VALUE + "'" : "") +
         " " + TOTAL_BLIPS_ATTRIBUTE + "='" + totalBlipCount + "'" +
         " " + UNREAD_BLIPS_ATTRIBUTE + "='" + unreadBlipCount + "'";
-    
-    openSpanWith(output, id, null, kind, extra);
+
+    openWith(output, id, null, kind, extra);
     {
-      openSpan(output, Components.TOGGLE.getDomId(id), css.toggle() + readStateCss + 
+      openSpan(output, Components.TOGGLE.getDomId(id), css.toggle() + readStateCss +
           collapsedStateCss, TypeCodes.kind(Type.TOGGLE));
       {
         appendSpan(output, Components.ARROW.getDomId(id), css.arrow(), null);
@@ -221,13 +225,13 @@ public final class CollapsibleBuilder implements UiBuilder {
           openSpan(output, Components.COUNT_TOTAL.getDomId(id), null, null);
           output.append(totalBlipCount);
           closeSpan(output);
-          
+
           String unreadExtra = unreadBlipCount <= 0 ? " style='display: none;'" : "";
           openSpanWith(output, Components.COUNT_UNREAD.getDomId(id), null, null, unreadExtra);
           output.appendEscaped("(" + unreadBlipCount + ")");
           closeSpan(output);
-          
-          open(output, Components.DROP_CONTAINER.getDomId(id), css.dropContainer() + 
+
+          open(output, Components.DROP_CONTAINER.getDomId(id), css.dropContainer() +
               collapsedStateCss, null);
           appendSpan(output, null, css.drop(), null);
           close(output);
@@ -235,13 +239,14 @@ public final class CollapsibleBuilder implements UiBuilder {
         closeSpan(output);
       }
       closeSpan(output);
-      open(output, Components.CHROME.getDomId(id), css.chrome() + collapsedStateCss, null);
+      openWith(output, Components.CHROME.getDomId(id), css.chrome() + collapsedStateCss, null,
+          unselectable);
       {
         content.outputHtml(output);
       }
       close(output);
     }
-    closeSpan(output);
+    close(output);
   }
 
 }

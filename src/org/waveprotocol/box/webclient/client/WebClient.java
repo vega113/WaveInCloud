@@ -117,8 +117,13 @@ public class WebClient implements EntryPoint {
     ErrorHandler.install();
 
     // Set up UI
-    RootPanel.get("app").add(BINDER.createAndBindUi(this));
-
+    DockLayoutPanel self = BINDER.createAndBindUi(this);
+    RootPanel.get("app").add(self);
+    // DockLayoutPanel forcibly conflicts with sensible layout control, and
+    // sticks inline styles on elements without permission. They must be
+    // cleared.
+    self.getElement().getStyle().clearPosition();
+    
     if (LogLevel.showDebug()) {
       logPanel.enable();
     } else {

@@ -288,7 +288,7 @@ public final class InlineAnchorLiveRenderer extends RenderingMutationHandler {
 
   @Override
   public Element createDomImpl(Renderable element) {
-    Element e = Document.get().createSpanElement();
+    Element e = Document.get().createDivElement();
     // Do the things that the doodad API should be doing by default.
     DomHelper.setContentEditable(e, false, false);
     DomHelper.makeUnselectable(e);

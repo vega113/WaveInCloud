@@ -107,7 +107,7 @@ public final class OutputHelper {
         + (id != null ? " id='" + id + "'" : "") //
         + (clazz != null ? " class='" + clazz + "'" : "")
         + (kind != null ? " " + BuilderHelper.KIND_ATTRIBUTE + "='" + kind + "'" : "")
-        + (extra != null ? extra : "") + ">");
+        + (extra != null ? " " + extra : "") + ">");
   }
 
   /**

@@ -32,7 +32,8 @@
   <gxp:param name='topBar' type='HtmlClosure' />
   <gxp:param name='useSocketIO' type='boolean' />
 
-  <html>
+  <!-- Generate doctype to trigger standards mode -->
+  <html gxp:doctype='transitional'>
     <head>
       <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
       <title>Wave in a Box</title>

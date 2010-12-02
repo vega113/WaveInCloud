@@ -16,12 +16,13 @@
 package org.waveprotocol.wave.client.wavepanel.view.dom.full;
 
 import static org.waveprotocol.wave.client.uibuilder.OutputHelper.close;
-import static org.waveprotocol.wave.client.uibuilder.OutputHelper.open;
+import static org.waveprotocol.wave.client.uibuilder.OutputHelper.openWith;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
+import org.waveprotocol.wave.client.common.util.UserAgent;
 import org.waveprotocol.wave.client.uibuilder.HtmlClosure;
 import org.waveprotocol.wave.client.uibuilder.UiBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.IntrinsicInlineThreadView;
@@ -31,7 +32,7 @@ import org.waveprotocol.wave.client.wavepanel.view.View.Type;
  * UI builder for an inline thread.
  */
 public final class InlineThreadViewBuilder implements IntrinsicInlineThreadView, UiBuilder {
-  
+
   /**
    * This final HtmlClosure sub class implements the internal structure of the inline thread.
    * It encapsulates the blips in a div container and then creates the continuation indicator
@@ -40,36 +41,39 @@ public final class InlineThreadViewBuilder implements IntrinsicInlineThreadView,
    * which expects a single entity as its contents.
    */
   final static class InlineThreadStructure implements HtmlClosure {
-    
+
     /** The closure representing the collection of blips. */
     private final HtmlClosure blips;
-    
+
     /** The UiBuilder that will render the inline thread continuation indicator. */
     private final UiBuilder continuationIndicator;
-    
-    /** 
-     * Creates a new InlineThreadStructure instance by combining the blips and 
+
+    /**
+     * Creates a new InlineThreadStructure instance by combining the blips and
      * continuation indicator.
      */
     public static InlineThreadStructure create(HtmlClosure blips, UiBuilder continuationIndicator) {
       return new InlineThreadStructure(blips, continuationIndicator);
     }
-    
+
     @VisibleForTesting
     InlineThreadStructure(HtmlClosure blips, UiBuilder continnuationIndicator) {
       this.blips = blips;
       this.continuationIndicator = continnuationIndicator;
     }
-    
+
     @Override
     public void outputHtml(SafeHtmlBuilder output) {
-      open(output, null, null, null);
+      // For whitespace in an inline thread to get click events, it needs zoom:1
+      // for some reason.
+      String extra = UserAgent.isIE() ? "style='zoom:1' unselectable='on'" : null;
+      openWith(output, null, null, null, extra);
       blips.outputHtml(output);
       close(output);
       continuationIndicator.outputHtml(output);
     }
   }
-  
+
   /** DOM id. */
   private final String id;
 
@@ -79,7 +83,7 @@ public final class InlineThreadViewBuilder implements IntrinsicInlineThreadView,
   /**
    * Creates a UI builder for an inline thread.
    */
-  public static InlineThreadViewBuilder create(String id, HtmlClosure blips, 
+  public static InlineThreadViewBuilder create(String id, HtmlClosure blips,
       UiBuilder continuationIndicator) {
     // must not contain ', it is especially troublesome because it cause
     // security issues.
@@ -119,7 +123,7 @@ public final class InlineThreadViewBuilder implements IntrinsicInlineThreadView,
   public void setUnreadBlipCount(int unreadBlipCount) {
     impl.setUnreadBlipCount(unreadBlipCount);
   }
-  
+
   @Override
   public void outputHtml(SafeHtmlBuilder output) {
     impl.outputHtml(output);
