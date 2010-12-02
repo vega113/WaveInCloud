@@ -76,6 +76,36 @@ public class ParticipantIdTest extends TestCase {
     }
   }
 
+  public void testComparable() {
+    ParticipantId idOne = ParticipantId.ofUnsafe("test@test.com");
+    ParticipantId idOneAgain = ParticipantId.ofUnsafe("test@test.com");
+    ParticipantId idTwo = ParticipantId.ofUnsafe("test@example.com");
+    ParticipantId idThree = ParticipantId.ofUnsafe("zzz@test.com");
+    ParticipantId idNoDomain = new ParticipantId("test@");
+    ParticipantId idNoName = new ParticipantId("@test.com");
+    ParticipantId idInvalid = new ParticipantId("test");
+    
+    // Compare same-name, same-domain
+    assertTrue(idOne.compareTo(idOneAgain) == 0);
+    assertTrue(idOneAgain.compareTo(idOne) == 0);
+
+    // Compare different-name, same domain
+    assertTrue(idOne.compareTo(idThree) < 0);
+    assertTrue(idThree.compareTo(idOne) > 0);
+    
+    // Compare same-name, different-domain
+    assertTrue(idOne.compareTo(idTwo) > 0);
+    assertTrue(idTwo.compareTo(idOne) < 0);
+
+    // Compare no-name to no-domain (but both with domain prefix.
+    assertTrue(idNoDomain.compareTo(idNoName) > 0);
+    assertTrue(idNoName.compareTo(idNoDomain) < 0);
+
+    // Compare two ids one with domain prefix, one without.
+    assertTrue(idOne.compareTo(idInvalid) > 0);
+    assertTrue(idInvalid.compareTo(idOne) < 0);
+  }
+  
   /**
    * Checks that an address is valid (by throwing an exception if it is not).
    */

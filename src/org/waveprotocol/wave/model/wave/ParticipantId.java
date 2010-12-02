@@ -23,7 +23,7 @@ import org.waveprotocol.wave.model.util.Preconditions;
  * A ParticipantId uniquely identifies a participant. It looks like an email
  * address, e.g. 'joe@example.com'
  */
-public final class ParticipantId {
+public final class ParticipantId implements Comparable<ParticipantId> {
 
   /** The prefix of a domain in the ParticpantId */
   public static final String DOMAIN_PREFIX = "@";
@@ -90,7 +90,7 @@ public final class ParticipantId {
    *         the last "@".
    */
   public String getDomain() {
-    String[] parts = address.split("@");
+    String[] parts = address.split(DOMAIN_PREFIX);
     return parts[parts.length - 1];
   }
 
@@ -145,5 +145,26 @@ public final class ParticipantId {
     } catch (InvalidParticipantAddress e) {
       throw new IllegalArgumentException(e);
     }
+  }
+
+  /**
+   * Compare two {@link ParticipantId}s, name first, then domain.
+   */
+  @Override
+  public int compareTo(ParticipantId other) {
+    /*
+     *  Because it's still possible to create invalid ParticipantId instances
+     *  we must deal with the case where an address has other than two (2) parts.
+     */
+    String[] parts = address.split(DOMAIN_PREFIX);
+    String[] otherParts = other.address.split(DOMAIN_PREFIX);
+    int minLen = Math.min(parts.length, otherParts.length);
+    for (int i = 0; i < minLen; i++) {
+      int diff = parts[i].compareTo(otherParts[i]);
+      if (diff != 0) {
+        return diff;
+      }
+    }
+    return parts.length - otherParts.length;
   }
 }
