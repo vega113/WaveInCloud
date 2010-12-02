@@ -17,6 +17,7 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.base.Preconditions;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
@@ -25,6 +26,9 @@ import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDeco
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 
@@ -73,6 +77,22 @@ public class AppliedDeltaUtil {
         appliedDelta.getByteArray(),
         getHashedVersionAppliedAt(appliedDelta),
         appliedDelta.getMessage().getOperationsApplied());
+  }
+
+  /**
+   * Builds a transformed delta from an applied delta and its transformed ops.
+   */
+  public static TransformedWaveletDelta buildTransformedDelta(
+      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDeltaBytes, WaveletDelta transformed)
+      throws InvalidProtocolBufferException, OperationException {
+    ProtocolAppliedWaveletDelta appliedDelta = appliedDeltaBytes.getMessage();
+    Preconditions.checkArgument(
+        getHashedVersionAppliedAt(appliedDeltaBytes).equals(transformed.getTargetVersion()));
+    Preconditions.checkArgument(appliedDelta.getOperationsApplied() == transformed.size());
+    HashedVersion resultingVersion = HASH_FACTORY.create(appliedDeltaBytes.getByteArray(),
+        transformed.getTargetVersion(), appliedDelta.getOperationsApplied());
+    return new TransformedWaveletDelta(transformed.getAuthor(), resultingVersion,
+        appliedDelta.getApplicationTimestamp(), transformed);
   }
 
   private AppliedDeltaUtil() { } // prevent instantiation

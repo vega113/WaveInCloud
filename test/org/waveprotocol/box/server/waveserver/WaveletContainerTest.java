@@ -313,9 +313,7 @@ public class WaveletContainerTest extends TestCase {
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
         LocalWaveletContainerImpl.buildAppliedDelta(
             signedDelta, delta.getTargetVersion(), delta.size(), 0L);
-    HashedVersion resultingVersion = HASH_FACTORY.create(
-        appliedDelta.getByteArray(), delta.getTargetVersion(), delta.size());
-    wavelet.buildAndApplyDelta(delta.getAuthor(), appliedDelta, delta);
+    wavelet.applyDelta(appliedDelta, delta);
   }
 
   private static WaveletDelta addParticipantDelta(WaveletContainer target) {

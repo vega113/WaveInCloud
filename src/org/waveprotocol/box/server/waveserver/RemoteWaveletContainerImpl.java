@@ -17,6 +17,7 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
@@ -364,9 +365,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     // The serialised hashed version should actually match the currentVersion at this point, since
     // the caller of transformAndApply delta will have made sure the applied deltas are ordered
     HashedVersion hashedVersion = AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
-    if (!hashedVersion.equals(currentVersion)) {
-      throw new IllegalStateException("Applied delta does not apply at current version");
-    }
+    Preconditions.checkState(hashedVersion.equals(currentVersion),
+        "Applied delta must apply to current version");
 
     // Extract the serialised wavelet delta
     ByteStringMessage<ProtocolWaveletDelta> protocolDelta =
@@ -394,9 +394,16 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           "it transformed away at version " + transformed.getTargetVersion().getVersion());
     }
 
+    if (!transformed.getTargetVersion().equals(hashedVersion)) {
+      state = State.CORRUPTED;
+      throw new WaveServerException("Couldn't apply authoritative delta, " +
+          "it transformed to wrong version. Expected " + hashedVersion +
+          ", actual " + transformed.getTargetVersion().getVersion());
+    }
+
     // Apply the delta to the local wavelet state.
     // This shouldn't fail since the delta is from the authoritative server, so if it fails
     // then the wavelet is corrupted (and the caller of this method will sort it out).
-    return buildAndApplyDelta(transformed.getAuthor(), appliedDelta, transformed);
+    return applyDelta(appliedDelta, transformed);
   }
 }

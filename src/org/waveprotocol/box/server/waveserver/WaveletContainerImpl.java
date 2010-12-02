@@ -298,16 +298,12 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * Builds a {@link WaveletDeltaRecord} and applies it to the wavelet container.
    * The delta must be non-empty.
    */
-  protected WaveletDeltaRecord buildAndApplyDelta(ParticipantId author,
-      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta,
-      Iterable<WaveletOperation> transformedOps)
+  protected WaveletDeltaRecord applyDelta(
+      ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta, WaveletDelta transformed)
       throws InvalidProtocolBufferException, OperationException {
-    ProtocolAppliedWaveletDelta appliedDeltaMessage = appliedDelta.getMessage();
-    HashedVersion resultingVersion = HASH_FACTORY.create(
-        appliedDelta.getByteArray(), currentVersion, appliedDeltaMessage.getOperationsApplied());
-    TransformedWaveletDelta transformedDelta = new TransformedWaveletDelta(author,
-        resultingVersion, appliedDeltaMessage.getApplicationTimestamp(), transformedOps);
-    WaveletDeltaRecord applicationResult = new WaveletDeltaRecord(appliedDelta, transformedDelta);
+    WaveletDeltaRecord applicationResult =
+        new WaveletDeltaRecord(appliedDelta,
+            AppliedDeltaUtil.buildTransformedDelta(appliedDelta, transformed));
 
     // Apply the delta to the local wavelet state.
     applyDelta(applicationResult);

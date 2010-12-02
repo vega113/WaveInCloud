@@ -122,7 +122,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
         buildAppliedDelta(signedDelta, currentVersion, transformed.size(), applicationTimestamp);
 
-    return buildAndApplyDelta(transformed.getAuthor(), appliedDelta, transformed);
+    return applyDelta(appliedDelta, transformed);
   }
 
   @VisibleForTesting
