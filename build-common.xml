@@ -16,34 +16,14 @@
  * Author: anorth@google.com (Alex North)
  -->
 <project>
-  <!-- Classpath of external dependencies -->
-  <path id="libpath">
-    <fileset dir="${lib.runtime}">
-      <include name="*/*.jar"/>
-    </fileset>
-    <fileset dir="${lib.codegen}">
-      <include name="*/*.jar"/>
-    </fileset>
-    <!-- Hamcrest, JUnit, and Mockito included for some of the classes in src/**/testing/ . Maybe these shouldn't be in src after all? -->
-    <fileset dir="${lib.test}">
-      <include name="hamcrest/*.jar"/>
-      <include name="junit/*.jar"/>
-      <include name="mockito/*.jar"/>
-    </fileset>
-  </path>
-
-  <!-- Classpath for testing only -->
-  <path id="test.libpath">
-    <fileset dir="${lib.test}">
-      <include name="**/*.jar"/>
-    </fileset>
-  </path>
+  <import file="${build.classpath.path}"/>
 
   <!-- 
   Compiles the sources referenced by the "srcs" patternset.
   -->
   <target name="compile">
-    <buildjava srcdir="${src.dir}" destdir="${build.src.dir}" srcpattern="srcs">
+    <buildjava destdir="${build.src.dir}" srcpattern="srcs">
+      <src path="${src.dir}"/>
       <classpath>
         <path refid="libpath"/>
         <path location="${build.proto.dir}"/>

@@ -18,13 +18,24 @@
 <project name="macros">
   <!-- Macro which builds a collection of sources -->
   <macrodef name="buildjava">
-    <attribute name="srcpattern" description="Pattern id describing files to build"/>
-    <attribute name="srcdir" description="Source root directory"/>
+    <attribute name="srcpattern" description="Pattern id describing files to build"
+        default="default-src-pattern"/>
+    <!--attribute name="srcdir" description="Source root directory"/-->
     <attribute name="destdir" description="Build root directory"/>
     <element name="javac-elements" description="Extra elements to pass to javac" implicit="true"/>
     <sequential>
-      <javac srcdir="@{srcdir}" destdir="@{destdir}" debug="true">
+      <patternset id="default-src-pattern">
+        <include name="**/*.java"/>
+      </patternset>
+      <javac destdir="@{destdir}" debug="true" includeAntRuntime="false">
         <patternset refid="@{srcpattern}"/>
+        <!-- TODO(anorth): enable -Werror after fixing warnings. -->
+        <!--compilerarg value="-Werror"/-->
+        <compilerarg value="-Xlint:all"/>
+        <compilerarg value="-Xlint:-serial"/>
+        <!-- Deprecation warnings are generated for .class files for some
+             compilers, e.g. org.hamcrest.Matcher -> org.hamcrest.BaseMatcher. -->
+        <compilerarg value="-Xlint:-deprecation"/>
         <javac-elements/>
       </javac>
     </sequential>
@@ -112,4 +123,8 @@
       <fail message="Tests failed. Check log and/or reports: ${test.out.dir}/index.html" if="test.failed"/>
     </sequential>
   </macrodef>
+
+  <!-- Task which compiles GXP templates -->
+  <taskdef name="gxpc" classname="com.google.gxp.compiler.ant.GxpcTask"
+      classpath="${lib.runtime}/gxp/gxp-0.2.4-beta.jar" />
 </project>

@@ -21,8 +21,8 @@
 
   <property file="build.properties"/>
 
-  <!-- Import common build defs and macros. -->
-  <import file="${build.common.path}"/>
+  <!-- Import classpath definitions. -->
+  <import file="${build.classpath.path}"/>
 
   <!-- Pull in the Emma tasks -->
   <taskdef resource="emma_ant.properties" classpathref="test.libpath"/>
@@ -36,7 +36,11 @@
   <tstamp>
     <format property="DSTAMP_INT" pattern="-yyyy-MM-dd"/>
   </tstamp>
-  <property name="release.name" value="wave-libraries${DSTAMP_INT}.zip"/>
+  <property name="release.name" value="wave-${DSTAMP_INT}.zip"/>
+
+  <!--=====
+      Initialization
+      =====-->
 
   <target name="clean" description="Cleans up the build artifacts and temporary directories">
     <delete dir="${build.dir}"/>
@@ -49,6 +53,7 @@
   </target>
 
   <target name="init">
+    <mkdir dir="${build.proto.dir}"/>
     <mkdir dir="${build.src.dir}"/>
     <mkdir dir="${build.test.dir}"/>
     <mkdir dir="${coverage.dir}"/>
@@ -58,27 +63,98 @@
     <mkdir dir="${test.out.dir}"/>
   </target>
 
-  <!-- compiles pre-generated proto sources; does NOT generate protos --> 
-  <target name="proto_src_dep">
+  <!-- === IDE helper targets === -->
+
+  <!-- Generates an eclipse .project file.
+       TODO(danilatos): Make this work on Windows as well. For now,
+       windows users can just copy the .project_template file manually. -->
+  <target name="eclipse">
+    <exec executable="tools/eclipse.sh"/>
+  </target>
+
+  <!--=====
+      Builds
+      ======-->
+
+  <!-- === 
+      Protocol buffer targets 
+      Compiles generated proto sources. See build-proto.xml for generating
+      proto sources from .proto files.
+  === -->
+  <target name="proto_compile_dep">
     <uptodate targetfile="${dep}/proto_compile" property="skip.proto_compile">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
-      <srcfiles dir="proto_src" includes="**/*.java"/>
+      <srcfiles dir="${src.proto.dir}" includes="**/*.java"/>
+      <srcfiles dir="${src.proto.gwt.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="proto_compile" depends="init, proto_src_dep" unless="skip.proto_compile" description="Compiles protocol buffers">
-    <javac sourcepath="" srcdir="proto_src" destdir="${build.src.dir}" debug="on"
-        target="1.5">
-      <include name="**/*.java"/>
-      <classpath refid="libpath"/>
-    </javac>
-    <javac sourcepath="" srcdir="proto_gwt_src" destdir="${build.src.dir}" debug="on"
-        target="1.5">
-      <include name="**/*.java"/>
-      <classpath refid="libpath"/>
-    </javac>
+  <target name="proto_compile" depends="init, proto_compile_dep"
+      unless="skip.proto_compile" description="Compiles protocol buffers">
+    <buildjava destdir="${build.proto.dir}">
+      <src path="${src.proto.dir}"/>
+      <src path="${src.proto.gwt.dir}" />
+      <classpath>
+        <path refid="libpath"/>
+      </classpath>
+    </buildjava>
     <touch file="${dep}/proto_compile"/>
   </target>
 
+  <!-- === GXP targets === -->
+  <target name="gen_gxp_dep">
+    <uptodate targetfile="${dep}/gen_gxp" property="skip.gen_gxp">
+      <srcfiles dir="${lib.runtime}/gxp" includes="*"/>
+      <srcfiles dir="${src.dir}" includes="org/waveprotocol/box/server/gxp/*.gxp"/>
+    </uptodate>
+  </target>
+  <!-- Generates the Java files from templates -->
+  <target name="gen_gxp" description="Generates GXP files" 
+      depends="init, gen_gxp_dep" unless="skip.gen_gxp">
+    <gxpc srcdir="${src.dir}" srcpaths="${src.dir}" destdir="${gen.dir}"
+        target="org.waveprotocol.box.server.gxp" />
+    <touch file="${dep}/gen_gxp"/>
+  </target>
+
+  <target name="gxp_compile_dep">
+    <uptodate targetfile="${dep}/gxp_compile" property="skip.gxp_compile">
+      <srcfiles dir="${lib.dir}" includes="**/*"/>
+      <srcfiles dir="${gen.dir}" includes="**/*.java"/>
+    </uptodate>
+  </target>
+  <target name="gxp_compile" depends="init, gen_gxp, gxp_compile_dep"
+      unless="skip.gxp_compile" description="Compiles GXP classes">
+    <buildjava destdir="${build.src.dir}">
+      <src path="${gen.dir}" />
+      <classpath>
+        <path refid="libpath"/>
+      </classpath>
+    </buildjava>
+    <touch file="${dep}/gxp_compile"/>
+  </target>
+
+  <!-- Work-in-progress PST rules
+  <target name="compile_pst">
+    <buildjava destdir="${build.src.dir}">
+      <src path="${src.dir}/org/waveprotocol/pst" />
+      <classpath>
+        <path refid="libpath"/>
+      </classpath>
+    </buildjava>
+  </target>
+  <target name="compile_messages">
+    <java failonerror="true" fork="true" classname="org.waveprotocol.pst.PstMain">
+      <classpath>
+        <path refid="libpath"/>
+        <pathelement location="${build.src.dir}"/>
+      </classpath>
+      <arg line="-d ${build.messages.dir}"/>
+      <arg line="-f ${build.proto.dir}/org/waveprotocol/box/server/waveserver/WaveClientRpc.class"/>
+      <arg value="${src.dir}/org/waveprotocol/pst/templates/Message/Message.st"/>
+    </java>
+  </target>
+  -->
+
+  <!-- === Java targets === -->
   <target name="compile_dep">
     <uptodate targetfile="${dep}/compile" property="skip.compile">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
@@ -86,26 +162,13 @@
       <srcfiles dir="${gen.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="compile" depends="proto_compile, gen_gxp, compile_dep" unless="skip.compile" description="Compiles all source">
+  <target name="compile" depends="proto_compile, gxp_compile, compile_dep" 
+      unless="skip.compile" description="Compiles all source">
     <depend srcdir="${src.dir}" destdir="${build.src.dir}" closure="yes"/>
-    <!-- Delegate to libraries build for o.w.wave. -->
-    <ant antfile="build-libraries.xml" target="compile" />
-    <javac sourcepath="" destdir="${build.src.dir}" debug="on" target="1.5"
-      includeAntRuntime="false">
-      <src path="${src.dir}" />
-      <src path="${gen.dir}" />
-      <include name="**/*.java"/>
-      <classpath>
-        <pathelement location="proto_gwt_src"/>
-        <path refid="libpath"/>
-      </classpath>
-      <compilerarg value="-Werror"/>
-      <compilerarg value="-Xlint:all"/>
-      <compilerarg value="-Xlint:-serial"/>
-      <!-- Deprecation warnings are generated for .class files for some
-           compilers, e.g. org.hamcrest.Matcher -> org.hamcrest.BaseMatcher. -->
-      <compilerarg value="-Xlint:-deprecation"/>
-    </javac>
+    <subant target="compile" inheritall="true">
+      <property name="build.common.path" location="build-common.xml"/>
+      <fileset dir="${src.dir}" includes="*/**/build.xml"/>
+    </subant>
 
     <!-- copy non binary resources in src tree to output classpath -->
     <copy todir="${build.src.dir}">
@@ -120,49 +183,22 @@
     <touch file="${dep}/compile"/>
   </target>
 
-  <target name="gen_gxp_dep">
-    <uptodate targetfile="${dep}/gen_gxp" property="skip.gen_gxp">
-      <srcfiles dir="${lib.runtime}/gxp" includes="*"/>
-      <srcfiles dir="${src.dir}" includes="org/waveprotocol/box/server/gxp/*.gxp"/>
-    </uptodate>
-  </target>
-  <target name="gen_gxp" description="Generates GXP files" depends="init, gen_gxp_dep" unless="skip.gen_gxp">
-    <taskdef
-        name="gxpc"
-        classname="com.google.gxp.compiler.ant.GxpcTask"
-        classpath="${lib.runtime}/gxp/gxp-0.2.4-beta.jar" />
-
-    <!-- Generates the java files in a parallel directory under gen/ -->
-    <gxpc
-        srcdir="${src.dir}"
-        srcpaths="${src.dir}"
-        destdir="${gen.dir}"
-        target="org.waveprotocol.box.server.gxp" />
-    <touch file="${dep}/gen_gxp"/>
-  </target>
-
-  <target name="compile_tests" depends="compile" description="Compiles all the unit tests in the project">
+  <target name="compile_tests" depends="compile" 
+      description="Compiles all unit tests">
     <depend srcdir="${test.dir}" destdir="${build.test.dir}" closure="yes">
       <classpath>
         <pathelement location="${build.src.dir}"/>
       </classpath>
     </depend>
-    <javac sourcepath="" srcdir="${test.dir}" destdir="${build.test.dir}" debug="on"
-        target="1.5" includeAntRuntime="false">
-      <include name="**/*.java"/>
+    <buildjava destdir="${build.test.dir}">
+      <src path="${test.dir}" />
       <classpath>
         <path refid="libpath"/>
         <path refid="test.libpath"/>
         <pathelement location="${build.src.dir}"/>
+        <pathelement location="${build.proto.dir}"/>
       </classpath>
-      <!-- TODO(anorth): enable -Werror after fixing warnings in o.w.wave. -->
-      <!--compilerarg value="-Werror"/>
-      <compilerarg value="-Xlint:all"/>
-      <compilerarg value="-Xlint:-serial"/-->
-      <!-- Deprecation warnings are generated for .class files for some
-           compilers, e.g. org.hamcrest.Matcher -> org.hamcrest.BaseMatcher. -->
-      <compilerarg value="-Xlint:-deprecation"/>
-    </javac>
+    </buildjava>
 
     <!-- copy non binary resources in src tree to output classpath -->
     <copy todir="${build.test.dir}">
@@ -174,11 +210,12 @@
     </copy>
   </target>
 
-  <!-- ===== Tests ==== -->
+  <!--=====
+      Tests
+      ======-->
 
   <target name="test" depends="compile_tests" description=
     "Runs all the unit tests in the project excluding external persistence">
-
     <!-- Tests are run in a single new VM, when forkmode is set to once -->
     <runtests forkmode="once" coverage="true">
       <fileset dir="${test.dir}">
@@ -228,15 +265,14 @@
   <target name="compile_proto_gwt_dep">
     <uptodate targetfile="${dep}/compile_proto_gwt_dep" property="skip.compile_proto_gwt">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
-      <srcfiles dir="proto_gwt_src" includes="**/*.java"/>
+      <srcfiles dir="${src.proto.gwt.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
   <target name="compile_proto_gwt" depends="init, compile_proto_gwt_dep" unless="skip.compile_proto_gwt">
-    <javac sourcepath="" srcdir="proto_gwt_src" destdir="${build.src.dir}" debug="on"
-        target="1.6">
-      <include name="**/*.java"/>
+    <buildjava destdir="${build.proto.dir}">
+      <src path="${src.proto.gwt.dir}" />
       <classpath refid="libpath"/>
-    </javac>
+    </buildjava>
     <touch file="${dep}/compile_proto_gwt_dep"/>
   </target>
 
@@ -244,13 +280,14 @@
     <uptodate targetfile="${dep}/compile_gwt" property="skip.compile_gwt">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
       <srcfiles dir="src" includes="**/*"/>
-      <srcfiles dir="proto_gwt_src" includes="**/*"/>
+      <srcfiles dir="${src.proto.gwt.dir}" includes="**/*"/>
     </uptodate>
   </target>
-  <target name="compile_gwt" depends="compile, compile_proto_gwt, compile_gwt_dep" description="GWT compile to production JavaScript" unless="skip.compile_gwt">    
+  <target name="compile_gwt" depends="compile, compile_proto_gwt, compile_gwt_dep" 
+      description="GWT compile to production JavaScript" unless="skip.compile_gwt">    
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
       <classpath>
-        <pathelement location="proto_gwt_src"/>
+        <pathelement location="${src.proto.gwt.dir}"/>
         <pathelement location="src"/>
         <path refid="libpath"/>
         <path refid="test.libpath"/>
@@ -273,13 +310,15 @@
     <uptodate targetfile="${dep}/compile_gwt_dev" property="skip.compile_gwt_dev">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
       <srcfiles dir="src" includes="**/*"/>
-      <srcfiles dir="proto_gwt_src" includes="**/*"/>
+      <srcfiles dir="${src.proto.gwt.dir}" includes="**/*"/>
     </uptodate>
   </target>
-  <target name="compile_gwt_dev" depends="compile, compile_proto_gwt, compile_gwt_dev_dep" description="GWT compile of a restricted set of permutations suitable for development." unless="skip.compile_gwt_dev">
+  <target name="compile_gwt_dev" depends="compile, compile_proto_gwt, compile_gwt_dev_dep" 
+      description="GWT compile of a restricted set of permutations suitable for development." 
+      unless="skip.compile_gwt_dev">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
       <classpath>
-        <pathelement location="proto_gwt_src"/>
+        <pathelement location="${src.proto.gwt.dir}"/>
         <pathelement location="src"/>
         <path refid="libpath"/>
         <path refid="test.libpath"/>
@@ -299,11 +338,12 @@
     <touch file="${dep}/compile_gwt_dev"/>
   </target>
 
-  <target name="hosted_gwt" depends="compile,compile_proto_gwt" description="Runs the hosted mode server, for debugging the GWT client in a JVM.">
+  <target name="hosted_gwt" depends="compile,compile_proto_gwt" 
+      description="Runs the hosted mode server, for debugging the GWT client in a JVM.">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
       <classpath>
-        <pathelement location="proto_gwt_src"/>
-        <pathelement location="src"/>
+        <pathelement location="${src.proto.gwt.dir}"/>
+        <pathelement location="${src.dir}"/>
         <path refid="libpath"/>
       </classpath>
       <jvmarg value="-Xmx512M"/>
@@ -316,11 +356,12 @@
     </java>
   </target>
 
-  <target name="waveharness_hosted" depends="compile,compile_proto_gwt" description="Runs the wave panel harness through the GWT hosted mode server, for debugging in a JVM.">
+  <target name="waveharness_hosted" depends="compile,compile_proto_gwt" 
+      description="Runs the wave panel harness through the GWT hosted mode server, for debugging in a JVM.">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
       <classpath>
-        <pathelement location="proto_gwt_src"/>
-        <pathelement location="src"/>
+        <pathelement location="${src.proto.gwt.dir}"/>
+        <pathelement location="${src.dir}"/>
         <path refid="libpath"/>
       </classpath>
       <jvmarg value="-Xmx512M"/>
@@ -338,27 +379,35 @@
       <srcfiles dir="${build.src.dir}" includes="**/*"/>
     </uptodate>
   </target>
-  <target name="stage" depends="compile, stage_dep" description="Copy classes and runtime depenencies to the staging directory" unless="skip.stage">
-    <!-- we unzip and copy all the runtime deps into a staging dir first -->
+  <target name="stage" depends="compile, stage_dep" 
+      description="Copy classes and runtime depenencies to the staging directory" unless="skip.stage">
+    <!-- Unzip and copy all the runtime deps into a staging dir -->
     <unzip dest="${staging.dir}">
       <fileset dir="${lib.runtime}">
         <include name="*/*.jar"/>
       </fileset>
     </unzip>
     <copy todir="${staging.dir}" preservelastmodified="true">
-      <fileset dir="${build.src.dir}">
-        <include name="**/*"/>
-      </fileset>
+      <fileset dir="${build.src.dir}"/>
+      <fileset dir="${build.proto.dir}"/>
     </copy>
     <touch file="${dep}/stage"/>
   </target>
 
-  <target name="dist" depends="test, dist-libraries, dist-server, dist-client-console, compile_gwt"
+  <target name="dist" depends="test, dist-proto, dist-libraries, dist-server, 
+      dist-client-console, compile_gwt"
       description="Compiles, tests and assembles artifacts">
   </target>
 
+  <target name="dist-proto" depends="proto_compile" description="Builds the proto jar">
+    <jar destfile="${dist.dir}\proto.jar" basedir="${build.proto.dir}"/>
+    <jar destfile="${dist.dir}\proto-src.jar" basedir="${src.proto.dir}"/>
+  </target>
+
   <target name="dist-libraries" depends="compile">
-    <ant antfile="build-libraries.xml" target="dist" />
+    <subant target="dist" inheritall="true">
+      <fileset dir="${src.dir}" includes="*/**/build.xml"/>
+    </subant>
   </target>
 
   <!-- dist-api is broken due to non-runnable dependencies in the waveserver directory.  TODO: fix. -->
@@ -491,8 +540,10 @@
     </zip>
   </target>
 
-  <target name="doc" depends="stage" description="Builds the Java documentation for the mode, protocol, and Wave in a Box">
-    <javadoc sourcepath="${src.dir}" destdir="${docs.dir}" linksource="yes" author="yes" protected="yes"
+  <target name="doc" depends="stage" 
+      description="Builds the Java documentation for the mode, protocol, and Wave in a Box">
+    <javadoc sourcepath="${src.dir}" destdir="${docs.dir}" linksource="yes" 
+        author="yes" protected="yes"
         windowtitle="${ant.project.name} Documentation">
       <classpath>
         <pathelement location="${staging.dir}" />
@@ -503,6 +554,5 @@
       <footer>&lt;a href="http://www.waveprotocol.org/"&gt;Wave Project&lt;a/&gt;</footer>
     </javadoc> 
   </target>
-
 </project>
 
