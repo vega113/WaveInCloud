@@ -8,7 +8,8 @@
 /*.key
 
 # Server-specific configuration
-run-config.sh
+server.config
+server.federation.config
 
 # Mercurial
 .hg
