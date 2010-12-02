@@ -10,30 +10,27 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package org.waveprotocol.wave.client.wavepanel.view.fake;
 
-import org.waveprotocol.wave.client.wavepanel.view.ReplyBoxView;
-import org.waveprotocol.wave.client.wavepanel.view.RootThreadView;
+import org.waveprotocol.wave.client.wavepanel.view.ContinuationIndicatorView;
+import org.waveprotocol.wave.client.wavepanel.view.InlineThreadView;
 
 /**
- * Fake, pojo implementation of a reply box view.
- *
+ * Fake, pojo implementation of a continuation indicator view.
  */
-public class FakeReplyBoxView implements ReplyBoxView {
+public final class FakeContinuationIndicatorView implements ContinuationIndicatorView {
 
-  private final FakeRootThreadView threadView;
+  private FakeInlineThreadView parent;
   private boolean enabled;
-  private String avatarImageUrl;
-  
-  public FakeReplyBoxView(FakeRootThreadView threadView) {
-    this.threadView = threadView;
+
+  public FakeContinuationIndicatorView(FakeInlineThreadView parent) {
+    this.parent = parent;
   }
-  
+
   @Override
   public Type getType() {
-    return Type.REPLY_BOX;
+    return Type.CONTINUATION_INDICATOR;
   }
 
   @Override
@@ -48,29 +45,20 @@ public class FakeReplyBoxView implements ReplyBoxView {
 
   @Override
   public void enable() {
-    this.enabled = true;
+    enabled = true;
   }
 
   @Override
   public void disable() {
-    this.enabled = false;
+    enabled = false;
   }
-  
+
   protected boolean isEnabled() {
-    return this.enabled;
+    return enabled;
   }
 
   @Override
-  public void setAvatarImageUrl(String imageUrl) {
-    this.avatarImageUrl = imageUrl;
-  }
-  
-  protected String getAvatarImageUrl() {
-    return this.avatarImageUrl;
-  }
-
-  @Override
-  public RootThreadView getParent() {
-    return this.threadView;
+  public InlineThreadView getParent() {
+    return parent;
   }
 }

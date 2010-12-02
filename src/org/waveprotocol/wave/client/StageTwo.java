@@ -19,13 +19,15 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Command;
 
+import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitor;
+import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitorImpl;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.account.impl.ProfileManagerImpl;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.client.common.util.CountdownLatch;
-import org.waveprotocol.wave.client.concurrencycontrol.MuxConnector;
 import org.waveprotocol.wave.client.concurrencycontrol.LiveChannelBinder;
+import org.waveprotocol.wave.client.concurrencycontrol.MuxConnector;
 import org.waveprotocol.wave.client.concurrencycontrol.WaveletOperationalizer;
 import org.waveprotocol.wave.client.doodad.DoodadInstallers;
 import org.waveprotocol.wave.client.editor.content.Registries;
@@ -174,6 +176,9 @@ public interface StageTwo {
     private ProfileManager profileManager;
     private ObservableConversationView conversations;
     private ObservableSupplementedWave supplement;
+    
+    // State Monitors
+    private ThreadReadStateMonitor threadReadStateMonitor;
 
     // Rendering objects.
 
@@ -243,6 +248,11 @@ public interface StageTwo {
 
     protected final ShallowBlipRenderer getBlipDetailer() {
       return blipDetailer == null ? blipDetailer = createBlipDetailer() : blipDetailer;
+    }
+    
+    protected final ThreadReadStateMonitor getThreadReadStateMonitor() {
+      return threadReadStateMonitor == null ? threadReadStateMonitor = 
+        createThreadReadStateMonitor() : threadReadStateMonitor;
     }
 
     @Override
@@ -466,6 +476,11 @@ public interface StageTwo {
     protected ShallowBlipRenderer createBlipDetailer() {
       return new UndercurrentShallowBlipRenderer(getProfileManager(), getSupplement());
     }
+    
+    /** @return the thread state monitor. Subclasses may override. */
+    protected ThreadReadStateMonitor createThreadReadStateMonitor() {
+      return ThreadReadStateMonitorImpl.create(getSupplement(), getConversations());
+    }
 
     /** @return the renderer of intrinsic blip state. Subclasses may override. */
     protected BlipQueueRenderer createBlipQueueRenderer() {
@@ -483,7 +498,8 @@ public interface StageTwo {
           replyManager,
           getConversations(),
           getSupplement(),
-          getProfileManager());
+          getProfileManager(),
+          getThreadReadStateMonitor());
 
       BlipPager pager = BlipPager.create(
           getDocumentRegistry(), doodads, domAsView, getModelAsViewProvider(), getBlipDetailer());
@@ -538,7 +554,7 @@ public interface StageTwo {
     protected void install() {
       WaveRenderer waveRenderer =
           FullDomWaveRendererImpl.create(getConversations(), getProfileManager(), getBlipDetailer(),
-              getViewIdMapper(), getBlipQueue());
+              getViewIdMapper(), getBlipQueue(), getThreadReadStateMonitor());
       stageOne.getDomAsViewProvider().setRenderer(waveRenderer);
 
       // Ensure the wave is rendered.

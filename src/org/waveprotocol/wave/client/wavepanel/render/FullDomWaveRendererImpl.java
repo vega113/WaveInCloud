@@ -18,6 +18,7 @@ package org.waveprotocol.wave.client.wavepanel.render;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 
+import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.render.ReductionBasedRenderer;
@@ -48,7 +49,8 @@ public final class FullDomWaveRendererImpl implements WaveRenderer {
   }
 
   public static WaveRenderer create(final ConversationView wave, ProfileManager profileManager,
-      ShallowBlipRenderer shallowRenderer, ViewIdMapper idMapper, final BlipQueueRenderer pager) {
+      ShallowBlipRenderer shallowRenderer, ViewIdMapper idMapper, final BlipQueueRenderer pager,
+      ThreadReadStateMonitor readMonitor) {
     DocRefRenderer docRenderer = new DocRefRenderer() {
       @Override
       public UiBuilder render(
@@ -60,7 +62,8 @@ public final class FullDomWaveRendererImpl implements WaveRenderer {
       }
     };
     RenderingRules<UiBuilder> rules = new FullDomRenderer(
-        shallowRenderer, docRenderer, profileManager, idMapper, ViewFactories.DEFAULT);
+        shallowRenderer, docRenderer, profileManager, idMapper, ViewFactories.DEFAULT, 
+        readMonitor);
     return new FullDomWaveRendererImpl(ReductionBasedRenderer.of(rules, wave));
   }
 

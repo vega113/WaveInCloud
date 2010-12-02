@@ -21,7 +21,6 @@ import org.waveprotocol.wave.client.wavepanel.view.ParticipantsView;
 
 /**
  * Fake, pojo implementation of a thread view.
- *
  */
 public final class FakeInlineConversationView extends FakeConversationView implements
     InlineConversationView {

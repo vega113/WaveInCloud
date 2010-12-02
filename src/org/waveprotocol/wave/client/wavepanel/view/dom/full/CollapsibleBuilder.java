@@ -45,7 +45,13 @@ public final class CollapsibleBuilder implements UiBuilder {
 
   /** {@link #COLLAPSED_ATTRIBUTE}'s value for collapsed (must be HTML safe). */
   public final static String COLLAPSED_VALUE = "c";
-
+  
+  /** Name of the attribute that stores the total blips. */
+  public final static String TOTAL_BLIPS_ATTRIBUTE = "t";
+  
+  /** Name of the attribute that stores the number of unread blips. */
+  public final static String UNREAD_BLIPS_ATTRIBUTE = "u";
+  
   /** Resources used by this widget. */
   public interface Resources extends ClientBundle {
     @Source("Collapsible.css")
@@ -54,31 +60,53 @@ public final class CollapsibleBuilder implements UiBuilder {
     @Source("callout.png")
     ImageResource callout();
 
-    @Source("expanded.png")
-    ImageResource expanded();
-
-    @Source("collapsed.png")
-    ImageResource collapsed();
+    @Source("arrow_read_expanded.png")
+    ImageResource expandedRead();
+    
+    @Source("arrow_unread_expanded.png")
+    ImageResource expandedUnread();
+    
+    @Source("arrow_read_collapsed.png")
+    ImageResource collapsedRead();
+    
+    @Source("arrow_unread_collapsed.png")
+    ImageResource collapsedUnread();
   }
 
   /** CSS class names for this widget. */
   public interface Css extends CssResource {
     String toggle();
+    
+    String arrow();
+    
+    String count();
+    
+    String collapsed();
+    
+    String expanded();
+    
+    String read();
+    
+    String unread();
 
     String chrome();
 
     String dropContainer();
 
     String drop();
-
-    String collapsed();
-
-    String expanded();
   }
 
   public enum Components implements Component {
-    /** The toggle button. */
+    /** The toggle container. */
     TOGGLE("T"),
+    /** The arrow icon */
+    ARROW("A"),
+    /** The blip number container. */
+    COUNT("N"),
+    /** The total number of blips in the subtree. */
+    COUNT_TOTAL("NT"),
+    /** The number of unread blips in the subtree. */
+    COUNT_UNREAD("NU"),
     /** The chrome element, also the container for contents. */
     CHROME("C"),
     /** The container of the callout triangle. */
@@ -113,13 +141,14 @@ public final class CollapsibleBuilder implements UiBuilder {
   //
 
   private boolean collapsed;
+  private int totalBlipCount;
+  private int unreadBlipCount;
 
   //
   // Structural components.
   //
 
   private final HtmlClosure content;
-
   private final String kind;
 
   /**
@@ -147,32 +176,71 @@ public final class CollapsibleBuilder implements UiBuilder {
   public boolean isCollapsed() {
     return collapsed;
   }
+  
+  public void setTotalBlipCount( int totalBlipCount ) {
+    this.totalBlipCount = totalBlipCount;
+  }
+  
+  public void setUnreadBlipCount( int unreadBlipCount ) {
+    this.unreadBlipCount = unreadBlipCount;
+  }
 
   @Override
   public void outputHtml(SafeHtmlBuilder output) {
     //
     // <span thread>
-    // <span toggle expanded>
-    // <span dropContainer expanded>
-    // <span drop/>
-    // </span>
-    // </span>
-    // <div chrome expanded>
+    //   <span toggle expanded|collapsed unread|read >
+    //     <span arrow />
+    //     <span count>
+    //       <span>10</span>
+    //       <span>(2)</span>
+    //       <span dropContainer>
+    //         <span drop/>
+    //       </span>
+    //     </span>
+    //   </span>
+    //   <div chrome expanded|collapsed>
     // ...
-    // </div>
-    //
-    String stateCss = " " + (collapsed ? css.collapsed() : css.expanded());
-    String extra = collapsed ? COLLAPSED_ATTRIBUTE + "='" + COLLAPSED_VALUE + "'" : "";
+    //   </div>
+    // </span>
+    String readStateCss = " " + ((unreadBlipCount > 0) ? css.unread() : css.read());
+    String collapsedStateCss = " " + (collapsed ? css.collapsed() : css.expanded());
+    
+    String extra = " " + (collapsed ? COLLAPSED_ATTRIBUTE + "='" + COLLAPSED_VALUE + "'" : "") +
+        " " + TOTAL_BLIPS_ATTRIBUTE + "='" + totalBlipCount + "'" +
+        " " + UNREAD_BLIPS_ATTRIBUTE + "='" + unreadBlipCount + "'";
+    
     openSpanWith(output, id, null, kind, extra);
-    openSpan(output, Components.TOGGLE.getDomId(id), css.toggle() + stateCss,
-        TypeCodes.kind(Type.TOGGLE));
-    openSpan(output, Components.DROP_CONTAINER.getDomId(id), css.dropContainer() + stateCss, null);
-    appendSpan(output, null, css.drop(), null);
-    closeSpan(output);
-    closeSpan(output);
-    open(output, Components.CHROME.getDomId(id), css.chrome() + stateCss, null);
-    content.outputHtml(output);
-    close(output);
+    {
+      openSpan(output, Components.TOGGLE.getDomId(id), css.toggle() + readStateCss + 
+          collapsedStateCss, TypeCodes.kind(Type.TOGGLE));
+      {
+        appendSpan(output, Components.ARROW.getDomId(id), css.arrow(), null);
+        openSpan(output, Components.COUNT.getDomId(id), css.count(), null);
+        {
+          openSpan(output, Components.COUNT_TOTAL.getDomId(id), null, null);
+          output.append(totalBlipCount);
+          closeSpan(output);
+          
+          String unreadExtra = unreadBlipCount <= 0 ? " style='display: none;'" : "";
+          openSpanWith(output, Components.COUNT_UNREAD.getDomId(id), null, null, unreadExtra);
+          output.appendEscaped("(" + unreadBlipCount + ")");
+          closeSpan(output);
+          
+          open(output, Components.DROP_CONTAINER.getDomId(id), css.dropContainer() + 
+              collapsedStateCss, null);
+          appendSpan(output, null, css.drop(), null);
+          close(output);
+        }
+        closeSpan(output);
+      }
+      closeSpan(output);
+      open(output, Components.CHROME.getDomId(id), css.chrome() + collapsedStateCss, null);
+      {
+        content.outputHtml(output);
+      }
+      close(output);
+    }
     closeSpan(output);
   }
 

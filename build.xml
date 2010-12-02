@@ -71,6 +71,11 @@
       <include name="**/*.java"/>
       <classpath refid="libpath"/>
     </javac>
+    <javac sourcepath="" srcdir="proto_gwt_src" destdir="${build.src.dir}" debug="on"
+        target="1.5">
+      <include name="**/*.java"/>
+      <classpath refid="libpath"/>
+    </javac>
     <touch file="${dep}/proto_compile"/>
   </target>
 

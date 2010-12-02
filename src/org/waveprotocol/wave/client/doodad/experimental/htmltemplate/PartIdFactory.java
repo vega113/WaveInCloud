@@ -14,18 +14,22 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.client.wavepanel.view;
+package org.waveprotocol.wave.client.doodad.experimental.htmltemplate;
 
 /**
- * Reveals the primitive state exposed in an inline thread view.
- * 
- * @see InlineThreadView for structural state.
+ * Constructs a new identifier for a newly created <part> object. Responsible for ensuring that the
+ * part IDs are unique and site-specific, so that, if a given wave is being viewed in two sites, and
+ * a new part is created in each site at the same time, the part IDs are distinct.
+ *
+ * @author ihab@google.com (Ihab Awad)
+ *
  */
-public interface IntrinsicInlineThreadView extends IntrinsicThreadView {
+public interface PartIdFactory {
 
-  /** Sets the collapsed state of this view. */
-  void setCollapsed(boolean collapsed);
-
-  /** @return true if this view is collapsed, false if expanded. */
-  boolean isCollapsed();
+  /**
+   * Manufacture and return a new <part> identifier.
+   *
+   * @return an identifier.
+   */
+  String getNextPartId();
 }

@@ -14,18 +14,22 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.client.wavepanel.view;
+package org.waveprotocol.wave.client.doodad.experimental.htmltemplate;
 
 /**
- * Reveals the primitive state exposed in an inline thread view.
- * 
- * @see InlineThreadView for structural state.
+ * A service that "cajoles" an HTML page referenced via a URL.
  */
-public interface IntrinsicInlineThreadView extends IntrinsicThreadView {
+public interface CajoleService {
 
-  /** Sets the collapsed state of this view. */
-  void setCollapsed(boolean collapsed);
+  /** The response from the cajoer. */
+  public interface CajolerResponse {
+    // TODO: Consider using SafeHtml.
+    String getHtml();
+    String getJs();
+  }
 
-  /** @return true if this view is collapsed, false if expanded. */
-  boolean isCollapsed();
+  /**
+   * Requests that the content reference by a URL be cajoled.
+   */
+  void cajole(String url, Callback<? super CajolerResponse> callback);
 }

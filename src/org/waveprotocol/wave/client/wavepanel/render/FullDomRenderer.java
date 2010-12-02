@@ -15,6 +15,11 @@
  */
 package org.waveprotocol.wave.client.wavepanel.render;
 
+import com.google.common.collect.Iterables;
+
+import org.waveprotocol.box.webclient.client.StagesProvider;
+import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitor;
+import org.waveprotocol.wave.client.StageTwo;
 import org.waveprotocol.wave.client.account.Profile;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.safehtml.EscapeUtils;
@@ -83,14 +88,17 @@ public final class FullDomRenderer implements RenderingRules<UiBuilder> {
   private final ViewIdMapper viewIdMapper;
   private final ViewFactory viewFactory;
   private final ProfileManager profileManager;
+  private final ThreadReadStateMonitor readMonitor;
 
   public FullDomRenderer(ShallowBlipRenderer blipPopulator, DocRefRenderer docRenderer,
-      ProfileManager profileManager, ViewIdMapper viewIdMapper, ViewFactory viewFactory) {
+      ProfileManager profileManager, ViewIdMapper viewIdMapper, ViewFactory viewFactory,
+      ThreadReadStateMonitor readMonitor) {
     this.blipPopulator = blipPopulator;
     this.docRenderer = docRenderer;
     this.profileManager = profileManager;
     this.viewIdMapper = viewIdMapper;
     this.viewFactory = viewFactory;
+    this.readMonitor = readMonitor;
   }
 
   @Override
@@ -169,7 +177,13 @@ public final class FullDomRenderer implements RenderingRules<UiBuilder> {
     } else {
       ContinuationIndicatorViewBuilder indicatorBuilder = ContinuationIndicatorViewBuilder.create(
           replyIndicatorId);
-      builder =InlineThreadViewBuilder.create(threadId, blipsUi, indicatorBuilder);
+      InlineThreadViewBuilder inlineBuilder = 
+          InlineThreadViewBuilder.create(threadId, blipsUi, indicatorBuilder);
+      int read = readMonitor.getReadCount(thread);
+      int unread = readMonitor.getUnreadCount(thread);
+      inlineBuilder.setTotalBlipCount(read + unread);
+      inlineBuilder.setUnreadBlipCount(unread);
+      builder = inlineBuilder;
     }
     return builder;
   }

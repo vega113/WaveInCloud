@@ -58,4 +58,14 @@ public final class RootThreadViewImpl<I extends IntrinsicThreadView> // \u2620
   public ReplyBoxView getReplyIndicator() {
     return helper.getIndicator(impl);
   }
+
+  @Override
+  public void setTotalBlipCount(int totalBlipCount) {
+    impl.setTotalBlipCount(totalBlipCount);
+  }
+
+  @Override
+  public void setUnreadBlipCount(int unreadBlipCount) {
+    impl.setUnreadBlipCount(unreadBlipCount);
+  }
 }

@@ -16,6 +16,8 @@
 package org.waveprotocol.wave.client.wavepanel.view.dom;
 
 import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.load;
+import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.TOTAL_BLIPS_ATTRIBUTE;
+import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.UNREAD_BLIPS_ATTRIBUTE;
 
 import com.google.gwt.dom.client.Element;
 
@@ -40,7 +42,6 @@ public class RootThreadDomImpl implements DomView, IntrinsicThreadView {
   // Element references are loaded lazily and cached.
   //
 
-  private Element indicator;
   private Element blips;
 
   RootThreadDomImpl(Element e, String id) {
@@ -83,6 +84,16 @@ public class RootThreadDomImpl implements DomView, IntrinsicThreadView {
   @Override
   public String getId() {
     return id;
+  }
+
+  @Override
+  public void setTotalBlipCount(int totalBlipCount) {
+    self.setAttribute(TOTAL_BLIPS_ATTRIBUTE, "" + totalBlipCount);
+  }
+  
+  @Override
+  public void setUnreadBlipCount( int unreadBlipCount ) {
+    self.setAttribute(UNREAD_BLIPS_ATTRIBUTE, "" + unreadBlipCount);
   }
 
   //

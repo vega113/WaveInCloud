@@ -22,7 +22,6 @@ import org.waveprotocol.wave.client.wavepanel.view.RootThreadView;
 
 /**
  * Fake, pojo implementation of a thread view.
- *
  */
 public final class FakeRootThreadView extends FakeThreadView implements RootThreadView {
 
@@ -58,5 +57,15 @@ public final class FakeRootThreadView extends FakeThreadView implements RootThre
   @Override
   public ReplyBoxView getReplyIndicator() {
     return replyIndicator;
+  }
+
+  @Override
+  public void setTotalBlipCount(int totalBlipCount) {
+    // no-op
+  }
+
+  @Override
+  public void setUnreadBlipCount(int unreadBlipCount) {
+    // no-op
   }
 }

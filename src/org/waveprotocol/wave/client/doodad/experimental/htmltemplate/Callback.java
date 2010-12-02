@@ -14,18 +14,23 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.client.wavepanel.view;
+package org.waveprotocol.wave.client.doodad.experimental.htmltemplate;
 
 /**
- * Reveals the primitive state exposed in an inline thread view.
- * 
- * @see InlineThreadView for structural state.
+ * A callback from an RPC.
+ *
+ * @param <R> Response type.
  */
-public interface IntrinsicInlineThreadView extends IntrinsicThreadView {
+public interface Callback<R> {
+  /**
+   * Notifies this callback of a successful response.
+   */
+  void onSuccess(R cajoled);
 
-  /** Sets the collapsed state of this view. */
-  void setCollapsed(boolean collapsed);
-
-  /** @return true if this view is collapsed, false if expanded. */
-  boolean isCollapsed();
+  /**
+   * Notifies this callback of a failure. This includes application-level
+   * failures (e.g., errors in performing the request) as well as
+   * communication-level failures (timeouts, message errors, etc).
+   */
+  void onError(String message);
 }

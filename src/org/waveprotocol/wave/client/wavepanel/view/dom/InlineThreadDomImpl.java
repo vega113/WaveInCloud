@@ -81,6 +81,16 @@ public final class InlineThreadDomImpl implements DomView, IntrinsicInlineThread
     return c.getChrome().getFirstChildElement().getNextSiblingElement();
   }
 
+  @Override
+  public void setTotalBlipCount(int totalBlipCount) {
+    c.setTotalBlipCount(totalBlipCount);
+  }
+
+  @Override
+  public void setUnreadBlipCount(int unreadBlipCount) {
+    c.setUnreadBlipCount(unreadBlipCount);
+  }
+  
   //
   // Equality.
   //

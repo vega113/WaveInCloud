@@ -17,6 +17,8 @@ package org.waveprotocol.wave.client.wavepanel.render;
 
 import com.google.common.base.Preconditions;
 
+import org.waveprotocol.box.webclient.client.StagesProvider;
+import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
@@ -54,14 +56,17 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
       ObservableConversation.AnchorListener, PagingHandler {
     private final ObservableConversation conv;
     private final LiveProfileRenderer profileUpdateMonitor;
+    private final ThreadReadStateMonitor readMonitor;
 
     /**
      * @param conv
      */
-    public ConversationUpdater(ObservableConversation conv, ProfileManager profileManager) {
+    public ConversationUpdater(ObservableConversation conv, ProfileManager profileManager, 
+        ThreadReadStateMonitor readMonitor) {
       this.conv = conv;
       this.profileUpdateMonitor =
           new LiveProfileRenderer(conv, profileManager, viewProvider, shallowBlipRenderer);
+      this.readMonitor = readMonitor;
     }
 
     public void init() {
@@ -110,6 +115,7 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
 
         // Render the new blip.
         threadView.insertBlipBefore(refView, blip);
+        bubbleBlipCountUpdate(blip);
       } else {
         throw new IllegalStateException("threadView not present");
       }
@@ -123,6 +129,17 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
         blipView.remove();
       }
       stopListeningToBlip(blip);
+      bubbleBlipCountUpdate(blip);
+    }
+    
+    private void bubbleBlipCountUpdate(ConversationBlip blip) {
+      ConversationThread thread = blip.getThread();
+      ThreadView threadUi = viewOf(thread);
+      threadUi.setTotalBlipCount(readMonitor.getTotalCount(thread));
+      ConversationBlip parentBlip = thread.getParentBlip();
+      if (parentBlip != null) {
+        bubbleBlipCountUpdate(parentBlip);
+      }
     }
 
     /**
@@ -262,7 +279,8 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
       ReplyManager replyHandler,
       ObservableConversationView convView,
       ObservableSupplementedWave supplement,
-      final ProfileManager profileManager) {
+      final ProfileManager profileManager,
+      final ThreadReadStateMonitor readMonitor) {
     this.shallowBlipRenderer = shallowBlipRenderer;
     this.viewProvider = viewProvider;
     this.replyHandler = replyHandler;
@@ -274,10 +292,10 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
     this.updaterFactory = new UpdaterFactory() {
       @Override
       public ConversationUpdater create(ObservableConversation c) {
-        return new ConversationUpdater(c, profileManager);
+        return new ConversationUpdater(c, profileManager, readMonitor);
       }
     };
-    this.supplementRenderer = LiveSupplementRenderer.create(supplement, viewProvider);
+    this.supplementRenderer = LiveSupplementRenderer.create(supplement, viewProvider, readMonitor);
 
     // Attach to existing conversations, then keep it live.
     for (ObservableConversation conv : convView.getConversations()) {

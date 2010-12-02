@@ -123,7 +123,8 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
             public void execute() {
               WaveRenderer waveRenderer =
                   FullDomWaveRendererImpl.create(getConversations(), getProfileManager(),
-                      getBlipDetailer(), getViewIdMapper(), getBlipQueue());
+                      getBlipDetailer(), getViewIdMapper(), getBlipQueue(), 
+                      getThreadReadStateMonitor());
 
               stageOne.getDomAsViewProvider().setRenderer(waveRenderer);
 
