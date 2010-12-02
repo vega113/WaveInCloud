@@ -131,6 +131,46 @@ public final class WaveletDataUtil {
   }
 
   /**
+   * Constructs the wavelet state after the application of the first delta.
+   *
+   * @param waveletName the name of the wavelet.
+   * @param delta first delta to apply at version zero.
+   */
+  public static ObservableWaveletData buildWaveletFromFirstDelta(WaveletName waveletName,
+      TransformedWaveletDelta delta) throws OperationException {
+    Preconditions.checkArgument(delta.getAppliedAtVersion() == 0,
+        "first delta has non-zero version: " + delta.getAppliedAtVersion());
+    ObservableWaveletData wavelet =
+        createEmptyWavelet(
+            waveletName,
+            delta.getAuthor(), // creator
+            HashedVersion.unsigned(0), // garbage hash, is overwritten by first delta below
+            delta.getApplicationTimestamp()); // creation time
+    applyWaveletDelta(delta, wavelet);
+    return wavelet;
+  }
+
+  /**
+   * Reads all deltas from the given iterator and constructs the end
+   * wavelet state by successive application of all deltas beginning
+   * from the empty wavelet.
+   *
+   * @param waveletName the name of the wavelet.
+   * @param deltas non-empty, contiguous sequence of non-empty deltas beginning
+   *        from version zero.
+   */
+  public static ObservableWaveletData buildWaveletFromDeltas(WaveletName waveletName,
+      Iterator<TransformedWaveletDelta> deltas) throws OperationException {
+    Preconditions.checkArgument(deltas.hasNext(), "empty deltas");
+    ObservableWaveletData wavelet = buildWaveletFromFirstDelta(waveletName, deltas.next());
+    while (deltas.hasNext()) {
+      TransformedWaveletDelta delta = deltas.next();
+      applyWaveletDelta(delta, wavelet);
+    }
+    return wavelet;
+  }
+
+  /**
    * Copies a wavelet.
    *
    * @param wavelet the wavelet to copy.
@@ -156,45 +196,5 @@ public final class WaveletDataUtil {
         new DocInitializationBuffer().finish(),
         time,
         time);
-  }
-
-
-  /**
-   * Reads all deltas from the given iterator and constructs the end
-   * wavelet state by successive application of all deltas beginning
-   * from the empty wavelet.
-   *
-   * @param waveletName the name of the wavelet.
-   * @param deltas non-empty, contiguous sequence of non-empty deltas beginning
-   *        from version zero.
-   */
-  public static ObservableWaveletData buildWaveletFromDeltas(WaveletName waveletName,
-      Iterator<TransformedWaveletDelta> deltas) throws OperationException {
-    Preconditions.checkArgument(deltas.hasNext(), "empty deltas");
-
-    // Read the first delta now to get creator and creation time.
-    TransformedWaveletDelta delta = deltas.next();
-    Preconditions.checkArgument(delta.getAppliedAtVersion() == 0,
-        "first delta has non-zero version: " + delta.getAppliedAtVersion());
-    ParticipantId creator = delta.getAuthor();
-    long creationTimestamp = delta.getApplicationTimestamp();
-
-    // Bootstrap the wavelet state to apply deltas to in the loop below.
-    ObservableWaveletData wavelet = createEmptyWavelet(
-        // garbage hashed version doesn't matter as it's overwritten by first delta below
-        waveletName, creator, HashedVersion.unsigned(0), creationTimestamp);
-
-    // Apply
-    for (;;) {
-      applyWaveletDelta(delta, wavelet);
-      Preconditions.checkState(wavelet.getHashedVersion().getVersion() == wavelet.getVersion());
-      Preconditions.checkState(wavelet.getHashedVersion().equals(delta.getResultingVersion()));
-      if (deltas.hasNext()) {
-        delta = deltas.next();
-      } else {
-        break;
-      }
-    }
-    return wavelet;
   }
 }

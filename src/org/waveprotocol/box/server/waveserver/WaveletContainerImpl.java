@@ -339,14 +339,13 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
     if (waveletData == null) {
       Preconditions.checkState(currentVersion.getVersion() == 0L, "CurrentVersion must be 0");
-      waveletData = WaveletDataUtil.createEmptyWavelet(waveletName, transformedDelta.getAuthor(),
-          currentVersion, transformedDelta.getApplicationTimestamp());
+      waveletData = WaveletDataUtil.buildWaveletFromFirstDelta(waveletName, transformedDelta);
+    } else {
+      // TODO(soren): fix tests and then strengthen this test:
+      // Preconditions.checkState(waveletData.getHashedVersion().equals(currentVersion));
+      Preconditions.checkState(waveletData.getVersion() == currentVersion.getVersion());
+      WaveletDataUtil.applyWaveletDelta(transformedDelta, waveletData);
     }
-    // TODO(soren): fix tests and then strengthen this test:
-    // Preconditions.checkState(waveletData.getHashedVersion().equals(currentVersion));
-    Preconditions.checkState(waveletData.getVersion() == currentVersion.getVersion());
-
-    WaveletDataUtil.applyWaveletDelta(transformedDelta, waveletData);
 
     transformedDeltas.put(currentVersion, transformedDelta);
     appliedDeltas.put(currentVersion, appliedDeltaBytes);
