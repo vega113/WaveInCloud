@@ -158,6 +158,14 @@ public class GadgetMetadata {
    */
   public void parse(JSONObject gadget) {
     iframeUrl = getJsonStringValue(gadget, "iframeUrl");
+    // Get rid of the protocol as we should rely on the browser to do the right
+    // thing with "//" as the beginning of the url.
+    // By doing this it also works around an issue in shindig where it shouldn't
+    // put "//" in front of "http://" see:
+    // https://issues.apache.org/jira/browse/SHINDIG-1460?page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel&focusedCommentId=12928110#action_12928110
+    // This work around may no longer be needed on the next version of shindig
+    iframeUrl = iframeUrl.replaceFirst("^//http[s]?://", "//");
+
     url = getJsonStringValue(gadget, "url");
     moduleId = getJsonStringValue(gadget, "moduleId");
     title = getJsonStringValue(gadget, "title");

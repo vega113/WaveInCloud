@@ -134,7 +134,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
    * Gadget RPC path: location of the RPC JavaScript code to be loaded into the
    * client code. This is the standard Gadget library to support RPCs.
    */
-  static final String GADGET_RPC_PATH = "/gadgets/js/core/rpc.js";
+  static final String GADGET_RPC_PATH = "/gadgets/js/core:rpc.js";
 
   /**
    * Gadget name prefix: the common part of the gadget IFrame ID and name. The
@@ -311,7 +311,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
    * Pattern to match module ID and security token parameters a URL. Used to
    * remove all these parameters.
    */
-  private final static String URL_CLEANING_PATTERN = "&(mid=|st=|lang=|country=)[^&]*";
+  private final static String URL_CLEANING_PATTERN = "&(mid=|st=|lang=|country=|debug=)[^&]*";
 
   /**
    * Pattern to match and remove URL fragment including the #.
@@ -330,12 +330,12 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
       "([\\w~!&@\\$\\-\\.\\'\\(\\)\\*\\+\\,\\;\\=\\?\\:]|%[0-9a-fA-F]{2})+";
 
   /**
-   * Pattern to match iframe host in the beginning of a URL. This is not a                                                                                                                     
-   * validation check. The user can choose their own host.  This simply serves                                                                                                                 
-   * to extract the iframe segment of the URL        
+   * Pattern to match iframe host in the beginning of a URL. This is not a
+   * validation check. The user can choose their own host.  This simply serves
+   * to extract the iframe segment of the URL
    */
   private final static String IFRAME_HOST_PATTERN =
-      "^\\/\\/(https?:\\/\\/)?[^\\/]+\\/"; 
+      "^\\/\\/(https?:\\/\\/)?[^\\/]+\\/";
 
   /**
    * Pattern to remove XML-unsafe characters. Snippeting fails on some of those
