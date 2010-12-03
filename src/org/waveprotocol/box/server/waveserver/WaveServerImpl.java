@@ -64,6 +64,7 @@ import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -181,6 +182,9 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         } catch (WaveletStateException e) {
           // HACK(jochen): TODO: fix the case of the missing history! ###
           LOG.severe("DANGER WILL ROBINSON, WAVELET HISTORY IS INCOMPLETE!!!", e);
+          error = e.getMessage();
+        } catch (IOException e) {
+          // TODO(soren): change things so this doesn't cause BAD_REQUEST response below
           error = e.getMessage();
         } catch (WaveServerException e) {
           error = e.getMessage();
@@ -492,7 +496,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    * @return an existing or new instance.
    * @throws IllegalArgumentException if the name refers to a local wavelet.
    */
-  private RemoteWaveletContainer getOrCreateRemoteWavelet(WaveletName waveletName) {
+  private RemoteWaveletContainer getOrCreateRemoteWavelet(WaveletName waveletName)
+      throws IOException {
     Preconditions.checkArgument(!isLocalWavelet(waveletName), "%s is local", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
@@ -520,7 +525,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    * @throws WaveletStateException if the wavelet is in a bad state.
    */
   private LocalWaveletContainer getOrCreateLocalWavelet(WaveletName waveletName,
-      ParticipantId participantId) throws AccessControlException, WaveletStateException {
+      ParticipantId participantId)
+      throws AccessControlException, IOException, WaveletStateException {
     Preconditions.checkArgument(isLocalWavelet(waveletName), "%s is remote", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
@@ -668,6 +674,10 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       } catch (InvalidProtocolBufferException e) {
+        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
+        return;
+      } catch (IOException e) {
+        // TODO(soren): pick a better error response than BAD_REQUEST
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
       } catch (WaveServerException e) {

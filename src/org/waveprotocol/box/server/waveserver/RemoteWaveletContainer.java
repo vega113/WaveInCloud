@@ -22,6 +22,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -34,8 +35,11 @@ import java.util.List;
 interface RemoteWaveletContainer extends WaveletContainer {
 
   interface Factory {
-    /** @throws IllegalArgumentException if the waveletName is bad */
-    RemoteWaveletContainer create(WaveletName waveletName);
+    /**
+     * @throws IOException if storage access goes wrong
+     * @throws IllegalArgumentException if the waveletName is bad
+     */
+    RemoteWaveletContainer create(WaveletName waveletName) throws IOException;
   }
 
   /**

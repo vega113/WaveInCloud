@@ -84,13 +84,14 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   protected State state;
 
   /**
-   * Constructs an empty WaveletContainer for a wavelet with the given name.
+   * Constructs an empty WaveletContainer for a wavelet.
    * waveletData is not set until a delta has been applied.
    *
-   * @param waveletName the name of the wavelet.
+   * @param waveletAccess access to the wavelet in the wavelet store
    */
-  public WaveletContainerImpl(WaveletName waveletName) {
-    this.waveletName = waveletName;
+  public WaveletContainerImpl(WaveletStore.WaveletAccess waveletAccess) {
+    // TODO(soren): make proper use of waveletAccess
+    this.waveletName = waveletAccess.getWaveletName();
     waveletData = null;
     currentVersion = HASH_FACTORY.createVersionZero(waveletName);
     lastCommittedVersion = null;

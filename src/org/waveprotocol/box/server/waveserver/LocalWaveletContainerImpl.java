@@ -42,8 +42,8 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 class LocalWaveletContainerImpl extends WaveletContainerImpl
     implements LocalWaveletContainer {
 
-  public LocalWaveletContainerImpl(WaveletName waveletName) {
-    super(waveletName);
+  public LocalWaveletContainerImpl(WaveletStore.WaveletAccess waveletAccess) {
+    super(waveletAccess);
   }
 
   @Override

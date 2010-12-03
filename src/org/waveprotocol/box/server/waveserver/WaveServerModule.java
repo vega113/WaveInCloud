@@ -44,29 +44,17 @@ import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 
+import java.io.IOException;
+
 /**
  * Guice Module for the prototype Server.
  *
  */
 public class WaveServerModule extends AbstractModule {
   private final boolean enableFederation;
-  
+
   public WaveServerModule(boolean enableFederation) {
     this.enableFederation = enableFederation;
-  }
-  
-  private static class LocalWaveletContainerFactory implements LocalWaveletContainer.Factory {
-    @Override
-    public LocalWaveletContainer create(WaveletName waveletName) {
-      return new LocalWaveletContainerImpl(waveletName);
-    }
-  }
-
-  private static class RemoteWaveletContainerFactory implements RemoteWaveletContainer.Factory {
-    @Override
-    public RemoteWaveletContainer create(WaveletName waveletName) {
-      return new RemoteWaveletContainerImpl(waveletName);
-    }
   }
 
   private static final IdURIEncoderDecoder URI_CODEC =
@@ -76,7 +64,7 @@ public class WaveServerModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(TimeSource.class).to(DefaultTimeSource.class).in(Singleton.class);
-    
+
     if (enableFederation) {
       bind(SignatureHandler.class)
       .toProvider(SigningSignatureHandler.SigningSignatureHandlerProvider.class);
@@ -103,17 +91,33 @@ public class WaveServerModule extends AbstractModule {
     bind(HashedVersionFactory.class).toInstance(HASH_FACTORY);
     bind(ClientFrontend.class).to(ClientFrontendImpl.class).in(Singleton.class);
     bind(ProtocolWaveClientRpc.Interface.class).to(WaveClientRpcImpl.class).in(Singleton.class);
-    bind(LocalWaveletContainer.Factory.class).to(LocalWaveletContainerFactory.class).in(
-        Singleton.class);
-    bind(RemoteWaveletContainer.Factory.class).to(RemoteWaveletContainerFactory.class).in(
-        Singleton.class);
+    bind(WaveletStore.class).to(DeltaStoreBasedWaveletStore.class);
   }
 
-  /**
-   * Guice provider of {@code WaveCertPathValidator}s.
-   */
   @Provides
-  protected WaveCertPathValidator provideWaveCertPathValidator(
+  private LocalWaveletContainer.Factory provideLocalWaveletContainerFactory(
+      final WaveletStore waveletStore) {
+    return new LocalWaveletContainer.Factory() {
+      @Override
+      public LocalWaveletContainer create(WaveletName waveletName) throws IOException {
+        return new LocalWaveletContainerImpl(waveletStore.open(waveletName));
+      }
+    };
+  }
+
+  @Provides
+  private RemoteWaveletContainer.Factory provideRemoteWaveletContainerFactory(
+      final WaveletStore waveletStore) {
+    return new RemoteWaveletContainer.Factory() {
+      @Override
+      public RemoteWaveletContainer create(WaveletName waveletName) throws IOException {
+        return new RemoteWaveletContainerImpl(waveletStore.open(waveletName));
+      }
+    };
+  }
+
+  @Provides
+  private WaveCertPathValidator provideWaveCertPathValidator(
       @Named(CoreSettings.WAVESERVER_DISABLE_SIGNER_VERIFICATION) boolean disableSignerVerification,
       TimeSource timeSource, VerifiedCertChainCache certCache,
       TrustRootsProvider trustRootsProvider) {

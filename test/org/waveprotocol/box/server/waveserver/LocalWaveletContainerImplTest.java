@@ -22,6 +22,7 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
+import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -67,6 +68,7 @@ public class LocalWaveletContainerImplTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+
     addParticipantOp = ProtocolWaveletOperation.newBuilder()
         .setAddParticipant(AUTHOR)
         .build();
@@ -78,7 +80,9 @@ public class LocalWaveletContainerImplTest extends TestCase {
     addBlipOp = ProtocolWaveletOperation.newBuilder().setMutateDocument(
         MutateDocument.newBuilder().setDocumentId(BLIP_ID).setDocumentOperation(
             ProtocolDocumentOperation.newBuilder().build())).build();
-    wavelet = new LocalWaveletContainerImpl(WAVELET_NAME);
+
+    WaveletStore waveletStore = new DeltaStoreBasedWaveletStore(new MemoryDeltaStore());
+    wavelet = new LocalWaveletContainerImpl(waveletStore.open(WAVELET_NAME));
   }
 
   @Override

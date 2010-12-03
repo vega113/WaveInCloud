@@ -37,7 +37,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -72,8 +71,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
    * Create a new RemoteWaveletContainerImpl. Just pass through to the parent
    * constructor.
    */
-  public RemoteWaveletContainerImpl(WaveletName waveletName) {
-    super(waveletName);
+  public RemoteWaveletContainerImpl(WaveletStore.WaveletAccess waveletAccess) {
+    super(waveletAccess);
     state = State.LOADING;
   }
 

@@ -25,6 +25,8 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
+import java.io.IOException;
+
 /**
  * A local wavelet may be updated by submits. The local wavelet will perform
  * operational transformation on the submitted delta and assign it the latest
@@ -35,8 +37,11 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 interface LocalWaveletContainer extends WaveletContainer {
 
   interface Factory {
-    /** @throws IllegalArgumentException if the waveletName is bad */
-    LocalWaveletContainer create(WaveletName waveletName);
+    /**
+     * @throws IOException if storage access goes wrong
+     * @throws IllegalArgumentException if the waveletName is bad
+     */
+    LocalWaveletContainer create(WaveletName waveletName) throws IOException;
   }
 
   /**
