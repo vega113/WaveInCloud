@@ -91,7 +91,7 @@ public class WaveServerModule extends AbstractModule {
     bind(HashedVersionFactory.class).toInstance(HASH_FACTORY);
     bind(ClientFrontend.class).to(ClientFrontendImpl.class).in(Singleton.class);
     bind(ProtocolWaveClientRpc.Interface.class).to(WaveClientRpcImpl.class).in(Singleton.class);
-    bind(WaveletStore.class).to(DeltaStoreBasedWaveletStore.class);
+    bind(WaveletStore.class).to(DeltaStoreBasedWaveletStore.class).in(Singleton.class);
   }
 
   @Provides

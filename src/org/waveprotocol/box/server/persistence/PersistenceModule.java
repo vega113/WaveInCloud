@@ -85,6 +85,7 @@ public class PersistenceModule extends AbstractModule {
     bindCertPathStore();
     bindAttachmentStore();
     bindAccountStore();
+    bindDeltaStore();
   }
 
   /**

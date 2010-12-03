@@ -18,6 +18,7 @@
 package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -210,6 +211,7 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
    *
    * @param deltaStore The underlying {@link DeltaStore}.
    */
+  @Inject
   public DeltaStoreBasedWaveletStore(DeltaStore deltaStore) {
     this.deltaStore = deltaStore;
   }
