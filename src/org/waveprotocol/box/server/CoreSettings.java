@@ -37,6 +37,8 @@ public class CoreSettings {
   public static final String ATTACHMENT_STORE_DIRECTORY = "attachment_store_directory";
   public static final String ACCOUNT_STORE_TYPE = "account_store_type";
   public static final String ACCOUNT_STORE_DIRECTORY = "account_store_directory";
+  public static final String DELTA_STORE_TYPE = "delta_store_type";
+  public static final String DELTA_STORE_DIRECTORY = "delta_store_directory";
   public static final String FLASHSOCKET_POLICY_PORT = "flashsocket_policy_port";
   public static final String USE_SOCKETIO = "use_socketio";
   public static final String GADGET_SERVER_HOSTNAME = "gadget_server_hostname";
@@ -85,7 +87,7 @@ public class CoreSettings {
   private static String attachmentStoreDirectory;
 
   @Setting(name = ACCOUNT_STORE_TYPE,
-      description = "Type of persistence to use for the Account Storage", defaultValue = "memory")
+      description = "Type of persistence to use for the accounts", defaultValue = "memory")
   private static String accountStoreType;
 
   @Setting(name = ACCOUNT_STORE_DIRECTORY,
@@ -93,6 +95,16 @@ public class CoreSettings {
           + "wave-in-a-box process. Only used by file-based account store.",
       defaultValue = "_accounts")
   private static String accountStoreDirectory;
+
+  @Setting(name = DELTA_STORE_TYPE,
+      description = "Type of persistence to use for the deltas", defaultValue = "memory")
+  private static String deltaStoreType;
+
+  @Setting(name = DELTA_STORE_DIRECTORY,
+      description = "Location on disk where the delta store lives. Must be writeable by the "
+          + "wave-in-a-box process. Only used by file-based account store.",
+      defaultValue = "_deltas")
+  private static String deltaStoreDirectory;
 
   @Setting(name = FLASHSOCKET_POLICY_PORT,
       description = "Port on which to listen for Flashsocket policy requests.",

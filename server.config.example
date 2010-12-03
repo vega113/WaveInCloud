@@ -28,13 +28,21 @@ attachment_store_type = disk
 # for other data store types.
 attachment_store_directory = _attachments
 
-# Currently supported Account store types: fake, memory, file, mongodb
+# Currently supported account store types: fake, memory, file, mongodb
 account_store_type = memory
 
 # The location where accounts are stored on disk. This should be changed.
 # Note: This is only used when using the file account store. It is ignored
 # for other data store types.
 account_store_directory = _accounts
+
+# Currently supported delta store types: memory, file
+delta_store_type = memory
+
+# The location where deltas are stored on disk. This should be changed.
+# Note: This is only used when using the file delta store. It is ignored
+# for other data store types.
+delta_store_directory = _deltas
 
 # Set true to use Socket.IO instead of raw WebSockets in the webclient.
 use_socketio = false

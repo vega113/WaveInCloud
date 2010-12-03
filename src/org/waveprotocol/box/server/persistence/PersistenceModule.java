@@ -25,9 +25,12 @@ import com.google.inject.name.Named;
 import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.persistence.file.FileAccountStore;
 import org.waveprotocol.box.server.persistence.file.FileAttachmentStore;
+import org.waveprotocol.box.server.persistence.file.FileDeltaStore;
 import org.waveprotocol.box.server.persistence.file.FileSignerInfoStore;
+import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
 import org.waveprotocol.box.server.persistence.mongodb.MongoDbProvider;
+import org.waveprotocol.box.server.waveserver.DeltaStore;
 import org.waveprotocol.wave.crypto.CertPathStore;
 
 /**
@@ -52,15 +55,19 @@ public class PersistenceModule extends AbstractModule {
 
   private final String accountStoreType;
 
+  private final String deltaStoreType;
+
   private MongoDbProvider mongoDbProvider;
 
   @Inject
   public PersistenceModule(@Named(CoreSettings.SIGNER_INFO_STORE_TYPE) String signerInfoStoreType,
       @Named(CoreSettings.ATTACHMENT_STORE_TYPE) String attachmentStoreType,
-      @Named(CoreSettings.ACCOUNT_STORE_TYPE) String accountStoreType) {
+      @Named(CoreSettings.ACCOUNT_STORE_TYPE) String accountStoreType,
+      @Named(CoreSettings.DELTA_STORE_TYPE) String deltaStoreType) {
     this.signerInfoStoreType = signerInfoStoreType;
     this.attachmentStoreType = attachmentStoreType;
     this.accountStoreType = accountStoreType;
+    this.deltaStoreType = deltaStoreType;
   }
 
   /**
@@ -121,6 +128,16 @@ public class PersistenceModule extends AbstractModule {
       bind(AccountStore.class).toInstance(mongoDbProvider.provideMongoDbStore());
     } else {
       throw new RuntimeException("Invalid account store type: '" + accountStoreType + "'");
+    }
+  }
+
+  private void bindDeltaStore() {
+    if (deltaStoreType.equalsIgnoreCase("memory")) {
+      bind(DeltaStore.class).to(MemoryDeltaStore.class).in(Singleton.class);
+    } else if (deltaStoreType.equalsIgnoreCase("file")) {
+      bind(DeltaStore.class).to(FileDeltaStore.class).in(Singleton.class);
+    } else {
+      throw new RuntimeException("Invalid delta store type: '" + deltaStoreType + "'");
     }
   }
 }
