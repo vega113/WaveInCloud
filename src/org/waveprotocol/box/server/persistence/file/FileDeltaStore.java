@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet.Builder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.waveserver.DeltaStore;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -54,7 +55,7 @@ public class FileDeltaStore implements DeltaStore {
   final private String basePath;
 
   @Inject
-  public FileDeltaStore(@Named("wave_store_directory") String basePath) {
+  public FileDeltaStore(@Named(CoreSettings.DELTA_STORE_DIRECTORY) String basePath) {
     Preconditions.checkNotNull(basePath, "Requested path is null");
     this.basePath = basePath;
   }
