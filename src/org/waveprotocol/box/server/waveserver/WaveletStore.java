@@ -17,14 +17,14 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.io.Closeable;
-import java.io.IOException;
-import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.Set;
 
@@ -57,40 +57,41 @@ public interface WaveletStore {
      * the deltas have been successfully and "durably" stored, that is,
      * the method forces the data to disk.
      *
-     * @param deltas Contiguous deltas, beginning from the DeltaAccess
-     *        object's end version. It is the caller's responsibility to
-     *        ensure that everything matches up (applied and transformed
-     *        deltas in the records match, that the hashes are correctly
-     *        computed, etc).
+     * @param deltas Contiguous deltas, beginning from the DeltaAccess object's
+     *        end version. It is the caller's responsibility to ensure that
+     *        everything matches up (applied and transformed deltas in the
+     *        records match, that the hashes are correctly computed, etc).
      * @param resultingSnapshot A snapshot of the state of the wavelet after
      *        {@code deltas} are applied.
-     * @throws IOException if anything goes wrong with the underlying storage.
+     * @throws PersistenceException if anything goes wrong with the underlying
+     *         storage.
      */
     void appendDeltas(Collection<WaveletDeltaRecord> deltas,
-        ReadableWaveletData resultingSnapshot) throws IOException;
+        ReadableWaveletData resultingSnapshot) throws PersistenceException;
   }
 
   /**
    * Opens a wavelet, which can be used to store deltas. If the wavelet doesn't
    * exist, it is implicitly created when the first op is appended to it.
    *
-   * @throws IOException if anything goes wrong with the underlying storage.
+   * @throws PersistenceException if anything goes wrong with the underlying storage.
    */
-  WaveletAccess open(WaveletName waveletName) throws IOException;
+  WaveletAccess open(WaveletName waveletName) throws PersistenceException;
 
   /**
    * Deletes a non-empty wavelet.
-   *
-   * @throws IOException if anything goes wrong with the underlying storage.
-   * @throws FileNotFoundException if this wavelet doesn't exist in the wavelet
-   *         store.
+   * 
+   * @throws PersistenceException if anything goes wrong with the underlying storage.
+   * @throws FileNotFoundPersistenceException if this wavelet doesn't exist in
+   *         the wavelet store.
    */
-  void delete(WaveletName waveletName) throws FileNotFoundException, IOException;
+  void delete(WaveletName waveletName) throws PersistenceException,
+      FileNotFoundPersistenceException;
 
   /**
    * Looks up all wavelets with deltas in the wavelet store.
    *
-   * @throws IOException if anything goes wrong with the underlying storage.
+   * @throws PersistenceException if anything goes wrong with the underlying storage.
    */
-  Set<WaveletId> lookup(WaveId waveId) throws IOException;
+  Set<WaveletId> lookup(WaveId waveId) throws PersistenceException;
 }

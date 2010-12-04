@@ -28,6 +28,7 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.LocalWaveletContainer.Factory;
@@ -39,8 +40,6 @@ import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
@@ -52,7 +51,6 @@ import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -91,7 +89,7 @@ public class WaveServerTest extends TestCase {
     final WaveletStore waveletStore = new DeltaStoreBasedWaveletStore(new MemoryDeltaStore());
     Factory localWaveletContainerFactory = new LocalWaveletContainer.Factory() {
       @Override
-      public LocalWaveletContainer create(WaveletName waveletName) throws IOException {
+      public LocalWaveletContainer create(WaveletName waveletName) throws PersistenceException {
         return new LocalWaveletContainerImpl(waveletStore.open(waveletName));
       }
     };

@@ -20,12 +20,14 @@ package org.waveprotocol.box.server.persistence.file;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 
-import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreDataSerializer;
+import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreData.ProtoTransformedWaveletDelta;
+import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreDataSerializer;
 import org.waveprotocol.box.server.waveserver.AppliedDeltaUtil;
 import org.waveprotocol.box.server.waveserver.ByteStringMessage;
-import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
 import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
+import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
@@ -33,7 +35,6 @@ import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -174,24 +175,28 @@ public class FileDeltaCollection implements DeltasAccess {
   /**
    * Delete the delta files from disk.
    *
-   * @throws IOException
+   * @throws PersistenceException
    */
-  public void delete() throws IOException, FileNotFoundException {
-    close();
+  public void delete() throws PersistenceException {
+    try {
+      close();
+    } catch (IOException e) {
+      throw new PersistenceException(e);
+    }
 
     File deltas = new File(basePath, deltasFilename);
     if (deltas.exists()) {
       if (!deltas.delete()) {
-        throw new IOException(String.format("Could not delete deltas file: %s", deltasFilename));
+        throw new PersistenceException("Could not delete deltas file: " + deltasFilename);
       }
     } else {
-      throw new FileNotFoundException("Deltas already deleted");
+      throw new PersistenceException("Deltas already deleted");
     }
 
     File index = new File(basePath, indexFilename);
     if (index.exists()) {
       if (!index.delete()) {
-        throw new IOException(String.format("Could not delete index file: %s", indexFilename));
+        throw new FileNotFoundPersistenceException("Could not delete index file: " + indexFilename);
       }
     }
   }
@@ -255,20 +260,24 @@ public class FileDeltaCollection implements DeltasAccess {
   }
 
   @Override
-  public void append(Collection<WaveletDeltaRecord> deltas) throws IOException {
-    openIfNeeded();
+  public void append(Collection<WaveletDeltaRecord> deltas) throws PersistenceException {
+    try {
+      openIfNeeded();
 
-    file.seek(file.length());
+      file.seek(file.length());
 
-    for (WaveletDeltaRecord delta : deltas) {
-      index.addDelta(delta.transformed.getAppliedAtVersion(),
-          delta.transformed.size(), file.getFilePointer());
-      writeDelta(delta);
-      endVersion = delta.transformed.getResultingVersion();
+      for (WaveletDeltaRecord delta : deltas) {
+        index.addDelta(delta.transformed.getAppliedAtVersion(), delta.transformed.size(),
+            file.getFilePointer());
+        writeDelta(delta);
+        endVersion = delta.transformed.getResultingVersion();
+      }
+
+      // fsync() before returning.
+      file.getChannel().force(true);
+    } catch (IOException e) {
+      throw new PersistenceException(e);
     }
-
-    // fsync() before returning.
-    file.getChannel().force(true);
   }
 
   @Override

@@ -18,25 +18,25 @@
 package org.waveprotocol.box.server.persistence;
 
 /**
- * {@link Exception} thrown when a persistence operation has failed.
+ * {@link Exception} thrown when a persistence operation can not locate a file.
  *
- * @author tad.glines@gmail.com (Tad Glines)
+ * @author ljvderijk@gmail.com (Lennard de Rijk)
  */
-public class PersistenceException extends Exception {
+public class FileNotFoundPersistenceException extends PersistenceException {
 
-  public PersistenceException() {
+  public FileNotFoundPersistenceException() {
     super();
   }
 
-  public PersistenceException(String message, Throwable cause) {
+  public FileNotFoundPersistenceException(String message, Throwable cause) {
     super(message, cause);
   }
 
-  public PersistenceException(String message) {
+  public FileNotFoundPersistenceException(String message) {
     super(message);
   }
 
-  public PersistenceException(Throwable cause) {
+  public FileNotFoundPersistenceException(Throwable cause) {
     super(cause);
   }
 }

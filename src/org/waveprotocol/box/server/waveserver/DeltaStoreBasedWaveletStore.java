@@ -20,6 +20,8 @@ package org.waveprotocol.box.server.waveserver;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -111,7 +113,7 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
    * Reads all deltas and applies them all to construct the end wavelet state.
    */
   private static ReadableWaveletData buildWaveletFromDeltaReader(WaveletDeltaRecordReader reader)
-      throws IOException {
+      throws PersistenceException {
     try {
       // TODO(soren): better error handling of IllegalStateExceptions and
       // OperationExceptions thrown from here
@@ -121,9 +123,9 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
       Preconditions.checkState(wavelet.getHashedVersion().equals(reader.getEndVersion()));
       return wavelet;
     } catch (OperationException e) {
-      throw new IllegalStateException(e);
+      throw new PersistenceException(e);
     } catch (RuntimeIOException e) {
-      throw e.getIOException();
+      throw new PersistenceException(e.getIOException());
     }
   }
 
@@ -133,9 +135,13 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
    * @throws IllegalStateException if the delta history is bad
    */
   private static WaveletAccess createWaveletAccess(DeltaStore.DeltasAccess deltasAccess)
-      throws IOException {
-    ReadableWaveletData wavelet =
-        deltasAccess.isEmpty() ? null : buildWaveletFromDeltaReader(deltasAccess);
+      throws PersistenceException {
+    ReadableWaveletData wavelet;
+    try {
+      wavelet = deltasAccess.isEmpty() ? null : buildWaveletFromDeltaReader(deltasAccess);
+    } catch (IOException e) {
+      throw new PersistenceException(e);
+    }
     return new DeltasAccessBasedWaveletAccess(deltasAccess, wavelet);
   }
 
@@ -187,7 +193,7 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
 
     @Override
     public void appendDeltas(Collection<WaveletDeltaRecord> deltas,
-        ReadableWaveletData resultingSnapshot) throws IOException {
+        ReadableWaveletData resultingSnapshot) throws PersistenceException {
       Preconditions.checkState(!isClosed, "Illegal access after closure");
       // First append the deltas.
       deltasAccess.append(deltas);
@@ -217,17 +223,18 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
   }
 
   @Override
-  public WaveletAccess open(WaveletName waveletName) throws IOException {
+  public WaveletAccess open(WaveletName waveletName) throws PersistenceException {
     return createWaveletAccess(deltaStore.open(waveletName));
   }
 
   @Override
-  public void delete(WaveletName waveletName) throws IOException {
+  public void delete(WaveletName waveletName) throws PersistenceException,
+      FileNotFoundPersistenceException {
     deltaStore.delete(waveletName);
   }
 
   @Override
-  public Set<WaveletId> lookup(WaveId waveId) throws IOException {
+  public Set<WaveletId> lookup(WaveId waveId) throws PersistenceException {
     return deltaStore.lookup(waveId);
   }
 }

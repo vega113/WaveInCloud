@@ -20,12 +20,11 @@ package org.waveprotocol.box.server.waveserver;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.version.HashedVersion;
-
-import java.io.IOException;
 
 /**
  * A local wavelet may be updated by submits. The local wavelet will perform
@@ -38,10 +37,10 @@ interface LocalWaveletContainer extends WaveletContainer {
 
   interface Factory {
     /**
-     * @throws IOException if storage access goes wrong
+     * @throws PersistenceException if storage access goes wrong
      * @throws IllegalArgumentException if the waveletName is bad
      */
-    LocalWaveletContainer create(WaveletName waveletName) throws IOException;
+    LocalWaveletContainer create(WaveletName waveletName) throws PersistenceException;
   }
 
   /**

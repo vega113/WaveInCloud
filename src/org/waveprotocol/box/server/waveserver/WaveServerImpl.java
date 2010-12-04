@@ -33,13 +33,14 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
-import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
+import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -64,12 +65,11 @@ import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
 import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -183,7 +183,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           // HACK(jochen): TODO: fix the case of the missing history! ###
           LOG.severe("DANGER WILL ROBINSON, WAVELET HISTORY IS INCOMPLETE!!!", e);
           error = e.getMessage();
-        } catch (IOException e) {
+        } catch (PersistenceException e) {
           // TODO(soren): change things so this doesn't cause BAD_REQUEST response below
           error = e.getMessage();
         } catch (WaveServerException e) {
@@ -495,9 +495,10 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    * @param waveletName name of wavelet
    * @return an existing or new instance.
    * @throws IllegalArgumentException if the name refers to a local wavelet.
+   * @throws PersistenceException if persistence fails.
    */
   private RemoteWaveletContainer getOrCreateRemoteWavelet(WaveletName waveletName)
-      throws IOException {
+      throws PersistenceException {
     Preconditions.checkArgument(!isLocalWavelet(waveletName), "%s is local", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
@@ -521,12 +522,13 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    * @param participantId on who's behalf this wavelet is to be accessed.
    * @return an existing or new instance.
    * @throws AccessControlException if the participant may not access the wavelet.
+   * @throws PersistenceException if the persistence storage fails.
    * @throws IllegalArgumentException if the name refers to a remote wavelet.
    * @throws WaveletStateException if the wavelet is in a bad state.
    */
   private LocalWaveletContainer getOrCreateLocalWavelet(WaveletName waveletName,
       ParticipantId participantId)
-      throws AccessControlException, IOException, WaveletStateException {
+      throws AccessControlException, PersistenceException, WaveletStateException {
     Preconditions.checkArgument(isLocalWavelet(waveletName), "%s is remote", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
@@ -676,7 +678,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       } catch (InvalidProtocolBufferException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;
-      } catch (IOException e) {
+      } catch (PersistenceException e) {
         // TODO(soren): pick a better error response than BAD_REQUEST
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
         return;

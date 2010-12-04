@@ -56,15 +56,11 @@ import java.util.List;
 public abstract class DeltaStoreTestBase extends TestCase {
   private final WaveletName WAVE1_WAVELET1 =
     WaveletName.of(new WaveId("example.com", "wave1"), new WaveletId("example.com", "wavelet1"));
-  private final WaveletName WAVE1_WAVELET2 =
-    WaveletName.of(new WaveId("example.com", "wave1"), new WaveletId("example.com", "wavelet2"));
-  private final WaveletName WAVE2_WAVELET1 =
-    WaveletName.of(new WaveId("example.com", "wave2"), new WaveletId("example.com", "wavelet1"));
 
   /** Create and return a new delta store instance of the type being tested. */
-  protected abstract DeltaStore newDeltaStore() throws IOException;
+  protected abstract DeltaStore newDeltaStore() throws Exception;
 
-  public void testOpenNonexistantWavelet() throws IOException {
+  public void testOpenNonexistantWavelet() throws Exception {
     DeltaStore store = newDeltaStore();
     DeltasAccess wavelet = store.open(WAVE1_WAVELET1);
 
@@ -82,7 +78,7 @@ public abstract class DeltaStoreTestBase extends TestCase {
     wavelet.close();
   }
 
-  public void testWriteToNewWavelet() throws IOException {
+  public void testWriteToNewWavelet() throws Exception {
     Pair<DeltaStore,WaveletDeltaRecord> pair = newDeltaStoreWithRecord(WAVE1_WAVELET1);
     DeltaStore store = pair.first;
     WaveletDeltaRecord record = pair.second;
@@ -101,7 +97,7 @@ public abstract class DeltaStoreTestBase extends TestCase {
     wavelet.close();
   }
 
-  public void testDeleteWaveletRemovesDeltas() throws IOException {
+  public void testDeleteWaveletRemovesDeltas() throws Exception {
     Pair<DeltaStore, WaveletDeltaRecord> pair = newDeltaStoreWithRecord(WAVE1_WAVELET1);
     DeltaStore store = pair.first;
 
@@ -111,14 +107,14 @@ public abstract class DeltaStoreTestBase extends TestCase {
     wavelet.close();
   }
 
-  public void testLookupReturnsWavelets() throws IOException {
+  public void testLookupReturnsWavelets() throws Exception {
     Pair<DeltaStore,WaveletDeltaRecord> pair = newDeltaStoreWithRecord(WAVE1_WAVELET1);
     DeltaStore store = pair.first;
 
     assertEquals(ImmutableSet.of(WAVE1_WAVELET1.waveletId), store.lookup(WAVE1_WAVELET1.waveId));
   }
 
-  public void testLookupDoesNotReturnEmptyWavelets() throws IOException {
+  public void testLookupDoesNotReturnEmptyWavelets() throws Exception {
     DeltaStore store = newDeltaStore();
     DeltasAccess wavelet = store.open(WAVE1_WAVELET1);
     wavelet.close();
@@ -126,7 +122,7 @@ public abstract class DeltaStoreTestBase extends TestCase {
     assertTrue(store.lookup(WAVE1_WAVELET1.waveId).isEmpty());
   }
 
-  public void testLookupDoesNotReturnDeletedWavelets() throws IOException {
+  public void testLookupDoesNotReturnDeletedWavelets() throws Exception {
     Pair<DeltaStore, WaveletDeltaRecord> pair = newDeltaStoreWithRecord(WAVE1_WAVELET1);
     DeltaStore store = pair.first;
     store.delete(WAVE1_WAVELET1);
@@ -168,7 +164,7 @@ public abstract class DeltaStoreTestBase extends TestCase {
   }
 
   private Pair<DeltaStore, WaveletDeltaRecord> newDeltaStoreWithRecord(WaveletName waveletName)
-      throws IOException {
+      throws Exception {
     DeltaStore store = newDeltaStore();
     DeltasAccess wavelet = store.open(waveletName);
 

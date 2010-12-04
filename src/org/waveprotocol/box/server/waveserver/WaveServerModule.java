@@ -27,6 +27,7 @@ import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.frontend.ClientFrontend;
 import org.waveprotocol.box.server.frontend.ClientFrontendImpl;
 import org.waveprotocol.box.server.frontend.WaveClientRpcImpl;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.crypto.CachedCertPathValidator;
@@ -43,8 +44,6 @@ import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
-
-import java.io.IOException;
 
 /**
  * Guice Module for the prototype Server.
@@ -99,7 +98,7 @@ public class WaveServerModule extends AbstractModule {
       final WaveletStore waveletStore) {
     return new LocalWaveletContainer.Factory() {
       @Override
-      public LocalWaveletContainer create(WaveletName waveletName) throws IOException {
+      public LocalWaveletContainer create(WaveletName waveletName) throws PersistenceException {
         return new LocalWaveletContainerImpl(waveletStore.open(waveletName));
       }
     };
@@ -110,7 +109,7 @@ public class WaveServerModule extends AbstractModule {
       final WaveletStore waveletStore) {
     return new RemoteWaveletContainer.Factory() {
       @Override
-      public RemoteWaveletContainer create(WaveletName waveletName) throws IOException {
+      public RemoteWaveletContainer create(WaveletName waveletName) throws PersistenceException {
         return new RemoteWaveletContainerImpl(waveletStore.open(waveletName));
       }
     };

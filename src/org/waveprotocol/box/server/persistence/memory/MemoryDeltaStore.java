@@ -20,13 +20,14 @@ package org.waveprotocol.box.server.persistence.memory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 
+import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.waveserver.DeltaStore;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 
-import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.Set;
 
@@ -55,14 +56,14 @@ public class MemoryDeltaStore implements DeltaStore {
   }
 
   @Override
-  public void delete(WaveletName waveletName) throws FileNotFoundException {
+  public void delete(WaveletName waveletName) throws PersistenceException {
     Map<WaveletId, MemoryDeltaCollection> waveData = data.get(waveletName.waveId);
     if (waveData == null) {
-      throw new FileNotFoundException();
+      throw new FileNotFoundPersistenceException("WaveletData unknown");
     } else {
       if (waveData.remove(waveletName.waveletId) == null) {
         // Nothing was removed.
-        throw new FileNotFoundException();
+        throw new FileNotFoundPersistenceException("Nothing was removed");
       }
     }
   }

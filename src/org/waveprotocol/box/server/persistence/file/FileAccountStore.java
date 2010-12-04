@@ -31,11 +31,9 @@ import org.waveprotocol.box.server.persistence.protos.ProtoAccountStoreData.Prot
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;

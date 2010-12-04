@@ -24,15 +24,14 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.waveprotocol.box.server.CoreSettings;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.waveserver.DeltaStore;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -61,12 +60,12 @@ public class FileDeltaStore implements DeltaStore {
   }
 
   @Override
-  public void delete(WaveletName waveletName) throws FileNotFoundException, IOException {
+  public void delete(WaveletName waveletName) throws PersistenceException {
     new FileDeltaCollection(waveletName, basePath).delete();
   }
 
   @Override
-  public Set<WaveletId> lookup(WaveId waveId) throws IOException {
+  public Set<WaveletId> lookup(WaveId waveId) throws PersistenceException {
     String waveDirectory = FileUtils.waveIdToPathSegment(waveId);
     File waveDir = new File(basePath, waveDirectory);
     if (!waveDir.exists()) {
@@ -93,7 +92,7 @@ public class FileDeltaStore implements DeltaStore {
   }
 
   @Override
-  public DeltasAccess open(WaveletName waveletName) throws FileNotFoundException, IOException {
+  public DeltasAccess open(WaveletName waveletName) throws PersistenceException {
     return new FileDeltaCollection(waveletName, basePath);
   }
 }
