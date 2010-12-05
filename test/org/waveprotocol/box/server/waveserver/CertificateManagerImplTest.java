@@ -49,6 +49,8 @@ import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
 import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.crypto.WaveSignerFactory;
 import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.SubmitResultListener;
+import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -60,8 +62,6 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.waveserver.federation.SubmitResultListener;
-import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

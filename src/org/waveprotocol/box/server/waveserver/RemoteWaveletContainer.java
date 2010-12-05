@@ -18,10 +18,10 @@
 package org.waveprotocol.box.server.waveserver;
 
 import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
 import java.util.List;
 

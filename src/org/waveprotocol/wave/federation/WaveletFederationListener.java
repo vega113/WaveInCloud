@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.waveserver.federation;
+package org.waveprotocol.wave.federation;
 
 import com.google.protobuf.ByteString;
 

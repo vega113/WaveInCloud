@@ -20,15 +20,15 @@ package org.waveprotocol.wave.federation.noop;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 
+import org.waveprotocol.wave.federation.FederationHostBridge;
+import org.waveprotocol.wave.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.federation.FederationTransport;
-import org.waveprotocol.wave.waveserver.federation.FederationHostBridge;
-import org.waveprotocol.wave.waveserver.federation.FederationRemoteBridge;
-import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
-import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
+import org.waveprotocol.wave.federation.WaveletFederationListener;
+import org.waveprotocol.wave.federation.WaveletFederationProvider;
 
 /**
  * Module for setting up an no-op federation subsystem
- * 
+ *
  * @author tad.glines@gmail.com (Tad Glines)
  */
 public class NoOpFederationModule extends AbstractModule {
@@ -40,7 +40,7 @@ public class NoOpFederationModule extends AbstractModule {
 
     bind(WaveletFederationListener.Factory.class).annotatedWith(FederationHostBridge.class).to(
         NoOpFederationHost.class).in(Singleton.class);
-    
+
     bind(FederationTransport.class).to(NoOpFederationTransport.class).in(Singleton.class);
   }
 

@@ -28,14 +28,14 @@ import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.federation.ProtocolHashedVersionFactory;
+import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.xmpp.MockDisco.PendingMockDisco;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.waveserver.federation.ProtocolHashedVersionFactory;
-import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
 import org.xmpp.packet.Packet;
 
 import java.util.Collections;

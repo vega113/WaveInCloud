@@ -15,11 +15,10 @@
  *
  */
 
-package org.waveprotocol.wave.waveserver.federation;
+package org.waveprotocol.wave.federation;
 
 import com.google.protobuf.ByteString;
 
-import org.waveprotocol.wave.federation.FederationURICodec;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.WaveletName;
 

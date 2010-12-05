@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.waveserver.federation;
+package org.waveprotocol.wave.federation;
 
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;

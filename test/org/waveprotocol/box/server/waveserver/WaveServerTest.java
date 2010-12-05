@@ -34,6 +34,8 @@ import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDeco
 import org.waveprotocol.box.server.waveserver.LocalWaveletContainer.Factory;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto;
+import org.waveprotocol.wave.federation.WaveletFederationListener;
+import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
@@ -48,8 +50,6 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
-import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
-import org.waveprotocol.wave.waveserver.federation.WaveletFederationProvider;
 
 import java.util.Arrays;
 import java.util.Collection;

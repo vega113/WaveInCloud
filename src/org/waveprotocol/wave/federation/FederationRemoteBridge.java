@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.waveprotocol.wave.waveserver.federation;
+package org.waveprotocol.wave.federation;
 
 import com.google.inject.BindingAnnotation;
 
@@ -27,9 +27,9 @@ import static java.lang.annotation.ElementType.METHOD;
 
 /**
  * Used to mark classes to be injected between the Wave Server and the
- * Federation Host.
+ * Federation Remote.
  * 
  * @author thorogood@google.com (Sam Thorogood)
  */
 @BindingAnnotation @Target({ FIELD, PARAMETER, METHOD }) @Retention(RUNTIME)
-public @interface FederationHostBridge {}
+public @interface FederationRemoteBridge {}

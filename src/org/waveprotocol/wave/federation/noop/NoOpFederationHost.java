@@ -20,9 +20,9 @@ package org.waveprotocol.wave.federation.noop;
 import com.google.protobuf.ByteString;
 
 import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.waveserver.federation.WaveletFederationListener;
 
 import java.util.List;
 
