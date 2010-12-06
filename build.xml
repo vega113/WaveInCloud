@@ -240,9 +240,9 @@
   </target>
 
   <target name="test_gwt" depends="compile_tests" description="Runs GWT tests (slow)">
-    <!-- Fork just once due to GWT test failure in shared JVM -->
+    <!-- Fork per test due to GWT test failure in shared JVM -->
     <!-- EMMA disabled due to GWT incompatibility -->
-    <runtests forkmode="once" coverage="false">
+    <runtests forkmode="perTest" coverage="false">
       <fileset dir="${test.dir}">
         <include name="**/*GwtTest.java"/>
       </fileset>
