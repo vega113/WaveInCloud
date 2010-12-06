@@ -128,7 +128,7 @@ public class GadgetNonEditorGwtTest extends GWTTestCase {
         "%2Ftest%2Fgadget.xml&country=ALL&st=SECURITY&libs=core%3Adynamic-height%3Awave" +
         "&mid=31415926#rpctoken=4815162342&st=WRONGPLACE&up_test=done&test=see&up_again=not";
     String cleanUrl = "//0-a-wave-opensocial.googleusercontent.com/gadgets/ifr?v=f5" +
-    "&container=wave&view=default&debug=0&url=http%3A%2F%2Fwave-api.appspot.com%2Fpublic" +
+    "&container=wave&view=default&url=http%3A%2F%2Fwave-api.appspot.com%2Fpublic" +
     "%2Fgadgets%2Ftest%2Fgadget.xml&libs=core%3Adynamic-height%3Awave#test=see";
     assertEquals(cleanUrl, GadgetWidget.cleanUrl(url));
   }
