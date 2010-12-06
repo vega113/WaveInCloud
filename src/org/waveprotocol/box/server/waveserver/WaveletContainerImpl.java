@@ -226,27 +226,29 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * Finds range of server deltas needed to transform against, then transforms all client
    * ops against the server ops.
    */
-  private WaveletDelta transformSubmittedDelta(
-      WaveletDelta submittedDelta)
+  private WaveletDelta transformSubmittedDelta(WaveletDelta submittedDelta)
       throws OperationException, InvalidHashException {
-    HashedVersion appliedVersion = submittedDelta.getTargetVersion();
+    HashedVersion targetVersion = submittedDelta.getTargetVersion();
     NavigableMap<HashedVersion, TransformedWaveletDelta> serverDeltas =
-        transformedDeltas.tailMap(transformedDeltas.floorKey(appliedVersion), true);
+        transformedDeltas.tailMap(transformedDeltas.floorKey(targetVersion), true);
 
     if (serverDeltas.isEmpty()) {
       LOG.warning("Got empty server set, but not sumbitting to head! " + submittedDelta);
       // Not strictly an invalid hash, but it's a related issue
-      throw new InvalidHashException(HashedVersion.unsigned(0), appliedVersion);
+      throw new InvalidHashException(HashedVersion.unsigned(0), targetVersion);
     }
 
     // Confirm that the target version/hash of this delta is valid.
-    if (!serverDeltas.firstEntry().getKey().equals(appliedVersion)) {
+    if (!serverDeltas.firstEntry().getKey().equals(targetVersion)) {
       LOG.warning("Mismatched hashes: expected: " + serverDeltas.firstEntry().getKey() +
-          " got: " + appliedVersion);
-      throw new InvalidHashException(serverDeltas.firstEntry().getKey(), appliedVersion);
+          " got: " + targetVersion);
+      throw new InvalidHashException(serverDeltas.firstEntry().getKey(), targetVersion);
     }
 
     ParticipantId clientAuthor = submittedDelta.getAuthor();
+    // TODO(anorth): remove this copy somehow; currently, it's necessary to
+    // ensure that clientOps.equals() works correctly below (because
+    // WaveletDelta breaks the List.equals() contract)
     List<WaveletOperation> clientOps = Lists.newArrayList(submittedDelta);
     for (Map.Entry<HashedVersion, TransformedWaveletDelta> d : serverDeltas.entrySet()) {
       // If the client delta transforms to nothing before we've traversed all
@@ -258,12 +260,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       }
       TransformedWaveletDelta serverDelta = d.getValue();
       ParticipantId serverAuthor = serverDelta.getAuthor();
-      List<WaveletOperation> serverOps = Lists.newArrayList(serverDelta);
-      if (clientAuthor.equals(serverAuthor) && clientOps.equals(serverOps)) {
+      if (clientAuthor.equals(serverAuthor) && clientOps.equals(serverDelta)) {
         // This is a duplicate, return the server delta.
         return new WaveletDelta(serverAuthor, d.getKey(), serverDelta);
       }
-      clientOps = transformOps(clientOps, serverOps);
+      clientOps = transformOps(clientOps, serverDelta);
     }
     return new WaveletDelta(clientAuthor, currentVersion, clientOps);
   }
