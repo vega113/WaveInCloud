@@ -20,15 +20,13 @@ package org.waveprotocol.wave.client.doodad.attachment;
 import org.waveprotocol.wave.client.doodad.attachment.render.ImageThumbnailRenderer;
 import org.waveprotocol.wave.client.doodad.attachment.render.ImageThumbnailWrapper;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.content.misc.Caption;
 import org.waveprotocol.wave.client.editor.selection.content.ValidSelectionStrategy;
 import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.FilteredView.Skip;
 import org.waveprotocol.wave.model.document.util.Property;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
@@ -85,22 +83,19 @@ public class ImageThumbnail {
   public static void register(ElementHandlerRegistry registry,
       SimpleAttachmentManager attachmentsManager, ThumbnailActionHandler actionHandler) {
     // TODO(danilatos): Generify
-    ImageThumbnailRenderer renderer = new ImageThumbnailRenderer(attachmentsManager);
+    ImageThumbnailAttachmentHandler attachmentListener = new ImageThumbnailAttachmentHandler();
+    ImageThumbnailRenderer renderer = new ImageThumbnailRenderer(attachmentsManager, attachmentListener);
     NodeEventHandler eventHandler = new ImageThumbnailNodeEventHandler(
         EditorStaticDeps.logger, renderer, actionHandler);
-    ImageThumbnailAttachmentHandler attachmentListener =
-        new ImageThumbnailAttachmentHandler(renderer);
+    attachmentListener.setRenderer(renderer);
+
 
     // TODO(danilatos/hearnden): These listeners need to be cleaned up.
     // E.g. currently they are created in WaveManager?
     attachmentsManager.addListener(attachmentListener);
 
-    registry.register(NodeEventHandler.class, FULL_TAGNAME, eventHandler);
-    registry.register(NodeMutationHandler.class, FULL_TAGNAME, renderer);
-    // Hmmm.... it's not nice that we have to specify both. What's a better way?
-    registry.register(Renderer.class, FULL_TAGNAME, renderer);
-    registry.register(ImageThumbnailRenderer.class, FULL_TAGNAME, renderer);
-    registry.register(ImageThumbnailAttachmentHandler.class, FULL_TAGNAME, attachmentListener);
+    registry.registerEventHandler(FULL_TAGNAME, eventHandler);
+    registry.registerRenderingMutationHandler(FULL_TAGNAME, renderer);
 
     // let the editor know w:image persistent tag can't have selection, but contains things that can
     ValidSelectionStrategy.registerTagForSelections(

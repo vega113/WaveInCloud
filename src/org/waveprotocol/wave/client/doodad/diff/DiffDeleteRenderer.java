@@ -21,9 +21,9 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.common.util.DomHelper;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.Renderer;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 
 import java.util.List;
 
@@ -51,7 +51,7 @@ public class DiffDeleteRenderer implements Renderer {
    */
   public static void register(ElementHandlerRegistry handlerRegistry) {
     // register the annotation handler:
-    handlerRegistry.register(Renderer.class, FULL_TAGNAME, getInstance());
+    handlerRegistry.registerRenderer(FULL_TAGNAME, getInstance());
   }
 
   /** Create a renderer, taking an object to use to manage properties. */

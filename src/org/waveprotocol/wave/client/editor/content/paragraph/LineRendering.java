@@ -24,17 +24,15 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.UListElement;
 
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.FullContentView;
-import org.waveprotocol.wave.client.editor.content.NiceHtmlRenderer;
 import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.extract.PasteFormatRenderers;
 import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 
 
@@ -88,10 +86,9 @@ public class LineRendering {
       final ElementHandlerRegistry registry) {
 
     LineContainers.registerLineContainerTagname(containerTagName);
-    registry.register(NodeMutationHandler.class, containerTagName, DEFAULT_PARAGRAPHISER);
-    registry.register(Renderer.class, containerTagName, DEFAULT_RENDERER);
-    registry.register(NiceHtmlRenderer.class, containerTagName,
-        PasteFormatRenderers.SHALLOW_CLONE_RENDERER);
+    registry.registerMutationHandler(containerTagName, DEFAULT_PARAGRAPHISER);
+    registry.registerRenderer(containerTagName, DEFAULT_RENDERER);
+    registry.registerNiceHtmlRenderer(containerTagName, PasteFormatRenderers.SHALLOW_CLONE_RENDERER);
   }
 
   /**
@@ -99,25 +96,17 @@ public class LineRendering {
    */
   public static void registerLines(
       final ElementHandlerRegistry registry) {
-
-    registry.register(NodeMutationHandler.class, LineContainers.LINE_TAGNAME,
-        DEFAULT_PARAGRAPHISER.getLineHandler());
-    registry.register(Renderer.class, LineContainers.LINE_TAGNAME,
-        DEFAULT_PARAGRAPHISER.getLineHandler());
-
     registerParagraphRenderer(registry, Paragraph.DEFAULT_RENDERER);
-    registry.register(NodeEventHandler.class, PARAGRAPH_FULL_TAGNAME,
-        DEFAULT_PARAGRAPH_EVENT_HANDLER);
-    registry.register(NiceHtmlRenderer.class, PARAGRAPH_FULL_TAGNAME,
-        Paragraph.DEFAULT_NICE_HTML_RENDERER);
+    registry.registerEventHandler(PARAGRAPH_FULL_TAGNAME, DEFAULT_PARAGRAPH_EVENT_HANDLER);
+    registry.registerNiceHtmlRenderer(PARAGRAPH_FULL_TAGNAME, Paragraph.DEFAULT_NICE_HTML_RENDERER);
+    registry.registerRenderingMutationHandler(LineContainers.LINE_TAGNAME,
+        DEFAULT_PARAGRAPHISER.getLineHandler());
   }
 
   public static void registerParagraphRenderer(ElementHandlerRegistry registry,
       RenderingMutationHandler renderer) {
-    registry.register(NodeMutationHandler.class, PARAGRAPH_FULL_TAGNAME, renderer);
-    registry.register(Renderer.class, PARAGRAPH_FULL_TAGNAME, renderer);
+    registry.registerRenderingMutationHandler(PARAGRAPH_FULL_TAGNAME, renderer);
   }
-
 
   public static boolean isLineContainerElement(ContentNode node) {
     return LineContainers.isLineContainer(FullContentView.INSTANCE, node);

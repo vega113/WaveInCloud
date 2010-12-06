@@ -25,11 +25,11 @@ import com.google.gwt.user.client.ui.Widget;
 
 import org.waveprotocol.wave.client.common.util.DomHelper;
 import org.waveprotocol.wave.client.common.util.DomHelper.JavaScriptEventListener;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.content.misc.ChunkyElementHandler;
 import org.waveprotocol.wave.client.editor.content.misc.DisplayEditModeHandler;
 import org.waveprotocol.wave.client.editor.content.misc.LinoTextEventHandler;
@@ -37,7 +37,6 @@ import org.waveprotocol.wave.client.editor.content.misc.UpdateContentEditable;
 import org.waveprotocol.wave.client.editor.content.paragraph.ParagraphRenderer;
 import org.waveprotocol.wave.client.editor.event.EditorEvent;
 import org.waveprotocol.wave.client.editor.gwt.GwtRenderingMutationHandler;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.Point;
 
 /**
@@ -72,16 +71,16 @@ public class MyDoodad {
     // The next line Creates a renderer that uses a "div" for the HTML, and
     // handles all the logic for correctly rendering a line
     // of text. See the implementation for details.
-    Renderer captionRenderer = ParagraphRenderer.create("div");
+    ParagraphRenderer captionRenderer = ParagraphRenderer.create("div");
     NodeEventHandler captionHandler = new CaptionEventHandler();
 
 
     ////
 
-    registry.register(Renderer.class, TAGNAME, renderer);
-    registry.register(Renderer.class, CAPTION_TAGNAME, captionRenderer);
-    registry.register(NodeEventHandler.class, TAGNAME, handler);
-    registry.register(NodeEventHandler.class, CAPTION_TAGNAME, captionHandler);
+    registry.registerRenderingMutationHandler(TAGNAME, renderer);
+    registry.registerRenderingMutationHandler(CAPTION_TAGNAME, captionRenderer);
+    registry.registerEventHandler(TAGNAME, handler);
+    registry.registerEventHandler(CAPTION_TAGNAME, captionHandler);
   }
 
   /**

@@ -17,16 +17,14 @@
 
 package org.waveprotocol.wave.client.editor.content.misc;
 
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.content.paragraph.DefaultParagraphHtmlRenderer;
 import org.waveprotocol.wave.client.editor.content.paragraph.Paragraph;
 import org.waveprotocol.wave.client.editor.content.paragraph.ParagraphRenderer;
 import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 /**
@@ -52,11 +50,11 @@ public class Caption {
    * Registers subclass with ContentElement
    */
   public static void register(ElementHandlerRegistry registry) {
-    registry.register(NodeEventHandler.class, FULL_TAGNAME, CAPTION_EVENT_HANDLER);
-    registry.register(NodeMutationHandler.class, FULL_TAGNAME, Paragraph.DEFAULT_RENDERER);
+    registry.registerEventHandler(FULL_TAGNAME, CAPTION_EVENT_HANDLER);
+    registry.registerMutationHandler(FULL_TAGNAME, Paragraph.DEFAULT_RENDERER);
     // TODO(danilatos): Stop using non-html tags
-    registry.register(Renderer.class, FULL_TAGNAME, new ParagraphRenderer(
-        new DefaultParagraphHtmlRenderer(FULL_TAGNAME)));
+    registry.registerRenderer(FULL_TAGNAME,
+        new ParagraphRenderer(new DefaultParagraphHtmlRenderer(FULL_TAGNAME)));
   }
 
 

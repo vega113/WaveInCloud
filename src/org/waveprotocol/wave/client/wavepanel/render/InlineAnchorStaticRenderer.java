@@ -21,10 +21,8 @@ import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.common.util.DomHelper;
 import org.waveprotocol.wave.client.doodad.DoodadInstallers.GlobalInstaller;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.model.conversation.Blips;
 
 /**
@@ -45,9 +43,7 @@ public class InlineAnchorStaticRenderer extends RenderingMutationHandler {
     return new GlobalInstaller() {
       public void install(org.waveprotocol.wave.client.editor.content.Registries registries) {
         InlineAnchorStaticRenderer renderer = new InlineAnchorStaticRenderer();
-        registries.getElementHandlerRegistry().register(Renderer.class,
-            Blips.THREAD_INLINE_ANCHOR_TAGNAME, renderer);
-        registries.getElementHandlerRegistry().register(NodeMutationHandler.class,
+        registries.getElementHandlerRegistry().registerRenderingMutationHandler(
             Blips.THREAD_INLINE_ANCHOR_TAGNAME, renderer);
       }
     };

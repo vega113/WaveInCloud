@@ -19,6 +19,7 @@ package org.waveprotocol.wave.client.editor.extract;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
+import org.waveprotocol.wave.client.editor.content.AgentAdapter;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.ContentTextNode;
@@ -106,9 +107,9 @@ public final class PasteFormatRenderer {
   }
 
   private static NiceHtmlRenderer getSemanticHandler(ContentNode node) {
-    if (node instanceof ContentElement) {
-      ContentElement element = (ContentElement) node;
-      NiceHtmlRenderer handler = element.getHandler(NiceHtmlRenderer.class);
+    if (node instanceof AgentAdapter) {
+      AgentAdapter element = (AgentAdapter) node;
+      NiceHtmlRenderer handler = element.getRegisteredNiceHtmlRenderer();
       return handler != null ? handler : PasteFormatRenderers.DEEP_CLONE_RENDERER;
     } else {
       return PasteFormatRenderers.DEEP_CLONE_RENDERER;

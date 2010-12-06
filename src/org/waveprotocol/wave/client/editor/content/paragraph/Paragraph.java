@@ -17,14 +17,12 @@
 
 package org.waveprotocol.wave.client.editor.content.paragraph;
 
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.content.CMutableDocument;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.model.document.indexed.LocationMapper;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.Point;
 import org.waveprotocol.wave.model.util.CollectionUtils;
@@ -227,10 +225,8 @@ public class Paragraph {
    * Registers paragraph handlers for any provided tag names / type attributes.
    */
   public static void register(String tagName, ElementHandlerRegistry registry) {
-
-    registry.register(NodeEventHandler.class, tagName, DEFAULT_EVENT_HANDLER);
-    registry.register(NodeMutationHandler.class, tagName, DEFAULT_RENDERER);
-    registry.register(Renderer.class, tagName, DEFAULT_RENDERER);
+    registry.registerEventHandler(tagName, DEFAULT_EVENT_HANDLER);
+    registry.registerRenderingMutationHandler(tagName, DEFAULT_RENDERER);
   }
 
   /**

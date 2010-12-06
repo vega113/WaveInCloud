@@ -21,12 +21,9 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.SpanElement;
 
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
-import org.waveprotocol.wave.client.editor.content.NiceHtmlRenderer;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.extract.PasteFormatRenderers;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 
 /**
  * Inline doodad for testing.
@@ -51,10 +48,7 @@ public class TestInlineDoodad {
 
   public static void register(ElementHandlerRegistry handlerRegistry, String tagName) {
     RenderingMutationHandler renderingMutationHandler = new TestRenderer();
-    handlerRegistry.register(Renderer.class, tagName, renderingMutationHandler);
-    handlerRegistry.register(
-        NodeMutationHandler.class, tagName, renderingMutationHandler);
-    handlerRegistry.register(
-        NiceHtmlRenderer.class, tagName, PasteFormatRenderers.SHALLOW_CLONE_RENDERER);
+    handlerRegistry.registerRenderingMutationHandler(tagName, renderingMutationHandler);
+    handlerRegistry.registerNiceHtmlRenderer(tagName, PasteFormatRenderers.SHALLOW_CLONE_RENDERER);
   }
 }

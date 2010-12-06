@@ -17,30 +17,27 @@
 
 package org.waveprotocol.wave.client.doodad.form.events;
 
-import org.waveprotocol.wave.client.editor.NodeEventHandler;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandlerImpl;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.NodeMutationHandlerImpl;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.NullRenderer;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.event.EditorEvent;
 import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.Point;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
+/** Useful document elements for representing user events inside the document. */
 public final class ContentEvents {
 
   private static final String FULL_TAGNAME = "w:events";
 
+  /** Register all behaviours for the events elements. */
   public static void register(ElementHandlerRegistry handlerRegistry) {
-    handlerRegistry.register(Renderer.class, FULL_TAGNAME, NullRenderer.INSTANCE);
-    handlerRegistry.register(NodeEventHandler.class, FULL_TAGNAME, ContentEventsNodeHandler
-        .getInstance());
-    handlerRegistry.register(NodeMutationHandler.class, FULL_TAGNAME,
-        ContentEventsNodeMutationHandler.getInstance());
+    handlerRegistry.registerRenderer(FULL_TAGNAME, NullRenderer.INSTANCE);
+    handlerRegistry.registerEventHandler(FULL_TAGNAME, ContentEventsNodeHandler.getInstance());
+    handlerRegistry.registerMutationHandler(FULL_TAGNAME, ContentEventsNodeMutationHandler.getInstance());
 
     // Register all {@link Event} subclasses here
     Click.register(handlerRegistry);

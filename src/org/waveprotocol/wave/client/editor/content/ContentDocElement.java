@@ -19,10 +19,9 @@ package org.waveprotocol.wave.client.editor.content;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
-import org.waveprotocol.wave.client.editor.NodeEventHandler;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandlerImpl;
 import org.waveprotocol.wave.client.editor.event.EditorEvent;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 
 /**
  * Root document element. Provides some event handlers.
@@ -34,14 +33,14 @@ public final class ContentDocElement {
   public static final String DEFAULT_TAGNAME = "doc";
 
   public static void register(ElementHandlerRegistry registry, String tagName) {
-    registry.register(Renderer.class, tagName, new Renderer() {
+    registry.registerRenderer(tagName, new Renderer() {
       @Override
       public Element createDomImpl(final Renderable element) {
         return element.setAutoAppendContainer(Document.get().createDivElement());
       }
     });
 
-    registry.register(NodeEventHandler.class, tagName, new NodeEventHandlerImpl() {
+    registry.registerEventHandler(tagName, new NodeEventHandlerImpl() {
       @Override
       public boolean handleLeftAtBeginning(ContentElement element, EditorEvent event) {
         return true;

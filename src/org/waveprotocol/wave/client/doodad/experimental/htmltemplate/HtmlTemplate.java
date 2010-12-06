@@ -21,15 +21,13 @@ import static org.waveprotocol.wave.model.gadget.GadgetConstants.URL_ATTRIBUTE;
 import com.google.gwt.user.client.ui.HTML;
 
 import org.waveprotocol.wave.client.doodad.DoodadInstallers.GlobalInstaller;
-import org.waveprotocol.wave.client.editor.NodeEventHandler;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
+import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.Registries;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.content.misc.ChunkyElementHandler;
 import org.waveprotocol.wave.client.editor.content.paragraph.LineRendering;
 import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.Property;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
@@ -110,17 +108,13 @@ public final class HtmlTemplate {
       @Override
       public void install(Registries r) {
         ElementHandlerRegistry handlers = r.getElementHandlerRegistry();
-        handlers.register(Renderer.class, TEMPLATE_TAG, TemplateNodeMutationHandler.create());
-        handlers.register(
-            NodeMutationHandler.class, TEMPLATE_TAG, TemplateNodeMutationHandler.create());
-        handlers.register(NodeEventHandler.class, TEMPLATE_TAG, ChunkyElementHandler.INSTANCE);
-
-        handlers.register(
-            NodeMutationHandler.class, NAMEVALUEPAIR_TAG, new NameValuePairNodeMutationHandler());
+        RenderingMutationHandler multiHandler = TemplateNodeMutationHandler.create();
 
         LineRendering.registerContainer(PART_TAG, handlers);
-        handlers.register(
-            NodeEventHandler.class, PART_TAG, LineRendering.DEFAULT_PARAGRAPH_EVENT_HANDLER);
+        handlers.registerRenderingMutationHandler(TEMPLATE_TAG, multiHandler);
+        handlers.registerMutationHandler(NAMEVALUEPAIR_TAG, new NameValuePairNodeMutationHandler());
+        handlers.registerEventHandler(TEMPLATE_TAG, ChunkyElementHandler.INSTANCE);
+        handlers.registerEventHandler(PART_TAG, LineRendering.DEFAULT_PARAGRAPH_EVENT_HANDLER);
       }
     };
   }

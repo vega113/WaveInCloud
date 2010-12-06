@@ -29,7 +29,6 @@ import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
@@ -60,6 +59,7 @@ import org.waveprotocol.wave.client.editor.EditorStaticDeps;
 import org.waveprotocol.wave.client.editor.EditorUpdateEvent;
 import org.waveprotocol.wave.client.editor.EditorUpdateEvent.EditorUpdateListener;
 import org.waveprotocol.wave.client.editor.Editors;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
 import org.waveprotocol.wave.client.editor.content.ContentDocument.Level;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
@@ -86,7 +86,6 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpValidator;
 import org.waveprotocol.wave.model.document.parser.XmlParseException;
 import org.waveprotocol.wave.model.document.util.DocIterate;
 import org.waveprotocol.wave.model.document.util.DocProviders;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
@@ -909,6 +908,7 @@ public class EditorHarness extends Composite implements KeySignalListener {
       }
 
       KeyBindingRegistry keysRegistry = new KeyBindingRegistry();
+      extendKeyBindings(keysRegistry);
 
       // Start editing
       editor1.init(testEditorRegistries, keysRegistry, EditorSettings.DEFAULT);
@@ -976,13 +976,12 @@ public class EditorHarness extends Composite implements KeySignalListener {
     extend(registries);
   }
 
-  /**
-   * Override this method to register additional doodads.
-   *
-   * NOTE: Ensure to call super unless you really know what you are doing.
-   */
+  /** Override this method to register additional doodads. */
   public void extend(Registries registries) {
+  }
 
+  /** Override this method to add keyboard handling hooks. */
+  public void extendKeyBindings(KeyBindingRegistry registry) {
   }
 
   private static class EditorBundle {

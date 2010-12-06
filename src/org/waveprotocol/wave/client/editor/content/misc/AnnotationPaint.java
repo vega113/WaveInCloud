@@ -19,13 +19,9 @@ package org.waveprotocol.wave.client.editor.content.misc;
 
 import com.google.gwt.user.client.Event;
 
-import org.waveprotocol.wave.client.editor.NodeEventHandler;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
-import org.waveprotocol.wave.client.editor.content.NiceHtmlRenderer;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.extract.PasteFormatRenderers;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -91,15 +87,12 @@ public class AnnotationPaint {
    */
   public static void register(ElementHandlerRegistry registry) {
     AnnotationSpreadRenderer paintRenderer = new AnnotationSpreadRenderer();
-    registry.register(Renderer.class, SPREAD_FULL_TAGNAME, paintRenderer);
-    registry.register(NodeMutationHandler.class, SPREAD_FULL_TAGNAME, paintRenderer);
-    registry.register(NiceHtmlRenderer.class, SPREAD_FULL_TAGNAME,
-        PasteFormatRenderers.SHALLOW_CLONE_RENDERER);
+    registry.registerRenderingMutationHandler(SPREAD_FULL_TAGNAME, paintRenderer);
+    registry.registerNiceHtmlRenderer(SPREAD_FULL_TAGNAME, PasteFormatRenderers.SHALLOW_CLONE_RENDERER);
 
     AnnotationBoundaryRenderer boundaryRenderer = new AnnotationBoundaryRenderer();
-    registry.register(Renderer.class, BOUNDARY_FULL_TAGNAME, boundaryRenderer);
-    registry.register(NodeEventHandler.class, BOUNDARY_FULL_TAGNAME,
-        AnnotationBoundaryRenderer.EVENT_HANDLER);
+    registry.registerRenderer(BOUNDARY_FULL_TAGNAME, boundaryRenderer);
+    registry.registerEventHandler(BOUNDARY_FULL_TAGNAME, AnnotationBoundaryRenderer.EVENT_HANDLER);
   }
 
   /**

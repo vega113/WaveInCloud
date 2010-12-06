@@ -16,8 +16,8 @@
  */
 package org.waveprotocol.wave.client.editor.content;
 
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.AnnotationRegistry;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 
 /**
  * Bundle of registries for handling/rendering of elements and annotations.

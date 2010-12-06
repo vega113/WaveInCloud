@@ -21,10 +21,10 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.common.util.DomHelper;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.sugg.SuggestionsManager.HasSuggestions;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.Property;
 
 /**
@@ -64,7 +64,6 @@ public class SuggestionRenderer implements Renderer {
    * @param handlerRegistry the registry to register with.
    */
   void register(ElementHandlerRegistry handlerRegistry) {
-    handlerRegistry.register(Renderer.class, FULL_TAGNAME, this);
-    handlerRegistry.register(SuggestionRenderer.class, FULL_TAGNAME, this);
+    handlerRegistry.registerRenderer(FULL_TAGNAME, this);
   }
 }

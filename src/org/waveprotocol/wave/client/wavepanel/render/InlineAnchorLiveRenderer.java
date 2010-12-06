@@ -25,11 +25,9 @@ import org.waveprotocol.wave.client.common.util.SequenceElement;
 import org.waveprotocol.wave.client.common.util.VolatileComparable;
 import org.waveprotocol.wave.client.doodad.DoodadInstallers.BlipInstaller;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.Registries;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.content.misc.ChunkyElementHandler;
 import org.waveprotocol.wave.client.editor.event.EditorEvent;
 import org.waveprotocol.wave.client.editor.selection.content.SelectionUtil;
@@ -120,11 +118,9 @@ public final class InlineAnchorLiveRenderer extends RenderingMutationHandler {
         InlineAnchorLiveRenderer renderer =
             new InlineAnchorLiveRenderer(viewIdMapper, b, manager, views);
 
-        r.getElementHandlerRegistry().register(Renderer.class,
+        r.getElementHandlerRegistry().registerRenderingMutationHandler(
             Blips.THREAD_INLINE_ANCHOR_TAGNAME, renderer);
-        r.getElementHandlerRegistry().register(NodeMutationHandler.class,
-            Blips.THREAD_INLINE_ANCHOR_TAGNAME, renderer);
-        r.getElementHandlerRegistry().register(NodeEventHandler.class,
+        r.getElementHandlerRegistry().registerEventHandler(
             Blips.THREAD_INLINE_ANCHOR_TAGNAME, ANCHOR_HANDLER);
       }
     };

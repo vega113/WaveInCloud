@@ -26,6 +26,7 @@ import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.CssResource;
 
 import org.waveprotocol.wave.client.common.util.DomHelper;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
 import org.waveprotocol.wave.client.editor.NodeEventHandlerImpl;
 import org.waveprotocol.wave.client.editor.NodeMutationHandler;
@@ -34,7 +35,6 @@ import org.waveprotocol.wave.client.editor.gwt.GwtRenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.gwt.HasGwtWidget;
 import org.waveprotocol.wave.client.editor.gwt.LogicalPanel;
 import org.waveprotocol.wave.client.editor.impl.NodeManager;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.util.ValueUtils;
 
 import java.util.Map;
@@ -219,28 +219,21 @@ public class AgentAdapter extends ContentElement implements
     this.nodeEventHandler.onActivated(this);
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public <T> T getHandler(Class<T> handlerType) {
+  /** Retrieve the registrie's handlers for each registerable entity. */
+  public Renderer getRegisteredRenderer() {
+    return registry.getRenderer(this);
+  }
 
-    // HACK(danilatos)
-    // A bit of magic so people don't have to register the same thing
-    // as both a Renderer and a NodeMutationHandler, which is by far
-    // the common case. Instead, they can just register a Renderer,
-    // and if it's also a NodeMutationHandler and a NMH isn't explicitly
-    // registered separately, we'll use the Renderer.
-    if (handlerType == NodeMutationHandler.class) {
-      T h = registry.getHandler(this, handlerType);
-      if (h == null) {
-        Renderer r = registry.getHandler(this, Renderer.class);
-        if (r instanceof NodeMutationHandler) {
-          h = (T) r;
-        }
-      }
-      return h;
-    }
+  public NodeEventHandler getRegisteredEventHandler() {
+    return registry.getEventHandler(this);
+  }
 
-    return registry.getHandler(this, handlerType);
+  public NodeMutationHandler<ContentNode, ContentElement> getRegisteredMutationHandler() {
+    return registry.getMutationHandler(this);
+  }
+
+  public NiceHtmlRenderer getRegisteredNiceHtmlRenderer() {
+    return registry.getNiceHtmlRenderer(this);
   }
 
   // Special behaviour for these two, hence not with the mechanically generated ones

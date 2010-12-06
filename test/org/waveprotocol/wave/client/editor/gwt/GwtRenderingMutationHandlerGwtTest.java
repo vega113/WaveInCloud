@@ -26,12 +26,10 @@ import com.google.gwt.user.client.ui.Widget;
 
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorImpl;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.content.AgentAdapter;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentRawDocument;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.gwt.GwtRenderingMutationHandler.Flow;
 import org.waveprotocol.wave.client.editor.testing.TestEditors;
 
@@ -175,10 +173,8 @@ public class GwtRenderingMutationHandlerGwtTest extends GWTTestCase {
   }
 
   private void initDoc() {
-    Editor.ROOT_HANDLER_REGISTRY.register(Renderer.class, "ab", handler);
-    Editor.ROOT_HANDLER_REGISTRY.register(Renderer.class, "cd", handler);
-    Editor.ROOT_HANDLER_REGISTRY.register(NodeMutationHandler.class, "ab", handler);
-    Editor.ROOT_HANDLER_REGISTRY.register(NodeMutationHandler.class, "cd", handler);
+    Editor.ROOT_HANDLER_REGISTRY.registerRenderingMutationHandler("ab", handler);
+    Editor.ROOT_HANDLER_REGISTRY.registerRenderingMutationHandler("cd", handler);
     doc = TestEditors.createTestDocument();
     rawDoc = doc.debugGetRawDocument();
     root = rawDoc.getDocumentElement();

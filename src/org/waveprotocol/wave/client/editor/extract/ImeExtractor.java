@@ -25,6 +25,7 @@ import com.google.gwt.dom.client.Style.Display;
 
 import org.waveprotocol.wave.client.common.util.DomHelper;
 import org.waveprotocol.wave.client.common.util.QuirksConstants;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.ContentTextNode;
@@ -34,7 +35,6 @@ import org.waveprotocol.wave.client.editor.impl.NodeManager;
 import org.waveprotocol.wave.client.editor.selection.html.NativeSelectionUtil;
 import org.waveprotocol.wave.model.document.util.DocHelper;
 import org.waveprotocol.wave.model.document.util.DocumentContext;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.FilteredView.Skip;
 import org.waveprotocol.wave.model.document.util.LocalDocument;
 import org.waveprotocol.wave.model.document.util.Point;
@@ -60,7 +60,7 @@ public class ImeExtractor {
   private static final String WRAPPER_TAGNAME = "l:ime";
 
   public static void register(ElementHandlerRegistry registry) {
-    registry.register(Renderer.class, WRAPPER_TAGNAME, new Renderer() {
+    registry.registerRenderer(WRAPPER_TAGNAME, new Renderer() {
       @Override
       public Element createDomImpl(Renderable element) {
         return element.setAutoAppendContainer(Document.get().createSpanElement());

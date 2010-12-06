@@ -17,11 +17,10 @@
 
 package org.waveprotocol.wave.client.doodad.form.events;
 
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.NullRenderer;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 public final class Click {
@@ -37,7 +36,7 @@ public final class Click {
       = new String[] {TIME, CLICKER};
 
   public static void register(ElementHandlerRegistry handlerRegistry) {
-    handlerRegistry.register(Renderer.class, FULL_TAGNAME, NullRenderer.INSTANCE);
+    handlerRegistry.registerRenderer(FULL_TAGNAME, NullRenderer.INSTANCE);
   }
 
   private Click() {

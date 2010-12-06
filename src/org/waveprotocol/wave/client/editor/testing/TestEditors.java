@@ -24,6 +24,7 @@ import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorSettings;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
 import org.waveprotocol.wave.client.editor.Editors;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
 import org.waveprotocol.wave.client.editor.content.PainterRegistry;
 import org.waveprotocol.wave.client.editor.content.Registries;
@@ -35,7 +36,6 @@ import org.waveprotocol.wave.client.widget.popup.simple.Popup;
 import org.waveprotocol.wave.model.conversation.Blips;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.util.AnnotationRegistry;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 
 /**
@@ -74,7 +74,7 @@ public class TestEditors {
     Registries registries = Editor.ROOT_REGISTRIES.createExtension();
     for (String t : new String[] {"q", "a", "b", "c", "x"}) {
       final String tag = t;
-      registries.getElementHandlerRegistry().register(Renderer.class, tag,
+      registries.getElementHandlerRegistry().registerRenderer(tag,
           new Renderer() {
             @Override
             public Element createDomImpl(Renderable element) {

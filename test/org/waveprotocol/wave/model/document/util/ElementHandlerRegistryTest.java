@@ -22,7 +22,11 @@ import static org.mockito.Mockito.when;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry.HasHandlers;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry.HasHandlers;
+import org.waveprotocol.wave.client.editor.NodeEventHandler;
+import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
+import org.waveprotocol.wave.client.editor.content.Renderer;
 
 /**
  * @author danilatos@google.com (Daniel Danilatos)
@@ -30,18 +34,15 @@ import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry.HasHandl
 
 public class ElementHandlerRegistryTest extends TestCase {
 
-  static class H1 extends Object {}
-  static class H2 extends Object {}
+  private final Renderer a = mock(Renderer.class);
+  private final Renderer b = mock(Renderer.class);
+  private final Renderer c = mock(Renderer.class);
+  private final Renderer d = mock(Renderer.class);
 
-  private final H1 a = new H1();
-  private final H1 b = new H1();
-  private final H1 c = new H1();
-  private final H1 d = new H1();
-
-  private final H2 e = new H2();
-  private final H2 f = new H2();
-  private final H2 g = new H2();
-  private final H2 h = new H2();
+  private final NodeEventHandler e = mock(NodeEventHandler.class);
+  private final NodeEventHandler f = mock(NodeEventHandler.class);
+  private final NodeEventHandler g = mock(NodeEventHandler.class);
+  private final NodeEventHandler h = mock(NodeEventHandler.class);
 
   private final HasHandlers el1 = mock(HasHandlers.class);
   private final HasHandlers el2 = mock(HasHandlers.class);
@@ -56,26 +57,26 @@ public class ElementHandlerRegistryTest extends TestCase {
   public void testRegister() {
     ElementHandlerRegistry r1 = ElementHandlerRegistry.ROOT.createExtension();
 
-    r1.register(H1.class, "x", a);
-    r1.register(H2.class, "y", f);
-    assertSame(a, r1.getHandler(el1, H1.class));
-    assertSame(f, r1.getHandler(el2, H2.class));
+    r1.registerRenderer("x", a);
+    r1.registerEventHandler("y", f);
+    assertSame(a, r1.getRenderer(el1));
+    assertSame(f, r1.getEventHandler(el2));
 
     ElementHandlerRegistry r2 = r1.createExtension();
 
     // Check overriding in the same registry
-    r1.register(H2.class, "y", h);
-    assertSame(h, r1.getHandler(el2, H2.class));
+    r1.registerEventHandler("y", h);
+    assertSame(h, r1.getEventHandler(el2));
 
     // Check overriding in a child registry
-    r2.register(H1.class, "x", b);
-    r2.register(H2.class, "y", g);
-    assertSame(b, r2.getHandler(el1, H1.class));
-    assertSame(g, r2.getHandler(el2, H2.class));
+    r2.registerRenderer("x", b);
+    r2.registerEventHandler("y", g);
+    assertSame(b, r2.getRenderer(el1));
+    assertSame(g, r2.getEventHandler(el2));
 
     // Check propagation
-    r1.register(H1.class, "z", c);
-    assertSame(c, r2.getHandler(el3, H1.class));
+    r1.registerRenderer("z", c);
+    assertSame(c, r2.getRenderer(el3));
   }
 
   public void testConcurrent() {
@@ -83,26 +84,34 @@ public class ElementHandlerRegistryTest extends TestCase {
     ElementHandlerRegistry r2 = r1.createExtension();
 
     // Check overriding in the child registry with concurrent propagation
-    r2.register(H1.class, "x", a);
-    r2.register(H1.class, "x", b);
-    r1.register(H1.class, "x", c);
-    r1.register(H1.class, "x", d);
-    assertSame(b, r2.getHandler(el1, H1.class));
+    r2.registerRenderer("x", a);
+    r2.registerRenderer("x", b);
+    r1.registerRenderer("x", c);
+    r1.registerRenderer("x", d);
+    assertSame(b, r2.getRenderer(el1));
 
   }
 
   public void testOverrideDifferentTypes() {
     ElementHandlerRegistry r1 = ElementHandlerRegistry.ROOT.createExtension();
 
-    r1.register(H1.class, "x", a);
-    r1.register(H2.class, "x", e);
+    r1.registerRenderer("x", a);
+    r1.registerEventHandler("x", e);
 
     ElementHandlerRegistry r2 = r1.createExtension();
 
     // Check overriding in the same registry
-    r2.register(H2.class, "x", h);
-    assertSame(h, r2.getHandler(el1, H2.class));
-    assertSame(a, r2.getHandler(el1, H1.class));
+    r2.registerEventHandler("x", h);
+    assertSame(h, r2.getEventHandler(el1));
+    assertSame(a, r2.getRenderer(el1));
+  }
 
+  public void testDoubleRegister() {
+    RenderingMutationHandler rmh = mock(RenderingMutationHandler.class);
+    ElementHandlerRegistry r1 = ElementHandlerRegistry.ROOT.createExtension();
+    r1.registerRenderingMutationHandler("x", rmh);
+
+    assertSame(rmh, r1.getRenderer(el1));
+    assertSame(rmh, r1.getMutationHandler(el1));
   }
 }

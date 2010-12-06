@@ -35,13 +35,16 @@ import org.waveprotocol.wave.client.editor.gwt.GwtRenderingMutationHandler;
 public class ImageThumbnailRenderer extends GwtRenderingMutationHandler {
 
   private final SimpleAttachmentManager manager;
+  private final ImageThumbnailAttachmentHandler attachmentHandler;
 
   /**
    * Constructor
    */
-  public ImageThumbnailRenderer(SimpleAttachmentManager manager) {
+  public ImageThumbnailRenderer(SimpleAttachmentManager manager,
+      ImageThumbnailAttachmentHandler handler) {
     super(Flow.USE_WIDGET);
     this.manager = manager;
+    this.attachmentHandler = handler;
   }
 
   @Override
@@ -81,13 +84,13 @@ public class ImageThumbnailRenderer extends GwtRenderingMutationHandler {
 
 
     ImageThumbnailWrapper w = new ImageThumbnailWrapper(element, attachment);
-    element.getHandler(ImageThumbnailAttachmentHandler.class).init(element, attachment);
+    attachmentHandler.init(element, attachment);
     element.setProperty(ImageThumbnailWrapper.PROPERTY, w);
   }
 
   @Override
   public void onDeactivated(ContentElement element) {
-    element.getHandler(ImageThumbnailAttachmentHandler.class).cleanup(element);
+    attachmentHandler.cleanup(element);
     element.setProperty(ImageThumbnailWrapper.PROPERTY, null);
   }
 

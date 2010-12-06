@@ -26,7 +26,7 @@ import com.google.gwt.resources.client.CssResource;
 
 import org.waveprotocol.wave.client.common.util.DomHelper;
 import org.waveprotocol.wave.client.editor.Editor;
-import org.waveprotocol.wave.client.editor.NodeEventHandler;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.content.misc.LinoTextEventHandler;
@@ -34,7 +34,6 @@ import org.waveprotocol.wave.client.editor.content.paragraph.DefaultParagraphHtm
 import org.waveprotocol.wave.client.editor.content.paragraph.LineRendering;
 import org.waveprotocol.wave.client.editor.content.paragraph.Paragraph;
 import org.waveprotocol.wave.client.editor.content.paragraph.ParagraphRenderer;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 public class Input extends LinoTextEventHandler {
@@ -66,8 +65,8 @@ public class Input extends LinoTextEventHandler {
     // implementation as it does not contain text directly, it is more
     // akin to a top-level container element.
     Paragraph.register(INPUT_FULL_TAGNAME, registry);
-    registry.register(NodeEventHandler.class, INPUT_FULL_TAGNAME, new Input());
-    registry.register(Renderer.class, INPUT_FULL_TAGNAME, new ParagraphRenderer(
+    registry.registerEventHandler(INPUT_FULL_TAGNAME, new Input());
+    registry.registerRenderer(INPUT_FULL_TAGNAME, new ParagraphRenderer(
         new DefaultParagraphHtmlRenderer() {
           @Override
           protected Element createNodelet(Renderable element) {
@@ -77,7 +76,7 @@ public class Input extends LinoTextEventHandler {
         }));
 
     LineRendering.registerContainer(TEXTAREA_FULL_TAGNAME, registry);
-    registry.register(Renderer.class, TEXTAREA_FULL_TAGNAME, new Renderer() {
+    registry.registerRenderer(TEXTAREA_FULL_TAGNAME, new Renderer() {
 
       @Override
       public Element createDomImpl(Renderable element) {

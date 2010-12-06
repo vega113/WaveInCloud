@@ -27,7 +27,6 @@ import org.waveprotocol.wave.client.editor.EditorAnnotationTree;
 import org.waveprotocol.wave.client.editor.EditorContext;
 import org.waveprotocol.wave.client.editor.EditorImpl.MiniBundle;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
-import org.waveprotocol.wave.client.editor.NodeEventHandler;
 import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ClientDocumentContext.RenderingConcerns;
 import org.waveprotocol.wave.client.editor.content.DiffHighlightingFilter.DiffHighlightTarget;
@@ -328,7 +327,7 @@ public class ContentDocument {
 
         e.setNodeEventHandler(null);
 
-        NodeMutationHandler mutationHandler = e.getHandler(NodeMutationHandler.class);
+        NodeMutationHandler mutationHandler = e.getRegisteredMutationHandler();
         if (mutationHandler instanceof PermanentMutationHandler) {
           e.setNodeMutationHandler(mutationHandler);
         } else {
@@ -350,11 +349,11 @@ public class ContentDocument {
           initRootElementRendering(shouldBeRendered);
         }
 
-        e.setNodeMutationHandler(e.getHandler(NodeMutationHandler.class));
+        e.setNodeMutationHandler(e.getRegisteredMutationHandler());
       }
 
       if (level == Level.EDITING) {
-        e.setNodeEventHandler(e.getHandler(NodeEventHandler.class));
+        e.setNodeEventHandler(e.getRegisteredEventHandler());
       }
 
       if (shouldBeRendered) {
@@ -478,7 +477,7 @@ public class ContentDocument {
       return;
     }
 
-    Renderer renderer = e.getHandler(Renderer.class);
+    Renderer renderer = e.getRegisteredRenderer();
     if (isRendering) {
       e.setRenderer(renderer != null ? renderer : AgentAdapter.defaultRenderer);
     } else {

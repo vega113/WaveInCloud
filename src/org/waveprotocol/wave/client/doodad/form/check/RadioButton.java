@@ -22,15 +22,13 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.InputElement;
 
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
 import org.waveprotocol.wave.client.editor.NodeEventHandlerImpl;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.event.EditorEvent;
 import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 public final class RadioButton {
@@ -111,11 +109,8 @@ public final class RadioButton {
   };
 
   public static void register(ElementHandlerRegistry handlerRegistry) {
-    handlerRegistry.register(Renderer.class, FULL_TAGNAME, RADIO_BUTTON_MUTATING_RENDERER);
-    handlerRegistry.register(NodeMutationHandler.class, FULL_TAGNAME,
-        RADIO_BUTTON_MUTATING_RENDERER);
-    handlerRegistry.register(NodeEventHandler.class, FULL_TAGNAME,
-        RADIO_BUTTON_NODE_EVENT_HANDLER);
+    handlerRegistry.registerRenderingMutationHandler(FULL_TAGNAME, RADIO_BUTTON_MUTATING_RENDERER);
+    handlerRegistry.registerEventHandler(FULL_TAGNAME, RADIO_BUTTON_NODE_EVENT_HANDLER);
   }
 
   /**

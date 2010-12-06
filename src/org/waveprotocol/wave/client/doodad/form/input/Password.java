@@ -30,14 +30,11 @@ import com.google.gwt.user.client.Event;
 import org.waveprotocol.wave.client.common.util.DomHelper;
 import org.waveprotocol.wave.client.common.util.DomHelper.HandlerReference;
 import org.waveprotocol.wave.client.common.util.DomHelper.JavaScriptEventListener;
-import org.waveprotocol.wave.client.editor.NodeEventHandler;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandlerImpl;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.event.EditorEvent;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.Property;
 
 /**
@@ -74,9 +71,8 @@ public class Password {
 
     PasswordEventHandler eventHandler = new PasswordEventHandler();
     PasswordRenderer renderer = new PasswordRenderer(eventHandler);
-    registry.register(NodeEventHandler.class, FULL_TAGNAME, eventHandler);
-    registry.register(NodeMutationHandler.class, FULL_TAGNAME, renderer);
-    registry.register(Renderer.class, FULL_TAGNAME, renderer);
+    registry.registerEventHandler(FULL_TAGNAME, eventHandler);
+    registry.registerRenderingMutationHandler(FULL_TAGNAME, renderer);
   }
 
   /**

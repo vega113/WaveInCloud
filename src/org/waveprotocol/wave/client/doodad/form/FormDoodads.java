@@ -25,7 +25,7 @@ import org.waveprotocol.wave.client.doodad.form.check.RadioGroup;
 import org.waveprotocol.wave.client.doodad.form.events.ContentEvents;
 import org.waveprotocol.wave.client.doodad.form.input.Input;
 import org.waveprotocol.wave.client.doodad.form.input.Password;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 
 /**
  * Common static stuff for form doodads incl. a method to register them all at

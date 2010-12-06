@@ -17,10 +17,7 @@
 
 package org.waveprotocol.wave.client.doodad.form.check;
 
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
-import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
-import org.waveprotocol.wave.client.editor.content.Renderer;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 public class Label {
@@ -28,10 +25,8 @@ public class Label {
   protected static final String FOR = "for";
 
   public static void register(ElementHandlerRegistry handlerRegistry) {
-    RenderingMutationHandler renderingMutationHandler = LabelRenderingMutationHandler.getInstance();
-    handlerRegistry.register(Renderer.class, FULL_TAGNAME, renderingMutationHandler);
-    handlerRegistry
-        .register(NodeMutationHandler.class, FULL_TAGNAME, renderingMutationHandler);
+    handlerRegistry.registerRenderingMutationHandler(FULL_TAGNAME,
+        LabelRenderingMutationHandler.getInstance());
   }
 
   private Label() {

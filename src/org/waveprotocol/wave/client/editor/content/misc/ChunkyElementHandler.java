@@ -17,12 +17,11 @@
 
 package org.waveprotocol.wave.client.editor.content.misc;
 
-import org.waveprotocol.wave.client.editor.NodeEventHandler;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandlerImpl;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.event.EditorEvent;
 import org.waveprotocol.wave.client.editor.selection.content.SelectionUtil;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 
 /**
  * An element that gets deleted by backspace and delete key events in the
@@ -33,7 +32,6 @@ import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
  * @author danilatos@google.com (Daniel Danilatos)
  */
 public class ChunkyElementHandler extends NodeEventHandlerImpl {
-
   /**
    * Instance, exposed for delegation if needed.
    */
@@ -41,7 +39,7 @@ public class ChunkyElementHandler extends NodeEventHandlerImpl {
 
   /** Register a self-deleting element */
   public static void register(String tagName, final ElementHandlerRegistry registry) {
-    registry.register(NodeEventHandler.class, tagName, INSTANCE);
+    registry.registerEventHandler(tagName, INSTANCE);
   }
 
   @Override

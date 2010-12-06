@@ -24,16 +24,15 @@ import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.dom.client.SpanElement;
 
 import org.waveprotocol.wave.client.common.util.DomHelper;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
 import org.waveprotocol.wave.client.editor.NodeEventHandlerImpl;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.event.EditorEvent;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
+/** Doodad definition for a checkbox which stores its value in the doc. */
 public class CheckBox {
   private static final String FULL_TAGNAME = "w:check";
 
@@ -53,11 +52,8 @@ public class CheckBox {
   public static void register(ElementHandlerRegistry handlerRegistry) {
     RenderingMutationHandler renderingMutationHandler =
         CheckBoxRendereringMutationHandler.getInstance();
-    handlerRegistry.register(Renderer.class, FULL_TAGNAME, renderingMutationHandler);
-    handlerRegistry
-        .register(NodeMutationHandler.class, FULL_TAGNAME, renderingMutationHandler);
-    handlerRegistry
-        .register(NodeEventHandler.class, FULL_TAGNAME, CHECKBOX_NODE_EVENT_HANDLER);
+    handlerRegistry.registerRenderingMutationHandler(FULL_TAGNAME, renderingMutationHandler);
+    handlerRegistry.registerEventHandler(FULL_TAGNAME, CHECKBOX_NODE_EVENT_HANDLER);
   }
 
   /**

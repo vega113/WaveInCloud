@@ -17,15 +17,14 @@
 
 package org.waveprotocol.wave.client.doodad.form.check;
 
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.NodeMutationHandlerImpl;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.NullRenderer;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 /**
@@ -74,9 +73,8 @@ public final class RadioGroup {
    * Registers subclasses
    */
   public static void register(ElementHandlerRegistry handlerRegistry) {
-    handlerRegistry.register(Renderer.class, FULL_TAGNAME, NullRenderer.INSTANCE);
-    handlerRegistry.register(NodeMutationHandler.class, FULL_TAGNAME,
-        RADIO_GROUP_MUTATION_HANDLER);
+    handlerRegistry.registerRenderer(FULL_TAGNAME, NullRenderer.INSTANCE);
+    handlerRegistry.registerMutationHandler(FULL_TAGNAME, RADIO_GROUP_MUTATION_HANDLER);
   }
 
   /**

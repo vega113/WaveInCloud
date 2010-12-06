@@ -26,6 +26,7 @@ import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.media.model.AttachmentV3.ImageMetadata;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.IdentityMap;
+import org.waveprotocol.wave.model.util.Preconditions;
 
 /**
  * Handler for the attachment logic for thumbnail doodads.
@@ -42,12 +43,12 @@ public class ImageThumbnailAttachmentHandler implements SimpleAttachmentManager.
   // Memory leak? Should be OK if this handler is per-wavelet
   private final IdentityMap<Attachment, ContentElement> doodads =
       CollectionUtils.createIdentityMap();
-  private final ImageThumbnailRenderer renderer;
+  private ImageThumbnailRenderer renderer;
 
-  /**
-   * @param renderer Thumbnail renderer
-   */
-  public ImageThumbnailAttachmentHandler(ImageThumbnailRenderer renderer) {
+  /** NOTE(patcoleman): Not in ctor due to circular dependency. */
+  void setRenderer(ImageThumbnailRenderer renderer) {
+    Preconditions.checkArgument(renderer != null, "can't bind attachment handler to a null renderer");
+    Preconditions.checkState(this.renderer == null, "renderer should only be set once");
     this.renderer = renderer;
   }
 

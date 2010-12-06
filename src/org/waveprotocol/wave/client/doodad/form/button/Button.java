@@ -18,17 +18,15 @@
 package org.waveprotocol.wave.client.doodad.form.button;
 
 import org.waveprotocol.wave.client.doodad.form.events.ContentEvents;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
 import org.waveprotocol.wave.client.editor.NodeEventHandlerImpl;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.NodeEventRouter;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.content.misc.Caption;
 import org.waveprotocol.wave.client.editor.event.EditorEvent;
 import org.waveprotocol.wave.client.widget.button.ClickButton;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.Property;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
@@ -63,9 +61,8 @@ public final class Button {
    */
   public static void register(
       final ElementHandlerRegistry registry) {
-    registry.register(NodeEventHandler.class, FULL_TAGNAME, NODE_EVENT_HANDLER);
-    registry.register(NodeMutationHandler.class, FULL_TAGNAME, RENDERING_MUTATION_HANDLER);
-    registry.register(Renderer.class, FULL_TAGNAME, RENDERING_MUTATION_HANDLER);
+    registry.registerEventHandler(FULL_TAGNAME, NODE_EVENT_HANDLER);
+    registry.registerRenderingMutationHandler(FULL_TAGNAME, RENDERING_MUTATION_HANDLER);
   }
 
   /**

@@ -22,17 +22,14 @@ import static org.waveprotocol.wave.model.gadget.GadgetConstants.FULL_TAGNAME;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.doodad.DoodadInstallers;
 import org.waveprotocol.wave.client.doodad.DoodadInstallers.BlipInstaller;
-import org.waveprotocol.wave.client.editor.NodeEventHandler;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.Registries;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.content.misc.ChunkyElementHandler;
 import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
 import org.waveprotocol.wave.client.gadget.renderer.GadgetRenderer;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.gadget.GadgetConstants;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.supplement.ObservableSupplementedWave;
@@ -58,9 +55,8 @@ public final class Gadget {
     GadgetRenderer renderer =
         new GadgetRenderer(waveletName, blip, supplement, profileManager, loginName);
 
-    registry.register(NodeEventHandler.class, FULL_TAGNAME, ChunkyElementHandler.INSTANCE);
-    registry.register(NodeMutationHandler.class, FULL_TAGNAME, renderer);
-    registry.register(Renderer.class, FULL_TAGNAME, renderer);
+    registry.registerEventHandler(FULL_TAGNAME, ChunkyElementHandler.INSTANCE);
+    registry.registerRenderingMutationHandler(FULL_TAGNAME, renderer);
   }
 
   public static boolean isGadget(ContentNode node) {

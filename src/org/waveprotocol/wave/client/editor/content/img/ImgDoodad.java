@@ -21,13 +21,10 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.common.util.DomHelper;
-import org.waveprotocol.wave.client.editor.NodeEventHandler;
-import org.waveprotocol.wave.client.editor.NodeMutationHandler;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
-import org.waveprotocol.wave.client.editor.content.Renderer;
 import org.waveprotocol.wave.client.editor.content.misc.ChunkyElementHandler;
-import org.waveprotocol.wave.model.document.util.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.ReadableStringSet;
 
@@ -51,9 +48,8 @@ public class ImgDoodad {
 
   /** Register the renderer and mutation handler. */
   public static void register(ElementHandlerRegistry registry) {
-    registry.register(Renderer.class, TAGNAME, RENDERER);
-    registry.register(NodeMutationHandler.class, TAGNAME, RENDERER);
-    registry.register(NodeEventHandler.class, TAGNAME, ChunkyElementHandler.get());
+    registry.registerRenderingMutationHandler(TAGNAME, RENDERER);
+    registry.registerEventHandler(TAGNAME, ChunkyElementHandler.get());
   }
 
   /**
