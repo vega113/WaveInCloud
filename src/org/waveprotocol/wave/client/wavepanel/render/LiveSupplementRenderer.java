@@ -15,7 +15,7 @@
  */
 package org.waveprotocol.wave.client.wavepanel.render;
 
-import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitor;
+import org.waveprotocol.wave.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.ThreadView;

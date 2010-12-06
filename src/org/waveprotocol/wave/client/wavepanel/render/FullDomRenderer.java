@@ -15,16 +15,12 @@
  */
 package org.waveprotocol.wave.client.wavepanel.render;
 
-import com.google.common.collect.Iterables;
-
-import org.waveprotocol.box.webclient.client.StagesProvider;
-import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitor;
-import org.waveprotocol.wave.client.StageTwo;
 import org.waveprotocol.wave.client.account.Profile;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.safehtml.EscapeUtils;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.render.RenderingRules;
+import org.waveprotocol.wave.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.uibuilder.HtmlClosure;
 import org.waveprotocol.wave.client.uibuilder.HtmlClosureCollection;
 import org.waveprotocol.wave.client.uibuilder.UiBuilder;
@@ -33,10 +29,10 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.full.AnchorViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipMetaViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.ContinuationIndicatorViewBuilder;
-import org.waveprotocol.wave.client.wavepanel.view.dom.full.ReplyBoxViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.InlineThreadViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.ParticipantNameViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.ParticipantsViewBuilder;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.ReplyBoxViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.RootThreadViewBuilder;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.ViewFactory;
 import org.waveprotocol.wave.model.conversation.Conversation;
@@ -171,13 +167,13 @@ public final class FullDomRenderer implements RenderingRules<UiBuilder> {
     String replyIndicatorId = viewIdMapper.replyIndicatorOf(thread);
     UiBuilder builder = null;
     if (thread.getConversation().getRootThread() == thread) {
-      ReplyBoxViewBuilder replyBoxBuilder = 
+      ReplyBoxViewBuilder replyBoxBuilder =
           ReplyBoxViewBuilder.create(replyIndicatorId);
       builder = RootThreadViewBuilder.create(threadId, blipsUi, replyBoxBuilder);
     } else {
       ContinuationIndicatorViewBuilder indicatorBuilder = ContinuationIndicatorViewBuilder.create(
           replyIndicatorId);
-      InlineThreadViewBuilder inlineBuilder = 
+      InlineThreadViewBuilder inlineBuilder =
           InlineThreadViewBuilder.create(threadId, blipsUi, indicatorBuilder);
       int read = readMonitor.getReadCount(thread);
       int unread = readMonitor.getUnreadCount(thread);

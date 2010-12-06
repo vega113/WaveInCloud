@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.waveprotocol.box.webclient.client.state;
+package org.waveprotocol.wave.client.state;
 
 import com.google.common.base.Preconditions;
 

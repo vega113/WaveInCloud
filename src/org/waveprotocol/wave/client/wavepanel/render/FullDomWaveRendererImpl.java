@@ -18,11 +18,11 @@ package org.waveprotocol.wave.client.wavepanel.render;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 
-import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.render.ReductionBasedRenderer;
 import org.waveprotocol.wave.client.render.RenderingRules;
+import org.waveprotocol.wave.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.uibuilder.UiBuilder;
 import org.waveprotocol.wave.client.wavepanel.render.FullDomRenderer.DocRefRenderer;
 import org.waveprotocol.wave.client.wavepanel.view.ViewIdMapper;

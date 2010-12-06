@@ -19,8 +19,6 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Command;
 
-import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitor;
-import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitorImpl;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.account.impl.ProfileManagerImpl;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
@@ -35,6 +33,8 @@ import org.waveprotocol.wave.client.editor.content.misc.StyleAnnotationHandler;
 import org.waveprotocol.wave.client.gadget.Gadget;
 import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
 import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
+import org.waveprotocol.wave.client.state.ThreadReadStateMonitor;
+import org.waveprotocol.wave.client.state.ThreadReadStateMonitorImpl;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
 import org.waveprotocol.wave.client.wave.RegistriesHolder;

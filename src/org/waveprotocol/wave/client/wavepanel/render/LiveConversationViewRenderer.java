@@ -17,9 +17,8 @@ package org.waveprotocol.wave.client.wavepanel.render;
 
 import com.google.common.base.Preconditions;
 
-import org.waveprotocol.box.webclient.client.StagesProvider;
-import org.waveprotocol.box.webclient.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.account.ProfileManager;
+import org.waveprotocol.wave.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.ConversationView;
@@ -61,7 +60,7 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
     /**
      * @param conv
      */
-    public ConversationUpdater(ObservableConversation conv, ProfileManager profileManager, 
+    public ConversationUpdater(ObservableConversation conv, ProfileManager profileManager,
         ThreadReadStateMonitor readMonitor) {
       this.conv = conv;
       this.profileUpdateMonitor =
@@ -131,7 +130,7 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
       stopListeningToBlip(blip);
       bubbleBlipCountUpdate(blip);
     }
-    
+
     private void bubbleBlipCountUpdate(ConversationBlip blip) {
       ConversationThread thread = blip.getThread();
       ThreadView threadUi = viewOf(thread);
