@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import org.waveprotocol.box.server.persistence.DeltaStoreTestBase;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.DeltaStore;
+import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
 import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -38,7 +39,7 @@ import java.io.RandomAccessFile;
  */
 public class DeltaStoreTest extends DeltaStoreTestBase {
 
-  private static final Log log = Log.get(DeltaStoreTest.class);
+  private static final Log LOG = Log.get(DeltaStoreTest.class);
 
   private File path;
   private final WaveletName WAVE1_WAVELET1 =
@@ -70,28 +71,29 @@ public class DeltaStoreTest extends DeltaStoreTestBase {
     // we can read it without crashing.
     DeltaStore store = newDeltaStore();
     WaveletDeltaRecord written = createRecord();
+    File deltaFile = ((FileDeltaCollection) store.open(WAVE1_WAVELET1)).getDeltasFile();
 
-    long toRemove = 1;  //
+    long toRemove = 1;
     while (true) {
       // This generates the full file.
-      FileDeltaCollection wavelet = (FileDeltaCollection) store.open(WAVE1_WAVELET1);
+      DeltasAccess wavelet = store.open(WAVE1_WAVELET1);
       wavelet.append(ImmutableList.of(written));
       wavelet.close();
 
-      RandomAccessFile file = FileUtils.getOrCreateFile(wavelet.getDeltasFile());
+      RandomAccessFile file = new RandomAccessFile(deltaFile, "rw");
       if (toRemove > file.length()) {
         break;
       }
       // eat the planned number of bytes
-      log.info("trying to remove " + toRemove + " bytes");
+      LOG.info("trying to remove " + toRemove + " bytes");
       file.setLength(file.length() - toRemove);
       file.close();
 
-      wavelet = (FileDeltaCollection) store.open(WAVE1_WAVELET1);
+      wavelet = store.open(WAVE1_WAVELET1);
       WaveletDeltaRecord read = wavelet.getDelta(0);
       assertNull("got an unexpected record " + read, read);
       wavelet.close();
-      toRemove ++;
+      toRemove++;
     }
   }
 }

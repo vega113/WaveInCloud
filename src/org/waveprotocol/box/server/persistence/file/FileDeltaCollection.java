@@ -72,7 +72,7 @@ public class FileDeltaCollection implements DeltasAccess {
 
   private static final int DELTA_PROTOCOL_VERSION = 1;
 
-  private static final Log log = Log.get(FileDeltaCollection.class);
+  private static final Log LOG = Log.get(FileDeltaCollection.class);
 
   private final WaveletName waveletName;
   private final String basePath;
@@ -347,7 +347,7 @@ public class FileDeltaCollection implements DeltasAccess {
                 nextPosition = file.getFilePointer();
               } catch (IOException e) {
                 // The next entry is invalid. There was probably a write error / crash.
-                log.severe("error reading delta file " + deltasFilename + " starting at " +
+                LOG.severe("Error reading delta file " + deltasFilename + " starting at " +
                     nextPosition, e);
                 return false;
               }
@@ -450,7 +450,7 @@ public class FileDeltaCollection implements DeltasAccess {
     long remaining = file.length() - file.getFilePointer();
     long missing = (appliedDeltaLength + transformedDeltaLength) - remaining;
     if (missing > 0) {
-      throw new IOException("file is corrupted, missing " + missing + " bytes");
+      throw new IOException("File is corrupted, missing " + missing + " bytes");
     }
     return deltaHeader;
   }

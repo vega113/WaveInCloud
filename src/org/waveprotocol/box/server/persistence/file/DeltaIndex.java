@@ -175,8 +175,9 @@ public class DeltaIndex {
 
     long position = version * RECORD_LENGTH;
     // We're expected to append the new delta
-    Preconditions.checkState(position == file.length(),
-        "position = " + position + ", file=" + file.length());
+    long fileLength = file.length();
+    Preconditions.checkState(position == fileLength,
+        "position = %d, file=%d", position, fileLength);
     file.seek(position);
     file.writeLong(offset);
     // fill in the additional positions with the 1-complement of the offset,
