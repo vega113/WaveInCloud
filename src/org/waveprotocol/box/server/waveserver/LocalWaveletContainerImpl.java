@@ -17,7 +17,6 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.gxp.com.google.common.collect.Iterables;
 import com.google.protobuf.ByteString;
@@ -122,29 +121,10 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
     // Build the applied delta to commit
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
-        buildAppliedDelta(signedDelta, transformed.getTargetVersion(), transformed.size(),
-            applicationTimestamp);
+        AppliedDeltaUtil.buildAppliedDelta(signedDelta, transformed.getTargetVersion(),
+            transformed.size(), applicationTimestamp);
 
     return applyDelta(appliedDelta, transformed);
-  }
-
-  @VisibleForTesting
-  static ByteStringMessage<ProtocolAppliedWaveletDelta> buildAppliedDelta(
-      ProtocolSignedDelta signedDelta, HashedVersion appliedAtVersion, int operationsApplied,
-      long applicationTimestamp) {
-    ProtocolAppliedWaveletDelta.Builder appliedDeltaBuilder = ProtocolAppliedWaveletDelta
-        .newBuilder()
-        .setSignedOriginalDelta(signedDelta)
-        .setOperationsApplied(operationsApplied)
-        .setApplicationTimestamp(applicationTimestamp);
-    // TODO: re-enable this condition for version 0.3 of the spec
-    if (/* opsWereTransformed */true) {
-      // This is set to indicate the head version of the wavelet was different
-      // to the intended version of the wavelet (so the hash will have changed)
-      appliedDeltaBuilder.setHashedVersionAppliedAt(
-          CoreWaveletOperationSerializer.serialize(appliedAtVersion));
-    }
-    return ByteStringMessage.serializeMessage(appliedDeltaBuilder.build());
   }
 
   @Override

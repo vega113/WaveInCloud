@@ -24,9 +24,9 @@ import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -48,7 +48,7 @@ public class AppliedDeltaUtil {
    * was applied at.
    * This may require looking at the contained {@code ProtocolWaveletDelta}.
    *
-   * @param appliedDelta to inspect
+   * @param appliedDeltaBytes to inspect
    * @return hashed version the delta was applied at
    * @throws InvalidProtocolBufferException if the contained
    *         {@code ProtocolWaveletDelta} is invalid
@@ -80,11 +80,35 @@ public class AppliedDeltaUtil {
   }
 
   /**
+   * Creates an applied delta message from a signed protocol delta and
+   * application metadata.
+   *
+   * @param signedDelta the original delta
+   * @param appliedAtVersion version at which the delta applied
+   * @param operationsApplied number of ops in the delta
+   * @param applicationTimestamp timestamp of application
+   */
+  public static ByteStringMessage<ProtocolAppliedWaveletDelta> buildAppliedDelta(
+      ProtocolSignedDelta signedDelta, HashedVersion appliedAtVersion, int operationsApplied,
+      long applicationTimestamp) {
+    ProtocolAppliedWaveletDelta.Builder appliedDeltaBuilder = ProtocolAppliedWaveletDelta
+        .newBuilder()
+        .setSignedOriginalDelta(signedDelta)
+        .setOperationsApplied(operationsApplied)
+        .setApplicationTimestamp(applicationTimestamp);
+    // TODO(soren): Only set hashedVersionAppliedAt when different from the
+    // signed delta's target version if we rev the protocol.
+    appliedDeltaBuilder.setHashedVersionAppliedAt(
+        CoreWaveletOperationSerializer.serialize(appliedAtVersion));
+    return ByteStringMessage.serializeMessage(appliedDeltaBuilder.build());
+  }
+
+  /**
    * Builds a transformed delta from an applied delta and its transformed ops.
    */
   public static TransformedWaveletDelta buildTransformedDelta(
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDeltaBytes, WaveletDelta transformed)
-      throws InvalidProtocolBufferException, OperationException {
+      throws InvalidProtocolBufferException {
     ProtocolAppliedWaveletDelta appliedDelta = appliedDeltaBytes.getMessage();
     Preconditions.checkArgument(
         getHashedVersionAppliedAt(appliedDeltaBytes).equals(transformed.getTargetVersion()));

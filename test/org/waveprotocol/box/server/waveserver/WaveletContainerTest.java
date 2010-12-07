@@ -20,7 +20,6 @@ package org.waveprotocol.box.server.waveserver;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 import junit.framework.TestCase;
 
@@ -28,7 +27,6 @@ import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
@@ -43,7 +41,6 @@ import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
@@ -240,12 +237,12 @@ public class WaveletContainerTest extends TestCase {
     BufferedDocOp docOp1 = new DocOpBuilder().characters("hi").build();
     WaveletDelta delta1 = createDelta(docId, docOp1, localVersion0);
 
-    applyDeltaToWavelet(localWavelet, delta1);
+    WaveServerTestUtil.applyDeltaToWavelet(localWavelet, delta1, 0L);
     try {
       BufferedDocOp docOp2 = new DocOpBuilder().characters("bye").build();
       WaveletDelta delta2 = createDelta(docId, docOp2, localWavelet.getCurrentVersion());
 
-      applyDeltaToWavelet(localWavelet, delta2);
+      WaveServerTestUtil.applyDeltaToWavelet(localWavelet, delta2, 0L);
       fail("Composition of \"hi\" and \"bye\" did not throw OperationException");
     } catch (OperationException expected) {
       // Correct
@@ -268,10 +265,10 @@ public class WaveletContainerTest extends TestCase {
    * participants.
    */
   private void assertSuccessfulApplyWaveletOperations(WaveletContainerImpl with) throws Exception {
-    applyDeltaToWavelet(with, addParticipantDelta(with));
+    WaveServerTestUtil.applyDeltaToWavelet(with, addParticipantDelta(with), 0L);
     assertEquals(with.getParticipants(), participants);
 
-    applyDeltaToWavelet(with, removeParticipantDelta(with));
+    WaveServerTestUtil.applyDeltaToWavelet(with, removeParticipantDelta(with), 0L);
     assertEquals(with.getParticipants(), Collections.emptySet());
   }
 
@@ -281,16 +278,16 @@ public class WaveletContainerTest extends TestCase {
    */
   private void assertFailedWaveletOperations(WaveletContainerImpl with) throws Exception {
     try {
-      applyDeltaToWavelet(with, removeParticipantDelta(with));
+      WaveServerTestUtil.applyDeltaToWavelet(with, removeParticipantDelta(with), 0L);
       fail("Should fail");
     } catch (OperationException e) {
       // Correct
     }
     assertEquals(localWavelet.getParticipants(), Collections.emptySet());
 
-    applyDeltaToWavelet(with, addParticipantDelta(with));
+    WaveServerTestUtil.applyDeltaToWavelet(with, addParticipantDelta(with), 0L);
     try {
-      applyDeltaToWavelet(with, addParticipantDelta(with));
+      WaveServerTestUtil.applyDeltaToWavelet(with, addParticipantDelta(with), 0L);
       fail("Should fail");
     } catch (OperationException e) {
       // Correct
@@ -298,28 +295,12 @@ public class WaveletContainerTest extends TestCase {
     assertEquals(with.getParticipants(), participants);
 
     try {
-      applyDeltaToWavelet(with, doubleRemoveParticipantDelta(with));
+      WaveServerTestUtil.applyDeltaToWavelet(with, doubleRemoveParticipantDelta(with), 0L);
       fail("Should fail");
     } catch (OperationException e) {
       // Correct
     }
     assertEquals(with.getParticipants(), participants);
-  }
-
-  /**
-   * Applies and commits a delta to a wavelet container.
-   */
-  private static void applyDeltaToWavelet(WaveletContainerImpl wavelet, WaveletDelta delta)
-      throws InvalidProtocolBufferException, OperationException {
-    ProtocolWaveletDelta protoDelta = serialize(delta);
-    ByteStringMessage<ProtocolWaveletDelta> deltaBytes =
-        ByteStringMessage.serializeMessage(protoDelta);
-    ProtocolSignedDelta signedDelta =
-        ProtocolSignedDelta.newBuilder().setDelta(deltaBytes.getByteString()).build();
-    ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
-        LocalWaveletContainerImpl.buildAppliedDelta(
-            signedDelta, delta.getTargetVersion(), delta.size(), 0L);
-    wavelet.applyDelta(appliedDelta, delta);
   }
 
   private static WaveletDelta addParticipantDelta(WaveletContainerImpl target) {
