@@ -112,7 +112,7 @@ public final class WaveletDataUtil {
         ops.get(i).apply(wavelet);
       } catch (OperationException e) {
         throw new IllegalStateException(
-            "Failed to roll back " + ops.get(i) + " with inverse " + ops.get(i), e);
+            "Failed to roll back operation with inverse " + ops.get(i), e);
       }
     }
   }
@@ -139,7 +139,7 @@ public final class WaveletDataUtil {
   public static ObservableWaveletData buildWaveletFromFirstDelta(WaveletName waveletName,
       TransformedWaveletDelta delta) throws OperationException {
     Preconditions.checkArgument(delta.getAppliedAtVersion() == 0,
-        "first delta has non-zero version: " + delta.getAppliedAtVersion());
+        "first delta has non-zero version: %s", delta.getAppliedAtVersion());
     ObservableWaveletData wavelet =
         createEmptyWavelet(
             waveletName,
