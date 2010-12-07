@@ -63,7 +63,7 @@ public class LocalWaveletContainerImplTest extends TestCase {
   private ProtocolWaveletOperation addParticipantOp;
   private static final String BLIP_ID = "b+muppet";
   private ProtocolWaveletOperation addBlipOp;
-  private LocalWaveletContainer wavelet;
+  private LocalWaveletContainerImpl wavelet;
 
   @Override
   protected void setUp() throws Exception {
@@ -92,16 +92,22 @@ public class LocalWaveletContainerImplTest extends TestCase {
    * @throws Exception should not be thrown.
    */
   public void testDuplicateOperations() throws Exception {
+    assertEquals(0L, wavelet.getCurrentVersion().getVersion());
 
     // create the wavelet.
     WaveletDeltaRecord v0Response = wavelet.submitRequest(
         WAVELET_NAME, createProtocolSignedDelta(addParticipantOp, HASHED_VERSION_ZERO));
+    assertEquals(1L, wavelet.getCurrentVersion().getVersion());
 
     ProtocolSignedDelta psd = createProtocolSignedDelta(
         addBlipOp, v0Response.getResultingVersion());
 
     WaveletDeltaRecord dar1 = wavelet.submitRequest(WAVELET_NAME, psd);
+    assertEquals(2L, wavelet.getCurrentVersion().getVersion());
+
     WaveletDeltaRecord dar2 = wavelet.submitRequest(WAVELET_NAME, psd);
+    assertEquals(2L, wavelet.getCurrentVersion().getVersion());
+
     assertEquals(dar1.getResultingVersion(), dar2.getResultingVersion());
   }
 

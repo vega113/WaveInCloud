@@ -68,13 +68,17 @@ public class WaveletContainerTest extends TestCase {
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
 
-  private static final String domain = "wave.google.com";
-  private static final WaveletName waveletName = WaveletName.of(
-      new WaveId(domain, "waveid"), new WaveletId(domain, "waveletid"));
-  private static final ParticipantId author = new ParticipantId("admin@" + domain);
+  private static final String localDomain = "example.com";
+  private static final WaveletName localWaveletName = WaveletName.of(
+      new WaveId(localDomain, "waveid"), new WaveletId(localDomain, "waveletid"));
+  private static final String remoteDomain = "example2.com";
+  private static final WaveletName remoteWaveletName = WaveletName.of(
+      new WaveId(remoteDomain, "waveid"), new WaveletId(remoteDomain, "waveletid"));
+  private static final ParticipantId author = new ParticipantId("admin@" + localDomain);
   private static final Set<ParticipantId> participants = ImmutableSet.of(
-      new ParticipantId("foo@" + domain), new ParticipantId("bar@example.com"));
-  private static final HashedVersion version0 = HASH_FACTORY.createVersionZero(waveletName);
+      new ParticipantId("foo@" + localDomain), new ParticipantId("bar@example3.com"));
+  private static final HashedVersion localVersion0 =
+      HASH_FACTORY.createVersionZero(localWaveletName);
   private static final ByteString fakeSigner1 = ByteString.EMPTY;
   private static final ByteString fakeSigner2 = ByteString.copyFrom(new byte[] {1});
   private static final ProtocolSignature fakeSignature1 = ProtocolSignature.newBuilder()
@@ -112,8 +116,8 @@ public class WaveletContainerTest extends TestCase {
   public void setUp() throws Exception {
     super.setUp();
     WaveletStore waveletStore = new DeltaStoreBasedWaveletStore(new MemoryDeltaStore());
-    localWavelet = new LocalWaveletContainerImpl(waveletStore.open(waveletName));
-    remoteWavelet = new RemoteWaveletContainerImpl(waveletStore.open(waveletName));
+    localWavelet = new LocalWaveletContainerImpl(waveletStore.open(localWaveletName));
+    remoteWavelet = new RemoteWaveletContainerImpl(waveletStore.open(remoteWaveletName));
   }
 
   // Tests
@@ -139,7 +143,7 @@ public class WaveletContainerTest extends TestCase {
         .addSignature(fakeSignature1)
         .setDelta(addParticipantProtoDelta(localWavelet).toByteString())
         .build();
-    localWavelet.submitRequest(waveletName, addDelta);
+    localWavelet.submitRequest(localWaveletName, addDelta);
     assertEquals(localWavelet.getCurrentVersion().getVersion(), 2);
     assertTrue(localWavelet.isDeltaSigner(
         localWavelet.getCurrentVersion(), fakeSigner1));
@@ -152,7 +156,7 @@ public class WaveletContainerTest extends TestCase {
         .setDelta(ProtocolWaveletDelta.newBuilder(removeParticipantProtoDelta(localWavelet))
             .setHashedVersion(serialize(localWavelet.getCurrentVersion())).build().toByteString())
         .build();
-    localWavelet.submitRequest(waveletName, removeDelta);
+    localWavelet.submitRequest(localWaveletName, removeDelta);
     assertEquals(localWavelet.getCurrentVersion().getVersion(), 4);
     assertTrue(localWavelet.isDeltaSigner(oldVersion, fakeSigner1));
     assertFalse(localWavelet.isDeltaSigner(oldVersion, fakeSigner2));
@@ -168,19 +172,19 @@ public class WaveletContainerTest extends TestCase {
         .setDelta(removeParticipantProtoDelta(localWavelet).toByteString())
         .build();
     try {
-      localWavelet.submitRequest(waveletName, removeDelta);
+      localWavelet.submitRequest(localWaveletName, removeDelta);
       fail("Should fail");
     } catch (OperationException e) {
       // Correct
     }
-    assertEquals(localWavelet.getCurrentVersion(), version0);
+    assertEquals(localWavelet.getCurrentVersion(), localVersion0);
 
     ProtocolSignedDelta addDelta = ProtocolSignedDelta.newBuilder()
         .addSignature(fakeSignature1)
         .setDelta(addParticipantProtoDelta(localWavelet).toByteString())
         .build();
 
-    localWavelet.submitRequest(waveletName, addDelta);
+    localWavelet.submitRequest(localWaveletName, addDelta);
     try {
       ProtocolSignedDelta addAgainDelta = ProtocolSignedDelta.newBuilder()
           .addSignature(fakeSignature2)
@@ -188,7 +192,7 @@ public class WaveletContainerTest extends TestCase {
               .setHashedVersion(serialize(localWavelet.getCurrentVersion()))
               .build().toByteString())
           .build();
-      localWavelet.submitRequest(waveletName, addAgainDelta);
+      localWavelet.submitRequest(localWaveletName, addAgainDelta);
       fail("Should fail");
     } catch (OperationException e) {
       // Correct
@@ -207,7 +211,7 @@ public class WaveletContainerTest extends TestCase {
             .build().toByteString())
         .build();
     try {
-      localWavelet.submitRequest(waveletName, rollbackDelta);
+      localWavelet.submitRequest(localWaveletName, rollbackDelta);
       fail("Should fail");
     } catch (OperationException e) {
       // Correct
@@ -220,11 +224,11 @@ public class WaveletContainerTest extends TestCase {
         .addSignature(fakeSignature1)
         .setDelta(ProtocolWaveletDelta.newBuilder()
             .setAuthor(author.toString())
-            .setHashedVersion(serialize(version0))
+            .setHashedVersion(serialize(localVersion0))
             .build().toByteString())
         .build();
     try {
-      localWavelet.submitRequest(waveletName, emptyDelta);
+      localWavelet.submitRequest(localWaveletName, emptyDelta);
       fail("Should fail");
     } catch (IllegalArgumentException e) {
       // Correct
@@ -234,7 +238,7 @@ public class WaveletContainerTest extends TestCase {
   public void testOperationsOfDifferentSizes() throws Exception {
     String docId = "b+somedoc";
     BufferedDocOp docOp1 = new DocOpBuilder().characters("hi").build();
-    WaveletDelta delta1 = createDelta(docId, docOp1, version0);
+    WaveletDelta delta1 = createDelta(docId, docOp1, localVersion0);
 
     applyDeltaToWavelet(localWavelet, delta1);
     try {
@@ -318,28 +322,29 @@ public class WaveletContainerTest extends TestCase {
     wavelet.applyDelta(appliedDelta, delta);
   }
 
-  private static WaveletDelta addParticipantDelta(WaveletContainer target) {
+  private static WaveletDelta addParticipantDelta(WaveletContainerImpl target) {
     return new WaveletDelta(author, target.getCurrentVersion(), addParticipantOps);
   }
 
-  private static ProtocolWaveletDelta addParticipantProtoDelta(WaveletContainer target) {
+  private static ProtocolWaveletDelta addParticipantProtoDelta(WaveletContainerImpl target) {
     return serialize(addParticipantDelta(target));
   }
 
-  private static WaveletDelta removeParticipantDelta(WaveletContainer target) {
+  private static WaveletDelta removeParticipantDelta(WaveletContainerImpl target) {
     return new WaveletDelta(author, target.getCurrentVersion(), removeParticipantOps);
   }
 
-  private static ProtocolWaveletDelta removeParticipantProtoDelta(WaveletContainer target) {
+  private static ProtocolWaveletDelta removeParticipantProtoDelta(WaveletContainerImpl target) {
     return serialize(removeParticipantDelta(target));
   }
 
-  private static WaveletDelta doubleRemoveParticipantDelta(WaveletContainer target) {
+  private static WaveletDelta doubleRemoveParticipantDelta(WaveletContainerImpl target) {
     return new WaveletDelta(author, target.getCurrentVersion(),
         doubleRemoveParticipantOps);
   }
 
-  private static ProtocolWaveletDelta doubleRemoveParticipantProtoDelta(WaveletContainer target) {
+  private static ProtocolWaveletDelta doubleRemoveParticipantProtoDelta(
+      WaveletContainerImpl target) {
     return serialize(doubleRemoveParticipantDelta(target));
   }
 

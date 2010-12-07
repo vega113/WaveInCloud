@@ -83,6 +83,8 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     // TODO(ljvderijk): a Clock needs to be injected here (Issue 104)
     long applicationTimestamp = System.currentTimeMillis();
 
+    HashedVersion currentVersion = getCurrentVersion();
+
     // This is always false right now because the current algorithm doesn't transform ops away.
     if (transformed.size() == 0) {
       Preconditions.checkState(currentVersion.getVersion() != 0,
@@ -120,7 +122,8 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
 
     // Build the applied delta to commit
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
-        buildAppliedDelta(signedDelta, currentVersion, transformed.size(), applicationTimestamp);
+        buildAppliedDelta(signedDelta, transformed.getTargetVersion(), transformed.size(),
+            applicationTimestamp);
 
     return applyDelta(appliedDelta, transformed);
   }

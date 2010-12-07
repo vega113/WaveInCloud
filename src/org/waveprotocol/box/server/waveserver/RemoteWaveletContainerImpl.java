@@ -91,7 +91,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       lastCommittedVersion = hashedVersion;
 
       // Pass to clients iff our known version is here or greater.
-      return currentVersion.getVersion() >= hashedVersion.getVersion();
+      return getCurrentVersion().getVersion() >= hashedVersion.getVersion();
     } finally {
       releaseWriteLock();
     }
@@ -146,7 +146,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           LOG.info("Fetching signer info " + Base64.encodeBytes(sig.getSignerId().toByteArray()));
           numSignerInfoPrefetched.incrementAndGet();
           certificateManager.prefetchDeltaSignerInfo(federationProvider, sig.getSignerId(),
-              waveletName, deltaEndVersion, prefetchListener);
+              getWaveletName(), deltaEndVersion, prefetchListener);
         }
       }
     }
@@ -175,7 +175,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     acquireWriteLock();
     try {
       checkStateOkOrLoading();
-      HashedVersion expectedVersion = currentVersion;
+      HashedVersion expectedVersion = getCurrentVersion();
       boolean haveRequestedHistory = false;
 
       // Verify signatures of all deltas
@@ -183,10 +183,10 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         try {
           certificateManager.verifyDelta(appliedDelta.getMessage().getSignedOriginalDelta());
         } catch (SignatureException e) {
-          LOG.warning("Verification failure for " + domain + " incoming " + waveletName, e);
+          LOG.warning("Verification failure for " + domain + " incoming " + getWaveletName(), e);
           throw new WaveServerException("Verification failure", e);
         } catch (UnknownSignerException e) {
-          LOG.severe("Unknown signer for " + domain + " incoming " + waveletName +
+          LOG.severe("Unknown signer for " + domain + " incoming " + getWaveletName() +
               ", this is BAD! We were supposed to have prefetched it!", e);
           throw new WaveServerException("Unknown signer", e);
         }
@@ -229,13 +229,13 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         // callback to request it and fall out of this update
         if (appliedAt.getVersion() > expectedVersion.getVersion()) {
           LOG.info("Missing history from " + expectedVersion.getVersion() + "-"
-              + appliedAt.getVersion() + ", requesting from upstream for " + waveletName);
+              + appliedAt.getVersion() + ", requesting from upstream for " + getWaveletName());
 
           if (federationProvider != null) {
             // TODO: only one request history should be pending at any one time?
             // We should derive a new one whenever the active one is finished,
             // based on the current state of pendingDeltas.
-            federationProvider.requestHistory(waveletName, domain,
+            federationProvider.requestHistory(getWaveletName(), domain,
                 CoreWaveletOperationSerializer.serialize(expectedVersion),
                 CoreWaveletOperationSerializer.serialize(appliedAt),
                 -1,
@@ -248,7 +248,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                     @Override
                     public void onSuccess(List<ByteString> deltaList,
                         ProtocolHashedVersion lastCommittedVersion, long versionTruncatedAt) {
-                      LOG.info("Got response callback: " + waveletName + ", lcv "
+                      LOG.info("Got response callback: " + getWaveletName() + ", lcv "
                           + lastCommittedVersion + " deltaList length = " + deltaList.size());
 
                       // Turn the ByteStrings in to a useful representation
@@ -322,7 +322,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
           }
 
           // TODO: does waveletData update?
-          expectedVersion = currentVersion;
+          expectedVersion = getCurrentVersion();
         } else {
           LOG.warning("Got delta from the past: " + appliedDelta);
         }
@@ -364,7 +364,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     // The serialised hashed version should actually match the currentVersion at this point, since
     // the caller of transformAndApply delta will have made sure the applied deltas are ordered
     HashedVersion hashedVersion = AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
-    Preconditions.checkState(hashedVersion.equals(currentVersion),
+    Preconditions.checkState(hashedVersion.equals(getCurrentVersion()),
         "Applied delta must apply to current version");
 
     // Extract the serialised wavelet delta

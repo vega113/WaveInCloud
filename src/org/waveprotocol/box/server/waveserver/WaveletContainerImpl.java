@@ -78,8 +78,8 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   private final Lock readLock;
   private final Lock writeLock;
   private WaveletData waveletData;
-  protected WaveletName waveletName;
-  protected HashedVersion currentVersion;
+  private WaveletName waveletName;
+  private HashedVersion currentVersion;
   protected HashedVersion lastCommittedVersion;
   protected State state;
 
@@ -117,6 +117,10 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   protected void releaseWriteLock() {
     writeLock.unlock();
+  }
+
+  protected WaveletName getWaveletName() {
+    return waveletName;
   }
 
   protected void checkStateOk() throws WaveletStateException {
@@ -178,11 +182,6 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   public WaveletSnapshotAndVersion getSnapshot() {
     acquireWriteLock();
     try {
-      // TODO: enable when we have persistence. Snapshots should only ever
-      // be of committed versions as otherwise they may contain information
-      // that could be lost for ever.
-//      Preconditions.checkState(waveletData.getVersion() == lastCommittedVersion.getVersion(),
-//          "Snapshot version doesn't match committed version");
       HashedVersion committedVersion = currentVersion;
       return new WaveletSnapshotAndVersion(
           SnapshotSerializer.serializeWavelet(waveletData, currentVersion),
@@ -439,8 +438,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     }
   }
 
-  @Override
-  public HashedVersion getCurrentVersion() {
+  protected HashedVersion getCurrentVersion() {
     return currentVersion;
   }
 }

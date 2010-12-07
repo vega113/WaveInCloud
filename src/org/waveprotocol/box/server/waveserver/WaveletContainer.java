@@ -105,7 +105,4 @@ interface WaveletContainer {
 
   /** A set of participants currently on the wave */
   Set<ParticipantId> getParticipants();
-
-  /** @return the current version of the wavelet. */
-  HashedVersion getCurrentVersion();
 }
