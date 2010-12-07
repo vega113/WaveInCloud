@@ -17,11 +17,20 @@
 
 package org.waveprotocol.box.server.persistence.file;
 
+import com.google.common.collect.ImmutableList;
+
 import org.waveprotocol.box.server.persistence.DeltaStoreTestBase;
+import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.DeltaStore;
+import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
+import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
+import org.waveprotocol.wave.model.id.WaveletName;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 /**
  * Tests for FileDeltaStore.
@@ -29,7 +38,12 @@ import java.io.IOException;
  * @author Joseph Gentle (josephg@gmail.com)
  */
 public class DeltaStoreTest extends DeltaStoreTestBase {
+
+  private static final Log LOG = Log.get(DeltaStoreTest.class);
+
   private File path;
+  private final WaveletName WAVE1_WAVELET1 =
+    WaveletName.of(new WaveId("example.com", "wave1"), new WaveletId("example.com", "wavelet1"));
 
   @Override
   protected void setUp() throws Exception {
@@ -51,5 +65,35 @@ public class DeltaStoreTest extends DeltaStoreTestBase {
     assertFalse(path.exists());
   }
 
-  // TODO: Test the delta store strips partially written data.
+  // Test the delta store strips partially written data.
+  public void testRecoverFromTruncatedDeltas() throws Exception {
+    // Create an entry with one record. Shrink the file byte by byte and ensure
+    // we can read it without crashing.
+    DeltaStore store = newDeltaStore();
+    WaveletDeltaRecord written = createRecord();
+    File deltaFile = ((FileDeltaCollection) store.open(WAVE1_WAVELET1)).getDeltasFile();
+
+    long toRemove = 1;
+    while (true) {
+      // This generates the full file.
+      DeltasAccess wavelet = store.open(WAVE1_WAVELET1);
+      wavelet.append(ImmutableList.of(written));
+      wavelet.close();
+
+      RandomAccessFile file = new RandomAccessFile(deltaFile, "rw");
+      if (toRemove > file.length()) {
+        break;
+      }
+      // eat the planned number of bytes
+      LOG.info("trying to remove " + toRemove + " bytes");
+      file.setLength(file.length() - toRemove);
+      file.close();
+
+      wavelet = store.open(WAVE1_WAVELET1);
+      WaveletDeltaRecord read = wavelet.getDelta(0);
+      assertNull("got an unexpected record " + read, read);
+      wavelet.close();
+      toRemove++;
+    }
+  }
 }

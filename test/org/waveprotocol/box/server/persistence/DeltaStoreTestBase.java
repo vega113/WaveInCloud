@@ -49,7 +49,7 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Tests for FileDeltaStore.
+ * Tests for all DeltaStore implementations.
  *
  * @author Joseph Gentle (josephg@gmail.com)
  */
@@ -132,7 +132,7 @@ public abstract class DeltaStoreTestBase extends TestCase {
 
   // *** Helpers
 
-  private WaveletDeltaRecord createRecord() throws IOException {
+  protected WaveletDeltaRecord createRecord() throws IOException {
     HashedVersion targetVersion = HashedVersion.of(0, new byte[] {3, 2, 1});
     HashedVersion resultingVersion = HashedVersion.of(2, new byte[] {1, 2, 3});
 
