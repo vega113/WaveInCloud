@@ -510,11 +510,7 @@ public class FileDeltaCollection implements DeltasAccess {
     } catch (InvalidProtocolBufferException e) {
       throw new IOException(e);
     }
-    try {
-      return ProtoDeltaStoreDataSerializer.deserialize(delta);
-    } catch (IllegalArgumentException e) {
-      throw new IOException(e);
-    }
+    return ProtoDeltaStoreDataSerializer.deserialize(delta);
   }
 
   /**
