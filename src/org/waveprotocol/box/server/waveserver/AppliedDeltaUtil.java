@@ -91,8 +91,14 @@ public class AppliedDeltaUtil {
     Preconditions.checkArgument(appliedDelta.getOperationsApplied() == transformed.size());
     HashedVersion resultingVersion = HASH_FACTORY.create(appliedDeltaBytes.getByteArray(),
         transformed.getTargetVersion(), appliedDelta.getOperationsApplied());
-    return new TransformedWaveletDelta(transformed.getAuthor(), resultingVersion,
-        appliedDelta.getApplicationTimestamp(), transformed);
+    // TODO(soren): Do something more efficient than the silly (de)serialization below.
+    // It works around the problem that the ops in transformed don't have the right metadata,
+    // e.g., the last op doesn't have a hashed version, otherwise we could just do:
+    // return new TransformedWaveletDelta(transformed.getAuthor(), resultingVersion,
+    //     appliedDelta.getApplicationTimestamp(), transformed);
+    return CoreWaveletOperationSerializer.deserialize(
+        CoreWaveletOperationSerializer.serialize(transformed),
+        resultingVersion, appliedDelta.getApplicationTimestamp());
   }
 
   private AppliedDeltaUtil() { } // prevent instantiation

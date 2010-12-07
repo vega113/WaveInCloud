@@ -73,10 +73,6 @@ public class LocalWaveletContainerImplTest extends TestCase {
         .setAddParticipant(AUTHOR)
         .build();
     // An empty blip operation - creates a new document.
-
-    WaveletOperationContext context =
-        new WaveletOperationContext(ParticipantId.ofUnsafe(AUTHOR), 0, 1);
-
     addBlipOp = ProtocolWaveletOperation.newBuilder().setMutateDocument(
         MutateDocument.newBuilder().setDocumentId(BLIP_ID).setDocumentOperation(
             ProtocolDocumentOperation.newBuilder().build())).build();

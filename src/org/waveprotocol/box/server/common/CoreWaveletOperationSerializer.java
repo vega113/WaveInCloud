@@ -314,15 +314,22 @@ public class CoreWaveletOperationSerializer {
    */
   public static TransformedWaveletDelta deserialize(ProtocolWaveletDelta delta,
       HashedVersion resultingVersion, long applicationTimestamp) {
-    List<WaveletOperation> ops = Lists.newArrayList();
-    for (ProtocolWaveletOperation op : delta.getOperationList()) {
-      WaveletOperationContext context = new WaveletOperationContext(
-          ParticipantId.ofUnsafe(delta.getAuthor()), applicationTimestamp, 1);
-      ops.add(deserialize(op, context));
+    ParticipantId author = ParticipantId.ofUnsafe(delta.getAuthor());
+    int count = delta.getOperationCount();
+    Preconditions.checkArgument(count > 0, "Cannot deserialize an empty delta");
+    List<WaveletOperation> ops = Lists.newArrayListWithCapacity(count);
+    if (count > 1) {
+      WaveletOperationContext context =
+          new WaveletOperationContext(author, applicationTimestamp, 1);
+      for (int i = 0; i < count - 1; i++) {
+        ProtocolWaveletOperation op = delta.getOperation(i);
+        ops.add(deserialize(op, context));
+      }
     }
-    HashedVersion hashedVersion = deserialize(delta.getHashedVersion());
-    return new TransformedWaveletDelta(new ParticipantId(delta.getAuthor()),
-        resultingVersion, applicationTimestamp, ops);
+    WaveletOperationContext context =
+        new WaveletOperationContext(author, applicationTimestamp, 1, resultingVersion);
+    ops.add(deserialize(delta.getOperation(count - 1), context));
+    return new TransformedWaveletDelta(author, resultingVersion, applicationTimestamp, ops);
   }
 
   /** Deserializes a protobuf to a HashedVersion POJO. */
