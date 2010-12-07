@@ -28,17 +28,17 @@ import java.io.RandomAccessFile;
 
 /**
  * An index for quickly accessing deltas. The index is an array of longs, one for each version.
- * 
+ *
  * The index must return the offset of a delta applied at a version, and of a delta leading to
  * a version.
- * 
+ *
  * Internal format:
- * 
+ *
  * Let's assume that operations are 10 bytes long. Deltas are separated by |.
  * <pre>
  * Deltas:    |  0  1  2 |  3 |  4  5 |
  *    offset  0          30   40      60
- *            
+ *
  * Index:        0 -1 -1   30   40 -41
  * </pre>
  * The file contains a negative value for any version for which there is not a delta. This will
@@ -142,7 +142,7 @@ public class DeltaIndex {
 
   /**
    * Seeks to the corresponding version, if it is valid.
-   * 
+   *
    * @param version version to seek to.
    * @return true iff the position is valid
    * @throws IOException
@@ -164,7 +164,7 @@ public class DeltaIndex {
 
   /**
    * Indexes a new delta.
-   * 
+   *
    * @param version the version at which the delta is applied
    * @param numOperations number of operations in the delta
    * @param offset offset at which the delta is stored
@@ -175,7 +175,9 @@ public class DeltaIndex {
 
     long position = version * RECORD_LENGTH;
     // We're expected to append the new delta
-    Preconditions.checkState(position == file.length());
+    long fileLength = file.length();
+    Preconditions.checkState(position == fileLength,
+        "position = %d, file=%d", position, fileLength);
     file.seek(position);
     file.writeLong(offset);
     // fill in the additional positions with the 1-complement of the offset,

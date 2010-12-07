@@ -17,13 +17,16 @@
 
 package org.waveprotocol.box.server.persistence.file;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreData.ProtoTransformedWaveletDelta;
 import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreDataSerializer;
+import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.AppliedDeltaUtil;
 import org.waveprotocol.box.server.waveserver.ByteStringMessage;
 import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
@@ -36,7 +39,6 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.Channels;
@@ -52,6 +54,9 @@ import java.util.Iterator;
  * version, the file contains a sequence of delta records. Each record contains a header followed
  * by a WaveletDeltaRecord.
  *
+ * A particular FileDeltaCollection instance assumes that it's <em>the only one</em> reading and
+ * writing a particular wavelet. The methods are <em>not</em> multithread-safe.
+ *
  * See this document for design specifics:
  * https://sites.google.com/a/waveprotocol.org/wave-protocol/protocol/design-proposals/wave-store-design-for-wave-in-a-box
  *
@@ -62,10 +67,12 @@ public class FileDeltaCollection implements DeltasAccess {
   public static final String INDEX_FILE_SUFFIX = ".index";
 
   private static final byte[] FILE_MAGIC_BYTES = new byte[]{'W', 'A', 'V', 'E'};
-  private static final short FILE_PROTOCOL_VERSION = 1;
-  private static final int FILE_HEADER_LENGTH = 6;
+  private static final int FILE_PROTOCOL_VERSION = 1;
+  private static final int FILE_HEADER_LENGTH = 8;
 
   private static final int DELTA_PROTOCOL_VERSION = 1;
+
+  private static final Log LOG = Log.get(FileDeltaCollection.class);
 
   private final WaveletName waveletName;
   private final String basePath;
@@ -132,7 +139,7 @@ public class FileDeltaCollection implements DeltasAccess {
     if (file.length() < FILE_HEADER_LENGTH) {
       // The file is new. Insert a header.
       file.write(FILE_MAGIC_BYTES);
-      file.writeShort(FILE_PROTOCOL_VERSION);
+      file.writeInt(FILE_PROTOCOL_VERSION);
     } else {
       byte[] magic = new byte[4];
       file.readFully(magic);
@@ -140,7 +147,7 @@ public class FileDeltaCollection implements DeltasAccess {
         throw new IOException("Delta file magic bytes are incorrect");
       }
 
-      short version = file.readShort();
+      int version = file.readInt();
       if (version != FILE_PROTOCOL_VERSION) {
         throw new IOException(String.format("File protocol version mismatch - expected %d got %d",
             FILE_PROTOCOL_VERSION, version));
@@ -340,6 +347,8 @@ public class FileDeltaCollection implements DeltasAccess {
                 nextPosition = file.getFilePointer();
               } catch (IOException e) {
                 // The next entry is invalid. There was probably a write error / crash.
+                LOG.severe("Error reading delta file " + deltasFilename + " starting at " +
+                    nextPosition, e);
                 return false;
               }
             }
@@ -356,7 +365,7 @@ public class FileDeltaCollection implements DeltasAccess {
    */
   private boolean seekToRecord(long version) throws IOException {
     Preconditions.checkArgument(version >= 0, "Version can't be negative");
-
+    openIfNeeded();
     long offset = index.getOffsetForVersion(version);
     return seekTo(offset);
   }
@@ -367,7 +376,7 @@ public class FileDeltaCollection implements DeltasAccess {
    */
   private boolean seekToEndRecord(long version) throws IOException {
     Preconditions.checkArgument(version >= 0, "Version can't be negative");
-
+    openIfNeeded();
     long offset = index.getOffsetForEndVersion(version);
     return seekTo(offset);
   }
@@ -391,7 +400,8 @@ public class FileDeltaCollection implements DeltasAccess {
 
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
         readAppliedDelta(header.appliedDeltaLength);
-    TransformedWaveletDelta transformedDelta = readTransformedWaveletDelta();
+    TransformedWaveletDelta transformedDelta = readTransformedWaveletDelta(
+        header.transformedDeltaLength);
 
     return new WaveletDeltaRecord(appliedDelta, transformedDelta);
   }
@@ -417,7 +427,8 @@ public class FileDeltaCollection implements DeltasAccess {
     DeltaHeader header = readDeltaHeader();
 
     file.skipBytes(header.appliedDeltaLength);
-    TransformedWaveletDelta transformedDelta = readTransformedWaveletDelta();
+    TransformedWaveletDelta transformedDelta = readTransformedWaveletDelta(
+        header.transformedDeltaLength);
 
     return transformedDelta;
   }
@@ -435,6 +446,12 @@ public class FileDeltaCollection implements DeltasAccess {
     int transformedDeltaLength = file.readInt();
     DeltaHeader deltaHeader = new DeltaHeader(version, appliedDeltaLength, transformedDeltaLength);
     deltaHeader.checkVersion();
+    // Verify the file size.
+    long remaining = file.length() - file.getFilePointer();
+    long missing = (appliedDeltaLength + transformedDeltaLength) - remaining;
+    if (missing > 0) {
+      throw new IOException("File is corrupted, missing " + missing + " bytes");
+    }
     return deltaHeader;
   }
 
@@ -459,7 +476,11 @@ public class FileDeltaCollection implements DeltasAccess {
 
     byte[] bytes = new byte[length];
     file.readFully(bytes);
-    return ByteStringMessage.parseProtocolAppliedWaveletDelta(ByteString.copyFrom(bytes));
+    try {
+      return ByteStringMessage.parseProtocolAppliedWaveletDelta(ByteString.copyFrom(bytes));
+    } catch (InvalidProtocolBufferException e) {
+      throw new IOException(e);
+    }
   }
 
   /**
@@ -479,9 +500,16 @@ public class FileDeltaCollection implements DeltasAccess {
   /**
    * Read a {@link TransformedWaveletDelta} from the current location in the file.
    */
-  private TransformedWaveletDelta readTransformedWaveletDelta() throws IOException {
-    InputStream stream = Channels.newInputStream(file.getChannel());
-    ProtoTransformedWaveletDelta delta = ProtoTransformedWaveletDelta.parseDelimitedFrom(stream);
+  private TransformedWaveletDelta readTransformedWaveletDelta(int transformedDeltaLength)
+      throws IOException {
+    byte[] bytes = new byte[transformedDeltaLength];
+    file.readFully(bytes);
+    ProtoTransformedWaveletDelta delta;
+    try {
+      delta = ProtoTransformedWaveletDelta.parseFrom(bytes);
+    } catch (InvalidProtocolBufferException e) {
+      throw new IOException(e);
+    }
     return ProtoDeltaStoreDataSerializer.deserialize(delta);
   }
 
@@ -493,7 +521,7 @@ public class FileDeltaCollection implements DeltasAccess {
     long startingPosition = file.getFilePointer();
     ProtoTransformedWaveletDelta protoDelta = ProtoDeltaStoreDataSerializer.serialize(delta);
     OutputStream stream = Channels.newOutputStream(file.getChannel());
-    protoDelta.writeDelimitedTo(stream);
+    protoDelta.writeTo(stream);
     return (int) (file.getFilePointer() - startingPosition);
   }
 
@@ -515,5 +543,10 @@ public class FileDeltaCollection implements DeltasAccess {
     file.seek(endPointer);
 
     return endPointer - headerPointer;
+  }
+
+  @VisibleForTesting
+  File getDeltasFile() {
+    return new File(basePath, deltasFilename);
   }
 }
