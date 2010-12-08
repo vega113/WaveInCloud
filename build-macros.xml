@@ -16,6 +16,51 @@
  * Author: anorth@google.com (Alex North)
  -->
 <project name="macros">
+  <!-- Macro which compiles a set of PST message templates -->
+  <macrodef name="pstmessage">
+    <attribute name="pkgpath" description="Package path for generated classes"/>
+    <attribute name="proto" description="Protocol buffer class file"/>
+    <sequential>
+      <!-- Common -->
+      <runpst proto="@{proto}"
+        templates="${src.dir}/org/waveprotocol/pst/templates/Message/Message.st
+          ${src.dir}/org/waveprotocol/pst/templates/MessagePojoImpl/MessagePojoImpl.st
+          ${src.dir}/org/waveprotocol/pst/templates/MessageClientImpl/MessageClientImpl.st"
+        outputdir="${build.messages.dir}/common/@{pkgpath}"/>
+      <!-- Server -->
+      <runpst proto="@{proto}"
+        templates="${src.dir}/org/waveprotocol/pst/templates/MessageServerImpl/MessageServerImpl.st"
+        outputdir="${build.messages.dir}/server/@{pkgpath}"/>
+      <!-- Client -->
+      <runpst proto="@{proto}"
+        templates="${src.dir}/org/waveprotocol/pst/templates/MessageClientImpl/MessageClientImpl.st"
+        outputdir="${build.messages.dir}/client/@{pkgpath}"/>
+    </sequential>
+  </macrodef>
+
+  <!-- Macro which runs the PST compiler.
+       Don't use this directly, use pstmessage. -->
+  <macrodef name="runpst">
+    <attribute name="proto" description="Protocol buffer class file"/>
+    <attribute name="templates" description="Template files"/>
+    <attribute name="outputdir" description="Output directory"/>
+    <sequential>
+      <java failonerror="true" fork="true" classname="org.waveprotocol.pst.PstMain">
+        <classpath>
+          <path refid="libpath"/> <!-- remove -->
+          <fileset dir="${lib.codegen}">
+            <include name="*/*.jar"/>
+          </fileset>
+          <pathelement location="${build.src.dir}"/>
+        </classpath>
+        <arg line="-d @{outputdir}"/>
+        <arg line="-f @{proto}"/>
+        <arg line="@{templates}"/>
+      </java>
+    </sequential>
+  </macrodef>
+
+
   <!-- Macro which builds a collection of sources -->
   <macrodef name="buildjava">
     <attribute name="srcpattern" description="Pattern id describing files to build"

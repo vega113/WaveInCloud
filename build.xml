@@ -76,8 +76,8 @@
       Builds
       ======-->
 
-  <!-- === 
-      Protocol buffer targets 
+  <!-- ===
+      Protocol buffer targets.
       Compiles generated proto sources. See build-proto.xml for generating
       proto sources from .proto files.
   === -->
@@ -108,7 +108,7 @@
     </uptodate>
   </target>
   <!-- Generates the Java files from templates -->
-  <target name="gen_gxp" description="Generates GXP files" 
+  <target name="gen_gxp" description="Generates GXP files"
       depends="init, gen_gxp_dep" unless="skip.gen_gxp">
     <gxpc srcdir="${src.dir}" srcpaths="${src.dir}" destdir="${gen.dir}"
         target="org.waveprotocol.box.server.gxp" />
@@ -132,27 +132,37 @@
     <touch file="${dep}/gxp_compile"/>
   </target>
 
-  <!-- Work-in-progress PST rules
-  <target name="compile_pst">
+  <!-- === PST targets === -->
+  <target name="pst_compile_dep">
+    <uptodate targetfile="${dep}/pst_compile" property="skip.pst_compile">
+      <srcfiles dir="${lib.dir}" includes="**/*"/>
+      <srcfiles dir="${src.dir}" includes="org/waveprotocol/pst/**"/>
+    </uptodate>
+  </target>
+  <target name="pst_compile" depends="init, pst_compile_dep"
+      unless="skip.pst_compile">
     <buildjava destdir="${build.src.dir}">
-      <src path="${src.dir}/org/waveprotocol/pst" />
+      <src path="${src.dir}/org/waveprotocol/pst"/>
       <classpath>
         <path refid="libpath"/>
       </classpath>
     </buildjava>
+    <touch file="${dep}/pst_compile"/>
   </target>
-  <target name="compile_messages">
-    <java failonerror="true" fork="true" classname="org.waveprotocol.pst.PstMain">
-      <classpath>
-        <path refid="libpath"/>
-        <pathelement location="${build.src.dir}"/>
-      </classpath>
-      <arg line="-d ${build.messages.dir}"/>
-      <arg line="-f ${build.proto.dir}/org/waveprotocol/box/server/waveserver/WaveClientRpc.class"/>
-      <arg value="${src.dir}/org/waveprotocol/pst/templates/Message/Message.st"/>
-    </java>
+
+  <target name="messages_dep">
+    <uptodate targetfile="${dep}/messages_compile" property="skip.messages_compile">
+      <srcfiles dir="${lib.dir}" includes="**/*"/>
+      <srcfiles dir="${build.messages.dir}" includes="**/*.java"/>
+    </uptodate>
   </target>
-  -->
+  <target name="messages_compile" depends="pst_compile, messages_dep"
+      unless="skip.messages_compile">
+    <pstmessage
+      pkgpath="org/waveprotocol/box/server"
+      proto="${build.proto.dir}/org/waveprotocol/box/server/waveserver/WaveClientRpc.class"/>
+    <touch file="${dep}/messages_compile"/>
+  </target>
 
   <!-- === Java targets === -->
   <target name="compile_dep">
@@ -162,7 +172,7 @@
       <srcfiles dir="${gen.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="compile" depends="proto_compile, gxp_compile, compile_dep" 
+  <target name="compile" depends="proto_compile, gxp_compile, messages_compile, compile_dep"
       unless="skip.compile" description="Compiles all source">
     <depend srcdir="${src.dir}" destdir="${build.src.dir}" closure="yes"/>
     <subant target="compile" inheritall="true">
