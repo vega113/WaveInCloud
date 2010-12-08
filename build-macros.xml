@@ -47,7 +47,7 @@
     <sequential>
       <java failonerror="true" fork="true" classname="org.waveprotocol.pst.PstMain">
         <classpath>
-          <path refid="libpath"/> <!-- remove -->
+          <path refid="libpath"/>
           <fileset dir="${lib.codegen}">
             <include name="*/*.jar"/>
           </fileset>

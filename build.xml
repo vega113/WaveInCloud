@@ -156,7 +156,7 @@
       <srcfiles dir="${build.messages.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="messages_compile" depends="pst_compile, messages_dep"
+  <target name="messages_compile" depends="pst_compile, proto_compile, messages_dep"
       unless="skip.messages_compile">
     <pstmessage
       pkgpath="org/waveprotocol/box/server"
