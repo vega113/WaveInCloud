@@ -20,11 +20,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.gwt.core.client.JsArray;
 
-import org.waveprotocol.box.server.waveserver.DocumentSnapshot;
-import org.waveprotocol.box.server.waveserver.ProtocolSubmitRequest;
-import org.waveprotocol.box.server.waveserver.ProtocolSubmitResponse;
-import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
-import org.waveprotocol.box.server.waveserver.WaveletSnapshot;
+import org.waveprotocol.box.common.comms.DocumentSnapshot;
+import org.waveprotocol.box.common.comms.ProtocolSubmitRequest;
+import org.waveprotocol.box.common.comms.ProtocolSubmitResponse;
+import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
+import org.waveprotocol.box.common.comms.WaveletSnapshot;
 import org.waveprotocol.box.webclient.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;

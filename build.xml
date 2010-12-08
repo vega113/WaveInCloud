@@ -160,7 +160,7 @@
       unless="skip.messages_compile">
     <pstmessage
       pkgpath="org/waveprotocol/box/server"
-      proto="${build.proto.dir}/org/waveprotocol/box/server/waveserver/WaveClientRpc.class"/>
+      proto="${build.proto.dir}/org/waveprotocol/box/common/comms/WaveClientRpc.class"/>
     <touch file="${dep}/messages_compile"/>
   </target>
 

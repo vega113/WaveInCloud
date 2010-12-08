@@ -20,7 +20,7 @@ package org.waveprotocol.box.server.frontend;
 
 import com.google.common.base.Preconditions;
 
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
+import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 
 /**

@@ -26,6 +26,7 @@ import com.google.inject.name.Names;
 import org.apache.commons.configuration.ConfigurationException;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.ProxyServlet;
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.box.server.authentication.AccountStoreHolder;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.persistence.AccountStore;
@@ -47,7 +48,6 @@ import org.waveprotocol.box.server.rpc.UserRegistrationServlet;
 import org.waveprotocol.box.server.rpc.WaveClientServlet;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveBus;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.federation.FederationTransport;
 import org.waveprotocol.wave.federation.noop.NoOpFederationModule;
@@ -145,10 +145,10 @@ public class ServerMain {
     ProtocolWaveClientRpc.Interface rpcImpl =
         injector.getInstance(ProtocolWaveClientRpc.Interface.class);
     server.registerService(ProtocolWaveClientRpc.newReflectiveService(rpcImpl));
-    
+
     FederationTransport federationManager = injector.getInstance(FederationTransport.class);
     federationManager.startFederation();
-    
+
     LOG.info("Starting server");
     server.startWebSocketServer();
   }

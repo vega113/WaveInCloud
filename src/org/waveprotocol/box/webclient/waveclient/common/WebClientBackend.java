@@ -20,9 +20,9 @@ package org.waveprotocol.box.webclient.waveclient.common;
 import com.google.gwt.core.client.JavaScriptObject;
 
 import org.waveprotocol.box.common.CommonConstants;
-import org.waveprotocol.box.server.waveserver.ProtocolOpenRequest;
-import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
-import org.waveprotocol.box.server.waveserver.WaveletSnapshot;
+import org.waveprotocol.box.common.comms.ProtocolOpenRequest;
+import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
+import org.waveprotocol.box.common.comms.WaveletSnapshot;
 import org.waveprotocol.box.webclient.client.ClientEvents;
 import org.waveprotocol.box.webclient.client.WaveWebSocketClient;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;

@@ -28,11 +28,11 @@ import com.google.gwt.json.client.JSONString;
 import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.Cookies;
 
-import org.waveprotocol.box.server.waveserver.ProtocolAuthenticate;
-import org.waveprotocol.box.server.waveserver.ProtocolOpenRequest;
-import org.waveprotocol.box.server.waveserver.ProtocolSubmitRequest;
-import org.waveprotocol.box.server.waveserver.ProtocolSubmitResponse;
-import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
+import org.waveprotocol.box.common.comms.ProtocolAuthenticate;
+import org.waveprotocol.box.common.comms.ProtocolOpenRequest;
+import org.waveprotocol.box.common.comms.ProtocolSubmitRequest;
+import org.waveprotocol.box.common.comms.ProtocolSubmitResponse;
+import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.box.webclient.util.Log;
@@ -69,8 +69,8 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   private WebClientBackend legacy;
   private WaveWebSocketCallback callback;
   private int sequenceNo;
-  
-  private Queue<String> messages = CollectionUtils.createQueue();
+
+  private final Queue<String> messages = CollectionUtils.createQueue();
 
   private final RepeatingCommand reconnectCommand = new RepeatingCommand() {
     public boolean execute() {
@@ -131,7 +131,7 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
     while (!messages.isEmpty() && connected == ConnectState.CONNECTED) {
       send(messages.poll());
     }
-    
+
     ClientEvents.get().fireEvent(new NetworkStatusEvent(ConnectionStatus.CONNECTED));
   }
 
@@ -198,7 +198,7 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   private static native void deleteMessageName(JavaScriptObject message) /*-{
     delete message._protoMessageName;
   }-*/;
-  
+
   private void send(String message) {
     switch (connected) {
       case CONNECTED:

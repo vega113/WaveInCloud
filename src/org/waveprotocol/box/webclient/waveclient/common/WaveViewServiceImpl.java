@@ -16,12 +16,12 @@
  */
 package org.waveprotocol.box.webclient.waveclient.common;
 
-import org.waveprotocol.box.server.waveserver.DocumentSnapshot;
-import org.waveprotocol.box.server.waveserver.ProtocolOpenRequest;
-import org.waveprotocol.box.server.waveserver.ProtocolSubmitRequest;
-import org.waveprotocol.box.server.waveserver.ProtocolSubmitResponse;
-import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
-import org.waveprotocol.box.server.waveserver.WaveletVersion;
+import org.waveprotocol.box.common.comms.DocumentSnapshot;
+import org.waveprotocol.box.common.comms.ProtocolOpenRequest;
+import org.waveprotocol.box.common.comms.ProtocolSubmitRequest;
+import org.waveprotocol.box.common.comms.ProtocolSubmitResponse;
+import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
+import org.waveprotocol.box.common.comms.WaveletVersion;
 import org.waveprotocol.box.webclient.client.RemoteWaveViewService;
 import org.waveprotocol.box.webclient.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;

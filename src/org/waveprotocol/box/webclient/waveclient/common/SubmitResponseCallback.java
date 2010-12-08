@@ -16,7 +16,7 @@
  */
 package org.waveprotocol.box.webclient.waveclient.common;
 
-import org.waveprotocol.box.server.waveserver.ProtocolSubmitResponse;
+import org.waveprotocol.box.common.comms.ProtocolSubmitResponse;
 
 /**
  * @author arb@google.com (Anthony Baxter)

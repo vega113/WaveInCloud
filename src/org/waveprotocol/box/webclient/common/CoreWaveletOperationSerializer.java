@@ -17,8 +17,8 @@
 
 package org.waveprotocol.box.webclient.common;
 
-import org.waveprotocol.box.server.waveserver.DocumentSnapshot;
-import org.waveprotocol.box.server.waveserver.WaveletSnapshot;
+import org.waveprotocol.box.common.comms.DocumentSnapshot;
+import org.waveprotocol.box.common.comms.WaveletSnapshot;
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;

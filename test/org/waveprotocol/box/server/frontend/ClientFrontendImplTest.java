@@ -38,6 +38,8 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.common.IndexWave;
+import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
+import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletVersion;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.common.SnapshotSerializer;
@@ -46,8 +48,6 @@ import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDeco
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletVersion;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;

@@ -18,9 +18,9 @@
 package org.waveprotocol.box.server.frontend.testing;
 
 import org.waveprotocol.box.common.DeltaSequence;
+import org.waveprotocol.box.common.comms.WaveClientRpc;
 import org.waveprotocol.box.server.frontend.ClientFrontend;
 import org.waveprotocol.box.server.waveserver.WaveBus;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;

@@ -22,6 +22,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.frontend.ClientFrontend;
@@ -29,7 +30,6 @@ import org.waveprotocol.box.server.frontend.ClientFrontendImpl;
 import org.waveprotocol.box.server.frontend.WaveClientRpcImpl;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.wave.crypto.CachedCertPathValidator;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.DefaultCacheImpl;

@@ -19,9 +19,9 @@ package org.waveprotocol.box.server.common;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.util.TestDataUtil;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;

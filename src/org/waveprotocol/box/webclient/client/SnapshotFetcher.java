@@ -23,7 +23,7 @@ import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 
-import org.waveprotocol.box.server.waveserver.WaveViewSnapshot;
+import org.waveprotocol.box.common.comms.WaveViewSnapshot;
 import org.waveprotocol.box.webclient.common.SnapshotSerializer;
 import org.waveprotocol.box.webclient.common.communication.callback.SimpleCallback;
 import org.waveprotocol.wave.client.debug.logger.DomLogger;

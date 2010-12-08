@@ -28,6 +28,7 @@ import com.google.protobuf.MessageLite;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.account.HumanAccountDataImpl;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.authentication.SessionManagerImpl;
@@ -35,7 +36,6 @@ import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
 import org.waveprotocol.box.server.util.TestDataUtil;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.common.util.jvm.JavaWaverefEncoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;

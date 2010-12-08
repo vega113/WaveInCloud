@@ -18,7 +18,7 @@
 package org.waveprotocol.box.server.frontend;
 
 import org.waveprotocol.box.common.DeltaSequence;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc;
+import org.waveprotocol.box.common.comms.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
@@ -28,6 +28,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collection;
+
 import javax.annotation.Nullable;
 
 /**

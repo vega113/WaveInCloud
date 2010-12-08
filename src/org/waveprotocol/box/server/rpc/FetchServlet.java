@@ -21,14 +21,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.protobuf.MessageLite;
 
+import org.waveprotocol.box.common.comms.WaveClientRpc.DocumentSnapshot;
+import org.waveprotocol.box.common.comms.WaveClientRpc.WaveViewSnapshot;
+import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletStateException;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.DocumentSnapshot;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveViewSnapshot;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.common.util.jvm.JavaWaverefEncoder;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -104,12 +104,12 @@ public final class FetchServlet extends HttpServlet {
     } else {
       dest.setStatus(HttpServletResponse.SC_OK);
       dest.setContentType("application/json");
-      
+
       // This is a hack to make sure the fetched data is fresh.
       // TODO(josephg): Change this so that browsers can cache wave snapshots. Probably need:
       // 'Cache-Control: must-revalidate, private' and an ETag with the wave[let]'s version.
       dest.setHeader("Cache-Control", "no-store");
-      
+
       serializer.writeTo(dest.getWriter(), message);
     }
   }

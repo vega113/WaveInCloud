@@ -5,7 +5,7 @@ import com.google.protobuf.UnknownFieldSet;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.server.waveserver.WaveClientRpc;
+import org.waveprotocol.box.common.comms.WaveClientRpc;
 
 /**
  * @author arb@google.com

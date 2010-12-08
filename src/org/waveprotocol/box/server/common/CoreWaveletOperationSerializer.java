@@ -22,10 +22,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 
+import org.waveprotocol.box.common.comms.WaveClientRpc.DocumentSnapshot;
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveletUpdate;
+import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.DocumentSnapshot;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;

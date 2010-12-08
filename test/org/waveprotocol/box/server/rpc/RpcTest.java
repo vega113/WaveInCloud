@@ -24,14 +24,14 @@ import com.google.protobuf.RpcController;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.waveprotocol.box.common.comms.WaveClientRpc;
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolAuthenticate;
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolAuthenticationResult;
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolOpenRequest;
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolSubmitRequest;
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolSubmitResponse;
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveletUpdate;
 import org.waveprotocol.box.server.authentication.SessionManager;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolOpenRequest;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitRequest;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolSubmitResponse;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolWaveletUpdate;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

@@ -24,11 +24,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.Service;
 import com.google.protobuf.UnknownFieldSet;
+import com.google.protobuf.Descriptors.MethodDescriptor;
 
 import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOServlet;
@@ -42,12 +42,12 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolAuthenticate;
+import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolAuthenticationResult;
 import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.NetUtils;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticate;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.ProtocolAuthenticationResult;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -73,7 +73,7 @@ import javax.servlet.http.HttpSession;
  */
 public class ServerRpcProvider {
   private static final Log LOG = Log.get(ServerRpcProvider.class);
-  
+
   private final InetSocketAddress[] httpAddresses;
   private final Integer flashsocketPolicyPort;
   private final Set<Connection> incomingConnections = Sets.newHashSet();

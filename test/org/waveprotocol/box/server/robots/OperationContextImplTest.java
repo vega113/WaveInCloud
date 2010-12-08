@@ -32,6 +32,7 @@ import com.google.wave.api.event.WaveletBlipCreatedEvent;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
@@ -39,7 +40,6 @@ import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;

@@ -24,9 +24,9 @@ import com.google.common.collect.Maps;
 
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.common.IndexWave;
+import org.waveprotocol.box.common.comms.WaveClientRpc;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;

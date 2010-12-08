@@ -21,7 +21,7 @@ import com.google.protobuf.Message;
 
 import com.dyuproject.protostuff.json.ReflectionNumericJSON;
 
-import org.waveprotocol.box.server.waveserver.WaveClientRpc;
+import org.waveprotocol.box.common.comms.WaveClientRpc;
 import org.waveprotocol.wave.federation.Proto;
 
 /**

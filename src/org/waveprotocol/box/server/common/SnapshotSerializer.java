@@ -17,8 +17,8 @@
 
 package org.waveprotocol.box.server.common;
 
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.DocumentSnapshot;
-import org.waveprotocol.box.server.waveserver.WaveClientRpc.WaveletSnapshot;
+import org.waveprotocol.box.common.comms.WaveClientRpc.DocumentSnapshot;
+import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;

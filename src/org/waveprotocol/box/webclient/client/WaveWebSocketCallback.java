@@ -17,7 +17,7 @@
 
 package org.waveprotocol.box.webclient.client;
 
-import org.waveprotocol.box.server.waveserver.ProtocolWaveletUpdate;
+import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
 
 /**
  * Callback for a wave websocket.

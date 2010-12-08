@@ -27,7 +27,7 @@ import "org/waveprotocol/wave/federation/federation.protodevel";
 
 package waveserver;
 
-option java_package = "org.waveprotocol.box.server.waveserver";
+option java_package = "org.waveprotocol.box.common.comms";
 option java_outer_classname = "WaveClientRpc";
 
 /**
