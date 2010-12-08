@@ -8,7 +8,6 @@
 	<classpathentry kind="lib" path="third_party/codegen/antlr/antlr-3.2.jar"/>
 	<classpathentry kind="lib" path="third_party/codegen/gwt/gwt-dev.jar"/>
 	<classpathentry kind="lib" path="third_party/codegen/gwt/gwt-user.jar"/>
-	<classpathentry kind="lib" path="third_party/codegen/stringtemplate/stringtemplate-3.2.1.jar"/>
 	<classpathentry kind="lib" path="third_party/codegen/velocity/velocity-1.6.3-dep.jar"/>
 	<classpathentry kind="lib" path="third_party/codegen/velocity/velocity-1.6.3.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/aopalliance/aopalliance.jar"/>
@@ -76,8 +75,6 @@
 	<classpathentry kind="lib" path="third_party/runtime/oauth/oauth-provider.jar" sourcepath="third_party/runtime/oauth/oauth-provider-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/wave-robot-java-client/wave-robot-api-20100910.jar" sourcepath="third_party/runtime/wave-robot-java-client/wave-robot-api-20100910-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/guava/guava-r07.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/stringtemplate/antlr.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/stringtemplate/stringtemplate.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/socketio/socketio-java.jar" sourcepath="third_party/runtime/socketio/socketio-java-src.jar"/>
 	<classpathentry kind="lib" path="third_party/test/jmock/jmock-2.5.1.jar"/>
 	<classpathentry kind="lib" path="third_party/test/jmock/jmock-junit3-2.5.1.jar"/>
