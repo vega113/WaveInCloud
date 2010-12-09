@@ -264,6 +264,7 @@ public final class IndexWave {
             HashedVersion.unsigned(targetVersion + receivedParticipantOps.size());
         participantDeltas.add(TransformedWaveletDelta.cloneOperations(delta.getAuthor(),
             endVersion, delta.getApplicationTimestamp(), receivedParticipantOps));
+        targetVersion += receivedParticipantOps.size();
       }
     }
     return participantDeltas;
