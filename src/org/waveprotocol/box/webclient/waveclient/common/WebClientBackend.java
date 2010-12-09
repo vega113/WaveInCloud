@@ -27,7 +27,6 @@ import org.waveprotocol.box.webclient.client.ClientEvents;
 import org.waveprotocol.box.webclient.client.WaveWebSocketClient;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEventHandler;
-import org.waveprotocol.box.webclient.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
@@ -41,11 +40,9 @@ import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.ConversionUtil;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
-import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
@@ -242,19 +239,13 @@ public class WebClientBackend {
       previousVersion = waves.get(waveletName.waveId).getWaveletVersion(waveletName.waveletId);
       for (int i = 0; i < waveletUpdate.getAppliedDeltaCount(); i++) {
         ProtocolWaveletDelta protobufDelta = waveletUpdate.getAppliedDelta(i);
-        WaveletOperationContext woc =
-            new WaveletOperationContext(new ParticipantId(protobufDelta.getAuthor()),
-                Constants.NO_TIMESTAMP, 1);
         TransformedWaveletDelta deltaAndVersion =
             WaveletOperationSerializer.deserialize(protobufDelta,
-                CoreWaveletOperationSerializer.deserialize(protobufDelta.getHashedVersion()), woc);
+                WaveletOperationSerializer.deserialize(protobufDelta.getHashedVersion()));
 
-        // TODO(anorth): Use the right timestamp when the protocol supplies it.
-        long applicationTimestamp = 0L;
-        final TransformedWaveletDelta oldDelta = CoreWaveletOperationSerializer.deserialize(
+        final TransformedWaveletDelta oldDelta = WaveletOperationSerializer.deserialize(
             protobufDelta,
-            CoreWaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()),
-            applicationTimestamp);
+            WaveletOperationSerializer.deserialize(waveletUpdate.getResultingVersion()));
 
         if (isIndexWave(waveletName)) { // only apply the hacky ops to index wave.
           for (WaveletOperation op : oldDelta) {
@@ -280,7 +271,7 @@ public class WebClientBackend {
     }
 
     if (isIndexWave(waveletName) && waveletUpdate.hasResultingVersion()) {
-      wave.setWaveletVersion(waveletName.waveletId, CoreWaveletOperationSerializer
+      wave.setWaveletVersion(waveletName.waveletId, WaveletOperationSerializer
           .deserialize(waveletUpdate.getResultingVersion()));
     }
     // If we have been removed from this wavelet then remove the data too, since if we're re-added
@@ -318,7 +309,7 @@ public class WebClientBackend {
 
         if (waveletUpdate.hasCommitNotice()) {
           LOG.info("Publishing commit notice");
-          waveView.publishCommitNotice(waveletName, CoreWaveletOperationSerializer
+          waveView.publishCommitNotice(waveletName, WaveletOperationSerializer
               .deserialize(waveletUpdate.getCommitNotice()));
         }
       } else if (waveletUpdate.hasChannelId()) {

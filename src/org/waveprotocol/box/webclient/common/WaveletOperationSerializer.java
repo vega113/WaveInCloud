@@ -19,9 +19,10 @@ package org.waveprotocol.box.webclient.common;
 
 
 import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;
+import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
@@ -45,10 +46,13 @@ import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
+import org.waveprotocol.wave.model.util.Base64DecoderException;
+import org.waveprotocol.wave.model.util.CharBase64;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -254,19 +258,22 @@ public class WaveletOperationSerializer {
    * @return deserialized wavelet delta and version
    */
   public static TransformedWaveletDelta deserialize(final ProtocolWaveletDelta protocolDelta,
-      HashedVersion postVersion, final WaveletOperationContext ctx) {
-    Iterable<WaveletOperation> ops =
-        Iterables.transform(protocolDelta.getOperationList(),
+      HashedVersion postVersion) {
+    // TODO(anorth): include the application timestamp when it's plumbed
+    // through correctly.
+    final WaveletOperationContext dummy = new WaveletOperationContext(null, 0L, 0L);
+    List<WaveletOperation> ops =
+        Lists.transform(protocolDelta.getOperationList(),
             new Function<ProtocolWaveletOperation, WaveletOperation>() {
               @Override
               public WaveletOperation apply(ProtocolWaveletOperation op) {
-                return deserialize(op, ctx);
+                return deserialize(op, dummy);
               }
             });
-    // TODO(anorth) include the application timestamp when it's plumbed
-    // through correctly.
-    return new TransformedWaveletDelta(ParticipantId.ofUnsafe(protocolDelta.getAuthor()),
-        postVersion, 0L, ops);
+    // This involves an unnecessary copy of the ops, but avoids repeating
+    // error-prone context calculations.
+    return TransformedWaveletDelta.cloneOperations(
+        ParticipantId.ofUnsafe(protocolDelta.getAuthor()), postVersion, 0L, ops);
   }
 
   /**
@@ -386,6 +393,21 @@ public class WaveletOperationSerializer {
     }
 
     return output.build();
+  }
+
+  /**
+   * Deserializes a {@link ProtocolHashedVersion} to a {@link HashedVersion}
+   * POJO.
+   */
+  public static HashedVersion deserialize(ProtocolHashedVersion hashedVersion) {
+    String b64Hash = hashedVersion.getHistoryHash();
+    byte[] historyHash;
+    try {
+      historyHash = CharBase64.decode(b64Hash);
+      return HashedVersion.of((long) hashedVersion.getVersion(), historyHash);
+    } catch (Base64DecoderException e) {
+      throw new IllegalArgumentException("Invalid Base64 hash: " + b64Hash, e);
+    }
   }
 
 }

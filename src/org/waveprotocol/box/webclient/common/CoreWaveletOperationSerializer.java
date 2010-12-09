@@ -17,45 +17,15 @@
 
 package org.waveprotocol.box.webclient.common;
 
-import org.waveprotocol.box.common.comms.DocumentSnapshot;
-import org.waveprotocol.box.common.comms.WaveletSnapshot;
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
-import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
-import org.waveprotocol.wave.federation.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
-import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
-import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
-import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
-import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
-import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
-import org.waveprotocol.wave.model.operation.core.CoreWaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.AddParticipant;
-import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
-import org.waveprotocol.wave.model.operation.wave.BlipOperationVisitor;
-import org.waveprotocol.wave.model.operation.wave.NoOp;
-import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
-import org.waveprotocol.wave.model.operation.wave.SubmitBlip;
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
-import org.waveprotocol.wave.model.util.Base64DecoderException;
 import org.waveprotocol.wave.model.util.CharBase64;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.model.wave.ParticipantId;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Utility class for serialising/deserialising wavelet operations (and their components) to/from
@@ -66,68 +36,6 @@ import java.util.Map;
 public class CoreWaveletOperationSerializer {
   private CoreWaveletOperationSerializer() {
   }
-
-  /**
-   * Serializes a wavelet delta as a {@link ProtocolWaveletDelta}
-   *
-   * @param waveletDelta to serialize
-   * @param version version at which the delta applies
-   * @return serialized protocol buffer wavelet delta
-   */
-  public static ProtocolWaveletDelta serialize(WaveletDelta waveletDelta, HashedVersion version) {
-    ProtocolWaveletDelta.Builder protobufDelta = ProtocolWaveletDelta.newBuilder();
-
-    for (WaveletOperation waveletOp : waveletDelta) {
-      protobufDelta.addOperation(serialize(waveletOp));
-    }
-
-    protobufDelta.setAuthor(waveletDelta.getAuthor().getAddress());
-    protobufDelta.setHashedVersion(serialize(version));
-    return protobufDelta.build();
-  }
-
-  /**
-   * Serializes a {@link CoreWaveletOperation} as a
-   * {@link ProtocolWaveletOperation}.
-   *
-   * @param waveletOp wavelet operation to serialize
-   * @return serialized protocol buffer wavelet operation
-   */
-  public static ProtocolWaveletOperation serialize(WaveletOperation waveletOp) {
-    ProtocolWaveletOperation.Builder protobufOp = ProtocolWaveletOperation.newBuilder();
-
-    if (waveletOp instanceof NoOp) {
-      protobufOp.setNoOp(true);
-    } else if (waveletOp instanceof AddParticipant) {
-      protobufOp.setAddParticipant(
-          ((AddParticipant) waveletOp).getParticipantId().getAddress());
-    } else if (waveletOp instanceof RemoveParticipant) {
-      protobufOp.setRemoveParticipant(
-          ((RemoveParticipant) waveletOp).getParticipantId().getAddress());
-    } else if (waveletOp instanceof WaveletBlipOperation) {
-      final WaveletBlipOperation wbOp = (WaveletBlipOperation) waveletOp;
-      final ProtocolWaveletOperation.MutateDocument.Builder mutation =
-        ProtocolWaveletOperation.MutateDocument.newBuilder();
-      mutation.setDocumentId(wbOp.getBlipId());
-      wbOp.getBlipOp().acceptVisitor(new BlipOperationVisitor() {
-        @Override
-        public void visitBlipContentOperation(BlipContentOperation blipOp) {
-          mutation.setDocumentOperation(serialize(blipOp.getContentOp()));
-        }
-
-        @Override
-        public void visitSubmitBlip(SubmitBlip op) {
-          throw new IllegalArgumentException("Unsupported blip operation: " + wbOp.getBlipOp());
-        }
-      });
-      protobufOp.setMutateDocument(mutation.build());
-    } else {
-      throw new IllegalArgumentException("Unsupported operation type: " + waveletOp);
-    }
-
-    return protobufOp.build();
-  }
-
 
   /**
    * Serializes a {@link DocOp} as a {@link ProtocolDocumentOperation}.
@@ -264,185 +172,11 @@ public class CoreWaveletOperationSerializer {
   }
 
   /**
-   * Deserializes a {@link ProtocolWaveletDelta} as a wavelet delta.
-   *
-   * @param delta protocol buffer wavelet delta to deserialize
-   * @return deserialized wavelet delta and version
-   */
-  public static TransformedWaveletDelta deserialize(ProtocolWaveletDelta delta,
-      HashedVersion resultingVersion, long applicationTimestamp) {
-    List<WaveletOperation> ops = new ArrayList<WaveletOperation>();
-
-    for (ProtocolWaveletOperation op : delta.getOperationList()) {
-      WaveletOperationContext context = new WaveletOperationContext(
-          ParticipantId.ofUnsafe(delta.getAuthor()), applicationTimestamp, 1);
-      ops.add(deserialize(op, context));
-    }
-    return new TransformedWaveletDelta(new ParticipantId(delta.getAuthor()), resultingVersion,
-        applicationTimestamp, ops);
-  }
-
-  /**
-   * Deserializes a {@link ProtocolHashedVersion} to a {@link HashedVersion}
-   * POJO.
-   */
-  public static HashedVersion deserialize(ProtocolHashedVersion hashedVersion) {
-    String b64Hash = hashedVersion.getHistoryHash();
-    byte[] historyHash;
-    try {
-      historyHash = CharBase64.decode(b64Hash);
-      return HashedVersion.of((long) hashedVersion.getVersion(), historyHash);
-    } catch (Base64DecoderException e) {
-      throw new IllegalArgumentException("Invalid Base64 hash: " + b64Hash, e);
-    }
-  }
-
-  /**
    * Serializes a {@link HashedVersion} POJO to a {@link ProtocolHashedVersion}.
    */
   public static ProtocolHashedVersion serialize(HashedVersion hashedVersion) {
     String b64Hash = CharBase64.encode(hashedVersion.getHistoryHash());
     return ProtocolHashedVersion.newBuilder().setVersion(hashedVersion.getVersion())
         .setHistoryHash(b64Hash);
-  }
-
-  /**
-   * Deserializes a {@link ProtocolWaveletOperation} as a
-   * {@link WaveletOperation}.
-   *
-   * @param protobufOp protocol buffer wavelet operation to deserialize
-   * @return deserialized wavelet operation
-   */
-  public static WaveletOperation deserialize(ProtocolWaveletOperation protobufOp,
-      WaveletOperationContext context) {
-    if (protobufOp.hasNoOp()) {
-      return new NoOp(context);
-    } else if (protobufOp.hasAddParticipant()) {
-      return new AddParticipant(context, new ParticipantId(protobufOp.getAddParticipant()));
-    } else if (protobufOp.hasRemoveParticipant()) {
-      return new RemoveParticipant(context, new ParticipantId(protobufOp.getRemoveParticipant()));
-    } else if (protobufOp.hasMutateDocument()) {
-      return new WaveletBlipOperation(protobufOp.getMutateDocument().getDocumentId(),
-          new BlipContentOperation(context,
-              deserialize(protobufOp.getMutateDocument().getDocumentOperation())));
-    } else {
-      throw new IllegalArgumentException("Unsupported operation: " + protobufOp);
-    }
-  }
-
-  /**
-   * Deserializes a {@link WaveletSnapshot} into a list of
-   * {@link WaveletOperation}s.
-   *
-   * @param snapshot snapshot protocol buffer to deserialize
-   * @return a list of operations
-   */
-   public static List<CoreWaveletOperation> deserialize(WaveletSnapshot snapshot) {
-     List<CoreWaveletOperation> ops = new ArrayList<CoreWaveletOperation>();
-     for (String participant : snapshot.getParticipantIdList()) {
-       CoreAddParticipant addOp = new CoreAddParticipant(new ParticipantId(participant));
-       ops.add(addOp);
-     }
-     for (DocumentSnapshot document : snapshot.getDocumentList()) {
-       CoreWaveletDocumentOperation docOp = new CoreWaveletDocumentOperation(document.getDocumentId(),
-           deserialize(document.getDocumentOperation()));
-       ops.add(docOp);
-     }
-     return ops;
-   }
-
-  /**
-   * Deserializes a {@link ProtocolDocumentOperation} into a {@link DocOp}.
-   *
-   * @param op protocol buffer document operation to deserialize
-   * @return deserialized DocOp
-   */
-  public static BufferedDocOp deserialize(ProtocolDocumentOperation op) {
-    DocOpBuilder output = new DocOpBuilder();
-
-    for (ProtocolDocumentOperation.Component c : op.getComponentList()) {
-      if (c.hasAnnotationBoundary()) {
-        if (c.getAnnotationBoundary().getEmpty()) {
-          output.annotationBoundary(AnnotationBoundaryMapImpl.EMPTY_MAP);
-        } else {
-          String[] ends = new String[c.getAnnotationBoundary().getEndCount()];
-          String[] changeKeys = new String[c.getAnnotationBoundary().getChangeCount()];
-          String[] oldValues = new String[c.getAnnotationBoundary().getChangeCount()];
-          String[] newValues = new String[c.getAnnotationBoundary().getChangeCount()];
-          if (c.getAnnotationBoundary().getEndCount() > 0) {
-            c.getAnnotationBoundary().getEndList().toArray(ends);
-          }
-          for (int i = 0; i < changeKeys.length; i++) {
-            ProtocolDocumentOperation.Component.KeyValueUpdate kvu =
-              c.getAnnotationBoundary().getChange(i);
-            changeKeys[i] = kvu.getKey();
-            oldValues[i] = kvu.hasOldValue() ? kvu.getOldValue() : null;
-            newValues[i] = kvu.hasNewValue() ? kvu.getNewValue() : null;
-          }
-          output.annotationBoundary(
-              new AnnotationBoundaryMapImpl(ends, changeKeys, oldValues, newValues));
-        }
-      } else if (c.hasCharacters()) {
-        output.characters(c.getCharacters());
-      } else if (c.hasElementStart()) {
-        Map<String, String> attributesMap = new HashMap<String, String>();
-        for (ProtocolDocumentOperation.Component.KeyValuePair pair :
-            c.getElementStart().getAttributeList()) {
-          attributesMap.put(pair.getKey(), pair.getValue());
-        }
-        output.elementStart(c.getElementStart().getType(), new AttributesImpl(attributesMap));
-      } else if (c.hasElementEnd()) {
-        output.elementEnd();
-      } else if (c.hasRetainItemCount()) {
-        output.retain(c.getRetainItemCount());
-      } else if (c.hasDeleteCharacters()) {
-        output.deleteCharacters(c.getDeleteCharacters());
-      } else if (c.hasDeleteElementStart()) {
-        Map<String, String> attributesMap = new HashMap<String, String>();
-        for (ProtocolDocumentOperation.Component.KeyValuePair pair :
-            c.getDeleteElementStart().getAttributeList()) {
-          attributesMap.put(pair.getKey(), pair.getValue());
-        }
-        output.deleteElementStart(c.getDeleteElementStart().getType(),
-            new AttributesImpl(attributesMap));
-      } else if (c.hasDeleteElementEnd()) {
-        output.deleteElementEnd();
-      } else if (c.hasReplaceAttributes()) {
-        if (c.getReplaceAttributes().getEmpty()) {
-          output.replaceAttributes(AttributesImpl.EMPTY_MAP, AttributesImpl.EMPTY_MAP);
-        } else {
-          Map<String, String> oldAttributesMap = new HashMap<String, String>();
-          Map<String, String> newAttributesMap = new HashMap<String, String>();
-          for (ProtocolDocumentOperation.Component.KeyValuePair pair :
-              c.getReplaceAttributes().getOldAttributeList()) {
-            oldAttributesMap.put(pair.getKey(), pair.getValue());
-          }
-          for (ProtocolDocumentOperation.Component.KeyValuePair pair :
-              c.getReplaceAttributes().getNewAttributeList()) {
-            newAttributesMap.put(pair.getKey(), pair.getValue());
-          }
-          output.replaceAttributes(new AttributesImpl(oldAttributesMap),
-              new AttributesImpl(newAttributesMap));
-        }
-      } else if (c.hasUpdateAttributes()) {
-        if (c.getUpdateAttributes().getEmpty()) {
-          output.updateAttributes(AttributesUpdateImpl.EMPTY_MAP);
-        } else {
-          String[] triplets = new String[c.getUpdateAttributes().getAttributeUpdateCount()*3];
-          for (int i = 0, j = 0; i < c.getUpdateAttributes().getAttributeUpdateCount(); i++) {
-            ProtocolDocumentOperation.Component.KeyValueUpdate kvu =
-              c.getUpdateAttributes().getAttributeUpdate(i);
-            triplets[j++] = kvu.getKey();
-            triplets[j++] = kvu.hasOldValue() ? kvu.getOldValue() : null;
-            triplets[j++] = kvu.hasNewValue() ? kvu.getNewValue() : null;
-          }
-          output.updateAttributes(new AttributesUpdateImpl(triplets));
-        }
-      } else {
-        //throw new IllegalArgumentException("Unsupported operation component: " + c);
-      }
-    }
-
-    return output.build();
   }
 }

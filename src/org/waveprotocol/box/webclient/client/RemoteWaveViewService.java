@@ -45,12 +45,10 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
-import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
@@ -256,7 +254,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
       public void run(ProtocolSubmitResponse response) {
         HashedVersion resultVersion = HashedVersion.unsigned(0);
         if (response.hasHashedVersionAfterApplication()) {
-          resultVersion = CoreWaveletOperationSerializer.deserialize(
+          resultVersion = WaveletOperationSerializer.deserialize(
               response.getHashedVersionAfterApplication());
           versions.updateHistory(wavelet, response.getHashedVersionAfterApplication());
         }
@@ -359,9 +357,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
   private static TransformedWaveletDelta deserialize(ProtocolWaveletDelta delta,
       ProtocolHashedVersion end) {
-    ParticipantId author = new ParticipantId(delta.getAuthor());
-    WaveletOperationContext woc = new WaveletOperationContext(author, Constants.NO_TIMESTAMP, 1);
-    return WaveletOperationSerializer.deserialize(delta, deserialize(end), woc);
+    return WaveletOperationSerializer.deserialize(delta, deserialize(end));
   }
 
   private ObservableWaveletData deserialize(WaveId waveId, WaveletSnapshot snapshot) {
@@ -411,6 +407,6 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   }
 
   private static HashedVersion deserialize(ProtocolHashedVersion version) {
-    return CoreWaveletOperationSerializer.deserialize(version);
+    return WaveletOperationSerializer.deserialize(version);
   }
 }

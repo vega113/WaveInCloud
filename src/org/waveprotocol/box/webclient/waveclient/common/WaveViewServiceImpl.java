@@ -42,12 +42,10 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
-import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
@@ -202,7 +200,7 @@ public class WaveViewServiceImpl implements WaveViewService {
       @Override
       public void run(final ProtocolSubmitResponse response) {
         updateVersionMap(waveletName, response.getHashedVersionAfterApplication());
-        HashedVersion resultVersion = CoreWaveletOperationSerializer.deserialize(
+        HashedVersion resultVersion = WaveletOperationSerializer.deserialize(
             response.getHashedVersionAfterApplication());
         callback.onSuccess(resultVersion, response.getOperationsApplied(), null, ResponseCode.OK);
       }
@@ -265,26 +263,23 @@ public class WaveViewServiceImpl implements WaveViewService {
           ? protobufDeltaList.get(i + 1).getHashedVersion()
           : resultingVersion;
       ProtocolWaveletDelta protobufDelta = protobufDeltaList.get(i);
-      WaveletOperationContext woc =
-          new WaveletOperationContext(new ParticipantId(protobufDelta.getAuthor()),
-              Constants.NO_TIMESTAMP, 1);
       TransformedWaveletDelta delta =
           WaveletOperationSerializer.deserialize(protobufDelta,
-              CoreWaveletOperationSerializer.deserialize(deltaEndVersion), woc);
+              WaveletOperationSerializer.deserialize(deltaEndVersion));
       updateVersionMap(waveletName, deltaEndVersion);
       deltaList.add(delta);
     }
     LOG.info("publishing deltas: " + deltaList.toString());
 
     HashedVersion resultingHashedVersion =
-        CoreWaveletOperationSerializer.deserialize(resultingVersion);
+        WaveletOperationSerializer.deserialize(resultingVersion);
     final WebClientWaveViewUpdate deltaUpdate =
       new WebClientWaveViewUpdate().setWaveletId(waveletName.waveletId)
           .setDeltaList(deltaList)
           .setCurrentVersion(resultingHashedVersion);
 
     if (commitNotice != null) {
-      HashedVersion commitHashedVersion = CoreWaveletOperationSerializer.deserialize(commitNotice);
+      HashedVersion commitHashedVersion = WaveletOperationSerializer.deserialize(commitNotice);
       deltaUpdate.setLastCommittedVersion(commitHashedVersion);
     }
 
@@ -312,7 +307,7 @@ public class WaveViewServiceImpl implements WaveViewService {
             .setCurrentVersion(waveletSnapshot.getHashedVersion());
     if (waveletUpdate.hasCommitNotice()) {
       snapshotUpdate.setLastCommittedVersion(
-          CoreWaveletOperationSerializer.deserialize(waveletUpdate.getCommitNotice()));
+          WaveletOperationSerializer.deserialize(waveletUpdate.getCommitNotice()));
     } else {
       LOG.severe("snapshot was missing commit_notice. Things won't work right.");
     }
@@ -391,7 +386,7 @@ public class WaveViewServiceImpl implements WaveViewService {
     final long currentVersion = (long) update.getResultingVersion().getVersion();
     WaveletDataImpl waveletData = new WaveletDataImpl(waveletName.waveletId, creator,
         currentTimeMillis, currentVersion,
-        CoreWaveletOperationSerializer.deserialize(update.getResultingVersion()),
+        WaveletOperationSerializer.deserialize(update.getResultingVersion()),
         currentTimeMillis, waveletName.waveId, documentFactory);
     for (String participant : update.getSnapshot().getParticipantIdList()) {
       waveletData.addParticipant(new ParticipantId(participant));

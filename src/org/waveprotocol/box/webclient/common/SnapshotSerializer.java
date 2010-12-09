@@ -104,7 +104,7 @@ public class SnapshotSerializer {
     long creationTime = (long) snapshot.getCreationTime();
 
     ObservableWaveletData wavelet = factory.create(new EmptyWaveletSnapshot(waveId, waveletId,
-            author, CoreWaveletOperationSerializer.deserialize(snapshot.getVersion()),
+            author, WaveletOperationSerializer.deserialize(snapshot.getVersion()),
             creationTime));
 
     for (String participant : snapshot.getParticipantIdList()) {
@@ -148,7 +148,7 @@ public class SnapshotSerializer {
 
   private static void addDocumentSnapshotToWavelet(
       DocumentSnapshot snapshot, WaveletData container) throws InvalidParticipantAddress {
-    DocOp op = CoreWaveletOperationSerializer.deserialize(snapshot.getDocumentOperation());
+    DocOp op = WaveletOperationSerializer.deserialize(snapshot.getDocumentOperation());
     DocInitialization docInit = DocOpUtil.asInitialization(op);
 
     Collection<ParticipantId> contributors = CollectionUtils.newArrayList();
