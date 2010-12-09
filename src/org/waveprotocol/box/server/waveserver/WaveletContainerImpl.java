@@ -303,7 +303,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta, WaveletDelta transformed)
       throws InvalidProtocolBufferException, OperationException {
     WaveletDeltaRecord applicationResult =
-        new WaveletDeltaRecord(appliedDelta,
+        new WaveletDeltaRecord(transformed.getTargetVersion(), appliedDelta,
             AppliedDeltaUtil.buildTransformedDelta(appliedDelta, transformed));
 
     // Apply the delta to the local wavelet state.

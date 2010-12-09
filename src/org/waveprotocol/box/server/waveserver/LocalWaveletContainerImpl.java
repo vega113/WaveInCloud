@@ -95,7 +95,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       // commitAppliedDelta(), because empty deltas cannot be part of the delta history.
       TransformedWaveletDelta emptyDelta = new TransformedWaveletDelta(transformed.getAuthor(),
           transformed.getTargetVersion(), applicationTimestamp, transformed);
-      return new WaveletDeltaRecord(null, emptyDelta);
+      return new WaveletDeltaRecord(transformed.getTargetVersion(), null, emptyDelta);
     }
 
     if (!transformed.getTargetVersion().equals(currentVersion)) {
@@ -116,7 +116,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
           "Duplicate delta detected but mismatched ops, expected %s found %s",
           transformed, dupDelta);
 
-      return new WaveletDeltaRecord(existingDeltaBytes, dupDelta);
+      return new WaveletDeltaRecord(transformed.getTargetVersion(), existingDeltaBytes, dupDelta);
     }
 
     // Build the applied delta to commit

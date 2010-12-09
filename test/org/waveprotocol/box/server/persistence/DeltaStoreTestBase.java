@@ -160,7 +160,8 @@ public abstract class DeltaStoreTestBase extends TestCase {
             .setHashedVersionAppliedAt(CoreWaveletOperationSerializer.serialize(targetVersion))
             .setSignedOriginalDelta(signedDelta).setOperationsApplied(2).build();
 
-    return new WaveletDeltaRecord(ByteStringMessage.serializeMessage(delta), transformed);
+    return new WaveletDeltaRecord(targetVersion, ByteStringMessage.serializeMessage(delta),
+        transformed);
   }
 
   private Pair<DeltaStore, WaveletDeltaRecord> newDeltaStoreWithRecord(WaveletName waveletName)

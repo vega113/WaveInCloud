@@ -34,17 +34,22 @@ import javax.annotation.Nullable;
  * @author soren@google.com (Soren Lassen)
  */
 public class WaveletDeltaRecord {
+  public final HashedVersion appliedAtVersion;
   @Nullable public final ByteStringMessage<ProtocolAppliedWaveletDelta> applied;
   public final TransformedWaveletDelta transformed;
 
   /**
+   * @param appliedAtVersion the version which the transformed delta applies at
    * @param applied is the applied delta which transforms to {@code transformed}
    * @param transformed is the transformed result of {@code applied}
    */
   public WaveletDeltaRecord(
+      HashedVersion appliedAtVersion,
       @Nullable ByteStringMessage<ProtocolAppliedWaveletDelta> applied,
       TransformedWaveletDelta transformed) {
+    Preconditions.checkNotNull(transformed, "null appliedAtVersion");
     Preconditions.checkNotNull(transformed, "null transformed delta");
+    this.appliedAtVersion = appliedAtVersion;
     this.applied = applied;
     this.transformed = transformed;
   }
@@ -60,12 +65,10 @@ public class WaveletDeltaRecord {
   // Convenience methods:
 
   /**
-   * @return the hashed version which this delta was applied at, if this
-   *         record has an applied delta, otherwise null
-   * @throws InvalidProtocolBufferException if the applied delta is ill-formed
+   * @return the hashed version which this delta was applied at
    */
-  public HashedVersion getAppliedAtVersion() throws InvalidProtocolBufferException {
-    return (applied == null) ? null : AppliedDeltaUtil.getHashedVersionAppliedAt(applied);
+  public HashedVersion getAppliedAtVersion() {
+    return appliedAtVersion;
   }
 
   /** @return the author of the delta */

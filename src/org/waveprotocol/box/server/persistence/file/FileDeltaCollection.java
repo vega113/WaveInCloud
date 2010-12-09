@@ -403,7 +403,8 @@ public class FileDeltaCollection implements DeltasAccess {
     TransformedWaveletDelta transformedDelta = readTransformedWaveletDelta(
         header.transformedDeltaLength);
 
-    return new WaveletDeltaRecord(appliedDelta, transformedDelta);
+    return new WaveletDeltaRecord(AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta),
+        appliedDelta, transformedDelta);
   }
 
   /**
