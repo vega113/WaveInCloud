@@ -46,7 +46,7 @@ interface WaveletState {
    * Callback which is invoked when deltas are persisted.
    */
   interface PersistenceListener {
-    void persisted(HashedVersion persistedVersion);
+    void persisted(WaveletName waveletName, HashedVersion persistedVersion);
 
     void failed(Exception cause);
   }
@@ -66,6 +66,11 @@ interface WaveletState {
    * @return The current hashed version.
    */
   HashedVersion getCurrentVersion();
+
+  /**
+   * @return The last persisted hashed version.
+   */
+  HashedVersion getLastPersistedVersion();
 
   /**
    * @return The hashed version at the given version, if the version is at a
@@ -125,8 +130,8 @@ interface WaveletState {
       throws InvalidProtocolBufferException, OperationException;
 
   /**
-   * Persist all in-memory deltas up to the one which results in the given
-   * version.
+   * Initiates persistence of all in-memory deltas up to the one which
+   * results in the given version. This call is non-blocking.
    *
    * <p>
    * If the deltas up to the given version are already persisted, this call does

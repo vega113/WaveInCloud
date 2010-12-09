@@ -271,7 +271,7 @@ public abstract class WaveletStateTestBase extends TestCase {
     appendDeltas(d1);
     target.persist(d1.getResultingVersion());
     awaitPersistence();
-    Mockito.verify(listener).persisted(d1.getResultingVersion());
+    Mockito.verify(listener).persisted(NAME, d1.getResultingVersion());
   }
 
   public void checkListenerReceivesCallbackForManyDeltas() throws Exception {
@@ -280,7 +280,7 @@ public abstract class WaveletStateTestBase extends TestCase {
     appendDeltas(d1, d2, d3);
     target.persist(d3.getResultingVersion());
     awaitPersistence();
-    Mockito.verify(listener).persisted(d3.getResultingVersion());
+    Mockito.verify(listener).persisted(NAME, d3.getResultingVersion());
     // There may have been other calls too, which the mock will ignore.
   }
 
@@ -302,11 +302,11 @@ public abstract class WaveletStateTestBase extends TestCase {
     appendDeltas(d1, d2, d3);
     target.persist(d2.getResultingVersion());
     awaitPersistence();
-    Mockito.verify(listener).persisted(d2.getResultingVersion());
+    Mockito.verify(listener).persisted(NAME, d2.getResultingVersion());
 
     target.persist(d3.getResultingVersion());
     awaitPersistence();
-    Mockito.verify(listener).persisted(d3.getResultingVersion());
+    Mockito.verify(listener).persisted(NAME, d3.getResultingVersion());
   }
 
   /**

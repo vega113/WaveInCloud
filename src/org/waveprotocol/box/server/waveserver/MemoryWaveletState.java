@@ -111,6 +111,11 @@ class MemoryWaveletState implements WaveletState {
   }
 
   @Override
+  public HashedVersion getLastPersistedVersion() {
+    return (lastPersistedVersion == null) ? versionZero : lastPersistedVersion;
+  }
+
+  @Override
   public HashedVersion getHashedVersion(long version) {
     if (version == 0) {
       return versionZero;
@@ -223,7 +228,7 @@ class MemoryWaveletState implements WaveletState {
       @Override
       public void run() {
         for (PersistenceListener listener : persistenceListeners) {
-          listener.persisted(version);
+          listener.persisted(waveletName, version);
         }
       }
     });
