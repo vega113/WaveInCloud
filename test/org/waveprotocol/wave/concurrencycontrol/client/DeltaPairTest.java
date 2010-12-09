@@ -20,7 +20,6 @@ package org.waveprotocol.wave.concurrencycontrol.client;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.concurrencycontrol.common.DeltaPair;
-import org.waveprotocol.wave.concurrencycontrol.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.OpComparators;
 import org.waveprotocol.wave.model.operation.TransformException;
@@ -28,6 +27,7 @@ import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
 import org.waveprotocol.wave.model.operation.wave.VersionUpdateOp;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 

@@ -51,6 +51,28 @@ import java.util.Date;
 public abstract class WaveletOperation implements
     ReversibleOperation<WaveletOperation, WaveletData>, Visitable<WaveletOperationVisitor> {
 
+  /**
+   * Clones a wavelet operation, attaching a new context.
+   */
+  // This might be better as a member method, but is less code this way.
+  public static WaveletOperation cloneOp(WaveletOperation op, WaveletOperationContext newContext) {
+    if (op instanceof NoOp) {
+      return new NoOp(newContext);
+    } else if (op instanceof AddParticipant) {
+      return new AddParticipant(newContext, ((AddParticipant) op).getParticipantId());
+    } else if (op instanceof RemoveParticipant) {
+      return new RemoveParticipant(newContext, ((RemoveParticipant) op).getParticipantId());
+    } else if (op instanceof WaveletBlipOperation) {
+      String docId = ((WaveletBlipOperation) op).getBlipId();
+      // BlipContentOperation is the only expected blip op type.
+      BlipContentOperation blipOp = (BlipContentOperation) ((WaveletBlipOperation) op).getBlipOp();
+      return new WaveletBlipOperation(docId, new BlipContentOperation(newContext,
+          blipOp.getContentOp()));
+    } else {
+      throw new IllegalArgumentException("Un-cloneable operation: " + op);
+    }
+  }
+
   /** Context/metadata which does not affect the logic of an operation. */
   protected final WaveletOperationContext context;
 

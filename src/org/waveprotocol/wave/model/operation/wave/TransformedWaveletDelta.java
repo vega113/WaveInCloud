@@ -45,11 +45,41 @@ public final class TransformedWaveletDelta extends AbstractList<WaveletOperation
   private final List<WaveletOperation> ops;
 
   /**
+   * Clones ops from a client delta to a transformed delta, replacing their
+   * contexts with that implied by the delta's metadata.
+   */
+  public static TransformedWaveletDelta cloneOperations(WaveletDelta delta,
+      long applicationTimestamp, HashedVersion resultingVersion) {
+    return cloneOperations(delta, delta.getAuthor(), applicationTimestamp, resultingVersion);
+  }
+
+  /**
+   * Clones a list of operations into a transformed delta, replacing their
+   * contexts with that implied by the delta's metadata.
+   */
+  public static TransformedWaveletDelta cloneOperations(List<WaveletOperation> ops,
+      ParticipantId author, long applicationTimestamp, HashedVersion resultingVersion) {
+    List<WaveletOperation> transformedOps = CollectionUtils.newArrayList();
+    WaveletOperationContext initialContext =
+        new WaveletOperationContext(author, applicationTimestamp, 1);
+    for (int i = 0; i < ops.size() - 1; ++i) {
+      transformedOps.add(WaveletOperation.cloneOp(ops.get(i), initialContext));
+    }
+    if (ops.size() > 0) {
+      WaveletOperationContext finalContext =
+        new WaveletOperationContext(author, applicationTimestamp, 1, resultingVersion);
+      transformedOps.add(WaveletOperation.cloneOp(ops.get(ops.size() - 1), finalContext));
+    }
+    return new TransformedWaveletDelta(author, resultingVersion, applicationTimestamp,
+        transformedOps);
+  }
+
+  /**
    * Create new delta from an author and a sequence of operations.
    *
    * @param author of the operations
-   * @param appliedAtVersion version to which the delta applied
    * @param resultingVersion hashed version after the delta applied
+   * @param applicationTimestamp timestamp at which the delta applied
    * @param ops operations
    */
   public TransformedWaveletDelta(ParticipantId author, HashedVersion resultingVersion,
@@ -58,6 +88,27 @@ public final class TransformedWaveletDelta extends AbstractList<WaveletOperation
     this.resultingVersion = resultingVersion;
     this.applicationTimestamp = applicationTimestamp;
     this.ops = Collections.unmodifiableList(CollectionUtils.newArrayList(ops));
+
+    // Check that the op contexts are right. (Everything in there is
+    // redundant...)
+    // TODO(anorth): Enable these checks after fixing up all the current
+    // mis-uses.
+//    for (int i = 0; i < this.ops.size(); i++) {
+//      WaveletOperationContext c = this.ops.get(i).getContext();
+//      Preconditions.checkArgument(c.getCreator().equals(author),
+//          "Context creator %s doesn't match delta author %s", c.getCreator(), author);
+//      Preconditions.checkArgument(c.getVersionIncrement() == 1,
+//          "Invalid context version increment %s", c.getVersionIncrement());
+//      Preconditions.checkArgument(c.hasHashedVersion() == (i == this.ops.size() - 1),
+//          "[Un]expected hashed version on op %s of %s", i, this.ops.size());
+//      Preconditions.checkArgument((i != this.ops.size() - 1)
+//          || c.getHashedVersion().equals(resultingVersion),
+//          "Context hashed version %s doesn't match delta hashed version %s", c.getHashedVersion(),
+//          resultingVersion);
+//      Preconditions.checkArgument(c.getTimestamp() == applicationTimestamp,
+//          "Context timestamp %s doesn't match delta timestamp %s",
+//          c.getTimestamp(), applicationTimestamp);
+//    }
   }
 
   /** Returns the author of the delta. */
@@ -127,7 +178,7 @@ public final class TransformedWaveletDelta extends AbstractList<WaveletOperation
     if (ops.isEmpty()) {
       builder.append("[]");
     } else {
-      builder.append(" ").append(ops.size()).append(" ops: [").append(ops.get(0));
+      builder.append(ops.size()).append(" ops: [").append(ops.get(0));
       for (int i = 1; i < ops.size(); i++) {
         builder.append(",").append(ops.get(i));
       }

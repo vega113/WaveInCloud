@@ -21,12 +21,8 @@ import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.AddParticipant;
-import org.waveprotocol.wave.model.operation.wave.NoOp;
-import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -38,19 +34,14 @@ import java.util.List;
 public class DeltaSequenceTest extends TestCase {
   private static final long START_VERSION = 23;
   private static final ParticipantId USER = new ParticipantId("user@host.com");
-  private static final WaveletOperationContext CONTEXT = new WaveletOperationContext(USER, 0, 1);
+  private static final DeltaTestUtil UTIL = new DeltaTestUtil(USER);
 
-  private final List<WaveletOperation> ops = ImmutableList.of(
-      new NoOp(CONTEXT), new NoOp(CONTEXT), new AddParticipant(CONTEXT, USER), new NoOp(CONTEXT),
-      new RemoveParticipant(CONTEXT, USER));
-
-  private final TransformedWaveletDelta delta1 = new TransformedWaveletDelta(USER,
-      HashedVersion.unsigned(START_VERSION + ops.size()), 0L, ops);
-  private final TransformedWaveletDelta delta2 = new TransformedWaveletDelta(USER,
-      HashedVersion.unsigned(START_VERSION + (2 * ops.size())), 0L, ops);
-  private final TransformedWaveletDelta delta3 = new TransformedWaveletDelta(USER,
-      HashedVersion.unsigned(START_VERSION + (3 * ops.size())), 0L, ops);
-
+  private final TransformedWaveletDelta delta1 =
+      UTIL.makeTransformedDelta(0L, HashedVersion.unsigned(START_VERSION + 5), 5);
+  private final TransformedWaveletDelta delta2 =
+      UTIL.makeTransformedDelta(0L, HashedVersion.unsigned(START_VERSION + 10), 5);
+  private final TransformedWaveletDelta delta3 =
+      UTIL.makeTransformedDelta(0L, HashedVersion.unsigned(START_VERSION + 15), 5);
   private final List<TransformedWaveletDelta> twoDeltas = ImmutableList.of(delta1, delta2);
 
   public void testEmptySequence() {
@@ -112,7 +103,7 @@ public class DeltaSequenceTest extends TestCase {
 
     // Construct a sublist with just the first delta.
     DeltaSequence subDeltas = deltaseq.subList(0, 1);
-    assertEquals(START_VERSION + ops.size(), subDeltas.getEndVersion().getVersion());
+    assertEquals(START_VERSION + 5, subDeltas.getEndVersion().getVersion());
     assertEquals(deltaseq.getStartVersion(), subDeltas.getStartVersion());
     assertEquals(ImmutableList.of(delta1), subDeltas);
   }

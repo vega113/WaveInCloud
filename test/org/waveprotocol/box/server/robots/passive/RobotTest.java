@@ -144,12 +144,13 @@ public class RobotTest extends TestCase {
     // We are making an delta which applies to version 1, however the robot only
     // knows about version 0.
     ParticipantId bob = ParticipantId.of("bob@exmaple.com");
-    WaveletOperation addBob = new AddParticipant(new WaveletOperationContext(ALEX, 0L, 1), bob);
+    HashedVersion v2 = HashedVersion.unsigned(2);
+    WaveletOperation addBob = new AddParticipant(new WaveletOperationContext(ALEX, 0L, 1, v2), bob);
     addBob.apply(waveletData);
-    waveletData.setHashedVersion(HashedVersion.unsigned(2));
+    waveletData.setHashedVersion(v2);
     waveletData.setVersion(2);
 
-    TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, HashedVersion.unsigned(2),
+    TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, v2,
         0L, Collections.singletonList(addBob));
 
     // Send the delta for version 1 to the robot, it should now enqueue a new
@@ -162,7 +163,7 @@ public class RobotTest extends TestCase {
         firstWavelet.getVersionAfterDeltas());
     WaveletAndDeltas secondWavelet = robot.dequeueWavelet();
     assertNotNull("Expected a wavelet to be dequeued", secondWavelet);
-    assertEquals("The wavelet with version two should be second", HashedVersion.unsigned(2),
+    assertEquals("The wavelet with version two should be second", v2,
         secondWavelet.getVersionAfterDeltas());
     assertNull("Only expected two wavelets to be dequeued", robot.dequeueWavelet());
   }

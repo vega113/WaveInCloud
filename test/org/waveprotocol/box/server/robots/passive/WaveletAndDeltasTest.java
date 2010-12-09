@@ -17,14 +17,13 @@
 
 package org.waveprotocol.box.server.robots.passive;
 
-import com.google.common.collect.Lists;
-
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
+import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
@@ -37,7 +36,6 @@ import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * Unit test for {@link WaveletAndDeltas}.
@@ -53,14 +51,15 @@ public class WaveletAndDeltasTest extends TestCase {
   private static final ParticipantId BOB = ParticipantId.ofUnsafe("bob@example.com");
   private static final ParticipantId CAROL = ParticipantId.ofUnsafe("carol@example.com");
 
+  private static final HashedVersion V1 = HashedVersion.unsigned(1);
+  private static final HashedVersion V2 = HashedVersion.unsigned(2);
+  private static final HashedVersion V3 = HashedVersion.unsigned(3);
+
   private WaveletAndDeltas wavelet;
-  private HashedVersion hashedVersionOne;
   private ObservableWaveletData waveletData;
-  private WaveletOperationContext context;
+
   private WaveletOperation addCarolOp;
   private WaveletOperation removeAlexOp;
-  private HashedVersion hashedVersionTwo;
-  private HashedVersion hashedVersionThree;
 
   @Override
   protected void setUp() throws Exception {
@@ -68,24 +67,15 @@ public class WaveletAndDeltasTest extends TestCase {
         0L);
     waveletData.addParticipant(ALEX);
 
-    context = new WaveletOperationContext(ALEX, 0L, 1);
-    AddParticipant addBobOp = new AddParticipant(context, BOB);
+    AddParticipant addBobOp = new AddParticipant(new WaveletOperationContext(ALEX, 0L, 1, V1), BOB);
 
     addBobOp.apply(waveletData);
-
-    List<WaveletOperation> ops = Lists.newArrayList();
-    ops.add(addBobOp);
-
-    hashedVersionOne = HashedVersion.unsigned(1L);
-    hashedVersionTwo = HashedVersion.unsigned(2L);
-    hashedVersionThree = HashedVersion.unsigned(3L);
-
-    TransformedWaveletDelta delta = new TransformedWaveletDelta(ALEX, hashedVersionOne, 0L, ops);
+    TransformedWaveletDelta delta =
+        new TransformedWaveletDelta(ALEX, V1, 0L, Arrays.asList(addBobOp));
 
     wavelet = WaveletAndDeltas.create(waveletData, DeltaSequence.of(delta));
-
-    addCarolOp = new AddParticipant(context, CAROL);
-    removeAlexOp = new RemoveParticipant(context, ALEX);
+    addCarolOp = new AddParticipant(new WaveletOperationContext(ALEX, 0L, 1, V2), CAROL);
+    removeAlexOp = new RemoveParticipant(new WaveletOperationContext(ALEX, 0L, 1, V3), ALEX);
   }
 
   public void testgetSnapshotBeforeDeltas() throws Exception {
@@ -104,11 +94,10 @@ public class WaveletAndDeltasTest extends TestCase {
   }
 
   public void testGetVersionAfterDeltas() throws Exception {
-    assertEquals(hashedVersionOne, wavelet.getVersionAfterDeltas());
+    assertEquals(V1, wavelet.getVersionAfterDeltas());
   }
 
   public void testAppendDeltas() throws Exception {
-    AddParticipant addCarolOp = new AddParticipant(context, CAROL);
     addCarolOp.apply(waveletData);
     HashedVersion hashedVersionTwo = HashedVersion.unsigned(2);
 
@@ -131,11 +120,11 @@ public class WaveletAndDeltasTest extends TestCase {
 
   public void testContiguousDeltas() throws Exception {
     addCarolOp.apply(waveletData);
-    TransformedWaveletDelta deltaAdd = new TransformedWaveletDelta(ALEX, hashedVersionTwo, 0L,
+    TransformedWaveletDelta deltaAdd = new TransformedWaveletDelta(ALEX, V2, 0L,
         Arrays.asList(addCarolOp));
 
     removeAlexOp.apply(waveletData);
-    TransformedWaveletDelta deltaRemove = new TransformedWaveletDelta(ALEX, hashedVersionThree, 0L,
+    TransformedWaveletDelta deltaRemove = new TransformedWaveletDelta(ALEX, V3, 0L,
         Arrays.asList(removeAlexOp));
 
     DeltaSequence deltas = DeltaSequence.of(deltaAdd, deltaRemove);
@@ -143,13 +132,10 @@ public class WaveletAndDeltasTest extends TestCase {
   }
 
   public void testNonContiguousDeltas() throws Exception {
-    addCarolOp.apply(waveletData);
-    TransformedWaveletDelta deltaAdd = new TransformedWaveletDelta(ALEX, hashedVersionOne, 0L,
-        Arrays.asList(addCarolOp));
-
-    removeAlexOp.apply(waveletData);
-    TransformedWaveletDelta deltaRemove = new TransformedWaveletDelta(ALEX, hashedVersionTwo, 0L,
-        Arrays.asList(removeAlexOp));
+    TransformedWaveletDelta deltaAdd = new TransformedWaveletDelta(ALEX, V1, 0L,
+        Arrays.asList(new NoOp(new WaveletOperationContext(ALEX, 0L, 1, V1))));
+    TransformedWaveletDelta deltaRemove = new TransformedWaveletDelta(ALEX, V2, 0L,
+        Arrays.asList(new NoOp(new WaveletOperationContext(ALEX, 0L, 1, V2))));
 
     DeltaSequence deltas = DeltaSequence.of(deltaAdd, deltaRemove);
 

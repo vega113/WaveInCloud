@@ -36,14 +36,11 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
-import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
@@ -78,6 +75,7 @@ public abstract class WaveletStateTestBase extends TestCase {
   private static final WaveletName NAME = WaveletName.of(new WaveId("example.com", "waveid"),
       new WaveletId("example.com", "waveletid"));
   private static final ParticipantId AUTHOR = ParticipantId.ofUnsafe("author@example.com");
+  private static final DeltaTestUtil UTIL = new DeltaTestUtil(AUTHOR);
   private static final long TS = 1234567890L;
   private static final long TS2 = TS + 1;
   private static final long TS3 = TS2 + 1;
@@ -327,12 +325,8 @@ public abstract class WaveletStateTestBase extends TestCase {
    */
   private static DeltaFacets makeDelta(HashedVersion appliedAtVersion, long timestamp, int numOps)
       throws InvalidProtocolBufferException {
-    List<WaveletOperation> ops = Lists.newArrayListWithExpectedSize(numOps);
-    WaveletOperationContext context = new WaveletOperationContext(AUTHOR, Constants.NO_TIMESTAMP, 1);
-    for (int i = 0; i < numOps; ++i) {
-      ops.add(new NoOp(context));
-    }
-    WaveletDelta delta = new WaveletDelta(AUTHOR, appliedAtVersion, ops);
+    // Use no-op delta so the ops can actually apply.
+    WaveletDelta delta = UTIL.makeNoOpDelta(appliedAtVersion, timestamp, numOps);
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
         WaveServerTestUtil.buildAppliedDelta(delta, timestamp);
     TransformedWaveletDelta transformedDelta =

@@ -21,7 +21,6 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.common.logging.PrintLogger;
 import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
-import org.waveprotocol.wave.concurrencycontrol.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
 import org.waveprotocol.wave.model.document.operation.SuperSink;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
@@ -37,6 +36,7 @@ import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -186,7 +186,7 @@ public class OT3Test extends TestCase {
      */
     public TestConfig serverDoInsert(int startVersion, int insertionPoint, String content,
         int remaining) throws OperationException, TransformException {
-      TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getParticipant(),
+      TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getAuthor(),
           genSignature(startVersion + 1), 0L,
           Arrays.asList(SERVER_UTIL.insert(insertionPoint, content, remaining, null)));
       serverConnectionMock.triggerServerDeltas(Collections.singletonList(d));
@@ -212,7 +212,7 @@ public class OT3Test extends TestCase {
         throws TransformException, OperationException {
       ArrayList<TransformedWaveletDelta> deltas = CollectionUtils.newArrayList();
       for (int i = 0; i < numOps; i++) {
-        TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getParticipant(),
+        TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getAuthor(),
             genSignature(startVersion + i + 1), 0l, Arrays.asList(SERVER_UTIL.noOp()));
         deltas.add(d);
       }
@@ -233,7 +233,7 @@ public class OT3Test extends TestCase {
      */
     public TestConfig serverDoEchoBackDocOp(int startVersion, String blipId)
         throws TransformException, OperationException {
-      TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getParticipant(),
+      TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getAuthor(),
           genSignature(startVersion + 1), 0l, Arrays.asList(noOpDocOp(blipId)));
       serverConnectionMock.triggerServerDeltas(Collections.singletonList(d));
       return this;
@@ -244,7 +244,7 @@ public class OT3Test extends TestCase {
      */
     public TestConfig serverDoEchoBack(int startVersion, long timestamp)
         throws TransformException, OperationException {
-      TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getParticipant(),
+      TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getAuthor(),
           genSignature(startVersion + 1), 0L, Arrays.asList(new NoOp(new WaveletOperationContext(
               clientMock.getParticipantId(), timestamp, 1L))));
       serverConnectionMock.triggerServerDeltas(Collections.singletonList(d));

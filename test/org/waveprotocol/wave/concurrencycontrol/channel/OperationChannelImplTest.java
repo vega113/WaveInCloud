@@ -25,20 +25,14 @@ import org.waveprotocol.wave.common.logging.AbstractLogger.Level;
 import org.waveprotocol.wave.concurrencycontrol.client.ConcurrencyControl;
 import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
-import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
-import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
-import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -54,14 +48,12 @@ public class OperationChannelImplTest extends TestCase {
   ///////////////////// PRIVATES //////////////////////
 
   private static final ParticipantId USER_ID = ParticipantId.ofUnsafe("test@example.com");
+  private static final DeltaTestUtil UTIL = new DeltaTestUtil(USER_ID);
   private static final byte[] SIG1 = new byte[] { 1, 1, 1, 1 };
   private static final byte[] SIG2 = new byte[] { 2, 2, 2, 2 };
   private static final byte[] SIG3 = new byte[] { 3, 3, 3, 3 };
   private static final byte[] SIG4 = new byte[] { 4, 4, 4, 4 };
   private static final byte[] SIG5 = new byte[] { 5, 5, 5, 5 };
-
-  private final WaveletOperationContext.Factory contextFactory =
-      new BasicWaveletOperationContextFactory(USER_ID);
 
   private MockWaveletDeltaChannel deltaChannel;
   private ConcurrencyControl cc;
@@ -87,55 +79,12 @@ public class OperationChannelImplTest extends TestCase {
   ///////////////////// UTILITY METHODS FOR TESTS //////////////////////
 
   /**
-   * Creates a random op message. DON'T EXPECT THIS TO BE A VALID OP, it is
-   * generated such that we are fairly certain that it will be unique so we can
-   * identify it when it completes a roundtrip.
-   */
-  private WaveletOperation createOp() {
-    WaveletOperationContext ctx = contextFactory.createContext();
-    BufferedDocOp blipOp = new DocOpBuilder()
-        .retain(Math.abs(randomInt()) / 2 + 1)
-        .characters("createRndOp#" + randomInt())
-        .build();
-    return new WaveletBlipOperation("createRndId#" + randomInt(),
-        new BlipContentOperation(ctx, blipOp));
-  }
-
-  private int randomInt() {
-    return (int) (Math.random() * Integer.MAX_VALUE);
-  }
-
-  /** Returns Delta with the specified count of random ops. */
-  private List<WaveletOperation> createRandomOps(int numOps) {
-    List<WaveletOperation> ops = CollectionUtils.newArrayList();
-    for (int i = 0; i < numOps; i++) {
-      WaveletOperation op = createOp();
-      ops.add(op);
-    }
-    return ops;
-  }
-
-  /** Returns Delta containing the given ops. */
-  private WaveletDelta createDelta(long waveVersion, byte[] sig, WaveletOperation... ops) {
-    return new WaveletDelta(USER_ID, HashedVersion.of(waveVersion, sig), Arrays.asList(ops));
-  }
-
-  /**
    * Returns a Delta with the requested number of ops, version number
    * and signature.
    */
-  private TransformedWaveletDelta createRandomVersionedDelta(int version, int opCount,
+  private TransformedWaveletDelta createRandomTransformedDelta(int targetVersion, int opCount,
       byte[] hash) {
-    TransformedWaveletDelta delta = new TransformedWaveletDelta(USER_ID,
-        HashedVersion.of(version + opCount, hash),
-        0L, createRandomOps(opCount));
-    return delta;
-  }
-
-  /** Returns a copy of a wavelet delta as a transformed delta. */
-  private TransformedWaveletDelta signedCopy(WaveletDelta original) {
-    return new TransformedWaveletDelta(original.getAuthor(),
-        HashedVersion.unsigned(original.getResultingVersion()), 0L, original);
+    return UTIL.makeTransformedDelta(0L, HashedVersion.of(targetVersion + opCount, hash), opCount);
   }
 
   /**
@@ -196,11 +145,10 @@ public class OperationChannelImplTest extends TestCase {
 
   private WaveletDelta sendAndCheckRandomOp(OperationChannelImpl opChannel,
       long currentVersion, byte[] signature) throws ChannelException {
-    WaveletOperation op = createOp();
-    WaveletDelta delta = createDelta(currentVersion, signature, op);
+    WaveletDelta delta = UTIL.makeDelta(HashedVersion.of(currentVersion, signature), 0L, 1);
 
     deltaChannel.expectSend(delta);
-    opChannel.send(new WaveletOperation[] {op});
+    opChannel.send(new WaveletOperation[] {delta.get(0)});
     return delta;
   }
 
@@ -254,7 +202,7 @@ public class OperationChannelImplTest extends TestCase {
     final int initialVersion = 42;
     connectChannel(initialVersion, SIG1);
 
-    operationChannel.onDelta(createRandomVersionedDelta(initialVersion, 1, SIG2));
+    operationChannel.onDelta(createRandomTransformedDelta(initialVersion, 1, SIG2));
     listener.checkOpsReceived(1);
     listener.clear();
     assertNotNull(operationChannel.receive());
@@ -334,7 +282,7 @@ public class OperationChannelImplTest extends TestCase {
     reconnectChannel(43, SIG2);
 
     // Receive next delta.
-    TransformedWaveletDelta delta = createRandomVersionedDelta(43, 1, SIG3);
+    TransformedWaveletDelta delta = createRandomTransformedDelta(43, 1, SIG3);
     operationChannel.onDelta(delta);
     listener.checkOpsReceived(1);
     assertNotNull(operationChannel.receive());
@@ -386,7 +334,9 @@ public class OperationChannelImplTest extends TestCase {
     reconnectChannel(initialVersion, initialSignature, afterVersion, afterSignature, null);
 
     // Receive delta that is the client's own un-acked op.
-    operationChannel.onDelta(signedCopy(delta));
+    TransformedWaveletDelta serverDelta =
+        TransformedWaveletDelta.cloneOperations(delta, 0L, HashedVersion.of(43, SIG2));
+    operationChannel.onDelta(serverDelta);
 
     // It should implicitly cause an ack, so read that fake op
     // to update version info, plus a VersionUpdateOp.
@@ -395,55 +345,12 @@ public class OperationChannelImplTest extends TestCase {
     listener.clear();
 
     // Receive another op
-    TransformedWaveletDelta rdelta = createRandomVersionedDelta(43, 1, SIG4);
+    TransformedWaveletDelta rdelta = createRandomTransformedDelta(43, 1, SIG4);
     operationChannel.onDelta(rdelta);
     // Recovery should be complete since the client has caught up with the
     // server, and there should be one readable delta.
     listener.checkOpsReceived(1);
     assertNotNull(operationChannel.receive());
-    checkExpectationsSatisfied();
-  }
-
-  /**
-   * Test reconnect where there was an unACKed delta during the failure which
-   * was received and ACKedby the server, but this was unseen by the client. On
-   * reconnect, the server responds with a delta that contains the unACKed one,
-   * but also other ops that it coalesced into the delta based on userId (e.g.
-   * happens if user is typing in two clients (or with delegate participants
-   * ?)).
-   *
-   * NOTE(zdwang): We don't support this, so CC should not accept a delta that
-   * contains operations from other clients as solely being generated by the
-   * client.
-   */
-  public void testReconnectWithPendingAckAndNewCoalescedDeltaSentByServer() throws Exception {
-    final int initialVersion = 42;
-    final byte[] initialSignature = SIG1;
-    connectChannel(initialVersion, initialSignature);
-
-    WaveletDelta delta = sendAndCheckRandomOp(operationChannel, 42, SIG1);
-
-    final long afterVersion = 44;
-    final byte[] afterSignature = SIG3;
-    reconnectChannel(initialVersion, initialSignature, afterVersion, afterSignature, null);
-    listener.checkOpsReceived(0);
-
-    // Create a delta that contains the op that was not Acked earlier
-    // and another op merged in.
-    List<WaveletOperation> mergedOps = CollectionUtils.newArrayList(delta);
-    mergedOps.add(createOp());
-    WaveletDelta merged = new WaveletDelta(delta.getAuthor(), delta.getTargetVersion(), mergedOps);
-
-    operationChannel.onDelta(signedCopy(merged));
-
-    // Recovery should NOT be complete as the delta contains other operations.
-    listener.checkOpsReceived(1);
-
-    // Even though this is our op, the delta contained other ppl's ops, so it's not recognised
-    // as ours hence not stripped out and it will be transformed.
-    assertNotNull(operationChannel.receive());
-    assertNotNull(operationChannel.receive());
-    assertNull(operationChannel.receive());
     checkExpectationsSatisfied();
   }
 
@@ -475,7 +382,7 @@ public class OperationChannelImplTest extends TestCase {
 
     // Receive a different delta to the first one the client sent.
     try {
-      operationChannel.onDelta(createRandomVersionedDelta(42, 5, SIG4));
+      operationChannel.onDelta(createRandomTransformedDelta(42, 5, SIG4));
       fail("Should have thrown ChannelException");
     } catch (ChannelException expected) {
     }
@@ -518,7 +425,7 @@ public class OperationChannelImplTest extends TestCase {
     // Receive a delta to resets the recovery mechanism so the next
     // recovery will be at version 43.
     final byte[] signature43 = SIG2;
-    operationChannel.onDelta(createRandomVersionedDelta(42, 1, signature43));
+    operationChannel.onDelta(createRandomTransformedDelta(42, 1, signature43));
     assertNotNull(operationChannel.receive());
     listener.clear();
 
@@ -529,7 +436,7 @@ public class OperationChannelImplTest extends TestCase {
     reconnectChannel(43, signature43, 44, SIG3, null);
 
     // Now receive a different delta to the un-acked delta1.
-    TransformedWaveletDelta delta2 = createRandomVersionedDelta(43, 1, SIG4);
+    TransformedWaveletDelta delta2 = createRandomTransformedDelta(43, 1, SIG4);
     operationChannel.onDelta(delta2);
     listener.checkOpsReceived(1);
     assertNotNull(operationChannel.receive());
@@ -537,9 +444,8 @@ public class OperationChannelImplTest extends TestCase {
 
     // Push another delta to the channel, but don't expect a delta channel
     // send yet.
-    WaveletOperation op3 = createOp();
-    WaveletDelta delta3 = createDelta(45, SIG5, op3);
-    operationChannel.send(new WaveletOperation[] { op3 });
+    WaveletDelta delta3 = UTIL.makeDelta(HashedVersion.of(45, SIG5), 0L, 1);
+    operationChannel.send(new WaveletOperation[] { delta3.get(0) });
     listener.checkOpsReceived(0);
 
     // Ack the first op, and expect a send for the pending op3.

@@ -25,7 +25,6 @@ import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiple
 import org.waveprotocol.wave.concurrencycontrol.channel.ViewChannelImpl;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
-import org.waveprotocol.wave.concurrencycontrol.testing.DeltaTestUtil;
 import org.waveprotocol.wave.concurrencycontrol.testing.FakeWaveViewServiceUpdate;
 import org.waveprotocol.wave.concurrencycontrol.testing.MockWaveViewService;
 import org.waveprotocol.wave.model.document.Document;
@@ -42,6 +41,7 @@ import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFa
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.schema.SchemaProvider;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.testing.FakeHashedVersionFactory;
 import org.waveprotocol.wave.model.util.ImmediateExcecutionScheduler;
 import org.waveprotocol.wave.model.version.HashedVersion;

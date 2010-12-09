@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.concurrencycontrol.testing;
+package org.waveprotocol.wave.model.testing;
 
 import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
@@ -24,14 +24,17 @@ import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.wave.Constants;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 
 /**
@@ -40,7 +43,10 @@ import java.util.List;
  * @author zdwang@google.com (David Wang)
  */
 public class DeltaTestUtil {
-  private final ParticipantId creator;
+  private static final WaveletOperationContext DUMMY = new WaveletOperationContext(null, 0L, 0L);
+
+  private final ParticipantId author;
+  private final Random random = new Random(42);
 
   /**
    * Creates a {@link DeltaTestUtil} with which operations authored by the given
@@ -51,15 +57,15 @@ public class DeltaTestUtil {
   }
 
   /**
-   * Creates a {@link TestUtil} with which operations authored by the given
+   * Creates a {@link DeltaTestUtil} with which operations authored by the given
    * creator can readily be made.
    */
   public DeltaTestUtil(ParticipantId creator) {
-    this.creator = creator;
+    this.author = creator;
   }
 
-  public ParticipantId getParticipant() {
-    return creator;
+  public ParticipantId getAuthor() {
+    return author;
   }
 
   /**
@@ -72,7 +78,7 @@ public class DeltaTestUtil {
         .retain(remaining)
         .build();
     BlipContentOperation blipOp = new BlipContentOperation(
-        new WaveletOperationContext(creator, 0L, 1), op);
+        new WaveletOperationContext(author, 0L, 1), op);
     WaveletBlipOperation waveOp = new WaveletBlipOperation("blip id", blipOp);
     return waveOp;
   }
@@ -81,16 +87,8 @@ public class DeltaTestUtil {
    * Wrap an op with a delta.
    */
   public TransformedWaveletDelta delta(long targetVersion, WaveletOperation op) {
-    return new TransformedWaveletDelta(creator, HashedVersion.unsigned(targetVersion + 1),
+    return new TransformedWaveletDelta(author, HashedVersion.unsigned(targetVersion + 1),
         0L, Arrays.asList(op));
-  }
-
-  /**
-   * Creates an XmlInsert with the given data.
-   */
-  public WaveletOperation insert(int pos, String text, int remaining,
-      HashedVersion resultingVersion) {
-    return insert(pos, text, remaining, creator, resultingVersion);
   }
 
   /**
@@ -99,21 +97,21 @@ public class DeltaTestUtil {
    * @param initialVersion The version before the operation.
    */
   public TransformedWaveletDelta noOpDelta(long initialVersion) {
-    return createNoOpDelta(1, HashedVersion.unsigned(initialVersion + 1));
+    return makeTransformedDelta(0L, HashedVersion.unsigned(initialVersion + 1), 1);
   }
 
   /**
    * Create a NoOp operation.
    */
   public NoOp noOp() {
-    return new NoOp(new WaveletOperationContext(creator, 0L, 1L));
+    return new NoOp(new WaveletOperationContext(author, 0L, 1L));
   }
 
   /**
    * Create an AddParticipant operation.
    */
   public AddParticipant addParticipant(ParticipantId participant) {
-    return new AddParticipant(new WaveletOperationContext(creator, 0L, 1L), participant);
+    return new AddParticipant(new WaveletOperationContext(author, 0L, 1L), participant);
   }
 
   /**
@@ -121,38 +119,77 @@ public class DeltaTestUtil {
    * also be empty, otherwise the operation is invalid.
    */
   public WaveletOperation noOpDocOp(String blipId) {
-    WaveletOperationContext context = new WaveletOperationContext(creator, 0L, 1L);
+    WaveletOperationContext context = new WaveletOperationContext(author, 0L, 1L);
     BlipContentOperation blipOp = new BlipContentOperation(context, (new DocOpBuilder()).build());
     return new WaveletBlipOperation(blipId, blipOp);
-  }
-
-
-  /**
-   * Create a delta with several NoOp operation.
-   * @param initialVersion The version before the first operation.
-   * @param numOps The number of NoOp operations to create.
-   */
-  public TransformedWaveletDelta createNoOpDelta(int numOps, HashedVersion resultingVersion) {
-    List<WaveletOperation> ops = CollectionUtils.newArrayList();
-    for (int i = 0; i < numOps; i++) {
-      ops.add(noOp());
-    }
-    return new TransformedWaveletDelta(creator, resultingVersion, 0L, ops);
   }
 
   /**
    * Creates an XmlInsert with the given data.
    */
-  public static WaveletOperation insert(int pos, String text, int remaining,
-      ParticipantId participant, HashedVersion resultingVersion) {
+  public WaveletOperation insert(int pos, String text, int remaining,
+      HashedVersion resultingVersion) {
     DocOpBuilder builder = new DocOpBuilder();
     builder.retain(pos).characters(text);
     if (remaining > 0) {
       builder.retain(remaining);
     }
     BlipContentOperation blipOp = new BlipContentOperation(
-        new WaveletOperationContext(participant, 0L, 1, resultingVersion), builder.build());
+        new WaveletOperationContext(author, 0L, 1, resultingVersion), builder.build());
     WaveletBlipOperation waveOp = new WaveletBlipOperation("blip id", blipOp);
     return waveOp;
+  }
+
+  /**
+   * Builds a random client delta.
+   */
+  public WaveletDelta makeDelta(HashedVersion targetVersion, long timestamp, int numOps) {
+    List<WaveletOperation> ops = CollectionUtils.newArrayList();
+    WaveletOperationContext context =
+        new WaveletOperationContext(author, Constants.NO_TIMESTAMP, 1);
+    for (int i = 0; i < numOps; ++i) {
+      ops.add(randomOp(context));
+    }
+    return new WaveletDelta(author, targetVersion, ops);
+  }
+
+  /**
+   * Builds a no-op client delta.
+   */
+  public WaveletDelta makeNoOpDelta(HashedVersion targetVersion, long timestamp, int numOps) {
+    List<WaveletOperation> ops = CollectionUtils.newArrayList();
+    WaveletOperationContext context =
+        new WaveletOperationContext(author, Constants.NO_TIMESTAMP, 1);
+    for (int i = 0; i < numOps; ++i) {
+      ops.add(new NoOp(context));
+    }
+    return new WaveletDelta(author, targetVersion, ops);
+  }
+
+  /**
+   * Builds a random transformed delta.
+   */
+  public TransformedWaveletDelta makeTransformedDelta(long applicationTimestamp,
+      HashedVersion resultingVersion, int numOps) {
+    List<WaveletOperation> ops = CollectionUtils.newArrayList();
+    for (int i = 0; i < numOps; ++i) {
+      ops.add(randomOp(DUMMY));
+    }
+    return TransformedWaveletDelta.cloneOperations(ops, author, applicationTimestamp,
+        resultingVersion);
+  }
+
+  /**
+   * Creates a random op. The result is unlikely to be applicable to any
+   * wavelet, but is generated such that we are fairly certain that it will be
+   * unique so we can identify it when it completes a round-trip.
+   */
+  private WaveletOperation randomOp(WaveletOperationContext context) {
+    BufferedDocOp blipOp = new DocOpBuilder()
+        .retain(Math.abs(random.nextInt()) / 2 + 1)
+        .characters("createRndOp#" + random.nextInt())
+        .build();
+    return new WaveletBlipOperation("createRndId#" + random.nextInt(),
+        new BlipContentOperation(context, blipOp));
   }
 }

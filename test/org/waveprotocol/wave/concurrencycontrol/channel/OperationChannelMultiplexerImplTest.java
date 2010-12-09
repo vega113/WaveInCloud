@@ -29,7 +29,6 @@ import org.waveprotocol.wave.concurrencycontrol.common.CorruptionDetail;
 import org.waveprotocol.wave.concurrencycontrol.common.Recoverable;
 import org.waveprotocol.wave.concurrencycontrol.common.UnsavedDataListener;
 import org.waveprotocol.wave.concurrencycontrol.common.UnsavedDataListenerFactory;
-import org.waveprotocol.wave.concurrencycontrol.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdFilters;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -39,6 +38,7 @@ import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.testing.BasicFactories;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.testing.FakeHashedVersionFactory;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.ImmediateExcecutionScheduler;
@@ -1047,7 +1047,7 @@ public class OperationChannelMultiplexerImplTest extends TestCase {
   private static List<TransformedWaveletDelta> createServerDeltaList(long version, int numOps,
       byte[] signature) {
     TransformedWaveletDelta delta =
-        testUtil.createNoOpDelta(numOps, HashedVersion.of(version + numOps, signature));
+        testUtil.makeTransformedDelta(0L, HashedVersion.of(version + numOps, signature), numOps);
     return Collections.singletonList(delta);
   }
 

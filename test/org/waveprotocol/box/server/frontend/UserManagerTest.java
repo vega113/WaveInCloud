@@ -58,10 +58,10 @@ public class UserManagerTest extends TestCase {
 
   private static final ParticipantId USER = ParticipantId.ofUnsafe("user@host.com");
 
-  private static final WaveletOperationContext CONTEXT = new WaveletOperationContext(USER, 0L, 1);
   private static final HashedVersion END_VERSION = HashedVersion.unsigned(2);
   private static final TransformedWaveletDelta DELTA = new TransformedWaveletDelta(USER,
-      END_VERSION, 0L, ImmutableList.of(new NoOp(CONTEXT), new NoOp(CONTEXT)));
+      END_VERSION, 0L, ImmutableList.of(new NoOp(new WaveletOperationContext(USER, 0L, 1)),
+          new NoOp(new WaveletOperationContext(USER, 0L, 1, END_VERSION))));
 
 
   private static final DeltaSequence DELTAS = DeltaSequence.of(DELTA);
@@ -138,7 +138,7 @@ public class UserManagerTest extends TestCase {
 
     HashedVersion v3 = HashedVersion.unsigned(3);
     TransformedWaveletDelta delta2 = new TransformedWaveletDelta(USER, v3, 0L,
-        Arrays.asList(new NoOp(CONTEXT)));
+        Arrays.asList(new NoOp(new WaveletOperationContext(USER, 0L, 1, v3))));
 
     m.subscribe(W1, IdFilters.ALL_IDS, "ch1", mock(OpenListener.class));
 

@@ -22,7 +22,6 @@ import junit.framework.TestCase;
 import org.waveprotocol.wave.common.logging.PrintLogger;
 import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
 import org.waveprotocol.wave.concurrencycontrol.server.ConcurrencyControlCore;
-import org.waveprotocol.wave.concurrencycontrol.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
 import org.waveprotocol.wave.model.document.operation.SuperSink;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
@@ -31,6 +30,7 @@ import org.waveprotocol.wave.model.operation.OpComparators;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.TransformException;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -98,7 +98,7 @@ public class ClientAndServerTest extends TestCase {
       if (injectV0Delta) {
         // Inject a single NoOp from a null connection, this ensures that all
         // clients submit AFTER version 0.
-        WaveletDelta initialDelta = new WaveletDelta(NOBODY_UTIL.getParticipant(),
+        WaveletDelta initialDelta = new WaveletDelta(NOBODY_UTIL.getAuthor(),
             genSignature(0), Arrays.asList(NOBODY_UTIL.noOp()));
         serverMock.receive(null, initialDelta);
         serverProcessDeltas();

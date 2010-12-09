@@ -55,6 +55,7 @@ import org.waveprotocol.wave.model.operation.CapturingOperationSink;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
@@ -105,7 +106,7 @@ public class EventGeneratorTest extends TestCase {
       new WaveletOperationContext.Factory() {
         @Override
         public WaveletOperationContext createContext() {
-          return new WaveletOperationContext(ALEX, 1234567890L, 1);
+          return new WaveletOperationContext(ALEX, 0L, 1);
         }
 
         @Override
@@ -209,7 +210,7 @@ public class EventGeneratorTest extends TestCase {
 
     List<WaveletOperation> ops1 = Lists.newArrayList(output.getOps());
     HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
-    TransformedWaveletDelta delta1 = new TransformedWaveletDelta(ALEX, endVersion, 0L, ops1);
+    TransformedWaveletDelta delta1 = makeDeltaFromCapturedOps(ALEX, ops1, endVersion, 0L);
     output.clear();
 
     // Delta2 event #1.
@@ -222,7 +223,7 @@ public class EventGeneratorTest extends TestCase {
     LineContainers.appendToLastLine(newBlip.getContent(), builder);
     List<WaveletOperation> ops2 = Lists.newArrayList(output.getOps());
     HashedVersion endVersion2 = HashedVersion.unsigned(waveletData.getVersion());
-    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(ROBOT, endVersion2, 0L, ops2);
+    TransformedWaveletDelta delta2 = makeDeltaFromCapturedOps(ROBOT, ops2, endVersion2, 0L);
     output.clear();
 
     assertTrue("Ops should not be empty", (!ops1.isEmpty()) && (!ops2.isEmpty()));
@@ -248,7 +249,7 @@ public class EventGeneratorTest extends TestCase {
 
     List<WaveletOperation> ops1 = Lists.newArrayList(output.getOps());
     HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
-    TransformedWaveletDelta delta1 = new TransformedWaveletDelta(ROBOT, endVersion, 0L, ops1);
+    TransformedWaveletDelta delta1 = makeDeltaFromCapturedOps(ROBOT, ops1, endVersion, 0L);
     output.clear();
 
     // Delta2 event #1.
@@ -260,7 +261,7 @@ public class EventGeneratorTest extends TestCase {
 
     List<WaveletOperation> ops2 = Lists.newArrayList(output.getOps());
     HashedVersion endVersion2 = HashedVersion.unsigned(waveletData.getVersion());
-    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(ALEX, endVersion2, 0L, ops2);
+    TransformedWaveletDelta delta2 = makeDeltaFromCapturedOps(ALEX, ops2, endVersion2, 0L);
     output.clear();
 
     EventMessageBundle messages = generateEventsFromDeltas(delta1, delta2);
@@ -342,7 +343,7 @@ public class EventGeneratorTest extends TestCase {
     wavelet.addParticipant(BOB);
     HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
     List<WaveletOperation> ops1 = Lists.newArrayList(output.getOps());
-    TransformedWaveletDelta delta1 = new TransformedWaveletDelta(ALEX, endVersion, 0L, ops1);
+    TransformedWaveletDelta delta1 = makeDeltaFromCapturedOps(ALEX, ops1, endVersion, 0L);
     output.clear();
 
     // Delta2 event #1.
@@ -357,7 +358,7 @@ public class EventGeneratorTest extends TestCase {
 
     List<WaveletOperation> ops2 = Lists.newArrayList(output.getOps());
     HashedVersion endVersion2 = HashedVersion.unsigned(waveletData.getVersion());
-    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(ROBOT, endVersion2, 0L, ops2);
+    TransformedWaveletDelta delta2 = makeDeltaFromCapturedOps(ROBOT, ops2, endVersion2, 0L);
     output.clear();
 
     EventMessageBundle messages = generateEventsFromDeltas(delta1, delta2);
@@ -371,7 +372,7 @@ public class EventGeneratorTest extends TestCase {
     wavelet.addParticipant(BOB);
     HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
     List<WaveletOperation> ops1 = Lists.newArrayList(output.getOps());
-    TransformedWaveletDelta delta1 = new TransformedWaveletDelta(ROBOT, endVersion, 0L, ops1);
+    TransformedWaveletDelta delta1 = makeDeltaFromCapturedOps(ROBOT, ops1, endVersion, 0L);
     output.clear();
 
     // Delta2 event #1.
@@ -386,7 +387,7 @@ public class EventGeneratorTest extends TestCase {
 
     List<WaveletOperation> ops2 = Lists.newArrayList(output.getOps());
     HashedVersion endVersion2 = HashedVersion.unsigned(waveletData.getVersion());
-    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(ALEX, endVersion2, 0L, ops2);
+    TransformedWaveletDelta delta2 = makeDeltaFromCapturedOps(ALEX, ops2, endVersion2, 0L);
     output.clear();
 
     EventMessageBundle messages = generateEventsFromDeltas(delta1, delta2);
@@ -402,7 +403,7 @@ public class EventGeneratorTest extends TestCase {
 
     List<WaveletOperation> ops = output.getOps();
     HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
-    TransformedWaveletDelta delta1 = new TransformedWaveletDelta(ALEX, endVersion, 0L, ops);
+    TransformedWaveletDelta delta1 = makeDeltaFromCapturedOps(ALEX, ops, endVersion, 0L);
     output.clear();
 
     ObservableConversationView conversation = conversationUtil.buildConversation(wavelet);
@@ -417,7 +418,7 @@ public class EventGeneratorTest extends TestCase {
 
     List<WaveletOperation> ops2 = output.getOps();
     HashedVersion endVersion2 = HashedVersion.unsigned(waveletData.getVersion());
-    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(ALEX, endVersion2, 0L, ops2);
+    TransformedWaveletDelta delta2 = makeDeltaFromCapturedOps(ALEX, ops2, endVersion2, 0L);
     output.clear();
 
     EventMessageBundle messages = generateEventsFromDeltas(delta1, delta2);
@@ -436,8 +437,7 @@ public class EventGeneratorTest extends TestCase {
    * @return the {@link EventMessageBundle} with the events generated when a
    *         robot is subscribed to all possible events.
    *
-   * @see generateAndCheckEvents(EventType eventType, ParticipantId
-   *      participantId)
+   * @see #generateAndCheckEvents(EventType, ParticipantId)
    */
   private EventMessageBundle generateAndCheckEvents(EventType eventType) throws Exception {
     EventMessageBundle eventMessageBundle = generateAndCheckEvents(eventType, ALEX);
@@ -453,14 +453,14 @@ public class EventGeneratorTest extends TestCase {
    * @return the {@link EventMessageBundle} with the events generated when a
    *         robot is subscribed to all possible events.
    *
-   * @see generateAndCheckEvents(EventType eventType)
+   * @see #generateAndCheckEvents(EventType)
    */
   private EventMessageBundle generateAndCheckEvents(EventType eventType,
       ParticipantId participantId) throws Exception {
     List<WaveletOperation> ops = output.getOps();
     HashedVersion endVersion = HashedVersion.unsigned(waveletData.getVersion());
     // Create the delta.
-    TransformedWaveletDelta delta = new TransformedWaveletDelta(participantId, endVersion, 0L, ops);
+    TransformedWaveletDelta delta = makeDeltaFromCapturedOps(participantId, ops, endVersion, 0L);
     WaveletAndDeltas waveletAndDeltas =
         WaveletAndDeltas.create(waveletData, DeltaSequence.of(delta));
 
@@ -484,6 +484,16 @@ public class EventGeneratorTest extends TestCase {
   }
 
   /**
+   * Builds a "transformed" delta from client ops (no transformation happens).
+   */
+  private TransformedWaveletDelta makeDeltaFromCapturedOps(ParticipantId author,
+      List<WaveletOperation> ops, HashedVersion endVersion, long timestamp) {
+    WaveletDelta clientDelta =
+        new WaveletDelta(author, HashedVersion.unsigned(endVersion.getVersion() - ops.size()), ops);
+    return TransformedWaveletDelta.cloneOperations(clientDelta, timestamp, endVersion);
+  }
+
+  /**
    * Checks whether events of the given types were put in the bundle.
    */
   private void checkEventTypeWasGenerated(EventMessageBundle messages, EventType... types) {
@@ -504,10 +514,6 @@ public class EventGeneratorTest extends TestCase {
 
   /**
    * Generate events from deltas
-   * @param delta1
-   * @param delta2
-   * @return messages generated from all deltas
-   * @throws OperationException
    */
   private EventMessageBundle generateEventsFromDeltas(TransformedWaveletDelta... deltas)
       throws OperationException {

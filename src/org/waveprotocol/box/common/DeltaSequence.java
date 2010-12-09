@@ -85,7 +85,7 @@ public final class DeltaSequence extends ForwardingList<TransformedWaveletDelta>
       if (i + 1 < deltas.size()) {
         long nextVersion = deltas.get(i + 1).getAppliedAtVersion();
         Preconditions.checkArgument(deltaEndVersion == nextVersion,
-            "Delta %s / %s ends at version %s, expected %s",
+            "Delta %s / %s ends at version %s, next begins at %s",
             i + 1, deltas.size(), deltaEndVersion, nextVersion);
       }
     }
