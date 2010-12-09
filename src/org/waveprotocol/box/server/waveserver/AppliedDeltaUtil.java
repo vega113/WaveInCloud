@@ -115,8 +115,8 @@ public class AppliedDeltaUtil {
     Preconditions.checkArgument(appliedDelta.getOperationsApplied() == transformed.size());
     HashedVersion resultingVersion = HASH_FACTORY.create(appliedDeltaBytes.getByteArray(),
         transformed.getTargetVersion(), appliedDelta.getOperationsApplied());
-    return TransformedWaveletDelta.cloneOperations(transformed,
-        appliedDelta.getApplicationTimestamp(), resultingVersion);
+    return TransformedWaveletDelta.cloneOperations(resultingVersion,
+        appliedDelta.getApplicationTimestamp(), transformed);
   }
 
   private AppliedDeltaUtil() { } // prevent instantiation

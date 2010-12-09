@@ -55,7 +55,7 @@ import java.util.List;
  */
 
 public class OT3Test extends TestCase {
-  private static final ParticipantId DEFAULT_CREATOR = new ParticipantId("zdwang@example.com");
+  private static final ParticipantId DEFAULT_CREATOR = new ParticipantId("test@example.com");
   private static final DeltaTestUtil CLIENT_UTIL = new DeltaTestUtil(DEFAULT_CREATOR);
   private static final DeltaTestUtil EXTRA_UTIL = new DeltaTestUtil("actasme@example.com");
 
@@ -186,9 +186,9 @@ public class OT3Test extends TestCase {
      */
     public TestConfig serverDoInsert(int startVersion, int insertionPoint, String content,
         int remaining) throws OperationException, TransformException {
-      TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getAuthor(),
-          genSignature(startVersion + 1), 0L,
-          Arrays.asList(SERVER_UTIL.insert(insertionPoint, content, remaining, null)));
+      TransformedWaveletDelta d = TransformedWaveletDelta.cloneOperations(SERVER_UTIL.getAuthor(),
+          genSignature(startVersion + 1), 0L, Arrays.asList(
+              SERVER_UTIL.insert(insertionPoint, content, remaining, null)));
       serverConnectionMock.triggerServerDeltas(Collections.singletonList(d));
       return this;
     }
@@ -212,8 +212,9 @@ public class OT3Test extends TestCase {
         throws TransformException, OperationException {
       ArrayList<TransformedWaveletDelta> deltas = CollectionUtils.newArrayList();
       for (int i = 0; i < numOps; i++) {
-        TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getAuthor(),
-            genSignature(startVersion + i + 1), 0l, Arrays.asList(SERVER_UTIL.noOp()));
+        TransformedWaveletDelta d = TransformedWaveletDelta.cloneOperations(
+            SERVER_UTIL.getAuthor(), genSignature(startVersion + i + 1), 0L,
+            Arrays.asList(SERVER_UTIL.noOp()));
         deltas.add(d);
       }
       serverConnectionMock.triggerServerDeltas(deltas);
@@ -233,8 +234,9 @@ public class OT3Test extends TestCase {
      */
     public TestConfig serverDoEchoBackDocOp(int startVersion, String blipId)
         throws TransformException, OperationException {
-      TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getAuthor(),
-          genSignature(startVersion + 1), 0l, Arrays.asList(noOpDocOp(blipId)));
+      TransformedWaveletDelta d = TransformedWaveletDelta.cloneOperations(
+          clientMock.getParticipantId(), genSignature(startVersion + 1), 0L,
+          Arrays.asList(noOpDocOp(blipId)));
       serverConnectionMock.triggerServerDeltas(Collections.singletonList(d));
       return this;
     }
@@ -244,9 +246,9 @@ public class OT3Test extends TestCase {
      */
     public TestConfig serverDoEchoBack(int startVersion, long timestamp)
         throws TransformException, OperationException {
-      TransformedWaveletDelta d = new TransformedWaveletDelta(SERVER_UTIL.getAuthor(),
-          genSignature(startVersion + 1), 0L, Arrays.asList(new NoOp(new WaveletOperationContext(
-              clientMock.getParticipantId(), timestamp, 1L))));
+      TransformedWaveletDelta d = TransformedWaveletDelta.cloneOperations(
+          clientMock.getParticipantId(), genSignature(startVersion + 1), timestamp,
+          Arrays.asList(SERVER_UTIL.noOp()));
       serverConnectionMock.triggerServerDeltas(Collections.singletonList(d));
       return this;
     }

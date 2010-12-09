@@ -490,7 +490,7 @@ public class EventGeneratorTest extends TestCase {
       List<WaveletOperation> ops, HashedVersion endVersion, long timestamp) {
     WaveletDelta clientDelta =
         new WaveletDelta(author, HashedVersion.unsigned(endVersion.getVersion() - ops.size()), ops);
-    return TransformedWaveletDelta.cloneOperations(clientDelta, timestamp, endVersion);
+    return TransformedWaveletDelta.cloneOperations(endVersion, timestamp, clientDelta);
   }
 
   /**

@@ -335,7 +335,7 @@ public class OperationChannelImplTest extends TestCase {
 
     // Receive delta that is the client's own un-acked op.
     TransformedWaveletDelta serverDelta =
-        TransformedWaveletDelta.cloneOperations(delta, 0L, HashedVersion.of(43, SIG2));
+        TransformedWaveletDelta.cloneOperations(HashedVersion.of(43, SIG2), 0L, delta);
     operationChannel.onDelta(serverDelta);
 
     // It should implicitly cause an ack, so read that fake op

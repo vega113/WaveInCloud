@@ -26,13 +26,10 @@ import org.waveprotocol.wave.concurrencycontrol.common.Recoverable;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
-import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.testing.BasicFactories;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -50,10 +47,6 @@ import java.util.Queue;
  */
 
 public class WaveletDeltaChannelImplTest extends TestCase {
-
-  private static final ParticipantId USER_ID = ParticipantId.ofUnsafe("test@example.com");
-  private final WaveletOperationContext.Factory contextFactory =
-      new BasicWaveletOperationContextFactory(USER_ID);
 
   /**
    * A mock delta channel receiver which support setting expectations of method
@@ -173,8 +166,10 @@ public class WaveletDeltaChannelImplTest extends TestCase {
     }
   }
 
-  private final static String WAVE_ID = "example.com!dummy_wave_id";
-  private final static String WAVELET_ID = "example.com!dummy_wavelet_id";
+  private static final ParticipantId USER_ID = ParticipantId.ofUnsafe("test@example.com");
+  private static final DeltaTestUtil UTIL = new DeltaTestUtil(USER_ID);
+  private final static WaveId WAVE_ID = new WaveId("example.com", "waveid");
+  private final static WaveletId WAVELET_ID = new WaveletId("example.com", "waveletid");
   private static final ObservableWaveletData.Factory<?> DATA_FACTORY =
       BasicFactories.waveletDataImplFactory();
 
@@ -1009,7 +1004,7 @@ public class WaveletDeltaChannelImplTest extends TestCase {
   private ObservableWaveletData buildSnapshot(final long version, final byte[] signature) {
     HashedVersion hv = HashedVersion.of(version, signature);
     return DATA_FACTORY.create(
-        new EmptyWaveletSnapshot(WaveId.deserialise(WAVE_ID), WaveletId.deserialise(WAVELET_ID),
+        new EmptyWaveletSnapshot(WAVE_ID, WAVELET_ID,
             new ParticipantId("creator@gwave.com"), hv, 0L));
   }
 
@@ -1020,28 +1015,19 @@ public class WaveletDeltaChannelImplTest extends TestCase {
    * @param signature reconnect signature
    */
   private List<TransformedWaveletDelta> buildReconnect(long version, byte[] signature) {
-    TransformedWaveletDelta delta =
-        new TransformedWaveletDelta(USER_ID, HashedVersion.of(version, signature), 0L, buildOps(0));
-    return Collections.singletonList(delta);
+    return Collections.singletonList(UTIL.makeTransformedDelta(0L, HashedVersion.of(version,
+        signature), 0));
   }
 
   /** Builds a client delta with numOps ops. */
   private WaveletDelta buildDelta(long targetVersion, int numOps) {
-    return new WaveletDelta(USER_ID, HashedVersion.unsigned(targetVersion), buildOps(numOps));
+    return UTIL.makeDelta(HashedVersion.unsigned(targetVersion), 123457890L, numOps);
   }
 
   /** Builds a server delta with numOps ops. */
   private TransformedWaveletDelta buildServerDelta(long initialVersion, int numOps) {
-    return new TransformedWaveletDelta(USER_ID, HashedVersion.unsigned(initialVersion + numOps), 0L,
-        buildOps(numOps));
-  }
-
-  private List<WaveletOperation> buildOps(int numOps) {
-    List<WaveletOperation> ops = CollectionUtils.newArrayList();
-    for (int i = 0; i < numOps; ++i) {
-      ops.add(new NoOp(contextFactory.createContext()));
-    }
-    return ops;
+    return UTIL.makeTransformedDelta(1234567890L, HashedVersion.unsigned(initialVersion + numOps),
+        numOps);
   }
 
   private static byte[] sig(long v) {

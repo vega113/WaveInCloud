@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.model.operation.wave;
 
 import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.util.Preconditions;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -48,17 +49,18 @@ public final class TransformedWaveletDelta extends AbstractList<WaveletOperation
    * Clones ops from a client delta to a transformed delta, replacing their
    * contexts with that implied by the delta's metadata.
    */
-  public static TransformedWaveletDelta cloneOperations(WaveletDelta delta,
-      long applicationTimestamp, HashedVersion resultingVersion) {
-    return cloneOperations(delta, delta.getAuthor(), applicationTimestamp, resultingVersion);
+  public static TransformedWaveletDelta cloneOperations(HashedVersion resultingVersion,
+      long applicationTimestamp, WaveletDelta delta) {
+    return cloneOperations(delta.getAuthor(), resultingVersion, applicationTimestamp, delta);
   }
 
   /**
    * Clones a list of operations into a transformed delta, replacing their
    * contexts with that implied by the delta's metadata.
    */
-  public static TransformedWaveletDelta cloneOperations(List<WaveletOperation> ops,
-      ParticipantId author, long applicationTimestamp, HashedVersion resultingVersion) {
+  public static TransformedWaveletDelta cloneOperations(ParticipantId author,
+      HashedVersion resultingVersion, long applicationTimestamp,
+      List<? extends WaveletOperation> ops) {
     List<WaveletOperation> transformedOps = CollectionUtils.newArrayList();
     WaveletOperationContext initialContext =
         new WaveletOperationContext(author, applicationTimestamp, 1);
@@ -91,24 +93,22 @@ public final class TransformedWaveletDelta extends AbstractList<WaveletOperation
 
     // Check that the op contexts are right. (Everything in there is
     // redundant...)
-    // TODO(anorth): Enable these checks after fixing up all the current
-    // mis-uses.
-//    for (int i = 0; i < this.ops.size(); i++) {
-//      WaveletOperationContext c = this.ops.get(i).getContext();
-//      Preconditions.checkArgument(c.getCreator().equals(author),
-//          "Context creator %s doesn't match delta author %s", c.getCreator(), author);
-//      Preconditions.checkArgument(c.getVersionIncrement() == 1,
-//          "Invalid context version increment %s", c.getVersionIncrement());
-//      Preconditions.checkArgument(c.hasHashedVersion() == (i == this.ops.size() - 1),
-//          "[Un]expected hashed version on op %s of %s", i, this.ops.size());
-//      Preconditions.checkArgument((i != this.ops.size() - 1)
-//          || c.getHashedVersion().equals(resultingVersion),
-//          "Context hashed version %s doesn't match delta hashed version %s", c.getHashedVersion(),
-//          resultingVersion);
-//      Preconditions.checkArgument(c.getTimestamp() == applicationTimestamp,
-//          "Context timestamp %s doesn't match delta timestamp %s",
-//          c.getTimestamp(), applicationTimestamp);
-//    }
+    for (int i = 0; i < this.ops.size(); i++) {
+      WaveletOperationContext c = this.ops.get(i).getContext();
+      Preconditions.checkArgument(c.getCreator().equals(author),
+          "Context creator %s doesn't match delta author %s", c.getCreator(), author);
+      Preconditions.checkArgument(c.getVersionIncrement() == 1,
+          "Invalid context version increment %s", c.getVersionIncrement());
+      Preconditions.checkArgument(c.hasHashedVersion() == (i == this.ops.size() - 1),
+          "[Un]expected hashed version on op %s of %s", i, this.ops.size());
+      Preconditions.checkArgument((i != this.ops.size() - 1)
+          || c.getHashedVersion().equals(resultingVersion),
+          "Context hashed version %s doesn't match delta hashed version %s", c.getHashedVersion(),
+          resultingVersion);
+      Preconditions.checkArgument(c.getTimestamp() == applicationTimestamp,
+          "Context timestamp %s doesn't match delta timestamp %s",
+          c.getTimestamp(), applicationTimestamp);
+    }
   }
 
   /** Returns the author of the delta. */

@@ -101,13 +101,13 @@ public class ServerMock {
 
       // Assume that they are working only on 1 wave.
       WaveletDelta transformedClientDelta = ccCore.onClientDelta(cache.delta);
-      HashedVersion sig = generateSignature(transformedClientDelta);
-      TransformedWaveletDelta serverDelta = new TransformedWaveletDelta(
-          transformedClientDelta.getAuthor(), sig, 0L, transformedClientDelta);
+      HashedVersion endVersion = generateSignature(transformedClientDelta);
+      TransformedWaveletDelta serverDelta =
+          TransformedWaveletDelta.cloneOperations(endVersion, 0L, transformedClientDelta);
 
       // Update the version of the wave
       history.addDelta(serverDelta);
-      history.setCurrentSignature(sig);
+      history.setCurrentSignature(endVersion);
 
       // Tell all other clients of the delta
       for (ServerConnectionMock conn : connectionMocks) {

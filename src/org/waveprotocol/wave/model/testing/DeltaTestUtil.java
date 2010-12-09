@@ -50,18 +50,18 @@ public class DeltaTestUtil {
 
   /**
    * Creates a {@link DeltaTestUtil} with which operations authored by the given
-   * creator can readily be made.
+   * author can readily be made.
    */
-  public DeltaTestUtil(String creator) {
-    this(new ParticipantId(creator));
+  public DeltaTestUtil(String author) {
+    this(new ParticipantId(author));
   }
 
   /**
    * Creates a {@link DeltaTestUtil} with which operations authored by the given
-   * creator can readily be made.
+   * author can readily be made.
    */
-  public DeltaTestUtil(ParticipantId creator) {
-    this.author = creator;
+  public DeltaTestUtil(ParticipantId author) {
+    this.author = author;
   }
 
   public ParticipantId getAuthor() {
@@ -87,8 +87,8 @@ public class DeltaTestUtil {
    * Wrap an op with a delta.
    */
   public TransformedWaveletDelta delta(long targetVersion, WaveletOperation op) {
-    return new TransformedWaveletDelta(author, HashedVersion.unsigned(targetVersion + 1),
-        0L, Arrays.asList(op));
+    return TransformedWaveletDelta.cloneOperations(author,
+        HashedVersion.unsigned(targetVersion + 1), 0L, Arrays.asList(op));
   }
 
   /**
@@ -175,8 +175,8 @@ public class DeltaTestUtil {
     for (int i = 0; i < numOps; ++i) {
       ops.add(randomOp(DUMMY));
     }
-    return TransformedWaveletDelta.cloneOperations(ops, author, applicationTimestamp,
-        resultingVersion);
+    return TransformedWaveletDelta.cloneOperations(author, resultingVersion, applicationTimestamp,
+        ops);
   }
 
   /**

@@ -262,8 +262,8 @@ public final class IndexWave {
       if (!receivedParticipantOps.isEmpty()) {
         HashedVersion endVersion =
             HashedVersion.unsigned(targetVersion + receivedParticipantOps.size());
-        participantDeltas.add(TransformedWaveletDelta.cloneOperations(receivedParticipantOps,
-            delta.getAuthor(), delta.getApplicationTimestamp(), endVersion));
+        participantDeltas.add(TransformedWaveletDelta.cloneOperations(delta.getAuthor(),
+            endVersion, delta.getApplicationTimestamp(), receivedParticipantOps));
       }
     }
     return participantDeltas;
