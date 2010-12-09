@@ -419,7 +419,7 @@
     <touch file="${dep}/stage"/>
   </target>
 
-  <target name="dist" depends="test, dist-proto, dist-libraries, dist-server, 
+  <target name="dist" depends="test, dist-libraries, dist-server, 
       dist-client-console, compile_gwt"
       description="Compiles, tests and assembles artifacts">
   </target>
@@ -429,7 +429,7 @@
     <jar destfile="${dist.dir}\proto-src.jar" basedir="${src.proto.dir}"/>
   </target>
 
-  <target name="dist-libraries" depends="compile">
+  <target name="dist-libraries" depends="compile, dist-proto">
     <subant target="dist" inheritall="true">
       <fileset dir="${src.dir}" includes="*/**/build.xml"/>
     </subant>
