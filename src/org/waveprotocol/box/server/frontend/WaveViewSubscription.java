@@ -105,7 +105,8 @@ final class WaveViewSubscription {
    * waiting, just queue the updates.
    */
   public void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
-      DeltaSequence deltas, @Nullable HashedVersion committedVersion, @Nullable Boolean hasMarker) {
+      DeltaSequence deltas, @Nullable HashedVersion endVersion,
+      @Nullable HashedVersion committedVersion, @Nullable Boolean hasMarker) {
     checkUpdateVersion(waveletName, snapshot, deltas);
     if (deltas.isEmpty()) {
       openListener.onUpdate(waveletName, snapshot, deltas, committedVersion, hasMarker,
