@@ -39,13 +39,13 @@ import org.waveprotocol.box.server.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationHostBridge;
 import org.waveprotocol.wave.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -68,8 +68,8 @@ import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -654,8 +654,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
                     LOG.warning("outgoing waveletDeltaUpdate failure: " + error);
                   }
                 });
+          }
+          // TODO(soren): When persistence is added, don't send commit notice
+          // until delta is persisted
+          dispatcher.waveletCommitted(waveletName, transformedDelta.getResultingVersion());
 
-            // TODO: if persistence is added, don't send commit notice
+          for (final String hostDomain : hostDomains) {
+            final WaveletFederationListener host = federationHosts.get(hostDomain);
+
             host.waveletCommitUpdate(waveletName, resultVersionProto,
                 new WaveletFederationListener.WaveletUpdateCallback() {
                   @Override

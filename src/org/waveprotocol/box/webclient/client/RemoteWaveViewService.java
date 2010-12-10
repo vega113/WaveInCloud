@@ -121,7 +121,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
     @Override
     public HashedVersion getLastCommittedVersion() {
-      return deserialize(update.getResultingVersion());
+      return deserialize(update.getCommitNotice());
     }
 
     @Override
