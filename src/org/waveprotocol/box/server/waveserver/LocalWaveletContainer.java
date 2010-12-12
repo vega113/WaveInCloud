@@ -55,8 +55,8 @@ interface LocalWaveletContainer extends WaveletContainer {
    * @throws InvalidHashException
    */
   public WaveletDeltaRecord submitRequest(WaveletName waveletName, ProtocolSignedDelta delta)
-      throws OperationException, WaveletStateException, InvalidProtocolBufferException,
-      InvalidHashException;
+      throws OperationException, InvalidProtocolBufferException, InvalidHashException,
+      PersistenceException;
 
   /**
    * Check whether a submitted delta (identified by its hashed version after application) was

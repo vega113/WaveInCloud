@@ -25,8 +25,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -39,13 +41,13 @@ import org.waveprotocol.box.server.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationHostBridge;
 import org.waveprotocol.wave.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -68,8 +70,10 @@ import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -83,6 +87,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
 
   protected static final long HISTORY_REQUEST_LENGTH_LIMIT_BYTES = 1024 * 1024;
 
+  private final Executor listenerExecutor;
   private final CertificateManager certificateManager;
   private final WaveletFederationListener.Factory federationHostFactory;
   private final RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
@@ -169,7 +174,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
               new RemoteWaveletDeltaCallback() {
                 @Override
                 public void onSuccess(DeltaSequence result) {
-                  dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(), result);
+                  dispatcher.waveletUpdate(getWavelet(waveletName).copyWaveletData(), result);
                 }
 
                 @Override
@@ -203,11 +208,16 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       public void waveletCommitUpdate(WaveletName waveletName,
           ProtocolHashedVersion committedVersion, WaveletUpdateCallback callback) {
         Preconditions.checkNotNull(committedVersion);
-        dispatcher.waveletCommitted(waveletName,
-            CoreWaveletOperationSerializer.deserialize(committedVersion));
-        // Pretend we've committed it, there is no persistence
-        LOG.fine("Responding with success to wavelet commit on " + waveletName);
-        callback.onSuccess();
+        WaveletContainer wavelet = getWavelet(waveletName);
+        if (isLocalWavelet(waveletName)) {
+          LOG.severe("Got commit update for local wavelet " + waveletName);
+        } else if (wavelet == null) {
+          LOG.info("Got commit update for missing wavelet " + waveletName);
+        } else {
+          persist(wavelet, CoreWaveletOperationSerializer.deserialize(committedVersion),
+              ImmutableSet.<String>of());
+        }
+        callback.onSuccess(); // TODO(soren): only call success if successful?
       }
     };
   }
@@ -445,6 +455,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   /**
    * Constructor.
    *
+   * @param listenerExecutor executes callback listeners
    * @param certificateManager provider of certificates; it also determines which
    *        domains this wave server regards as local wavelets.
    * @param federationHostFactory factory that returns federation host instance listening
@@ -454,11 +465,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    * @param remoteWaveletContainerFactory factory for remote WaveletContainers
    */
   @Inject
-  public WaveServerImpl(CertificateManager certificateManager,
+  public WaveServerImpl(
+      @Named("listener_executor") Executor listenerExecutor,
+      CertificateManager certificateManager,
       @FederationHostBridge WaveletFederationListener.Factory federationHostFactory,
       @FederationRemoteBridge WaveletFederationProvider federationRemote,
       LocalWaveletContainer.Factory localWaveletContainerFactory,
       RemoteWaveletContainer.Factory remoteWaveletContainerFactory) {
+    this.listenerExecutor = listenerExecutor;
     this.certificateManager = certificateManager;
     this.federationHostFactory = federationHostFactory;
     this.federationRemote = federationRemote;
@@ -608,7 +622,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         synchronized (wc) {
           // Get the host domains before applying the delta in case
           // the delta contains a removeParticipant operation.
-          Set<String> hostDomains = Sets.newHashSet(getParticipantDomains(wc));
+          Set<String> remoteHostDomainsBefore = getRemoteParticipantDomains(wc);
           WaveletDeltaRecord submitResult = wc.submitRequest(waveletName, signedDelta);
           TransformedWaveletDelta transformedDelta = submitResult.getTransformedDelta();
 
@@ -628,19 +642,21 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
             return; // ignore the delta (don't publish it), it was transformed away
           }
 
-          // Send the results to subscribers.
+          // Broadcast the result on the wave bus.
           try {
-            dispatcher.waveletUpdate(getWavelet(waveletName).getWaveletData(),
+            dispatcher.waveletUpdate(getWavelet(waveletName).copyWaveletData(),
                 DeltaSequence.of(transformedDelta));
           } catch (RuntimeException e) {
             LOG.severe("Runtime exception in wave bus subscriber", e);
           }
 
           // Capture any new domains from addParticipant operations.
-          hostDomains.addAll(getParticipantDomains(wc));
+          Set<String> remoteHostDomainsAfter = getRemoteParticipantDomains(wc);
+          ImmutableSet<String> remoteHostDomains =
+              Sets.union(remoteHostDomainsBefore, remoteHostDomainsAfter).immutableCopy();
 
           // Broadcast results to the remote servers, but make sure they all have our signatures
-          for (final String hostDomain : hostDomains) {
+          for (final String hostDomain : remoteHostDomains) {
             final WaveletFederationListener host = federationHosts.get(hostDomain);
             host.waveletDeltaUpdate(waveletName,
                 ImmutableList.of(submitResult.getAppliedDelta().getByteString()),
@@ -655,25 +671,10 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
                   }
                 });
           }
-          // TODO(soren): When persistence is added, don't send commit notice
-          // until delta is persisted
-          dispatcher.waveletCommitted(waveletName, transformedDelta.getResultingVersion());
 
-          for (final String hostDomain : hostDomains) {
-            final WaveletFederationListener host = federationHosts.get(hostDomain);
-
-            host.waveletCommitUpdate(waveletName, resultVersionProto,
-                new WaveletFederationListener.WaveletUpdateCallback() {
-                  @Override
-                  public void onSuccess() {
-                  }
-
-                  @Override
-                  public void onFailure(FederationError error) {
-                    LOG.warning("outgoing waveletCommitUpdate failure: " + error);
-                  }
-                });
-          }
+          // We always persist a local delta immediately after it's applied
+          // and after it's broadcast on the wave bus and to remote servers.
+          persist(wc, submitResult.getResultingVersion(), remoteHostDomains);
         }
       } catch (OperationException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
@@ -704,6 +705,65 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
             }
           });
     }
+  }
+
+  /**
+   * Persists the wavelet at the given version and, upon completion,
+   * sends a commit notice on the wave bus and to the given domains.
+   */
+  private void persist(WaveletContainer wavelet, HashedVersion versionToPersist,
+      ImmutableSet<String> domainsToNotify) {
+    ListenableFuture<Void> future = wavelet.persist(versionToPersist);
+    future.addListener(
+        persistenceListener(future, wavelet.getWaveletName(), versionToPersist, domainsToNotify),
+        listenerExecutor);
+  }
+
+  /** Builds a closure which posts a commit notice on the wave bus and to remote domains. */
+  private Runnable persistenceListener(
+      final ListenableFuture<Void> future, final WaveletName waveletName,
+      final HashedVersion versionToPersist, final ImmutableSet<String> domainsToNotify) {
+    return new Runnable() {
+      @Override
+      public void run() {
+        Preconditions.checkArgument(isLocalWavelet(waveletName) || domainsToNotify.isEmpty(),
+            "Remote wavelet %s cannot notify other domains", waveletName);
+        try {
+          future.get();
+        } catch (InterruptedException e) {
+          LOG.severe("Interrupted persisting " + waveletName + " at version " + versionToPersist,
+              e);
+          return;
+        } catch (ExecutionException e) {
+          LOG.severe("Failed to persist " + waveletName + " at version " + versionToPersist, e);
+          return;
+        }
+        // No exceptions, so the version was successfully persisted. Tell the world!
+        dispatcher.waveletCommitted(waveletName, versionToPersist);
+        if (!domainsToNotify.isEmpty()) {
+          notifyDomains();
+        }
+      }
+
+      private void notifyDomains() {
+        ProtocolHashedVersion serializedVersion =
+            CoreWaveletOperationSerializer.serialize(versionToPersist);
+        for (final String domain : domainsToNotify) {
+          final WaveletFederationListener host = federationHosts.get(domain);
+          host.waveletCommitUpdate(waveletName, serializedVersion,
+              new WaveletFederationListener.WaveletUpdateCallback() {
+                @Override
+                public void onSuccess() {
+                }
+
+                @Override
+                public void onFailure(FederationError error) {
+                  LOG.warning("Outgoing waveletCommitUpdate failure: " + error);
+                }
+              });
+        }
+      }
+    };
   }
 
   /**
@@ -762,7 +822,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
     }
   }
 
-  private Set<String> getParticipantDomains(LocalWaveletContainer lwc) {
+  private ImmutableSet<String> getRemoteParticipantDomains(LocalWaveletContainer lwc) {
     Set<String> hosts = Sets.newHashSet();
     Set<String> localDomains = certificateManager.getLocalDomains();
     for (ParticipantId p : lwc.getParticipants()) {
@@ -794,15 +854,13 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         for (WaveletContainer c : entry.getValue().values()) {
           if (c.getParticipants().contains(user)) {
             if (resultIndex >= startAt && resultIndex < (startAt + numResults)) {
-              WaveletData wavelet = c.getWaveletData();
-
               WaveViewData wave = results.get(waveId);
               if (wave == null) {
                 wave = WaveViewDataImpl.create(waveId);
                 results.put(waveId, wave);
               }
 
-              wave.addWavelet(UnmodifiableWaveletData.FACTORY.create(wavelet));
+              wave.addWavelet(c.copyWaveletData());
             }
 
             resultIndex++;

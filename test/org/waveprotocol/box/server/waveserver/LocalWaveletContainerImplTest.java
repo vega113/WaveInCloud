@@ -22,7 +22,6 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -77,8 +76,8 @@ public class LocalWaveletContainerImplTest extends TestCase {
         MutateDocument.newBuilder().setDocumentId(BLIP_ID).setDocumentOperation(
             ProtocolDocumentOperation.newBuilder().build())).build();
 
-    WaveletStore waveletStore = new DeltaStoreBasedWaveletStore(new MemoryDeltaStore());
-    wavelet = new LocalWaveletContainerImpl(waveletStore.open(WAVELET_NAME));
+    WaveletState waveletState = new MemoryWaveletState(WAVELET_NAME);
+    wavelet = new LocalWaveletContainerImpl(waveletState);
   }
 
   @Override

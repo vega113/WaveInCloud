@@ -17,8 +17,6 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import com.google.common.util.concurrent.MoreExecutors;
-
 import org.waveprotocol.wave.model.id.WaveletName;
 
 import java.util.concurrent.ExecutorService;
@@ -30,11 +28,9 @@ import java.util.concurrent.ExecutorService;
  */
 public class MemoryWaveletStateTest extends WaveletStateTestBase {
 
-  private final ExecutorService executor = MoreExecutors.sameThreadExecutor();
-
   @Override
   protected WaveletState createEmptyState(WaveletName name) {
-    return new MemoryWaveletState(executor, name);
+    return new MemoryWaveletState(name);
   }
 
   @Override

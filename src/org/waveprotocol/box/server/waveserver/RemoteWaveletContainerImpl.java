@@ -26,6 +26,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.jivesoftware.util.Base64;
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.crypto.SignatureException;
@@ -71,8 +72,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
    * Create a new RemoteWaveletContainerImpl. Just pass through to the parent
    * constructor.
    */
-  public RemoteWaveletContainerImpl(WaveletStore.WaveletAccess waveletAccess) {
-    super(waveletAccess);
+  public RemoteWaveletContainerImpl(WaveletState waveletState) {
+    super(waveletState);
     state = State.LOADING;
   }
 
@@ -80,20 +81,6 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
   protected void checkStateOkOrLoading() throws WaveletStateException {
     if (state != State.LOADING) {
       checkStateOk();
-    }
-  }
-
-  @Override
-  public boolean committed(HashedVersion hashedVersion) throws WaveletStateException {
-    acquireWriteLock();
-    try {
-      checkStateOkOrLoading();
-      lastCommittedVersion = hashedVersion;
-
-      // Pass to clients iff our known version is here or greater.
-      return getCurrentVersion().getVersion() >= hashedVersion.getVersion();
-    } finally {
-      releaseWriteLock();
     }
   }
 

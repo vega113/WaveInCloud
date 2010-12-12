@@ -17,10 +17,10 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.common.DeltaSequence;
-import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -43,27 +43,18 @@ import java.util.Collection;
 interface WaveletState {
 
   /**
-   * Callback which is invoked when deltas are persisted.
-   */
-  interface PersistenceListener {
-    void persisted(WaveletName waveletName, HashedVersion persistedVersion);
-
-    void failed(Exception cause);
-  }
-
-  /**
    * @return The wavelet name.
    */
   WaveletName getWaveletName();
 
   /**
-   * @return A snapshot copy of the wavelet state. The snapshot is a reference
+   * @return a snapshot copy of the wavelet state. The snapshot is a reference
    *         the internal state.
    */
   ReadableWaveletData getSnapshot();
 
   /**
-   * @return The current hashed version.
+   * @return the current hashed version.
    */
   HashedVersion getCurrentVersion();
 
@@ -73,45 +64,45 @@ interface WaveletState {
   HashedVersion getLastPersistedVersion();
 
   /**
-   * @return The hashed version at the given version, if the version is at a
+   * @return the hashed version at the given version, if the version is at a
    *         delta boundary, otherwise null.
    */
   HashedVersion getHashedVersion(long version);
 
   /**
-   * @return The transformed delta applied at the given version, if it exists,
+   * @return the transformed delta applied at the given version, if it exists,
    *         otherwise null.
    */
   TransformedWaveletDelta getTransformedDelta(HashedVersion beginVersion);
 
   /**
-   * @return The transformed delta with the given resulting version, if it
+   * @return the transformed delta with the given resulting version, if it
    *         exists, otherwise null.
    */
   TransformedWaveletDelta getTransformedDeltaByEndVersion(HashedVersion endVersion);
 
   /**
-   * @return The transformed deltas from the one applied at the given start
+   * @return the transformed deltas from the one applied at the given start
    *         version until the one resulting in the given end version, if these
    *         exist, otherwise null.
    */
   DeltaSequence getTransformedDeltaHistory(HashedVersion startVersion, HashedVersion endVersion);
 
   /**
-   * @return The applied delta applied at the given version, if it exists,
+   * @return the applied delta applied at the given version, if it exists,
    *         otherwise null.
    */
   ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDelta(HashedVersion beginVersion);
 
   /**
-   * @return The applied delta with the given resulting version, if it exists,
+   * @return the applied delta with the given resulting version, if it exists,
    *         otherwise null.
    */
   ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDeltaByEndVersion(
       HashedVersion endVersion);
 
   /**
-   * @return The applied deltas from the one applied at the given start version
+   * @return the applied deltas from the one applied at the given start version
    *         until the one resulting in the given end version, if these exist,
    *         otherwise null.
    */
@@ -135,35 +126,18 @@ interface WaveletState {
    *
    * <p>
    * If the deltas up to the given version are already persisted, this call does
-   * nothing.
-   *
-   * <p>
-   * As the deltas are persisted, any persistence listeners are invoked, one
-   * batch at a time, not necessarily for each delta.
+   * nothing and returns a future which is already done.
    *
    * @param version Must be the resulting version of some delta in the delta
    *        history.
+   * @return a future which is done when the version is persisted, or the attempt
+   *         to persist fails (in which case the future raises an exception).
    */
-  void persist(HashedVersion version) throws PersistenceException;
+  ListenableFuture<Void> persist(HashedVersion version);
 
   /**
    * Closes the object. No other methods on the object should be invoked after
    * this class.
    */
   void close() throws IOException;
-
-  /**
-   * Adds a persistence listener. The listener will be called whenever another
-   * batch of deltas are persisted, until the listener is removed with a call to
-   * {@link #removePersistenceListener(PersistenceListener)}. If the listener
-   * was already added, this call does nothing.
-   */
-  void addPersistenceListener(PersistenceListener listener);
-
-  /**
-   * Removes a persistence listener which was added with
-   * {@link #addPersistenceListener(PersistenceListener)}. If the listener was
-   * not added or has already been removed, this call does nothing.
-   */
-  void removePersistenceListener(PersistenceListener listener);
 }

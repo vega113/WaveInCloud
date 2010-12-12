@@ -17,12 +17,15 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
+import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 
 import java.util.Collection;
 import java.util.Set;
@@ -46,12 +49,26 @@ interface WaveletContainer {
     CORRUPTED
   }
 
+  /** Returns the state of the wavelet container. */
   State getState();
 
+  /** Sets the state of the wavelet container. */
   void setState(State state);
 
-  WaveletData getWaveletData();
+  /**
+   * Initiates persistence of deltas up to the given version.
+   *
+   * @see WaveletState#persist(HashedVersion)
+   */
+  ListenableFuture<Void> persist(HashedVersion version);
 
+  /** Returns the name of the wavelet. */
+  WaveletName getWaveletName();
+
+  /** Returns a snapshot copy of the wavelet state. */
+  ObservableWaveletData copyWaveletData();
+
+  /** Returns a snapshot of the wavelet state, last committed version. */
   WaveletSnapshotAndVersion getSnapshot();
 
   /**

@@ -19,6 +19,8 @@ package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
@@ -38,8 +40,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ExecutorService;
 
 /**
  * All-in-memory implementation of wavelet state for testing.
@@ -66,13 +66,8 @@ class MemoryWaveletState implements WaveletState {
     return (entry != null && entry.getKey().getVersion() == version) ? entry : null;
   }
 
-  private final ExecutorService executor;
   private final WaveletName waveletName;
   private final HashedVersion versionZero;
-
-  /** CopyOnWriteArraySet so we can iterate over it in another thread. */
-  private final Set<PersistenceListener> persistenceListeners =
-      new CopyOnWriteArraySet<PersistenceListener>();
 
   /** Keyed by appliedAtVersion. */
   private final NavigableMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>>
@@ -89,8 +84,7 @@ class MemoryWaveletState implements WaveletState {
   private HashedVersion lastPersistedVersion;
 
   /** Constructs an empty wavelet state with the given name. */
-  public MemoryWaveletState(ExecutorService executor, WaveletName waveletName) {
-    this.executor = executor;
+  public MemoryWaveletState(WaveletName waveletName) {
     this.waveletName = waveletName;
     this.versionZero = HASH_FACTORY.createVersionZero(waveletName);
   }
@@ -209,44 +203,23 @@ class MemoryWaveletState implements WaveletState {
   }
 
   @Override
-  public void persist(final HashedVersion version) {
+  public ListenableFuture<Void> persist(final HashedVersion version) {
     Preconditions.checkArgument(version.getVersion() > 0,
         "Cannot persist non-positive version %s", version);
     Preconditions.checkArgument(isDeltaBoundary(version),
         "Version to persist %s matches no delta", version);
 
-    // Ignore, if this version is already persisted.
-    if (lastPersistedVersion != null && lastPersistedVersion.getVersion() >= version.getVersion()) {
-      return;
+    if (lastPersistedVersion == null || lastPersistedVersion.getVersion() < version.getVersion()) {
+      lastPersistedVersion = version;
     }
-
-    lastPersistedVersion = version;
 
     // This implementation regards things as persisted when they are in memory, so
     // we report the version as persisted as soon as we're asked to persist it.
-    executor.execute(new Runnable() {
-      @Override
-      public void run() {
-        for (PersistenceListener listener : persistenceListeners) {
-          listener.persisted(waveletName, version);
-        }
-      }
-    });
+    return Futures.immediateFuture(null);
   }
 
   @Override
   public void close() {
-    persistenceListeners.clear();
-  }
-
-  @Override
-  public void addPersistenceListener(PersistenceListener listener) {
-    persistenceListeners.add(listener);
-  }
-
-  @Override
-  public void removePersistenceListener(PersistenceListener listener) {
-    persistenceListeners.remove(listener);
   }
 
   private boolean isDeltaBoundary(HashedVersion version) {

@@ -21,6 +21,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.box.server.CoreSettings;
@@ -45,20 +46,25 @@ import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 /**
  * Guice Module for the prototype Server.
  *
  */
 public class WaveServerModule extends AbstractModule {
+  // TODO(soren): move to global config file
+  private static final int LISTENER_EXECUTOR_THREAD_COUNT = 2;
+  private static final IdURIEncoderDecoder URI_CODEC =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+  private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
+
   private final boolean enableFederation;
 
   public WaveServerModule(boolean enableFederation) {
     this.enableFederation = enableFederation;
   }
-
-  private static final IdURIEncoderDecoder URI_CODEC =
-      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
-  private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
 
   @Override
   protected void configure() {
@@ -91,26 +97,26 @@ public class WaveServerModule extends AbstractModule {
     bind(ClientFrontend.class).to(ClientFrontendImpl.class).in(Singleton.class);
     bind(ProtocolWaveClientRpc.Interface.class).to(WaveClientRpcImpl.class).in(Singleton.class);
     bind(WaveletStore.class).to(DeltaStoreBasedWaveletStore.class).in(Singleton.class);
+    bind(Executor.class).annotatedWith(Names.named("listener_executor")).toInstance(
+        Executors.newFixedThreadPool(LISTENER_EXECUTOR_THREAD_COUNT));
   }
 
   @Provides
-  private LocalWaveletContainer.Factory provideLocalWaveletContainerFactory(
-      final WaveletStore waveletStore) {
+  private LocalWaveletContainer.Factory provideLocalWaveletContainerFactory() {
     return new LocalWaveletContainer.Factory() {
       @Override
       public LocalWaveletContainer create(WaveletName waveletName) throws PersistenceException {
-        return new LocalWaveletContainerImpl(waveletStore.open(waveletName));
+        return new LocalWaveletContainerImpl(new MemoryWaveletState(waveletName));
       }
     };
   }
 
   @Provides
-  private RemoteWaveletContainer.Factory provideRemoteWaveletContainerFactory(
-      final WaveletStore waveletStore) {
+  private RemoteWaveletContainer.Factory provideRemoteWaveletContainerFactory() {
     return new RemoteWaveletContainer.Factory() {
       @Override
       public RemoteWaveletContainer create(WaveletName waveletName) throws PersistenceException {
-        return new RemoteWaveletContainerImpl(waveletStore.open(waveletName));
+        return new RemoteWaveletContainerImpl(new MemoryWaveletState(waveletName));
       }
     };
   }

@@ -25,7 +25,6 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -112,9 +111,10 @@ public class WaveletContainerTest extends TestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    WaveletStore waveletStore = new DeltaStoreBasedWaveletStore(new MemoryDeltaStore());
-    localWavelet = new LocalWaveletContainerImpl(waveletStore.open(localWaveletName));
-    remoteWavelet = new RemoteWaveletContainerImpl(waveletStore.open(remoteWaveletName));
+    WaveletState localWaveletState = new MemoryWaveletState(localWaveletName);
+    localWavelet = new LocalWaveletContainerImpl(localWaveletState);
+    WaveletState remoteWaveletState = new MemoryWaveletState(remoteWaveletName);
+    remoteWavelet = new RemoteWaveletContainerImpl(remoteWaveletState);
   }
 
   // Tests

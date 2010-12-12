@@ -23,6 +23,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
@@ -41,14 +42,14 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 class LocalWaveletContainerImpl extends WaveletContainerImpl
     implements LocalWaveletContainer {
 
-  public LocalWaveletContainerImpl(WaveletStore.WaveletAccess waveletAccess) {
-    super(waveletAccess);
+  public LocalWaveletContainerImpl(WaveletState waveletState) {
+    super(waveletState);
   }
 
   @Override
   public WaveletDeltaRecord submitRequest(WaveletName waveletName,
       ProtocolSignedDelta signedDelta) throws OperationException,
-      InvalidProtocolBufferException, InvalidHashException {
+      InvalidProtocolBufferException, InvalidHashException, PersistenceException {
     acquireWriteLock();
     try {
       return transformAndApplyLocalDelta(signedDelta);
@@ -70,7 +71,8 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
    * @throws InvalidHashException if delta hash sanity checks fail
    */
   private WaveletDeltaRecord transformAndApplyLocalDelta(ProtocolSignedDelta signedDelta)
-      throws OperationException, InvalidProtocolBufferException, InvalidHashException {
+      throws OperationException, InvalidProtocolBufferException, InvalidHashException,
+      PersistenceException {
     ProtocolWaveletDelta protocolDelta =
         ByteStringMessage.parseProtocolWaveletDelta(signedDelta.getDelta()).getMessage();
 

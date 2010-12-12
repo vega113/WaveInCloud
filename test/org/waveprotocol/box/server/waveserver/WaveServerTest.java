@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import junit.framework.TestCase;
 
@@ -29,7 +30,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.persistence.PersistenceException;
-import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.LocalWaveletContainer.Factory;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
@@ -86,15 +86,16 @@ public class WaveServerTest extends TestCase {
     SignatureHandler localSigner = mock(SignatureHandler.class);
     when(localSigner.getSignerInfo()).thenReturn(null);
     when(certificateManager.getLocalSigner()).thenReturn(localSigner);
-    final WaveletStore waveletStore = new DeltaStoreBasedWaveletStore(new MemoryDeltaStore());
     Factory localWaveletContainerFactory = new LocalWaveletContainer.Factory() {
       @Override
       public LocalWaveletContainer create(WaveletName waveletName) throws PersistenceException {
-        return new LocalWaveletContainerImpl(waveletStore.open(waveletName));
+        WaveletState waveletState = new MemoryWaveletState(waveletName);
+        return new LocalWaveletContainerImpl(waveletState);
       }
     };
 
-    waveServer = new WaveServerImpl(certificateManager, federationHostFactory, federationRemote,
+    waveServer = new WaveServerImpl(MoreExecutors.sameThreadExecutor(),
+        certificateManager, federationHostFactory, federationRemote,
         localWaveletContainerFactory, remoteWaveletContainerFactory);
 
     IdURIEncoderDecoder uriCodec =

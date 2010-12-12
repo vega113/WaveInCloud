@@ -29,7 +29,6 @@ import org.mockito.Mockito;
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.box.server.waveserver.WaveletState.PersistenceListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -47,6 +46,7 @@ import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * Tests for {@link WaveletState} implementations.
@@ -257,56 +257,37 @@ public abstract class WaveletStateTestBase extends TestCase {
     }
   }
 
-  public void testPersistenceListenerNotCalledBeforePersistence() throws Exception {
-    PersistenceListener listener = mock(PersistenceListener.class);
-    target.addPersistenceListener(listener);
+  public void checkSingleDeltaPersistFutureDone() throws Exception {
     appendDeltas(d1);
+    Future<Void> future = target.persist(d1.getResultingVersion());
     awaitPersistence();
-    Mockito.verifyZeroInteractions(listener);
+    assertTrue(future.isDone());
+    assertEquals(null, future.get());
+    assertEquals(d1.getResultingVersion(), target.getLastPersistedVersion());
   }
 
-  public void checkListenerReceivesCallbackForSingleDelta() throws Exception {
-    PersistenceListener listener = mock(PersistenceListener.class);
-    target.addPersistenceListener(listener);
-    appendDeltas(d1);
-    target.persist(d1.getResultingVersion());
-    awaitPersistence();
-    Mockito.verify(listener).persisted(NAME, d1.getResultingVersion());
-  }
-
-  public void checkListenerReceivesCallbackForManyDeltas() throws Exception {
-    PersistenceListener listener = mock(PersistenceListener.class);
-    target.addPersistenceListener(listener);
+  public void checkManyDeltasPersistFutureDone() throws Exception {
     appendDeltas(d1, d2, d3);
-    target.persist(d3.getResultingVersion());
+    Future<Void> future = target.persist(d3.getResultingVersion());
     awaitPersistence();
-    Mockito.verify(listener).persisted(NAME, d3.getResultingVersion());
-    // There may have been other calls too, which the mock will ignore.
-  }
-
-  public void testPersistIsIdempotent() throws Exception {
-    PersistenceListener listener = mock(PersistenceListener.class);
-    appendDeltas(d1);
-    target.persist(d1.getResultingVersion());
-    awaitPersistence();
-
-    target.addPersistenceListener(listener);
-    target.persist(d1.getResultingVersion());
-    awaitPersistence();
-    Mockito.verifyZeroInteractions(listener);
+    assertTrue(future.isDone());
+    assertEquals(null, future.get());
+    assertEquals(d3.getResultingVersion(), target.getLastPersistedVersion());
   }
 
   public void testCanPersistOnlySomeDeltas() throws Exception {
-    PersistenceListener listener = mock(PersistenceListener.class);
-    target.addPersistenceListener(listener);
     appendDeltas(d1, d2, d3);
-    target.persist(d2.getResultingVersion());
+    Future<Void> future = target.persist(d2.getResultingVersion());
     awaitPersistence();
-    Mockito.verify(listener).persisted(NAME, d2.getResultingVersion());
+    assertTrue(future.isDone());
+    assertEquals(null, future.get());
+    assertEquals(d2.getResultingVersion(), target.getLastPersistedVersion());
 
-    target.persist(d3.getResultingVersion());
+    future = target.persist(d3.getResultingVersion());
     awaitPersistence();
-    Mockito.verify(listener).persisted(NAME, d3.getResultingVersion());
+    assertTrue(future.isDone());
+    assertEquals(null, future.get());
+    assertEquals(d3.getResultingVersion(), target.getLastPersistedVersion());
   }
 
   /**

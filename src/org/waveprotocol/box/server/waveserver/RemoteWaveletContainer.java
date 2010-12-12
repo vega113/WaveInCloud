@@ -61,11 +61,4 @@ interface RemoteWaveletContainer extends WaveletContainer {
   void update(List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas, String domain,
       WaveletFederationProvider federationProvider, CertificateManager certificateManager,
       RemoteWaveletDeltaCallback updateCallback) throws WaveServerException;
-
-  /**
-   * Indicate that the remote wave server has committed the wavelet to disk.
-   * @param hashedVersion version that was committed.
-   * @return whether to inform clients of the commit.
-   */
-  boolean committed(HashedVersion hashedVersion) throws WaveletStateException;
 }

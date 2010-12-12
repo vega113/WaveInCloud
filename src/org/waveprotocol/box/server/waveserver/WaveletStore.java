@@ -43,6 +43,9 @@ public interface WaveletStore {
    * Accesses the state for a wavelet.
    * Permits reading a snapshot of the wavelet state and historical deltas,
    * and appending deltas to the history.
+   *
+   * Callers must serialize all calls to
+   * {@link #appendDeltas(Collection<WaveletDeltaRecord>,ReadableWaveletData)}.
    */
   interface WaveletAccess extends WaveletDeltaRecordReader, Closeable {
 
@@ -80,7 +83,7 @@ public interface WaveletStore {
 
   /**
    * Deletes a non-empty wavelet.
-   * 
+   *
    * @throws PersistenceException if anything goes wrong with the underlying storage.
    * @throws FileNotFoundPersistenceException if this wavelet doesn't exist in
    *         the wavelet store.
