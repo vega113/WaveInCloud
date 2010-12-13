@@ -109,7 +109,7 @@ public final class PasteFormatRenderer {
   private static NiceHtmlRenderer getSemanticHandler(ContentNode node) {
     if (node instanceof AgentAdapter) {
       AgentAdapter element = (AgentAdapter) node;
-      NiceHtmlRenderer handler = element.getRegisteredNiceHtmlRenderer();
+      NiceHtmlRenderer handler = element.getRegistry().getNiceHtmlRenderer(element);
       return handler != null ? handler : PasteFormatRenderers.DEEP_CLONE_RENDERER;
     } else {
       return PasteFormatRenderers.DEEP_CLONE_RENDERER;

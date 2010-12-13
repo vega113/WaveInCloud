@@ -27,6 +27,7 @@ import org.waveprotocol.wave.client.editor.EditorAnnotationTree;
 import org.waveprotocol.wave.client.editor.EditorContext;
 import org.waveprotocol.wave.client.editor.EditorImpl.MiniBundle;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
+import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ClientDocumentContext.RenderingConcerns;
 import org.waveprotocol.wave.client.editor.content.DiffHighlightingFilter.DiffHighlightTarget;
@@ -320,6 +321,8 @@ public class ContentDocument {
 
       // Note: Redundant setting of handlers currently possible...
 
+      ElementHandlerRegistry elementRegistry = registries.getElementHandlerRegistry();
+      e.setRegistry(elementRegistry);
       if (!shouldBeRendered) {
 
         // Reverse order, for cleanup
@@ -327,7 +330,7 @@ public class ContentDocument {
 
         e.setNodeEventHandler(null);
 
-        NodeMutationHandler mutationHandler = e.getRegisteredMutationHandler();
+        NodeMutationHandler mutationHandler = elementRegistry.getMutationHandler(e);
         if (mutationHandler instanceof PermanentMutationHandler) {
           e.setNodeMutationHandler(mutationHandler);
         } else {
@@ -349,11 +352,11 @@ public class ContentDocument {
           initRootElementRendering(shouldBeRendered);
         }
 
-        e.setNodeMutationHandler(e.getRegisteredMutationHandler());
+        e.setNodeMutationHandler(elementRegistry.getMutationHandler(e));
       }
 
       if (level == Level.EDITING) {
-        e.setNodeEventHandler(e.getRegisteredEventHandler());
+        e.setNodeEventHandler(elementRegistry.getEventHandler(e));
       }
 
       if (shouldBeRendered) {
@@ -477,7 +480,7 @@ public class ContentDocument {
       return;
     }
 
-    Renderer renderer = e.getRegisteredRenderer();
+    Renderer renderer = registries.getElementHandlerRegistry().getRenderer(e);
     if (isRendering) {
       e.setRenderer(renderer != null ? renderer : AgentAdapter.defaultRenderer);
     } else {
@@ -1420,7 +1423,6 @@ public class ContentDocument {
     registries = registriesBundle;
 
     if (registries != null) {
-      // TODO: go and re-render all the doodads with their new handlers.
       AnnotationPainter.createAndSetDocPainter(getContext(), registries.getPaintRegistry());
     } else {
       AnnotationPainter.clearDocPainter(getContext());

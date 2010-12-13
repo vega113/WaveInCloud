@@ -127,7 +127,7 @@ public class AgentAdapter extends ContentElement implements
   private NodeMutationHandler<ContentNode, ContentElement> nodeMutationHandler =
       defaultMutationHandler;
   private Renderer renderer = noRenderer;
-  private final ElementHandlerRegistry registry;
+  private ElementHandlerRegistry registry;
   private final ContentElement element = this;
 
   public AgentAdapter(String tagName, Map<String, String> attributes,
@@ -140,17 +140,23 @@ public class AgentAdapter extends ContentElement implements
    * @param registry The handler registry associated with the document
    *   the element belongs to
    */
-  // The handlers are themselves of generic type. Nothing we can do about this with java's
-  // type system, but that's ok because it's very unlikely that one would register the
-  // wrong type of handler on a ContentElement registry.
-  @SuppressWarnings("unchecked")
   public AgentAdapter(String tagName, Map<String, String> attributes,
       ExtendedClientDocumentContext bundle, ElementHandlerRegistry registry, boolean isRendered) {
     super(tagName, bundle, true);
 
-    this.registry = registry;
-
+    setRegistry(registry);
     init(attributes);
+  }
+
+  // NOTE(danilatos): The registry member variable is only needed in one place
+  // where some code gets the "nice html renderer" from an element. Delete this
+  // once that's gone.
+  public void setRegistry(ElementHandlerRegistry registry) {
+    this.registry = registry;
+  }
+
+  public ElementHandlerRegistry getRegistry() {
+    return registry;
   }
 
   Renderer getRenderer() {
@@ -217,23 +223,6 @@ public class AgentAdapter extends ContentElement implements
     this.nodeEventHandler.onDeactivated(this);
     this.nodeEventHandler = ValueUtils.valueOrDefault(nodeEventHandler, defaultEventHandler);
     this.nodeEventHandler.onActivated(this);
-  }
-
-  /** Retrieve the registrie's handlers for each registerable entity. */
-  public Renderer getRegisteredRenderer() {
-    return registry.getRenderer(this);
-  }
-
-  public NodeEventHandler getRegisteredEventHandler() {
-    return registry.getEventHandler(this);
-  }
-
-  public NodeMutationHandler<ContentNode, ContentElement> getRegisteredMutationHandler() {
-    return registry.getMutationHandler(this);
-  }
-
-  public NiceHtmlRenderer getRegisteredNiceHtmlRenderer() {
-    return registry.getNiceHtmlRenderer(this);
   }
 
   // Special behaviour for these two, hence not with the mechanically generated ones
