@@ -227,6 +227,20 @@ class ImageThumbnailWidget extends Composite implements ImageThumbnailView {
 
   @UiHandler("image")
   void onImageClicked(ClickEvent ignored) {
+    handleImageRegionClicked();
+  }
+
+  @UiHandler("spin")
+  void onSpinClicked(ClickEvent ignored) {
+    handleImageRegionClicked();
+  }
+
+  @UiHandler("errorLabel")
+  void onErrorClicked(ClickEvent ignored) {
+    handleImageRegionClicked();
+  }
+
+  private void handleImageRegionClicked() {
     if (listener != null) {
       listener.onClickImage();
     }

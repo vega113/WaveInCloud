@@ -55,7 +55,7 @@ public class FakeAttachmentsManager implements SimpleAttachmentManager {
 
   @Override
   public Attachment getAttachment(String id) {
-    return map.get(id);
+    return id != null ? map.get(id) : null;
   }
 
   @Override

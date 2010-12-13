@@ -21,17 +21,21 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RootPanel;
 
 import org.waveprotocol.wave.client.doodad.attachment.ImageThumbnail;
+import org.waveprotocol.wave.client.doodad.attachment.ImageThumbnail.ThumbnailActionHandler;
+import org.waveprotocol.wave.client.doodad.attachment.render.ImageThumbnailWrapper;
 import org.waveprotocol.wave.client.doodad.attachment.testing.FakeAttachmentsManager;
 import org.waveprotocol.wave.client.doodad.diff.DiffDeleteRenderer;
 import org.waveprotocol.wave.client.doodad.form.FormDoodads;
 import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler;
 import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler.LinkAttributeAugmenter;
 import org.waveprotocol.wave.client.doodad.suggestion.Suggestion;
+import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.Registries;
 import org.waveprotocol.wave.client.editor.testtools.TestConstants;
 
@@ -64,7 +68,27 @@ public class DefaultTestHarness implements EntryPoint {
         attachmentManager.createFakeAttachment("pics/hills.jpg", 120, 74);
         attachmentManager.createFakeAttachment("pics/wave.gif", 120, 74);
 
-        ImageThumbnail.register(registries.getElementHandlerRegistry(), attachmentManager, null);
+        ImageThumbnail.register(registries.getElementHandlerRegistry(), attachmentManager,
+            new ThumbnailActionHandler() {
+          @Override
+          public boolean onClick(ImageThumbnailWrapper thumbnail) {
+            ContentElement e = thumbnail.getElement();
+            String newId = Window.prompt("New attachment id, or 'remove' to remove the attribute",
+                e.getAttribute(ImageThumbnail.ATTACHMENT_ATTR));
+
+            if (newId == null) {
+              // They hit escape
+              return true;
+            }
+
+            if ("remove".equals(newId)) {
+              newId = null;
+            }
+
+            e.getMutableDoc().setElementAttribute(e, ImageThumbnail.ATTACHMENT_ATTR, newId);
+            return true;
+          }
+        });
 
 
         LinkAnnotationHandler.register(registries,

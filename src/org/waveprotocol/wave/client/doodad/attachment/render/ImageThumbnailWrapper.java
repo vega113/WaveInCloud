@@ -17,7 +17,6 @@
 
 package org.waveprotocol.wave.client.doodad.attachment.render;
 
-import org.waveprotocol.wave.client.doodad.attachment.SimpleAttachmentManager;
 import org.waveprotocol.wave.client.doodad.attachment.SimpleAttachmentManager.Attachment;
 import org.waveprotocol.wave.client.editor.content.CMutableDocument;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
@@ -44,15 +43,13 @@ public class ImageThumbnailWrapper {
   private final ContentElement element;
 
   /** Attachment. */
-  private final Attachment attachment;
+  private Attachment attachment;
 
   /**
    * @param element the element being wrapped
-   * @param attachment the attachment
    */
-  public ImageThumbnailWrapper(ContentElement element, Attachment attachment) {
+  public ImageThumbnailWrapper(ContentElement element) {
     this.element = element;
-    this.attachment = attachment;
   }
 
   /**
@@ -62,6 +59,10 @@ public class ImageThumbnailWrapper {
    */
   public static ImageThumbnailWrapper of(ContentElement e) {
     return e.getProperty(ImageThumbnailWrapper.PROPERTY);
+  }
+
+  void setAttachment(Attachment a) {
+    attachment = a;
   }
 
   /**
@@ -96,5 +97,9 @@ public class ImageThumbnailWrapper {
     }
     builder.appendNode(element);
     return builder;
+  }
+
+  public ContentElement getElement() {
+    return element;
   }
 }

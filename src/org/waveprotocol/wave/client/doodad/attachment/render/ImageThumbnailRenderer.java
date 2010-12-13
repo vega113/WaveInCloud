@@ -77,15 +77,9 @@ public class ImageThumbnailRenderer extends GwtRenderingMutationHandler {
 
   @Override
   public void onActivationStart(ContentElement element) {
+    element.setProperty(ImageThumbnailWrapper.PROPERTY, new ImageThumbnailWrapper(element));
+
     fanoutAttrs(element);
-
-    final Attachment attachment = manager.getAttachment(element.getAttribute(
-        ImageThumbnail.ATTACHMENT_ATTR));
-
-
-    ImageThumbnailWrapper w = new ImageThumbnailWrapper(element, attachment);
-    attachmentHandler.init(element, attachment);
-    element.setProperty(ImageThumbnailWrapper.PROPERTY, w);
   }
 
   @Override
@@ -100,6 +94,20 @@ public class ImageThumbnailRenderer extends GwtRenderingMutationHandler {
     if (ImageThumbnail.STYLE_ATTR.equals(name)) {
       ImageThumbnailView view = getView(element);
       view.setFullSizeMode(ImageThumbnail.STYLE_FULL.equals(newValue));
+    } else if (ImageThumbnail.ATTACHMENT_ATTR.equals(name)) {
+      ImageThumbnailWrapper w = ImageThumbnailWrapper.of(element);
+      assert w != null;
+
+      Attachment newAttachment = manager.getAttachment(newValue);
+      if (newAttachment != w.getAttachment()) {
+        if (w.getAttachment() != null) {
+          attachmentHandler.cleanup(element);
+        }
+        if (newAttachment != null) {
+          ImageThumbnailWrapper.of(element).setAttachment(newAttachment);
+          attachmentHandler.init(element, newAttachment);
+        }
+      }
     }
     super.onAttributeModified(element, name, oldValue, newValue);
   }
