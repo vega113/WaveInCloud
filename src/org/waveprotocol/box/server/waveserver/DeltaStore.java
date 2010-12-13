@@ -17,6 +17,7 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -87,4 +88,17 @@ public interface DeltaStore {
    *         storage.
    */
   Set<WaveletId> lookup(WaveId waveId) throws PersistenceException;
+
+  /**
+   * Return an {@link ExceptionalIterator} that throws a {@link PersistenceException} if something
+   * goes wrong while iterating over the store's wave IDs. This will only return the ids of waves
+   * that have at least one non-empty wavelet.
+   * 
+   * The results returned from the iterator may or may not reflect concurrent modifications.
+   * the iterator itself is NOT thread safe and should only be used by one thread.
+   * 
+   * @throws PersistenceException if anything goes wrong with the underlying
+   *         storage while creating the iterator.
+   */
+  ExceptionalIterator<WaveId, PersistenceException> getWaveIdIterator() throws PersistenceException;
 }

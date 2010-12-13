@@ -19,10 +19,10 @@ package org.waveprotocol.box.server.persistence.file;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.waveserver.DeltaStore;
@@ -32,6 +32,8 @@ import org.waveprotocol.wave.model.id.WaveletName;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
@@ -79,7 +81,7 @@ public class FileDeltaStore implements DeltaStore {
       }
     });
 
-    Builder<WaveletId> results = ImmutableSet.builder();
+    ImmutableSet.Builder<WaveletId> results = ImmutableSet.builder();
     for(File deltaFile : deltaFiles) {
       String name = deltaFile.getName();
       String encodedWaveletId =
@@ -94,5 +96,69 @@ public class FileDeltaStore implements DeltaStore {
   @Override
   public DeltasAccess open(WaveletName waveletName) throws PersistenceException {
     return new FileDeltaCollection(waveletName, basePath);
+  }
+  
+  @Override
+  public ExceptionalIterator<WaveId, PersistenceException> getWaveIdIterator()
+      throws PersistenceException {
+    File baseDir = new File(basePath);
+    if (!baseDir.exists()) {
+      return ExceptionalIterator.Empty.create();
+    }
+
+    File[] waveDirs = baseDir.listFiles(new FilenameFilter() {
+      @Override
+      public boolean accept(File dir, String name) {
+        try {
+          FileUtils.waveIdFromPathSegment(name);
+          return true;
+        } catch (IllegalArgumentException e) {
+          return false;
+        }
+      }
+    });
+
+    final ImmutableSet.Builder<WaveId> results = ImmutableSet.builder();
+    for(File waveDir : waveDirs) {
+      results.add(FileUtils.waveIdFromPathSegment(waveDir.getName()));
+    }
+    
+    return new ExceptionalIterator<WaveId, PersistenceException>() {
+      private final Iterator<WaveId> iterator = results.build().iterator();
+      private boolean nextFetched = false;
+      private WaveId nextWaveId = null;
+
+      private void fetchNext() throws PersistenceException {
+        while(!nextFetched) {
+          if (iterator.hasNext()) {
+            nextWaveId = iterator.next();
+            if (!lookup(nextWaveId).isEmpty()) {
+              nextFetched = true;
+            }
+          } else {
+            nextFetched = true;
+            nextWaveId = null;
+          }
+        }
+      }
+      
+      @Override
+      public boolean hasNext() throws PersistenceException {
+        fetchNext();
+        return nextWaveId != null; 
+      }
+
+      @Override
+      public WaveId next() throws PersistenceException {
+        fetchNext();
+        if (nextWaveId == null) {
+          throw new NoSuchElementException();
+        } else {
+          nextFetched = false;
+          return nextWaveId;
+        }
+      }
+      
+    };
   }
 }

@@ -234,7 +234,9 @@
         <exclude name="**/*LargeTest.java"/>
         <!-- Exclude all persistence tests -->
         <exclude name="**/server/persistence/**"/>
-        <!-- Include the persistence tests that aren't run elsewhere -->
+      </fileset>
+      <!-- Include the persistence tests that aren't run elsewhere -->
+      <fileset dir="${test.dir}">
         <include name="**/server/persistence/memory/*Test.java"/>
         <include name="**/server/persistence/file/*Test.java"/>
       </fileset>

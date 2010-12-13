@@ -23,6 +23,7 @@ import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.util.testing.TestingConstants;
 import org.waveprotocol.box.server.waveserver.ByteStringMessage;
@@ -47,6 +48,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * Tests for all DeltaStore implementations.
@@ -56,6 +58,8 @@ import java.util.List;
 public abstract class DeltaStoreTestBase extends TestCase {
   private final WaveletName WAVE1_WAVELET1 =
     WaveletName.of(new WaveId("example.com", "wave1"), new WaveletId("example.com", "wavelet1"));
+  private final WaveletName WAVE2_WAVELET1 =
+    WaveletName.of(new WaveId("example.com", "wave2"), new WaveletId("example.com", "wavelet1"));
 
   /** Create and return a new delta store instance of the type being tested. */
   protected abstract DeltaStore newDeltaStore() throws Exception;
@@ -130,16 +134,79 @@ public abstract class DeltaStoreTestBase extends TestCase {
     assertTrue(store.lookup(WAVE1_WAVELET1.waveId).isEmpty());
   }
 
+  public void testWaveIdIteratorReturnsWaveIds() throws Exception {
+    Pair<DeltaStore,WaveletDeltaRecord> pair = newDeltaStoreWithRecord(WAVE1_WAVELET1);
+    DeltaStore store = pair.first;
+
+    ImmutableSet<WaveId> waveIds = setFromExceptionalIterator(store.getWaveIdIterator());
+    
+    assertEquals(ImmutableSet.of(WAVE1_WAVELET1.waveId), waveIds);
+  }
+
+  public void testWaveIdIteratorDoesNotReturnEmptyWavelets() throws Exception {
+    DeltaStore store = newDeltaStore();
+    DeltasAccess wavelet = store.open(WAVE1_WAVELET1);
+    wavelet.close();
+
+    assertFalse(store.getWaveIdIterator().hasNext());
+  }
+
+  public void testWaveIdIteratorDoesNotReturnDeletedWavelets() throws Exception {
+    Pair<DeltaStore, WaveletDeltaRecord> pair = newDeltaStoreWithRecord(WAVE1_WAVELET1);
+    DeltaStore store = pair.first;
+    store.delete(WAVE1_WAVELET1);
+
+    assertFalse(store.getWaveIdIterator().hasNext());
+  }
+
+  public void testWaveIdIteratorLimits() throws Exception {
+    Pair<DeltaStore,WaveletDeltaRecord> pair = newDeltaStoreWithRecord(WAVE1_WAVELET1);
+    DeltaStore store = pair.first;
+
+    DeltasAccess wavelet = store.open(WAVE2_WAVELET1);
+
+    WaveletDeltaRecord record = createRecord();
+    wavelet.append(ImmutableList.of(record));
+    wavelet.close();
+    
+    ExceptionalIterator<WaveId, PersistenceException> iterator = store.getWaveIdIterator();
+    assertTrue(iterator.hasNext());
+
+    WaveId waveId1 = iterator.next();
+    assertTrue(iterator.hasNext());
+
+    WaveId waveId2 = iterator.next();
+
+    // This is necessary because the order of waveIds is implementation specific.
+    if (WAVE1_WAVELET1.waveId.equals(waveId1)) {
+      assertEquals(WAVE2_WAVELET1.waveId, waveId2);
+    } else {
+      assertEquals(WAVE2_WAVELET1.waveId, waveId1);
+      assertEquals(WAVE1_WAVELET1.waveId, waveId2);
+    }
+
+    assertFalse(iterator.hasNext());
+    try {
+      waveId1 = iterator.next();
+      // Fail the test, it should have thrown an exception.
+      fail();
+    } catch (NoSuchElementException e) {
+      // Test passes.
+    }
+  }
+  
   // *** Helpers
 
   protected WaveletDeltaRecord createRecord() throws IOException {
     HashedVersion targetVersion = HashedVersion.of(0, new byte[] {3, 2, 1});
     HashedVersion resultingVersion = HashedVersion.of(2, new byte[] {1, 2, 3});
 
-    WaveletOperationContext context =
+    WaveletOperationContext context1 =
         new WaveletOperationContext(TestingConstants.PARTICIPANT, 1234567890, 1);
+    WaveletOperationContext context2 =
+      new WaveletOperationContext(TestingConstants.PARTICIPANT, 1234567890, 1, resultingVersion);
     List<WaveletOperation> ops =
-        ImmutableList.of(new NoOp(context), new AddParticipant(context,
+        ImmutableList.of(new NoOp(context1), new AddParticipant(context2,
             TestingConstants.OTHER_PARTICIPANT));
     TransformedWaveletDelta transformed =
         new TransformedWaveletDelta(TestingConstants.PARTICIPANT, resultingVersion, 1234567890, ops);
@@ -174,5 +241,14 @@ public abstract class DeltaStoreTestBase extends TestCase {
     wavelet.close();
 
     return new Pair<DeltaStore, WaveletDeltaRecord>(store, record);
+  }
+  
+  private static <T, E extends Exception> ImmutableSet<T> setFromExceptionalIterator(
+      ExceptionalIterator<T, E> iterator) throws E {
+    ImmutableSet.Builder<T> builder = ImmutableSet.builder();
+    while(iterator.hasNext()) {
+      builder.add(iterator.next());
+    }
+    return builder.build();
   }
 }

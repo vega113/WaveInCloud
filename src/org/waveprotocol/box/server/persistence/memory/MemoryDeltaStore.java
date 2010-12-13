@@ -20,6 +20,7 @@ package org.waveprotocol.box.server.persistence.memory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.waveserver.DeltaStore;
@@ -95,5 +96,23 @@ public class MemoryDeltaStore implements DeltaStore {
     }
 
     return collection;
+  }
+
+  @Override
+  public ExceptionalIterator<WaveId, PersistenceException> getWaveIdIterator()
+      throws PersistenceException {
+    ImmutableSet.Builder<WaveId> builder = ImmutableSet.builder();
+    // Filter out empty waves
+    for (Map.Entry<WaveId, Map<WaveletId, MemoryDeltaCollection>> e : data.entrySet()) {
+      if (!e.getValue().isEmpty()) {
+        for (MemoryDeltaCollection collection : e.getValue().values()) {
+          if (!collection.isEmpty()) {
+            builder.add(e.getKey());
+            break;
+          }
+        }
+      }
+    }
+    return ExceptionalIterator.FromIterator.create(builder.build().iterator());
   }
 }
