@@ -155,6 +155,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
             new RemoteWaveletDeltaCallback() {
               @Override
               public void onSuccess(DeltaSequence result) {
+                callback.onSuccess();
                 dispatcher.waveletUpdate(getWavelet(waveletName).copyWaveletData(), result);
               }
 
@@ -164,8 +165,6 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
                 callback.onFailure(FederationErrors.badRequest(errorMessage));
               }
             });
-        // TODO: when we support federated groups, forward to federationHosts too.
-        callback.onSuccess();
       }
 
       @Override

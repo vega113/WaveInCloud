@@ -105,37 +105,32 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         return;
       }
     }
-
     LOG.info("Got update: " + appliedDeltas);
 
-    // Fetch any signer info that we don't already have
+    // Fetch any signer info that we don't already have and then run internalUpdate
     final AtomicInteger numSignerInfoPrefetched = new AtomicInteger(1); // extra 1 for sentinel
+    final Runnable countDown = new Runnable() {
+      @Override
+      public void run() {
+        if (numSignerInfoPrefetched.decrementAndGet() == 0) {
+          internalUpdate(appliedDeltas, domain, federationProvider, certificateManager,
+              deltaCallback);
+        }
+      }
+    };
     SignerInfoPrefetchResultListener prefetchListener = new SignerInfoPrefetchResultListener() {
       @Override
       public void onFailure(FederationError error) {
         LOG.warning("Signer info prefetch failed: " + error);
-        countDown();
+        countDown.run();
       }
 
       @Override
       public void onSuccess(ProtocolSignerInfo signerInfo) {
         LOG.info("Signer info prefetch success for " + signerInfo.getDomain());
-        countDown();
-      }
-
-      private void countDown() {
-        if (numSignerInfoPrefetched.decrementAndGet() == 0) {
-          try {
-            internalUpdate(appliedDeltas, domain, federationProvider, certificateManager,
-                deltaCallback);
-          } catch (WaveServerException e) {
-            LOG.warning("Wave server exception when running update", e);
-            deltaCallback.onFailure(e.getMessage());
-          }
-        }
+        countDown.run();
       }
     };
-
     for (ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta : appliedDeltas) {
       ProtocolSignedDelta toVerify = appliedDelta.getMessage().getSignedOriginalDelta();
       HashedVersion deltaEndVersion;
@@ -154,17 +149,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         }
       }
     }
-
     // If we didn't fetch any signer info, run internalUpdate immediately
-    if (numSignerInfoPrefetched.decrementAndGet() == 0) {
-      try {
-        internalUpdate(appliedDeltas, domain, federationProvider, certificateManager,
-            deltaCallback);
-      } catch (WaveServerException e) {
-        LOG.warning("Wave server exception when running update", e);
-        deltaCallback.onFailure(e.getMessage());
-      }
-    }
+    countDown.run();
   }
 
   /**
@@ -175,12 +161,10 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
    * @param federationProvider
    * @param certificateManager
    * @param deltaCallback
-   * @throws WaveServerException
    */
   private void internalUpdate(List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas,
       final String domain, final WaveletFederationProvider federationProvider,
-      final CertificateManager certificateManager, final RemoteWaveletDeltaCallback deltaCallback)
-      throws WaveServerException {
+      final CertificateManager certificateManager, final RemoteWaveletDeltaCallback deltaCallback) {
     LOG.info("Passed signer info check, now applying all " + appliedDeltas.size() + " deltas");
     acquireWriteLock();
     try {
@@ -331,6 +315,9 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       } else {
         LOG.info("History requested, ignoring callback");
       }
+    } catch (WaveServerException e) {
+      LOG.warning("Update failure", e);
+      deltaCallback.onFailure(e.getMessage());
     } finally {
       releaseWriteLock();
     }
