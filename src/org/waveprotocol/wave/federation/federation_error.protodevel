@@ -69,6 +69,9 @@ message FederationError {
     // Request unexpected, wait requested. Note that this may be generated
     // internally, notably if an in-flight ID is re-used.
     UNEXPECTED_REQUEST = 8;
+
+    // Internal server error, wait requested.
+    INTERNAL_SERVER_ERROR = 9;
   }
 
   required Code error_code = 1;

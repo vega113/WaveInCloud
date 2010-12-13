@@ -62,6 +62,20 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   private static final Log LOG = Log.get(WaveletContainerImpl.class);
 
+  protected enum State {
+    /** Everything is working fine. */
+    OK,
+    /** Wavelet's history is not yet available. */
+    LOADING,
+    /** Wavelet has been deleted, the instance will not contain any data. */
+    DELETED,
+    /**
+     * For some reason this instance is broken, e.g. a remote wavelet update
+     * signature failed.
+     */
+    CORRUPTED
+  }
+
   private final Lock readLock;
   private final Lock writeLock;
   private WaveletState waveletState;
@@ -100,27 +114,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   protected void checkStateOk() throws WaveletStateException {
     if (state != State.OK) {
-      throw new WaveletStateException(state, "The wavelet is in an unusable state: " + state);
-    }
-  }
-
-  @Override
-  public State getState() {
-    acquireReadLock();
-    try {
-      return state;
-    } finally {
-      releaseReadLock();
-    }
-  }
-
-  @Override
-  public void setState(State state) {
-    acquireWriteLock();
-    try {
-      this.state = state;
-    } finally {
-      releaseWriteLock();
+      throw new WaveletStateException("The wavelet is in an unusable state: " + state);
     }
   }
 

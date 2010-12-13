@@ -37,7 +37,6 @@ import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.Log;
-import org.waveprotocol.box.server.waveserver.WaveletContainer.State;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
@@ -127,11 +126,10 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    */
   public WaveletFederationListener listenerForDomain(final String domain) {
     return new WaveletFederationListener() {
-
       @Override
       public void waveletDeltaUpdate(final WaveletName waveletName,
-          List<ByteString> rawAppliedDeltas, final WaveletUpdateCallback callback) {
-        Preconditions.checkArgument(!rawAppliedDeltas.isEmpty());
+          List<ByteString> deltas, final WaveletUpdateCallback callback) {
+        Preconditions.checkArgument(!deltas.isEmpty());
 
         if (isLocalWavelet(waveletName)) {
           LOG.warning("Remote tried to update local wavelet " + waveletName);
@@ -139,69 +137,35 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           return;
         }
 
-        WaveletContainer wavelet = getWavelet(waveletName);
-
-        if (wavelet != null && wavelet.getState() == State.CORRUPTED) {
-          // TODO: throw away whole wavelet and start again
-          LOG.info("Received update for corrupt wavelet");
-          callback.onFailure(FederationErrors.badRequest("Corrupt wavelet"));
+        // Update wavelet container with the applied deltas
+        final RemoteWaveletContainer remoteWavelet;
+        try {
+          remoteWavelet = getOrCreateRemoteWavelet(waveletName);
+        } catch (PersistenceException e) {
+          // We swallow e.getMessage() to avoid leaking information.
+          callback.onFailure(FederationErrors.newFederationError(
+              FederationError.Code.INTERNAL_SERVER_ERROR, "Storage access failure"));
           return;
         }
 
-        // Turn raw serialised ByteStrings in to a more useful representation
-        List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas = Lists.newArrayList();
-        for (ByteString delta : rawAppliedDeltas) {
-          try {
-            appliedDeltas.add(ByteStringMessage.parseProtocolAppliedWaveletDelta(delta));
-          } catch (InvalidProtocolBufferException e) {
-            LOG.info("Invalid applied delta protobuf for incoming " + waveletName, e);
-            safeMarkWaveletCorrupted(wavelet);
-            callback.onFailure(FederationErrors.badRequest("Invalid applied delta protocol buffer"));
-            return;
-          }
-        }
+        // Update this remote wavelet with the immediately incoming delta,
+        // providing a callback so that incoming historic deltas (as well as
+        // this delta) can be provided to the wave bus.
+        remoteWavelet.update(deltas, domain, federationRemote, certificateManager,
+            new RemoteWaveletDeltaCallback() {
+              @Override
+              public void onSuccess(DeltaSequence result) {
+                dispatcher.waveletUpdate(getWavelet(waveletName).copyWaveletData(), result);
+              }
 
-        // Update wavelet container with the applied deltas
-        String error = null;
-
-        try {
-          final RemoteWaveletContainer remoteWavelet = getOrCreateRemoteWavelet(waveletName);
-
-          // Update this remote wavelet with the immediately incoming delta,
-          // providing a callback so that incoming historic deltas (as well as
-          // this delta) can be provided to the wave bus.
-          remoteWavelet.update(appliedDeltas, domain, federationRemote, certificateManager,
-              new RemoteWaveletDeltaCallback() {
-                @Override
-                public void onSuccess(DeltaSequence result) {
-                  dispatcher.waveletUpdate(getWavelet(waveletName).copyWaveletData(), result);
-                }
-
-                @Override
-                public void onFailure(String errorMessage) {
-                  LOG.warning("Update failed: e" + errorMessage);
-                  callback.onFailure(FederationErrors.badRequest(errorMessage));
-                }
-              });
-          // TODO: when we support federated groups, forward to federationHosts too.
-        } catch (WaveletStateException e) {
-          // HACK(jochen): TODO: fix the case of the missing history! ###
-          LOG.severe("DANGER WILL ROBINSON, WAVELET HISTORY IS INCOMPLETE!!!", e);
-          error = e.getMessage();
-        } catch (PersistenceException e) {
-          // TODO(soren): change things so this doesn't cause BAD_REQUEST response below
-          error = e.getMessage();
-        } catch (WaveServerException e) {
-          error = e.getMessage();
-        } catch (IllegalArgumentException e) {
-          error = "Bad wavelet name " + e.getMessage();
-        }
-        if (error == null) {
-          callback.onSuccess();
-        } else {
-          LOG.warning("incoming waveletUpdate: bad update, " + error);
-          callback.onFailure(FederationErrors.badRequest(error));
-        }
+              @Override
+              public void onFailure(String errorMessage) {
+                LOG.warning("Update failed: " + errorMessage);
+                callback.onFailure(FederationErrors.badRequest(errorMessage));
+              }
+            });
+        // TODO: when we support federated groups, forward to federationHosts too.
+        callback.onSuccess();
       }
 
       @Override
@@ -220,17 +184,6 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         callback.onSuccess(); // TODO(soren): only call success if successful?
       }
     };
-  }
-
-  /**
-   * Set wavelet as corrupted, if not null.
-   *
-   * @param wavelet to set as corrupted, if not null
-   */
-  private void safeMarkWaveletCorrupted(WaveletContainer wavelet) {
-    if (wavelet != null) {
-      wavelet.setState(State.CORRUPTED);
-    }
   }
 
   //

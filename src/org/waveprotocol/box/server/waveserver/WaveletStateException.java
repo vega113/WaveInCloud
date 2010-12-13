@@ -17,24 +17,13 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import org.waveprotocol.box.server.waveserver.WaveletContainer.State;
-
 /**
  * Exception thrown when an attempt is made to access Wavelet content where
  * it's state is not OK.
- *
- *
- *
  */
 public class WaveletStateException extends WaveServerException {
-  private final State state;
 
-  public WaveletStateException(State state, String message) {
+  public WaveletStateException(String message) {
     super(message);
-    this.state = state;
-  }
-
-  public State getState() {
-    return state;
   }
 }

@@ -85,10 +85,27 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
   }
 
   @Override
-  public void update(final List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas,
+  public void update(final List<ByteString> deltas,
       final String domain, final WaveletFederationProvider federationProvider,
-      final CertificateManager certificateManager, final RemoteWaveletDeltaCallback deltaCallback)
-      throws WaveServerException {
+      final CertificateManager certificateManager, final RemoteWaveletDeltaCallback deltaCallback) {
+    // Turn raw serialised ByteStrings in to a more useful representation
+    final List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas = Lists.newArrayList();
+    for (ByteString delta : deltas) {
+      try {
+        appliedDeltas.add(ByteStringMessage.parseProtocolAppliedWaveletDelta(delta));
+      } catch (InvalidProtocolBufferException e) {
+        LOG.info("Invalid applied delta protobuf for incoming " + getWaveletName(), e);
+        acquireWriteLock();
+        try {
+          state = State.CORRUPTED;
+        } finally {
+          releaseWriteLock();
+        }
+        deltaCallback.onFailure("Invalid applied delta protocol buffer");
+        return;
+      }
+    }
+
     LOG.info("Got update: " + appliedDeltas);
 
     // Fetch any signer info that we don't already have
@@ -140,7 +157,13 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
 
     // If we didn't fetch any signer info, run internalUpdate immediately
     if (numSignerInfoPrefetched.decrementAndGet() == 0) {
-      internalUpdate(appliedDeltas, domain, federationProvider, certificateManager, deltaCallback);
+      try {
+        internalUpdate(appliedDeltas, domain, federationProvider, certificateManager,
+            deltaCallback);
+      } catch (WaveServerException e) {
+        LOG.warning("Wave server exception when running update", e);
+        deltaCallback.onFailure(e.getMessage());
+      }
     }
   }
 
@@ -161,7 +184,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     LOG.info("Passed signer info check, now applying all " + appliedDeltas.size() + " deltas");
     acquireWriteLock();
     try {
-      checkStateOkOrLoading();
+      checkStateOkOrLoading(); // TODO(soren): if CORRUPTED, throw away wavelet and start again
       HashedVersion expectedVersion = getCurrentVersion();
       boolean haveRequestedHistory = false;
 
@@ -196,7 +219,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         try {
           appliedAt = AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
         } catch (InvalidProtocolBufferException e) {
-          setState(State.CORRUPTED);
+          state = State.CORRUPTED;
           throw new WaveServerException(
               "Authoritative server sent delta with badly formed original wavelet delta", e);
         }
@@ -238,29 +261,9 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                       LOG.info("Got response callback: " + getWaveletName() + ", lcv "
                           + lastCommittedVersion + " deltaList length = " + deltaList.size());
 
-                      // Turn the ByteStrings in to a useful representation
-                      List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltaList =
-                          Lists.newArrayList();
-                      for (ByteString appliedDelta : deltaList) {
-                        try {
-                          LOG.info("Delta incoming from history: " + appliedDelta);
-                          appliedDeltaList.add(
-                              ByteStringMessage.parseProtocolAppliedWaveletDelta(appliedDelta));
-                        } catch (InvalidProtocolBufferException e) {
-                          LOG.warning("Invalid protocol buffer when requesting history!");
-                          state = State.CORRUPTED;
-                          break;
-                        }
-                      }
-
                       // Try updating again with the new history
-                      try {
-                        update(appliedDeltaList, domain, federationProvider, certificateManager,
-                            deltaCallback);
-                      } catch (WaveServerException e) {
-                        // TODO: deal with this
-                        LOG.severe("Exception when updating from history", e);
-                      }
+                      update(deltaList, domain, federationProvider, certificateManager,
+                          deltaCallback);
                     }
                 });
             haveRequestedHistory = true;

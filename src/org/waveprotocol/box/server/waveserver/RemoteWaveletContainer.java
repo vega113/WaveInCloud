@@ -17,9 +17,10 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.protobuf.ByteString;
+
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
-import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
@@ -29,8 +30,6 @@ import java.util.List;
  * Remote wavelets differ from local ones in that deltas are not submitted for OT,
  * rather they are updated when a remote wave service provider has applied and sent
  * a delta.
- *
- *
  */
 interface RemoteWaveletContainer extends WaveletContainer {
 
@@ -49,16 +48,15 @@ interface RemoteWaveletContainer extends WaveletContainer {
    * client. If they do not, then an asynchronous callback will be kicked off to
    * request the missing deltas.
    *
-   * @param appliedDeltas the list of deltas for the update.
-   * @param domain the listener domain where these deltas were receievd
+   * @param deltas the list of (serialized applied) deltas for the update
+   * @param domain the listener domain where these deltas were received
    * @param federationProvider the provider where missing data may be sourced
    * @param certificateManager for verifying signatures and requesting signer info
    * @param updateCallback for asynchronous notification when deltas are ready
    *        to be processed, providing a transformed version of the applied
    *        delta and the hashed version after application
-   * @throws WaveServerException
    */
-  void update(List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas, String domain,
+  void update(List<ByteString> deltas, String domain,
       WaveletFederationProvider federationProvider, CertificateManager certificateManager,
-      RemoteWaveletDeltaCallback updateCallback) throws WaveServerException;
+      RemoteWaveletDeltaCallback updateCallback);
 }

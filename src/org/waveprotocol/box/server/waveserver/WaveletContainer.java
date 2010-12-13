@@ -35,26 +35,6 @@ import java.util.Set;
  * delta history. Local and remote wavelet interfaces inherit from this one.
  */
 interface WaveletContainer {
-  enum State {
-    /** Everything is working fine. */
-    OK,
-    /** Wavelet's history is not yet available. */
-    LOADING,
-    /** Wavelet has been deleted, the instance will not contain any data. */
-    DELETED,
-    /**
-     * For some reason this instance is broken, e.g. a remote wavelet update
-     * signature failed.
-     */
-    CORRUPTED
-  }
-
-  /** Returns the state of the wavelet container. */
-  State getState();
-
-  /** Sets the state of the wavelet container. */
-  void setState(State state);
-
   /**
    * Initiates persistence of deltas up to the given version.
    *

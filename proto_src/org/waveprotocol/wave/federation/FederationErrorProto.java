@@ -46,6 +46,7 @@ public final class FederationErrorProto {
       UNDEFINED_CONDITION(6, 6),
       REMOTE_SERVER_TIMEOUT(7, 7),
       UNEXPECTED_REQUEST(8, 8),
+      INTERNAL_SERVER_ERROR(9, 9),
       ;
       
       
@@ -62,6 +63,7 @@ public final class FederationErrorProto {
           case 6: return UNDEFINED_CONDITION;
           case 7: return REMOTE_SERVER_TIMEOUT;
           case 8: return UNEXPECTED_REQUEST;
+          case 9: return INTERNAL_SERVER_ERROR;
           default: return null;
         }
       }
@@ -92,7 +94,7 @@ public final class FederationErrorProto {
       }
       
       private static final Code[] VALUES = {
-        OK, BAD_REQUEST, ITEM_NOT_FOUND, NOT_ACCEPTABLE, NOT_AUTHORIZED, RESOURCE_CONSTRAINT, UNDEFINED_CONDITION, REMOTE_SERVER_TIMEOUT, UNEXPECTED_REQUEST, 
+        OK, BAD_REQUEST, ITEM_NOT_FOUND, NOT_ACCEPTABLE, NOT_AUTHORIZED, RESOURCE_CONSTRAINT, UNDEFINED_CONDITION, REMOTE_SERVER_TIMEOUT, UNEXPECTED_REQUEST, INTERNAL_SERVER_ERROR, 
       };
       public static Code valueOf(
           com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
@@ -441,16 +443,17 @@ public final class FederationErrorProto {
   static {
     java.lang.String[] descriptorData = {
       "\n<org/waveprotocol/wave/federation/feder" +
-      "ation_error.protodevel\022\nfederation\"\241\002\n\017F" +
+      "ation_error.protodevel\022\nfederation\"\274\002\n\017F" +
       "ederationError\0224\n\nerror_code\030\001 \002(\0162 .fed" +
       "eration.FederationError.Code\022\025\n\rerror_me" +
-      "ssage\030\002 \001(\t\"\300\001\n\004Code\022\006\n\002OK\020\000\022\017\n\013BAD_REQU" +
+      "ssage\030\002 \001(\t\"\333\001\n\004Code\022\006\n\002OK\020\000\022\017\n\013BAD_REQU" +
       "EST\020\001\022\022\n\016ITEM_NOT_FOUND\020\002\022\022\n\016NOT_ACCEPTA" +
       "BLE\020\003\022\022\n\016NOT_AUTHORIZED\020\004\022\027\n\023RESOURCE_CO" +
       "NSTRAINT\020\005\022\027\n\023UNDEFINED_CONDITION\020\006\022\031\n\025R" +
       "EMOTE_SERVER_TIMEOUT\020\007\022\026\n\022UNEXPECTED_REQ" +
-      "UEST\020\010B8\n org.waveprotocol.wave.federati",
-      "onB\024FederationErrorProto"
+      "UEST\020\010\022\031\n\025INTERNAL_SERVER_ERROR\020\tB8\n org",
+      ".waveprotocol.wave.federationB\024Federatio" +
+      "nErrorProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
