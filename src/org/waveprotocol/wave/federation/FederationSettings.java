@@ -15,7 +15,9 @@
  *
  */
 
-package org.waveprotocol.box.server;
+package org.waveprotocol.wave.federation;
+
+import org.waveprotocol.wave.util.settings.Setting;
 
 import java.util.List;
 

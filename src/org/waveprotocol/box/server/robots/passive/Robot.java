@@ -31,12 +31,12 @@ import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Iterator;
 import java.util.List;

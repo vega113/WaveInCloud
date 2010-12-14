@@ -21,7 +21,7 @@ import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.protobuf.Message;
 
-import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

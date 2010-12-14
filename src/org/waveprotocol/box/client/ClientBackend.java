@@ -44,7 +44,6 @@ import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.rpc.ClientRpcChannel;
 import org.waveprotocol.box.server.rpc.WebSocketClientRpcChannel;
 import org.waveprotocol.box.server.util.BlockingSuccessFailCallback;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.NetUtils;
 import org.waveprotocol.box.server.util.SuccessFailCallback;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
@@ -79,6 +78,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -2,12 +2,8 @@
 <module>
   <inherits name="com.google.gwt.user.User"/>
    
-  <source path=""/>
-    
   <source path="">
-     
     <exclude name="jvm/**"/>
-     
   </source>
    
 </module>

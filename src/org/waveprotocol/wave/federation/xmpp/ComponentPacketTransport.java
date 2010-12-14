@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.jivesoftware.whack.ExternalComponentManager;
-import org.waveprotocol.box.server.FederationSettings;
+import org.waveprotocol.wave.federation.FederationSettings;
 import org.xmpp.component.Component;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;

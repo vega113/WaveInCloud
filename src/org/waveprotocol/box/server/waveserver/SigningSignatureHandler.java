@@ -26,11 +26,11 @@ import com.google.inject.ProvisionException;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import org.waveprotocol.box.server.FederationSettings;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.crypto.WaveSignerFactory;
+import org.waveprotocol.wave.federation.FederationSettings;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.waveprotocol.box.server;
+package org.waveprotocol.wave.util.settings;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -48,10 +48,6 @@ import java.util.Map;
  * List<String>.
  */
 public class SettingsBinder {
-  /**
-   * This is the name of the system property used to find the server config file.
-   */
-  private static final String PROPERTIES_FILE_KEY = "wave.server.config";
 
   /**
    * Used to validate that a type is supported. Some types may have generic parameters that need
@@ -100,21 +96,22 @@ public class SettingsBinder {
     builder.put(List.class, LIST_TYPE_VALIDATOR);
     supportedSettingTypes = builder.build();
   }
-  
+
   /**
    * Bind configuration parameters into Guice Module.
    *
    * @return a Guice module configured with setting support.
    * @throws ConfigurationException on configuration error
    */
-  public static Module bindSettings(Class<?>... settingsArg) throws ConfigurationException {
+  public static Module bindSettings(String propertiesFileKey, Class<?>... settingsArg)
+      throws ConfigurationException {
     final CompositeConfiguration config = new CompositeConfiguration();
     config.addConfiguration(new SystemConfiguration());
-    String propertyFile = config.getString(PROPERTIES_FILE_KEY);
+    String propertyFile = config.getString(propertiesFileKey);
     if (propertyFile != null) {
       config.addConfiguration(new PropertiesConfiguration(propertyFile));
     }
-    
+
     List<Field> fields = new ArrayList<Field>();
     for (Class<?> settings : settingsArg) {
       fields.addAll(Arrays.asList(settings.getDeclaredFields()));
@@ -133,7 +130,7 @@ public class SettingsBinder {
         throw new IllegalArgumentException(field.getType()
             + " is not one of the supported setting types");
       }
-      
+
       Setting setting = field.getAnnotation(Setting.class);
       settings.put(setting, field);
     }

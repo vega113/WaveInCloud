@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.waveprotocol.box.server.util;
+package org.waveprotocol.wave.util.logging;
 
 import com.google.common.collect.Lists;
 
@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 
 /**
  * Tests basic Log functions.
- * 
+ *
  *
  */
 public class LogTest extends TestCase {

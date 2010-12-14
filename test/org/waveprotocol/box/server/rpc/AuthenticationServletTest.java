@@ -36,8 +36,8 @@ import org.waveprotocol.box.server.authentication.PasswordDigest;
 import org.waveprotocol.box.server.authentication.SessionManagerImpl;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
-import org.waveprotocol.wave.common.util.PercentEscaper;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.util.escapers.PercentEscaper;
 
 import java.io.BufferedReader;
 import java.io.IOException;

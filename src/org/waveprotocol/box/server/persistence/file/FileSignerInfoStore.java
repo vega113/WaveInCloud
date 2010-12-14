@@ -25,12 +25,12 @@ import org.apache.commons.codec.binary.Hex;
 import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.SignerInfoStore;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.DefaultCertPathStore;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.File;
 import java.io.FileInputStream;

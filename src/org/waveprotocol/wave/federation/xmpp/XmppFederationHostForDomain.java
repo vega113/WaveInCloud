@@ -22,9 +22,9 @@ import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 
 import org.dom4j.Element;
-import org.waveprotocol.box.server.FederationSettings;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.FederationSettings;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.WaveletName;

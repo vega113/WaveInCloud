@@ -28,8 +28,8 @@ import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.protos.ProtoAccountDataSerializer;
 import org.waveprotocol.box.server.persistence.protos.ProtoAccountStoreData.ProtoAccountData;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.File;
 import java.io.FileInputStream;

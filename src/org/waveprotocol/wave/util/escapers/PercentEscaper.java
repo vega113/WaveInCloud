@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.common.util;
+package org.waveprotocol.wave.util.escapers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

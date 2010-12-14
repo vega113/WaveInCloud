@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.box.server.util;
+package org.waveprotocol.wave.util.logging;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;

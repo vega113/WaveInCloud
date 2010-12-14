@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.waveprotocol.box.server;
+package org.waveprotocol.wave.util.settings;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -22,11 +22,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * A flag descriptor. All flags are mandatory unless explicitly
- * specified otherwise. Specify name = "" to give map the command
- * line flag name to the annotated field.
- *
- *
+ * A setting descriptor. All settings are mandatory unless explicitly specified
+ * otherwise.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

@@ -17,9 +17,9 @@
 
 package org.waveprotocol.box.server.robots.util;
 
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.util.logging.Log;
 
 /**
  * {@link SubmitRequestListener} that simply logs its calls.

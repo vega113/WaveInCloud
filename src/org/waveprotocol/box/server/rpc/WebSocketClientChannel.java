@@ -19,7 +19,7 @@ package org.waveprotocol.box.server.rpc;
 
 import com.sixfire.websocket.WebSocket;
 
-import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;

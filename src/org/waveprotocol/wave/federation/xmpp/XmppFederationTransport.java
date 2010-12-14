@@ -19,8 +19,8 @@ package org.waveprotocol.wave.federation.xmpp;
 
 import com.google.inject.Inject;
 
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.federation.FederationTransport;
+import org.waveprotocol.wave.util.logging.Log;
 import org.xmpp.component.ComponentException;
 
 /**

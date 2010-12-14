@@ -22,7 +22,7 @@ import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.OperationType;
 
 import org.waveprotocol.box.server.robots.operations.OperationService;
-import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Map;
 

@@ -22,7 +22,7 @@ import com.glines.socketio.common.SocketIOException;
 import com.glines.socketio.server.SocketIOFrame;
 import com.glines.socketio.server.SocketIOInbound;
 
-import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.wave.util.logging.Log;
 
 /**
  * The server side of WebSocketChannel.

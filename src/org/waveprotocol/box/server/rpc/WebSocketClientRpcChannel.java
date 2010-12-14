@@ -28,7 +28,7 @@ import com.google.protobuf.Descriptors.MethodDescriptor;
 
 import com.sixfire.websocket.WebSocket;
 
-import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

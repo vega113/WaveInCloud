@@ -46,12 +46,14 @@ import org.waveprotocol.box.server.rpc.ServerRpcProvider;
 import org.waveprotocol.box.server.rpc.SignOutServlet;
 import org.waveprotocol.box.server.rpc.UserRegistrationServlet;
 import org.waveprotocol.box.server.rpc.WaveClientServlet;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.wave.crypto.CertPathStore;
+import org.waveprotocol.wave.federation.FederationSettings;
 import org.waveprotocol.wave.federation.FederationTransport;
 import org.waveprotocol.wave.federation.noop.NoOpFederationModule;
 import org.waveprotocol.wave.federation.xmpp.XmppFederationModule;
+import org.waveprotocol.wave.util.logging.Log;
+import org.waveprotocol.wave.util.settings.SettingsBinder;
 
 import java.io.IOException;
 
@@ -61,11 +63,16 @@ import java.io.IOException;
  */
 public class ServerMain {
 
+  /**
+   * This is the name of the system property used to find the server config file.
+   */
+  private static final String PROPERTIES_FILE_KEY = "wave.server.config";
+
   private static final Log LOG = Log.get(ServerMain.class);
 
   public static void main(String... args) {
     try {
-      Module coreSettings = SettingsBinder.bindSettings(CoreSettings.class);
+      Module coreSettings = SettingsBinder.bindSettings(PROPERTIES_FILE_KEY, CoreSettings.class);
       run(coreSettings);
       return;
     } catch (IOException e) {
@@ -86,7 +93,8 @@ public class ServerMain {
             Names.named(CoreSettings.ENABLE_FEDERATION)));
     Module federationModule;
     if (enableFederation) {
-      Module federationSettings = SettingsBinder.bindSettings(FederationSettings.class);
+      Module federationSettings =
+          SettingsBinder.bindSettings(PROPERTIES_FILE_KEY, FederationSettings.class);
       settingsInjector = settingsInjector.createChildInjector(federationSettings);
       federationModule = settingsInjector.getInstance(XmppFederationModule.class);
     } else {

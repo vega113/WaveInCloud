@@ -18,7 +18,7 @@
 package org.waveprotocol.box.server.rpc;
 
 import org.eclipse.jetty.websocket.WebSocket;
-import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.IOException;
 

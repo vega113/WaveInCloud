@@ -17,6 +17,8 @@
 
 package org.waveprotocol.box.server;
 
+import org.waveprotocol.wave.util.settings.Setting;
+
 import java.util.List;
 
 /**

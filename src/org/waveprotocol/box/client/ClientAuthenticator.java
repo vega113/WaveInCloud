@@ -19,7 +19,7 @@ package org.waveprotocol.box.client;
 
 import com.google.common.base.Preconditions;
 
-import org.waveprotocol.wave.common.util.PercentEscaper;
+import org.waveprotocol.wave.util.escapers.PercentEscaper;
 
 import java.io.IOException;
 import java.io.OutputStream;

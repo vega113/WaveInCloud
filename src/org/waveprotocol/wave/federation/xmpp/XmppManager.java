@@ -24,9 +24,9 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.dom4j.Element;
-import org.waveprotocol.box.server.FederationSettings;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.FederationSettings;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;

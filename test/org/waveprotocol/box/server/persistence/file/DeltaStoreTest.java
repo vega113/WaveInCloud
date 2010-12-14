@@ -20,13 +20,13 @@ package org.waveprotocol.box.server.persistence.file;
 import com.google.common.collect.ImmutableList;
 
 import org.waveprotocol.box.server.persistence.DeltaStoreTestBase;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.DeltaStore;
 import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
 import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.File;
 import java.io.IOException;

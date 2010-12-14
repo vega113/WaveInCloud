@@ -36,7 +36,6 @@ import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.persistence.PersistenceException;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
@@ -65,6 +64,7 @@ import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.UnmodifiableWaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Collection;
 import java.util.List;

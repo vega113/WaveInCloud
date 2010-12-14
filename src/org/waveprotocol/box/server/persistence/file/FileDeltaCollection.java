@@ -26,7 +26,6 @@ import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreData.ProtoTransformedWaveletDelta;
 import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreDataSerializer;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.AppliedDeltaUtil;
 import org.waveprotocol.box.server.waveserver.ByteStringMessage;
 import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
@@ -36,6 +35,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.File;
 import java.io.IOException;

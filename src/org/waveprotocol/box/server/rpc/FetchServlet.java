@@ -26,15 +26,15 @@ import org.waveprotocol.box.common.comms.WaveClientRpc.WaveViewSnapshot;
 import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletStateException;
-import org.waveprotocol.wave.common.util.jvm.JavaWaverefEncoder;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
 import org.waveprotocol.wave.model.waveref.WaveRef;
+import org.waveprotocol.wave.util.escapers.jvm.JavaWaverefEncoder;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.IOException;
 

@@ -37,9 +37,9 @@ import net.oauth.server.HttpRequestMessage;
 
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.gxp.OAuthAuthorizeTokenPage;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

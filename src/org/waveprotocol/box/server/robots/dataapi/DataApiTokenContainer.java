@@ -28,10 +28,10 @@ import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthProblemException;
 
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.box.server.util.OAuthUtil;
 import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;

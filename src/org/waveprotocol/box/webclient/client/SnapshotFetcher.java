@@ -28,13 +28,13 @@ import org.waveprotocol.box.webclient.common.SnapshotSerializer;
 import org.waveprotocol.box.webclient.common.communication.callback.SimpleCallback;
 import org.waveprotocol.wave.client.debug.logger.DomLogger;
 import org.waveprotocol.wave.common.logging.LoggerBundle;
-import org.waveprotocol.wave.common.util.gwt.GwtWaverefEncoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.waveref.WaveRef;
+import org.waveprotocol.wave.util.escapers.gwt.GwtWaverefEncoder;
 
 /**
  * Helper class to fetch wavelet snapshots using the snapshot fetch service.

@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import org.waveprotocol.box.client.ClientUtils;
 import org.waveprotocol.box.client.ClientWaveView;
 import org.waveprotocol.box.common.DocumentConstants;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
@@ -32,6 +31,7 @@ import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorA
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Collections;
 import java.util.Deque;

@@ -15,21 +15,20 @@
  *
  */
 
-package org.waveprotocol.wave.common.util.jvm;
+package org.waveprotocol.wave.util.escapers.gwt;
 
-import org.waveprotocol.wave.common.util.PercentEscaper;
+import com.google.gwt.http.client.URL;
+
 import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 import org.waveprotocol.wave.model.waveref.WaverefEncoder;
 import org.waveprotocol.wave.model.waveref.WaverefEncoder.PercentEncoderDecoder;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import org.waveprotocol.wave.util.escapers.PercentEscaper;
 
 /**
- * Non-GWT-enabled instance of WaverefEncoder for use in the server.
+ * GWT-enabled instance of WaverefEncoder for use in the client.
  */
-public class JavaWaverefEncoder {
+public class GwtWaverefEncoder {
 
   private static final PercentEscaper pathEscaper =
       new PercentEscaper(PercentEscaper.SAFEPATHCHARS_URLENCODER + "+", false);
@@ -39,11 +38,7 @@ public class JavaWaverefEncoder {
   public static final WaverefEncoder INSTANCE = new WaverefEncoder(new PercentEncoderDecoder() {
     @Override
     public String decode(String encodedValue) {
-      try {
-        return URLDecoder.decode(encodedValue, "UTF-8").replaceAll(" ", "+");
-      } catch (UnsupportedEncodingException e) {
-        return null;
-      }
+      return URL.decode(encodedValue);
     }
 
     @Override
@@ -58,7 +53,7 @@ public class JavaWaverefEncoder {
   });
 
   // Disallow construction
-  private JavaWaverefEncoder() {
+  private GwtWaverefEncoder() {
   }
 
   /** {@link WaverefEncoder#encodeToUriQueryString(String)} */

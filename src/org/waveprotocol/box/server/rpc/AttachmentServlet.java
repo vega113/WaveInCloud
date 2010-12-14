@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 
 import org.waveprotocol.box.server.persistence.AttachmentStore;
 import org.waveprotocol.box.server.persistence.AttachmentStore.AttachmentData;
-import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.IOException;
 

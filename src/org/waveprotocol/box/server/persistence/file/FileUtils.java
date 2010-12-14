@@ -22,11 +22,11 @@ import com.google.gxp.com.google.common.base.Preconditions;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.waveprotocol.box.server.persistence.PersistenceException;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.util.Pair;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.Closeable;
 import java.io.File;

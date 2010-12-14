@@ -30,10 +30,10 @@ import org.waveprotocol.box.server.gxp.robots.RobotRegistrationPage;
 import org.waveprotocol.box.server.gxp.robots.RobotRegistrationSuccessPage;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
-import org.waveprotocol.box.server.util.Log;
 import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.IOException;
 import java.net.URI;

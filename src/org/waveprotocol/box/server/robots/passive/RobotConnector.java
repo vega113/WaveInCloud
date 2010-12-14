@@ -31,7 +31,7 @@ import com.google.wave.api.robot.RobotConnectionException;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.account.RobotAccountDataImpl;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
-import org.waveprotocol.box.server.util.Log;
+import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Collections;
 import java.util.List;
