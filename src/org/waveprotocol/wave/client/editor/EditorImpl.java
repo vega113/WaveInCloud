@@ -205,7 +205,7 @@ public class EditorImpl extends LogicalPanel.Impl implements Editor,
 
     RepairListener getRepairListener();
     EditorContext getEditorContext();
-    
+
     /**
      * Brings the editor into a consistent state, possibly asynchronously.
      *
@@ -1457,16 +1457,9 @@ public class EditorImpl extends LogicalPanel.Impl implements Editor,
     Iterator<Widget> i = iterator();
     while (i.hasNext()) {
       Widget w = i.next();
-      if (w.getElement().hasParentElement()) {
-        i.remove();
-      } else {
-        if (EditorStaticDeps.logger.error().shouldLog()) {
-          EditorStaticDeps.logger.error().log("Forcing logical detach of non-cleaned up widget");
-        }
-        getChildren().remove(w);
-        // Resume iteration.
-        i = iterator();
-      }
+      removeWidget(w);
+      // Resume iteration.
+      i = iterator();
     }
 
     repairer = null;
