@@ -38,15 +38,12 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorit
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.wave.AddParticipant;
-import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -60,6 +57,8 @@ public abstract class DeltaStoreTestBase extends TestCase {
     WaveletName.of(new WaveId("example.com", "wave1"), new WaveletId("example.com", "wavelet1"));
   private final WaveletName WAVE2_WAVELET1 =
     WaveletName.of(new WaveId("example.com", "wave2"), new WaveletId("example.com", "wavelet1"));
+  private final DeltaTestUtil UTIL = new DeltaTestUtil(TestingConstants.PARTICIPANT);
+
 
   /** Create and return a new delta store instance of the type being tested. */
   protected abstract DeltaStore newDeltaStore() throws Exception;
@@ -139,7 +138,7 @@ public abstract class DeltaStoreTestBase extends TestCase {
     DeltaStore store = pair.first;
 
     ImmutableSet<WaveId> waveIds = setFromExceptionalIterator(store.getWaveIdIterator());
-    
+
     assertEquals(ImmutableSet.of(WAVE1_WAVELET1.waveId), waveIds);
   }
 
@@ -168,7 +167,7 @@ public abstract class DeltaStoreTestBase extends TestCase {
     WaveletDeltaRecord record = createRecord();
     wavelet.append(ImmutableList.of(record));
     wavelet.close();
-    
+
     ExceptionalIterator<WaveId, PersistenceException> iterator = store.getWaveIdIterator();
     assertTrue(iterator.hasNext());
 
@@ -194,22 +193,17 @@ public abstract class DeltaStoreTestBase extends TestCase {
       // Test passes.
     }
   }
-  
+
   // *** Helpers
 
-  protected WaveletDeltaRecord createRecord() throws IOException {
+  protected WaveletDeltaRecord createRecord() {
     HashedVersion targetVersion = HashedVersion.of(0, new byte[] {3, 2, 1});
     HashedVersion resultingVersion = HashedVersion.of(2, new byte[] {1, 2, 3});
 
-    WaveletOperationContext context1 =
-        new WaveletOperationContext(TestingConstants.PARTICIPANT, 1234567890, 1);
-    WaveletOperationContext context2 =
-      new WaveletOperationContext(TestingConstants.PARTICIPANT, 1234567890, 1, resultingVersion);
     List<WaveletOperation> ops =
-        ImmutableList.of(new NoOp(context1), new AddParticipant(context2,
-            TestingConstants.OTHER_PARTICIPANT));
-    TransformedWaveletDelta transformed =
-        new TransformedWaveletDelta(TestingConstants.PARTICIPANT, resultingVersion, 1234567890, ops);
+        ImmutableList.of(UTIL.noOp(), UTIL.addParticipant(TestingConstants.OTHER_PARTICIPANT));
+    TransformedWaveletDelta transformed = TransformedWaveletDelta.cloneOperations(
+        TestingConstants.PARTICIPANT, resultingVersion, 1234567890, ops);
 
     ProtocolWaveletDelta serializedDelta = CoreWaveletOperationSerializer.serialize(transformed);
 
@@ -242,7 +236,7 @@ public abstract class DeltaStoreTestBase extends TestCase {
 
     return new Pair<DeltaStore, WaveletDeltaRecord>(store, record);
   }
-  
+
   private static <T, E extends Exception> ImmutableSet<T> setFromExceptionalIterator(
       ExceptionalIterator<T, E> iterator) throws E {
     ImmutableSet.Builder<T> builder = ImmutableSet.builder();

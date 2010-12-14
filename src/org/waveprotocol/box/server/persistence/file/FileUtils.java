@@ -148,8 +148,7 @@ public class FileUtils {
   /**
    * Creates a filename-friendly path segment for a wavelet name.
    *
-   * @param waveletId
-   * @return the filename-friendly path segment representing the waveletId
+   * @return the filename-friendly path segment representing the wavelet
    */
   public static String waveletNameToPathSegment(WaveletName waveletName) {
     return waveIdToPathSegment(waveletName.waveId)
@@ -199,7 +198,7 @@ public class FileUtils {
 
     return dir.getAbsoluteFile();
   }
-  
+
   /**
    * Close the closeable and log, but ignore, any exception thrown.
    */
@@ -221,7 +220,7 @@ public class FileUtils {
   public static void performDirectoryChecks(String dir, final String extension, String dirType,
       Log LOG) throws PersistenceException {
     File baseDir = new File(dir);
-    
+
     // Make sure the dir exists.
     if (!baseDir.exists()) {
       // It doesn't so try and create it.
@@ -230,13 +229,13 @@ public class FileUtils {
             "Configured %s directory (%s) doesn't exist and could not be created!", dirType, dir));
       }
     }
-    
+
     // Make sure the dir is a directory.
     if (!baseDir.isDirectory()) {
       throw new PersistenceException(String.format(
           "Configured %s path (%s) isn't a directory!", dirType, dir));
     }
-    
+
     // Make sure we can read files by trying to read one of the files.
     File[] files = baseDir.listFiles(new FilenameFilter() {
       @Override
@@ -268,7 +267,7 @@ public class FileUtils {
             e);
       }
     }
-    
+
     // Make sure the dir is writable.
     try {
       File tmp = File.createTempFile("tempInitialization", ".temp", baseDir);

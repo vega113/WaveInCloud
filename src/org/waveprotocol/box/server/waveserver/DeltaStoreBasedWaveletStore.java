@@ -73,11 +73,7 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
 
     @Override
     public boolean hasNext() {
-      try {
-        return !reader.isEmpty() && nextVersion < reader.getEndVersion().getVersion();
-      } catch (IOException e) {
-        throw new RuntimeIOException(e);
-      }
+      return !reader.isEmpty() && nextVersion < reader.getEndVersion().getVersion();
     }
 
     /**
@@ -137,11 +133,7 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
   private static WaveletAccess createWaveletAccess(DeltaStore.DeltasAccess deltasAccess)
       throws PersistenceException {
     ReadableWaveletData wavelet;
-    try {
-      wavelet = deltasAccess.isEmpty() ? null : buildWaveletFromDeltaReader(deltasAccess);
-    } catch (IOException e) {
-      throw new PersistenceException(e);
-    }
+    wavelet = deltasAccess.isEmpty() ? null : buildWaveletFromDeltaReader(deltasAccess);
     return new DeltasAccessBasedWaveletAccess(deltasAccess, wavelet);
   }
 

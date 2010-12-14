@@ -22,14 +22,13 @@ import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceException;
-import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreData.ProtoTransformedWaveletDelta;
 import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreDataSerializer;
+import org.waveprotocol.box.server.persistence.protos.ProtoDeltaStoreData.ProtoTransformedWaveletDelta;
 import org.waveprotocol.box.server.waveserver.AppliedDeltaUtil;
 import org.waveprotocol.box.server.waveserver.ByteStringMessage;
-import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
 import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
+import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
@@ -75,13 +74,11 @@ public class FileDeltaCollection implements DeltasAccess {
   private static final Log LOG = Log.get(FileDeltaCollection.class);
 
   private final WaveletName waveletName;
-  private final String basePath;
-  private final String deltasFilename;
-  private final String indexFilename;
+  private final RandomAccessFile file;
+  private final DeltaIndex index;
 
-  private RandomAccessFile file;
-  private DeltaIndex index;
   private HashedVersion endVersion;
+  private boolean isOpen;
 
   /**
    * A single record in the delta file.
@@ -111,72 +108,26 @@ public class FileDeltaCollection implements DeltasAccess {
   }
 
   /**
-   * Create a new file delta collection for the given wavelet.
+   * Opens a file delta collection.
    *
-   * @param waveletName name of the wavelet
-   * @param basePath the file store's base path
+   * @param waveletName name of the wavelet to open
+   * @param basePath base path of files
+   * @return an open collection
+   * @throws IOException
    */
-  public FileDeltaCollection(WaveletName waveletName, String basePath) {
-    Preconditions.checkNotNull(waveletName, "wavelet name cannot be null");
-    Preconditions.checkNotNull(basePath, "base path cannot be null");
+  public static FileDeltaCollection open(WaveletName waveletName, String basePath)
+      throws IOException {
+    Preconditions.checkNotNull(waveletName, "null wavelet name");
 
-    this.waveletName = waveletName;
-    this.basePath = basePath;
+    RandomAccessFile deltaFile = FileUtils.getOrCreateFile(deltasFile(basePath, waveletName));
+    setOrCheckFileHeader(deltaFile);
+    DeltaIndex index = new DeltaIndex(indexFile(basePath, waveletName));
 
-    String waveletPathPrefix = FileUtils.waveletNameToPathSegment(waveletName);
-    deltasFilename = waveletPathPrefix + DELTAS_FILE_SUFFIX;
-    indexFilename = waveletPathPrefix + INDEX_FILE_SUFFIX;
-  }
+    FileDeltaCollection collection = new FileDeltaCollection(waveletName, deltaFile, index);
 
-  private boolean isOpen() {
-    return file != null;
-  }
-
-  private void setOrCheckFileHeader() throws IOException {
-    Preconditions.checkNotNull(file);
-    file.seek(0);
-
-    if (file.length() < FILE_HEADER_LENGTH) {
-      // The file is new. Insert a header.
-      file.write(FILE_MAGIC_BYTES);
-      file.writeInt(FILE_PROTOCOL_VERSION);
-    } else {
-      byte[] magic = new byte[4];
-      file.readFully(magic);
-      if (!Arrays.equals(FILE_MAGIC_BYTES, magic)) {
-        throw new IOException("Delta file magic bytes are incorrect");
-      }
-
-      int version = file.readInt();
-      if (version != FILE_PROTOCOL_VERSION) {
-        throw new IOException(String.format("File protocol version mismatch - expected %d got %d",
-            FILE_PROTOCOL_VERSION, version));
-      }
-    }
-  }
-
-  /** Open the delta collection, if the collection is not already open. */
-  private void openIfNeeded() throws IOException {
-    if (!isOpen()) {
-      File fileRef = new File(basePath, deltasFilename);
-      file = FileUtils.getOrCreateFile(fileRef);
-      setOrCheckFileHeader();
-
-      index = new DeltaIndex(new File(basePath, indexFilename));
-      index.openForCollection(this);
-
-      long numRecords = index.length();
-      if (numRecords >= 1) {
-        endVersion = getDeltaByEndVersion(numRecords).getResultingVersion();
-      } else {
-        endVersion = null;
-      }
-
-      // After reading the last record, the file's position should be at the end. There might
-      // be trailing junk here if there was a partially completed write, and the server crashed.
-      // So, we'll truncate the file here.
-      file.setLength(file.getFilePointer());
-    }
+    index.openForCollection(collection);
+    collection.initializeEndVersionAndTruncateTrailingJunk();
+    return collection;
   }
 
   /**
@@ -184,28 +135,40 @@ public class FileDeltaCollection implements DeltasAccess {
    *
    * @throws PersistenceException
    */
-  public void delete() throws PersistenceException {
-    try {
-      close();
-    } catch (IOException e) {
-      throw new PersistenceException(e);
-    }
+  public static void delete(WaveletName waveletName, String basePath) throws PersistenceException {
+    String error = "";
+    File deltas = deltasFile(basePath, waveletName);
 
-    File deltas = new File(basePath, deltasFilename);
     if (deltas.exists()) {
       if (!deltas.delete()) {
-        throw new PersistenceException("Could not delete deltas file: " + deltasFilename);
+        error += "Could not delete deltas file: " + deltas.getAbsolutePath() + ". ";
       }
-    } else {
-      throw new PersistenceException("Deltas already deleted");
     }
 
-    File index = new File(basePath, indexFilename);
+    File index = indexFile(basePath, waveletName);
     if (index.exists()) {
       if (!index.delete()) {
-        throw new FileNotFoundPersistenceException("Could not delete index file: " + indexFilename);
+        error += "Could not delete index file: " + index.getAbsolutePath();
       }
     }
+    if (!error.isEmpty()) {
+      throw new PersistenceException(error);
+    }
+  }
+
+  /**
+   * Create a new file delta collection for the given wavelet.
+   *
+   * @param waveletName name of the wavelet
+   * @param deltaFile the file of deltas
+   * @param index index into deltas
+   */
+  public FileDeltaCollection(WaveletName waveletName, RandomAccessFile deltaFile,
+      DeltaIndex index) {
+    this.waveletName = waveletName;
+    this.file = deltaFile;
+    this.index = index;
+    this.isOpen = true;
   }
 
   @Override
@@ -220,27 +183,32 @@ public class FileDeltaCollection implements DeltasAccess {
 
   @Override
   public WaveletDeltaRecord getDelta(long version) throws IOException {
+    checkIsOpen();
     return seekToRecord(version) ? readRecord() : null;
   }
 
   @Override
   public WaveletDeltaRecord getDeltaByEndVersion(long version) throws IOException {
+    checkIsOpen();
     return seekToEndRecord(version) ? readRecord() : null;
   }
 
   @Override
   public ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDelta(long version)
       throws IOException {
+    checkIsOpen();
     return seekToRecord(version) ? readAppliedDeltaFromRecord() : null;
   }
 
   @Override
   public TransformedWaveletDelta getTransformedDelta(long version) throws IOException {
+    checkIsOpen();
     return seekToRecord(version) ? readTransformedDeltaFromRecord() : null;
   }
 
   @Override
   public HashedVersion getAppliedAtVersion(long version) throws IOException {
+    checkIsOpen();
     ByteStringMessage<ProtocolAppliedWaveletDelta> applied = getAppliedDelta(version);
 
     return (applied != null) ? AppliedDeltaUtil.getHashedVersionAppliedAt(applied) : null;
@@ -248,6 +216,7 @@ public class FileDeltaCollection implements DeltasAccess {
 
   @Override
   public HashedVersion getResultingVersion(long version) throws IOException {
+    checkIsOpen();
     TransformedWaveletDelta transformed = getTransformedDelta(version);
 
     return (transformed != null) ? transformed.getResultingVersion() : null;
@@ -255,42 +224,37 @@ public class FileDeltaCollection implements DeltasAccess {
 
   @Override
   public void close() throws IOException {
-    if (file != null) {
-      file.close();
-      file = null;
-      if (index != null) {
-        index.close();
-        index = null;
-      }
-      endVersion = null;
-    }
+    file.close();
+    index.close();
+    endVersion = null;
+    isOpen = false;
   }
 
   @Override
   public void append(Collection<WaveletDeltaRecord> deltas) throws PersistenceException {
+    checkIsOpen();
     try {
-      openIfNeeded();
-
       file.seek(file.length());
 
+      WaveletDeltaRecord lastDelta = null;
       for (WaveletDeltaRecord delta : deltas) {
         index.addDelta(delta.transformed.getAppliedAtVersion(), delta.transformed.size(),
             file.getFilePointer());
         writeDelta(delta);
-        endVersion = delta.transformed.getResultingVersion();
+        lastDelta = delta;
       }
 
       // fsync() before returning.
       file.getChannel().force(true);
+      endVersion = lastDelta.transformed.getResultingVersion();
     } catch (IOException e) {
       throw new PersistenceException(e);
     }
   }
 
   @Override
-  public boolean isEmpty() throws IOException {
-    openIfNeeded();
-
+  public boolean isEmpty() {
+    checkIsOpen();
     return index.length() == 0;
   }
 
@@ -301,7 +265,7 @@ public class FileDeltaCollection implements DeltasAccess {
    * @throws IOException
    */
   Iterable<Pair<Pair<Long,Integer>, Long>> getOffsetsIterator() throws IOException {
-    openIfNeeded();
+    checkIsOpen();
 
     return new Iterable<Pair<Pair<Long, Integer>, Long>>() {
       @Override
@@ -347,7 +311,7 @@ public class FileDeltaCollection implements DeltasAccess {
                 nextPosition = file.getFilePointer();
               } catch (IOException e) {
                 // The next entry is invalid. There was probably a write error / crash.
-                LOG.severe("Error reading delta file " + deltasFilename + " starting at " +
+                LOG.severe("Error reading delta file for " + waveletName + " starting at " +
                     nextPosition, e);
                 return false;
               }
@@ -360,12 +324,54 @@ public class FileDeltaCollection implements DeltasAccess {
     };
   }
 
+  @VisibleForTesting
+  static final File deltasFile(String basePath, WaveletName waveletName) {
+    String waveletPathPrefix = FileUtils.waveletNameToPathSegment(waveletName);
+    return new File(basePath, waveletPathPrefix + DELTAS_FILE_SUFFIX);
+  }
+
+  @VisibleForTesting
+  static final File indexFile(String basePath, WaveletName waveletName) {
+    String waveletPathPrefix = FileUtils.waveletNameToPathSegment(waveletName);
+    return new File(basePath, waveletPathPrefix + INDEX_FILE_SUFFIX);
+  }
+
+  /**
+   * Checks that a file has a valid deltas header, adding the header if the
+   * file is shorter than the header.
+   */
+  private static void setOrCheckFileHeader(RandomAccessFile file) throws IOException {
+    Preconditions.checkNotNull(file);
+    file.seek(0);
+
+    if (file.length() < FILE_HEADER_LENGTH) {
+      // The file is new. Insert a header.
+      file.write(FILE_MAGIC_BYTES);
+      file.writeInt(FILE_PROTOCOL_VERSION);
+    } else {
+      byte[] magic = new byte[4];
+      file.readFully(magic);
+      if (!Arrays.equals(FILE_MAGIC_BYTES, magic)) {
+        throw new IOException("Delta file magic bytes are incorrect");
+      }
+
+      int version = file.readInt();
+      if (version != FILE_PROTOCOL_VERSION) {
+        throw new IOException(String.format("File protocol version mismatch - expected %d got %d",
+            FILE_PROTOCOL_VERSION, version));
+      }
+    }
+  }
+
+  private void checkIsOpen() {
+    Preconditions.checkState(isOpen, "Delta collection closed");
+  }
+
   /**
    * Seek to the start of a delta record. Returns false if the record doesn't exist.
    */
   private boolean seekToRecord(long version) throws IOException {
     Preconditions.checkArgument(version >= 0, "Version can't be negative");
-    openIfNeeded();
     long offset = index.getOffsetForVersion(version);
     return seekTo(offset);
   }
@@ -376,7 +382,6 @@ public class FileDeltaCollection implements DeltasAccess {
    */
   private boolean seekToEndRecord(long version) throws IOException {
     Preconditions.checkArgument(version >= 0, "Version can't be negative");
-    openIfNeeded();
     long offset = index.getOffsetForEndVersion(version);
     return seekTo(offset);
   }
@@ -386,7 +391,6 @@ public class FileDeltaCollection implements DeltasAccess {
       // There's no record for the specified version.
       return false;
     } else {
-      openIfNeeded();
       file.seek(offset);
       return true;
     }
@@ -546,8 +550,18 @@ public class FileDeltaCollection implements DeltasAccess {
     return endPointer - headerPointer;
   }
 
-  @VisibleForTesting
-  File getDeltasFile() {
-    return new File(basePath, deltasFilename);
+  /**
+   * Reads the last complete record in the deltas file and truncates any trailing junk.
+   */
+  private void initializeEndVersionAndTruncateTrailingJunk() throws IOException {
+    long numRecords = index.length();
+    if (numRecords >= 1) {
+      endVersion = getDeltaByEndVersion(numRecords).getResultingVersion();
+    } else {
+      endVersion = null;
+    }
+    // The file's position should be at the end. Truncate any
+    // trailing junk such as from a partially completed write.
+    file.setLength(file.getFilePointer());
   }
 }

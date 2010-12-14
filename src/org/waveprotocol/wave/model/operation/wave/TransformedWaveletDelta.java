@@ -100,7 +100,7 @@ public final class TransformedWaveletDelta extends AbstractList<WaveletOperation
       Preconditions.checkArgument(c.getVersionIncrement() == 1,
           "Invalid context version increment %s", c.getVersionIncrement());
       Preconditions.checkArgument(c.hasHashedVersion() == (i == this.ops.size() - 1),
-          "[Un]expected hashed version on op %s of %s", i, this.ops.size());
+          "[Un]expected hashed version on op %s of %s", i + 1, this.ops.size());
       Preconditions.checkArgument((i != this.ops.size() - 1)
           || c.getHashedVersion().equals(resultingVersion),
           "Context hashed version %s doesn't match delta hashed version %s", c.getHashedVersion(),

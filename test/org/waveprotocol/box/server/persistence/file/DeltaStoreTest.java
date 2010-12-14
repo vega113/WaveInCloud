@@ -21,15 +21,14 @@ import com.google.common.collect.ImmutableList;
 
 import org.waveprotocol.box.server.persistence.DeltaStoreTestBase;
 import org.waveprotocol.box.server.waveserver.DeltaStore;
-import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
 import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
+import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.RandomAccessFile;
 
 /**
@@ -52,7 +51,7 @@ public class DeltaStoreTest extends DeltaStoreTestBase {
   }
 
   @Override
-  protected DeltaStore newDeltaStore() throws IOException {
+  protected DeltaStore newDeltaStore() {
     return new FileDeltaStore(path.getAbsolutePath());
   }
 
@@ -71,7 +70,8 @@ public class DeltaStoreTest extends DeltaStoreTestBase {
     // we can read it without crashing.
     DeltaStore store = newDeltaStore();
     WaveletDeltaRecord written = createRecord();
-    File deltaFile = ((FileDeltaCollection) store.open(WAVE1_WAVELET1)).getDeltasFile();
+    File deltaFile = FileDeltaCollection.deltasFile(path.getAbsolutePath(), WAVE1_WAVELET1);
+
 
     long toRemove = 1;
     while (true) {

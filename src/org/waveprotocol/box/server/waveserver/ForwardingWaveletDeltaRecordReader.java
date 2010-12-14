@@ -39,7 +39,7 @@ public abstract class ForwardingWaveletDeltaRecordReader implements WaveletDelta
   }
 
   @Override
-  public boolean isEmpty() throws IOException {
+  public boolean isEmpty() {
     return delegate().isEmpty();
   }
 

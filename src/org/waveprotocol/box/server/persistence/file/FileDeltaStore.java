@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.eclipse.jetty.util.log.Log;
 import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.persistence.PersistenceException;
@@ -29,9 +30,11 @@ import org.waveprotocol.box.server.waveserver.DeltaStore;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.version.HashedVersion;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -62,8 +65,17 @@ public class FileDeltaStore implements DeltaStore {
   }
 
   @Override
+  public FileDeltaCollection open(WaveletName waveletName) throws PersistenceException {
+    try {
+      return FileDeltaCollection.open(waveletName, basePath);
+    } catch (IOException e) {
+      throw new PersistenceException("Failed to open deltas for wavelet " + waveletName, e);
+    }
+  }
+
+  @Override
   public void delete(WaveletName waveletName) throws PersistenceException {
-    new FileDeltaCollection(waveletName, basePath).delete();
+    FileDeltaCollection.delete(waveletName, basePath);
   }
 
   @Override
@@ -87,20 +99,23 @@ public class FileDeltaStore implements DeltaStore {
       String encodedWaveletId =
           name.substring(0, name.lastIndexOf(FileDeltaCollection.DELTAS_FILE_SUFFIX));
       WaveletId waveletId = FileUtils.waveletIdFromPathSegment(encodedWaveletId);
-      results.add(waveletId);
+        FileDeltaCollection deltas = open(WaveletName.of(waveId, waveletId));
+        HashedVersion endVersion = deltas.getEndVersion();
+        if (endVersion != null && endVersion.getVersion() > 0) {
+          results.add(waveletId);
+        }
+      try {
+        deltas.close();
+      } catch (IOException e) {
+        Log.info("Failed to close deltas file " + name, e);
+      }
     }
 
     return results.build();
   }
 
   @Override
-  public DeltasAccess open(WaveletName waveletName) throws PersistenceException {
-    return new FileDeltaCollection(waveletName, basePath);
-  }
-  
-  @Override
-  public ExceptionalIterator<WaveId, PersistenceException> getWaveIdIterator()
-      throws PersistenceException {
+  public ExceptionalIterator<WaveId, PersistenceException> getWaveIdIterator() {
     File baseDir = new File(basePath);
     if (!baseDir.exists()) {
       return ExceptionalIterator.Empty.create();
@@ -122,7 +137,7 @@ public class FileDeltaStore implements DeltaStore {
     for(File waveDir : waveDirs) {
       results.add(FileUtils.waveIdFromPathSegment(waveDir.getName()));
     }
-    
+
     return new ExceptionalIterator<WaveId, PersistenceException>() {
       private final Iterator<WaveId> iterator = results.build().iterator();
       private boolean nextFetched = false;
@@ -141,11 +156,11 @@ public class FileDeltaStore implements DeltaStore {
           }
         }
       }
-      
+
       @Override
       public boolean hasNext() throws PersistenceException {
         fetchNext();
-        return nextWaveId != null; 
+        return nextWaveId != null;
       }
 
       @Override
@@ -158,7 +173,7 @@ public class FileDeltaStore implements DeltaStore {
           return nextWaveId;
         }
       }
-      
+
     };
   }
 }
