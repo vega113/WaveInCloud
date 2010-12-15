@@ -149,6 +149,12 @@
     </buildjava>
     <touch file="${dep}/pst_compile"/>
   </target>
+  <target name="dist-pst" depends="pst_compile">
+    <patternset id="srcs">
+      <include name="org/waveprotocol/pst/**"/>
+    </patternset>
+    <distlib libname="pst" srcpattern="srcs"/>
+  </target>
 
   <target name="messages_dep">
     <uptodate targetfile="${dep}/messages_compile" property="skip.messages_compile">
@@ -431,7 +437,7 @@
     <jar destfile="${dist.dir}\proto-src.jar" basedir="${src.proto.dir}"/>
   </target>
 
-  <target name="dist-libraries" depends="compile, dist-proto">
+  <target name="dist-libraries" depends="compile, dist-proto, dist-pst">
     <subant target="dist" inheritall="true">
       <fileset dir="${src.dir}" includes="*/**/build.xml"/>
     </subant>
