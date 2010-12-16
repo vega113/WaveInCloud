@@ -21,8 +21,8 @@ import com.google.common.collect.ImmutableList;
 
 import org.waveprotocol.box.server.persistence.DeltaStoreTestBase;
 import org.waveprotocol.box.server.waveserver.DeltaStore;
-import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
 import org.waveprotocol.box.server.waveserver.DeltaStore.DeltasAccess;
+import org.waveprotocol.box.server.waveserver.WaveletDeltaRecord;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -33,7 +33,7 @@ import java.io.RandomAccessFile;
 
 /**
  * Tests for FileDeltaStore.
- *
+ * 
  * @author Joseph Gentle (josephg@gmail.com)
  */
 public class DeltaStoreTest extends DeltaStoreTestBase {
@@ -41,8 +41,8 @@ public class DeltaStoreTest extends DeltaStoreTestBase {
   private static final Log LOG = Log.get(DeltaStoreTest.class);
 
   private File path;
-  private final WaveletName WAVE1_WAVELET1 =
-    WaveletName.of(new WaveId("example.com", "wave1"), new WaveletId("example.com", "wavelet1"));
+  private final WaveletName WAVE1_WAVELET1 = WaveletName.of(new WaveId("example.com", "wave1"),
+      new WaveletId("example.com", "wavelet1"));
 
   @Override
   protected void setUp() throws Exception {
@@ -82,6 +82,7 @@ public class DeltaStoreTest extends DeltaStoreTestBase {
 
       RandomAccessFile file = new RandomAccessFile(deltaFile, "rw");
       if (toRemove > file.length()) {
+        file.close();
         break;
       }
       // eat the planned number of bytes
