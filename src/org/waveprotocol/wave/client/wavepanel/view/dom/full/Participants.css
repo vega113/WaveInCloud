@@ -89,6 +89,8 @@
 div.participant {
   line-height: 42px;
   margin: 4px 0 0 12px;
+  text-decoration: underline;
+  color: blue;
 }
 
 /* Avatar-based rendering. */
