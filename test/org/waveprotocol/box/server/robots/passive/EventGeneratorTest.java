@@ -20,8 +20,7 @@ package org.waveprotocol.box.server.robots.passive;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.ImmutableMap.Builder;
-import com.google.inject.internal.Sets;
+import com.google.common.collect.Sets;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.data.converter.v22.EventDataConverterV22;
 import com.google.wave.api.event.AnnotatedTextChangedEvent;
@@ -118,7 +117,7 @@ public class EventGeneratorTest extends TestCase {
   /** Map containing a subscription to all possible events */
   private static final Map<EventType, Capability> ALL_CAPABILITIES;
   static {
-    Builder<EventType, Capability> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<EventType, Capability> builder = ImmutableMap.builder();
     for (EventType event : EventType.values()) {
       if (!event.equals(EventType.UNKNOWN)) {
         builder.put(event, new Capability(event));
