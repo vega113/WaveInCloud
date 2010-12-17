@@ -25,31 +25,25 @@ import junit.framework.TestCase;
  */
 public class IdUtilTest extends TestCase implements IdConstants {
   public void testConversationRootIsConversational() {
-    WaveletId root = new WaveletId("example.com", CONVERSATION_ROOT_WAVELET);
-    assertTrue(IdUtil.isConversationalId(root));
-    assertTrue(IdUtil.isConversationRootWaveletId(root));
-  }
-
-  public void testLegacyConversationRootIsConversational() {
-    WaveletId root = new WaveletId("example.com", "conversation/root");
+    WaveletId root = WaveletId.of("example.com", CONVERSATION_ROOT_WAVELET);
     assertTrue(IdUtil.isConversationalId(root));
     assertTrue(IdUtil.isConversationRootWaveletId(root));
   }
 
   public void testConversationWaveletIsConversational() {
-    WaveletId conv = new WaveletId("example.com", CONVERSATION_WAVELET_PREFIX + TOKEN_SEPARATOR +
+    WaveletId conv = WaveletId.of("example.com", CONVERSATION_WAVELET_PREFIX + TOKEN_SEPARATOR +
         "foo");
     assertTrue(IdUtil.isConversationalId(conv));
   }
 
   public void testUserDataWaveletaIsNonConversational() {
-    WaveletId root = new WaveletId("example.com", USER_DATA_WAVELET_PREFIX + TOKEN_SEPARATOR
+    WaveletId root = WaveletId.of("example.com", USER_DATA_WAVELET_PREFIX + TOKEN_SEPARATOR
         + "nobody@gwave.com");
     assertFalse(IdUtil.isConversationalId(root));
   }
 
   public void testUserDataWavelet() {
-    WaveletId udw = new WaveletId("example.com", USER_DATA_WAVELET_PREFIX + TOKEN_SEPARATOR
+    WaveletId udw = WaveletId.of("example.com", USER_DATA_WAVELET_PREFIX + TOKEN_SEPARATOR
         + "nobody@gwave.com");
     assertTrue(IdUtil.isUserDataWavelet(udw));
     assertTrue(IdUtil.isUserDataWavelet("nobody@gwave.com", udw));

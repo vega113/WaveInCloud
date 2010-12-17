@@ -45,7 +45,7 @@ public class WaveletDataUtilTest extends TestCase {
   public static final ParticipantId CREATOR = new ParticipantId("creator@example.com");
   public static final ParticipantId JOE = new ParticipantId("joe@example.com");
   public static final WaveletName WAVELET_NAME =
-      WaveletName.of(new WaveId("example.com", "w+wave"), new WaveletId("example.com", "wavelet"));
+      WaveletName.of(WaveId.of("example.com", "w+wave"), WaveletId.of("example.com", "wavelet"));
 
   private WaveletOperationContext opContext(long timestamp, HashedVersion version) {
     return new WaveletOperationContext(CREATOR, timestamp, 1L, version);

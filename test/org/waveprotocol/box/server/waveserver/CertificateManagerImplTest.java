@@ -422,7 +422,7 @@ public class CertificateManagerImplTest extends TestCase {
   }
 
   private WaveletName getFakeWaveletName(String domain) {
-    return WaveletName.of(new WaveId(domain, "wave"), new WaveletId(domain, "wavelet"));
+    return WaveletName.of(WaveId.of(domain, "wave"), WaveletId.of(domain, "wavelet"));
   }
 
   private ByteString getRealSignerId() throws Exception {

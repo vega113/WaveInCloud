@@ -52,9 +52,9 @@ public interface TestingConstants {
 
   public static final ParticipantId PARTICIPANT = new ParticipantId(USER);
 
-  public static final WaveId WAVE_ID = new WaveId(DOMAIN, "w+wave");
+  public static final WaveId WAVE_ID = WaveId.of(DOMAIN, "w+wave");
 
-  public static final WaveletId WAVELET_ID = new WaveletId(DOMAIN, "wavelet");
+  public static final WaveletId WAVELET_ID = WaveletId.of(DOMAIN, "wavelet");
 
   public static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
 }

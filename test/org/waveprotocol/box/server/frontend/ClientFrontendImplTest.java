@@ -90,12 +90,12 @@ public class ClientFrontendImplTest extends TestCase {
   private static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionFactoryImpl(URI_CODEC);
 
-  private static final WaveId WAVE_ID = new WaveId("domain", "waveId");
+  private static final WaveId WAVE_ID = WaveId.of("domain", "waveId");
   private static final WaveletId WAVELET_ID =
-    new WaveletId("domain", IdConstants.CONVERSATION_ROOT_WAVELET);
+    WaveletId.of("domain", IdConstants.CONVERSATION_ROOT_WAVELET);
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final WaveletName INDEX_WAVELET_NAME =
-      WaveletName.of(INDEX_WAVE_ID, new WaveletId("domain", "waveId"));
+      WaveletName.of(INDEX_WAVE_ID, WaveletId.of("domain", "waveId"));
   private static final ParticipantId USER = new ParticipantId("user@example.com");
   private static final ParticipantId USER_2 = new ParticipantId("user2@example.com");
   private static final HashedVersion VERSION_0 = HASH_FACTORY.createVersionZero(WAVELET_NAME);

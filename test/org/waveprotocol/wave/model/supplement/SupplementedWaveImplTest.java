@@ -525,10 +525,10 @@ public final class SupplementedWaveImplTest extends TestCase {
 
     final HashedVersion signature1 = HashedVersion.of(234L, new byte[] { 1 }),
         signature2 = HashedVersion.of(12828L, new byte[] { 2 });
-    WaveletId waveletId1 = new WaveletId("example.com", "somewaveletid1");
+    WaveletId waveletId1 = WaveletId.of("example.com", "somewaveletid1");
     when(supplementedView.getSignature(waveletId1)).thenReturn(signature1);
 
-    WaveletId waveletId2 = new WaveletId("example.com", "somewaveletid2");
+    WaveletId waveletId2 = WaveletId.of("example.com", "somewaveletid2");
     when(supplementedView.getSignature(waveletId2)).thenReturn(signature2);
 
     when(supplementedView.getWavelets()).thenReturn(Arrays.asList(waveletId1, waveletId2));
@@ -553,7 +553,7 @@ public final class SupplementedWaveImplTest extends TestCase {
     PrimitiveSupplement primitiveSupplement = mock(PrimitiveSupplement.class);
     SupplementWaveView supplementedView = mock(SupplementWaveView.class);
 
-    WaveletId waveletId1 = new WaveletId("example.com", "somewaveletid1");
+    WaveletId waveletId1 = WaveletId.of("example.com", "somewaveletid1");
     HashedVersion wavelet1SeenVersion = HashedVersion.of(12312L, new byte[] { 1 });
 
     when(supplementedView.getWavelets()).thenReturn(Arrays.asList(waveletId1));
@@ -592,7 +592,7 @@ public final class SupplementedWaveImplTest extends TestCase {
     SupplementWaveView supplementedView = mock(SupplementWaveView.class);
 
     final HashedVersion signature1 = HashedVersion.of(234L, new byte[] { 1 });
-    WaveletId waveletId1 = new WaveletId("google.com", "somewaveletid1");
+    WaveletId waveletId1 = WaveletId.of("google.com", "somewaveletid1");
     when(supplementedView.getSignature(waveletId1)).thenReturn(signature1);
 
     when(supplementedView.getWavelets()).thenReturn(Arrays.asList(waveletId1));
@@ -657,10 +657,10 @@ public final class SupplementedWaveImplTest extends TestCase {
 
     final HashedVersion signature1 = HashedVersion.of(VERSION_1, SIGNATURE),
         signature2 = HashedVersion.of(VERSION_2, SIGNATURE);
-    WaveletId waveletId1 = new WaveletId("example.com", "somewaveletid1");
+    WaveletId waveletId1 = WaveletId.of("example.com", "somewaveletid1");
     when(supplementedView.getSignature(waveletId1)).thenReturn(signature1);
 
-    WaveletId waveletId2 = new WaveletId("example.com", "somewaveletid2");
+    WaveletId waveletId2 = WaveletId.of("example.com", "somewaveletid2");
     when(supplementedView.getSignature(waveletId2)).thenReturn(signature2);
 
     when(supplementedView.getWavelets()).thenReturn(Arrays.asList(waveletId1, waveletId2));
@@ -700,7 +700,7 @@ public final class SupplementedWaveImplTest extends TestCase {
     final long VERSION_1 = 234L;
 
     final HashedVersion signature1 = HashedVersion.of(VERSION_1, SIGNATURE);
-    WaveletId waveletId1 = new WaveletId("example.com", "somewaveletid1");
+    WaveletId waveletId1 = WaveletId.of("example.com", "somewaveletid1");
     when(supplementedView.getSignature(waveletId1)).thenReturn(signature1);
     when(primitiveSupplement.getNotifiedWavelets())
         .thenReturn(CollectionUtils.<WaveletId>immutableSet())

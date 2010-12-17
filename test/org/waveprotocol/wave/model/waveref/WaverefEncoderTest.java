@@ -102,8 +102,8 @@ public class WaverefEncoderTest extends TestCase {
    * waveDomain/waveId[/~/waveletId/[documentId]]
    */
   public void testPathEncodeGetsCalledWithWaveRefInput() {
-    WaveId waveId = new WaveId("www.example.com", "abcdEFGH");
-    WaveletId waveletId = new WaveletId("www.example.com", "conv+root");
+    WaveId waveId = WaveId.of("www.example.com", "abcdEFGH");
+    WaveletId waveletId = WaveletId.of("www.example.com", "conv+root");
     String documentId = "b+1234";
 
     WaveRef waveIdOnly = WaveRef.of(waveId);
@@ -132,8 +132,8 @@ public class WaverefEncoderTest extends TestCase {
    * waveDomain/waveId[/~/waveletId/[documentId]]
    */
   public void testQueryEncodeGetsCalledWithWaveRefInput() {
-    WaveId waveId = new WaveId("www.example.com", "abcdEFGH");
-    WaveletId waveletId = new WaveletId("www.example.com", "conv+root");
+    WaveId waveId = WaveId.of("www.example.com", "abcdEFGH");
+    WaveletId waveletId = WaveletId.of("www.example.com", "conv+root");
     String documentId = "b+1234";
 
     WaveRef waveIdOnly = WaveRef.of(waveId);
@@ -176,8 +176,8 @@ public class WaverefEncoderTest extends TestCase {
 
   public void testDeserialisingValidWaveRefs() throws InvalidWaveRefException {
     WaveRef ref = waverefEncoder.decodeWaveRefFromPath("example.com/w+abc123/~/conv+root/b+983247");
-    WaveRef expected = WaveRef.of(new WaveId("example.com", "w+abc123"),
-        new WaveletId("example.com", "conv+root"),
+    WaveRef expected = WaveRef.of(WaveId.of("example.com", "w+abc123"),
+        WaveletId.of("example.com", "conv+root"),
     "b+983247");
     assertEquals(expected, ref);
   }

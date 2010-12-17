@@ -81,11 +81,28 @@ public final class WaveId implements Comparable<WaveId>, Serializable {
   }
 
   /**
+   * Creates a wave id from a domain and local identifier.
+   */
+  public static WaveId of(String domain, String id) {
+    Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, domain), "Invalid domain %s",
+        domain);
+    Preconditions.checkArgument(WaveIdentifiers.isValidIdentifier(id), "Invalid id %s", id);
+    return new WaveId(domain, id);
+  }
+
+  /**
+   * Creates a wave id without doing validity checking, except for a deprecated
+   * serialization scheme.
+   *
+   * TODO(anorth): Deprecate the public constructor in favor of of().
+   *
    * @param domain must not be null. This is assumed to be of a valid canonical
    *        domain format.
    * @param id must not be null. This is assumed to be escaped with
    *        SimplePrefixEscaper.DEFAULT_ESCAPER.
+   * @deprecated use {@link #of(String, String)}
    */
+  @Deprecated
   public WaveId(String domain, String id) {
     if (domain == null || id == null) {
       Preconditions.nullPointer("Cannot create wave id with null value in [domain:"

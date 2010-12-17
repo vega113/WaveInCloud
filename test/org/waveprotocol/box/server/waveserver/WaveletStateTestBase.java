@@ -72,8 +72,8 @@ public abstract class WaveletStateTestBase extends TestCase {
     }
   }
 
-  private static final WaveletName NAME = WaveletName.of(new WaveId("example.com", "waveid"),
-      new WaveletId("example.com", "waveletid"));
+  private static final WaveletName NAME = WaveletName.of(WaveId.of("example.com", "waveid"),
+      WaveletId.of("example.com", "waveletid"));
   private static final ParticipantId AUTHOR = ParticipantId.ofUnsafe("author@example.com");
   private static final DeltaTestUtil UTIL = new DeltaTestUtil(AUTHOR);
   private static final long TS = 1234567890L;

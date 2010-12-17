@@ -46,11 +46,11 @@ import java.util.List;
  * Tests {@link UserManager}.
  */
 public class UserManagerTest extends TestCase {
-  private static final WaveId W1 = new WaveId("example.com", "111");
-  private static final WaveId W2 = new WaveId("example.com", "222");
+  private static final WaveId W1 = WaveId.of("example.com", "111");
+  private static final WaveId W2 = WaveId.of("example.com", "222");
 
-  private static final WaveletId WA = new WaveletId("example.com", "AAA");
-  private static final WaveletId WB = new WaveletId("example.com", "BBB");
+  private static final WaveletId WA = WaveletId.of("example.com", "AAA");
+  private static final WaveletId WB = WaveletId.of("example.com", "BBB");
 
   private static final WaveletName W1A = WaveletName.of(W1, WA);
   private static final WaveletName W2A = WaveletName.of(W2, WA);

@@ -127,7 +127,7 @@ public final class FetchServlet extends HttpServlet {
     // TODO(josephg): Its currently impossible to fetch all wavelets inside a
     // wave that are visible to the user. Until this is fixed, if no wavelet is
     // specified we'll just return the conv+root.
-    WaveletId waveletId = waveref.hasWaveletId() ? waveref.getWaveletId() : new WaveletId(
+    WaveletId waveletId = waveref.hasWaveletId() ? waveref.getWaveletId() : WaveletId.of(
         waveref.getWaveId().getDomain(), "conv+root");
 
     WaveletName waveletName = WaveletName.of(waveref.getWaveId(), waveletId);

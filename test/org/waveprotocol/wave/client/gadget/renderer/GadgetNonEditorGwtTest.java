@@ -161,8 +161,8 @@ public class GadgetNonEditorGwtTest extends GWTTestCase {
     userPrefs.put("pref1", "value1");
     userPrefs.put("pref2", "value2");
     GadgetMetadata metadata = getTestMetadata(xmlSource);
-    WaveId waveId = new WaveId("wave.google.com", "123");
-    WaveletId waveletId = new WaveletId("wave.google.com", "conv+root");
+    WaveId waveId = WaveId.of("wave.google.com", "123");
+    WaveletId waveletId = WaveletId.of("wave.google.com", "conv+root");
     WaveletName name = WaveletName.of(waveId, waveletId);
     String securityToken = "SECURITY";
     GadgetWidget gadget = GadgetWidget.createForTesting(

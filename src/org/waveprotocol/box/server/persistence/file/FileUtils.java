@@ -117,7 +117,7 @@ public class FileUtils {
    */
   public static WaveId waveIdFromPathSegment(String pathSegment) {
     Pair<String, String> segments = decodePathSegmentPair(pathSegment);
-    return new WaveId(segments.first, segments.second);
+    return WaveId.of(segments.first, segments.second);
   }
 
   /**
@@ -142,7 +142,7 @@ public class FileUtils {
    */
   public static WaveletId waveletIdFromPathSegment(String pathSegment) {
     Pair<String, String> segments = decodePathSegmentPair(pathSegment);
-    return new WaveletId(segments.first, segments.second);
+    return WaveletId.of(segments.first, segments.second);
   }
 
   /**

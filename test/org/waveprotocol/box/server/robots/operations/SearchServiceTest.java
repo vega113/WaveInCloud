@@ -85,7 +85,7 @@ import java.util.Set;
 public class SearchServiceTest extends TestCase {
   private static final ParticipantId USER = ParticipantId.ofUnsafe("me@example.com");
   private static final WaveletId CONVERSATION_WAVELET_ID =
-      new WaveletId("example.com", "conv+root");
+      WaveletId.of("example.com", "conv+root");
 
   private SearchService service;
 

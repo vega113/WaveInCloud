@@ -64,19 +64,19 @@ public class IdSerialiserTest extends TestCase {
   }
 
   private void checkSerialise(String domain, String id, String expectedSerialised) {
-    String serialisedWaveId = serialiser.serialiseWaveId(new WaveId(domain, id));
+    String serialisedWaveId = serialiser.serialiseWaveId(WaveId.of(domain, id));
     assertEquals(expectedSerialised, serialisedWaveId);
 
-    String serialisedWaveletId = serialiser.serialiseWaveletId(new WaveletId(domain, id));
+    String serialisedWaveletId = serialiser.serialiseWaveletId(WaveletId.of(domain, id));
     assertEquals(expectedSerialised, serialisedWaveletId);
   }
 
   private void checkDeserialise(String toDeserialise, String expectedDomain, String expectedId)
       throws InvalidIdException {
-    assertEquals(new WaveId(expectedDomain, expectedId),
+    assertEquals(WaveId.of(expectedDomain, expectedId),
         serialiser.deserialiseWaveId(toDeserialise));
 
-    assertEquals(new WaveletId(expectedDomain, expectedId),
+    assertEquals(WaveletId.of(expectedDomain, expectedId),
         serialiser.deserialiseWaveletId(toDeserialise));
   }
 }

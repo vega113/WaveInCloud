@@ -82,12 +82,27 @@ public final class WaveletId implements Comparable<WaveletId>, Serializable {
   }
 
   /**
+   * Creates a wavelet id from a domain and local identifier.
+   */
+  public static WaveletId of(String domain, String id) {
+    Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, domain), "Invalid domain %s",
+        domain);
+    Preconditions.checkArgument(WaveIdentifiers.isValidIdentifier(id), "Invalid id %s", id);
+    return new WaveletId(domain, id);
+  }
+
+  /**
+   * Creates a wavelet id without doing validity checking, except for a
+   * deprecated serialization scheme.
+   *
    * @param domain must not be null. This is assumed to be of a valid canonical
    *        domain format.
    * @param id must not be null. This is assumed to be escaped with
    *        SimplePrefixEscaper.DEFAULT_ESCAPER.
    * @throws IllegalArgumentException if domain or id is invalid.
+   * @deprecated use {@link #of(String, String)}
    */
+  @Deprecated
   public WaveletId(String domain, String id) {
     if (domain == null || id == null) {
       Preconditions.nullPointer("Cannot create WaveletId with null value in [domain:"

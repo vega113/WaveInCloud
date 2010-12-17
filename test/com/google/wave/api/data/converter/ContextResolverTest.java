@@ -97,8 +97,8 @@ public class ContextResolverTest extends TestCase {
     when(mockWavelet.getCreationTime()).thenReturn(123L);
     ParticipantId creator = new ParticipantId("foo@test.com");
     when(mockWavelet.getCreatorId()).thenReturn(creator);
-    when(mockWavelet.getWaveId()).thenReturn(new WaveId("example.com", "123"));
-    when(mockWavelet.getId()).thenReturn(new WaveletId("example.com", "conv+root"));
+    when(mockWavelet.getWaveId()).thenReturn(WaveId.of("example.com", "123"));
+    when(mockWavelet.getId()).thenReturn(WaveletId.of("example.com", "conv+root"));
     when(mockWavelet.getLastModifiedTime()).thenReturn(123L);
     when(mockWavelet.getVersion()).thenReturn(1L);
     when(mockWavelet.getDocumentIds()).thenReturn(Collections.<String>emptySet());

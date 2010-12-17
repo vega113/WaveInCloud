@@ -54,9 +54,9 @@ import java.util.NoSuchElementException;
  */
 public abstract class DeltaStoreTestBase extends TestCase {
   private final WaveletName WAVE1_WAVELET1 =
-    WaveletName.of(new WaveId("example.com", "wave1"), new WaveletId("example.com", "wavelet1"));
+    WaveletName.of(WaveId.of("example.com", "wave1"), WaveletId.of("example.com", "wavelet1"));
   private final WaveletName WAVE2_WAVELET1 =
-    WaveletName.of(new WaveId("example.com", "wave2"), new WaveletId("example.com", "wavelet1"));
+    WaveletName.of(WaveId.of("example.com", "wave2"), WaveletId.of("example.com", "wavelet1"));
   private final DeltaTestUtil UTIL = new DeltaTestUtil(TestingConstants.PARTICIPANT);
 
 

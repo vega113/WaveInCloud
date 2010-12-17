@@ -422,7 +422,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   @VisibleForTesting
   static WaveletName createDummyWaveletName(WaveId waveId) {
     final WaveletName dummyWaveletName =
-      WaveletName.of(waveId, new WaveletId(waveId.getDomain(), "dummy+root"));
+      WaveletName.of(waveId, WaveletId.of(waveId.getDomain(), "dummy+root"));
     return dummyWaveletName;
   }
 }

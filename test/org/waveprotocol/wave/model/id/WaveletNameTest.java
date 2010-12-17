@@ -29,21 +29,21 @@ public class WaveletNameTest extends TestCase {
 
   public void testNullPartsAreRejected() {
     try {
-      WaveletName.of(null, new WaveletId("example.com", "id"));
+      WaveletName.of(null, WaveletId.of("example.com", "id"));
       fail("Expected NPE from wavelet name with null wave id");
     } catch (NullPointerException expected) {
     }
 
     try {
-      WaveletName.of(new WaveId("example.com", "id"), null);
+      WaveletName.of(WaveId.of("example.com", "id"), null);
       fail("Expected NPE from wavelet name with null wavelet id");
     } catch (NullPointerException expected) {
     }
   }
 
   public void testOfToString() throws Exception {
-    final WaveId waveId = new WaveId("example.com", "w+abcd1234");
-    final WaveletId waveletId = new WaveletId("acmewave.com", "conv+blah");
+    final WaveId waveId = WaveId.of("example.com", "w+abcd1234");
+    final WaveletId waveletId = WaveletId.of("acmewave.com", "conv+blah");
     WaveletName name = WaveletName.of(waveId, waveletId);
     String expected = "[WaveletName example.com!w+abcd1234 acmewave.com!conv+blah]";
     assertEquals(expected, name.toString());

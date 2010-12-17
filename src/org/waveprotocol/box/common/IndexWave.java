@@ -200,7 +200,7 @@ public final class IndexWave {
    * wave referred to by an index wavelet name.
    */
   public static WaveletName waveletNameFromIndexWavelet(WaveletName indexWaveletName) {
-    return WaveletName.of(IndexWave.waveIdFromIndexWavelet(indexWaveletName), new WaveletId(
+    return WaveletName.of(IndexWave.waveIdFromIndexWavelet(indexWaveletName), WaveletId.of(
         indexWaveletName.waveletId.getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET));
   }
 

@@ -79,14 +79,14 @@ public class IdFilterTest extends TestCase {
    * Tests that the filter of all ids matches some string.
    */
   public void testAllFilterMatchesAnything() {
-    assertTrue(IdFilter.accepts(IdFilters.ALL_IDS, wid("any string")));
+    assertTrue(IdFilter.accepts(IdFilters.ALL_IDS, wid("anystring")));
   }
 
   /**
    * Tests that the filter of no ids doesn't match some string.
    */
   public void testNoFilterDoesntMatchSomething() {
-    assertFalse(IdFilter.accepts(IdFilters.NO_IDS, wid("any string")));
+    assertFalse(IdFilter.accepts(IdFilters.NO_IDS, wid("anystring")));
   }
 
   /**
@@ -96,7 +96,7 @@ public class IdFilterTest extends TestCase {
     IdFilter filter = IdFilter.ofIds(wid("match-id"));
     assertTrue(IdFilter.accepts(filter, wid("match-id")));
     assertFalse(IdFilter.accepts(filter, wid("match-id-longer")));
-    assertFalse(IdFilter.accepts(filter, wid("any string")));
+    assertFalse(IdFilter.accepts(filter, wid("anystring")));
   }
 
   /**
@@ -107,7 +107,7 @@ public class IdFilterTest extends TestCase {
       wid("match-id-2"));
     assertTrue(IdFilter.accepts(filter, wid("match-id-1")));
     assertTrue(IdFilter.accepts(filter, wid("match-id-2")));
-    assertFalse(IdFilter.accepts(filter, wid("another string")));
+    assertFalse(IdFilter.accepts(filter, wid("anystring")));
   }
 
   /**
@@ -118,7 +118,7 @@ public class IdFilterTest extends TestCase {
     assertTrue(IdFilter.accepts(filter, wid("match-id")));
     assertTrue(IdFilter.accepts(filter, wid("match-id-n")));
     assertFalse(IdFilter.accepts(filter, wid("match-")));
-    assertFalse(IdFilter.accepts(filter, wid("any string")));
+    assertFalse(IdFilter.accepts(filter, wid("anystring")));
   }
 
   /**
@@ -148,7 +148,7 @@ public class IdFilterTest extends TestCase {
   }
 
   public WaveletId wid(String waveletId) {
-    return new WaveletId("example.com", waveletId);
+    return WaveletId.of("example.com", waveletId);
   }
 
   /**

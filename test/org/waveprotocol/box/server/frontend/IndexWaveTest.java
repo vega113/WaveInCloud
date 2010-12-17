@@ -33,11 +33,11 @@ import org.waveprotocol.wave.model.id.WaveletName;
  * @author mk.mateng@gmail.com (Michael Kuntzman)
  */
 public class IndexWaveTest extends TestCase {
-  private static final WaveId WAVE_ID = new WaveId("domain", "waveId");
-  private static final WaveletId WAVELET_ID = new WaveletId("domain", CONVERSATION_ROOT_WAVELET);
+  private static final WaveId WAVE_ID = WaveId.of("domain", "waveId");
+  private static final WaveletId WAVELET_ID = WaveletId.of("domain", CONVERSATION_ROOT_WAVELET);
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final WaveletName INDEX_WAVELET_NAME = WaveletName.of(INDEX_WAVE_ID,
-      new WaveletId("domain", "waveId"));
+      WaveletId.of("domain", "waveId"));
 
   /**
    * Test that a wavelet name can be converted to the corresponding index

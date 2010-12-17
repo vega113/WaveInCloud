@@ -168,8 +168,8 @@ public class WaveletDeltaChannelImplTest extends TestCase {
 
   private static final ParticipantId USER_ID = ParticipantId.ofUnsafe("test@example.com");
   private static final DeltaTestUtil UTIL = new DeltaTestUtil(USER_ID);
-  private final static WaveId WAVE_ID = new WaveId("example.com", "waveid");
-  private final static WaveletId WAVELET_ID = new WaveletId("example.com", "waveletid");
+  private final static WaveId WAVE_ID = WaveId.of("example.com", "waveid");
+  private final static WaveletId WAVELET_ID = WaveletId.of("example.com", "waveletid");
   private static final ObservableWaveletData.Factory<?> DATA_FACTORY =
       BasicFactories.waveletDataImplFactory();
 

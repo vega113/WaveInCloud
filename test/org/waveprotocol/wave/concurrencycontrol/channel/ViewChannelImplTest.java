@@ -245,7 +245,7 @@ public class ViewChannelImplTest extends TestCase {
   /**
    * Wavelet id to use in the tests.
    */
-  private static final WaveletId WAVELET_ID = new WaveletId("example.com", "waveletId_1");
+  private static final WaveletId WAVELET_ID = WaveletId.of("example.com", "waveletId_1");
 
   /**
    * Channel Id to be used in the tests.
@@ -264,7 +264,7 @@ public class ViewChannelImplTest extends TestCase {
 
   @Override
   protected void setUp() {
-    WaveId waveId = new WaveId("example.com", "waveid");
+    WaveId waveId = WaveId.of("example.com", "waveid");
     ViewChannelImpl.setMaxViewChannelsPerWave(Integer.MAX_VALUE);
     waveViewService = new MockWaveViewService();
     viewOpenListener = new MockViewChannelListener();
@@ -659,7 +659,7 @@ public class ViewChannelImplTest extends TestCase {
 
   public void testCannotCreateTooManyChannels() {
     ViewChannelImpl.setMaxViewChannelsPerWave(4);
-    WaveId waveId = new WaveId("example.com", "toomanywaveid");
+    WaveId waveId = WaveId.of("example.com", "toomanywaveid");
     for  (int i = 0; i < 4; i++) {
       channel = new ViewChannelImpl(waveId, waveViewService, logger);
     }
@@ -672,7 +672,7 @@ public class ViewChannelImplTest extends TestCase {
   }
 
   public void testClosingOneChannelMakesRoomForAnother() {
-    WaveId waveId = new WaveId("example.com", "makeroomwaveid");
+    WaveId waveId = WaveId.of("example.com", "makeroomwaveid");
     ViewChannelImpl.setMaxViewChannelsPerWave(4);
     for (int i = 0; i < 4; i++) {
       channel = new ViewChannelImpl(waveId, waveViewService, logger);

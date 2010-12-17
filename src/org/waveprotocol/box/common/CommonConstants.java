@@ -33,6 +33,6 @@ public final class CommonConstants {
   }
 
   /** The wave id of the index wave (not federated, so fake domain). */
-  public static final WaveId INDEX_WAVE_ID = new WaveId("indexwave", "indexwave");
+  public static final WaveId INDEX_WAVE_ID = WaveId.of("indexwave", "indexwave");
 
 }

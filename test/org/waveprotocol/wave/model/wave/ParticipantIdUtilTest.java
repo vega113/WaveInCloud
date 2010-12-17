@@ -20,6 +20,8 @@ package org.waveprotocol.wave.model.wave;
 
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.model.id.WaveIdentifiers;
+
 /**
  * Test cases for the {@link ParticipantIdUtil} class.
  *
@@ -27,23 +29,23 @@ import junit.framework.TestCase;
 
 public class ParticipantIdUtilTest extends TestCase {
   public void testIsValidDomain() {
-    assertTrue(ParticipantIdUtil.isValidDomain(0, "google.com"));
-    assertTrue(ParticipantIdUtil.isValidDomain(0, "a.gwave.com"));
-    assertTrue(ParticipantIdUtil.isValidDomain(0, "googlewave.com"));
-    assertTrue(ParticipantIdUtil.isValidDomain(0, "google.org"));
-    assertTrue(ParticipantIdUtil.isValidDomain(0, "google.co.uk"));
-    assertTrue(ParticipantIdUtil.isValidDomain(0, "a-1-2-3.com"));
-    assertTrue(ParticipantIdUtil.isValidDomain(0, "my-domain.com"));
-    assertTrue(ParticipantIdUtil.isValidDomain(0, "sd8fud.a0s8df7as.mil"));
+    assertTrue(WaveIdentifiers.isValidDomain(0, "google.com"));
+    assertTrue(WaveIdentifiers.isValidDomain(0, "a.gwave.com"));
+    assertTrue(WaveIdentifiers.isValidDomain(0, "googlewave.com"));
+    assertTrue(WaveIdentifiers.isValidDomain(0, "google.org"));
+    assertTrue(WaveIdentifiers.isValidDomain(0, "google.co.uk"));
+    assertTrue(WaveIdentifiers.isValidDomain(0, "a-1-2-3.com"));
+    assertTrue(WaveIdentifiers.isValidDomain(0, "my-domain.com"));
+    assertTrue(WaveIdentifiers.isValidDomain(0, "sd8fud.a0s8df7as.mil"));
     // NOTE(user): Not valid according to RFC1035 but it exists.
-    assertTrue(ParticipantIdUtil.isValidDomain(0, "76.com"));
+    assertTrue(WaveIdentifiers.isValidDomain(0, "76.com"));
 
-    assertFalse(ParticipantIdUtil.isValidDomain(0, ""));
-    assertFalse(ParticipantIdUtil.isValidDomain(0, "google..com"));
-    assertFalse(ParticipantIdUtil.isValidDomain(0, "dom*ain.com"));
-    assertFalse(ParticipantIdUtil.isValidDomain(0, "trailing-.dash.com"));
-    assertFalse(ParticipantIdUtil.isValidDomain(0, "trailing.dash.com-"));
-    assertFalse(ParticipantIdUtil.isValidDomain(0, "google.com."));
+    assertFalse(WaveIdentifiers.isValidDomain(0, ""));
+    assertFalse(WaveIdentifiers.isValidDomain(0, "google..com"));
+    assertFalse(WaveIdentifiers.isValidDomain(0, "dom*ain.com"));
+    assertFalse(WaveIdentifiers.isValidDomain(0, "trailing-.dash.com"));
+    assertFalse(WaveIdentifiers.isValidDomain(0, "trailing.dash.com-"));
+    assertFalse(WaveIdentifiers.isValidDomain(0, "google.com."));
 
     // The long domain case. Check that 253 is fine, but 254 fails.
     StringBuilder builder = new StringBuilder();
@@ -52,8 +54,8 @@ public class ParticipantIdUtilTest extends TestCase {
     }
     String longDomain = builder.append(".com").toString();
     assertEquals(253, longDomain.length());
-    assertTrue(ParticipantIdUtil.isValidDomain(0, longDomain));
-    assertFalse(ParticipantIdUtil.isValidDomain(0, "a" + longDomain));
+    assertTrue(WaveIdentifiers.isValidDomain(0, longDomain));
+    assertFalse(WaveIdentifiers.isValidDomain(0, "a" + longDomain));
   }
 
   public void testIsNormalizedAddress() {

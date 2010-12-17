@@ -57,7 +57,7 @@ public class XmppFederationHostForDomainTest extends TestCase {
   private final static String REMOTE_JID = "wave." + REMOTE_DOMAIN;
 
   private final static WaveletName WAVELET_NAME =
-      WaveletName.of(new WaveId(REMOTE_DOMAIN, "wave"), new WaveletId(REMOTE_DOMAIN, "wavelet"));
+      WaveletName.of(WaveId.of(REMOTE_DOMAIN, "wave"), WaveletId.of(REMOTE_DOMAIN, "wavelet"));
   private final static ProtocolHashedVersion WAVELET_VERSION =
       ProtocolHashedVersionFactory.createVersionZero(WAVELET_NAME);
   private final static ByteString DELTA_BYTESTRING =

@@ -53,8 +53,8 @@ public class AddParticipantTest extends TestCase {
 
   @Override
   public void setUp() {
-    WaveId waveId = new WaveId("example.com", "c+123");
-    WaveletId waveletId = new WaveletId("example.com", IdConstants.CONVERSATION_ROOT_WAVELET);
+    WaveId waveId = WaveId.of("example.com", "c+123");
+    WaveletId waveletId = WaveletId.of("example.com", IdConstants.CONVERSATION_ROOT_WAVELET);
     wavelet = new WaveletDataImpl(waveletId, CREATOR, 0L, 0L,
         HashedVersion.unsigned(0), 0L, waveId,
         BasicFactories.pluggableMutableDocumentFactory());

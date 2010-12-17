@@ -32,9 +32,9 @@ import org.waveprotocol.wave.model.id.WaveletId;
 public class WaveRefTest extends TestCase {
 
   public void testBasicEquals() {
-    WaveRef first = WaveRef.of(new WaveId("example.com", "w+1234abcd"));
-    WaveRef second = WaveRef.of(new WaveId("example.com", "w+1234abcd"));
-    WaveRef different = WaveRef.of(new WaveId("test.com", "w+1234abcd"));
+    WaveRef first = WaveRef.of(WaveId.of("example.com", "w+1234abcd"));
+    WaveRef second = WaveRef.of(WaveId.of("example.com", "w+1234abcd"));
+    WaveRef different = WaveRef.of(WaveId.of("test.com", "w+1234abcd"));
 
     assertFalse(first.equals(null));
     assertTrue(first.equals(first));
@@ -43,11 +43,11 @@ public class WaveRefTest extends TestCase {
   }
 
   public void testEqualsWithSameWaveIdDifferentOtherFields() {
-    WaveRef first = WaveRef.of(new WaveId("example.com", "w+1234abcd"));
-    WaveRef second = WaveRef.of(new WaveId("example.com", "w+1234abcd"),
-        new WaveletId("example.com", "conv+root"));
-    WaveRef third = WaveRef.of(new WaveId("example.com", "w+1234abcd"),
-        new WaveletId("example.com", "conv+root"),
+    WaveRef first = WaveRef.of(WaveId.of("example.com", "w+1234abcd"));
+    WaveRef second = WaveRef.of(WaveId.of("example.com", "w+1234abcd"),
+        WaveletId.of("example.com", "conv+root"));
+    WaveRef third = WaveRef.of(WaveId.of("example.com", "w+1234abcd"),
+        WaveletId.of("example.com", "conv+root"),
         "b+12345");
 
     assertTrue(second.equals(second));
@@ -59,26 +59,26 @@ public class WaveRefTest extends TestCase {
   }
 
   public void testEqualsWithDifferentWaveIdSameOtherFields() {
-    WaveRef first = WaveRef.of(new WaveId("test.com", "w+1234"),
-        new WaveletId("example.com", "conv+root"),
+    WaveRef first = WaveRef.of(WaveId.of("test.com", "w+1234"),
+        WaveletId.of("example.com", "conv+root"),
         "b+12345");
-    WaveRef second = WaveRef.of(new WaveId("example.com", "w+1234"),
-        new WaveletId("example.com", "conv+root"),
+    WaveRef second = WaveRef.of(WaveId.of("example.com", "w+1234"),
+        WaveletId.of("example.com", "conv+root"),
         "b+12345");
 
     assertFalse(first.equals(second));
   }
 
   public void testHashCode() {
-    WaveRef first = WaveRef.of(new WaveId("example.com", "w+1234"));
-    WaveRef second = WaveRef.of(new WaveId("example.com", "w+1234"),
-        new WaveletId("example.com", "conv+root"));
-    WaveRef third = WaveRef.of(new WaveId("example.com", "w+1234"),
-        new WaveletId("example.com", "conv+root"), "b+12345");
+    WaveRef first = WaveRef.of(WaveId.of("example.com", "w+1234"));
+    WaveRef second = WaveRef.of(WaveId.of("example.com", "w+1234"),
+        WaveletId.of("example.com", "conv+root"));
+    WaveRef third = WaveRef.of(WaveId.of("example.com", "w+1234"),
+        WaveletId.of("example.com", "conv+root"), "b+12345");
 
-    WaveRef sameAsFirst = WaveRef.of(new WaveId("example.com", "w+1234"));
-    WaveRef sameAsThird = WaveRef.of(new WaveId("example.com", "w+1234"),
-        new WaveletId("example.com", "conv+root"), "b+12345");
+    WaveRef sameAsFirst = WaveRef.of(WaveId.of("example.com", "w+1234"));
+    WaveRef sameAsThird = WaveRef.of(WaveId.of("example.com", "w+1234"),
+        WaveletId.of("example.com", "conv+root"), "b+12345");
 
     assertEquals(first.hashCode(), sameAsFirst.hashCode());
     assertEquals(third.hashCode(), sameAsThird.hashCode());

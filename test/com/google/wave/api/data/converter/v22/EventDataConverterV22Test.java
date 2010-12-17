@@ -52,8 +52,8 @@ import java.util.Map;
 
 public class EventDataConverterV22Test extends TestCase {
 
-  private static final WaveId WAVE_ID = new WaveId("example.com", "123");
-  private static final WaveletId WAVELET_ID = new WaveletId("example.com", "conv+root");
+  private static final WaveId WAVE_ID = WaveId.of("example.com", "123");
+  private static final WaveletId WAVELET_ID = WaveletId.of("example.com", "conv+root");
 
   private Conversation conversation;
 

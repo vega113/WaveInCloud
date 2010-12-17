@@ -17,6 +17,7 @@
 
 package org.waveprotocol.wave.model.id;
 
+
 /**
  * This class is used to generate Wave and Wavelet ids.
  *

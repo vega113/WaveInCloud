@@ -45,7 +45,7 @@ public abstract class PrimitiveSupplementTestBase extends GenericTestBase<Primit
   public void testDefaults() {
 
     // Default read versions are all NO_VERSION
-    WaveletId wavelet1 = new WaveletId("google.com", "wavelet1");
+    WaveletId wavelet1 = WaveletId.of("google.com", "wavelet1");
     String blip1 = "blip1";
     assertEquals(PrimitiveSupplement.NO_VERSION, target.getLastReadBlipVersion(wavelet1, blip1));
     assertEquals(PrimitiveSupplement.NO_VERSION, target.getLastReadParticipantsVersion(wavelet1));
@@ -66,8 +66,8 @@ public abstract class PrimitiveSupplementTestBase extends GenericTestBase<Primit
   }
 
   public void testInboxing() {
-    WaveletId wavelet1 = new WaveletId("google.com", "wavelet1");
-    WaveletId wavelet2 = new WaveletId("google.com", "wavelet2");
+    WaveletId wavelet1 = WaveletId.of("google.com", "wavelet1");
+    WaveletId wavelet2 = WaveletId.of("google.com", "wavelet2");
 
     target.archiveAtVersion(wavelet1, 10);
     assertEquals(10, target.getArchiveWaveletVersion(wavelet1));
@@ -80,8 +80,8 @@ public abstract class PrimitiveSupplementTestBase extends GenericTestBase<Primit
   }
 
   public void testClearReadState() {
-    WaveletId wavelet1 = new WaveletId("google.com", "wavelet1");
-    WaveletId wavelet2 = new WaveletId("google.com", "wavelet2");
+    WaveletId wavelet1 = WaveletId.of("google.com", "wavelet1");
+    WaveletId wavelet2 = WaveletId.of("google.com", "wavelet2");
     String blip1 = "blip1";
     String blip2 = "blip2";
 
@@ -97,7 +97,7 @@ public abstract class PrimitiveSupplementTestBase extends GenericTestBase<Primit
   }
 
   public void testClearBlipReadState() {
-    WaveletId wavelet1 = new WaveletId("google.com", "wavelet1");
+    WaveletId wavelet1 = WaveletId.of("google.com", "wavelet1");
     String blip1 = "blip1";
     String blip2 = "blip2";
 
@@ -115,8 +115,8 @@ public abstract class PrimitiveSupplementTestBase extends GenericTestBase<Primit
   }
 
   public void testSeenVersions() {
-    WaveletId wavelet1 = new WaveletId("example.com", "wavelet1");
-    WaveletId wavelet2 = new WaveletId("example.com", "wavelet2");
+    WaveletId wavelet1 = WaveletId.of("example.com", "wavelet1");
+    WaveletId wavelet2 = WaveletId.of("example.com", "wavelet2");
     HashedVersion aSeenVersion = HashedVersion.of(213819238L, new byte[] {1});
 
     target.setSeenVersion(wavelet1, aSeenVersion);
@@ -136,8 +136,8 @@ public abstract class PrimitiveSupplementTestBase extends GenericTestBase<Primit
   //
 
   public void testRandom() {
-    WaveletId wavelet1 = new WaveletId("google.com", "wavelet1");
-    WaveletId wavelet2 = new WaveletId("google.com", "wavelet2");
+    WaveletId wavelet1 = WaveletId.of("google.com", "wavelet1");
+    WaveletId wavelet2 = WaveletId.of("google.com", "wavelet2");
     String blip1 = "blip1";
     String blip2 = "blip2";
     String thread1 = "thread1";
@@ -234,7 +234,7 @@ public abstract class PrimitiveSupplementTestBase extends GenericTestBase<Primit
   }
 
   public void testAbuse() {
-    WaveletId wavelet1 = new WaveletId("google.com", "wavelet1");
+    WaveletId wavelet1 = WaveletId.of("google.com", "wavelet1");
     final String adder = "evilbob@evil.com";
     WantedEvaluation eval1 =
         new SimpleWantedEvaluation(

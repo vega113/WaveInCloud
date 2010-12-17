@@ -81,7 +81,7 @@ public class DataUtilTest extends TestCase {
   }
 
   private static final WaveletName WAVELET_NAME =
-      WaveletName.of(new WaveId("example.com", "wave"), new WaveletId("example.com", "wavelet"));
+      WaveletName.of(WaveId.of("example.com", "wave"), WaveletId.of("example.com", "wavelet"));
   private static final BufferedDocInitialization[] CONTENTS = new BufferedDocInitialization[]{
     ModelTestUtils.createContent("the quick brown fox"),
     ModelTestUtils.createContent("nothing to fear but fear itself"),

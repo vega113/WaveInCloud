@@ -75,15 +75,15 @@ public class UnsavedDataUpdateTest extends TestCase {
   }
 
   /** ID of wavelets for testing. */
-  private static final WaveletId WAVELET_ID_1 = new WaveletId("example.com", "conv+1");
-  private static final WaveletId WAVELET_ID_2 = new WaveletId("example.com", "conv+2");
+  private static final WaveletId WAVELET_ID_1 = WaveletId.of("example.com", "conv+1");
+  private static final WaveletId WAVELET_ID_2 = WaveletId.of("example.com", "conv+2");
 
   private static final byte[] SIGNATURE1 = new byte[] { 1, 1, 1, 1 };
   private static final byte[] SIGNATURE2 = new byte[] { 2, 2, 2, 2 };
   private static final byte[] SIGNATURE3 = new byte[] { 3, 3, 3, 3 };
 
   /** ID of wave for testing. */
-  private static final WaveId WAVE_ID = new WaveId("example.com", "w+1");
+  private static final WaveId WAVE_ID = WaveId.of("example.com", "w+1");
 
   /** Channel Id for testing. */
   private static final String CHANNEL_ID = "channelId_1";

@@ -21,6 +21,7 @@ package org.waveprotocol.wave.model.id;
 import com.google.common.annotations.VisibleForTesting;
 
 import org.waveprotocol.wave.model.util.Preconditions;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
  * This class is used to generate Wave and Wavelet ids.
@@ -74,23 +75,25 @@ public class IdGeneratorImpl implements IdGenerator, IdConstants {
 
   @Override
   public WaveId newWaveId() {
-    return new WaveId(defaultDomain, newId(WAVE_PREFIX));
+    return WaveId.of(defaultDomain, newId(WAVE_PREFIX));
   }
 
   @Override
   public WaveletId newConversationRootWaveletId() {
-    return new WaveletId(defaultDomain, CONVERSATION_ROOT_WAVELET);
+    return WaveletId.of(defaultDomain, CONVERSATION_ROOT_WAVELET);
   }
 
   @Override
   public WaveletId newConversationWaveletId() {
-    return new WaveletId(defaultDomain, newId(CONVERSATION_WAVELET_PREFIX));
+    return WaveletId.of(defaultDomain, newId(CONVERSATION_WAVELET_PREFIX));
   }
 
   @Override
   public WaveletId newUserDataWaveletId(String address) {
-    String userDomain = getDomain(address);
-    return new WaveletId(userDomain, build(USER_DATA_WAVELET_PREFIX, address));
+    // TODO(anorth): Take ParticipantId as a parameter after moving it
+    // into model.id package.
+    String userDomain = ParticipantId.ofUnsafe(address).getDomain();
+    return WaveletId.of(userDomain, build(USER_DATA_WAVELET_PREFIX, address));
   }
 
   @Override

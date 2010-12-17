@@ -66,10 +66,10 @@ public class WaveletContainerTest extends TestCase {
 
   private static final String localDomain = "example.com";
   private static final WaveletName localWaveletName = WaveletName.of(
-      new WaveId(localDomain, "waveid"), new WaveletId(localDomain, "waveletid"));
+      WaveId.of(localDomain, "waveid"), WaveletId.of(localDomain, "waveletid"));
   private static final String remoteDomain = "example2.com";
   private static final WaveletName remoteWaveletName = WaveletName.of(
-      new WaveId(remoteDomain, "waveid"), new WaveletId(remoteDomain, "waveletid"));
+      WaveId.of(remoteDomain, "waveid"), WaveletId.of(remoteDomain, "waveletid"));
   private static final ParticipantId author = new ParticipantId("admin@" + localDomain);
   private static final Set<ParticipantId> participants = ImmutableSet.of(
       new ParticipantId("foo@" + localDomain), new ParticipantId("bar@example3.com"));

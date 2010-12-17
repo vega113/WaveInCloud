@@ -34,11 +34,11 @@ public class FederationURICodecTest extends TestCase {
   private FederationURICodec uriCodec = null;
 
   private final static WaveletName SINGLE_DOMAIN_WAVELETNAME =
-      WaveletName.of(new WaveId("acmewave.com", "wave"), new WaveletId("acmewave.com", "wavelet"));
+      WaveletName.of(WaveId.of("acmewave.com", "wave"), WaveletId.of("acmewave.com", "wavelet"));
   private final static String SINGLE_DOMAIN_STRING = "wave://acmewave.com/wave/wavelet";
 
   private final static WaveletName DISTINCT_DOMAIN_WAVELETNAME =
-      WaveletName.of(new WaveId("google.com", "wave"), new WaveletId("acmewave.com", "wavelet"));
+      WaveletName.of(WaveId.of("google.com", "wave"), WaveletId.of("acmewave.com", "wavelet"));
   private final static String DISTINCT_DOMAIN_STRING =
       "wave://acmewave.com/google.com!wave/wavelet";
 

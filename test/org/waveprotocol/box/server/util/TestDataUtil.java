@@ -47,7 +47,7 @@ public class TestDataUtil {
    */
   public static WaveletData createSimpleWaveletData() {
     WaveletName name = WaveletName.of(
-        new WaveId("example.com", "w+abc123"), new WaveletId("example.com", "conv+root"));
+        WaveId.of("example.com", "w+abc123"), WaveletId.of("example.com", "conv+root"));
     ParticipantId creator = ParticipantId.ofUnsafe("sam@example.com");
     long time = 1234567890;
 

@@ -208,7 +208,7 @@ public class WaverefEncoder {
     WaveId waveId = null;
 
     try {
-      waveId = new WaveId(waveDomain, waveIdStr);
+      waveId = WaveId.of(waveDomain, waveIdStr);
     } catch (IllegalArgumentException e) {
       throw new InvalidWaveRefException(path, "Invalid WaveID:" + e.getMessage());
     }
@@ -230,7 +230,7 @@ public class WaverefEncoder {
     WaveletId waveletId = null;
 
     try {
-      waveletId = new WaveletId(waveletDomain, waveletIdStr);
+      waveletId = WaveletId.of(waveletDomain, waveletIdStr);
     } catch (IllegalArgumentException e) {
       throw new InvalidWaveRefException(path, "Invalid WaveletID:" + e.getMessage());
     }

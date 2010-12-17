@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.model.id;
 
-import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
-import org.waveprotocol.wave.model.waveref.WaveRef;
 
 /**
  * Serialises and deserialises wave ids and wavelet ids to and from
@@ -39,7 +37,7 @@ public class LongIdSerialiser implements IdSerialiser {
   public String serialiseWaveletId(WaveletId waveletId) {
     return waveletId.getDomain() + PART_SEPARATOR + waveletId.getId();
   }
-  
+
   @Override
   public WaveId deserialiseWaveId(String serialisedForm) throws InvalidIdException {
     String[] parts = SimplePrefixEscaper.DEFAULT_ESCAPER.splitWithoutUnescaping(

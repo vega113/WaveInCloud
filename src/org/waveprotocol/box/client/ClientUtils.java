@@ -267,6 +267,6 @@ public class ClientUtils {
    * @return the conversation root wavelet id corresponding to a wave id.
    */
   public static WaveletId getConversationRootId(WaveId waveId) {
-    return new WaveletId(waveId.getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET);
+    return WaveletId.of(waveId.getDomain(), IdConstants.CONVERSATION_ROOT_WAVELET);
   }
 }

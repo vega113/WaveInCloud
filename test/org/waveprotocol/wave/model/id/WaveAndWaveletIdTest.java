@@ -68,8 +68,8 @@ public class WaveAndWaveletIdTest extends TestCase {
     String domain = "example.com";
     String id = "efg";
     {
-      WaveId idA = new WaveId(domain, id);
-      WaveId idB = new WaveId(domain, id);
+      WaveId idA = WaveId.of(domain, id);
+      WaveId idB = WaveId.of(domain, id);
 
       assertEquals(0, idA.compareTo(idB));
       assertEquals(0, idB.compareTo(idA));
@@ -80,8 +80,8 @@ public class WaveAndWaveletIdTest extends TestCase {
       assertEquals(idA.hashCode(), idB.hashCode());
     }
     {
-      WaveletId idA = new WaveletId(domain, id);
-      WaveletId idB = new WaveletId(domain, id);
+      WaveletId idA = WaveletId.of(domain, id);
+      WaveletId idB = WaveletId.of(domain, id);
 
       assertEquals(0, idA.compareTo(idB));
       assertEquals(0, idB.compareTo(idA));
@@ -99,14 +99,14 @@ public class WaveAndWaveletIdTest extends TestCase {
    */
   private static void assertIdRejected(String domain, String id) {
     try {
-      new WaveId(domain, id);
+      WaveId.of(domain, id);
       fail("Expected wave id construction to throw an exception");
     } catch (NullPointerException expected) {
     } catch (IllegalArgumentException expected) {
     }
 
     try {
-      new WaveletId(domain, id);
+      WaveletId.of(domain, id);
       fail("Expected wavelet id construction to throw an exception");
     } catch (NullPointerException expected) {
     } catch (IllegalArgumentException expected) {
@@ -119,8 +119,8 @@ public class WaveAndWaveletIdTest extends TestCase {
    */
   private static void assertIdsCompare(String domainA, String idA, String domainB, String idB) {
     {
-      WaveId a = new WaveId(domainA, idA);
-      WaveId b = new WaveId(domainB, idB);
+      WaveId a = WaveId.of(domainA, idA);
+      WaveId b = WaveId.of(domainB, idB);
 
       assertTrue(a.compareTo(b) < 0);
       assertTrue(b.compareTo(a) > 0);
@@ -128,8 +128,8 @@ public class WaveAndWaveletIdTest extends TestCase {
     }
 
     {
-      WaveletId a = new WaveletId(domainA, idA);
-      WaveletId b = new WaveletId(domainB, idB);
+      WaveletId a = WaveletId.of(domainA, idA);
+      WaveletId b = WaveletId.of(domainB, idB);
 
       assertTrue(a.compareTo(b) < 0);
       assertTrue(b.compareTo(a) > 0);

@@ -34,7 +34,7 @@ import java.io.ObjectOutputStream;
 public class IdAndNameJavaIoSerializationTest extends TestCase {
 
   public void testWaveIdSerializationAndDeserialization() throws Exception {
-    WaveId expected = new WaveId("example.com", "123");
+    WaveId expected = WaveId.of("example.com", "123");
     byte[] serialized = serialize(expected);
     Object deserialized = deserialize(serialized);
     assertTrue(deserialized instanceof WaveId);
@@ -43,7 +43,7 @@ public class IdAndNameJavaIoSerializationTest extends TestCase {
   }
 
   public void testWaveletIdSerializationAndDeserialization() throws Exception {
-    WaveletId expected = new WaveletId("example.com", "123");
+    WaveletId expected = WaveletId.of("example.com", "123");
     byte[] serialized = serialize(expected);
     Object deserialized = deserialize(serialized);
     assertTrue(deserialized instanceof WaveletId);
@@ -52,8 +52,8 @@ public class IdAndNameJavaIoSerializationTest extends TestCase {
   }
 
   public void testWaveletNameSerializationAndDeserialization() throws Exception {
-    WaveletName expected = WaveletName.of(new WaveId("example.com", "wave1"),
-        new WaveletId("example.com", "wavelet1"));
+    WaveletName expected = WaveletName.of(WaveId.of("example.com", "wave1"),
+        WaveletId.of("example.com", "wavelet1"));
     byte[] serialized = serialize(expected);
     Object deserialized = deserialize(serialized);
     assertTrue(deserialized instanceof WaveletName);

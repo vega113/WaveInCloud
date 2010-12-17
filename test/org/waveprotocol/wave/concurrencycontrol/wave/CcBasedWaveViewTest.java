@@ -61,8 +61,8 @@ import java.util.ArrayList;
  */
 
 public class CcBasedWaveViewTest extends TestCase {
-  private static final WaveId WAVE_ID = new WaveId("example.com", "waveId_1");
-  private static final WaveletId GENERATED_WAVELET_ID = new WaveletId("example.com", "some id");
+  private static final WaveId WAVE_ID = WaveId.of("example.com", "waveId_1");
+  private static final WaveletId GENERATED_WAVELET_ID = WaveletId.of("example.com", "some_id");
   private static final WaveletId ROOT_WAVELET_ID
       = new IdGeneratorImpl("example.com", null).newConversationRootWaveletId();
   private static final String GENERATED_BLIP_ID = "some blip id";
@@ -298,7 +298,7 @@ public class CcBasedWaveViewTest extends TestCase {
 
     // Receive a new wavelet from the server.
     openCallback.onUpdate(new FakeWaveViewServiceUpdate()
-        .setWaveletId(new WaveletId("example.com", "newServerWavelet_1"))
+        .setWaveletId(WaveletId.of("example.com", "newServerWavelet_1"))
         .setWaveletSnapshot(WAVE_ID, USER_ID, 0L, HashedVersion.of(1L, sig(123)))
         .setLastCommittedVersion(HashedVersion.unsigned(0)));
 

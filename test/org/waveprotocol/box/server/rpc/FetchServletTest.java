@@ -98,9 +98,9 @@ public class FetchServletTest extends TestCase {
     WaveId waveId = wavelet.getWaveId();
     WaveletId waveletId = wavelet.getWaveletId();
 
-    WaveRef unknownWave = WaveRef.of(new WaveId(waveId.getDomain(), waveId.getId() + "junk"));
+    WaveRef unknownWave = WaveRef.of(WaveId.of(waveId.getDomain(), waveId.getId() + "junk"));
     verifyServletReturnsForbiddenForWaveref(unknownWave);
-    WaveRef unknownWavelet = WaveRef.of(waveId, new WaveletId(waveletId.getDomain(), waveletId.getId() + "junk"));
+    WaveRef unknownWavelet = WaveRef.of(waveId, WaveletId.of(waveletId.getDomain(), waveletId.getId() + "junk"));
     verifyServletReturnsForbiddenForWaveref(unknownWavelet);
     WaveRef unknownDocument = WaveRef.of(waveId, waveletId, "madeupdocid");
     verifyServletReturnsForbiddenForWaveref(unknownDocument);

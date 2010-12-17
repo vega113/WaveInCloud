@@ -45,8 +45,8 @@ import java.util.Map;
 public class CoreWaveletOperationTest extends TestCase {
 
   private static final String DOMAIN = "example.com";
-  private static final WaveId WAVE_ID = new WaveId(DOMAIN, "hello");
-  private static final WaveletId WAVELET_ID = new WaveletId(DOMAIN, "world");
+  private static final WaveId WAVE_ID = WaveId.of(DOMAIN, "hello");
+  private static final WaveletId WAVELET_ID = WaveletId.of(DOMAIN, "world");
   private static final ParticipantId PARTICIPANT_ID = new ParticipantId("test@" + DOMAIN);
   private static final String DOC_ID = "doc";
   private static final String TEXT = "hi";

@@ -35,11 +35,11 @@ import java.util.Map;
  */
 
 public class WaveViewDataImplTest extends TestCase {
-  private static final WaveId WAVE_ID = new WaveId("example.com", "wave");
+  private static final WaveId WAVE_ID = WaveId.of("example.com", "wave");
   private static final WaveletId WAVELET_IDS[] = new WaveletId[] {
-    new WaveletId("example.com", "wavelet"),
-    new WaveletId("example.com", "wavelet1"),
-    new WaveletId("example.com", "wavelet2"),
+    WaveletId.of("example.com", "wavelet"),
+    WaveletId.of("example.com", "wavelet1"),
+    WaveletId.of("example.com", "wavelet2"),
   };
   private static final long CREATE_TIMESTAMP = 123456789;
   private static final ParticipantId CREATOR = new ParticipantId("nobody@example.com");

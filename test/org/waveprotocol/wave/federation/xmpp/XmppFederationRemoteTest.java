@@ -73,7 +73,7 @@ public class XmppFederationRemoteTest extends TestCase {
   private final static String REMOTE_JID = "wave." + REMOTE_DOMAIN;
 
   private final static WaveletName REMOTE_WAVELET =
-      WaveletName.of(new WaveId(REMOTE_DOMAIN, "wave"), new WaveletId(REMOTE_DOMAIN, "wavelet"));
+      WaveletName.of(WaveId.of(REMOTE_DOMAIN, "wave"), WaveletId.of(REMOTE_DOMAIN, "wavelet"));
   private final static ProtocolHashedVersion START_VERSION =
       ProtocolHashedVersionFactory.createVersionZero(REMOTE_WAVELET);
   private final static ByteString DELTA_BYTESTRING =

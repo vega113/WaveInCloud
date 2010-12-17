@@ -60,8 +60,8 @@ import java.util.Set;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class WaveServerTest extends TestCase {
-  private static final WaveletId WAVELET_ID = new WaveletId("example.com", "conv+root");
-  private static final WaveId WAVE_ID = new WaveId("example.com", "abc123");
+  private static final WaveletId WAVELET_ID = WaveletId.of("example.com", "conv+root");
+  private static final WaveId WAVE_ID = WaveId.of("example.com", "abc123");
 
   private static final ParticipantId USER1 = ParticipantId.ofUnsafe("user1@example.com");
   private static final ParticipantId USER2 = ParticipantId.ofUnsafe("user2@example.com");
@@ -132,7 +132,7 @@ public class WaveServerTest extends TestCase {
   public void testSearchLimitEnforced() {
     for (int i = 0; i < 10; i++) {
       WaveletName name = WaveletName.of(
-          new WaveId("example.com", "w" + i), WAVELET_ID);
+          WaveId.of("example.com", "w" + i), WAVELET_ID);
       submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
     }
 
@@ -148,7 +148,7 @@ public class WaveServerTest extends TestCase {
 
     for (int i = 0; i < 10; i++) {
       WaveletName name = WaveletName.of(
-          new WaveId("example.com", String.valueOf(i)), WAVELET_ID);
+          WaveId.of("example.com", String.valueOf(i)), WAVELET_ID);
       submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
     }
 

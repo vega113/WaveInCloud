@@ -111,11 +111,11 @@ public class OperationChannelMultiplexerImplTest extends TestCase {
   }
 
   /** IDs of wavelets for testing. */
-  private static final WaveletId WAVELET_ID_1 = new WaveletId("example.com","w+1234");
-  private static final WaveletId WAVELET_ID_2 = new WaveletId("example.com","w+5678");
+  private static final WaveletId WAVELET_ID_1 = WaveletId.of("example.com","w+1234");
+  private static final WaveletId WAVELET_ID_2 = WaveletId.of("example.com","w+5678");
 
   /** ID of wave for testing. */
-  private static final WaveId WAVE_ID = new WaveId("example.com", "waveId_1");
+  private static final WaveId WAVE_ID = WaveId.of("example.com", "waveId_1");
 
   /** User name for testing. */
   private static final ParticipantId USER_ID = ParticipantId.ofUnsafe("fred@example.com");
