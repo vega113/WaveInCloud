@@ -32,6 +32,7 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer.PagingHandler;
 import org.waveprotocol.wave.client.wavepanel.view.impl.BlipMetaViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.BlipViewImpl;
+import org.waveprotocol.wave.client.widget.common.LogicalPanel;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 
 /**
@@ -54,6 +55,9 @@ public final class BlipPager implements PagingHandler {
   /** Reveals the registries to use to render a document. */
   private final DocumentRegistries registries;
 
+  /** Logical panel for widgets in paged-in blips to attach themselves to */
+  private final LogicalPanel logicalPanel;
+
   /**
    * Maps models to implementations.
    */
@@ -62,12 +66,14 @@ public final class BlipPager implements PagingHandler {
   }
 
   private BlipPager(DocumentRegistries registries, ShallowBlipRenderer blipPopulator,
-      DocProvider docProvider, DomAsViewProvider views, ModelAsViewProvider viewProvider) {
+      DocProvider docProvider, DomAsViewProvider views, ModelAsViewProvider viewProvider,
+      LogicalPanel logicalPanel) {
     this.registries = registries;
     this.blipPopulator = blipPopulator;
     this.docProvider = docProvider;
     this.views = views;
     this.viewProvider = viewProvider;
+    this.logicalPanel = logicalPanel;
   }
 
   /**
@@ -75,7 +81,7 @@ public final class BlipPager implements PagingHandler {
    */
   public static BlipPager create(final ContentDocumentSinkFactory docFactory,
       DocumentRegistries registries, DomAsViewProvider views, ModelAsViewProvider viewProvider,
-      ShallowBlipRenderer blipPopulator) {
+      ShallowBlipRenderer blipPopulator, LogicalPanel logicalPanel) {
     DocProvider docProvider = new DocProvider() {
       @Override
       public ContentDocumentSink docOf(ConversationBlip blip) {
@@ -83,7 +89,7 @@ public final class BlipPager implements PagingHandler {
       }
     };
 
-    return new BlipPager(registries, blipPopulator, docProvider, views, viewProvider);
+    return new BlipPager(registries, blipPopulator, docProvider, views, viewProvider, logicalPanel);
   }
 
   /**
@@ -136,7 +142,7 @@ public final class BlipPager implements PagingHandler {
       // Clear content before rendering, so that doodad events caused by rendering
       // apply on a fresh state.
       metaDom.clearContent();
-      doc.startRendering(r);
+      doc.startRendering(r, logicalPanel);
       metaDom.setContent(getRendering(doc));
       blipPopulator.render(blip, metaDom);
     }

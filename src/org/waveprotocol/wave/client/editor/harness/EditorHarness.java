@@ -20,6 +20,7 @@ package org.waveprotocol.wave.client.editor.harness;
 import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -72,6 +73,7 @@ import org.waveprotocol.wave.client.editor.webdriver.EditorWebDriverUtil;
 import org.waveprotocol.wave.client.scheduler.ScheduleCommand;
 import org.waveprotocol.wave.client.scheduler.Scheduler;
 import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
+import org.waveprotocol.wave.client.widget.common.LogicalPanel;
 import org.waveprotocol.wave.client.widget.popup.PopupChrome;
 import org.waveprotocol.wave.client.widget.popup.PopupChromeProvider;
 import org.waveprotocol.wave.client.widget.popup.simple.Popup;
@@ -123,10 +125,12 @@ public class EditorHarness extends Composite implements KeySignalListener {
   Editor editor2;
   EditorBundle editorBundle2;
 
-  FlowPanel displayDoc1 = new FlowPanel();
-  {
-    displayDoc1.getElement().getStyle().setProperty("border", "1px dashed silver");
-  }
+  LogicalPanel.Impl displayDoc1 = new LogicalPanel.Impl() {
+    {
+      setElement(Document.get().createDivElement());
+      getElement().getStyle().setProperty("border", "1px dashed silver");
+    }
+  };
 
   /**
    * Flag is ops coming out from editor1 should go to editor2
@@ -507,49 +511,40 @@ public class EditorHarness extends Composite implements KeySignalListener {
       return;
     }
 
-    double start = Duration.currentTimeMillis();
-    double middle = 0;
+    if (current == Level.EDITING) {
+      if (newLevel == Level.SHELVED) {
+        editor1.removeContentAndUnrender();
+      } else {
+        editor1.removeContent();
+      }
+      doc1.replaceOutgoingSink(editor1Sink);
+    }
+
 
     if (newLevel == Level.SHELVED) {
-      if (current == Level.EDITING) {
-        ((EditorImpl) editor1).debugRemoveContentFast();
-      }
-      middle = Duration.currentTimeMillis();
-      doc1.setRendering(false);
+      doc1.setShelved();
     } else if (newLevel == Level.EDITING) {
       editor1.setContent(doc1);
     } else {
-      assert newLevel == Level.RENDERED;
-      if (current == Level.SHELVED) {
-        doc1.setRendering(true);
+      assert newLevel == Level.RENDERED || newLevel == Level.INTERACTIVE;
+      if (newLevel == Level.RENDERED) {
+        doc1.setRendering();
       } else {
-        assert current == Level.EDITING;
-        editor1.removeContent();
+        doc1.setInteractive(displayDoc1);
       }
     }
 
-    double now = Duration.currentTimeMillis();
-    double duration = now - start;
-    logger.log(AbstractLogger.Level.TRACE, "Mode change took: " + duration
-        + ", middle to end: " + (now - middle));
+    assert doc1.getLevel() == newLevel;
 
-
-    if (doc1.getLevel() == Level.RENDERED) {
-      start = Duration.currentTimeMillis();
+    if (doc1.getLevel() == Level.RENDERED || doc1.getLevel() == Level.INTERACTIVE) {
       displayDoc1.getElement().appendChild(
           doc1.getFullContentView().getDocumentElement().getImplNodelet());
-      duration = Duration.currentTimeMillis() - start;
-      logger.log(AbstractLogger.Level.TRACE, "Append rendered took: " + duration);
     } else if (doc1.getLevel() == Level.SHELVED) {
-      start = Duration.currentTimeMillis();
       for (ContentNode n : DocIterate.deep(
           doc1.getFullContentView(), doc1.getFullContentView().getDocumentElement(), null)) {
         assert n.getImplNodelet() == null;
       }
-      duration = Duration.currentTimeMillis() - start;
-      logger.log(AbstractLogger.Level.TRACE, "Iterating over DOM took: " + duration);
     }
-
   }
 
   /**
@@ -790,9 +785,9 @@ public class EditorHarness extends Composite implements KeySignalListener {
 
       // The editors we are testing
       editor1 = createEditor("editor1");
-      editorBundle1 = new EditorBundle(editor1);
+      editorBundle1 = new EditorBundle(editor1, true);
       editor2 = createEditor("editor2");
-      editorBundle2 = new EditorBundle(editor2);
+      editorBundle2 = new EditorBundle(editor2, false);
       toggleEditCheck1 = createEditToggleCheckBox(editor1);
       toggleEditCheck2 = createEditToggleCheckBox(editor2);
 
@@ -984,18 +979,18 @@ public class EditorHarness extends Composite implements KeySignalListener {
   public void extendKeyBindings(KeyBindingRegistry registry) {
   }
 
-  private static class EditorBundle {
+  static {
+    Editors.initRootRegistries();
+  }
+
+  private class EditorBundle {
     private final HighlightingDiffState diffState;
-    private final Editor editor;
+    private final boolean is1;
 
-    static {
-      Editors.initRootRegistries();
-    }
-
-    EditorBundle(Editor editor) {
-      this.editor = editor;
+    EditorBundle(Editor editor, boolean is1) {
       diffState = new HighlightingDiffState(EditorStaticDeps.logger);
       diffState.setEditor(editor);
+      this.is1 = is1;
     }
 
     public DiffController getDiffController() {
@@ -1006,7 +1001,8 @@ public class EditorHarness extends Composite implements KeySignalListener {
       if (diffState.shouldShowAsDiff()) {
         diffState.consume(op);
       } else {
-        editor.getContent().consume(op);
+        // TODO(danilatos): Clean this up
+        (is1 ? doc1 : doc2).consume(op);
       }
     }
   }

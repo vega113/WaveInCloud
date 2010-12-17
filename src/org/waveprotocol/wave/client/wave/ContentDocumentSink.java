@@ -18,6 +18,7 @@ package org.waveprotocol.wave.client.wave;
 import org.waveprotocol.wave.client.editor.content.AnnotationPainter;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
 import org.waveprotocol.wave.client.editor.content.Registries;
+import org.waveprotocol.wave.client.widget.common.LogicalPanel;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcDocument;
 import org.waveprotocol.wave.model.document.Doc;
 import org.waveprotocol.wave.model.document.Document;
@@ -122,13 +123,13 @@ public final class ContentDocumentSink extends MutableDocumentProxy<Doc.N, Doc.E
    *
    * @param registries registries for rendering
    */
-  public void startRendering(Registries registries) {
+  public void startRendering(Registries registries, LogicalPanel logicalPanel) {
     if (document == null) {
       loadWith(registries);
     } else {
       document.setRegistries(registries);
     }
-    document.setRendering(true);
+    document.setInteractive(logicalPanel);
     // ContentDocument does not render synchronously, so we have to force it
     // to finish, rather than reveal half-rendered content at the end of the
     // event cycle.
@@ -139,7 +140,7 @@ public final class ContentDocumentSink extends MutableDocumentProxy<Doc.N, Doc.E
    * Stops rendering the document.
    */
   public void stopRendering() {
-    document.setRendering(false);
+    document.setShelved();
   }
 
   @Override

@@ -24,6 +24,7 @@ import com.google.gwt.user.client.ui.Widget;
 import org.waveprotocol.wave.client.common.util.DomHelper;
 import org.waveprotocol.wave.client.editor.RenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
+import org.waveprotocol.wave.client.widget.common.LogicalPanel;
 import org.waveprotocol.wave.model.document.util.Property;
 import org.waveprotocol.wave.model.util.Preconditions;
 
@@ -226,16 +227,16 @@ public abstract class GwtRenderingMutationHandler extends RenderingMutationHandl
     Preconditions.checkState(existingParent == null || parent == null,
         "setLogicalPanel called for an element that already has it");
 
-    element.setProperty(LOGICAL_PANEL, parent);
-
     if (element.isContentAttached()) {
       if (parent == null) {
-        assert existingParent != null;
+        assert existingParent != null && parent == null;
         maybeLogicalDetach(element);
+        element.setProperty(LOGICAL_PANEL, null);
       } else {
         // The preconditions check should guard against this being
         // called for already-attached elements.
-        assert existingParent == null;
+        assert existingParent == null && parent != null;
+        element.setProperty(LOGICAL_PANEL, parent);
         maybeLogicalAttach(element);
       }
     }
@@ -261,7 +262,7 @@ public abstract class GwtRenderingMutationHandler extends RenderingMutationHandl
     Widget w = getGwtWidget(element);
     LogicalPanel p = getLogicalPanel(element);
     if (p != null && w != null) {
-      p.addWidget(w, null);
+      p.doAdopt(w);
     }
   }
 
@@ -269,7 +270,7 @@ public abstract class GwtRenderingMutationHandler extends RenderingMutationHandl
     Widget w = getGwtWidget(element);
     LogicalPanel p = getLogicalPanel(element);
     if (p != null && w != null && w.getParent() != null) {
-      p.removeWidget(w);
+      p.doOrphan(w);
     }
   }
 
