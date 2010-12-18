@@ -16,10 +16,7 @@
  */
 package org.waveprotocol.wave.client.widget.common;
 
-import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.Widget;
-
-import org.waveprotocol.wave.model.util.Preconditions;
 
 /**
  * A panel that can adopt and orphan widgets that attach and detach themselves
@@ -34,7 +31,8 @@ public interface LogicalPanel {
 
   /**
    * Logically attaches a widget to this panel, without any physical DOM change.
-   * No assumptions are made about the physical location of {@code child}.
+   * It is assumed that {@code child} is already a physical descendant of this
+   * panel.
    *
    * @param child widget to adopt
    */
@@ -42,26 +40,10 @@ public interface LogicalPanel {
 
   /**
    * Logically detaches a child from this panel, without any physical DOM
-   * change. No assumptions are made about the physical location of {@code child}.
+   * change. It is assumed that {@code child} is currently a physical descendant
+   * of this panel.
    *
    * @param child widget to orphan
    */
   void doOrphan(Widget child);
-
-  /** Canonical implementation */
-  public abstract class Impl extends ComplexPanel implements LogicalPanel {
-    @Override
-    public void doAdopt(Widget child) {
-      Preconditions.checkArgument(child != null && child.getParent() == null, "Not an orphan");
-      getChildren().add(child);
-      adopt(child);
-    }
-
-    @Override
-    public void doOrphan(Widget child) {
-      Preconditions.checkArgument(child != null && child.getParent() == this, "Not a child");
-      orphan(child);
-      getChildren().remove(child);
-    }
-  }
 }

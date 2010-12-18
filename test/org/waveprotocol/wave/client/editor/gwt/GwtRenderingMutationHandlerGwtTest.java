@@ -20,7 +20,6 @@ package org.waveprotocol.wave.client.editor.gwt;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.junit.client.GWTTestCase;
-import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
@@ -43,7 +42,7 @@ import java.util.Collections;
 public class GwtRenderingMutationHandlerGwtTest extends GWTTestCase {
 
   private ContentDocument doc;
-  private ComplexPanel panel;
+  private LogicalPanel.Impl panel;
   private GwtRenderingMutationHandler handler;
   private ContentElement root;
   private ContentRawDocument rawDoc;

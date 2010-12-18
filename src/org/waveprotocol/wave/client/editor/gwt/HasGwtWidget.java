@@ -16,8 +16,6 @@
  */
 package org.waveprotocol.wave.client.editor.gwt;
 
-import org.waveprotocol.wave.client.widget.common.LogicalPanel;
-
 /**
  * Interface to be implemented by editor doodads that contain a GWT widget.
  * The attaching of the widget should occur when the createWidget() method
@@ -32,5 +30,5 @@ public interface HasGwtWidget {
    *
    * @param parent
    */
-  void setLogicalParent(LogicalPanel parent);
+  void createWidget(LogicalPanel parent);
 }

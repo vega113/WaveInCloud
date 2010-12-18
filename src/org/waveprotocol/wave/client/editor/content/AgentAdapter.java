@@ -18,7 +18,6 @@
 package org.waveprotocol.wave.client.editor.content;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -34,8 +33,8 @@ import org.waveprotocol.wave.client.editor.NodeMutationHandler;
 import org.waveprotocol.wave.client.editor.NodeMutationHandlerImpl;
 import org.waveprotocol.wave.client.editor.gwt.GwtRenderingMutationHandler;
 import org.waveprotocol.wave.client.editor.gwt.HasGwtWidget;
+import org.waveprotocol.wave.client.editor.gwt.LogicalPanel;
 import org.waveprotocol.wave.client.editor.impl.NodeManager;
-import org.waveprotocol.wave.client.widget.common.LogicalPanel;
 import org.waveprotocol.wave.model.util.ValueUtils;
 
 import java.util.Map;
@@ -165,21 +164,21 @@ public class AgentAdapter extends ContentElement implements
   }
 
   /**
-   * See {@link #noRenderer} This should not be used for hidden elements - it
-   * should be used only when we turn off rendering altogether. For hidden
-   * elements, use {@link #emptyRenderer}
+   * See {@link #noRenderer}
+   * This should not be used for hidden elements - it should be used only when
+   * we turn off rendering altogether.
    */
   void clearRenderer() {
     this.setRenderer(noRenderer);
   }
 
-  void setRenderer(Renderer renderer) {
-    Preconditions.checkNotNull(renderer, "Null renderer");
-    if (this.renderer == renderer) {
-      return;
-    }
+  /**  Public for testing purposes ONLY */
+  @VisibleForTesting public void debugSetRenderer(Renderer renderer) {
+    setRenderer(renderer);
+  }
 
-    this.renderer = renderer;
+  void setRenderer(Renderer renderer) {
+    this.renderer = ValueUtils.valueOrDefault(renderer, emptyRenderer);
 
     Element oldNodelet = getImplNodelet();
 
@@ -206,14 +205,8 @@ public class AgentAdapter extends ContentElement implements
 
   void setNodeMutationHandler(NodeMutationHandler<ContentNode, ContentElement> handler) {
     assert isContentAttached() || getMutableDoc().getDocumentElement() == this;
-
-    handler = ValueUtils.valueOrDefault(handler, defaultMutationHandler);
-    if (this.nodeMutationHandler == handler) {
-      return;
-    }
-
     this.nodeMutationHandler.onDeactivated(this);
-    this.nodeMutationHandler = handler;
+    this.nodeMutationHandler = ValueUtils.valueOrDefault(handler, defaultMutationHandler);
     this.nodeMutationHandler.onActivationStart(this);
   }
 
@@ -225,15 +218,10 @@ public class AgentAdapter extends ContentElement implements
     this.nodeMutationHandler.onActivatedSubtree(this);
   }
 
-  void setNodeEventHandler(NodeEventHandler newHandler) {
+  void setNodeEventHandler(NodeEventHandler nodeEventHandler) {
     assert isContentAttached() || getMutableDoc().getDocumentElement() == this;
-
-    newHandler = ValueUtils.valueOrDefault(newHandler, defaultEventHandler);
-    if (this.nodeEventHandler == newHandler) {
-      return;
-    }
     this.nodeEventHandler.onDeactivated(this);
-    this.nodeEventHandler = newHandler;
+    this.nodeEventHandler = ValueUtils.valueOrDefault(nodeEventHandler, defaultEventHandler);
     this.nodeEventHandler.onActivated(this);
   }
 
@@ -294,7 +282,7 @@ public class AgentAdapter extends ContentElement implements
 
   // TODO(danilatos): Get rid of this hack, which is a temporary measure to get
   // gwt event hookups to work for doodads that are rendered by gwt widgets.
-  public void setLogicalParent(LogicalPanel parent) {
+  public void createWidget(LogicalPanel parent) {
     if (renderer instanceof GwtRenderingMutationHandler) {
       ((GwtRenderingMutationHandler) renderer).setLogicalPanel(this, parent);
     }

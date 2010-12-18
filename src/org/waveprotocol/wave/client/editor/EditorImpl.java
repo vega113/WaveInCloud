@@ -55,7 +55,6 @@ import org.waveprotocol.wave.client.editor.constants.BrowserEvents;
 import org.waveprotocol.wave.client.editor.content.AnnotationPainter;
 import org.waveprotocol.wave.client.editor.content.CMutableDocument;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
-import org.waveprotocol.wave.client.editor.content.ContentDocument.Level;
 import org.waveprotocol.wave.client.editor.content.ContentDocument.LocalOperationException;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
@@ -89,6 +88,7 @@ import org.waveprotocol.wave.client.editor.extract.Repairer;
 import org.waveprotocol.wave.client.editor.extract.TypingExtractor;
 import org.waveprotocol.wave.client.editor.extract.TypingExtractor.SelectionSource;
 import org.waveprotocol.wave.client.editor.extract.TypingExtractor.TypingSink;
+import org.waveprotocol.wave.client.editor.gwt.LogicalPanel;
 import org.waveprotocol.wave.client.editor.impl.NodeManager;
 import org.waveprotocol.wave.client.editor.keys.KeyBindingRegistry;
 import org.waveprotocol.wave.client.editor.selection.content.AggressiveSelectionHelper;
@@ -110,7 +110,6 @@ import org.waveprotocol.wave.client.scheduler.ScheduleCommand;
 import org.waveprotocol.wave.client.scheduler.Scheduler;
 import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
 import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
-import org.waveprotocol.wave.client.widget.common.LogicalPanel;
 import org.waveprotocol.wave.client.widget.popup.UniversalPopup;
 import org.waveprotocol.wave.model.document.AnnotationBehaviour.BiasDirection;
 import org.waveprotocol.wave.model.document.AnnotationBehaviour.ContentType;
@@ -178,8 +177,8 @@ import java.util.Set;
 //   <div>(editable content)</div>
 // </div>
 //
-public class EditorImpl extends LogicalPanel.Impl implements
-    Editor, LogicalPanel, HtmlSelectionHelper, JavaScriptEventListener {
+public class EditorImpl extends LogicalPanel.Impl implements Editor,
+    LogicalPanel, HtmlSelectionHelper, JavaScriptEventListener {
 
   /** CSS class applied to editor document's top level html element when in edit mode */
   public static final String WAVE_EDITOR_EDIT_ON = "wave-editor-on";
@@ -199,6 +198,8 @@ public class EditorImpl extends LogicalPanel.Impl implements
     SuggestionsManager getSuggestionsManager();
     /***/
     PassiveSelectionHelper getPassiveSelectionHelper();
+    /** GWT widget based doodads attach to it */
+    LogicalPanel getLogicalPanel();
     /** ContentDocument updates this registry of "elements with display modes" :( */
     CopyOnWriteSet<ContentElement> getElementsWithDisplayModes();
 
@@ -257,6 +258,10 @@ public class EditorImpl extends LogicalPanel.Impl implements
     /** {@inheritDoc} */
     public PassiveSelectionHelper getPassiveSelectionHelper() {
       return passiveSelectionHelper;
+    }
+    @Override
+    public LogicalPanel getLogicalPanel() {
+      return EditorImpl.this;
     }
     @Override
     public CopyOnWriteSet<ContentElement> getElementsWithDisplayModes() {
@@ -1452,7 +1457,7 @@ public class EditorImpl extends LogicalPanel.Impl implements
     Iterator<Widget> i = iterator();
     while (i.hasNext()) {
       Widget w = i.next();
-      doOrphan(w);
+      removeWidget(w);
       // Resume iteration.
       i = iterator();
     }
@@ -1460,13 +1465,12 @@ public class EditorImpl extends LogicalPanel.Impl implements
     repairer = null;
     keyBindings.clear();
     caretStyles = null;
-    clearContent();
+    discardContent();
     annotationLogic = null;
   }
 
   private void clearContent() {
     if (content != null) {
-      updateDocumentEditState(false);
       EditorStaticDeps.startIgnoreMutations();
       try {
         unregisterDomEventHandling();
@@ -1544,6 +1548,19 @@ public class EditorImpl extends LogicalPanel.Impl implements
     setContent(new ContentDocument(registries, op, schema));
   }
 
+  private void discardContent() {
+    if (content != null) {
+      ContentDocument oldContent = removeContentFast();
+      if (ownsDocument) {
+        oldContent.discardFast();
+      } else {
+        // This editor does not own the document (i.e., it was attached to an
+        // independent document), so throwing this editor away editor should not
+        // affect it.
+      }
+    }
+  }
+
   @Override
   public ContentDocument getContent() {
     return content;
@@ -1552,29 +1569,36 @@ public class EditorImpl extends LogicalPanel.Impl implements
   @Override
   public ContentDocument removeContent() {
     ContentDocument oldDoc = content;
-
-    clearContent();
+    content.detachEditor();
 
     if (ownsDocument) {
-      oldDoc.setRendering();
-      oldDoc.replaceOutgoingSink(SilentOperationSink.Void.get());
+      content.replaceOutgoingSink(SilentOperationSink.Void.get());
     } else {
-      oldDoc.setInteractive();
-      oldDoc.replaceOutgoingSink(innerOutputSink);
+      content.replaceOutgoingSink(innerOutputSink);
     }
 
+    clearContent();
     // TODO(danilatos): Clear all the stuff initialised in setContent()
     return oldDoc;
   }
 
+  private ContentDocument removeContentFast() {
+    ContentDocument oldDoc = content;
+    content.detachEditorFast();
+    clearContent();
+    // TODO(danilatos): Clear all the stuff initialised in setContent()
+    return oldDoc;
+  }
+
+  @VisibleForTesting public ContentDocument debugRemoveContentFast() {
+    return removeContentFast();
+  }
+
   @Override
   public ContentDocument removeContentAndUnrender() {
-    ContentDocument oldDoc = content;
-
-    clearContent();
-    oldDoc.setShelved();
-
-    return oldDoc;
+    ContentDocument content = removeContentFast();
+    content.setRendering(false);
+    return content;
   }
 
   @Override
@@ -1586,7 +1610,7 @@ public class EditorImpl extends LogicalPanel.Impl implements
         suggestionsManager.clear();
       }
       elementsWithDisplayEditModes.clear();
-      clearContent();
+      discardContent();
 
       content = newDoc;
 
@@ -1600,10 +1624,8 @@ public class EditorImpl extends LogicalPanel.Impl implements
 
       /////////////////////////////
       /////////////////////////////
-      if (!content.getLevel().isAtLeast(Level.RENDERED)) {
-        // TODO(danilatos): Use setRenderingFast() once it also initialises nodeManager, etc.
-        content.setRendering();
-      }
+      // TODO(danilatos): Use setRenderingFast() once it also initialises nodeManager, etc.
+      content.setRendering(true);
 
       repairer = content.getRepairer();
 
@@ -1719,7 +1741,7 @@ public class EditorImpl extends LogicalPanel.Impl implements
 //      /////////////////////////////
 //      /////////////////////////////
 
-      content.attachEditor(editorPackage, ownsDocument ? this : null);
+      content.attachEditor(editorPackage);
 
       Element docDiv = getDocumentHtmlElement();
       if (ownsDocument) {
@@ -1808,7 +1830,25 @@ public class EditorImpl extends LogicalPanel.Impl implements
   public void setEditing(final boolean editing) {
     this.editing = editing;
     if (content != null) {
-      updateDocumentEditState(editing);
+      Element topLevel = getDocumentHtmlElement();
+      // Set property to some arbitrary non-null value if we're in editing mode.
+      full().getDocumentElement().setProperty(AnnotationPainter.DOCUMENT_MODE, editing
+          ? ContentDocument.Level.EDITING : ContentDocument.Level.RENDERED);
+
+      topLevel.removeClassName(WAVE_EDITOR_EDIT_ON);
+      topLevel.removeClassName(WAVE_EDITOR_EDIT_OFF);
+      topLevel.addClassName(editing ? WAVE_EDITOR_EDIT_ON : WAVE_EDITOR_EDIT_OFF);
+
+      AnnotationPainter.maybeScheduleRepaint(content.getContext(), 0, mutable().size());
+      DomHelper.setContentEditable(topLevel, editing, true);
+
+      for (ContentElement element : elementsWithDisplayEditModes) {
+        if (element.getParentElement() != null) {
+          DisplayEditModeHandler.onEditModeChange(element, editing);
+        } else {
+          elementsWithDisplayEditModes.remove(element);
+        }
+      }
 
       editorUndoManager.maybeCheckpoint();
 
@@ -1819,30 +1859,6 @@ public class EditorImpl extends LogicalPanel.Impl implements
           EditorStaticDeps.logger.error().log("Scheduling update with no inner output sink...");
         }
         scheduleUpdateNotification(false, true, false, false);
-      }
-    }
-  }
-
-  /**
-   * Removes the various editor bits on the document
-   */
-  private void updateDocumentEditState(boolean editing) {
-    Element topLevel = getDocumentHtmlElement();
-    // Set property to some arbitrary non-null value if we're in editing mode.
-    full().getDocumentElement().setProperty(AnnotationPainter.DOCUMENT_MODE, editing);
-
-    topLevel.removeClassName(WAVE_EDITOR_EDIT_ON);
-    topLevel.removeClassName(WAVE_EDITOR_EDIT_OFF);
-    topLevel.addClassName(editing ? WAVE_EDITOR_EDIT_ON : WAVE_EDITOR_EDIT_OFF);
-
-    AnnotationPainter.maybeScheduleRepaint(content.getContext(), 0, mutable().size());
-    DomHelper.setContentEditable(topLevel, editing, true);
-
-    for (ContentElement element : elementsWithDisplayEditModes) {
-      if (element.getParentElement() != null) {
-        DisplayEditModeHandler.onEditModeChange(element, editing);
-      } else {
-        elementsWithDisplayEditModes.remove(element);
       }
     }
   }
@@ -2280,7 +2296,7 @@ public class EditorImpl extends LogicalPanel.Impl implements
 
           // Destroy all rendering
           ContentDocument savedDoc = removeContent();
-          savedDoc.setShelved();
+          savedDoc.setRendering(false);
 
           // Re-insert document to re-render from scratch
           setContent(savedDoc);

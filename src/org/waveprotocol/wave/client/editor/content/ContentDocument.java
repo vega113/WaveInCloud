@@ -54,7 +54,6 @@ import org.waveprotocol.wave.client.editor.sugg.SuggestionsManager;
 import org.waveprotocol.wave.client.scheduler.FinalTaskRunner;
 import org.waveprotocol.wave.client.scheduler.FinalTaskRunnerImpl;
 import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
-import org.waveprotocol.wave.client.widget.common.LogicalPanel;
 import org.waveprotocol.wave.model.document.AnnotationMutationHandler;
 import org.waveprotocol.wave.model.document.MutableAnnotationSet;
 import org.waveprotocol.wave.model.document.ReadableDocument;
@@ -310,73 +309,26 @@ public class ContentDocument {
     }
 
     @Override
+    @SuppressWarnings("unchecked") // NodeMutationHandler is generic
     public void setupBehaviour(ContentElement element) {
-      ContentDocument.this.setupBehaviour(element, null);
-    }
+      AgentAdapter e = (AgentAdapter) element;
 
-    @Override
-    public ContentTextNode createText(String text) {
-      return new ContentTextNode(text, context);
-    }
-  };
+      boolean notRendered = (e.getRenderer() == AgentAdapter.noRenderer);
+      boolean shouldBeRendered = level != Level.SHELVED;
 
-  @SuppressWarnings({"unchecked", "fallthrough"}) // NodeMutationHandler is generic
-  private void setupBehaviour(ContentElement element, Level oldLevel) {
-    AgentAdapter e = (AgentAdapter) element;
 
-    ElementHandlerRegistry elementRegistry = registries.getElementHandlerRegistry();
+      // TODO(danilatos): Cleanup maybeSetupNotifications
 
-    // bootstrapping for new nodes
-    if (oldLevel == null) {
-      NodeMutationHandler mutationHandler = elementRegistry.getMutationHandler(e);
-      if (mutationHandler instanceof PermanentMutationHandler) {
-        e.setNodeMutationHandler(mutationHandler);
-      }
-      oldLevel = Level.SHELVED;
-    }
+      // Note: Redundant setting of handlers currently possible...
 
-    boolean notRendered = (e.getRenderer() == AgentAdapter.noRenderer);
-    assert notRendered == (oldLevel == Level.SHELVED) : "oldLevel: " + oldLevel + " notRendered:"+notRendered;
-    boolean shouldBeRendered = level.isAtLeast(Level.RENDERED);
+      ElementHandlerRegistry elementRegistry = registries.getElementHandlerRegistry();
+      e.setRegistry(elementRegistry);
+      if (!shouldBeRendered) {
 
-    // Increasing level
-    switch (oldLevel) {
-      case SHELVED: // -> RENDERED
-        if (level.isAtMost(Level.SHELVED)) break;
-
-        setupRenderer(e, true);
-        if (e == fullRawSubstrate.getDocumentElement()) {
-          initRootElementRendering(true);
-        }
-        e.setNodeMutationHandler(elementRegistry.getMutationHandler(e));
-
-      case RENDERED: // -> INTERACTIVE
-        if (level.isAtMost(Level.RENDERED)) break;
-
-        e.setNodeEventHandler(elementRegistry.getEventHandler(e));
+        // Reverse order, for cleanup
         maybeSetupGwtWidget(e);
 
-      case INTERACTIVE: // -> EDITING
-        if (level.isAtMost(Level.INTERACTIVE)) break;
-
-        maybeSetupModeNotifications(e);
-        break;
-    }
-
-    // Decreasing level
-    switch (oldLevel) {
-      case EDITING: // -> INTERACTIVE
-        if (level.isAtLeast(Level.EDITING)) break;
-        // No need to cleanup mode notifications
-
-      case INTERACTIVE: // -> RENDERED
-        if (level.isAtLeast(Level.INTERACTIVE)) break;
-
-        maybeSetupGwtWidget(e);
         e.setNodeEventHandler(null);
-
-      case RENDERED: // -> SHELVED
-        if (level.isAtLeast(Level.RENDERED)) break;
 
         NodeMutationHandler mutationHandler = elementRegistry.getMutationHandler(e);
         if (mutationHandler instanceof PermanentMutationHandler) {
@@ -384,50 +336,76 @@ public class ContentDocument {
         } else {
           e.setNodeMutationHandler(null);
         }
+
         setupRenderer(e, false);
 
         if (e == fullRawSubstrate.getDocumentElement()) {
-          initRootElementRendering(false);
+          initRootElementRendering(shouldBeRendered);
         }
+
+      }
+
+      if (shouldBeRendered && notRendered) {
+        setupRenderer(e, true);
+
+        if (e == fullRawSubstrate.getDocumentElement()) {
+          initRootElementRendering(shouldBeRendered);
+        }
+
+        e.setNodeMutationHandler(elementRegistry.getMutationHandler(e));
+      }
+
+      if (level == Level.EDITING) {
+        e.setNodeEventHandler(elementRegistry.getEventHandler(e));
+      }
+
+      if (shouldBeRendered) {
+        maybeSetupGwtWidget(e);
+        maybeSetupModeNotifications(e);
+      }
+
+      for (ContentNode n = e.getFirstChild(); n != null; n = n.getNextSibling()) {
+        if (n instanceof ContentElement) {
+          setupBehaviour((AgentAdapter) n);
+        } else {
+          n.asText().setRendering(shouldBeRendered);
+        }
+      }
+
+      if (notRendered && shouldBeRendered) {
+        e.reInsertImpl();
+      }
+
+      e.triggerChildrenReady();
+
+      assert checkHealthy(e, false);
     }
 
-    for (ContentNode n = e.getFirstChild(); n != null; n = n.getNextSibling()) {
-      if (n instanceof ContentElement) {
-        setupBehaviour((AgentAdapter) n, oldLevel);
-      } else {
-        n.asText().setRendering(shouldBeRendered);
+    @Override
+    public ContentTextNode createText(String text) {
+      return new ContentTextNode(text, context);
+    }
+
+    // TODO(danilatos): Kill the postCreation methods
+
+    @SuppressWarnings("unchecked")
+    private void postCreation(ContentElement element) {
+      maybeAddToNameMap(element);
+    }
+
+    /**
+     * Adds element to nameMap if it has a name attribute
+     * TODO(user): consider a friendly warning if detecting duplicate name here.
+     * Would be useful for agent developers...
+     *
+     * @param element
+     */
+    private void maybeAddToNameMap(ContentElement element) {
+      if (element.hasName()) {
+        nameMap.put(element.getName(), element);
       }
     }
-
-    if (notRendered && shouldBeRendered) {
-      e.reInsertImpl();
-    }
-
-    e.triggerChildrenReady();
-
-    assert checkHealthy(e, false);
-  }
-
-
-  // TODO(danilatos): Kill the postCreation methods
-
-  @SuppressWarnings("unchecked")
-  private void postCreation(ContentElement element) {
-    maybeAddToNameMap(element);
-  }
-
-  /**
-   * Adds element to nameMap if it has a name attribute
-   * TODO(user): consider a friendly warning if detecting duplicate name here.
-   * Would be useful for agent developers...
-   *
-   * @param element
-   */
-  private void maybeAddToNameMap(ContentElement element) {
-    if (element.hasName()) {
-      nameMap.put(element.getName(), element);
-    }
-  }
+  };
 
   /**
    * Sanity checks for an element
@@ -435,7 +413,7 @@ public class ContentDocument {
    * @return dummy boolean so the code can be run inside an assert statement
    */
   private boolean checkHealthy(ContentElement e, boolean recursive) {
-    if (level.isAtLeast(Level.RENDERED)) {
+    if (level == Level.RENDERED || level == Level.EDITING) {
       if (LineRendering.isLocalParagraph(e)) {
         if (e.getImplNodelet() == null) {
           throw new AssertionError("Local paragraphs have no impl nodelet?");
@@ -479,7 +457,8 @@ public class ContentDocument {
    */
   private void maybeSetupGwtWidget(ContentElement element) {
     if (element instanceof HasGwtWidget) {
-      ((HasGwtWidget) element).setLogicalParent(logicalPanel);
+      ((HasGwtWidget) element).createWidget(editorPackage != null
+          ? editorPackage.getLogicalPanel() : null);
     }
   }
 
@@ -497,8 +476,12 @@ public class ContentDocument {
   }
 
   private void setupRenderer(AgentAdapter e, boolean isRendering) {
+    if ((e.getImplNodelet() != null) == isRendering) {
+      return;
+    }
+
+    Renderer renderer = registries.getElementHandlerRegistry().getRenderer(e);
     if (isRendering) {
-      Renderer renderer = registries.getElementHandlerRegistry().getRenderer(e);
       e.setRenderer(renderer != null ? renderer : AgentAdapter.defaultRenderer);
     } else {
       e.clearRenderer();
@@ -1109,8 +1092,6 @@ public class ContentDocument {
 
   private MiniBundle editorPackage;
 
-  private LogicalPanel logicalPanel;
-
   private final RawAnnotationSet<Object> fullAnnotationSet;
 
   private final SelectionMaintainer selectionMaintainer;
@@ -1258,105 +1239,63 @@ public class ContentDocument {
     return editorPackage != null ? editorPackage.flush(resume) : true;
   }
 
-  public void setShelved() {
-    Level oldLevel = adjustLevel(Level.SHELVED);
-    setupBehaviour(fullRawSubstrate.getDocumentElement(), oldLevel);
-  }
-
   /**
    * Transitions this document to/from a rendering state.
+   *
+   * @param newRendering if true, the {@link Level level} is increased to be at
+   *        least {@link Level#RENDERED}; if false, the level is decreased to at
+   *        most {@link Level#SHELVED}.
    */
-  public void setRendering() {
-
+  public void setRendering(boolean newRendering) {
     // setupBehaviour deactivates and re-activates rendering, does re-creation
     // of GWT widgets, clobbers event handlers etc. Skip it if possible.
-    if (level == Level.RENDERED) {
+    if (newRendering && (level == Level.RENDERED || level == Level.EDITING)) {
       return;
     }
-    Level oldLevel = adjustLevel(Level.RENDERED);
-    setupBehaviour(fullRawSubstrate.getDocumentElement(), oldLevel);
-  }
-
-  public void setInteractive() {
-    Preconditions.checkState(logicalPanel != null, "Don't have a logicalPanel");
-    assert level.isAtLeast(Level.INTERACTIVE);
-
-    adjustLevel(Level.INTERACTIVE);
-    // No need to setupBehaviour, nothing to do if already interactive, or just
-    // leaving edit mode.
-  }
-
-  public void setInteractive(LogicalPanel logicalPanel) {
-    Preconditions.checkNotNull(logicalPanel, "Null logicalPanel");
-
-    if (this.logicalPanel == logicalPanel) {
-      this.setInteractive();
-      return;
-    }
-
-    this.logicalPanel = logicalPanel;
-
-    Level oldLevel = adjustLevel(Level.INTERACTIVE);
-    setupBehaviour(fullRawSubstrate.getDocumentElement(), oldLevel);
+    setRenderingFast(newRendering);
+    factory.setupBehaviour(fullRawSubstrate.getDocumentElement());
   }
 
   /**
-   * Puts the document into the new level. Does not traverse the document
-   * to re-render elements and so forth.
-   *
-   * @return the old level for convenience
+   * Perform cleanup quickly. The document may not be in a consistent state, so
+   * this should only be used to quickly do any cleanup for a document being
+   * discarded.
    */
-  private Level adjustLevel(Level newLevel) {
-    Level old = level;
+  public void discardFast() {
+    setRenderingFast(false);
+  }
 
-    for (int i = level.ordinal() + 1; i <= newLevel.ordinal(); i++) {
-      Level currentLevel = Level.values()[i];
-
-      switch (currentLevel) {
-        case RENDERED:
-          if (!fullRawSubstrate.getAffectHtml()) {
-            fullRawSubstrate.setAffectHtml();
-          }
-          break;
-        case INTERACTIVE:
-          assert logicalPanel != null;
-          Preconditions.checkState(fullRawSubstrate.getAffectHtml(),
-              "rendered or higher state should imply affectHtml");
-          break;
-        case EDITING:
-          // Most is done in attachEditor()
-          break;
-        default:
-          throw new AssertionError("Unknown level " + currentLevel);
+  // TODO(danilatos): Expose this to the editor so it can call it first instead of
+  // setRendering, which will be faster.
+  private void setRenderingFast(boolean isRendering) {
+    if (!isRendering) {
+      if (editorPackage != null) {
+        detachEditorFast();
       }
+      AnnotationPainter.clearDocPainter(context);
     }
 
-    for (int i = level.ordinal() - 1; i >= newLevel.ordinal(); i--) {
-      Level currentLevel = Level.values()[i];
+    if (isRendering) {
+      if (level == Level.RENDERED || level == Level.EDITING) {
+        Preconditions.checkState(fullRawSubstrate.getAffectHtml(),
+            "rendered or higher state should imply affectHtml");
+        return;
+      }
 
-      switch (currentLevel) {
-        case INTERACTIVE:
-          assert editorPackage != null;
-          editingConcerns = LowLevelEditingConcerns.STUB;
-          editorPackage = null;
-          selectionMaintainer.detachEditor();
-          break;
-        case RENDERED:
-          logicalPanel = null;
-          break;
-        case SHELVED:
-          if (fullRawSubstrate.getAffectHtml()) {
-            fullRawSubstrate.clearAffectHtml();
-          }
-          AnnotationPainter.clearDocPainter(context);
-          break;
-        default:
-          throw new AssertionError("Unknown level " + currentLevel);
+      level = Level.RENDERED;
+      if (!fullRawSubstrate.getAffectHtml()) {
+        fullRawSubstrate.setAffectHtml();
+      }
+    } else {
+      if (level == Level.SHELVED) {
+        return;
+      }
+
+      level = Level.SHELVED;
+      if (fullRawSubstrate.getAffectHtml()) {
+        fullRawSubstrate.clearAffectHtml();
       }
     }
-
-    level = newLevel;
-    return old;
   }
 
   public void initRootElementRendering(boolean isRendering) {
@@ -1386,22 +1325,9 @@ public class ContentDocument {
   }
 
   public enum Level {
-    /** Completely unrendered, no HTML manipulations (faster and smaller memory footprint) */
     SHELVED,
-    /** Rendered */
     RENDERED,
-    /** Event handlers attached */
-    INTERACTIVE,
-    /** Editor attached */
-    EDITING;
-
-    public boolean isAtLeast(Level other) {
-      return this.compareTo(other) >= 0;
-    }
-
-    public boolean isAtMost(Level other) {
-      return this.compareTo(other) <= 0;
-    }
+    EDITING
   }
 
   private Level level = Level.SHELVED;
@@ -1420,19 +1346,16 @@ public class ContentDocument {
    */
   // TODO(danilatos): Ultimately, remove the document's explicit knowledge
   // of editors altogether.
-  public void attachEditor(MiniBundle editorBundle, LogicalPanel panel) {
+  public void attachEditor(MiniBundle editorBundle) {
     Preconditions.checkNotNull(editorBundle, "editorBundle must not be null");
     Preconditions.checkState(level != Level.EDITING,
         "Cannot attach editor to a document already with an editor");
 
-    if (panel == null) {
-      Preconditions.checkState(this.logicalPanel != null,
-          "Must either already have a logical panel, or one must be provided");
-    } else {
-      this.logicalPanel = panel;
+    if (level == Level.SHELVED) {
+      setRenderingFast(true);
     }
 
-    Level oldLevel = adjustLevel(Level.EDITING);
+    level = Level.EDITING;
 
     this.editorPackage = editorBundle;
 
@@ -1476,7 +1399,24 @@ public class ContentDocument {
     };
 
     selectionMaintainer.attachEditor(editingConcerns);
-    setupBehaviour(fullRawSubstrate.getDocumentElement(), oldLevel);
+    factory.setupBehaviour(fullRawSubstrate.getDocumentElement());
+  }
+
+  /**
+   * Detaches an editor from this document
+   */
+  public void detachEditor() {
+    detachEditorFast();
+    factory.setupBehaviour(fullRawSubstrate.getDocumentElement());
+  }
+
+  public void detachEditorFast() {
+    Preconditions.checkState(level == Level.EDITING, "Cannot detach editor if there is no editor");
+    level = Level.RENDERED;
+
+    editingConcerns = LowLevelEditingConcerns.STUB;
+    editorPackage = null;
+    selectionMaintainer.detachEditor();
   }
 
   public void setRegistries(Registries registriesBundle) {
