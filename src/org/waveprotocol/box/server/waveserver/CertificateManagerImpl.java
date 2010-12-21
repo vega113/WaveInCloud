@@ -53,7 +53,6 @@ import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Default implementation of {@link CertificateManager}.
@@ -74,7 +73,8 @@ public class CertificateManagerImpl implements CertificateManager {
    * is available for the signer id.  It is arranged by domain to facilitate the optimisation where
    * exactly 1 signer request is sent per domain.
    */
-  private final Map<ByteString, Multimap<String, SignerInfoPrefetchResultListener>> signerInfoRequests;
+  private final Map<ByteString, Multimap<String, SignerInfoPrefetchResultListener>>
+      signerInfoRequests;
 
   @Inject
   public CertificateManagerImpl(
@@ -95,7 +95,7 @@ public class CertificateManagerImpl implements CertificateManager {
   }
 
   @Override
-  public Set<String> getLocalDomains() {
+  public ImmutableSet<String> getLocalDomains() {
     return localDomains;
   }
 
@@ -157,7 +157,8 @@ public class CertificateManagerImpl implements CertificateManager {
    * @throws SignatureException if the signature doesn't verify.
    */
   private void verifySingleSignature(ByteStringMessage<ProtocolWaveletDelta> delta,
-      ProtocolSignature signature, String domain) throws SignatureException, UnknownSignerException {
+      ProtocolSignature signature, String domain)
+      throws SignatureException, UnknownSignerException {
     verifier.verify(delta.getByteString().toByteArray(), signature, domain);
   }
 

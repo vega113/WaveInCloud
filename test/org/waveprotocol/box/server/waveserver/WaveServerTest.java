@@ -20,6 +20,7 @@ package org.waveprotocol.box.server.waveserver;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -36,6 +37,7 @@ import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListe
 import org.waveprotocol.wave.federation.Proto;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
@@ -54,7 +56,6 @@ import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author josephg@gmail.com (Joseph Gentle)
@@ -69,7 +70,8 @@ public class WaveServerTest extends TestCase {
   private static final WaveletOperationContext CONTEXT =
     new WaveletOperationContext(USER1, 1234567890, 1);
   
-  @Mock private CertificateManager certificateManager;
+  private CertificateManager certificateManager;
+  @Mock private SignatureHandler localSigner;
   @Mock private WaveletFederationListener.Factory federationHostFactory;
   @Mock private WaveletFederationProvider federationRemote;
   @Mock private RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
@@ -80,12 +82,14 @@ public class WaveServerTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    Set<String> domains = ImmutableSet.of("example.com");
-    when(certificateManager.getLocalDomains()).thenReturn(domains);
 
-    SignatureHandler localSigner = mock(SignatureHandler.class);
+    when(localSigner.getDomain()).thenReturn("example.com");
     when(localSigner.getSignerInfo()).thenReturn(null);
-    when(certificateManager.getLocalSigner()).thenReturn(localSigner);
+    when(localSigner.sign(Matchers.<ByteStringMessage<ProtocolWaveletDelta>>any()))
+        .thenReturn(ImmutableList.<ProtocolSignature>of());
+
+    certificateManager = new CertificateManagerImpl(true, localSigner, null, null);
+
     Factory localWaveletContainerFactory = new LocalWaveletContainer.Factory() {
       @Override
       public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
@@ -188,9 +192,6 @@ public class WaveServerTest extends TestCase {
     ProtocolSignedDelta signedProtoDelta =
         ProtocolSignedDelta.newBuilder().setDelta(protoDelta.toByteString()).build();
 
-    when(
-        certificateManager.signDelta(Matchers.<ByteStringMessage<Proto.ProtocolWaveletDelta>>any()))
-        .thenReturn(signedProtoDelta);
     waveServer.submitRequest(name, protoDelta, new SubmitRequestListener() {
       @Override
       public void onSuccess(int operationsApplied, HashedVersion hashedVersionAfterApplication,

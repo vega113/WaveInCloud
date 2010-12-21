@@ -17,6 +17,7 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 
 import org.waveprotocol.wave.crypto.SignatureException;
@@ -30,8 +31,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
 
-import java.util.Set;
-
 /**
  * Stand-in interface for the certificate manager.
  *
@@ -39,7 +38,7 @@ import java.util.Set;
  */
 public interface CertificateManager {
 
-  Set<String> getLocalDomains();
+  ImmutableSet<String> getLocalDomains();
 
   /**
    * @return the signer info for the local wave signer.
