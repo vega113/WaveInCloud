@@ -43,12 +43,15 @@ public class RandomBase64GeneratorTest extends TestCase {
   public void testUniqueness() {
     for (RandomBase64Generator generator : generators) {
       HashSet<String> set = new HashSet<String>();
-      for (int i = 1; i < 10; i++) {
-        // hopefully at most 1 collision among (2^i)+1 pseudo-random strings of length i
+      // Len starts at 4 because collisions in really small strings are
+      // actually likely.
+      for (int len = 4; len < 10; len++) {
+        // Expect at most 1 collision among (2^i)+1 pseudo-random strings
+        // of length i
         set.clear();
         int collisions = 0;
-        for (int j = 0; j < (1 << i) + 1; j++) {
-          if (!set.add(generator.next(i))) collisions++;
+        for (int j = 0; j < (1 << len) + 1; j++) {
+          if (!set.add(generator.next(len))) collisions++;
         }
         assertTrue("improbable " + collisions + " collisions in set of " + set.size(),
             collisions <= 1);

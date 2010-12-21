@@ -20,8 +20,6 @@ package org.waveprotocol.wave.model.id;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.id.TokenGenerator;
-import org.waveprotocol.wave.model.id.TokenGeneratorImpl;
 import org.waveprotocol.wave.model.util.CharBase64;
 
 import java.util.HashSet;
@@ -53,12 +51,13 @@ public class TokenGeneratorImplTest extends TestCase {
   public void testUniqueness() {
     Set<String> set = new HashSet<String>();
     for (int i = 1; i < 10; i++) {
-      // hopefully no collisions among 100 pseudo-random strings
       set.clear();
       for (int j = 1; j < 100; j++) {
-        String next = generator.generateToken(i * 4);
-        assertTrue("improbable duplicate '" + next + "' in set of " + set.size(), set.add(next));
+        set.add(generator.generateToken(i * 4));
       }
+      // This is pretty weak, but tests must be almost rock
+      // solid to be useful.
+      assertTrue("Improbable 10 collisions", set.size() > (100 - 4));
     }
   }
 
