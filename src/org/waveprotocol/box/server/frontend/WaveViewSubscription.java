@@ -186,8 +186,7 @@ final class WaveViewSubscription {
    */
   private void sendUpdate(WaveletName waveletName, List<TransformedWaveletDelta> deltas,
       HashedVersion committedVersion) {
-    openListener.onUpdate(waveletName, null, DeltaSequence.of(deltas), committedVersion, null,
-        channelId);
+    openListener.onUpdate(waveletName, null, deltas, committedVersion, null, channelId);
   }
 
   /**

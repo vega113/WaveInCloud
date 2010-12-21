@@ -17,17 +17,18 @@
 
 package org.waveprotocol.box.server.frontend;
 
-import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.common.comms.WaveClientRpc;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -45,10 +46,17 @@ public interface ClientFrontend {
   interface OpenListener {
     /**
      * Called when an update is received.
+     *
+     * @param waveletName wavelet receiving the update
+     * @param snapshot optional snapshot
+     * @param deltas optional deltas, not necessarily contiguous
+     * @param committedVersion optional commit notice
+     * @param hasMarker optional (true/false/absent) marker
+     * @param channelId channel id (first message only)
      */
     void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
-        DeltaSequence deltas, @Nullable HashedVersion committedVersion,
-        @Nullable Boolean hasMarker, String channel_id);
+        List<TransformedWaveletDelta> deltas, @Nullable HashedVersion committedVersion,
+        @Nullable Boolean hasMarker, String channelId);
 
     /**
      * Called when the stream fails. No further updates will be received.

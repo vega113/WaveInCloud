@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 import org.mockito.ArgumentMatcher;
+import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.common.IndexWave;
@@ -149,6 +150,7 @@ public class ClientFrontendImplTest extends TestCase {
    * Tests that if our subscription doesn't involve a matching waveletIdPrefix,
    * deltas arriving via waveletUpdate(), aren't forwarded to the listener.
    */
+  @SuppressWarnings("unchecked") // Mock container
   public void testDeltasArentPropagatedIfNotSubscribedToWavelet() {
     OpenListener listener = mock(OpenListener.class);
     clientFrontend.openRequest(USER, WAVE_ID, IdFilter.ofPrefixes("non-existing"),
@@ -164,7 +166,7 @@ public class ClientFrontendImplTest extends TestCase {
     WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, VERSION_0, 0L);
     clientFrontend.waveletUpdate(wavelet, DELTAS);
     verify(listener, Mockito.never()).onUpdate(eq(WAVELET_NAME),
-        any(WaveletSnapshotAndVersion.class), any(DeltaSequence.class),
+        any(WaveletSnapshotAndVersion.class), Matchers.anyList(),
         any(HashedVersion.class), isNullMarker(), anyString());
   }
 
@@ -247,7 +249,7 @@ public class ClientFrontendImplTest extends TestCase {
         any(HashedVersion.class), isNullMarker(), anyString());
   }
 
-  private static class IsNonEmptySequence extends ArgumentMatcher<DeltaSequence> {
+  private static class IsNonEmptySequence extends ArgumentMatcher<List<TransformedWaveletDelta>> {
     @Override
     public boolean matches(Object sequence) {
       return sequence != null && ((DeltaSequence)sequence).size() > 0;
@@ -270,8 +272,8 @@ public class ClientFrontendImplTest extends TestCase {
 
     @Override
     public void onUpdate(WaveletName wn, @Nullable WaveletSnapshotAndVersion snapshot,
-        DeltaSequence newDeltas, @Nullable HashedVersion committedVersion, Boolean hasMarker,
-        @Nullable String channelId) {
+        List<TransformedWaveletDelta> newDeltas, @Nullable HashedVersion committedVersion,
+        @Nullable Boolean hasMarker, @Nullable String channelId) {
 
       if (snapshot == null && newDeltas.isEmpty()) {
         // Ignore marker/channel id updates
