@@ -40,7 +40,8 @@ interface LocalWaveletContainer extends WaveletContainer {
      * @throws PersistenceException if storage access goes wrong
      * @throws IllegalArgumentException if the waveletName is bad
      */
-    LocalWaveletContainer create(WaveletName waveletName) throws PersistenceException;
+    LocalWaveletContainer create(WaveletNotificationSubscriber notifiee, WaveletName waveletName)
+        throws PersistenceException;
   }
 
   /**

@@ -17,7 +17,10 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -30,9 +33,12 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
+import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
+import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
  * A local wavelet may be updated by submits. The local wavelet will perform
@@ -42,8 +48,34 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 class LocalWaveletContainerImpl extends WaveletContainerImpl
     implements LocalWaveletContainer {
 
-  public LocalWaveletContainerImpl(WaveletState waveletState) {
-    super(waveletState);
+  private static final Function<RemoveParticipant, ParticipantId> PARTICIPANT_REMOVED_BY =
+      new Function<RemoveParticipant, ParticipantId>() {
+        @Override
+        public ParticipantId apply(RemoveParticipant op) {
+          return op.getParticipantId();
+        }
+      };
+
+  private static final Function<ParticipantId, String> DOMAIN_OF =
+      new Function<ParticipantId, String>() {
+        @Override
+        public String apply(ParticipantId participant) {
+          return participant.getDomain();
+        }
+      };
+
+  private static Iterable<ParticipantId> participantsRemovedBy(Iterable<WaveletOperation> ops) {
+    return Iterables.transform(Iterables.filter(ops, RemoveParticipant.class),
+        PARTICIPANT_REMOVED_BY);
+  }
+
+  private static ImmutableSet<String> domainsOf(Iterable<ParticipantId> participants) {
+    return ImmutableSet.copyOf(Iterables.transform(participants, DOMAIN_OF));
+  }
+
+  public LocalWaveletContainerImpl(WaveletNotificationSubscriber notifiee,
+      WaveletState waveletState) {
+    super(notifiee, waveletState);
   }
 
   @Override
@@ -52,7 +84,19 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
       InvalidProtocolBufferException, InvalidHashException, PersistenceException {
     acquireWriteLock();
     try {
-      return transformAndApplyLocalDelta(signedDelta);
+      WaveletDeltaRecord result = transformAndApplyLocalDelta(signedDelta);
+      // Only publish and persist the delta if it wasn't transformed away.
+      // (Right now it never is since the current OT algorithm doesn't transform ops away.)
+      if (!result.isEmpty()) {
+        ImmutableSet<String> domainsToNotify = domainsOf(Iterables.concat(
+            accessSnapshot().getParticipants(),
+            participantsRemovedBy(result.getTransformedDelta())));
+        notifyOfDeltas(ImmutableList.of(result), domainsToNotify);
+        // We always persist a local delta immediately after it's applied
+        // and after it's broadcast on the wave bus and to remote servers.
+        persist(result.getResultingVersion(), domainsToNotify);
+      }
+      return result;
     } finally {
       releaseWriteLock();
     }

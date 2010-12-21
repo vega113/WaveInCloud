@@ -88,9 +88,10 @@ public class WaveServerTest extends TestCase {
     when(certificateManager.getLocalSigner()).thenReturn(localSigner);
     Factory localWaveletContainerFactory = new LocalWaveletContainer.Factory() {
       @Override
-      public LocalWaveletContainer create(WaveletName waveletName) throws PersistenceException {
+      public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
+          WaveletName waveletName) throws PersistenceException {
         WaveletState waveletState = new MemoryWaveletState(waveletName);
-        return new LocalWaveletContainerImpl(waveletState);
+        return new LocalWaveletContainerImpl(notifiee, waveletState);
       }
     };
 

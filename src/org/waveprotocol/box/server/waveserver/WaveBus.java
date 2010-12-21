@@ -35,8 +35,8 @@ public interface WaveBus {
     /**
      * Notifies the subscriber of a wavelet update.
      *
-     * @param wavelet the state of the wavelet wavelet after the deltas have
-     *        been applied.
+     * @param wavelet the state of the wavelet after the deltas have
+     *        been applied
      * @param deltas deltas applied to the wavelet
      */
     void waveletUpdate(ReadableWaveletData wavelet, DeltaSequence deltas);

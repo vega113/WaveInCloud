@@ -17,6 +17,7 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.ByteString;
 
 import org.waveprotocol.box.server.persistence.PersistenceException;
@@ -38,7 +39,8 @@ interface RemoteWaveletContainer extends WaveletContainer {
      * @throws PersistenceException if storage access goes wrong
      * @throws IllegalArgumentException if the waveletName is bad
      */
-    RemoteWaveletContainer create(WaveletName waveletName) throws PersistenceException;
+    RemoteWaveletContainer create(WaveletNotificationSubscriber notifiee, WaveletName waveletName)
+        throws PersistenceException;
   }
 
   /**
@@ -52,11 +54,14 @@ interface RemoteWaveletContainer extends WaveletContainer {
    * @param domain the listener domain where these deltas were received
    * @param federationProvider the provider where missing data may be sourced
    * @param certificateManager for verifying signatures and requesting signer info
-   * @param updateCallback for asynchronous notification when deltas are ready
-   *        to be processed, providing a transformed version of the applied
-   *        delta and the hashed version after application
+   * @return future which is set after the deltas are applied to the local
+   *         state or a failure occurs
    */
-  void update(List<ByteString> deltas, String domain,
-      WaveletFederationProvider federationProvider, CertificateManager certificateManager,
-      RemoteWaveletDeltaCallback updateCallback);
+  ListenableFuture<Void> update(List<ByteString> deltas, String domain,
+      WaveletFederationProvider federationProvider, CertificateManager certificateManager);
+
+  /**
+   * Is called when a commit notice is received from the wavelet host.
+   */
+  void commit(HashedVersion version);
 }

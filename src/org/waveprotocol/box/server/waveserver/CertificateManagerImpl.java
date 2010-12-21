@@ -63,6 +63,7 @@ public class CertificateManagerImpl implements CertificateManager {
   private static final Log LOG = Log.get(CertificateManagerImpl.class);
 
   private final SignatureHandler waveSigner;
+  private final ImmutableSet<String> localDomains;
   private final WaveSignatureVerifier verifier;
   private final CertPathStore certPathStore;
   private final boolean disableVerfication;
@@ -81,6 +82,8 @@ public class CertificateManagerImpl implements CertificateManager {
       SignatureHandler signer, WaveSignatureVerifier verifier, CertPathStore certPathStore) {
     this.disableVerfication = disableVerfication;
     this.waveSigner = signer;
+    // for now, we just support a single signer
+    this.localDomains = ImmutableSet.of(signer.getDomain());
     this.verifier = verifier;
     this.certPathStore = certPathStore;
     this.signerInfoRequests = Maps.newHashMap();
@@ -93,8 +96,7 @@ public class CertificateManagerImpl implements CertificateManager {
 
   @Override
   public Set<String> getLocalDomains() {
-    // TODO: for now, we just support a single signer
-    return ImmutableSet.of(waveSigner.getDomain());
+    return localDomains;
   }
 
   @Override

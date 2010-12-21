@@ -16,6 +16,8 @@
  */
 package org.waveprotocol.box.server.waveserver;
 
+import static org.mockito.Mockito.mock;
+
 import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
@@ -76,8 +78,9 @@ public class LocalWaveletContainerImplTest extends TestCase {
         MutateDocument.newBuilder().setDocumentId(BLIP_ID).setDocumentOperation(
             ProtocolDocumentOperation.newBuilder().build())).build();
 
+    WaveletNotificationSubscriber notifiee = mock(WaveletNotificationSubscriber.class);
     WaveletState waveletState = new MemoryWaveletState(WAVELET_NAME);
-    wavelet = new LocalWaveletContainerImpl(waveletState);
+    wavelet = new LocalWaveletContainerImpl(notifiee, waveletState);
   }
 
   @Override

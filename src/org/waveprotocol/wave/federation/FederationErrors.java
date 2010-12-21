@@ -43,4 +43,8 @@ public class FederationErrors {
   public static FederationError badRequest(String errorMessage) {
     return newFederationError(FederationError.Code.BAD_REQUEST, errorMessage);
   }
+
+  public static FederationError internalServerError(String errorMessage) {
+    return newFederationError(FederationError.Code.INTERNAL_SERVER_ERROR, errorMessage);
+  }
 }

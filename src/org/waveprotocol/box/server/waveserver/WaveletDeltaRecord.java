@@ -64,6 +64,11 @@ public class WaveletDeltaRecord {
 
   // Convenience methods:
 
+  /** @return true if the transformed delta has no operations */
+  public boolean isEmpty() {
+    return transformed.isEmpty();
+  }
+
   /**
    * @return the hashed version which this delta was applied at
    */

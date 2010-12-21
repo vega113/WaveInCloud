@@ -17,6 +17,8 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import static org.mockito.Mockito.mock;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
@@ -111,10 +113,11 @@ public class WaveletContainerTest extends TestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    WaveletNotificationSubscriber notifiee = mock(WaveletNotificationSubscriber.class);
     WaveletState localWaveletState = new MemoryWaveletState(localWaveletName);
-    localWavelet = new LocalWaveletContainerImpl(localWaveletState);
+    localWavelet = new LocalWaveletContainerImpl(notifiee, localWaveletState);
     WaveletState remoteWaveletState = new MemoryWaveletState(remoteWaveletName);
-    remoteWavelet = new RemoteWaveletContainerImpl(remoteWaveletState);
+    remoteWavelet = new RemoteWaveletContainerImpl(notifiee, remoteWaveletState);
   }
 
   // Tests

@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 Google Inc.
+ * Copyright 2010 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,25 @@
  *
  */
 
-package org.waveprotocol.box.server.waveserver;
+package org.waveprotocol.wave.federation;
 
-import org.waveprotocol.box.common.DeltaSequence;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 
 /**
- * Notification interface for when remote wavelet deltas are ready to be processed.
+ * Wraps a federation error.
  *
- *
+ * @author soren@google.com (Soren Lassen)
  */
-public interface RemoteWaveletDeltaCallback {
-  
-  /**
-   * Called when remote wavelet deltas are ready to be processed.
-   *
-   * @param deltaSequence ready to be processed
-   */
-  void onSuccess(DeltaSequence deltaSequence);
-  
-  /**
-   * Called when the remove wavelets failed to process.
-   */
-  void onFailure(String errorMessage);
+public class FederationException extends Exception {
+
+  private final FederationError error;
+
+  public FederationException(FederationError error) {
+    super(error.getErrorCode() + " " + error.getErrorMessage());
+    this.error = error;
+  }
+
+  public FederationError getError() {
+    return error;
+  }
 }

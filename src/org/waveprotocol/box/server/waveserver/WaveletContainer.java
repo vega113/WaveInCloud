@@ -17,8 +17,6 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import com.google.common.util.concurrent.ListenableFuture;
-
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -35,13 +33,6 @@ import java.util.Set;
  * delta history. Local and remote wavelet interfaces inherit from this one.
  */
 interface WaveletContainer {
-  /**
-   * Initiates persistence of deltas up to the given version.
-   *
-   * @see WaveletState#persist(HashedVersion)
-   */
-  ListenableFuture<Void> persist(HashedVersion version);
-
   /** Returns the name of the wavelet. */
   WaveletName getWaveletName();
 

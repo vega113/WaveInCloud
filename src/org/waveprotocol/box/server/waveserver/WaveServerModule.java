@@ -105,8 +105,9 @@ public class WaveServerModule extends AbstractModule {
   private LocalWaveletContainer.Factory provideLocalWaveletContainerFactory() {
     return new LocalWaveletContainer.Factory() {
       @Override
-      public LocalWaveletContainer create(WaveletName waveletName) throws PersistenceException {
-        return new LocalWaveletContainerImpl(new MemoryWaveletState(waveletName));
+      public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
+          WaveletName waveletName) throws PersistenceException {
+        return new LocalWaveletContainerImpl(notifiee, new MemoryWaveletState(waveletName));
       }
     };
   }
@@ -115,8 +116,9 @@ public class WaveServerModule extends AbstractModule {
   private RemoteWaveletContainer.Factory provideRemoteWaveletContainerFactory() {
     return new RemoteWaveletContainer.Factory() {
       @Override
-      public RemoteWaveletContainer create(WaveletName waveletName) throws PersistenceException {
-        return new RemoteWaveletContainerImpl(new MemoryWaveletState(waveletName));
+      public RemoteWaveletContainer create(WaveletNotificationSubscriber notifiee,
+          WaveletName waveletName) throws PersistenceException {
+        return new RemoteWaveletContainerImpl(notifiee, new MemoryWaveletState(waveletName));
       }
     };
   }

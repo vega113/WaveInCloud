@@ -18,8 +18,13 @@
 package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ValueFuture;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -30,6 +35,8 @@ import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
+import org.waveprotocol.wave.federation.FederationErrors;
+import org.waveprotocol.wave.federation.FederationException;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
@@ -72,8 +79,9 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
    * Create a new RemoteWaveletContainerImpl. Just pass through to the parent
    * constructor.
    */
-  public RemoteWaveletContainerImpl(WaveletState waveletState) {
-    super(waveletState);
+  public RemoteWaveletContainerImpl(WaveletNotificationSubscriber notifiee,
+      WaveletState waveletState) {
+    super(notifiee, waveletState);
     state = State.LOADING;
   }
 
@@ -85,9 +93,27 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
   }
 
   @Override
-  public void update(final List<ByteString> deltas,
+  public ListenableFuture<Void> update(final List<ByteString> deltas,
       final String domain, final WaveletFederationProvider federationProvider,
-      final CertificateManager certificateManager, final RemoteWaveletDeltaCallback deltaCallback) {
+      final CertificateManager certificateManager) {
+    ValueFuture<Void> futureResult = ValueFuture.create();
+    internalUpdate(deltas, domain, federationProvider, certificateManager, futureResult);
+    return futureResult;
+  }
+
+  @Override
+  public void commit(HashedVersion version) {
+    acquireWriteLock();
+    try {
+      persist(version, ImmutableSet.<String>of());
+    } finally {
+      releaseWriteLock();
+    }
+  }
+
+  private void internalUpdate(final List<ByteString> deltas,
+      final String domain, final WaveletFederationProvider federationProvider,
+      final CertificateManager certificateManager, final ValueFuture<Void> futureResult) {
     // Turn raw serialised ByteStrings in to a more useful representation
     final List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas = Lists.newArrayList();
     for (ByteString delta : deltas) {
@@ -101,7 +127,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         } finally {
           releaseWriteLock();
         }
-        deltaCallback.onFailure("Invalid applied delta protocol buffer");
+        futureResult.setException(new FederationException(
+            FederationErrors.badRequest("Invalid applied delta protocol buffer")));
         return;
       }
     }
@@ -113,8 +140,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       @Override
       public void run() {
         if (numSignerInfoPrefetched.decrementAndGet() == 0) {
-          internalUpdate(appliedDeltas, domain, federationProvider, certificateManager,
-              deltaCallback);
+          internalUpdateAfterSignerInfoRetrieval(
+              appliedDeltas, domain, federationProvider, certificateManager, futureResult);
         }
       }
     };
@@ -153,18 +180,10 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     countDown.run();
   }
 
-  /**
-   * Called by {@link #update} when all signer info is guaranteed to be available.
-   *
-   * @param appliedDeltas
-   * @param domain
-   * @param federationProvider
-   * @param certificateManager
-   * @param deltaCallback
-   */
-  private void internalUpdate(List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas,
+  private void internalUpdateAfterSignerInfoRetrieval(
+      List<ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas,
       final String domain, final WaveletFederationProvider federationProvider,
-      final CertificateManager certificateManager, final RemoteWaveletDeltaCallback deltaCallback) {
+      final CertificateManager certificateManager, final ValueFuture<Void> futureResult) {
     LOG.info("Passed signer info check, now applying all " + appliedDeltas.size() + " deltas");
     acquireWriteLock();
     try {
@@ -212,7 +231,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       }
 
       // Traverse pendingDeltas while we have any to process.
-      List<TransformedWaveletDelta> result = Lists.newLinkedList();
+      ImmutableList.Builder<WaveletDeltaRecord> resultingDeltas = ImmutableList.builder();
       while (pendingDeltas.size() > 0) {
         Map.Entry<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>> first =
             pendingDeltas.firstEntry();
@@ -246,8 +265,8 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                           + lastCommittedVersion + " deltaList length = " + deltaList.size());
 
                       // Try updating again with the new history
-                      update(deltaList, domain, federationProvider, certificateManager,
-                          deltaCallback);
+                      internalUpdate(deltaList, domain, federationProvider, certificateManager,
+                          futureResult);
                     }
                 });
             haveRequestedHistory = true;
@@ -277,7 +296,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
                   + appliedDelta.getMessage().getOperationsApplied() + ".");
             }
             // Add transformed result to return list.
-            result.add(applicationResult.getTransformedDelta());
+            resultingDeltas.add(applicationResult);
             LOG.fine("Applied delta: " + appliedDelta);
           } catch (OperationException e) {
             state = State.CORRUPTED;
@@ -305,19 +324,19 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
       }
 
       if (!haveRequestedHistory) {
-        DeltaSequence deltaSequence = DeltaSequence.of(result);
-        if (LOG.isFineLoggable()) {
-          LOG.fine("Returning contiguous block: " + deltaSequence);
-        }
-        deltaCallback.onSuccess(deltaSequence);
-      } else if (!result.isEmpty()) {
+        notifyOfDeltas(resultingDeltas.build(), ImmutableSet.<String>of());
+        futureResult.set(null);
+      } else if (!resultingDeltas.build().isEmpty()) {
         LOG.severe("History requested but non-empty result, non-contiguous deltas?");
       } else {
         LOG.info("History requested, ignoring callback");
       }
     } catch (WaveServerException e) {
       LOG.warning("Update failure", e);
-      deltaCallback.onFailure(e.getMessage());
+      // TODO(soren): make everyone throw FederationException instead
+      // of WaveServerException so we don't have to translate between them here
+      futureResult.setException(
+          new FederationException(FederationErrors.badRequest(e.getMessage())));
     } finally {
       releaseWriteLock();
     }

@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.common.DeltaSequence;
@@ -50,8 +51,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -76,22 +78,30 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     CORRUPTED
   }
 
+  // TODO(soren): inject a proper executor, using sameThreadExecutor can be fragile
+  private final Executor persistContinuationExecutor =
+      Executors.newSingleThreadExecutor();
+      //MoreExecutors.sameThreadExecutor();
+
   private final Lock readLock;
-  private final Lock writeLock;
-  private WaveletState waveletState;
+  private final ReentrantReadWriteLock.WriteLock writeLock;
+  private final WaveletNotificationSubscriber notifiee;
+  private final WaveletState waveletState;
   protected State state;
 
   /**
    * Constructs an empty WaveletContainer for a wavelet.
    * waveletData is not set until a delta has been applied.
    *
-   * @param waveletAccess access to the wavelet in the wavelet store
+   * @param notifiee subscriber to notify of wavelet updates and commits
+   * @param waveletState the wavelet's delta history and current state
    */
-  public WaveletContainerImpl(WaveletState waveletState) {
-    ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+  public WaveletContainerImpl(WaveletNotificationSubscriber notifiee, WaveletState waveletState) {
+    ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     this.readLock = readWriteLock.readLock();
     this.writeLock = readWriteLock.writeLock();
 
+    this.notifiee = notifiee;
     this.waveletState = waveletState;
     this.state = State.OK;
   }
@@ -112,20 +122,45 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     writeLock.unlock();
   }
 
+  protected void notifyOfDeltas(ImmutableList<WaveletDeltaRecord> deltas,
+      ImmutableSet<String> domainsToNotify) {
+    Preconditions.checkState(writeLock.isHeldByCurrentThread(), "must hold write lock");
+    Preconditions.checkArgument(!deltas.isEmpty(), "empty deltas");
+    HashedVersion endVersion = deltas.get(deltas.size() - 1).getResultingVersion();
+    HashedVersion currentVersion = getCurrentVersion();
+    Preconditions.checkArgument(endVersion.equals(currentVersion),
+        "cannot notify of deltas ending in %s != current version %s", endVersion, currentVersion);
+    notifiee.waveletUpdate(waveletState.getSnapshot(), deltas, domainsToNotify);
+  }
+
+  protected void notifyOfCommit(HashedVersion version, ImmutableSet<String> domainsToNotify) {
+    Preconditions.checkState(writeLock.isHeldByCurrentThread(), "must hold write lock");
+    notifiee.waveletCommitted(getWaveletName(), version, domainsToNotify);
+  }
+
   protected void checkStateOk() throws WaveletStateException {
     if (state != State.OK) {
       throw new WaveletStateException("The wavelet is in an unusable state: " + state);
     }
   }
 
-  @Override
-  public ListenableFuture<Void> persist(HashedVersion version) {
-    acquireWriteLock();
-    try {
-      return waveletState.persist(version);
-    } finally {
-      releaseWriteLock();
-    }
+  protected void persist(final HashedVersion version, final ImmutableSet<String> domainsToNotify) {
+    Preconditions.checkState(writeLock.isHeldByCurrentThread(), "must hold write lock");
+    final ListenableFuture<Void> result = waveletState.persist(version);
+    result.addListener(
+        new Runnable() {
+          @Override
+          public void run() {
+            acquireWriteLock();
+            try {
+              // waveletState.flush(version); // TODO(soren): implement this
+              notifyOfCommit(version, domainsToNotify);
+            } finally {
+              releaseWriteLock();
+            }
+          }
+        },
+        persistContinuationExecutor);
   }
 
   @Override
@@ -376,5 +411,9 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   protected HashedVersion getCurrentVersion() {
     return waveletState.getCurrentVersion();
+  }
+
+  protected ReadableWaveletData accessSnapshot() {
+    return waveletState.getSnapshot();
   }
 }
