@@ -20,6 +20,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
+import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.wavepanel.event.FocusManager;
 import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.impl.collapse.CollapseBuilder;
@@ -28,7 +29,6 @@ import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFrameBuilder;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.dom.FullStructure;
 import org.waveprotocol.wave.client.wavepanel.view.dom.UpgradeableDomAsViewProvider;
-import org.waveprotocol.wave.client.widget.common.LogicalPanel;
 
 /**
  * The first stage of Undercurrent code.

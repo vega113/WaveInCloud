@@ -23,7 +23,6 @@ import org.waveprotocol.wave.client.editor.testing.TestEditors;
 /**
  * @author danilatos@google.com (Daniel Danilatos)
  */
-
 public class ContentElementGwtTest extends ContentTestBase {
 
   public void testImplDataSumsTextNodes() throws HtmlMissing {

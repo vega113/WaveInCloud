@@ -20,7 +20,6 @@ package org.waveprotocol.wave.client.editor.content;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.scheduler.Scheduler;
 import org.waveprotocol.wave.client.scheduler.TimerService;
-
 import org.waveprotocol.wave.model.document.AnnotationCursor;
 import org.waveprotocol.wave.model.document.MutableAnnotationSet;
 import org.waveprotocol.wave.model.document.indexed.LocationMapper;
@@ -54,7 +53,7 @@ public class AnnotationPainter {
    *
    * If non-null the editor is in editing mode, else it in non-editing mode.
    */
-  public static final Property<ContentDocument.Level> DOCUMENT_MODE =
+  public static final Property<Boolean> DOCUMENT_MODE =
       Property.immutable("doc_mode");
 
   public static <N, E extends N, T extends N> boolean isEditing(LocalDocument<N, E, T> doc) {
@@ -62,8 +61,7 @@ public class AnnotationPainter {
   }
 
   public static <E> boolean isInEditingDocument(ElementManager<E> mgr, E element) {
-    return mgr.getProperty(AnnotationPainter.DOCUMENT_MODE, element) ==
-        ContentDocument.Level.EDITING;
+    return Boolean.TRUE.equals(mgr.getProperty(AnnotationPainter.DOCUMENT_MODE, element));
   }
 
   /**

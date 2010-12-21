@@ -176,7 +176,7 @@ public interface StageTwo {
     private ProfileManager profileManager;
     private ObservableConversationView conversations;
     private ObservableSupplementedWave supplement;
-    
+
     // State Monitors
     private ThreadReadStateMonitor threadReadStateMonitor;
 
@@ -249,9 +249,9 @@ public interface StageTwo {
     protected final ShallowBlipRenderer getBlipDetailer() {
       return blipDetailer == null ? blipDetailer = createBlipDetailer() : blipDetailer;
     }
-    
+
     protected final ThreadReadStateMonitor getThreadReadStateMonitor() {
-      return threadReadStateMonitor == null ? threadReadStateMonitor = 
+      return threadReadStateMonitor == null ? threadReadStateMonitor =
         createThreadReadStateMonitor() : threadReadStateMonitor;
     }
 
@@ -476,7 +476,7 @@ public interface StageTwo {
     protected ShallowBlipRenderer createBlipDetailer() {
       return new UndercurrentShallowBlipRenderer(getProfileManager(), getSupplement());
     }
-    
+
     /** @return the thread state monitor. Subclasses may override. */
     protected ThreadReadStateMonitor createThreadReadStateMonitor() {
       return ThreadReadStateMonitorImpl.create(getSupplement(), getConversations());
@@ -502,7 +502,8 @@ public interface StageTwo {
           getThreadReadStateMonitor());
 
       BlipPager pager = BlipPager.create(
-          getDocumentRegistry(), doodads, domAsView, getModelAsViewProvider(), getBlipDetailer());
+          getDocumentRegistry(), doodads, domAsView, getModelAsViewProvider(), getBlipDetailer(),
+          stageOne.getWavePanel().getGwtPanel());
 
       // Collect various components required for paging blips in/out.
       PagingHandlerProxy pagingHandler = PagingHandlerProxy.create( // \u2620

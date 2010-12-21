@@ -33,6 +33,8 @@ import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.WidgetCollection;
 
+import org.waveprotocol.wave.client.common.util.LogicalPanel;
+
 /**
  * A generic panel for use by UiBinder templates, for widgets that require more
  * powerful control over their DOM and/or child lifecycle.

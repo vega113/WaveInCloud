@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.common.util.KeyCombo;
+import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.scroll.TargetScroller;
 import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.event.EventDispatcherPanel;
@@ -30,7 +31,6 @@ import org.waveprotocol.wave.client.wavepanel.view.FrameView;
 import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
-import org.waveprotocol.wave.client.widget.common.LogicalPanel;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 import org.waveprotocol.wave.model.wave.SourcesEvents;
 

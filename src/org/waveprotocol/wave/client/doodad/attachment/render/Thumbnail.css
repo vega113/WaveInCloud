@@ -194,6 +194,7 @@
 .itci {
   margin: auto auto;
   position: relative;
+  min-height: 60px;
 }
 
 @sprite .itco {

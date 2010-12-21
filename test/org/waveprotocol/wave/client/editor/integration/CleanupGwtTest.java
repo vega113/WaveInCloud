@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.client.editor.integration;
 
 import com.google.gwt.junit.client.GWTTestCase;
+
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorImpl;
 import org.waveprotocol.wave.client.editor.EditorSettings;
@@ -38,14 +39,12 @@ import org.waveprotocol.wave.client.scheduler.testing.FakeTimerService;
 import org.waveprotocol.wave.client.widget.popup.PopupChrome;
 import org.waveprotocol.wave.client.widget.popup.PopupChromeProvider;
 import org.waveprotocol.wave.client.widget.popup.simple.Popup;
-
 import org.waveprotocol.wave.model.document.util.DocHelper;
 
 /**
  *
  * @author danilatos@google.com (Daniel Danilatos)
  */
-
 public class CleanupGwtTest extends GWTTestCase {
 
   @Override
@@ -92,6 +91,7 @@ public class CleanupGwtTest extends GWTTestCase {
     assertNull(DocHelper.getElementWithTagName(fullDoc, AnnotationPaint.SPREAD_FULL_TAGNAME));
 
     doc.setAnnotation(3, 5, "style/color", "red");
+    editor.removeContentAndUnrender();
     editor.reset();
     timerService.tick(1000);
     assertNull(DocHelper.getElementWithTagName(fullDoc, AnnotationPaint.SPREAD_FULL_TAGNAME));

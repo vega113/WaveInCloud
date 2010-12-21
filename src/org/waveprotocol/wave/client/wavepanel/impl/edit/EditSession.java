@@ -22,6 +22,7 @@ import com.google.gwt.user.client.ui.Widget;
 import org.waveprotocol.wave.client.common.util.EventWrapper;
 import org.waveprotocol.wave.client.common.util.KeyCombo;
 import org.waveprotocol.wave.client.common.util.KeySignalListener;
+import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.common.util.SignalEvent;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
 import org.waveprotocol.wave.client.editor.Editor;
@@ -36,7 +37,6 @@ import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.IntrinsicBlipMetaView.MenuOption;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
-import org.waveprotocol.wave.client.widget.common.LogicalPanel;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 
