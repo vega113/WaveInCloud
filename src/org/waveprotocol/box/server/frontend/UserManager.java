@@ -73,12 +73,7 @@ final class UserManager {
     }
     List<WaveViewSubscription> subscriptions = matchSubscriptions(waveletName);
     for (WaveViewSubscription subscription : subscriptions) {
-      try {
-        // Last 2 args are committedVersion, hasMarker
-        subscription.onUpdate(waveletName, null, deltas, null, null);
-      } catch (IllegalStateException e) {
-        // TODO: remove the listener
-      }
+      subscription.onUpdate(waveletName, deltas);
     }
   }
 
@@ -91,7 +86,7 @@ final class UserManager {
     Preconditions.checkNotNull(version);
     List<WaveViewSubscription> listeners = matchSubscriptions(waveletName);
     for (WaveViewSubscription listener : listeners) {
-      listener.onUpdate(waveletName, null, DeltaSequence.empty(), version, null);
+      listener.onCommit(waveletName, version);
     }
   }
 

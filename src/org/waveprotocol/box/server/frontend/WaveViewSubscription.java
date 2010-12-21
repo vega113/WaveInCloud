@@ -2,14 +2,14 @@
 
 package org.waveprotocol.box.server.frontend;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.MapMaker;
 import com.google.common.collect.Sets;
 
 import org.waveprotocol.box.common.DeltaSequence;
-import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -18,11 +18,9 @@ import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.util.logging.Log;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.Nullable;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * A client's subscription to a wave view.
@@ -31,18 +29,42 @@ import javax.annotation.Nullable;
  */
 final class WaveViewSubscription {
 
+  /**
+   * State of a wavelet endpoint.
+   */
+  private static final class WaveletChannelState {
+    /**
+     * Resulting versions of deltas submitted on this wavelet for which
+     * the outbound delta has not yet been seen.
+     */
+    public final Collection<Long> submittedEndVersions = Sets.newHashSet();
+    /**
+     * Resulting version of the most recent outbound delta.
+     */
+    public HashedVersion lastVersion = null;
+    /**
+     * Whether a submit request is awaiting a response.
+     */
+    public boolean hasOutstandingSubmit = false;
+    /**
+     * Outbound deltas held back while a submit is in-flight.
+     */
+    public List<TransformedWaveletDelta> heldBackDeltas = Lists.newLinkedList();
+  }
+
   private static final Log LOG = Log.get(WaveViewSubscription.class);
 
   private final WaveId waveId;
   private final IdFilter waveletIdFilter;
   private final ClientFrontend.OpenListener openListener;
   private final String channelId;
-  // Successfully submitted versions for which we haven't yet seen the update
-  private final HashMultimap<WaveletId, Long> submittedVersions = HashMultimap.create();
-  // Wavelets with outstanding submits
-  private final Set<WaveletId> outstandingSubmits = Sets.newHashSet();
-  // Current version of each wavelet
-  private final Map<WaveletId, HashedVersion> currentVersions = Maps.newHashMap();
+  private final ConcurrentMap<WaveletId, WaveletChannelState> channels =
+      new MapMaker().makeComputingMap(new Function<WaveletId, WaveletChannelState>() {
+        @Override
+        public WaveletChannelState apply(WaveletId id) {
+          return new WaveletChannelState();
+        }
+      });
 
   public WaveViewSubscription(WaveId waveId, IdFilter waveletIdFilter, String channelId,
       ClientFrontend.OpenListener openListener) {
@@ -79,10 +101,11 @@ final class WaveViewSubscription {
   /** This client sent a submit request */
   public synchronized void submitRequest(WaveletName waveletName) {
     // A given client can only have one outstanding submit per wavelet.
-    Preconditions.checkState(!outstandingSubmits.contains(waveletName.waveletId),
+    WaveletChannelState state = channels.get(waveletName.waveletId);
+    Preconditions.checkState(!state.hasOutstandingSubmit,
         "Received overlapping submit requests to subscription %s", this);
     LOG.info("Submit oustandinding on channel " + channelId);
-    outstandingSubmits.add(waveletName.waveletId);
+    state.hasOutstandingSubmit = true;
   }
 
   /**
@@ -92,69 +115,92 @@ final class WaveViewSubscription {
   public synchronized void submitResponse(WaveletName waveletName, HashedVersion version) {
     Preconditions.checkNotNull(version, "Null delta application version");
     WaveletId waveletId = waveletName.waveletId;
-    submittedVersions.put(waveletId, version.getVersion());
-    outstandingSubmits.remove(waveletId);
+    WaveletChannelState state = channels.get(waveletId);
+    Preconditions.checkState(state.hasOutstandingSubmit);
+    state.submittedEndVersions.add(version.getVersion());
+    state.hasOutstandingSubmit = false;
     LOG.info("Submit resolved on channel " + channelId);
+
+    // Forward any queued deltas.
+    List<TransformedWaveletDelta> filteredDeltas =  filterOwnDeltas(state.heldBackDeltas, state);
+    if (!filteredDeltas.isEmpty()) {
+      sendUpdate(waveletName, filteredDeltas, null);
+    }
+    state.heldBackDeltas.clear();
   }
 
   /**
-   * Sends an update for this subscription (if appropriate).
+   * Sends deltas for this subscription (if appropriate).
    *
    * If the update contains a delta for a wavelet where the delta is actually
-   * from this client, don't send that delta. If there's outstanding submits
-   * waiting, just queue the updates.
+   * from this client, the delta is dropped. If there's an outstanding submit
+   * request the delta is queued until the submit finishes.
    */
-  public void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
-      DeltaSequence deltas, @Nullable HashedVersion committedVersion, @Nullable Boolean hasMarker) {
-    checkUpdateVersion(waveletName, snapshot, deltas);
-    if (deltas.isEmpty()) {
-      openListener.onUpdate(waveletName, snapshot, deltas, committedVersion, hasMarker,
-          channelId);
+  public synchronized void onUpdate(WaveletName waveletName, DeltaSequence deltas) {
+    Preconditions.checkArgument(!deltas.isEmpty());
+    WaveletChannelState state = channels.get(waveletName.waveletId);
+    checkUpdateVersion(waveletName, deltas, state);
+    state.lastVersion = deltas.getEndVersion();
+    if (state.hasOutstandingSubmit) {
+      state.heldBackDeltas.addAll(deltas);
+    } else {
+      List<TransformedWaveletDelta> filteredDeltas = filterOwnDeltas(deltas, state);
+      if (!filteredDeltas.isEmpty()) {
+        sendUpdate(waveletName, filteredDeltas, null);
+      }
     }
-    WaveletId waveletId = waveletName.waveletId;
-    List<TransformedWaveletDelta> filteredDeltas;
-    if (!submittedVersions.isEmpty() && !submittedVersions.get(waveletId).isEmpty()) {
-      // Walk through the deltas, removing any that are from this client.
-      filteredDeltas = Lists.newArrayList();
-      Set<Long> mySubmits = submittedVersions.get(waveletId);
+  }
 
+  /**
+   * Filters any deltas sent by this client from a list of received deltas.
+   *
+   * @param deltas received deltas
+   * @param state channel state
+   * @return deltas, if none are from this client, or a copy with own client's
+   *         deltas removed
+   */
+  private List<TransformedWaveletDelta> filterOwnDeltas(List<TransformedWaveletDelta> deltas,
+      WaveletChannelState state) {
+    List<TransformedWaveletDelta> filteredDeltas = deltas;
+    if (!state.submittedEndVersions.isEmpty()) {
+      filteredDeltas = Lists.newArrayList();
       for (TransformedWaveletDelta delta : deltas) {
-        long deltaEndVersion = delta.getAppliedAtVersion() + delta.size();
-        if (mySubmits.contains(deltaEndVersion)) {
-          submittedVersions.remove(waveletId, deltaEndVersion);
-        } else {
+        long deltaEndVersion = delta.getResultingVersion().getVersion();
+        if (!state.submittedEndVersions.remove(deltaEndVersion)) {
           filteredDeltas.add(delta);
         }
       }
-    } else {
-      filteredDeltas = deltas;
     }
-    if (!filteredDeltas.isEmpty()) {
-      openListener.onUpdate(waveletName, snapshot, DeltaSequence.of(filteredDeltas),
-          committedVersion, hasMarker, channelId);
-    }
+    return filteredDeltas;
+  }
+
+  /**
+   * Sends a commit notice for this subscription.
+   */
+  public synchronized void onCommit(WaveletName waveletName, HashedVersion committedVersion) {
+    sendUpdate(waveletName, ImmutableList.<TransformedWaveletDelta>of(), committedVersion);
+  }
+
+  /**
+   * Sends an update to the client.
+   */
+  private void sendUpdate(WaveletName waveletName, List<TransformedWaveletDelta> deltas,
+      HashedVersion committedVersion) {
+    openListener.onUpdate(waveletName, null, DeltaSequence.of(deltas), committedVersion, null,
+        channelId);
   }
 
   /**
    * Checks the update targets the next expected version.
    */
-  private void checkUpdateVersion(WaveletName waveletName, WaveletSnapshotAndVersion snapshot,
-      DeltaSequence deltas) {
-    if (snapshot != null) {
-      Preconditions.checkArgument(deltas.isEmpty(), "Unexpected deltas with snapshot for %s",
-          waveletName);
-      currentVersions.put(waveletName.waveletId,
-          CoreWaveletOperationSerializer.deserialize(snapshot.snapshot.getVersion()));
-    } else if (!deltas.isEmpty()) {
-      if (currentVersions.containsKey(waveletName.waveletId)) {
-        long expectedVersion = currentVersions.get(waveletName.waveletId).getVersion();
-        long targetVersion = deltas.getStartVersion();
-        Preconditions.checkState(targetVersion == expectedVersion,
-            "Subscription expected delta for %s targetting %s, was %s", waveletName,
-            expectedVersion, targetVersion);
-      }
-      HashedVersion nextExpectedVersion = deltas.getEndVersion();
-      currentVersions.put(waveletName.waveletId, nextExpectedVersion);
+  private void checkUpdateVersion(WaveletName waveletName, DeltaSequence deltas,
+      WaveletChannelState state) {
+    if (state.lastVersion != null) {
+      long expectedVersion = state.lastVersion.getVersion();
+      long targetVersion = deltas.getStartVersion();
+      Preconditions.checkState(targetVersion == expectedVersion,
+          "Subscription expected delta for %s targeting %s, was %s", waveletName, expectedVersion,
+          targetVersion);
     }
   }
 

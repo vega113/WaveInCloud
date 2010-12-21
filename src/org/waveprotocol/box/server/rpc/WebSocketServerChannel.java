@@ -88,13 +88,16 @@ public class WebSocketServerChannel extends WebSocketChannel implements WebSocke
   protected void sendMessageString(String data) {
     synchronized (this) {
       if (outbound == null) {
-        throw new IllegalStateException("Connection has been disconnected.");
-      }
-      try {
-        // we always use null to frame our UTF-8 strings.
-        outbound.sendMessage((byte) 0x00, data);
-      } catch (IOException e) {
-        throw new IllegalStateException(e);
+        // Just drop the message. It's rude to throw an exception since the
+        // caller had no way of knowing.
+        LOG.warning("Websocket is not connected");
+      } else {
+        try {
+          // we always use null to frame our UTF-8 strings.
+          outbound.sendMessage((byte) 0x00, data);
+        } catch (IOException e) {
+          throw new IllegalStateException(e);
+        }
       }
     }
   }

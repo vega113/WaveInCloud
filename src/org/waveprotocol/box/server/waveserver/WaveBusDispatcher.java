@@ -22,14 +22,21 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
+import org.waveprotocol.wave.util.logging.Log;
 
 /**
  * Dispatches messages to a collection of wave bus subscribers.
+ *
+ * Swallows any runtime exception from a subscriber and removes that subscriber.
+ * The wave server used to do this swallowing but really things are in
+ * bad shape if a subscriber throws a runtime exception.
+ * TODO(anorth): Remove this catch and let the server crash.
  *
  * @author anorth@google.com (Alex North)
  */
 public final class WaveBusDispatcher implements WaveBus, WaveBus.Subscriber {
 
+  private static final Log LOG = Log.get(WaveBusDispatcher.class);
   private final CopyOnWriteSet<WaveBus.Subscriber> subscribers = CopyOnWriteSet.createListSet();
 
   @Override
@@ -45,14 +52,25 @@ public final class WaveBusDispatcher implements WaveBus, WaveBus.Subscriber {
   @Override
   public void waveletUpdate(ReadableWaveletData wavelet, DeltaSequence deltas) {
     for (WaveBus.Subscriber s : subscribers) {
-      s.waveletUpdate(wavelet, deltas);
+      try {
+        s.waveletUpdate(wavelet, deltas);
+      } catch (RuntimeException e) {
+        LOG.severe("Runtime exception in update to wave bus subscriber " + s, e);
+        // Subscriber is now in an undefined state.
+        subscribers.remove(s);
+      }
     }
   }
 
   @Override
   public void waveletCommitted(WaveletName waveletName, HashedVersion version) {
     for (WaveBus.Subscriber s : subscribers) {
-      s.waveletCommitted(waveletName, version);
+      try {
+        s.waveletCommitted(waveletName, version);
+      } catch (RuntimeException e) {
+        LOG.severe("Runtime exception in commit to wave bus subscriber " + s, e);
+        subscribers.remove(s);
+      }
     }
   }
 }

@@ -39,13 +39,13 @@ import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationHostBridge;
 import org.waveprotocol.wave.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
@@ -61,18 +61,16 @@ import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
-import org.waveprotocol.wave.model.wave.data.impl.UnmodifiableWaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.Executor;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -595,12 +593,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
           }
 
           // Broadcast the result on the wave bus.
-          try {
-            dispatcher.waveletUpdate(getWavelet(waveletName).copyWaveletData(),
-                DeltaSequence.of(transformedDelta));
-          } catch (RuntimeException e) {
-            LOG.severe("Runtime exception in wave bus subscriber", e);
-          }
+          dispatcher.waveletUpdate(getWavelet(waveletName).copyWaveletData(),
+              DeltaSequence.of(transformedDelta));
 
           // Capture any new domains from addParticipant operations.
           Set<String> remoteHostDomainsAfter = getRemoteParticipantDomains(wc);

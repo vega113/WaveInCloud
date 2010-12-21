@@ -18,13 +18,13 @@
 package org.waveprotocol.box.server.frontend;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 
-import org.mockito.Matchers;
-import org.mockito.Mockito;
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.wave.model.id.IdFilter;
@@ -32,14 +32,12 @@ import org.waveprotocol.wave.model.id.IdFilters;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
+import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -57,13 +55,12 @@ public class UserManagerTest extends TestCase {
   private static final WaveletName W2B = WaveletName.of(W2, WB);
 
   private static final ParticipantId USER = ParticipantId.ofUnsafe("user@host.com");
+  private static final DeltaTestUtil UTIL = new DeltaTestUtil(USER);
 
-  private static final HashedVersion END_VERSION = HashedVersion.unsigned(2);
-  private static final TransformedWaveletDelta DELTA = new TransformedWaveletDelta(USER,
-      END_VERSION, 0L, ImmutableList.of(new NoOp(new WaveletOperationContext(USER, 0L, 1)),
-          new NoOp(new WaveletOperationContext(USER, 0L, 1, END_VERSION))));
+  private static final HashedVersion V2 = HashedVersion.unsigned(2);
+  private static final HashedVersion V3 = HashedVersion.unsigned(3);
 
-
+  private static final TransformedWaveletDelta DELTA = UTIL.makeTransformedDelta(0L, V2, 2);
   private static final DeltaSequence DELTAS = DeltaSequence.of(DELTA);
 
   private UserManager m;
@@ -119,50 +116,85 @@ public class UserManagerTest extends TestCase {
     assertEquals(expectedListeners, actualListeners);
   }
 
-  /**
-   * Tests that sending a single delta with the correct start version
-   * number 0 to a wavelet we're subscribed to succeeds.
-   */
-  public void testUpdateSingleDeltaVersion() {
-    m.subscribe(W1, IdFilters.ALL_IDS, "channel", mock(OpenListener.class));
-    m.onUpdate(W1A, DELTAS); // pass
+  public void testEmptyDeltaNotReceived() {
+    OpenListener listener = mock(OpenListener.class);
+    m.subscribe(W1, IdFilters.ALL_IDS, "ch", listener);
+    m.onUpdate(W1A, DeltaSequence.empty());
+    verifyZeroInteractions(listener);
   }
 
   /**
-   * Test that a second delta marked as version 2 = DELTA.getOperationCount()
-   * succeeds.
+   * Tests that a single delta update is received by the listener.
+   */
+  public void testSingleDeltaReceived() {
+    OpenListener listener = mock(OpenListener.class);
+    m.subscribe(W1, IdFilters.ALL_IDS, "ch", listener);
+    m.onUpdate(W1A, DELTAS);
+    verify(listener).onUpdate(W1A, null, DELTAS, null, null, "ch");
+  }
+
+  /**
+   * Tests that multiple deltas are received.
    */
   public void testUpdateSeveralDeltas() {
-    // Check that test was set up correctly
-    assertEquals(2, DELTA.size());
+    TransformedWaveletDelta delta2 = UTIL.noOpDelta(V2.getVersion());
 
-    HashedVersion v3 = HashedVersion.unsigned(3);
-    TransformedWaveletDelta delta2 = new TransformedWaveletDelta(USER, v3, 0L,
-        Arrays.asList(new NoOp(new WaveletOperationContext(USER, 0L, 1, v3))));
+    OpenListener listener = mock(OpenListener.class);
+    m.subscribe(W1, IdFilters.ALL_IDS, "ch1", listener);
 
-    m.subscribe(W1, IdFilters.ALL_IDS, "ch1", mock(OpenListener.class));
-
-    m.onUpdate(W1A, DeltaSequence.of(DELTA, delta2)); // success
+    DeltaSequence bothDeltas =  DeltaSequence.of(DELTA, delta2);
+    m.onUpdate(W1A, bothDeltas);
+    verify(listener).onUpdate(W1A, null, bothDeltas, null, null, "ch1");
 
     // Also succeeds when sending the two deltas via separate onUpdates()
-    m.subscribe(W2, IdFilters.ALL_IDS, "ch2", mock(OpenListener.class));
-    m.onUpdate(W2A, DELTAS); // success
-    m.onUpdate(W2A, DeltaSequence.of(delta2)); // success
+    DeltaSequence delta2Sequence = DeltaSequence.of(delta2);
+    m.subscribe(W2, IdFilters.ALL_IDS, "ch2", listener);
+    m.onUpdate(W2A, DELTAS);
+    m.onUpdate(W2A, DeltaSequence.of(delta2));
+    verify(listener).onUpdate(W2A, null, DELTAS, null, null, "ch2");
+    verify(listener).onUpdate(W2A, null, delta2Sequence, null, null, "ch2");
   }
 
   /**
-   * Tests that subscribed listeners are only invoked from onUpdate when
-   * at least one delta is passed in.
+   * Tests that delta updates are held back while a submit is in flight.
    */
-  public void testListenersInvokedOnlyForNonemptyDeltas() {
-    OpenListener listener = mock(OpenListener.class, "1");
-    String channelId = "ch";
-    m.subscribe(W1, IdFilters.ALL_IDS, channelId, listener);
-    m.onUpdate(W1A, DeltaSequence.empty());
-    Mockito.verifyZeroInteractions(listener);
+  public void testDeltaHeldBackWhileOutstandingSubmit() {
+    OpenListener listener = mock(OpenListener.class);
+    m.subscribe(W1, IdFilters.ALL_IDS, "ch", listener);
+
+    m.submitRequest("ch", W1A);
     m.onUpdate(W1A, DELTAS);
-    Mockito.verify(listener).onUpdate(Mockito.eq(W1A), (WaveletSnapshotAndVersion)Matchers.isNull(),
-        Mockito.eq(DELTAS), Mockito.any(HashedVersion.class), (Boolean) Mockito.isNull(),
-        Mockito.eq(channelId));
+    verifyZeroInteractions(listener);
+
+    m.submitResponse("ch", W1A, V3); // V3 not the same as update delta.
+    verify(listener).onUpdate(W1A, null, DELTAS, null, null, "ch");
+  }
+
+  /**
+   * Tests that a delta with an end version matching one submitted on this
+   * channel is dropped.
+   */
+  public void testOwnDeltasAreDropped() {
+    OpenListener listener = mock(OpenListener.class);
+    m.subscribe(W1, IdFilters.ALL_IDS, "ch", listener);
+
+    m.submitRequest("ch", W1A);
+    m.submitResponse("ch", W1A, V2);
+    m.onUpdate(W1A, DELTAS);
+    verifyZeroInteractions(listener);
+  }
+
+  /**
+   * Tests that a a delta with an end version matching one submitted on this
+   * channel is dropped even if received before the submit completes.
+   */
+  public void testOwnDeltaDroppedAfterBeingHeldBack() {
+    OpenListener listener = mock(OpenListener.class);
+    m.subscribe(W1, IdFilters.ALL_IDS, "ch", listener);
+
+    m.submitRequest("ch", W1A);
+    m.onUpdate(W1A, DELTAS);
+    m.submitResponse("ch", W1A, V2);
+    verifyZeroInteractions(listener);
   }
 }
