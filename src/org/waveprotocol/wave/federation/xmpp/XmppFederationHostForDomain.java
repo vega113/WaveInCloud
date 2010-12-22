@@ -22,12 +22,13 @@ import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 
 import org.dom4j.Element;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationSettings;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
@@ -131,8 +132,8 @@ class XmppFederationHostForDomain implements WaveletFederationListener {
 
     final String encodedWaveletName;
     try {
-      encodedWaveletName = XmppUtil.waveletNameCodec.encode(waveletName);
-    } catch (IllegalArgumentException e) {
+      encodedWaveletName = XmppUtil.waveletNameCodec.waveletNameToURI(waveletName);
+    } catch (EncodingException e) {
       callback.onFailure(FederationErrors.badRequest("Bad wavelet name " + waveletName));
       return;
     }

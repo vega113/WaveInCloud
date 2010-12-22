@@ -26,7 +26,7 @@ import org.waveprotocol.box.webclient.client.RemoteWaveViewService;
 import org.waveprotocol.box.webclient.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;
-import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
@@ -68,7 +68,7 @@ public class WaveViewServiceImpl implements WaveViewService {
   private static final Log LOG = Log.get(WaveViewServiceImpl.class);
 
   private static final IdURIEncoderDecoder URI_CODEC =
-      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+      new IdURIEncoderDecoder(new ClientPercentEncoderDecoder());
 
   private final WaveId waveId;
   // Map of channel id to <filter, listener>

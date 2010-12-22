@@ -20,8 +20,8 @@ package org.waveprotocol.box.webclient.client;
 import org.waveprotocol.box.common.comms.ProtocolOpenRequest;
 import org.waveprotocol.box.common.comms.ProtocolSubmitRequest;
 import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
-import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.webclient.waveclient.common.SubmitResponseCallback;
+import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.URIEncoderDecoder;
@@ -40,7 +40,7 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
 
   /** Codec for parsing wavelet names, for identifying each update's target .*/
   private static final IdURIEncoderDecoder URI_CODEC =
-      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+      new IdURIEncoderDecoder(new ClientPercentEncoderDecoder());
 
   /** Per-wave streams. */
   private final Map<WaveId, WaveWebSocketCallback> streams = CollectionUtils.newHashMap();

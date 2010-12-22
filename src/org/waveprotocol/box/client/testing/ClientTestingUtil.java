@@ -37,7 +37,7 @@ import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.box.consoleclient.ConsoleClient;
 import org.waveprotocol.box.server.util.BlockingSuccessFailCallback;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
-import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -78,7 +78,7 @@ public class ClientTestingUtil {
   public static final long TEST_TIMEOUT = 5000;
 
   public static final IdURIEncoderDecoder URI_CODEC =
-      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+      new IdURIEncoderDecoder(new ClientPercentEncoderDecoder());
   public static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionZeroFactoryImpl(URI_CODEC);
 

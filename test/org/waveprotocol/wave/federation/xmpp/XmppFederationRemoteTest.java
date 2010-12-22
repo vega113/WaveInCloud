@@ -49,6 +49,7 @@ import org.waveprotocol.wave.federation.WaveletFederationProvider.PostSignerInfo
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.PacketError;
@@ -112,36 +113,45 @@ public class XmppFederationRemoteTest extends TestCase {
                   + "  <received xmlns=\"urn:xmpp:receipts\"/>\n"
                   + "</message>";
 
-  private static final String EXPECTED_SUBMIT_REQUEST =
-    "\n<iq type=\"set\" id=\"" + TEST_ID + "\" from=\"" + LOCAL_JID + "\"" +
-          " to=\"" + REMOTE_JID + "\">\n"
-    + "  <pubsub xmlns=\"http://jabber.org/protocol/pubsub\">\n"
-    + "    <publish node=\"wavelet\">\n"
-    + "      <item>\n"
-    + "        <submit-request xmlns=\"http://waveprotocol.org/protocol/0.2/waveserver\">\n"
-    + "          <delta wavelet-name=\"" +
-          XmppUtil.waveletNameCodec.encode(REMOTE_WAVELET) + "\">" +
-          "<![CDATA[" + Base64Util.encode(DUMMY_SIGNED_DELTA) + "]]></delta>\n"
-    + "        </submit-request>\n"
-    + "      </item>\n"
-    + "    </publish>\n"
-    + "  </pubsub>\n"
-    + "</iq>";
+  private static final String EXPECTED_SUBMIT_REQUEST;
+  private static final String EXPECTED_HISTORY_REQUEST;
 
-  private static final String EXPECTED_HISTORY_REQUEST =
-    "\n<iq type=\"get\" id=\"" + TEST_ID + "\" from=\"" + LOCAL_JID + "\"" +
-          " to=\"" + REMOTE_JID + "\">\n"
-    + "  <pubsub xmlns=\"http://jabber.org/protocol/pubsub\">\n"
-    + "    <items node=\"wavelet\">\n"
-    + "      <delta-history xmlns=\"http://waveprotocol.org/protocol/0.2/waveserver\""
-    + " start-version=\"" + START_VERSION.getVersion() + "\""
-    + " start-version-hash=\"" + Base64Util.encode(START_VERSION.getHistoryHash()) + "\""
-    + " end-version=\"" + VERSION_ONE.getVersion() + "\""
-    + " end-version-hash=\"" + Base64Util.encode(VERSION_ONE.getHistoryHash()) + "\""
-    + " wavelet-name=\"" + XmppUtil.waveletNameCodec.encode(REMOTE_WAVELET) + "\"/>\n"
-    + "    </items>\n"
-    + "  </pubsub>\n"
-    + "</iq>";
+  static {
+    try {
+      String uri = XmppUtil.waveletNameCodec.waveletNameToURI(REMOTE_WAVELET);
+      EXPECTED_SUBMIT_REQUEST =
+          "\n<iq type=\"set\" id=\"" + TEST_ID + "\" from=\"" + LOCAL_JID + "\"" +
+                " to=\"" + REMOTE_JID + "\">\n"
+          + "  <pubsub xmlns=\"http://jabber.org/protocol/pubsub\">\n"
+          + "    <publish node=\"wavelet\">\n"
+          + "      <item>\n"
+          + "        <submit-request xmlns=\"http://waveprotocol.org/protocol/0.2/waveserver\">\n"
+          + "          <delta wavelet-name=\"" + uri + "\">" +
+                "<![CDATA[" + Base64Util.encode(DUMMY_SIGNED_DELTA) + "]]></delta>\n"
+          + "        </submit-request>\n"
+          + "      </item>\n"
+          + "    </publish>\n"
+          + "  </pubsub>\n"
+          + "</iq>";
+
+      EXPECTED_HISTORY_REQUEST =
+          "\n<iq type=\"get\" id=\"" + TEST_ID + "\" from=\"" + LOCAL_JID + "\"" +
+                " to=\"" + REMOTE_JID + "\">\n"
+          + "  <pubsub xmlns=\"http://jabber.org/protocol/pubsub\">\n"
+          + "    <items node=\"wavelet\">\n"
+          + "      <delta-history xmlns=\"http://waveprotocol.org/protocol/0.2/waveserver\""
+          + " start-version=\"" + START_VERSION.getVersion() + "\""
+          + " start-version-hash=\"" + Base64Util.encode(START_VERSION.getHistoryHash()) + "\""
+          + " end-version=\"" + VERSION_ONE.getVersion() + "\""
+          + " end-version-hash=\"" + Base64Util.encode(VERSION_ONE.getHistoryHash()) + "\""
+          + " wavelet-name=\"" + uri + "\"/>\n"
+          + "    </items>\n"
+          + "  </pubsub>\n"
+          + "</iq>";
+    } catch (EncodingException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   @Override
   public void setUp() {
@@ -415,7 +425,7 @@ public class XmppFederationRemoteTest extends TestCase {
    * foreign federation host is correctly decoded and passed to the Update
    * Listener Factory, and a response is sent as requested.
    */
-  public void testUpdate() {
+  public void testUpdate() throws EncodingException {
     Message updateMessage = new Message();
     Element waveletUpdate = addWaveletUpdate(updateMessage, true); // request receipt
     waveletUpdate.addElement("applied-delta").addCDATA(Base64Util.encode(DELTA_BYTESTRING));
@@ -448,7 +458,7 @@ public class XmppFederationRemoteTest extends TestCase {
    * Test that a single update message, where a receipt is not requested, is
    * correctly received and processed.
    */
-  public void testUpdateNoReceipt() {
+  public void testUpdateNoReceipt() throws EncodingException {
     Message updateMessage = new Message();
     Element waveletUpdate = addWaveletUpdate(updateMessage, false);
     waveletUpdate.addElement("applied-delta").addCDATA(Base64Util.encode(DELTA_BYTESTRING));
@@ -469,7 +479,8 @@ public class XmppFederationRemoteTest extends TestCase {
    * Add a single wavelet-update message to the given Message. Should (probably)
    * not be called twice on the same Message.
    */
-  private Element addWaveletUpdate(Message updateMessage, boolean requestReceipt) {
+  private Element addWaveletUpdate(Message updateMessage, boolean requestReceipt)
+      throws EncodingException {
     updateMessage.setFrom(REMOTE_JID);
     updateMessage.setTo(LOCAL_JID);
     updateMessage.setID(TEST_ID);
@@ -479,7 +490,8 @@ public class XmppFederationRemoteTest extends TestCase {
     Element event = updateMessage.addChildElement("event", XmppNamespace.NAMESPACE_PUBSUB_EVENT);
     Element waveletUpdate =
         event.addElement("items").addElement("item").addElement("wavelet-update");
-    waveletUpdate.addAttribute("wavelet-name", XmppUtil.waveletNameCodec.encode(REMOTE_WAVELET));
+    waveletUpdate.addAttribute("wavelet-name",
+        XmppUtil.waveletNameCodec.waveletNameToURI(REMOTE_WAVELET));
     return waveletUpdate;
   }
 }

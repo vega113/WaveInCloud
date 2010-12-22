@@ -28,8 +28,8 @@ import org.waveprotocol.box.common.comms.WaveletSnapshot;
 import org.waveprotocol.box.webclient.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;
-import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.webclient.waveclient.common.SubmitResponseCallback;
+import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
@@ -156,7 +156,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
    */
   private static class VersionSignatureManager {
     private static final HashedVersionFactory HASHER = new HashedVersionZeroFactoryImpl(
-        new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder()));
+        new IdURIEncoderDecoder(new ClientPercentEncoderDecoder()));
 
     /** Most recent signed versions. */
     private final Map<WaveletName, ProtocolHashedVersion> versions = CollectionUtils.newHashMap();

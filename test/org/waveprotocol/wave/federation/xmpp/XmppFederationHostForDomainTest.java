@@ -24,8 +24,6 @@ import static org.mockito.Mockito.verify;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 
-
-
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.federation.ProtocolHashedVersionFactory;
@@ -36,6 +34,7 @@ import org.waveprotocol.wave.federation.xmpp.MockDisco.PendingMockDisco;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.xmpp.packet.Packet;
 
 import java.util.Collections;
@@ -70,23 +69,31 @@ public class XmppFederationHostForDomainTest extends TestCase {
   private XmppFederationHostForDomain fedHost;
   private MockOutgoingPacketTransport transport;
 
-  private static final String EXPECTED_UPDATE_MESSAGE =
-      "\n<message type=\"normal\" from=\"" + LOCAL_JID + "\""
-      + " to=\"" + REMOTE_JID + "\" id=\"" + "1" + TEST_ID_SUFFIX + "\">\n"
-      + "  <request xmlns=\"urn:xmpp:receipts\"/>\n"
-      + "  <event xmlns=\"http://jabber.org/protocol/pubsub#event\">\n"
-      + "    <items>\n"
-      + "      <item>\n"
-      + "        <wavelet-update"
-      + " xmlns=\"http://waveprotocol.org/protocol/0.2/waveserver\""
-      + " wavelet-name=\"" + XmppUtil.waveletNameCodec.encode(WAVELET_NAME) + "\">\n"
-      + "          <applied-delta>"
-      + "<![CDATA[" + Base64Util.encode(DELTA_BYTESTRING) + "]]></applied-delta>\n"
-      + "        </wavelet-update>\n"
-      + "      </item>\n"
-      + "    </items>\n"
-      + "  </event>\n"
-      + "</message>";
+  private static final String EXPECTED_UPDATE_MESSAGE;
+
+  static {
+    try {
+      EXPECTED_UPDATE_MESSAGE =
+          "\n<message type=\"normal\" from=\"" + LOCAL_JID + "\""
+          + " to=\"" + REMOTE_JID + "\" id=\"" + "1" + TEST_ID_SUFFIX + "\">\n"
+          + "  <request xmlns=\"urn:xmpp:receipts\"/>\n"
+          + "  <event xmlns=\"http://jabber.org/protocol/pubsub#event\">\n"
+          + "    <items>\n"
+          + "      <item>\n"
+          + "        <wavelet-update"
+          + " xmlns=\"http://waveprotocol.org/protocol/0.2/waveserver\""
+          + " wavelet-name=\"" + XmppUtil.waveletNameCodec.waveletNameToURI(WAVELET_NAME) + "\">\n"
+          + "          <applied-delta>"
+          + "<![CDATA[" + Base64Util.encode(DELTA_BYTESTRING) + "]]></applied-delta>\n"
+          + "        </wavelet-update>\n"
+          + "      </item>\n"
+          + "    </items>\n"
+          + "  </event>\n"
+          + "</message>";
+    } catch (EncodingException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   private static final List<ByteString> NO_DELTAS = Collections.emptyList();
 
@@ -290,23 +297,27 @@ public class XmppFederationHostForDomainTest extends TestCase {
   }
 
   private static String generateExpectedCommitMessage(String testId) {
-    return
-      "\n<message type=\"normal\" from=\"" + LOCAL_JID + "\""
-      + " to=\"" + REMOTE_JID + "\" id=\"" + testId + "\">\n"
-      + "  <request xmlns=\"urn:xmpp:receipts\"/>\n"
-      + "  <event xmlns=\"http://jabber.org/protocol/pubsub#event\">\n"
-      + "    <items>\n"
-      + "      <item>\n"
-      + "        <wavelet-update"
-      + " xmlns=\"http://waveprotocol.org/protocol/0.2/waveserver\""
-      + " wavelet-name=\"" + XmppUtil.waveletNameCodec.encode(WAVELET_NAME) + "\">\n"
-      + "          <commit-notice version=\"" + WAVELET_VERSION.getVersion() + "\" history-hash=\""
-      + Base64Util.encode(WAVELET_VERSION.getHistoryHash())
-      + "\"/>\n"
-      + "        </wavelet-update>\n"
-      + "      </item>\n"
-      + "    </items>\n"
-      + "  </event>\n"
-      + "</message>";
+    try {
+      return
+        "\n<message type=\"normal\" from=\"" + LOCAL_JID + "\""
+        + " to=\"" + REMOTE_JID + "\" id=\"" + testId + "\">\n"
+        + "  <request xmlns=\"urn:xmpp:receipts\"/>\n"
+        + "  <event xmlns=\"http://jabber.org/protocol/pubsub#event\">\n"
+        + "    <items>\n"
+        + "      <item>\n"
+        + "        <wavelet-update"
+        + " xmlns=\"http://waveprotocol.org/protocol/0.2/waveserver\""
+        + " wavelet-name=\"" + XmppUtil.waveletNameCodec.waveletNameToURI(WAVELET_NAME) + "\">\n"
+        + "          <commit-notice version=\"" + WAVELET_VERSION.getVersion() + "\" history-hash=\""
+        + Base64Util.encode(WAVELET_VERSION.getHistoryHash())
+        + "\"/>\n"
+        + "        </wavelet-update>\n"
+        + "      </item>\n"
+        + "    </items>\n"
+        + "  </event>\n"
+        + "</message>";
+    } catch (EncodingException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

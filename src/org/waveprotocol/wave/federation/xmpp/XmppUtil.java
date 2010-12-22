@@ -21,8 +21,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 
 import org.dom4j.Element;
-import org.waveprotocol.wave.federation.FederationURICodec;
+import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -31,17 +32,18 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicLong;
 
-/** 
+/**
  * Common utility code for XMPP packet generation and parsing.
  */
 public class XmppUtil {
   private static final AtomicLong idSequenceNo = new AtomicLong(0);
   private static final Random random = new SecureRandom();
 
-  public static final FederationURICodec waveletNameCodec = new FederationURICodec();
+  public static final IdURIEncoderDecoder waveletNameCodec =
+      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
 
   // If non-null, this fake unique ID will be returned from generateUniqueId()
   // rather than a random base64 string.

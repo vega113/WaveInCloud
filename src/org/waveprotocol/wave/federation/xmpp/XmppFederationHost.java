@@ -25,18 +25,19 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.dom4j.Element;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationHostBridge;
 import org.waveprotocol.wave.federation.FederationSettings;
 import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.xmpp.XmppUtil.UnknownSignerType;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.xmpp.packet.IQ;
 
 import java.util.List;
@@ -168,8 +169,9 @@ public class XmppFederationHost implements WaveletFederationListener.Factory {
 
     final WaveletName waveletName;
     try {
-      waveletName = XmppUtil.waveletNameCodec.decode(historyDelta.attributeValue("wavelet-name"));
-    } catch (IllegalArgumentException e) {
+      waveletName =
+          XmppUtil.waveletNameCodec.uriToWaveletName(historyDelta.attributeValue("wavelet-name"));
+    } catch (EncodingException e) {
       responseCallback.error(FederationErrors.badRequest(
           "Malformed wavelet name: " + historyDelta.attributeValue("wavelet-name")));
       return;
@@ -257,8 +259,9 @@ public class XmppFederationHost implements WaveletFederationListener.Factory {
 
     final WaveletName waveletName;
     try {
-      waveletName = XmppUtil.waveletNameCodec.decode(deltaElement.attributeValue("wavelet-name"));
-    } catch (IllegalArgumentException e) {
+      waveletName =
+          XmppUtil.waveletNameCodec.uriToWaveletName(deltaElement.attributeValue("wavelet-name"));
+    } catch (EncodingException e) {
       responseCallback.error(FederationErrors.badRequest(
           "Malformed wavelet name: " + deltaElement.attributeValue("wavelet-name")));
       return;
@@ -342,8 +345,9 @@ public class XmppFederationHost implements WaveletFederationListener.Factory {
 
     final WaveletName waveletName;
     try {
-      waveletName = XmppUtil.waveletNameCodec.decode(signerRequest.attributeValue("wavelet-name"));
-    } catch (IllegalArgumentException e) {
+      waveletName =
+          XmppUtil.waveletNameCodec.uriToWaveletName(signerRequest.attributeValue("wavelet-name"));
+    } catch (EncodingException e) {
       responseCallback.error(FederationErrors.badRequest("Malformed wavelet name"));
       return;
     }

@@ -29,7 +29,7 @@ import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEventHandler;
 import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;
-import org.waveprotocol.box.webclient.util.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
@@ -76,7 +76,7 @@ public class WebClientBackend {
    * Id URI encoder and decoder.
    */
   private static final IdURIEncoderDecoder URI_CODEC =
-      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+      new IdURIEncoderDecoder(new ClientPercentEncoderDecoder());
 
   private static final HashedVersionZeroFactoryImpl HASH_FACTORY =
       new HashedVersionZeroFactoryImpl(URI_CODEC);

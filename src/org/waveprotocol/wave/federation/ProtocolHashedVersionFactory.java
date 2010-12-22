@@ -19,8 +19,12 @@ package org.waveprotocol.wave.federation;
 
 import com.google.protobuf.ByteString;
 
+import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
+import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
+import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -32,7 +36,10 @@ import java.security.NoSuchAlgorithmException;
  * @author jochen@google.com (Jochen Bekmann)
  */
 public class ProtocolHashedVersionFactory {
-  private static final FederationURICodec codec = new FederationURICodec();
+  private static final IdURIEncoderDecoder URI_CODEC =
+    new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+
+  private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
 
   /** The first N bits of a SHA-256 hash are stored in the hash. Must not exceed 256. */
   private static final int HASH_SIZE_BITS = 160;
@@ -41,13 +48,6 @@ public class ProtocolHashedVersionFactory {
    * Utility class only, disallow construction.
    */
   private ProtocolHashedVersionFactory() {
-  }
-
-  /**
-   * @return The initial history hash (at version zero) for the given wavelet.
-   */
-  public static ByteString initialHash(WaveletName waveletName) {
-    return ByteString.copyFromUtf8(codec.encode(waveletName));
   }
 
   private static ByteString nextHash(ByteString historyHash, ByteString appliedDeltaBytes) {
@@ -66,9 +66,10 @@ public class ProtocolHashedVersionFactory {
    * Return the version zero hash for the given wavelet name.
    */
   public static ProtocolHashedVersion createVersionZero(WaveletName waveletName) {
+    byte[] initialHash = HASH_FACTORY.createVersionZero(waveletName).getHistoryHash();
     return ProtocolHashedVersion.newBuilder()
         .setVersion(0)
-        .setHistoryHash(initialHash(waveletName))
+        .setHistoryHash(ByteString.copyFrom(initialHash))
         .build();
   }
 
