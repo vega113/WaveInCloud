@@ -26,14 +26,12 @@ import org.waveprotocol.wave.model.util.ValueUtils;
  * A WaveRef refers to a particular wave, and optionally to a more specific
  * position inside it, i.e. to a wavelet and blip inside it.
  *
- *
+ * @author meade@google.com <Edwina Mead>
  */
 public final class WaveRef {
 
   /**
-   * Provides a WaveRef.
-   *
-   *
+   * Provides a waveref.
    */
   public interface Provider {
     WaveRef getWaveRef();

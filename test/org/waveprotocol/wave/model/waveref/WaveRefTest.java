@@ -26,9 +26,8 @@ import org.waveprotocol.wave.model.id.WaveletId;
 /**
  * Unit tests for {@link WaveRef}
  *
- *
+ * @author meade@google.com <Edwina Mead>
  */
-
 public class WaveRefTest extends TestCase {
 
   public void testBasicEquals() {

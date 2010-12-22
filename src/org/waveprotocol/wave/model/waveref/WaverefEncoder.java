@@ -25,6 +25,7 @@ import org.waveprotocol.wave.model.id.WaveletId;
  * Implementation of an escaping scheme for encoding and decoding waverefs into
  * URI path segments and URI query strings
  *
+ * @author meade@google.com <Edwina Mead>
  */
 public class WaverefEncoder {
 
@@ -39,7 +40,6 @@ public class WaverefEncoder {
    *
    * GWT (com.google.gwt.http.client.URL) and std java
    * (c.g.common.base.PercentEscaper)
-   *
    */
   public interface PercentEncoderDecoder {
 
@@ -81,8 +81,9 @@ public class WaverefEncoder {
   private final PercentEncoderDecoder encoderDecoder;
 
   /**
+   * Creates a waveref encoder.
    *
-   * @param decoder
+   * @param decoder delegate for %-encoding
    */
   public WaverefEncoder(PercentEncoderDecoder decoder) {
     this.encoderDecoder = decoder;

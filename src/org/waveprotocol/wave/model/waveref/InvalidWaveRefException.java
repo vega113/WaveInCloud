@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.waveref;
 /**
  * Checked exception indicating that a serialised waveref is invalid.
  *
- *
+ * @author meade@google.com <Edwina Mead>
  */
 public class InvalidWaveRefException extends Exception {
 
@@ -39,5 +39,4 @@ public class InvalidWaveRefException extends Exception {
   public String getMessage() {
     return "Invalid waveRef '" + ref + "': " + super.getMessage();
   }
-
 }

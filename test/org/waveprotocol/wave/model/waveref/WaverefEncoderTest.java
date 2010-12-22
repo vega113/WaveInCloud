@@ -27,9 +27,8 @@ import org.waveprotocol.wave.model.waveref.WaverefEncoder.PercentEncoderDecoder;
 /**
  * Unit tests for {@link WaverefEncoder}
  *
- *
+ * @author meade@google.com <Edwina Mead>
  */
-
 public class WaverefEncoderTest extends TestCase {
 
   private static final String decodeDummyString = "decodedDummyString";
