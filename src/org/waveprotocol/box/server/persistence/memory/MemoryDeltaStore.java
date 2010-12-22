@@ -18,7 +18,6 @@
 package org.waveprotocol.box.server.persistence.memory;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
 
 import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
@@ -30,7 +29,6 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A simple in-memory implementation of DeltaStore.
@@ -70,12 +68,12 @@ public class MemoryDeltaStore implements DeltaStore {
   }
 
   @Override
-  public Set<WaveletId> lookup(WaveId waveId) {
+  public ImmutableSet<WaveletId> lookup(WaveId waveId) {
     Map<WaveletId, MemoryDeltaCollection> waveData = data.get(waveId);
     if (waveData == null) {
       return ImmutableSet.of();
     } else {
-      Builder<WaveletId> builder = ImmutableSet.builder();
+      ImmutableSet.Builder<WaveletId> builder = ImmutableSet.builder();
       for (MemoryDeltaCollection collection : waveData.values()) {
         if (!collection.isEmpty()) {
           builder.add(collection.getWaveletName().waveletId);

@@ -17,6 +17,8 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceException;
@@ -26,7 +28,6 @@ import org.waveprotocol.wave.model.id.WaveletName;
 
 import java.io.Closeable;
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Stores wavelet deltas.
@@ -87,7 +88,7 @@ public interface DeltaStore {
    * @throws PersistenceException if anything goes wrong with the underlying
    *         storage.
    */
-  Set<WaveletId> lookup(WaveId waveId) throws PersistenceException;
+  ImmutableSet<WaveletId> lookup(WaveId waveId) throws PersistenceException;
 
   /**
    * Return an {@link ExceptionalIterator} that throws a {@link PersistenceException} if something

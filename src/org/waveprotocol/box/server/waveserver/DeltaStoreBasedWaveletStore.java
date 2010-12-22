@@ -18,6 +18,7 @@
 package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
@@ -34,7 +35,6 @@ import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * Wave store backed by a {@link DeltaStore}.
@@ -226,7 +226,7 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
   }
 
   @Override
-  public Set<WaveletId> lookup(WaveId waveId) throws PersistenceException {
+  public ImmutableSet<WaveletId> lookup(WaveId waveId) throws PersistenceException {
     return deltaStore.lookup(waveId);
   }
 }

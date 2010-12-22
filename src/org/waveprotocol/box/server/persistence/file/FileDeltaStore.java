@@ -37,7 +37,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 /**
  * A flat file based implementation of DeltaStore.
@@ -79,7 +78,7 @@ public class FileDeltaStore implements DeltaStore {
   }
 
   @Override
-  public Set<WaveletId> lookup(WaveId waveId) throws PersistenceException {
+  public ImmutableSet<WaveletId> lookup(WaveId waveId) throws PersistenceException {
     String waveDirectory = FileUtils.waveIdToPathSegment(waveId);
     File waveDir = new File(basePath, waveDirectory);
     if (!waveDir.exists()) {

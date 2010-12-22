@@ -17,6 +17,8 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -26,7 +28,6 @@ import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.io.Closeable;
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Stores wavelets.
@@ -96,5 +97,5 @@ public interface WaveletStore {
    *
    * @throws PersistenceException if anything goes wrong with the underlying storage.
    */
-  Set<WaveletId> lookup(WaveId waveId) throws PersistenceException;
+  ImmutableSet<WaveletId> lookup(WaveId waveId) throws PersistenceException;
 }
