@@ -742,20 +742,6 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
     }
   }
 
-  private ImmutableSet<String> getRemoteParticipantDomains(LocalWaveletContainer lwc) {
-    Set<String> hosts = Sets.newHashSet();
-    Set<String> localDomains = certificateManager.getLocalDomains();
-    for (ParticipantId p : lwc.getParticipants()) {
-      String domain = p.getDomain();
-      if (localDomains.contains(domain)) {
-        // Ignore, don't re-federate to a local domain.
-      } else {
-        hosts.add(p.getDomain());
-      }
-    }
-    return ImmutableSet.copyOf(hosts);
-  }
-
   @Override
   public Collection<WaveViewData> search(ParticipantId user, String query, int startAt,
       int numResults) {
@@ -772,7 +758,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       for (Entry<WaveId, Map<WaveletId, WaveletContainer>> entry : waveMap.entrySet()) {
         WaveId waveId = entry.getKey();
         for (WaveletContainer c : entry.getValue().values()) {
-          if (c.getParticipants().contains(user)) {
+          if (c.hasParticipant(user)) {
             if (resultIndex >= startAt && resultIndex < (startAt + numResults)) {
               WaveViewData wave = results.get(waveId);
               if (wave == null) {

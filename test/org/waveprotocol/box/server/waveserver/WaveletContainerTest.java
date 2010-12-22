@@ -269,10 +269,10 @@ public class WaveletContainerTest extends TestCase {
    */
   private void assertSuccessfulApplyWaveletOperations(WaveletContainerImpl with) throws Exception {
     WaveServerTestUtil.applyDeltaToWavelet(with, addParticipantDelta(with), 0L);
-    assertEquals(with.getParticipants(), participants);
+    assertEquals(with.accessSnapshot().getParticipants(), participants);
 
     WaveServerTestUtil.applyDeltaToWavelet(with, removeParticipantDelta(with), 0L);
-    assertEquals(with.getParticipants(), Collections.emptySet());
+    assertEquals(with.accessSnapshot().getParticipants(), Collections.emptySet());
   }
 
   /**
@@ -286,7 +286,7 @@ public class WaveletContainerTest extends TestCase {
     } catch (OperationException e) {
       // Correct
     }
-    assertEquals(localWavelet.getParticipants(), Collections.emptySet());
+    assertNull(localWavelet.accessSnapshot());
 
     WaveServerTestUtil.applyDeltaToWavelet(with, addParticipantDelta(with), 0L);
     try {
@@ -295,7 +295,7 @@ public class WaveletContainerTest extends TestCase {
     } catch (OperationException e) {
       // Correct
     }
-    assertEquals(with.getParticipants(), participants);
+    assertEquals(with.accessSnapshot().getParticipants(), participants);
 
     try {
       WaveServerTestUtil.applyDeltaToWavelet(with, doubleRemoveParticipantDelta(with), 0L);
@@ -303,7 +303,7 @@ public class WaveletContainerTest extends TestCase {
     } catch (OperationException e) {
       // Correct
     }
-    assertEquals(with.getParticipants(), participants);
+    assertEquals(with.accessSnapshot().getParticipants(), participants);
   }
 
   private static WaveletDelta addParticipantDelta(WaveletContainerImpl target) {

@@ -26,7 +26,6 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Interface for a container class for a Wavelet's current state as well as its
@@ -91,6 +90,8 @@ interface WaveletContainer {
    */
   HashedVersion getLastCommittedVersion() throws WaveletStateException;
 
-  /** A set of participants currently on the wave */
-  Set<ParticipantId> getParticipants();
+  /**
+   * @return true if the participant id is a curent participant of the wavelet
+   */
+  boolean hasParticipant(ParticipantId participant);
 }

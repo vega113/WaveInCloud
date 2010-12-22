@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -48,9 +47,6 @@ import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
@@ -399,11 +395,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public Set<ParticipantId> getParticipants() {
+  public boolean hasParticipant(ParticipantId participant) {
     acquireReadLock();
     try {
       ReadableWaveletData snapshot = waveletState.getSnapshot();
-      return (snapshot == null) ? ImmutableSet.<ParticipantId>of() : snapshot.getParticipants();
+      return snapshot != null && snapshot.getParticipants().contains(participant);
     } finally {
       releaseReadLock();
     }
