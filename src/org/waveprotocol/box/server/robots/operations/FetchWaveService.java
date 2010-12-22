@@ -62,7 +62,7 @@ public class FetchWaveService implements OperationService {
     WaveletFetchedEvent event =
         new WaveletFetchedEvent(null, null, participant.getAddress(), System.currentTimeMillis(),
             message, rootBlipId, messages.getWaveletData(), messages.getBlipData(),
-            messages.getThreads());
+            messages.getThreads(), null, null);
 
     context.processEvent(operation, event);
   }

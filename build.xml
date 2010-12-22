@@ -37,7 +37,9 @@
     <format property="DSTAMP_INT" pattern="-yyyy-MM-dd"/>
   </tstamp>
   <property name="release.name" value="wave-${DSTAMP_INT}.zip"/>
-
+  <property name="release.robot.name" value="wave-robot-client${DSTAMP_INT}.zip"/>
+  <property name="release.robot.python.name" value="wave-robot-python-client${DSTAMP_INT}.zip"/>
+	
   <!--=====
       Initialization
       =====-->
@@ -62,7 +64,7 @@
     <mkdir dir="${dep}"/>
     <mkdir dir="${test.out.dir}"/>
   </target>
-
+	
   <!-- === IDE helper targets === -->
 
   <!-- Generates an eclipse .project file.
@@ -232,6 +234,7 @@
 
   <target name="test" depends="compile_tests" description=
     "Runs all the unit tests in the project excluding external persistence">
+    <!-- EMMA disabled due to incompatibility with EventSerializer -->
     <!-- Tests are run in a single new VM, when forkmode is set to once -->
     <runtests forkmode="once" coverage="true">
       <fileset dir="${test.dir}">
@@ -428,7 +431,7 @@
   </target>
 
   <target name="dist" depends="test, dist-libraries, dist-server, 
-      dist-client-console, compile_gwt"
+      dist-client-console, dist-robot-client-api, compile_gwt"
       description="Compiles, tests and assembles artifacts">
   </target>
 
@@ -441,6 +444,18 @@
     <subant target="dist" inheritall="true">
       <fileset dir="${src.dir}" includes="*/**/build.xml"/>
     </subant>
+  </target>
+
+  <target name="dist-robot-client-api" depends="compile">
+  	<jar destfile="${robotclient.jar.out}">
+      <fileset dir="${staging.dir}">
+      	<include name="com/google/wave/api/*" />
+      	<include name="com/google/wave/api/event/**/*" />
+      	<include name="com/google/wave/api/impl/**/*" />
+      	<include name="com/google/wave/api/oauth/**/*" />
+      	<include name="com/google/wave/api/v2/**/*" />
+      </fileset>
+    </jar>
   </target>
 
   <!-- dist-api is broken due to non-runnable dependencies in the waveserver directory.  TODO: fix. -->
@@ -565,7 +580,7 @@
     </junit>
   </target>
 
-  <target name="release" depends="dist" description="Creates a zip for a release">
+  <target name="release" depends="dist, release-robot-client-api, release-robot-client-python-api" description="Creates a zip for a release">
     <delete file="${dist.dir}/${release.name}"/>
     <zip destfile="${dist.dir}/${release.name}">
       <zipfileset dir="${dist.dir}" includes="*.jar"/>
@@ -573,10 +588,29 @@
     </zip>
   </target>
 
-  <target name="doc" depends="stage" 
-      description="Builds the Java documentation for the mode, protocol, and Wave in a Box">
-    <javadoc sourcepath="${src.dir}" destdir="${docs.dir}" linksource="yes" 
-        author="yes" protected="yes"
+  <target name="release-robot-client-api" depends="dist" description="Creates a zip for the java robot client release">
+    <delete file="${dist.dir}/${release.robot.name}"/>
+    <zip destfile="${dist.dir}/${release.robot.name}">	
+      <zipfileset dir="${dist.dir}" includes="model.jar"/>
+      <zipfileset dir="${dist.dir}" includes="wave-api-${waveinabox.version}.jar"/>
+      <zipfileset dir="${lib.dir}/runtime/commons_codec" includes="*.jar"/>
+      <zipfileset dir="${lib.dir}/runtime/gson" includes="*.jar"/>
+      <zipfileset dir="${lib.dir}/runtime/jdo" includes="*.jar"/>
+      <zipfileset dir="${lib.dir}/runtime/oauth" includes="*.jar"/>
+      <zipfileset dir="${basedir}" includes="COPYING"/>
+    </zip>
+  </target>
+
+  <target name="release-robot-client-python-api" description="Creates a zip for the python robot client release">
+    <delete file="${dist.dir}/${release.robot.python.name}"/>
+    <zip destfile="${dist.dir}/${release.robot.python.name}">	
+      <zipfileset dir="${src.dir}/python/api" includes="**/*.py"/>
+      <zipfileset dir="${basedir}" includes="COPYING"/>
+    </zip>
+  </target>
+
+  <target name="doc" depends="stage" description="Builds the Java documentation for the mode, protocol, and Wave in a Box">
+    <javadoc sourcepath="${src.dir}" destdir="${docs.dir}" linksource="yes" author="yes" protected="yes"
         windowtitle="${ant.project.name} Documentation">
       <classpath>
         <pathelement location="${staging.dir}" />
@@ -588,4 +622,3 @@
     </javadoc> 
   </target>
 </project>
-
