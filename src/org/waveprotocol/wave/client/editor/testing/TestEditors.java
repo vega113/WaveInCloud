@@ -20,8 +20,6 @@ package org.waveprotocol.wave.client.editor.testing;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
-import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler;
-import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler.LinkAttributeAugmenter;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorSettings;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
@@ -39,8 +37,6 @@ import org.waveprotocol.wave.model.conversation.Blips;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.util.AnnotationRegistry;
 import org.waveprotocol.wave.model.document.util.LineContainers;
-
-import java.util.Map;
 
 /**
  * Utility to set up basic editors for integration testing.
@@ -70,13 +66,6 @@ public class TestEditors {
     LineRendering.registerContainer(Blips.BODY_TAGNAME, elementHandlerRegistry);
     TestInlineDoodad.register(elementHandlerRegistry);
     StyleAnnotationHandler.register(registries);
-    LinkAnnotationHandler.register(registries, new LinkAttributeAugmenter() {
-      @Override
-      public Map<String, String> augment(Map<String, Object> annotations, boolean isEditing,
-          Map<String, String> current) {
-        return current;
-      }
-    });
   }
 
   /** For testing purposes only. */
