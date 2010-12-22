@@ -33,8 +33,6 @@ import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.LocalWaveletContainer.Factory;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
-import org.waveprotocol.wave.federation.Proto;
-import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
@@ -71,8 +69,8 @@ public class WaveServerTest extends TestCase {
   
   private CertificateManager certificateManager;
   @Mock private SignatureHandler localSigner;
-  @Mock private WaveletFederationListener.Factory federationHostFactory;
   @Mock private WaveletFederationProvider federationRemote;
+  @Mock private WaveletNotificationDispatcher notifiee;
   @Mock private RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
 
   private WaveServerImpl waveServer;
@@ -99,7 +97,7 @@ public class WaveServerTest extends TestCase {
     };
 
     waveServer = new WaveServerImpl(MoreExecutors.sameThreadExecutor(),
-        certificateManager, federationHostFactory, federationRemote,
+        certificateManager, notifiee, federationRemote,
         localWaveletContainerFactory, remoteWaveletContainerFactory);
 
     IdURIEncoderDecoder uriCodec =

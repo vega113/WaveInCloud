@@ -19,12 +19,10 @@ package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -42,7 +40,6 @@ import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationException;
-import org.waveprotocol.wave.federation.FederationHostBridge;
 import org.waveprotocol.wave.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
@@ -59,7 +56,6 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
-import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -71,7 +67,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -80,40 +75,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The main class that services the FederationHost, FederationRemote and ClientFrontend.
  */
 @Singleton
-public class WaveServerImpl implements WaveBus, WaveletProvider,
+public class WaveServerImpl implements WaveletProvider,
     WaveletFederationProvider, WaveletFederationListener.Factory, SearchProvider {
 
   private static final Log LOG = Log.get(WaveServerImpl.class);
 
   protected static final long HISTORY_REQUEST_LENGTH_LIMIT_BYTES = 1024 * 1024;
 
-  /** Picks out the transformed deltas from a list of delta records. */
-  private static ImmutableList<TransformedWaveletDelta> transformedDeltasOf(
-      Iterable<WaveletDeltaRecord> deltaRecords) {
-    ImmutableList.Builder<TransformedWaveletDelta> transformedDeltas = ImmutableList.builder();
-    for (WaveletDeltaRecord deltaRecord : deltaRecords) {
-      transformedDeltas.add(deltaRecord.getTransformedDelta());
-    }
-    return transformedDeltas.build();
-  }
-
-  /** Picks out the byte strings of the applied deltas from a list of delta records. */
-  private static ImmutableList<ByteString> serializedAppliedDeltasOf(
-      Iterable<WaveletDeltaRecord> deltaRecords) {
-    ImmutableList.Builder<ByteString> serializedAppliedDeltas = ImmutableList.builder();
-    for (WaveletDeltaRecord deltaRecord : deltaRecords) {
-      serializedAppliedDeltas.add(deltaRecord.getAppliedDelta().getByteString());
-    }
-    return serializedAppliedDeltas.build();
-  }
-
   private final Executor listenerExecutor;
   private final CertificateManager certificateManager;
-  private final WaveletFederationListener.Factory federationHostFactory;
+  private final WaveletNotificationSubscriber notifiee;
   private final RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
   private final LocalWaveletContainer.Factory localWaveletContainerFactory;
   private final WaveletFederationProvider federationRemote;
-  private final WaveBusDispatcher dispatcher = new WaveBusDispatcher();
 
   /** Wavelet states */
   private final Map<WaveId, Map<WaveletId, WaveletContainer>> waveMap =
@@ -124,63 +98,6 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
             return Maps.newHashMap();
           }
         });
-
-  /** List of federation hosts for which we have listeners */
-  private final Map<String, WaveletFederationListener> federationHosts =
-      // Add a new entry to the map on demand.
-      new MapMaker().makeComputingMap(
-        new Function<String, WaveletFederationListener>() {
-          @Override
-          public WaveletFederationListener apply(String domain) {
-            return federationHostFactory.listenerForDomain(domain);
-          }
-        }
-      );
-
-  private final WaveletNotificationSubscriber notifiee = new WaveletNotificationSubscriber() {
-    @Override
-    public void waveletUpdate(ReadableWaveletData wavelet, ImmutableList<WaveletDeltaRecord> deltas,
-        ImmutableSet<String> domainsToNotify) {
-      dispatcher.waveletUpdate(wavelet, DeltaSequence.of(transformedDeltasOf(deltas)));
-      Set<String> remoteDomainsToNotify = Sets.difference(domainsToNotify, getLocalDomains());
-      if (!remoteDomainsToNotify.isEmpty()) {
-        ImmutableList<ByteString> serializedAppliedDeltas = serializedAppliedDeltasOf(deltas);
-        for (String domain : remoteDomainsToNotify) {
-          federationHosts.get(domain).waveletDeltaUpdate(WaveletDataUtil.waveletNameOf(wavelet),
-              serializedAppliedDeltas, federationCallback("delta update"));
-        }
-      }        
-    }
-
-    @Override
-    public void waveletCommitted(WaveletName waveletName, HashedVersion version,
-        ImmutableSet<String> domainsToNotify) {
-      dispatcher.waveletCommitted(waveletName, version);
-      Set<String> remoteDomainsToNotify = Sets.difference(domainsToNotify, getLocalDomains());
-      if (!remoteDomainsToNotify.isEmpty()) {
-        ProtocolHashedVersion serializedVersion = CoreWaveletOperationSerializer.serialize(version);
-        for (String domain : remoteDomainsToNotify) {
-          federationHosts.get(domain).waveletCommitUpdate(
-              waveletName, serializedVersion, federationCallback("commit notice"));
-        }
-      }
-    }
-
-    private WaveletFederationListener.WaveletUpdateCallback federationCallback(
-        final String description) {
-      return new WaveletFederationListener.WaveletUpdateCallback() {
-        @Override
-        public void onSuccess() {
-          LOG.info(description + " success");
-        }
-
-        @Override
-        public void onFailure(FederationError error) {
-          LOG.warning(description + " failure: " + error);
-        }
-      };
-    }
-  };
 
   //
   // WaveletFederationListener.Factory implementation.
@@ -457,20 +374,6 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   }
 
   //
-  // WaveBus implementation.
-  //
-
-  @Override
-  public void subscribe(Subscriber s) {
-    dispatcher.subscribe(s);
-  }
-
-  @Override
-  public void unsubscribe(Subscriber s) {
-    dispatcher.unsubscribe(s);
-  }
-
-  //
   // Constructor and privates.
   //
 
@@ -480,8 +383,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    * @param listenerExecutor executes callback listeners
    * @param certificateManager provider of certificates; it also determines which
    *        domains this wave server regards as local wavelets.
-   * @param federationHostFactory factory that returns federation host instance listening
-   *        on a given domain.
+   * @param notifiee wavelet notification dispatcher
    * @param federationRemote federation remote interface
    * @param localWaveletContainerFactory factory for local WaveletContainers
    * @param remoteWaveletContainerFactory factory for remote WaveletContainers
@@ -490,15 +392,14 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
   public WaveServerImpl(
       @Named("listener_executor") Executor listenerExecutor,
       CertificateManager certificateManager,
-      @FederationHostBridge WaveletFederationListener.Factory federationHostFactory,
+      WaveletNotificationSubscriber notifiee,
       @FederationRemoteBridge WaveletFederationProvider federationRemote,
       LocalWaveletContainer.Factory localWaveletContainerFactory,
       RemoteWaveletContainer.Factory remoteWaveletContainerFactory) {
     this.listenerExecutor = listenerExecutor;
     this.certificateManager = certificateManager;
-    this.federationHostFactory = federationHostFactory;
+    this.notifiee = notifiee;
     this.federationRemote = federationRemote;
-
     this.localWaveletContainerFactory = localWaveletContainerFactory;
     this.remoteWaveletContainerFactory = remoteWaveletContainerFactory;
 
@@ -733,11 +634,11 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
       throw new AssertionError("Only queries for the inbox work");
     }
 
-    Map<WaveId, WaveViewData> results = CollectionUtils.newHashMap();
+    Map<WaveId, WaveViewData> results = Maps.newHashMap();
 
     synchronized (waveMap) {
       int resultIndex = 0;
-      for (Entry<WaveId, Map<WaveletId, WaveletContainer>> entry : waveMap.entrySet()) {
+      for (Map.Entry<WaveId, Map<WaveletId, WaveletContainer>> entry : waveMap.entrySet()) {
         WaveId waveId = entry.getKey();
         for (WaveletContainer c : entry.getValue().values()) {
           if (c.hasParticipant(user)) {
