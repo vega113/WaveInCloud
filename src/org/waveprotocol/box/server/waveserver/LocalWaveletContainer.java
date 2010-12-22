@@ -35,14 +35,10 @@ import org.waveprotocol.wave.model.version.HashedVersion;
  */
 interface LocalWaveletContainer extends WaveletContainer {
 
-  interface Factory {
-    /**
-     * @throws PersistenceException if storage access goes wrong
-     * @throws IllegalArgumentException if the waveletName is bad
-     */
-    LocalWaveletContainer create(WaveletNotificationSubscriber notifiee, WaveletName waveletName)
-        throws PersistenceException;
-  }
+  /**
+   * Manufactures remote wavelet containers.
+   */
+  interface Factory extends WaveletContainer.Factory<LocalWaveletContainer> { }
 
   /**
    * Request that a given delta is submitted to the wavelet.

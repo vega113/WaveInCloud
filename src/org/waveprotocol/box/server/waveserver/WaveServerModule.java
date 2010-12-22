@@ -29,7 +29,6 @@ import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.frontend.ClientFrontend;
 import org.waveprotocol.box.server.frontend.ClientFrontendImpl;
 import org.waveprotocol.box.server.frontend.WaveClientRpcImpl;
-import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.crypto.CachedCertPathValidator;
 import org.waveprotocol.wave.crypto.CertPathStore;
@@ -106,7 +105,7 @@ public class WaveServerModule extends AbstractModule {
     return new LocalWaveletContainer.Factory() {
       @Override
       public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
-          WaveletName waveletName) throws PersistenceException {
+          WaveletName waveletName) {
         return new LocalWaveletContainerImpl(notifiee, new MemoryWaveletState(waveletName));
       }
     };
@@ -117,7 +116,7 @@ public class WaveServerModule extends AbstractModule {
     return new RemoteWaveletContainer.Factory() {
       @Override
       public RemoteWaveletContainer create(WaveletNotificationSubscriber notifiee,
-          WaveletName waveletName) throws PersistenceException {
+          WaveletName waveletName) {
         return new RemoteWaveletContainerImpl(notifiee, new MemoryWaveletState(waveletName));
       }
     };

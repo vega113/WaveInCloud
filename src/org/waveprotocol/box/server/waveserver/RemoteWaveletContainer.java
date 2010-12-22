@@ -20,7 +20,6 @@ package org.waveprotocol.box.server.waveserver;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.ByteString;
 
-import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -34,14 +33,10 @@ import java.util.List;
  */
 interface RemoteWaveletContainer extends WaveletContainer {
 
-  interface Factory {
-    /**
-     * @throws PersistenceException if storage access goes wrong
-     * @throws IllegalArgumentException if the waveletName is bad
-     */
-    RemoteWaveletContainer create(WaveletNotificationSubscriber notifiee, WaveletName waveletName)
-        throws PersistenceException;
-  }
+  /**
+   * Manufactures remote wavelet containers.
+   */
+  interface Factory extends WaveletContainer.Factory<RemoteWaveletContainer> { }
 
   /**
    * Update the state of the remote wavelet. This acts somewhat like a high

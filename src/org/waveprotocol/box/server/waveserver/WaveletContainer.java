@@ -32,6 +32,19 @@ import java.util.Collection;
  * delta history. Local and remote wavelet interfaces inherit from this one.
  */
 interface WaveletContainer {
+
+  /**
+   * Manufactures wavelet containers.
+   *
+   * @param <T> type manufactured by this factory.
+   */
+  interface Factory<T extends WaveletContainer> {
+    /**
+     * @return a new wavelet container with the given wavelet name
+     */
+    T create(WaveletNotificationSubscriber notifiee, WaveletName waveletName);
+  }
+
   /** Returns the name of the wavelet. */
   WaveletName getWaveletName();
 

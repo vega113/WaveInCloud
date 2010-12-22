@@ -30,7 +30,6 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.LocalWaveletContainer.Factory;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
@@ -93,7 +92,7 @@ public class WaveServerTest extends TestCase {
     Factory localWaveletContainerFactory = new LocalWaveletContainer.Factory() {
       @Override
       public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
-          WaveletName waveletName) throws PersistenceException {
+          WaveletName waveletName) {
         WaveletState waveletState = new MemoryWaveletState(waveletName);
         return new LocalWaveletContainerImpl(notifiee, waveletState);
       }

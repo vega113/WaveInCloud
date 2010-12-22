@@ -205,14 +205,7 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         }
 
         // Update wavelet container with the applied deltas
-        final RemoteWaveletContainer remoteWavelet;
-        try {
-          remoteWavelet = getOrCreateRemoteWavelet(waveletName);
-        } catch (PersistenceException e) {
-          // We swallow e.getMessage() to avoid leaking information.
-          callback.onFailure(FederationErrors.internalServerError("Storage access failure"));
-          return;
-        }
+        final RemoteWaveletContainer remoteWavelet = getOrCreateRemoteWavelet(waveletName);
 
         // Update this remote wavelet with the immediately incoming delta,
         // providing a callback so that incoming historic deltas (as well as
@@ -541,10 +534,8 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    * @param waveletName name of wavelet
    * @return an existing or new instance.
    * @throws IllegalArgumentException if the name refers to a local wavelet.
-   * @throws PersistenceException if persistence fails.
    */
-  private RemoteWaveletContainer getOrCreateRemoteWavelet(WaveletName waveletName)
-      throws PersistenceException {
+  private RemoteWaveletContainer getOrCreateRemoteWavelet(WaveletName waveletName) {
     Preconditions.checkArgument(!isLocalWavelet(waveletName), "%s is local", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
@@ -568,13 +559,12 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
    * @param participantId on who's behalf this wavelet is to be accessed.
    * @return an existing or new instance.
    * @throws AccessControlException if the participant may not access the wavelet.
-   * @throws PersistenceException if the persistence storage fails.
    * @throws IllegalArgumentException if the name refers to a remote wavelet.
    * @throws WaveletStateException if the wavelet is in a bad state.
    */
   private LocalWaveletContainer getOrCreateLocalWavelet(WaveletName waveletName,
       ParticipantId participantId)
-      throws AccessControlException, PersistenceException, WaveletStateException {
+      throws AccessControlException, WaveletStateException {
     Preconditions.checkArgument(isLocalWavelet(waveletName), "%s is remote", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
