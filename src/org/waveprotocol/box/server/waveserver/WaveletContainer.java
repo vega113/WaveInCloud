@@ -90,7 +90,8 @@ interface WaveletContainer {
    *        wavelet, or null if the user isn't logged in.
    * @throws WaveletStateException if the wavelet is in a state unsuitable for
    *         checking permissions.
-   * @return true if the participant is a participant on the wavelet.
+   * @return true if the participant is a participant on the wavelet or if the
+   *         wavelet is empty.
    */
   boolean checkAccessPermission(ParticipantId participantId) throws WaveletStateException;
 

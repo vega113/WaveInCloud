@@ -551,20 +551,12 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
 
   /**
    * Returns a container for a local wavelet. If it doesn't exist, it will be created.
-   * Local wavelets are retrieved or created by a federation host or client on behalf
-   * of a participant. The participant must have permission to access the wavelet if
-   * it already exists.
    *
    * @param waveletName name of wavelet
-   * @param participantId on who's behalf this wavelet is to be accessed.
    * @return an existing or new instance.
-   * @throws AccessControlException if the participant may not access the wavelet.
    * @throws IllegalArgumentException if the name refers to a remote wavelet.
-   * @throws WaveletStateException if the wavelet is in a bad state.
    */
-  private LocalWaveletContainer getOrCreateLocalWavelet(WaveletName waveletName,
-      ParticipantId participantId)
-      throws AccessControlException, WaveletStateException {
+  private LocalWaveletContainer getOrCreateLocalWavelet(WaveletName waveletName) {
     Preconditions.checkArgument(isLocalWavelet(waveletName), "%s is remote", waveletName);
     synchronized (waveMap) {
       Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
@@ -575,10 +567,6 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
         // TODO: HACK(Jochen): do we need a namespace policer here ??? ###
         // TODO(ljvderijk): Do we want to put in a wavelet wich has not been submitted yet?
         wave.put(waveletName.waveletId, wc);
-      } else {
-        if (!wc.checkAccessPermission(participantId)) {
-          throw new AccessControlException(participantId + " is not a participant: " + waveletName);
-        }
       }
       return wc;
     }
@@ -629,8 +617,12 @@ public class WaveServerImpl implements WaveBus, WaveletProvider,
             + " ops");
 
         // TODO(arb): add v0 policer here.
-        LocalWaveletContainer wc =
-            getOrCreateLocalWavelet(waveletName, new ParticipantId(delta.getAuthor()));
+        LocalWaveletContainer wc = getOrCreateLocalWavelet(waveletName);
+
+        ParticipantId author = new ParticipantId(delta.getAuthor());
+        if (!wc.checkAccessPermission(author)) {
+          throw new AccessControlException(author + " is not a participant of " + waveletName);
+        }
 
         WaveletDeltaRecord submitResult = wc.submitRequest(waveletName, signedDelta);
         TransformedWaveletDelta transformedDelta = submitResult.getTransformedDelta();
