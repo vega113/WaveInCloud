@@ -31,6 +31,7 @@
 	<classpathentry kind="lib" path="third_party/runtime/guice/javax.inject.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/gxp/gxp-0.2.4-beta.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/jackson/jackson-core-asl-1.5.2.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/jdo/jdo2-api-2.2.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/jdom/jdom.jar" sourcepath="third_party/runtime/jdom/jdom-src.zip"/>
 	<classpathentry kind="lib" path="third_party/runtime/jetty/jetty-client-7.1.6.v20100715.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/jetty/jetty-continuation-7.1.6.v20100715.jar"/>
