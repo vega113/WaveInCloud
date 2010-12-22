@@ -44,8 +44,8 @@ delta_store_type = memory
 # for other data store types.
 delta_store_directory = _deltas
 
-# Set true to use Socket.IO instead of raw WebSockets in the webclient.
-use_socketio = false
+# Set false to use raw WebSockets instead of Socket.IO (still a bit experimental) in the webclient
+use_socketio = true
 
 # To enable federation, edit the server.federation.config file and uncomment the line below
 #include = server.federation.config
