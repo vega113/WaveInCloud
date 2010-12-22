@@ -140,7 +140,7 @@ public final class EscapeUtils {
    * @param uri the URI to extract the scheme from
    * @return the URI's scheme, or {@code null} if the URI does not have one
    */
-  static String extractScheme(String uri) {
+  public static String extractScheme(String uri) {
     int colonPos = uri.indexOf(':');
     if (colonPos < 0) {
       return null;

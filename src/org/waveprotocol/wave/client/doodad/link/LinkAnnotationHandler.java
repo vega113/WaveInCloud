@@ -21,6 +21,7 @@ import static org.waveprotocol.wave.client.doodad.link.Link.AUTO_KEY;
 import static org.waveprotocol.wave.client.doodad.link.Link.LINK_KEYS;
 import static org.waveprotocol.wave.client.doodad.link.Link.MANUAL_KEY;
 import static org.waveprotocol.wave.client.doodad.link.Link.PREFIX;
+import static org.waveprotocol.wave.client.doodad.link.Link.WAVE_KEY;
 
 import org.waveprotocol.wave.client.doodad.suggestion.Suggestion;
 import org.waveprotocol.wave.client.doodad.suggestion.SuggestionRenderer;
@@ -90,8 +91,8 @@ public class LinkAnnotationHandler implements AnnotationMutationHandler {
    *
    * @param registries set of editor registries
    * @param augmenter paint function with wave link handling logic
-   * @return the new handler
    */
+  @SuppressWarnings("deprecation")
   public static void register(Registries registries,
       LinkAttributeAugmenter augmenter) {
     PainterRegistry painterRegistry = registries.getPaintRegistry();
@@ -103,8 +104,8 @@ public class LinkAnnotationHandler implements AnnotationMutationHandler {
     // Don't register behaviour on the link/auto key, since an external agent
     // puts it there resulting in surprising behaviour mid-typing (e.g. if
     // the text is bold, the bold will suddenly get ended because of the link)
-    registerBehaviour(annotationRegistry, Link.MANUAL_KEY);
-    registerBehaviour(annotationRegistry, Link.WAVE_KEY);
+    registerBehaviour(annotationRegistry, MANUAL_KEY);
+    registerBehaviour(annotationRegistry, WAVE_KEY);
 
     painterRegistry.registerPaintFunction(KEYS, new RenderFunc(augmenter));
     painterRegistry.registerBoundaryFunction(BOUNDARY_KEYS, boundaryFunc);
@@ -138,10 +139,15 @@ public class LinkAnnotationHandler implements AnnotationMutationHandler {
 
   private final AnnotationPainter painter;
 
+  @SuppressWarnings("deprecation")
   public static String getLink(Map<String, Object> map) {
     Object ret;
     if (map.containsKey(MANUAL_KEY)) {
-      ret = map.get(MANUAL_KEY);
+      ret = Link.toHrefFromUri((String) map.get(MANUAL_KEY));
+    } else if (map.containsKey(WAVE_KEY)) {
+      // This is for backwards compatibility. Stop supporting WAVE_KEY once
+      // the data is cleaned.
+      ret = Link.toHrefFromUri((String) map.get(WAVE_KEY));
     } else {
       ret = map.get(AUTO_KEY);
     }

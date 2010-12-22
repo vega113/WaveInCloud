@@ -24,6 +24,9 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.Window;
 
+import org.waveprotocol.wave.client.common.util.WaveRefConstants;
+import org.waveprotocol.wave.client.doodad.link.Link;
+import org.waveprotocol.wave.client.doodad.link.Link.InvalidLinkException;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorContext;
 import org.waveprotocol.wave.client.editor.EditorUpdateEvent;
@@ -49,6 +52,7 @@ import org.waveprotocol.wave.client.widget.toolbar.ToplevelToolbarWidget;
 import org.waveprotocol.wave.client.widget.toolbar.buttons.ToolbarClickButton;
 import org.waveprotocol.wave.client.widget.toolbar.buttons.ToolbarToggleButton;
 import org.waveprotocol.wave.model.document.indexed.LocationMapper;
+import org.waveprotocol.wave.model.document.util.FocusedRange;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.Range;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
@@ -352,8 +356,12 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
     createClearFormattingButton(group);
 
     group = toolbarUi.addGroup();
+    createInsertLinkButton(group);
+    createRemoveLinkButton(group);
+
+    group = toolbarUi.addGroup();
     createInsertGadgetButton(group, user);
-  
+
   }
 
   private void createBoldButton(ToolbarView toolbar) {
@@ -489,6 +497,47 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
             String url = Window.prompt("Gadget URL", YES_NO_MAYBE_GADGET);
             XmlStringBuilder xml = GadgetXmlUtil.constructXml(url, "", user.getAddress());
             LineContainers.appendLine(editor.getDocument(), xml);
+          }
+        });
+  }
+
+  private void createInsertLinkButton(ToolbarView toolbar) {
+    // TODO (Yuri Z.) use createTextSelectionController when the full link doodad
+    // is incorporated
+    new ToolbarButtonViewBuilder()
+        .setIcon(css.insertLink())
+        .applyTo(toolbar.addClickButton(), new ToolbarClickButton.Listener() {
+              @Override  public void onClicked() {
+                FocusedRange range = editor.getSelectionHelper().getSelectionRange();
+                if (range == null || range.isCollapsed()) {
+                  Window.alert("Select some text to create a link.");
+                  return;
+                }
+                String rawLinkValue =
+                    Window.prompt("Enter link: URL or Wave ID.", WaveRefConstants.WAVE_URI_PREFIX);
+                // user hit "ESC" or "cancel"
+                if (rawLinkValue == null) {
+                  return;
+                }
+                try {
+                  String linkAnnotationValue = Link.normalizeLink(rawLinkValue);
+                  EditorAnnotationUtil.setAnnotationOverSelection(editor, Link.MANUAL_KEY,
+                      linkAnnotationValue);
+                } catch (InvalidLinkException e) {
+                  Window.alert(e.getLocalizedMessage());
+                }
+              }
+            });
+  }
+
+  private void createRemoveLinkButton(ToolbarView toolbar) {
+    new ToolbarButtonViewBuilder()
+        .setIcon(css.removeLink())
+        .applyTo(toolbar.addClickButton(), new ToolbarClickButton.Listener() {
+          @Override public void onClicked() {
+            if (editor.getSelectionHelper().getSelectionRange() != null) {
+              EditorAnnotationUtil.clearAnnotationsOverSelection(editor, Link.LINK_KEYS);
+            }
           }
         });
   }

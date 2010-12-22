@@ -20,6 +20,8 @@ import com.google.gwt.user.client.ui.Composite;
 
 import org.waveprotocol.box.common.DocumentConstants;
 import org.waveprotocol.box.webclient.util.Log;
+import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler;
+import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler.LinkAttributeAugmenter;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorSettings;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
@@ -35,6 +37,8 @@ import org.waveprotocol.wave.client.widget.popup.simple.Popup;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
+
+import java.util.Map;
 
 /**
  * A composite containing an editor and debug output.
@@ -69,15 +73,13 @@ class EditorWidget extends Composite {
     // TODO(zamfi): add these back in if there's time to open them also.
 
     // FormDoodads.register(Editor.ROOT_HANDLER_REGISTRY);
-    // LinkAnnotationHandler.register(Editor.ROOT_REGISTRIES,
-    // new LinkAttributeAugmenter() {
-    // @Override
-    // public Map<String, String> augment(Map<String, Object> annotations,
-    // boolean isEditing,
-    // Map<String, String> current) {
-    // return current;
-    // }
-    // });
+    LinkAnnotationHandler.register(Editor.ROOT_REGISTRIES, new LinkAttributeAugmenter() {
+      @Override
+      public Map<String, String> augment(Map<String, Object> annotations, boolean isEditing,
+          Map<String, String> current) {
+        return current;
+      }
+    });
     // Suggestion.register(Editor.ROOT_HANDLER_REGISTRY);
 
     editor = createEditor();

@@ -22,6 +22,8 @@ import org.waveprotocol.wave.client.doodad.attachment.testing.FakeAttachmentsMan
 import org.waveprotocol.wave.client.doodad.diff.DiffAnnotationHandler;
 import org.waveprotocol.wave.client.doodad.diff.DiffDeleteRenderer;
 import org.waveprotocol.wave.client.doodad.form.FormDoodads;
+import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler;
+import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler.LinkAttributeAugmenter;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorSettings;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
@@ -35,6 +37,8 @@ import org.waveprotocol.wave.client.editor.keys.KeyBindingRegistry;
 import org.waveprotocol.wave.client.widget.popup.simple.Popup;
 import org.waveprotocol.wave.model.conversation.Blips;
 import org.waveprotocol.wave.model.document.util.AnnotationRegistry;
+
+import java.util.Map;
 
 /**
  * Utility class that provides a realistic editor for testing.
@@ -67,9 +71,13 @@ public class RealisticEditor {
     StyleAnnotationHandler.register(registries);
     DiffAnnotationHandler.register(annotationRegistry, paintRegistry);
     DiffDeleteRenderer.register(elementHandlerRegistry);
-    // NOTE(user): Disable LinkAnnotationHandler for EditorTestHarness until
-    // we untangle dependency with Gadget.
-    // LinkAnnotationHandler.register(Editor.ROOT_ANNOTATION_REGISTRY, painter);
+    LinkAnnotationHandler.register(registries, new LinkAttributeAugmenter() {
+      @Override
+      public Map<String, String> augment(Map<String, Object> annotations, boolean isEditing,
+          Map<String, String> current) {
+        return current;
+      }
+    });
     LineRendering.registerContainer(Blips.BODY_TAGNAME, elementHandlerRegistry);
     FormDoodads.register(Editor.ROOT_HANDLER_REGISTRY);
 

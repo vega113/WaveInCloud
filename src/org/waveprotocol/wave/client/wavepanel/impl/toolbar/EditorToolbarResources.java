@@ -49,6 +49,8 @@ public interface EditorToolbarResources extends ClientBundle {
     String alignRight();
     String alignJustify();
     String clearFormatting();
+    String insertLink();
+    String removeLink();
     String insertGadget();
   }
 
@@ -71,6 +73,8 @@ public interface EditorToolbarResources extends ClientBundle {
   @Source("images/edit/icon_align_right.png") ImageResource alignRight();
   @Source("images/edit/icon_align_justify.png") ImageResource alignJustify();
   @Source("images/edit/remove_formatting.png") ImageResource clearFormatting();
+  @Source("images/edit/createLink.png") ImageResource insertLink();
+  @Source("images/edit/removeLink.png") ImageResource removeLink();
   @Source("images/edit/gadget.png") ImageResource insertGadget();
 
   @Source("EditToolbar.css")

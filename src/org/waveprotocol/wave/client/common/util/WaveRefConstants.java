@@ -23,8 +23,21 @@ package org.waveprotocol.wave.client.common.util;
  */
 public interface WaveRefConstants {
 
+  public static final String WAVE_SCHEME = "wave";
+
   /** The temporary format for wavelinks */
-  public static final String WAVE_URI_PREFIX = "waveid://";
+  public static final String WAVE_URI_PREFIX = WAVE_SCHEME + "://";
+
+
+  @Deprecated
+  public static final String WAVE_SCHEME_OLD = "waveid";
+
+  /**
+   * The temporary format for wavelinks
+   * @deprecated  Use WAVE_URI_PREFIX.
+   */
+  @Deprecated
+  public static final String WAVE_URI_PREFIX_OLD = WAVE_SCHEME_OLD + "://";
 
   /** The tag in a permalink */
   public static final String PERMALINK_WAVEREF_TAG = "waveref/";

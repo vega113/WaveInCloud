@@ -34,7 +34,7 @@ import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.waveref.WaveRef;
-import org.waveprotocol.wave.util.escapers.gwt.GwtWaverefEncoder;
+import org.waveprotocol.wave.util.escapers.GwtWaverefEncoder;
 
 /**
  * Helper class to fetch wavelet snapshots using the snapshot fetch service.

@@ -54,6 +54,8 @@ import org.waveprotocol.wave.client.debug.logger.LogLevel;
 import org.waveprotocol.wave.client.debug.logger.LoggerListener;
 import org.waveprotocol.wave.client.doodad.diff.DiffAnnotationHandler;
 import org.waveprotocol.wave.client.doodad.diff.DiffController;
+import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler;
+import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler.LinkAttributeAugmenter;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorImpl;
 import org.waveprotocol.wave.client.editor.EditorSettings;
@@ -94,6 +96,7 @@ import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  *
@@ -957,6 +960,14 @@ public class EditorHarness extends Composite implements KeySignalListener {
     DiffAnnotationHandler.register(
         registries.getAnnotationHandlerRegistry(),
         registries.getPaintRegistry());
+    
+    LinkAnnotationHandler.register(registries, new LinkAttributeAugmenter() {
+      @Override
+      public Map<String, String> augment(Map<String, Object> annotations, boolean isEditing,
+          Map<String, String> current) {
+        return current;
+      }
+    });
 
     // TODO(danilatos): Open source spelly stuff
 //    SpellDocument testSpellDocument = SpellDebugHelper.createTestSpellDocument(

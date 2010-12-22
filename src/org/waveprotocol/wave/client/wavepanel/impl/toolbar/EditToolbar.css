@@ -80,6 +80,14 @@
   gwt-image: 'clearFormatting';
 }
 
+@sprite .insertLink {
+  gwt-image: 'insertLink';
+}
+
+@sprite .removeLink {
+  gwt-image: 'removeLink';
+}
+
 @sprite .insertGadget {
   gwt-image: 'insertGadget';
 }

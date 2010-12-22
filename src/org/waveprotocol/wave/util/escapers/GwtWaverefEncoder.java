@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.util.escapers.gwt;
+package org.waveprotocol.wave.util.escapers;
 
 import com.google.gwt.http.client.URL;
 
@@ -23,7 +23,6 @@ import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 import org.waveprotocol.wave.model.waveref.WaverefEncoder;
 import org.waveprotocol.wave.model.waveref.WaverefEncoder.PercentEncoderDecoder;
-import org.waveprotocol.wave.util.escapers.PercentEscaper;
 
 /**
  * GWT-enabled instance of WaverefEncoder for use in the client.
@@ -35,7 +34,7 @@ public class GwtWaverefEncoder {
   private static final PercentEscaper queryEscaper =
       new PercentEscaper(PercentEscaper.SAFEQUERYSTRINGCHARS_URLENCODER + "+", false);
 
-  public static final WaverefEncoder INSTANCE = new WaverefEncoder(new PercentEncoderDecoder() {
+  public static WaverefEncoder INSTANCE = new WaverefEncoder(new PercentEncoderDecoder() {
     @Override
     public String decode(String encodedValue) {
       return URL.decode(encodedValue);

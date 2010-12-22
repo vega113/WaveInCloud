@@ -28,7 +28,8 @@ import org.waveprotocol.wave.client.common.safehtml.EscapeUtils;
 public class Scrub {
 
   /** If true, then we scrub URLs */
-  private static boolean enableScrubbing = true;
+  // TODO (Yuri Z.) implement scrubbing mechanism for wiab and then set to true
+  private static boolean enableScrubbing = false;
 
   public static void setEnableScrubbing(final boolean enableScrubbing) {
     Scrub.enableScrubbing = enableScrubbing;
@@ -59,7 +60,8 @@ public class Scrub {
     } else {
       // If we are not scrubbing the url, then we still need to sanitize it,
       // to protect against e.g. javascript.
-      return EscapeUtils.sanitizeUri(url);
+      String sanitizedUri = EscapeUtils.sanitizeUri(url);
+      return sanitizedUri;
     }
   }
 }

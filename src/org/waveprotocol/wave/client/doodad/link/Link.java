@@ -17,18 +17,59 @@
 
 package org.waveprotocol.wave.client.doodad.link;
 
+import com.google.common.base.Preconditions;
+
+import org.waveprotocol.wave.client.common.safehtml.EscapeUtils;
+import org.waveprotocol.wave.client.common.util.WaveRefConstants;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.util.ReadableStringSet;
+import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
+import org.waveprotocol.wave.model.waveref.WaveRef;
+import org.waveprotocol.wave.util.escapers.GwtWaverefEncoder;
+
+import javax.annotation.Nullable;
+
 /**
- * Annotation keys for links.
+ * Link utilities
  *
  */
 public final class Link {
+
+  private static final ReadableStringSet WEB_SCHEMES = CollectionUtils.newStringSet(
+      "http", "https", "ftp", "mailto");
+
+  private static final String INVALID_LINK_MSG =
+      "Invalid link. Should either be a web url\n" +
+      "or, a Wave ref in the form: wave://example.com/w+1234/~/conv+root/b+abcd\n" +
+      "or be a valid serialized wave id";
+
+  public static class InvalidLinkException extends Exception {
+    public InvalidLinkException(String message, Throwable cause) {
+      super(message, cause);
+    }
+    public InvalidLinkException(String message) {
+      super(message);
+    }
+    public InvalidLinkException(Throwable cause) {
+      super(cause);
+    }
+  }
+
   /** Key prefix */
   public static final String PREFIX = "link";
   /** Key for 'linky' agent created links. */
   public static final String AUTO_KEY = PREFIX + "/auto";
   /** Key for manually created links. */
   public static final String MANUAL_KEY = PREFIX + "/manual";
-  /** Key for wave links. */
+  /**
+   * Key for wave links.
+   *
+   * @deprecated Use link/manual with value of the form:
+   *             wave://example.com/w+1234/~/conv+root/b+abcd
+   */
+  @Deprecated
   public static final String WAVE_KEY = PREFIX + "/wave";
   /**
    * Array of all link keys
@@ -43,15 +84,110 @@ public final class Link {
   }
 
   /**
-   * @param key
-   * @return iff the given key is a link key.
+   * Adapts the value of manual/link to the actual value that browser will use
+   * to navigate
+   *
+   * @param uri
+   * @return actual value that will be used by browser, or null if no link
+   *         should be rendered.
    */
-  public static boolean isLinkKey(String key) {
-    for (String linkKey : LINK_KEYS) {
-      if (linkKey.equals(key)) {
-        return true;
+  public static @Nullable String toHrefFromUri(String uri) {
+    // First, normalise it in case we have junk data.
+    // We can optionally replace this step with something that just
+    // returns null if the uri is not supported.
+    try {
+      uri = normalizeLink(uri);
+    } catch (InvalidLinkException e1) {
+      return null;
+    }
+
+    // If it's a wave link, use # for local navigation
+    if (uri.startsWith(WaveRefConstants.WAVE_URI_PREFIX)) {
+      try {
+        WaveRef ref = GwtWaverefEncoder.decodeWaveRefFromPath(
+            uri.substring(WaveRefConstants.WAVE_URI_PREFIX.length()));
+
+        // TODO(yuri/danilatos): Use the wave ref string instead of a serialized
+        // wave id, once the client supports it.
+        return "#" + ref.getWaveId().serialise();
+
+      } catch (InvalidWaveRefException e) {
+        return null;
       }
     }
-    return false;
+
+    assert EscapeUtils.extractScheme(uri) != null;
+
+    // Otherwise, just return the given link.
+    return uri;
+  }
+
+  /**
+   * @return best guess link annotation value from an arbitrary string. feeding
+   *         the return value back through this method should always return the
+   *         input.
+   * @throws InvalidLinkException
+   */
+  @SuppressWarnings("deprecation")
+  public static String normalizeLink(String rawLinkValue) throws InvalidLinkException {
+    Preconditions.checkNotNull(rawLinkValue);
+
+    rawLinkValue = rawLinkValue.trim();
+
+    String[] parts = splitUri(rawLinkValue);
+    String scheme = parts != null ? parts[0] : null;
+
+    // Normal web url
+    if (scheme != null && WEB_SCHEMES.contains(scheme)) {
+      return rawLinkValue;
+    }
+
+    // Try to interpret a wave URI or naked waveid/waveref
+    try {
+      // NOTE(danilatos): Pasting in the raw serialized form of a wave ref is
+      // not supported here. In practice this doesn't really matter.
+      WaveRef ref;
+      if (WaveRefConstants.WAVE_SCHEME.equals(scheme)) {
+        ref = GwtWaverefEncoder.decodeWaveRefFromPath(parts[1]);
+      } else if (scheme == null) {
+        ref = inferWaveRef(rawLinkValue);
+      } else if (WaveRefConstants.WAVE_SCHEME_OLD.equals(scheme)) {
+        ref = inferWaveRef(parts[1]);
+      } else {
+        // Scheme is not a regular web scheme nor a wave scheme.
+        throw new InvalidLinkException("Unsupported URL scheme: " + scheme);
+      }
+      return WaveRefConstants.WAVE_URI_PREFIX + GwtWaverefEncoder.encodeToUriPathSegment(ref);
+    } catch (InvalidWaveRefException e) {
+      throw new InvalidLinkException(INVALID_LINK_MSG, e);
+    }
+  }
+
+  /**
+   * Splits a URI string into its scheme and suffix components, if it matches.
+   *
+   * @return [scheme, suffix] for scheme://suffix, or null if it doesn't match.
+   */
+  private static String[] splitUri(String uri) {
+    int sepLength = "://".length();
+    String scheme = EscapeUtils.extractScheme(uri);
+    if (scheme == null || uri.length() <= scheme.length() + sepLength) {
+      return null;
+    }
+    return new String[] {scheme, uri.substring(scheme.length() + sepLength)};
+  }
+
+  public static WaveRef inferWaveRef(String rawString) throws InvalidWaveRefException {
+    try {
+      return GwtWaverefEncoder.decodeWaveRefFromPath(rawString);
+    } catch (InvalidWaveRefException e) {
+      // Let's try decoding it as a serialized wave id instead
+      try {
+        return WaveRef.of(WaveId.checkedDeserialise(rawString));
+      } catch (InvalidIdException e1) {
+        // Didn't work. Just re-throw the original exception
+        throw e;
+      }
+    }
   }
 }

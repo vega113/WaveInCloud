@@ -28,6 +28,8 @@ import org.waveprotocol.wave.client.concurrencycontrol.LiveChannelBinder;
 import org.waveprotocol.wave.client.concurrencycontrol.MuxConnector;
 import org.waveprotocol.wave.client.concurrencycontrol.WaveletOperationalizer;
 import org.waveprotocol.wave.client.doodad.DoodadInstallers;
+import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler;
+import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler.LinkAttributeAugmenter;
 import org.waveprotocol.wave.client.editor.content.Registries;
 import org.waveprotocol.wave.client.editor.content.misc.StyleAnnotationHandler;
 import org.waveprotocol.wave.client.gadget.Gadget;
@@ -98,6 +100,7 @@ import org.waveprotocol.wave.model.wave.opbased.WaveViewImpl.WaveletConfigurator
 import org.waveprotocol.wave.model.wave.opbased.WaveViewImpl.WaveletFactory;
 
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * The second stage of client code.
@@ -536,6 +539,13 @@ public interface StageTwo {
         @Override
         public void install(Registries r) {
           StyleAnnotationHandler.register(r);
+          LinkAnnotationHandler.register(r, new LinkAttributeAugmenter() {
+            @Override
+            public Map<String, String> augment(Map<String, Object> annotations, boolean isEditing,
+                Map<String, String> current) {
+              return current;
+            }
+          });
         }
       });
     }

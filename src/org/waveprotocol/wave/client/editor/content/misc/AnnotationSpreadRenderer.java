@@ -106,8 +106,9 @@ class AnnotationSpreadRenderer extends RenderingMutationHandler {
     Element implNodelet = element.getImplNodelet();
     if (name.equals(AnnotationPaint.LINK_ATTR)) {
       if (newValue != null) {
-        implNodelet.setAttribute("href", Scrub.scrub(newValue));
-        if (newValue.startsWith("#")) {
+        String scrubbedValue = Scrub.scrub(newValue);
+        implNodelet.setAttribute("href", scrubbedValue);
+        if (scrubbedValue.startsWith("#")) {
           implNodelet.removeAttribute("target");
         } else {
           implNodelet.setAttribute("target", "_blank");
