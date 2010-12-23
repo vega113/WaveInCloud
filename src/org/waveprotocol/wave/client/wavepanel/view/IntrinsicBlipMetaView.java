@@ -32,7 +32,9 @@ public interface IntrinsicBlipMetaView {
     /** Option to reply to this blip. */
     REPLY,
     /** Option to delete this blip. */
-    DELETE, ;
+    DELETE,
+    /** Option to link to this blip. */
+    LINK, ;
   }
 
   /**

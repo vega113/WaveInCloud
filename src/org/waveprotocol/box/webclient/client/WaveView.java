@@ -46,11 +46,11 @@ import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveBasedConversationView;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.waveref.WaveRef;
 
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -114,8 +114,8 @@ public class WaveView extends Composite {
     ClientEvents.get().addWaveSelectionEventHandler(
         new WaveSelectionEventHandler() {
           @Override
-          public void onSelection(WaveId id) {
-            setWave(id);
+          public void onSelection(WaveRef waveRef) {
+            setWave(waveRef);
           }
         });
   }
@@ -131,14 +131,14 @@ public class WaveView extends Composite {
     this.idGenerator = idGenerator;
   }
 
-  private void setWave(final WaveId waveId) {
-    LOG.info("WaveView opening wavelet " + waveId);
+  private void setWave(final WaveRef waveRef) {
+    LOG.info("WaveView opening wavelet " + waveRef);
     docFactory = new SimpleCcDocumentFactory();
     if (this.manager != null) {
       manager.view.close();
       backend.clearWaveView(manager.getWaveId());
     }
-    this.waveView = (WaveViewServiceImpl) backend.getWaveView(waveId, "",
+    this.waveView = (WaveViewServiceImpl) backend.getWaveView(waveRef.getWaveId(), "",
         docFactory);
     manager = new CcStackManager(this.waveView, docFactory, HASH_FACTORY, participant);
     conversationView = WaveBasedConversationView.create(manager.view, idGenerator);
@@ -258,8 +258,8 @@ public class WaveView extends Composite {
 
       @Override
       public void onOpenFinished() {
-        LOG.info("open finished on wave: "+waveId);
-        ClientEvents.get().fireEvent(new WaveOpenEvent(waveId));
+        LOG.info("open finished on wave: " + waveRef);
+        ClientEvents.get().fireEvent(new WaveOpenEvent(waveRef));
       }
     });
 
@@ -267,7 +267,7 @@ public class WaveView extends Composite {
     blipsById.clear();
     blipsToNext.clear();
 
-    History.newItem(waveId.serialise(), false);
+    History.newItem(waveRef.getWaveId().serialise(), false);
   }
 
   public ObservableConversationView getConversationView() {

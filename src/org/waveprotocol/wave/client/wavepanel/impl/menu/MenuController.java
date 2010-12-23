@@ -75,6 +75,9 @@ public final class MenuController implements WaveMouseDownHandler {
       case DELETE:
         actions.delete(item.getParent().getParent());
         break;
+      case LINK:
+        actions.popupLink(item.getParent().getParent());
+        break;
       default:
         throw new AssertionError();
     }

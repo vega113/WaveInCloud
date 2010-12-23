@@ -90,9 +90,11 @@ public final class BlipMetaViewBuilder implements UiBuilder, IntrinsicBlipMetaVi
     MENU_CODES.put(MenuOption.EDIT, EscapeUtils.fromSafeConstant("e"));
     MENU_CODES.put(MenuOption.REPLY, EscapeUtils.fromSafeConstant("r"));
     MENU_CODES.put(MenuOption.DELETE, EscapeUtils.fromSafeConstant("d"));
+    MENU_CODES.put(MenuOption.LINK, EscapeUtils.fromSafeConstant("l"));
     MENU_LABELS.put(MenuOption.EDIT, EscapeUtils.fromSafeConstant("Edit"));
     MENU_LABELS.put(MenuOption.REPLY, EscapeUtils.fromSafeConstant("Reply"));
     MENU_LABELS.put(MenuOption.DELETE, EscapeUtils.fromSafeConstant("Delete"));
+    MENU_LABELS.put(MenuOption.LINK, EscapeUtils.fromSafeConstant("Link"));
     for (MenuOption option : MENU_CODES.keySet()) {
       MENU_OPTIONS.put(MENU_CODES.get(option).asString(), option);
     }

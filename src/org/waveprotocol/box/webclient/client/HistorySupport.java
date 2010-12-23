@@ -22,11 +22,15 @@ import com.google.gwt.user.client.History;
 
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.util.Log;
-import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.client.doodad.link.Link;
+import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
+import org.waveprotocol.wave.model.waveref.WaveRef;
+
+import javax.annotation.Nullable;
 
 /**
  * Contains the code to interface the history event mechanism with the client's
- * event bus. At the moment, a history token simply encodes a wave id.
+ * event bus. At the moment, a history token encodes a wave id or wave ref.
  */
 public class HistorySupport {
   private static final Log LOG = Log.get(HistorySupport.class);
@@ -39,13 +43,30 @@ public class HistorySupport {
         if (encodedToken == null || encodedToken.length() == 0) {
           return;
         }
-
-        WaveId id = WaveId.deserialise(encodedToken);
-        LOG.info("Changing selected wave based on history event to "
-            + id.getId());
-        ClientEvents.get().fireEvent(new WaveSelectionEvent(id));
+        WaveRef waveRef = waveRefFromHistoryToken(encodedToken);
+        if (waveRef == null) {
+          LOG.info("History token contains invalid path: " + encodedToken);
+          return;
+        }
+        LOG.info("Changing selected wave based on history event to " + waveRef.toString());
+        ClientEvents.get().fireEvent(new WaveSelectionEvent(waveRef));
       }
     });
+  }
+
+  /**
+   * @param encodedToken token to parse into waveref
+   * @return null if cannot parse into valid waveRef
+   */
+  @Nullable
+  static WaveRef waveRefFromHistoryToken(String encodedToken) {
+    WaveRef waveRef = null;
+    try {
+      waveRef = Link.inferWaveRef(encodedToken);
+    } catch (InvalidWaveRefException e) {
+      // Ignore.
+    }
+    return waveRef;
   }
 
   private HistorySupport() {

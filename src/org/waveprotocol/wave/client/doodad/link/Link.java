@@ -107,9 +107,7 @@ public final class Link {
         WaveRef ref = GwtWaverefEncoder.decodeWaveRefFromPath(
             uri.substring(WaveRefConstants.WAVE_URI_PREFIX.length()));
 
-        // TODO(yuri/danilatos): Use the wave ref string instead of a serialized
-        // wave id, once the client supports it.
-        return "#" + ref.getWaveId().serialise();
+        return "#" + GwtWaverefEncoder.encodeToUriPathSegment(ref);
 
       } catch (InvalidWaveRefException e) {
         return null;
@@ -131,9 +129,7 @@ public final class Link {
   @SuppressWarnings("deprecation")
   public static String normalizeLink(String rawLinkValue) throws InvalidLinkException {
     Preconditions.checkNotNull(rawLinkValue);
-
     rawLinkValue = rawLinkValue.trim();
-
     String[] parts = splitUri(rawLinkValue);
     String scheme = parts != null ? parts[0] : null;
 

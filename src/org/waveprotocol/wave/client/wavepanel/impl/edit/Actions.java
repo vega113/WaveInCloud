@@ -16,6 +16,9 @@
  */
 package org.waveprotocol.wave.client.wavepanel.impl.edit;
 
+import com.google.gwt.user.client.Window;
+
+import org.waveprotocol.wave.client.common.util.WaveRefConstants;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.ThreadView;
@@ -23,6 +26,10 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
+import org.waveprotocol.wave.model.waveref.WaveRef;
+import org.waveprotocol.wave.util.escapers.GwtWaverefEncoder;
 
 /**
  * Defines the UI actions that can be performed as part of the editing feature.
@@ -30,7 +37,6 @@ import org.waveprotocol.wave.model.conversation.ConversationThread;
  *
  */
 public final class Actions {
-
   enum Action {
     EDIT_BLIP,
     REPLY_TO_BLIP,
@@ -136,6 +142,26 @@ public final class Actions {
     edit.startEditing(blipUi);
   }
 
+  /**
+   * Focus on a blip.
+   */
+  public void focus(BlipView blipUi) {
+    focus.focus(blipUi);
+  }
+
+  public void popupLink(BlipView blipUi) {
+    ConversationBlip blip = views.getBlip(blipUi);
+    // TODO(Yuri Z.) Change to use the conversation model when the Conversation
+    // exposes a reference to its ConversationView.
+    WaveId waveId = blip.hackGetRaw().getWavelet().getWaveId();
+    WaveletId waveletId = WaveletId.deserialise(blip.getConversation().getId());
+    WaveRef waveRef = WaveRef.of(waveId, waveletId, blip.getId());
+    String waveRefStringValue =
+        WaveRefConstants.WAVE_URI_PREFIX + GwtWaverefEncoder.encodeToUriPathSegment(waveRef);
+    // TODO(Yuri Z.) replace with custom popup.
+    Window.prompt("Link to this blip:", waveRefStringValue);
+  }
+
   //
   // All the same actions as above, but bound to the context of the focus frame.
   //
@@ -186,4 +212,5 @@ public final class Actions {
   private static ThreadView parentOf(BlipView blip) {
     return blip != null ? blip.getParent() : null;
   }
+
 }

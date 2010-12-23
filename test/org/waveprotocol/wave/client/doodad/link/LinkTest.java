@@ -55,9 +55,7 @@ public class LinkTest extends TestCase {
     assertNull(Link.toHrefFromUri("foo://asdf"));
 
     assertEquals("http://example.com/abcd", Link.toHrefFromUri("http://example.com/abcd"));
-
-    // This test will need updating soon.
-    assertEquals("#example.com!abcd", Link.toHrefFromUri("wave://example.com/abcd"));
+    assertEquals("#example.com/abcd", Link.toHrefFromUri("wave://example.com/abcd"));
   }
 
 

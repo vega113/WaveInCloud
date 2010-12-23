@@ -20,13 +20,14 @@ package org.waveprotocol.box.webclient.client.events;
 import com.google.gwt.event.shared.GwtEvent;
 
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.waveref.WaveRef;
 
 public class WaveOpenEvent extends GwtEvent<WaveOpenEventHandler> {
   public static final GwtEvent.Type<WaveOpenEventHandler> TYPE = new GwtEvent.Type<WaveOpenEventHandler>();
-  private final WaveId id;
+  private final WaveRef id;
 
-  public WaveOpenEvent(WaveId id) {
-    this.id = id;
+  public WaveOpenEvent(WaveRef waveRef) {
+    this.id = waveRef;
   }
 
   @Override

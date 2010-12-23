@@ -39,6 +39,7 @@ import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.waveref.WaveRef;
 
 import java.util.List;
 
@@ -83,14 +84,14 @@ public class WaveList extends Composite {
         event.stopPropagation();
         String serializedWaveId = elt.getId().substring(WAVE_ID_PREFIX.length());
         WaveId waveId = WaveId.deserialise(serializedWaveId);
-        ClientEvents.get().fireEvent(new WaveSelectionEvent(waveId));
+        ClientEvents.get().fireEvent(new WaveSelectionEvent(WaveRef.of(waveId)));
       }
     }, ClickEvent.getType());
 
     ClientEvents.get().addWaveSelectionEventHandler(
         new WaveSelectionEventHandler() {
           @Override
-          public void onSelection(WaveId id) {
+          public void onSelection(WaveRef id) {
             LOG.info("WaveList changing selection to " + id.toString());
             select(id);
           }
@@ -110,11 +111,11 @@ public class WaveList extends Composite {
     ClientEvents.get().fireEvent(WaveCreationEvent.CREATE_NEW_WAVE);
   }
 
-  private void select(WaveId id) {
+  private void select(WaveRef waveRef) {
     if (currentSelection != null) {
       currentSelection.removeClassName(style.selected());
     }
-    String serializedId = id.serialise();
+    String serializedId = waveRef.getWaveId().serialise();
     String eltId = WAVE_ID_PREFIX + serializedId;
     Element elt = panel.getElementById(eltId);
     currentSelection = elt;
@@ -123,7 +124,7 @@ public class WaveList extends Composite {
       elt.addClassName(style.selected());
       pendingSelectionId = null;
     } else {
-      pendingSelectionId = id;
+      pendingSelectionId = waveRef.getWaveId();
     }
   }
 
@@ -151,7 +152,8 @@ public class WaveList extends Composite {
           MAX_SNIPPET_LENGTH)));
 
       if (entry.getWaveId().equals(pendingSelectionId)) {
-        select(entry.getWaveId());
+        WaveRef waveRef = WaveRef.of(entry.getWaveId());
+        select(waveRef);
       }
     }
   }

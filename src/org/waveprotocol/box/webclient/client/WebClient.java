@@ -33,7 +33,6 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
-import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEventHandler;
@@ -41,6 +40,7 @@ import org.waveprotocol.box.webclient.client.events.WaveIndexUpdatedEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveUpdatedEvent;
+import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.waveclient.common.ClientIdGenerator;
 import org.waveprotocol.box.webclient.waveclient.common.WaveViewServiceImpl;
@@ -61,6 +61,7 @@ import org.waveprotocol.wave.model.id.IdFilters;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.waveref.WaveRef;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -123,7 +124,7 @@ public class WebClient implements EntryPoint {
     // sticks inline styles on elements without permission. They must be
     // cleared.
     self.getElement().getStyle().clearPosition();
-    
+
     if (LogLevel.showDebug()) {
       logPanel.enable();
     } else {
@@ -135,8 +136,8 @@ public class WebClient implements EntryPoint {
       ClientEvents.get().addWaveSelectionEventHandler(
           new WaveSelectionEventHandler() {
             @Override
-            public void onSelection(WaveId id) {
-              openWave(id, false);
+            public void onSelection(WaveRef waveRef) {
+              openWave(waveRef, false);
             }
           });
       waveView = null;
@@ -159,10 +160,11 @@ public class WebClient implements EntryPoint {
             }
 
             if (ClientFlags.get().enableWavePanelHarness()) {
-              openWave(idGenerator.newWaveId(), true);
+              WaveId newWaveId = idGenerator.newWaveId();
+              openWave(WaveRef.of(newWaveId), true);
             } else {
               WaveId newWaveId = idGenerator.newWaveId();
-              ClientEvents.get().fireEvent(new WaveSelectionEvent(newWaveId));
+              ClientEvents.get().fireEvent(new WaveSelectionEvent(WaveRef.of(newWaveId)));
               ObservableConversation convo = waveView.getConversationView().createRoot();
               CcBasedWavelet rootWavelet = waveView.getCcStackManager().view.getRoot();
               rootWavelet.addParticipant(loggedInUser);
@@ -283,10 +285,10 @@ public class WebClient implements EntryPoint {
   /**
    * Shows a wave in a wave panel.
    *
-   * @param id wave id to open
+   * @param waveRef wave id to open
    * @param isNewWave whether the wave is being created by this client session.
    */
-  private void openWave(WaveId id, boolean isNewWave) {
+  private void openWave(WaveRef waveRef, boolean isNewWave) {
     LOG.info("WebClient.openWave()");
 
     if (wave != null) {
@@ -295,9 +297,22 @@ public class WebClient implements EntryPoint {
     }
 
     wave = new StagesProvider(contentPanel.getElement().appendChild(Document.get().createDivElement()),
-        contentPanel, id, channel, idGenerator, isNewWave);
+        contentPanel, waveRef, channel, idGenerator, isNewWave);
     wave.load(null);
-    History.newItem(id.serialise(), false);
+    String encodedToken = History.getToken();
+    if (encodedToken != null && !encodedToken.isEmpty()) {
+      WaveRef fromWaveRef = HistorySupport.waveRefFromHistoryToken(encodedToken);
+      if (waveRef == null) {
+        LOG.info("History token contains invalid path: " + encodedToken);
+        return;
+      }
+      if (fromWaveRef.getWaveId().equals(waveRef.getWaveId())) {
+        // History change was caused by clicking on a link, it's already
+        // updated by browser.
+        return;
+      }
+    }
+    History.newItem(waveRef.getWaveId().serialise(), false);
   }
 
   /**

@@ -30,9 +30,10 @@ import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
+import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationView;
 import org.waveprotocol.wave.model.id.IdGenerator;
-import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.waveref.WaveRef;
 
 /**
  * Stages for loading the undercurrent Wave Panel
@@ -43,7 +44,7 @@ public class StagesProvider extends Stages {
 
   private final Element wavePanelElement;
   private final LogicalPanel rootPanel;
-  private final WaveId waveId;
+  private final WaveRef waveRef;
   private final RemoteViewServiceMultiplexer channel;
   private final IdGenerator idGenerator;
   private final boolean isNewWave;
@@ -56,17 +57,17 @@ public class StagesProvider extends Stages {
    * @param wavePanelElement The dom element to become the wave panel
    * @param rootPanel A panel that this an ancestor of wavePanelElement. This is
    *        used for adopting to the GWT widget tree.
-   * @param waveId the id of the wave to open. If null, it means, create a new
+   * @param waveRef the id of the wave to open. If null, it means, create a new
    *        wave.
    * @param channel communication channel.
    * @param isNewWave true if the wave is a new client-created wave
    * @param idGenerator
    */
-  public StagesProvider(Element wavePanelElement, LogicalPanel rootPanel, WaveId waveId,
+  public StagesProvider(Element wavePanelElement, LogicalPanel rootPanel, WaveRef waveRef,
       RemoteViewServiceMultiplexer channel, IdGenerator idGenerator, boolean isNewWave) {
     this.wavePanelElement = wavePanelElement;
     this.rootPanel = rootPanel;
-    this.waveId = waveId;
+    this.waveRef = waveRef;
     this.channel = channel;
     this.idGenerator = idGenerator;
     this.isNewWave = isNewWave;
@@ -89,7 +90,8 @@ public class StagesProvider extends Stages {
 
   @Override
   protected AsyncHolder<StageTwo> createStageTwoLoader(StageOne one) {
-    return new StageTwoProvider(this.one = one, waveId, channel, isNewWave, idGenerator);
+    return new StageTwoProvider(this.one = one, waveRef.getWaveId(), channel, isNewWave,
+        idGenerator);
   }
 
   @Override
@@ -105,6 +107,8 @@ public class StagesProvider extends Stages {
             StagesProvider.this.three = x;
             if (isNewWave) {
               initNewWave(x);
+            } else {
+              handleExistingWave(x);
             }
             whenReady.use(x);
           }
@@ -123,6 +127,25 @@ public class StagesProvider extends Stages {
     blipQueue.flush();
     BlipView blipUi = views.getBlipView(wave.getRoot().getRootThread().getFirstBlip());
     three.getEditActions().startEditing(blipUi);
+  }
+
+  private void handleExistingWave(StageThree three) {
+    // If there's blip reference then focus on that blip.
+    String documentId = waveRef.getDocumentId();
+    if (documentId != null) {
+      ModelAsViewProvider views = two.getModelAsViewProvider();
+      BlipQueueRenderer blipQueue = two.getBlipQueue();
+      ConversationView wave = two.getConversations();
+      blipQueue.flush();
+      // Find selected blip.
+      ConversationBlip blip = wave.getRoot().getBlip(documentId);
+      if (blip != null) {
+        BlipView blipUi = views.getBlipView(blip);
+        if (blipUi != null) {
+          three.getEditActions().focus(blipUi);
+        }
+      }
+    }
   }
 
   public void destroy() {
