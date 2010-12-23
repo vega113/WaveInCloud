@@ -26,6 +26,7 @@ import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.waveprotocol.box.server.persistence.PersistenceException;
@@ -151,6 +152,7 @@ public class WaveMap implements SearchProvider {
 
   private final ConcurrentMap<WaveId, Wave> waves;
 
+  @Inject
   public WaveMap(final WaveletStore waveletStore,
       final WaveletNotificationSubscriber notifiee,
       final LocalWaveletContainer.Factory localFactory,
