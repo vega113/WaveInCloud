@@ -17,26 +17,13 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.MoreExecutors;
-
 import junit.framework.TestCase;
 
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
-import org.waveprotocol.box.server.waveserver.LocalWaveletContainer.Factory;
-import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
-import org.waveprotocol.wave.federation.WaveletFederationProvider;
-import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
@@ -50,12 +37,16 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
+import org.waveprotocol.wave.model.wave.data.WaveViewData;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * @author josephg@gmail.com (Joseph Gentle)
+ * @author soren@google.com (Soren Lassen)
  */
-public class WaveServerTest extends TestCase {
+public class WaveMapTest extends TestCase {
   private static final String DOMAIN = "example.com";
   private static final WaveId WAVE_ID = WaveId.of(DOMAIN, "abc123");
   private static final WaveletId WAVELET_ID = WaveletId.of(DOMAIN, "conv+root");
@@ -71,65 +62,101 @@ public class WaveServerTest extends TestCase {
     return new AddParticipant(CONTEXT, user);
   }
 
-  @Mock private SignatureHandler localSigner;
-  @Mock private WaveletFederationProvider federationRemote;
   @Mock private WaveletNotificationDispatcher notifiee;
   @Mock private RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
 
-  private CertificateManager certificateManager;
   private WaveletStore waveletStore;
   private WaveMap waveMap;
-  private WaveServerImpl waveServer;
   private HashedVersionZeroFactoryImpl versionZeroFactory;
 
   @Override
   protected void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
 
-    when(localSigner.getDomain()).thenReturn(DOMAIN);
-    when(localSigner.getSignerInfo()).thenReturn(null);
-    when(localSigner.sign(Matchers.<ByteStringMessage<ProtocolWaveletDelta>>any()))
-        .thenReturn(ImmutableList.<ProtocolSignature>of());
-
-    certificateManager = new CertificateManagerImpl(true, localSigner, null, null);
-
-    Factory localWaveletContainerFactory = new LocalWaveletContainer.Factory() {
-      @Override
-      public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
-          WaveletName waveletName) {
-        WaveletState waveletState = new MemoryWaveletState(waveletName);
-        return new LocalWaveletContainerImpl(notifiee, waveletState);
-      }
-    };
+    LocalWaveletContainer.Factory localWaveletContainerFactory =
+        new LocalWaveletContainer.Factory() {
+          @Override
+          public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
+              WaveletName waveletName) {
+            WaveletState waveletState = new MemoryWaveletState(waveletName);
+            return new LocalWaveletContainerImpl(notifiee, waveletState);
+          }
+        };
 
     waveletStore = new DeltaStoreBasedWaveletStore(new MemoryDeltaStore());
     waveMap = new WaveMap(
         waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
-    waveServer = new WaveServerImpl(
-        MoreExecutors.sameThreadExecutor(), certificateManager, federationRemote, waveMap);
 
     IdURIEncoderDecoder uriCodec =
         new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
     versionZeroFactory = new HashedVersionZeroFactoryImpl(uriCodec);
   }
 
-  public void testWaveletNotification() {
-    submitDeltaToNewWavelet(WAVELET_NAME, USER1, addParticipantToWavelet(USER2));
+  public void testSearchEmptyInboxReturnsNothing() {
+    Collection<WaveViewData> results = waveMap.search(USER1, "in:inbox", 0, 20);
 
-    verify(notifiee).waveletUpdate(Matchers.<ReadableWaveletData>any(),
-        Matchers.<ImmutableList<WaveletDeltaRecord>>any(), eq(ImmutableSet.of(DOMAIN)));
-    // TODO(anorth): Re-enable this check when WaveletContainerImpl injects an
-    // executor rather than using its own.
-//    verify(notifiee).waveletCommitted(eq(WAVELET_NAME), Matchers.<HashedVersion>any(),
-//        eq(ImmutableSet.of(DOMAIN)));
+    assertEquals(0, results.size());
   }
 
+  public void testSearchInboxReturnsWaveWithExplicitParticipant() throws Exception {
+    submitDeltaToNewWavelet(WAVELET_NAME, USER1, addParticipantToWavelet(USER2));
+
+    Collection<WaveViewData> results = waveMap.search(USER2, "in:inbox", 0, 20);
+
+    assertEquals(1, results.size());
+    assertEquals(WAVELET_NAME.waveId, results.iterator().next().getWaveId());
+  }
+
+  public void testSearchInboxDoesNotReturnWaveWithoutUser() throws Exception {
+    submitDeltaToNewWavelet(WAVELET_NAME, USER1, addParticipantToWavelet(USER1));
+
+    Collection<WaveViewData> results = waveMap.search(USER2, "in:inbox", 0, 20);
+    assertEquals(0, results.size());
+  }
+
+  public void testSearchLimitEnforced() throws Exception {
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, "w" + i), WAVELET_ID);
+      submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
+    }
+
+    Collection<WaveViewData> results = waveMap.search(USER1, "in:inbox", 0, 5);
+
+    assertEquals(5, results.size());
+  }
+
+  public void testSearchIndexWorks() throws Exception {
+    // For this test, we'll create 10 waves with wave ids "0", "1", ... "9" and then run 10
+    // searches using offsets 0..9. The waves we get back can be in any order, but we must get
+    // all 10 of the waves back exactly once each from the search query.
+
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(i)), WAVELET_ID);
+      submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
+    }
+
+    // The number of times we see each wave when we search
+    int[] saw_wave = new int[10];
+
+    for (int i = 0; i < 10; i++) {
+      Collection<WaveViewData> results = waveMap.search(USER1, "in:inbox", i, 1);
+      assertEquals(1, results.size());
+      int index = Integer.parseInt(results.iterator().next().getWaveId().getId());
+      saw_wave[index]++;
+    }
+
+    for (int i = 0; i < 10; i++) {
+      // Each wave should appear exactly once in the results
+      assertEquals(1, saw_wave[i]);
+    }
+  }
+
+  // *** Helpers
+
   private void submitDeltaToNewWavelet(WaveletName name, ParticipantId user,
-      WaveletOperation... ops) {
+      WaveletOperation... ops) throws Exception {
     HashedVersion version = versionZeroFactory.createVersionZero(name);
-
-    WaveletDelta delta = new WaveletDelta(user, version, ImmutableList.of(ops));
-
+    WaveletDelta delta = new WaveletDelta(user, version, Arrays.asList(ops));
     ProtocolWaveletDelta protoDelta = CoreWaveletOperationSerializer.serialize(delta);
 
     // Submitting the request will require the certificate manager to sign the delta. We'll just
@@ -137,17 +164,7 @@ public class WaveServerTest extends TestCase {
     ProtocolSignedDelta signedProtoDelta =
         ProtocolSignedDelta.newBuilder().setDelta(protoDelta.toByteString()).build();
 
-    waveServer.submitRequest(name, protoDelta, new SubmitRequestListener() {
-      @Override
-      public void onSuccess(int operationsApplied, HashedVersion hashedVersionAfterApplication,
-          long applicationTimestamp) {
-        // Wavelet was submitted.
-      }
-
-      @Override
-      public void onFailure(String errorMessage) {
-        fail("Could not submit callback");
-      }
-    });
+    LocalWaveletContainer wavelet = waveMap.getOrCreateLocalWavelet(name);
+    wavelet.submitRequest(name, signedProtoDelta);
   }
 }

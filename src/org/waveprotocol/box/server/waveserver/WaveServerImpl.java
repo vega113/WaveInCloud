@@ -17,12 +17,8 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.MapMaker;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,11 +26,9 @@ import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.persistence.PersistenceException;
-import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
@@ -51,21 +45,15 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
-import org.waveprotocol.wave.model.wave.data.WaveViewData;
-import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -76,7 +64,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Singleton
 public class WaveServerImpl implements WaveletProvider,
-    WaveletFederationProvider, WaveletFederationListener.Factory, SearchProvider {
+    WaveletFederationProvider, WaveletFederationListener.Factory {
 
   private static final Log LOG = Log.get(WaveServerImpl.class);
 
@@ -84,20 +72,8 @@ public class WaveServerImpl implements WaveletProvider,
 
   private final Executor listenerExecutor;
   private final CertificateManager certificateManager;
-  private final WaveletNotificationSubscriber notifiee;
-  private final RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
-  private final LocalWaveletContainer.Factory localWaveletContainerFactory;
   private final WaveletFederationProvider federationRemote;
-
-  /** Wavelet states */
-  private final Map<WaveId, Map<WaveletId, WaveletContainer>> waveMap =
-    new MapMaker().makeComputingMap(
-        new Function<WaveId, Map<WaveletId, WaveletContainer>>() {
-          @Override
-          public Map<WaveletId, WaveletContainer> apply(WaveId from) {
-            return Maps.newHashMap();
-          }
-        });
+  private final WaveMap waveMap;
 
   //
   // WaveletFederationListener.Factory implementation.
@@ -158,7 +134,9 @@ public class WaveServerImpl implements WaveletProvider,
       public void waveletCommitUpdate(WaveletName waveletName,
           ProtocolHashedVersion committedVersion, WaveletUpdateCallback callback) {
         Preconditions.checkNotNull(committedVersion);
-        WaveletContainer wavelet = getWavelet(waveletName);
+        WaveletContainer wavelet;
+        wavelet = getWavelet(waveletName);
+
         if (wavelet instanceof RemoteWaveletContainer) {
           ((RemoteWaveletContainer) wavelet).commit(
               CoreWaveletOperationSerializer.deserialize(committedVersion));
@@ -383,25 +361,19 @@ public class WaveServerImpl implements WaveletProvider,
    * @param listenerExecutor executes callback listeners
    * @param certificateManager provider of certificates; it also determines which
    *        domains this wave server regards as local wavelets.
-   * @param notifiee wavelet notification dispatcher
    * @param federationRemote federation remote interface
-   * @param localWaveletContainerFactory factory for local WaveletContainers
-   * @param remoteWaveletContainerFactory factory for remote WaveletContainers
+   * @param waveMap records the waves and wavelets in memory
    */
   @Inject
   public WaveServerImpl(
       @Named("listener_executor") Executor listenerExecutor,
       CertificateManager certificateManager,
-      WaveletNotificationSubscriber notifiee,
       @FederationRemoteBridge WaveletFederationProvider federationRemote,
-      LocalWaveletContainer.Factory localWaveletContainerFactory,
-      RemoteWaveletContainer.Factory remoteWaveletContainerFactory) {
+      WaveMap waveMap) {
     this.listenerExecutor = listenerExecutor;
     this.certificateManager = certificateManager;
-    this.notifiee = notifiee;
     this.federationRemote = federationRemote;
-    this.localWaveletContainerFactory = localWaveletContainerFactory;
-    this.remoteWaveletContainerFactory = remoteWaveletContainerFactory;
+    this.waveMap = waveMap;
 
     LOG.info("Wave Server configured to host local domains: "
         + certificateManager.getLocalDomains());
@@ -438,16 +410,7 @@ public class WaveServerImpl implements WaveletProvider,
    */
   private RemoteWaveletContainer getOrCreateRemoteWavelet(WaveletName waveletName) {
     Preconditions.checkArgument(!isLocalWavelet(waveletName), "%s is local", waveletName);
-    synchronized (waveMap) {
-      Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
-      // This will blow up if we messed up and put a local wavelet in by mistake.
-      RemoteWaveletContainer wc = (RemoteWaveletContainer) wave.get(waveletName.waveletId);
-      if (wc == null) {
-        wc = remoteWaveletContainerFactory.create(notifiee, waveletName);
-        wave.put(waveletName.waveletId, wc);
-      }
-      return wc;
-    }
+    return waveMap.getOrCreateRemoteWavelet(waveletName);
   }
 
   /**
@@ -459,18 +422,7 @@ public class WaveServerImpl implements WaveletProvider,
    */
   private LocalWaveletContainer getOrCreateLocalWavelet(WaveletName waveletName) {
     Preconditions.checkArgument(isLocalWavelet(waveletName), "%s is remote", waveletName);
-    synchronized (waveMap) {
-      Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
-      // This will blow up if we messed up and put a remote wavelet in by mistake.
-      LocalWaveletContainer wc = (LocalWaveletContainer) wave.get(waveletName.waveletId);
-      if (wc == null) {
-        wc = localWaveletContainerFactory.create(notifiee, waveletName);
-        // TODO: HACK(Jochen): do we need a namespace policer here ??? ###
-        // TODO(ljvderijk): Do we want to put in a wavelet wich has not been submitted yet?
-        wave.put(waveletName.waveletId, wc);
-      }
-      return wc;
-    }
+    return waveMap.getOrCreateLocalWavelet(waveletName);
   }
 
   /**
@@ -480,10 +432,13 @@ public class WaveServerImpl implements WaveletProvider,
    * @param waveletName name of wavelet.
    * @return an wavelet container or null if it doesn't exist.
    */
-  private WaveletContainer getWavelet(WaveletName waveletName) {
-    synchronized (waveMap) {
-      Map<WaveletId, WaveletContainer> wave = waveMap.get(waveletName.waveId);
-      return wave.get(waveletName.waveletId);
+  private WaveletContainer getWavelet(WaveletName waveletName) /*throws PersistenceException*/ {
+    try {
+      return isLocalWavelet(waveletName) ?
+          waveMap.getLocalWavelet(waveletName) : waveMap.getRemoteWavelet(waveletName);
+    } catch (PersistenceException e) {
+      // TODO(soren): propagate the checked PersistenceException and catch it everywhere
+      throw new IllegalStateException("Oh noes", e);
     }
   }
 
@@ -623,44 +578,5 @@ public class WaveServerImpl implements WaveletProvider,
         });
       }
     }
-  }
-
-  @Override
-  public Collection<WaveViewData> search(ParticipantId user, String query, int startAt,
-      int numResults) {
-    LOG.info("Search query '" + query + "' from user: " + user);
-
-    if (!query.equals("in:inbox") && !query.equals("with:me")) {
-      throw new AssertionError("Only queries for the inbox work");
-    }
-
-    Map<WaveId, WaveViewData> results = Maps.newHashMap();
-
-    synchronized (waveMap) {
-      int resultIndex = 0;
-      for (Map.Entry<WaveId, Map<WaveletId, WaveletContainer>> entry : waveMap.entrySet()) {
-        WaveId waveId = entry.getKey();
-        for (WaveletContainer c : entry.getValue().values()) {
-          if (c.hasParticipant(user)) {
-            if (resultIndex >= startAt && resultIndex < (startAt + numResults)) {
-              WaveViewData wave = results.get(waveId);
-              if (wave == null) {
-                wave = WaveViewDataImpl.create(waveId);
-                results.put(waveId, wave);
-              }
-
-              wave.addWavelet(c.copyWaveletData());
-            }
-
-            resultIndex++;
-            if (resultIndex > startAt + numResults) {
-              return results.values();
-            }
-          }
-        }
-      }
-    }
-
-    return results.values();
   }
 }

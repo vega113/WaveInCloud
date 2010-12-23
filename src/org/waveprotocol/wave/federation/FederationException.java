@@ -33,6 +33,11 @@ public class FederationException extends Exception {
     this.error = error;
   }
 
+  public FederationException(Throwable cause) {
+    super("Internal error in federation", cause);
+    this.error = FederationErrors.internalServerError("Local failure");
+  }
+
   public FederationError getError() {
     return error;
   }

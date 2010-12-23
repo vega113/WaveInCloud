@@ -108,4 +108,9 @@ interface WaveletContainer {
    * @return true if the participant id is a curent participant of the wavelet
    */
   boolean hasParticipant(ParticipantId participant);
+
+  /**
+   * @return true if the wavelet is at version zero, i.e., has no delta history
+   */
+  boolean isEmpty();
 }

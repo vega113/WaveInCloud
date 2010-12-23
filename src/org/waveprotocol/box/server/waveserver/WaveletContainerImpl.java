@@ -172,6 +172,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       // ParticipantId will be null if the user isn't logged in. A user who isn't logged in should
       // have access to public waves once they've been implemented.
       // If the wavelet is empty, everyone has access (to write the first delta).
+      // TODO(soren): determine if off-domain participants should be denied access if empty
       ReadableWaveletData snapshot = waveletState.getSnapshot();
       return participantId != null
           && (snapshot == null || snapshot.getParticipants().contains(participantId));
@@ -402,6 +403,16 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     try {
       ReadableWaveletData snapshot = waveletState.getSnapshot();
       return snapshot != null && snapshot.getParticipants().contains(participant);
+    } finally {
+      releaseReadLock();
+    }
+  }
+
+  @Override
+  public boolean isEmpty() {
+    acquireReadLock();
+    try {
+      return waveletState.getSnapshot() == null;
     } finally {
       releaseReadLock();
     }
