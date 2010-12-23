@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.box.client;
+package org.waveprotocol.box.consoleclient;
 
 import org.waveprotocol.wave.model.operation.wave.AbstractWaveletOperationContextFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;

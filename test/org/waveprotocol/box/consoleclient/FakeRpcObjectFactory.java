@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.waveprotocol.box.client.testing;
+package org.waveprotocol.box.consoleclient;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
@@ -22,10 +22,10 @@ import com.google.protobuf.RpcController;
 import com.google.protobuf.Descriptors.MethodDescriptor;
 
 import org.mockito.Mockito;
-import org.waveprotocol.box.client.ClientBackend;
 import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolAuthenticate;
 import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolAuthenticationResult;
 import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveClientRpc;
+import org.waveprotocol.box.consoleclient.ClientBackend;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.authentication.SessionManagerImpl;
 import org.waveprotocol.box.server.frontend.WaveClientRpcImpl;

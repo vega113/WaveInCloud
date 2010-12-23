@@ -21,9 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.waveprotocol.box.client.ClientBackend;
-import org.waveprotocol.box.client.ClientUtils;
-import org.waveprotocol.box.client.ClientWaveView;
 import org.waveprotocol.box.common.IndexEntry;
 import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.wave.model.version.HashedVersion;

@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.box.client;
+package org.waveprotocol.box.consoleclient;
 
 import static org.waveprotocol.box.common.CommonConstants.INDEX_WAVE_ID;
 

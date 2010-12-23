@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.box.client;
+package org.waveprotocol.box.consoleclient;
 
 import com.google.common.base.Preconditions;
 

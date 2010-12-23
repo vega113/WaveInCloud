@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableMap;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.client.ClientUtils;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
@@ -103,7 +102,7 @@ public class WaveletOperationSerializerTest extends TestCase {
   }
 
   public void testEmptyDocumentMutation() {
-    assertReversible(makeBlipOp("empty", ClientUtils.createEmptyDocument()));
+    assertReversible(makeBlipOp("empty", new DocOpBuilder().build()));
   }
 
   public void testSingleCharacters() {

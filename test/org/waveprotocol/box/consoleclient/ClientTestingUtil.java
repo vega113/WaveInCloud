@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.box.client.testing;
+package org.waveprotocol.box.consoleclient;
 
 import static junit.framework.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
@@ -28,12 +28,12 @@ import static org.waveprotocol.box.common.DocumentConstants.MANIFEST_DOCUMENT_ID
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-import org.waveprotocol.box.client.ClientAuthenticator;
-import org.waveprotocol.box.client.ClientBackend;
-import org.waveprotocol.box.client.ClientUtils;
-import org.waveprotocol.box.client.ClientWaveView;
 import org.waveprotocol.box.common.Snippets;
 import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolSubmitResponse;
+import org.waveprotocol.box.consoleclient.ClientAuthenticator;
+import org.waveprotocol.box.consoleclient.ClientBackend;
+import org.waveprotocol.box.consoleclient.ClientUtils;
+import org.waveprotocol.box.consoleclient.ClientWaveView;
 import org.waveprotocol.box.consoleclient.ConsoleClient;
 import org.waveprotocol.box.server.util.BlockingSuccessFailCallback;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
