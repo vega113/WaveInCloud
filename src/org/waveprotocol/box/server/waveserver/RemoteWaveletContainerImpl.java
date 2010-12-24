@@ -22,8 +22,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ValueFuture;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -92,12 +92,12 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
   }
 
   @Override
-  public ListenableFuture<Void> update(final List<ByteString> deltas,
+  public CheckedFuture<Void, FederationException> update(final List<ByteString> deltas,
       final String domain, final WaveletFederationProvider federationProvider,
       final CertificateManager certificateManager) {
     ValueFuture<Void> futureResult = ValueFuture.create();
     internalUpdate(deltas, domain, federationProvider, certificateManager, futureResult);
-    return futureResult;
+    return FutureUtil.check(futureResult, FederationException.class);
   }
 
   @Override

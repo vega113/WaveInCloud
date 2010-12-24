@@ -19,7 +19,7 @@ package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.CheckedFuture;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -103,28 +103,19 @@ public class WaveServerImpl implements WaveletProvider,
         // Update this remote wavelet with the immediately incoming delta,
         // providing a callback so that incoming historic deltas (as well as
         // this delta) can be provided to the wave bus.
-        final ListenableFuture<Void> result =
+        final CheckedFuture<Void, FederationException> result =
             remoteWavelet.update(deltas, domain, federationRemote, certificateManager);
         result.addListener(
             new Runnable() {
               @Override
               public void run() {
-                FederationError error;
                 try {
-                  result.get();
+                  result.checkedGet();
                   callback.onSuccess();
-                  return;
-                } catch (InterruptedException e) {
-                  LOG.severe("Interrupted updating " + waveletName, e);
-                  error = FederationErrors.internalServerError("Interrupted");
-                } catch (ExecutionException e) {
+                } catch (FederationException e) {
                   LOG.warning("Failed updating " + waveletName, e);
-                  Throwable cause = e.getCause();
-                  error = (cause instanceof FederationException)
-                      ? ((FederationException) cause).getError()
-                      : FederationErrors.internalServerError("Unknown error");
+                  callback.onFailure(e.getError());
                 }
-                callback.onFailure(error);
               }
             },
             listenerExecutor);

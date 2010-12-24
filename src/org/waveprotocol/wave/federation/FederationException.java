@@ -28,17 +28,24 @@ public class FederationException extends Exception {
 
   private final FederationError error;
 
-  public FederationException(FederationError error) {
-    super(error.getErrorCode() + " " + error.getErrorMessage());
+  public FederationException(FederationError error, Throwable cause) {
+    super(error.getErrorCode() + " " + error.getErrorMessage(), cause);
     this.error = error;
   }
 
+  public FederationException(FederationError error) {
+    this(error, null);
+  }
+
   public FederationException(Throwable cause) {
-    super("Internal error in federation", cause);
-    this.error = FederationErrors.internalServerError("Local failure");
+    this(FederationErrors.internalServerError(describe(cause)), cause);
   }
 
   public FederationError getError() {
     return error;
+  }
+
+  private static String describe(Throwable cause) {
+    return (cause instanceof InterruptedException) ? "Interrupted" : "Internal failure";
   }
 }
