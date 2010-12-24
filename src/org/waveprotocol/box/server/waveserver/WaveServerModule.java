@@ -87,10 +87,9 @@ public class WaveServerModule extends AbstractModule {
       throw new IllegalStateException(e);
     }
 
-    bind(WaveBusDispatcher.class).in(Singleton.class);
-    bind(WaveBus.class).to(WaveBusDispatcher.class).in(Singleton.class);
-    bind(WaveletNotificationSubscriber.class).to(WaveletNotificationDispatcher.class)
-        .in(Singleton.class);
+    bind(WaveletNotificationDispatcher.class).in(Singleton.class);
+    bind(WaveBus.class).to(WaveletNotificationDispatcher.class);
+    bind(WaveletNotificationSubscriber.class).to(WaveletNotificationDispatcher.class);
     bind(TrustRootsProvider.class).to(DefaultTrustRootsProvider.class).in(Singleton.class);
     bind(CertificateManager.class).to(CertificateManagerImpl.class).in(Singleton.class);
     bind(WaveMap.class).in(Singleton.class);

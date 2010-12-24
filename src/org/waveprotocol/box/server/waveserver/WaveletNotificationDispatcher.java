@@ -41,13 +41,19 @@ import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * Forwards wave notifications to the wave bus and to remote wave servers.
+ * Forwards wave notifications to wave bus subscribers and remote wave servers.
+ *
+ * Swallows any runtime exception from a wave bus subscriber and removes that
+ * subscriber. The wave server used to do this swallowing but really things are
+ * in bad shape if a subscriber throws a runtime exception.
+ * TODO(anorth): Remove this catch and let the server crash.
  *
  * @author soren@google.com (Soren Lassen)
  */
-class WaveletNotificationDispatcher implements WaveletNotificationSubscriber {
+class WaveletNotificationDispatcher implements WaveBus, WaveletNotificationSubscriber {
 
   private static final Log LOG = Log.get(WaveletNotificationDispatcher.class);
 
@@ -73,11 +79,8 @@ class WaveletNotificationDispatcher implements WaveletNotificationSubscriber {
 
   private final ImmutableSet<String> localDomains;
   private final WaveletFederationListener.Factory federationHostFactory;
-  /**
-   * Type WaveBusDispatcher rather than just WaveBus.Subscriber, because we want
-   * to know that the methods swallow RuntimeExceptions.
-   */
-  private final WaveBusDispatcher dispatcher;
+  private final CopyOnWriteArraySet<WaveBus.Subscriber> subscribers =
+      new CopyOnWriteArraySet<WaveBus.Subscriber>();
 
   /** Maps remote domains to wave server stubs for those domains. */
   private final Map<String, WaveletFederationListener> federationHosts =
@@ -95,22 +98,39 @@ class WaveletNotificationDispatcher implements WaveletNotificationSubscriber {
    * @param certificateManager knows what the local domains are
    * @param federationHostFactory manufactures federation host instances for
    *        remote domains
-   * @param dispatcher forwards messages to wave bus subscribers
    */
   @Inject
   public WaveletNotificationDispatcher(
       CertificateManager certificateManager,
-      @FederationHostBridge WaveletFederationListener.Factory federationHostFactory,
-      WaveBusDispatcher dispatcher) {
+      @FederationHostBridge WaveletFederationListener.Factory federationHostFactory) {
     this.localDomains = certificateManager.getLocalDomains();
     this.federationHostFactory = federationHostFactory;
-    this.dispatcher = dispatcher;
+  }
+
+  @Override
+  public void subscribe(Subscriber s) {
+    subscribers.add(s);
+  }
+
+  @Override
+  public void unsubscribe(Subscriber s) {
+    subscribers.remove(s);
   }
 
   @Override
   public void waveletUpdate(ReadableWaveletData wavelet, ImmutableList<WaveletDeltaRecord> deltas,
       ImmutableSet<String> domainsToNotify) {
-    dispatcher.waveletUpdate(wavelet, DeltaSequence.of(transformedDeltasOf(deltas)));
+    DeltaSequence sequence = DeltaSequence.of(transformedDeltasOf(deltas));
+    for (WaveBus.Subscriber s : subscribers) {
+      try {
+        s.waveletUpdate(wavelet, sequence);
+      } catch (RuntimeException e) {
+        LOG.severe("Runtime exception in update to wave bus subscriber " + s, e);
+        // Subscriber is now in an undefined state.
+        subscribers.remove(s);
+      }
+    }
+
     Set<String> remoteDomainsToNotify = Sets.difference(domainsToNotify, localDomains);
     if (!remoteDomainsToNotify.isEmpty()) {
       ImmutableList<ByteString> serializedAppliedDeltas = serializedAppliedDeltasOf(deltas);
@@ -124,7 +144,16 @@ class WaveletNotificationDispatcher implements WaveletNotificationSubscriber {
   @Override
   public void waveletCommitted(WaveletName waveletName, HashedVersion version,
       ImmutableSet<String> domainsToNotify) {
-    dispatcher.waveletCommitted(waveletName, version);
+    for (WaveBus.Subscriber s : subscribers) {
+      try {
+        s.waveletCommitted(waveletName, version);
+      } catch (RuntimeException e) {
+        LOG.severe("Runtime exception in commit to wave bus subscriber " + s, e);
+        // Subscriber is now in an undefined state.
+        subscribers.remove(s);
+      }
+    }
+
     Set<String> remoteDomainsToNotify = Sets.difference(domainsToNotify, localDomains);
     if (!remoteDomainsToNotify.isEmpty()) {
       ProtocolHashedVersion serializedVersion = CoreWaveletOperationSerializer.serialize(version);
