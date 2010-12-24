@@ -36,9 +36,16 @@ import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.security.Principal;
 
 import javax.security.auth.Subject;
@@ -81,15 +88,35 @@ public class AuthenticationServlet extends HttpServlet {
 
   @SuppressWarnings("unchecked")
   private LoginContext login(BufferedReader body) throws IOException, LoginException {
-    Subject subject = new Subject();
-    MultiMap<String> parameters = new UrlEncoded(body.readLine());
-    CallbackHandler callbackHandler = new HttpRequestBasedCallbackHandler(parameters);
+    try {
+      Subject subject = new Subject();
 
-    LoginContext context = new LoginContext("Wave", subject, callbackHandler, configuration);
+      String parametersLine = body.readLine();
+      // Throws UnsupportedEncodingException.
+      byte[] utf8Bytes = parametersLine.getBytes("UTF-8");
 
-    // If authentication fails, login() will throw a LoginException.
-    context.login();
-    return context;
+      CharsetDecoder utf8Decoder = Charset.forName("UTF-8").newDecoder();
+      utf8Decoder.onMalformedInput(CodingErrorAction.IGNORE);
+      utf8Decoder.onUnmappableCharacter(CodingErrorAction.IGNORE);
+
+      // Throws CharacterCodingException.
+      CharBuffer parsed = utf8Decoder.decode(ByteBuffer.wrap(utf8Bytes));
+      parametersLine = parsed.toString();
+
+      MultiMap<String> parameters = new UrlEncoded(parametersLine);
+      CallbackHandler callbackHandler = new HttpRequestBasedCallbackHandler(parameters);
+
+      LoginContext context = new LoginContext("Wave", subject, callbackHandler, configuration);
+
+      // If authentication fails, login() will throw a LoginException.
+      context.login();
+      return context;
+    } catch (CharacterCodingException cce) {
+      throw new LoginException("Character coding exception (not utf-8): "
+          + cce.getLocalizedMessage());
+    } catch (UnsupportedEncodingException uee) {
+      throw new LoginException("ad character encoding specification: " + uee.getLocalizedMessage());
+    }
   }
 
   /**
@@ -97,6 +124,7 @@ public class AuthenticationServlet extends HttpServlet {
    */
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    req.setCharacterEncoding("UTF-8");
     LoginContext context;
     try {
       context = login(req.getReader());
@@ -172,6 +200,8 @@ public class AuthenticationServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     // If the user is already logged in, we'll try to redirect them immediately.
+    resp.setCharacterEncoding("UTF-8");
+    req.setCharacterEncoding("UTF-8");
     HttpSession session = req.getSession(false);
     ParticipantId user = sessionManager.getLoggedInUser(session);
 
@@ -179,7 +209,7 @@ public class AuthenticationServlet extends HttpServlet {
       redirectLoggedInUser(req, resp);
     } else {
       resp.setStatus(HttpServletResponse.SC_OK);
-      resp.setContentType("text/html");
+      resp.setContentType("text/html;charset=utf-8");
       AuthenticationPage.write(resp.getWriter(), new GxpContext(req.getLocale()), domain, "",
           RESPONSE_STATUS_NONE);
     }

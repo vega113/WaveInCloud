@@ -65,6 +65,7 @@ public final class UserRegistrationServlet extends HttpServlet {
   @SuppressWarnings("unchecked")
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    req.setCharacterEncoding("UTF-8");
     String message =
         tryCreateUser(req.getParameter(HttpRequestBasedCallbackHandler.ADDRESS_FIELD),
             req.getParameter(HttpRequestBasedCallbackHandler.PASSWORD_FIELD));
@@ -142,7 +143,8 @@ public final class UserRegistrationServlet extends HttpServlet {
 
   private void writeRegistrationPage(String message, String responseType, Locale locale,
       HttpServletResponse dest) throws IOException {
-    dest.setContentType("text/html");
+    dest.setCharacterEncoding("UTF-8");
+    dest.setContentType("text/html;charset=utf-8");
     UserRegistrationPage.write(dest.getWriter(), new GxpContext(locale), domain, message,
         responseType);
   }
