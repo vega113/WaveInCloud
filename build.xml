@@ -36,10 +36,14 @@
   <tstamp>
     <format property="DSTAMP_INT" pattern="-yyyy-MM-dd"/>
   </tstamp>
+  <tstamp>
+    <format property="LOG_STAMP" pattern="yyyy-MM-dd_HH-mm-ss"/>
+  </tstamp>
   <property name="release.name" value="wave-${DSTAMP_INT}.zip"/>
   <property name="release.robot.name" value="wave-robot-client${DSTAMP_INT}.zip"/>
   <property name="release.robot.python.name" value="wave-robot-python-client${DSTAMP_INT}.zip"/>
-	
+  <property name="build.log.filename" value="build_${LOG_STAMP}.log"/>
+
   <!--=====
       Initialization
       =====-->
@@ -54,7 +58,14 @@
     <delete dir="war/webclient"/>
   </target>
 
-  <target name="init">
+  <target name="init_logging" description="Enable logging to file">
+    <mkdir dir="${build.log.dir}"/>
+    <record name="${build.log.dir}/${build.log.filename}"
+        loglevel="verbose" append="false"/>
+    <echo message="Logging to ${build.log.dir}/${build.log.filename}"/>
+  </target>
+
+  <target name="init" depends="init_logging">
     <mkdir dir="${build.proto.dir}"/>
     <mkdir dir="${build.src.dir}"/>
     <mkdir dir="${build.test.dir}"/>
@@ -64,7 +75,7 @@
     <mkdir dir="${dep}"/>
     <mkdir dir="${test.out.dir}"/>
   </target>
-	
+
   <!-- === IDE helper targets === -->
 
   <!-- Generates an eclipse .project file.
