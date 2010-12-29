@@ -371,6 +371,18 @@ public final class QuirksConstants {
   public static final boolean PLAINTEXT_PASTE_DOES_NOT_EMIT_PASTE_EVENT =
     UserAgent.isSafari();
 
+
+  /**
+   * True if the browser sanitizes pasted content to contenteditable to
+   * prevent script execution.
+   *
+   * Tested:
+   * Chrome 9.0, Safari 5, FF 3.5, FF 4.0
+   */
+  public static final boolean SANITIZES_PASTED_CONTENT =
+      (UserAgent.isWebkit() && UserAgent.isAtLeastVersion(533, 16)) ||
+      (UserAgent.isFirefox() && UserAgent.isAtLeastVersion(4, 0));
+
   private static native boolean checkGetElementsByClassNameSupport() /*-{
     return !!document.body.getElementsByClassName;
   }-*/;

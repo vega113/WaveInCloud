@@ -24,6 +24,7 @@ import com.google.gwt.dom.client.Style.Overflow;
 import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.dom.client.Style.Unit;
 import org.waveprotocol.wave.client.common.util.JsoView;
+import org.waveprotocol.wave.client.common.util.QuirksConstants;
 import org.waveprotocol.wave.client.common.util.UserAgent;
 import org.waveprotocol.wave.client.editor.selection.html.NativeSelectionUtil;
 
@@ -49,13 +50,17 @@ public class PasteBufferImpl {
    */
   static PasteBufferImpl create() {
     PasteBufferImpl pasteBuffer;
-    if (UserAgent.isFirefox()) {
-      pasteBuffer = new PasteBufferImplFirefox();
-    } else if (UserAgent.isSafari()) {
+   
+    if (UserAgent.isSafari()) {
       pasteBuffer = new PasteBufferImplSafari();
+    } else if (UserAgent.isFirefox() && !QuirksConstants.SANITIZES_PASTED_CONTENT) {
+      // Older versions of firefox doesn't sanitize pasted content and requires the
+      // paste buffer to be an iframe to prevent XSS.
+      pasteBuffer = new PasteBufferImplFirefox();
     } else {
       pasteBuffer = new PasteBufferImpl();
     }
+
     pasteBuffer.setupDom();
     return pasteBuffer;
   }
