@@ -49,7 +49,7 @@ public class WaveAndWaveletIdTest extends TestCase {
   }
 
   public void testSeparatorIsNotAllowedInDomainOrId() {
-    String illegal = "id" + IdSerialiser.PART_SEPARATOR + "suffix";
+    String illegal = "id" + LegacyIdSerialiser.PART_SEPARATOR + "suffix";
     assertIdRejected(illegal, "id");
     assertIdRejected("example.com", illegal);
   }

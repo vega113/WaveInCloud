@@ -28,6 +28,11 @@ import java.util.Arrays;
  */
 
 public class WaveIdentifiersTest extends TestCase {
+  public void testEmptyIsInvalid() {
+    assertFalse(WaveIdentifiers.isValidDomain(0, ""));
+    assertFalse(WaveIdentifiers.isValidIdentifier(""));
+  }
+
   public void testPlainAsciiIsValid() {
     assertTrue(WaveIdentifiers.isValidIdentifier("abcxyzABCXYZ0123456789"));
     assertTrue(WaveIdentifiers.isValidIdentifier(".-_~+@*"));

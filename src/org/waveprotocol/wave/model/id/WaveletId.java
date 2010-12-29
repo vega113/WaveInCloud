@@ -51,7 +51,7 @@ public final class WaveletId implements Comparable<WaveletId>, Serializable {
    * @throws InvalidIdException if the serialised form is invalid
    */
   public static WaveletId checkedDeserialise(String waveletIdString) throws InvalidIdException {
-    return LongIdSerialiser.INSTANCE.deserialiseWaveletId(waveletIdString);
+    return LegacyIdSerialiser.INSTANCE.deserialiseWaveletId(waveletIdString);
   }
 
   /**
@@ -70,24 +70,33 @@ public final class WaveletId implements Comparable<WaveletId>, Serializable {
   }
 
   /**
-   * Checks a string is a valid serialised wavelet id.
+   * Creates a wavelet id from a domain and local identifier.
    *
-   * @param waveletIdString serialised wavelet id
-   * @return the input string, for convenience
-   * @throws IllegalArgumentException if the string is invalid
+   * @throws IllegalArgumentException if the domain or id are not valid
    */
-  public static String checkIsValid(String waveletIdString) {
-    deserialise(waveletIdString);
-    return waveletIdString;
+  public static WaveletId of(String domain, String id) {
+    Preconditions.checkNotNull(domain, "Null domain");
+    Preconditions.checkNotNull(id, "Null id");
+    Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, domain), "Invalid domain %s",
+        domain);
+    Preconditions.checkArgument(WaveIdentifiers.isValidIdentifier(id), "Invalid id %s", id);
+    return new WaveletId(domain, id);
   }
 
   /**
    * Creates a wavelet id from a domain and local identifier.
+   *
+   * @throws InvalidIdException if the domain or id are not valid
    */
-  public static WaveletId of(String domain, String id) {
-    Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, domain), "Invalid domain %s",
-        domain);
-    Preconditions.checkArgument(WaveIdentifiers.isValidIdentifier(id), "Invalid id %s", id);
+  public static WaveletId ofChecked(String domain, String id) throws InvalidIdException {
+    Preconditions.checkNotNull(domain, "Null domain");
+    Preconditions.checkNotNull(id, "Null id");
+    if (!WaveIdentifiers.isValidDomain(0, domain)) {
+      throw new InvalidIdException(domain, "Invalid domain");
+    }
+    if (!WaveIdentifiers.isValidIdentifier(id)) {
+      throw new InvalidIdException(id, "Invalid id");
+    }
     return new WaveletId(domain, id);
   }
 
@@ -100,18 +109,12 @@ public final class WaveletId implements Comparable<WaveletId>, Serializable {
    * @param id must not be null. This is assumed to be escaped with
    *        SimplePrefixEscaper.DEFAULT_ESCAPER.
    * @throws IllegalArgumentException if domain or id is invalid.
-   * @deprecated use {@link #of(String, String)}
    */
-  @Deprecated
-  public WaveletId(String domain, String id) {
-    if (domain == null || id == null) {
-      Preconditions.nullPointer("Cannot create WaveletId with null value in [domain:"
-          + domain + "] [id:" + id + "]");
-    }
-    if (domain.isEmpty() || id.isEmpty()) {
-      Preconditions.illegalArgument("Cannot create wave id with empty value in [domain:"
-          + domain + "] [id:" + id + "]");
-    }
+  public static WaveletId ofLegacy(String domain, String id) {
+    Preconditions.checkNotNull(domain, "Null domain");
+    Preconditions.checkNotNull(id, "Null id");
+    Preconditions.checkArgument(!domain.isEmpty(), "Empty domain");
+    Preconditions.checkArgument(!id.isEmpty(), "Empty id");
 
     if (SimplePrefixEscaper.DEFAULT_ESCAPER.hasEscapeCharacters(domain)) {
       Preconditions.illegalArgument(
@@ -122,6 +125,10 @@ public final class WaveletId implements Comparable<WaveletId>, Serializable {
       Preconditions.illegalArgument("Id is not properly escaped: " + id);
     }
 
+    return new WaveletId(domain, id);
+  }
+
+  private WaveletId(String domain, String id) {
     // Intern domain string for memory efficiency.
     this.domain = domain.intern();
     this.id = id;
@@ -147,7 +154,7 @@ public final class WaveletId implements Comparable<WaveletId>, Serializable {
    */
   public String serialise() {
     if (cachedSerialisation == null) {
-      cachedSerialisation = LongIdSerialiser.INSTANCE.serialiseWaveletId(this);
+      cachedSerialisation = LegacyIdSerialiser.INSTANCE.serialiseWaveletId(this);
     }
     return cachedSerialisation;
   }

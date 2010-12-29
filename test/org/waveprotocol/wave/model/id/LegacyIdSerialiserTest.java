@@ -26,14 +26,13 @@ import junit.framework.TestCase;
  *
  * @author zdwang@google.com (David Wang)
  */
-
-public class IdSerialiserTest extends TestCase {
+public class LegacyIdSerialiserTest extends TestCase {
 
   private IdSerialiser serialiser;
 
   @Override
   public void setUp() {
-    serialiser = new LongIdSerialiser();
+    serialiser = LegacyIdSerialiser.INSTANCE;
   }
 
   public void testIdSerialiser() throws InvalidIdException {

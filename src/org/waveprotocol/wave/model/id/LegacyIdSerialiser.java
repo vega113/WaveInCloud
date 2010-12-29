@@ -24,30 +24,33 @@ package org.waveprotocol.wave.model.id;
  *
  * @author zdwang@google.com (David Wang)
  */
-public class LongIdSerialiser implements IdSerialiser {
+public class LegacyIdSerialiser implements IdSerialiser {
 
-  public static final LongIdSerialiser INSTANCE = new LongIdSerialiser();
+  public static final LegacyIdSerialiser INSTANCE = new LegacyIdSerialiser();
+
+  /** Separates a wave id from a wavelet id in serialised form. */
+  public static final char PART_SEPARATOR = '!';
 
   @Override
   public String serialiseWaveId(WaveId waveId) {
-    return waveId.getDomain() + PART_SEPARATOR + waveId.getId();
+    return waveId.getDomain() + LegacyIdSerialiser.PART_SEPARATOR + waveId.getId();
   }
 
   @Override
   public String serialiseWaveletId(WaveletId waveletId) {
-    return waveletId.getDomain() + PART_SEPARATOR + waveletId.getId();
+    return waveletId.getDomain() + LegacyIdSerialiser.PART_SEPARATOR + waveletId.getId();
   }
 
   @Override
   public WaveId deserialiseWaveId(String serialisedForm) throws InvalidIdException {
     String[] parts = SimplePrefixEscaper.DEFAULT_ESCAPER.splitWithoutUnescaping(
-        PART_SEPARATOR, serialisedForm);
+        LegacyIdSerialiser.PART_SEPARATOR, serialisedForm);
     if ((parts.length != 2) || parts[0].isEmpty() || parts[1].isEmpty()) {
       throw new InvalidIdException(serialisedForm,
-          "Wave id must be of the form <domain>" + PART_SEPARATOR + "<id>");
+          "Wave id must be of the form <domain>" + LegacyIdSerialiser.PART_SEPARATOR + "<id>");
     }
     try {
-      return new WaveId(parts[0], parts[1]);
+      return WaveId.ofLegacy(parts[0], parts[1]);
     } catch (IllegalArgumentException ex) {
       throw new InvalidIdException(serialisedForm, ex.getMessage());
     }
@@ -56,15 +59,18 @@ public class LongIdSerialiser implements IdSerialiser {
   @Override
   public WaveletId deserialiseWaveletId(String serialisedForm) throws InvalidIdException {
     String[] parts = SimplePrefixEscaper.DEFAULT_ESCAPER.splitWithoutUnescaping(
-        PART_SEPARATOR, serialisedForm);
+        LegacyIdSerialiser.PART_SEPARATOR, serialisedForm);
     if ((parts.length != 2) || parts[0].isEmpty() || parts[1].isEmpty()) {
       throw new InvalidIdException(serialisedForm,
-          "Wavelet id must be of the form <domain>" + PART_SEPARATOR + "<id>");
+          "Wavelet id must be of the form <domain>" + LegacyIdSerialiser.PART_SEPARATOR + "<id>");
     }
     try {
-      return new WaveletId(parts[0], parts[1]);
+      return WaveletId.ofLegacy(parts[0], parts[1]);
     } catch (IllegalArgumentException ex) {
       throw new InvalidIdException(serialisedForm, ex.getMessage());
     }
+  }
+
+  private LegacyIdSerialiser() {
   }
 }

@@ -82,7 +82,7 @@ public final class WaveIdentifiers {
    * Checks whether a UTF-16 string is a valid wave identifier.
    */
   public static boolean isValidIdentifier(String id) {
-    return Utf16Util.traverseUtf16String(id, GOOD_UTF16_FOR_ID);
+    return !id.isEmpty() && Utf16Util.traverseUtf16String(id, GOOD_UTF16_FOR_ID);
   }
 
   /**

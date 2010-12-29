@@ -163,8 +163,8 @@ public class SimplePrefixEscaperTest extends TestCase {
 
   private void utilTestEscapedId(String domain, String id) {
     try {
-      new WaveId(domain, id);
-      new WaveletId(domain, id);
+      WaveId.ofLegacy(domain, id);
+      WaveletId.ofLegacy(domain, id);
     } catch (IllegalArgumentException ex) {
       fail("Not supposed to throw exception: " + ex.getMessage());
     }
@@ -172,14 +172,14 @@ public class SimplePrefixEscaperTest extends TestCase {
 
   private void utilTestEscapedIdFail(String domain, String id) {
     try {
-      new WaveId(domain, id);
+      WaveId.ofLegacy(domain, id);
       fail("Not supposed to be able to create invalid WaveId");
     } catch (IllegalArgumentException ex) {
       // Expected
     }
 
     try {
-      new WaveletId(domain, id);
+      WaveletId.ofLegacy(domain, id);
       fail("Not supposed to be able to create invalid WaveletId");
     } catch (IllegalArgumentException ex) {
       // Expected

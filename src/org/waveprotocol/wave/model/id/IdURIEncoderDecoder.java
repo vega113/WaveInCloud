@@ -128,15 +128,15 @@ public class IdURIEncoderDecoder {
           serialisedForm);
     }
 
-    WaveletId waveletId = new WaveletId(parts[0], encoder.decode(parts[2]));
+    WaveletId waveletId = WaveletId.ofLegacy(parts[0], encoder.decode(parts[2]));
 
     String[] waveIdParts = SimplePrefixEscaper.DEFAULT_ESCAPER.splitWithoutUnescaping(
         '!', parts[1]);
     WaveId waveId;
     if (waveIdParts.length == 1) {
-      waveId = new WaveId(waveletId.getDomain(), encoder.decode(waveIdParts[0]));
+      waveId = WaveId.ofLegacy(waveletId.getDomain(), encoder.decode(waveIdParts[0]));
     } else if (waveIdParts.length == 2) {
-      waveId = new WaveId(waveIdParts[0], encoder.decode(waveIdParts[1]));
+      waveId = WaveId.ofLegacy(waveIdParts[0], encoder.decode(waveIdParts[1]));
     } else {
       throw new IllegalArgumentException("Wave id in URI path is invalid. Expected the format" +
           " [<wave domain>!]<wave id> but got: " + parts[1]);

@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.model.id;
 
-import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
-import org.waveprotocol.wave.model.waveref.WaveRef;
 
 /**
  * Serialises identifiers and waverefs to and from strings.
@@ -27,11 +25,6 @@ import org.waveprotocol.wave.model.waveref.WaveRef;
  * @author anorth@google.com (Alex North)
  */
 public interface IdSerialiser {
-  /** Separates a wave id from a wavelet id in serialised form. */
-  public static final char PART_SEPARATOR = '!';
-  /** Separates parts of a waveref in serialised form. */
-  public static final String WAVEREF_PART_SEPARATOR = "/";
-
   /**
    * Serialises a wave id into a string.
    */

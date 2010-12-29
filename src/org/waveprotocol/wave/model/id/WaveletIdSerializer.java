@@ -47,8 +47,8 @@ public final class WaveletIdSerializer {
         return WaveletId.deserialise(s);
       } catch (IllegalArgumentException e) {
         // The string may be a legacy wavelet id, that is missing a domain part.
-        if (!s.contains("" + IdSerialiser.PART_SEPARATOR)) {
-          return WaveletId.deserialise("google.com" + IdSerialiser.PART_SEPARATOR + s);
+        if (!s.contains("" + LegacyIdSerialiser.PART_SEPARATOR)) {
+          return WaveletId.deserialise("google.com" + LegacyIdSerialiser.PART_SEPARATOR + s);
         } else {
           throw e;
         }
