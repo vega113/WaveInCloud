@@ -29,7 +29,7 @@ import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class AuthTestUtil {
-  public static Configuration make() {
+  public static Configuration makeConfiguration() {
     return new Configuration() {
       @Override
       public AppConfigurationEntry[] getAppConfigurationEntry(String name) {

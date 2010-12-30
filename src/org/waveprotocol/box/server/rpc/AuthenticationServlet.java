@@ -225,10 +225,8 @@ public class AuthenticationServlet extends HttpServlet {
    */
   private void redirectLoggedInUser(HttpServletRequest req, HttpServletResponse resp)
       throws IOException {
-// TODO(josephg): reenable this check after fixing the delicate mocks in AuthenticationServletTest
-//     Preconditions.checkState(sessionManager.getLoggedInUser(req.getSession(false)) != null,
-//         "The user is not logged in");
-
+     Preconditions.checkState(sessionManager.getLoggedInUser(req.getSession(false)) != null,
+         "The user is not logged in");
     String query = req.getQueryString();
 
     // Not using req.getParameter() for this because calling that method might parse the password

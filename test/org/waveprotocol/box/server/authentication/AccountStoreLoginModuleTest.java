@@ -75,8 +75,8 @@ public class AccountStoreLoginModuleTest extends TestCase {
   }
 
   private LoginContext makeLoginContext(String address, String password) throws LoginException {
-    return new LoginContext(
-        "Wave", new Subject(), new FakeCallbackHandler(address, password), AuthTestUtil.make());
+    return new LoginContext("Wave", new Subject(), new FakeCallbackHandler(address, password),
+        AuthTestUtil.makeConfiguration());
   }
 
   private static void assertLoginFails(LoginContext context) {
@@ -106,7 +106,7 @@ public class AccountStoreLoginModuleTest extends TestCase {
     context.logout();
     assertEquals(0, subject.getPrincipals(ParticipantPrincipal.class).size());
   }
-  
+
   public void testMissingDomainIsAddedAutomatically() throws Exception {
     LoginContext context = makeLoginContext("haspwd", "pwd");
     context.login();

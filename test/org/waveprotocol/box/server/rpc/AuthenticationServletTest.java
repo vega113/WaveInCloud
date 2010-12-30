@@ -27,13 +27,14 @@ import static org.mockito.Mockito.when;
 import junit.framework.TestCase;
 
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.waveprotocol.box.server.account.HumanAccountData;
 import org.waveprotocol.box.server.account.HumanAccountDataImpl;
 import org.waveprotocol.box.server.authentication.AccountStoreHolder;
 import org.waveprotocol.box.server.authentication.AuthTestUtil;
 import org.waveprotocol.box.server.authentication.PasswordDigest;
-import org.waveprotocol.box.server.authentication.SessionManagerImpl;
+import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -61,6 +62,7 @@ public class AuthenticationServletTest extends TestCase {
   @Mock private HttpServletRequest req;
   @Mock private HttpServletResponse resp;
   @Mock private HttpSession session;
+  @Mock private SessionManager manager;
 
   @Override
   protected void setUp() throws Exception {
@@ -71,11 +73,7 @@ public class AuthenticationServletTest extends TestCase {
         new HumanAccountDataImpl(USER, new PasswordDigest("password".toCharArray()));
     store.putAccount(account);
 
-    org.eclipse.jetty.server.SessionManager jettySessionManager =
-        mock(org.eclipse.jetty.server.SessionManager.class);
-    servlet = new AuthenticationServlet(
-        AuthTestUtil.make(), new SessionManagerImpl(store, jettySessionManager), "example.com");
-
+    servlet = new AuthenticationServlet(AuthTestUtil.makeConfiguration(), manager, "example.com");
     AccountStoreHolder.init(store, "example.com");
   }
 
@@ -99,53 +97,47 @@ public class AuthenticationServletTest extends TestCase {
   public void testGetRedirects() throws IOException {
     String location = "/abc123?nested=query&string";
     when(req.getSession(false)).thenReturn(session);
-    when(session.getAttribute("user")).thenReturn(USER);
+    when(manager.getLoggedInUser(session)).thenReturn(USER);
     configureRedirectString(location);
 
     servlet.doGet(req, resp);
-
     verify(resp).sendRedirect(location);
   }
 
   public void testValidLoginWorks() throws IOException {
-    attemptLogin("frodo@example.com", "password");
-
+    attemptLogin("frodo@example.com", "password", true);
     verify(resp).sendRedirect("/");
-    verify(session).setAttribute("user", USER);
   }
 
   public void testUserWithNoDomainGetsDomainAutomaticallyAdded() throws Exception {
-    attemptLogin("frodo", "password");
-
+    attemptLogin("frodo", "password", true);
     verify(resp).sendRedirect("/");
-    verify(session).setAttribute("user", USER);
   }
 
   public void testLoginRedirects() throws IOException {
     String redirect = "/abc123?nested=query&string";
     configureRedirectString(redirect);
-    attemptLogin("frodo@example.com", "password");
+    attemptLogin("frodo@example.com", "password", true);
 
     verify(resp).sendRedirect(redirect);
-    verify(session).setAttribute("user", USER);
   }
 
   public void testLoginDoesNotRedirectToRemoteSite() throws IOException {
     configureRedirectString("http://example.com/other/site");
-    attemptLogin("frodo@example.com", "password");
+    attemptLogin("frodo@example.com", "password", true);
 
     verify(resp, never()).sendRedirect(anyString());
   }
 
   public void testIncorrectPasswordReturns403() throws IOException {
-    attemptLogin("frodo@example.com", "incorrect");
+    attemptLogin("frodo@example.com", "incorrect", false);
 
     verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
     verify(session, never()).setAttribute(eq("user"), anyString());
   }
 
   public void testInvalidUsernameReturns403() throws IOException {
-    attemptLogin("madeup@example.com", "incorrect");
+    attemptLogin("madeup@example.com", "incorrect", false);
 
     verify(resp).setStatus(HttpServletResponse.SC_FORBIDDEN);
     verify(session, never()).setAttribute(eq("address"), anyString());
@@ -160,7 +152,7 @@ public class AuthenticationServletTest extends TestCase {
     when(req.getQueryString()).thenReturn(queryStr);
   }
 
-  public void attemptLogin(String address, String password) throws IOException {
+  private void attemptLogin(String address, String password, boolean expectSuccess) throws IOException {
     // The query string is escaped.
     PercentEscaper escaper = new PercentEscaper(PercentEscaper.SAFECHARS_URLENCODER, true);
     String data =
@@ -174,6 +166,15 @@ public class AuthenticationServletTest extends TestCase {
     when(req.getSession(true)).thenReturn(session);
     when(req.getLocale()).thenReturn(Locale.ENGLISH);
 
+    // Servlet control flow forces us to set these return values first and
+    // verify the logged in user was set afterwards.
+    if (expectSuccess) {
+      when(manager.getLoggedInUser(Mockito.any(HttpSession.class))).thenReturn(USER);
+      when(session.getAttribute("user")).thenReturn(USER);
+    }
     servlet.doPost(req, resp);
+    if (expectSuccess) {
+      verify(manager).setLoggedInUser(session, USER);
+    }
   }
 }

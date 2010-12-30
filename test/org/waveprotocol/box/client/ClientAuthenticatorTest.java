@@ -58,8 +58,9 @@ public class ClientAuthenticatorTest extends TestCase {
     AccountStore store = new MemoryStore();
     org.eclipse.jetty.server.SessionManager jettySessionManager =
         Mockito.mock(org.eclipse.jetty.server.SessionManager.class);
-    AuthenticationServlet servlet = new AuthenticationServlet(
-        AuthTestUtil.make(), new SessionManagerImpl(store, jettySessionManager), "example.com");
+    AuthenticationServlet servlet =
+        new AuthenticationServlet(AuthTestUtil.makeConfiguration(), new SessionManagerImpl(store,
+            jettySessionManager), "example.com");
 
     store.putAccount(new HumanAccountDataImpl(
         ParticipantId.ofUnsafe("user@example.com"), new PasswordDigest("pwd".toCharArray())));
