@@ -71,12 +71,11 @@ public interface WaveletProvider {
    * @return deltas in the range as requested, ordered by applied version.
    * @throws AccessControlException if {@code versionStart} or
    *         {@code versionEnd} are not in the wavelet history.
-   * @throws WaveletStateException if the wavelet is in a state unsuitable for
-   *         retrieving history.
+   * @throws WaveServerException if storage access fails or if the wavelet is in
+   *         a bad state
    */
   Collection<TransformedWaveletDelta> getHistory(WaveletName waveletName,
-      HashedVersion versionStart, HashedVersion versionEnd)
-      throws AccessControlException, WaveletStateException;
+      HashedVersion versionStart, HashedVersion versionEnd) throws WaveServerException;
 
   /**
    * Check if the specified participantId has access to the named wavelet.
@@ -84,19 +83,21 @@ public interface WaveletProvider {
    * @param waveletName name of wavelet.
    * @param participantId id of participant attempting to gain access to
    *        wavelet, or null if the user isn't logged in.
-   * @throws WaveletStateException if the wavelet is in a state unsuitable for
-   *         checking permissions.
    * @return true if the wavelet exists and the participant is a participant on
    *         the wavelet.
+   * @throws WaveServerException if storage access fails or if the wavelet is in
+   *         a bad state
    */
   boolean checkAccessPermission(WaveletName waveletName, ParticipantId participantId)
-      throws WaveletStateException;
+      throws WaveServerException;
 
   /**
    * Request the current state of the wavelet.
    *
    * @param waveletName the name of the wavelet
    * @return the wavelet, or null if the wavelet doesn't exist
+   * @throws WaveServerException if storage access fails or if the wavelet is in
+   *         a bad state
    */
-  WaveletSnapshotAndVersion getSnapshot(WaveletName waveletName);
+  WaveletSnapshotAndVersion getSnapshot(WaveletName waveletName) throws WaveServerException;
 }

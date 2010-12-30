@@ -198,7 +198,13 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
           // TODO(anorth): calculate resync point if the client already knows
           // a snapshot.
           deltasToSend = DeltaSequence.empty();
-          snapshotToSend = waveletProvider.getSnapshot(waveletName);
+          try {
+            snapshotToSend = waveletProvider.getSnapshot(waveletName);
+          } catch (WaveServerException e) {
+            LOG.warning("Failed to retrieve snapshot for wavelet " + waveletName, e);
+            openListener.onFailure("Wave server failure retrieving wavelet");
+            return;
+          }
         }
 
         LOG.info("snapshot in response is: " + (snapshotToSend != null));

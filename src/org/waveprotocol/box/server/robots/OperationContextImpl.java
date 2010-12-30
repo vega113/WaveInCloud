@@ -36,6 +36,7 @@ import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.robots.util.OperationUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
+import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
@@ -205,7 +206,13 @@ public class OperationContextImpl implements OperationContext, OperationResults 
     RobotWaveletData wavelet = openedWavelets.get(waveletName);
     if (wavelet == null) {
       // Open a wavelet from the server
-      WaveletSnapshotAndVersion snapshot = waveletProvider.getSnapshot(waveletName);
+      WaveletSnapshotAndVersion snapshot;
+      try {
+        snapshot = waveletProvider.getSnapshot(waveletName);
+      } catch (WaveServerException e) {
+        LOG.severe("Wave server failure retrieving snapshot for wavelet " + waveletName);
+        throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
+      }
 
       if (snapshot == null) {
         throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");

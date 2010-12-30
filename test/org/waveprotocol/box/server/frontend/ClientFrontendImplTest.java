@@ -331,7 +331,7 @@ public class ClientFrontendImplTest extends TestCase {
    * gets a snapshot and both existing listeners and the new listener get
    * subsequent updates.
    */
-  public void testOpenAfterVersionZero() {
+  public void testOpenAfterVersionZero() throws Exception {
     UpdateListener oldListener = new UpdateListener();
     clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, NO_KNOWN_WAVELETS, oldListener);
 

@@ -137,7 +137,8 @@ public class WaveMap implements SearchProvider {
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        throw new RuntimeException("Interrupted", e);
+        // Let's call this a persistence exception because, ultimately, we failed to access storage.
+        throw new PersistenceException("Interrupted looking up wavelets for wave " + waveId, e);
       }
     }
   }

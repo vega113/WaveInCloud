@@ -27,7 +27,7 @@ import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
-import org.waveprotocol.box.server.waveserver.WaveletStateException;
+import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -132,18 +132,17 @@ public final class FetchServlet extends HttpServlet {
 
     WaveletName waveletName = WaveletName.of(waveref.getWaveId(), waveletId);
 
+    WaveletSnapshotAndVersion snapshotAndV;
     try {
       if (!waveletProvider.checkAccessPermission(waveletName, requester)) {
         dest.sendError(HttpServletResponse.SC_FORBIDDEN);
         return;
       }
-    } catch (WaveletStateException e) {
+      LOG.info("Fetching snapshot of wavelet " + waveletName);
+      snapshotAndV = waveletProvider.getSnapshot(waveletName);
+    } catch (WaveServerException e) {
       throw new IOException(e);
     }
-
-    LOG.info("Fetching snapshot of wavelet " + waveletName);
-    WaveletSnapshotAndVersion snapshotAndV = waveletProvider.getSnapshot(waveletName);
-
     if (snapshotAndV != null) {
       WaveletSnapshot snapshot = snapshotAndV.snapshot;
       if (waveref.hasDocumentId()) {
