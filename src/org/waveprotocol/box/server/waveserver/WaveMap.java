@@ -24,7 +24,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -75,7 +75,7 @@ public class WaveMap implements SearchProvider {
 
     private final WaveId waveId;
     /** Future providing already-existing wavelets in storage. */
-    private final CheckedFuture<ImmutableSet<WaveletId>, PersistenceException> lookedupWavelets;
+    private final ListenableFuture<ImmutableSet<WaveletId>> lookedupWavelets;
     private final ConcurrentMap<WaveletId, LocalWaveletContainer> localWavelets;
     private final ConcurrentMap<WaveletId, RemoteWaveletContainer> remoteWavelets;
     private final WaveletNotificationSubscriber notifiee;
@@ -85,7 +85,7 @@ public class WaveMap implements SearchProvider {
      * query is first made.
      */
     public Wave(WaveId waveId,
-        CheckedFuture<ImmutableSet<WaveletId>, PersistenceException> lookedupWavelets,
+        ListenableFuture<ImmutableSet<WaveletId>> lookedupWavelets,
         WaveletNotificationSubscriber notifiee, LocalWaveletContainer.Factory localFactory,
         RemoteWaveletContainer.Factory remoteFactory) {
       this.waveId = waveId;
@@ -123,20 +123,26 @@ public class WaveMap implements SearchProvider {
 
     private <T extends WaveletContainer> T getWavelet(WaveletId waveletId,
         ConcurrentMap<WaveletId, T> waveletsMap) throws PersistenceException {
-      // Since waveletsMap is a computing map, we must call containsKey(waveletId)
-      // to tell if waveletId is mapped, we cannot test if get(waveletId) returns null.
-      if (!lookedupWavelets.checkedGet().contains(waveletId) &&
-          !waveletsMap.containsKey(waveletId)) {
-        return null;
-      } else {
-        T wavelet = waveletsMap.get(waveletId);
-        Preconditions.checkNotNull(wavelet, "computingMap returned null");
-        return wavelet.isEmpty() ? null : wavelet;
+      try {
+        ImmutableSet<WaveletId> storedWavelets =
+            FutureUtil.getResultOrPropagateException(lookedupWavelets, PersistenceException.class);
+        // Since waveletsMap is a computing map, we must call containsKey(waveletId)
+        // to tell if waveletId is mapped, we cannot test if get(waveletId) returns null.
+        if (!storedWavelets.contains(waveletId) && !waveletsMap.containsKey(waveletId)) {
+          return null;
+        } else {
+          T wavelet = waveletsMap.get(waveletId);
+          Preconditions.checkNotNull(wavelet, "computingMap returned null");
+          return wavelet.isEmpty() ? null : wavelet;
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException("Interrupted", e);
       }
     }
   }
 
-  private static CheckedFuture<ImmutableSet<WaveletId>, PersistenceException> lookupWavelets(
+  private static ListenableFuture<ImmutableSet<WaveletId>> lookupWavelets(
       final WaveId waveId, final WaveletStore waveletStore, Executor lookupExecutor) {
     ListenableFutureTask<ImmutableSet<WaveletId>> task =
         new ListenableFutureTask<ImmutableSet<WaveletId>>(
@@ -147,7 +153,7 @@ public class WaveMap implements SearchProvider {
               }
             });
     lookupExecutor.execute(task);
-    return FutureUtil.check(task, PersistenceException.class);
+    return task;
   }
 
   private final ConcurrentMap<WaveId, Wave> waves;
@@ -163,7 +169,7 @@ public class WaveMap implements SearchProvider {
         new Function<WaveId, Wave>() {
           @Override
           public Wave apply(WaveId waveId) {
-            CheckedFuture<ImmutableSet<WaveletId>, PersistenceException> lookedupWavelets =
+            ListenableFuture<ImmutableSet<WaveletId>> lookedupWavelets =
                 lookupWavelets(waveId, waveletStore, lookupExecutor);
             return new Wave(waveId, lookedupWavelets, notifiee, localFactory, remoteFactory);
           }

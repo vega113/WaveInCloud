@@ -17,7 +17,7 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.ByteString;
 
 import org.waveprotocol.wave.federation.FederationException;
@@ -53,7 +53,7 @@ interface RemoteWaveletContainer extends WaveletContainer {
    * @return future which is set after the deltas are applied to the local
    *         state or a failure occurs
    */
-  CheckedFuture<Void, FederationException> update(List<ByteString> deltas, String domain,
+  ListenableFuture<Void> update(List<ByteString> deltas, String domain,
       WaveletFederationProvider federationProvider, CertificateManager certificateManager);
 
   /**
