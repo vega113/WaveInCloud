@@ -49,7 +49,6 @@ import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
 import org.waveprotocol.wave.crypto.WaveSigner;
 import org.waveprotocol.wave.crypto.WaveSignerFactory;
 import org.waveprotocol.wave.federation.FederationErrors;
-import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;

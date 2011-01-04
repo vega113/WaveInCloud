@@ -29,7 +29,6 @@ import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.federation.FederationHostBridge;
-import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
@@ -138,7 +137,7 @@ class WaveletNotificationDispatcher implements WaveBus, WaveletNotificationSubsc
         federationHosts.get(domain).waveletDeltaUpdate(WaveletDataUtil.waveletNameOf(wavelet),
             serializedAppliedDeltas, federationCallback("delta update"));
       }
-    }        
+    }
   }
 
   @Override

@@ -28,7 +28,6 @@ import org.dom4j.Element;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationHostBridge;
 import org.waveprotocol.wave.federation.FederationSettings;
-import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
@@ -277,8 +276,8 @@ public class XmppFederationHost implements WaveletFederationListener.Factory {
     }
 
     // Construct a submit result listener inline.
-    SubmitResultListener listener =
-        new SubmitResultListener() {
+    WaveletFederationProvider.SubmitResultListener listener =
+        new WaveletFederationProvider.SubmitResultListener() {
           @Override
           public void onFailure(FederationError error) {
             responseCallback.error(error);

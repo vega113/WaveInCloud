@@ -44,6 +44,16 @@ import java.util.List;
  */
 public interface WaveletFederationProvider {
   /**
+   * Base interface for federation listeners which can fail with a federation error code.
+   */
+  interface FederationListener {
+    /**
+     * Called when a request fails.
+     */
+    void onFailure(FederationError errorMessage);
+  }
+
+  /**
    * Request submission of signed delta.
    *
    * @param waveletName name of wavelet.
@@ -52,6 +62,18 @@ public interface WaveletFederationProvider {
    */
   void submitRequest(WaveletName waveletName, ProtocolSignedDelta delta,
       SubmitResultListener listener);
+
+  interface SubmitResultListener extends FederationListener {
+    /**
+     * Called when a submit succeeds.
+     *
+     * @param operationsApplied number of ops applied
+     * @param hashedVersionAfterApplication wavelet version after the delta
+     * @param applicationTimestamp timestamp of the application
+     */
+    void onSuccess(int operationsApplied, ProtocolHashedVersion hashedVersionAfterApplication,
+        long applicationTimestamp);
+  }
 
   /**
    * Retrieve delta history for the given wavelet.
@@ -69,7 +91,7 @@ public interface WaveletFederationProvider {
       ProtocolHashedVersion startVersion, ProtocolHashedVersion endVersion,
       long lengthLimit, HistoryResponseListener listener);
 
-  interface HistoryResponseListener {
+  interface HistoryResponseListener extends FederationListener {
     /**
      * @param deltaList of serialised {@code ProtocolAppliedWaveletDelta}s, represented as
      *        {@code ByteString}s.  Note that these are not guaranteed to parse correctly as
@@ -81,7 +103,6 @@ public interface WaveletFederationProvider {
      */
     void onSuccess(List<ByteString> deltaList,
                    ProtocolHashedVersion lastCommittedVersion, long versionTruncatedAt);
-    void onFailure(FederationError errorMessage);
   }
 
   /**
@@ -104,9 +125,8 @@ public interface WaveletFederationProvider {
       WaveletName waveletName, ProtocolHashedVersion deltaEndVersion,
       DeltaSignerInfoResponseListener listener);
 
-  interface DeltaSignerInfoResponseListener {
+  interface DeltaSignerInfoResponseListener extends FederationListener {
     void onSuccess(ProtocolSignerInfo signerInfo);
-    void onFailure(FederationError errorMessage);
   }
 
   /**
@@ -120,8 +140,7 @@ public interface WaveletFederationProvider {
   void postSignerInfo(String destinationDomain, ProtocolSignerInfo signerInfo,
       PostSignerInfoResponseListener listener);
 
-  interface PostSignerInfoResponseListener {
+  interface PostSignerInfoResponseListener extends FederationListener {
     void onSuccess();
-    void onFailure(FederationError errorMessage);
   }
 }

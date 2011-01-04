@@ -20,7 +20,6 @@ package org.waveprotocol.wave.federation.noop;
 import com.google.protobuf.ByteString;
 
 import org.waveprotocol.wave.federation.FederationErrors;
-import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
@@ -30,7 +29,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
 /**
  * An implementation of {@link WaveletFederationProvider} that always calls the onFailure()
  * method of the listeners.
- * 
+ *
  * @author tad.glines@gmail.com (Tad Glines)
  */
 public class NoOpFederationRemote implements WaveletFederationProvider {

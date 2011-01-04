@@ -35,7 +35,6 @@ import junit.framework.TestCase;
 import org.dom4j.Element;
 import org.mockito.ArgumentCaptor;
 import org.waveprotocol.wave.federation.ProtocolHashedVersionFactory;
-import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
@@ -46,6 +45,7 @@ import org.waveprotocol.wave.federation.WaveletFederationListener.WaveletUpdateC
 import org.waveprotocol.wave.federation.WaveletFederationProvider.DeltaSignerInfoResponseListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider.HistoryResponseListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider.PostSignerInfoResponseListener;
+import org.waveprotocol.wave.federation.WaveletFederationProvider.SubmitResultListener;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;

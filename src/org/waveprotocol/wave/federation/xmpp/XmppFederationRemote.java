@@ -30,7 +30,6 @@ import org.dom4j.Element;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationRemoteBridge;
 import org.waveprotocol.wave.federation.FederationSettings;
-import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;

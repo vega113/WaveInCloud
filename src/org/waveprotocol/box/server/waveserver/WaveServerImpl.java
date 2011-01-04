@@ -35,7 +35,6 @@ import org.waveprotocol.wave.crypto.UnknownSignerException;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationException;
 import org.waveprotocol.wave.federation.FederationRemoteBridge;
-import org.waveprotocol.wave.federation.SubmitResultListener;
 import org.waveprotocol.wave.federation.WaveletFederationListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
@@ -55,7 +54,6 @@ import org.waveprotocol.wave.util.logging.Log;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -143,7 +141,7 @@ public class WaveServerImpl implements WaveletProvider,
           LOG.warning("Failed to lookup wavelet " + waveletName + " for commit update", e);
           callback.onFailure(FederationErrors.internalServerError("Storage access failure"));
           return;
-        } 
+        }
         if (wavelet != null) {
           wavelet.commit(CoreWaveletOperationSerializer.deserialize(committedVersion));
         } else {
@@ -205,98 +203,55 @@ public class WaveServerImpl implements WaveletProvider,
   public void requestHistory(WaveletName waveletName, String domain,
       ProtocolHashedVersion startVersion, ProtocolHashedVersion endVersion,
       long lengthLimit, HistoryResponseListener listener) {
-    // TODO: once we support federated groups, expand support to request remote wavelets too.
-    if (!isLocalWavelet(waveletName)) {
-      LOG.info("Federation remote for domain: " + domain + " requested a remote wavelet: " +
-          waveletName);
-      listener.onFailure(FederationErrors.badRequest("Wavelet not hosted here."));
-      return;
-    }
+    LocalWaveletContainer wavelet = loadLocalWavelet(waveletName, listener);
+    if (wavelet != null) {
+      Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> deltaHistory;
+      try {
+        deltaHistory = wavelet.requestHistory(
+            CoreWaveletOperationSerializer.deserialize(startVersion),
+            CoreWaveletOperationSerializer.deserialize(endVersion));
+      } catch (WaveServerException e) {
+        LOG.severe("Error retrieving wavelet history: " + waveletName + " " + startVersion +
+            " - " + endVersion);
+        // TODO(soren): choose a better error code (depending on e)
+        listener.onFailure(FederationErrors.badRequest(
+            "Server error while retrieving wavelet history."));
+        return;
+      }
 
-    LocalWaveletContainer wavelet;
-    try {
-      wavelet = getLocalWavelet(waveletName);
-    } catch (PersistenceException e) {
-      LOG.warning("Failed to lookup wavelet " + waveletName + " for history request", e);
-      listener.onFailure(FederationErrors.internalServerError("Storage access failure"));
-      return;
-    } 
-    if (wavelet == null) {
-      LOG.info("Request history: " + domain + " requested non-existent wavelet: " + waveletName);
-      // TODO(soren): determine if it's ok to leak the fact that the wavelet doesn't exist,
-      // or if we should hide this information and return the same error code as for wrong
-      // version number or history hash
-      listener.onFailure(FederationErrors.badRequest("Wavelet does not exist."));
-      return;
+      // TODO(soren): enforce length limit
+      ImmutableList.Builder<ByteString> deltaHistoryBytes = ImmutableList.builder();
+      for (ByteStringMessage<ProtocolAppliedWaveletDelta> d : deltaHistory) {
+        deltaHistoryBytes.add(d.getByteString());
+      }
+      // Now determine whether we received the entire requested wavelet history.
+      LOG.info("Found deltaHistory between " + startVersion + " - " + endVersion
+          + ", returning to requester domain " + domain + " -- " + deltaHistory);
+      listener.onSuccess(deltaHistoryBytes.build(), endVersion, endVersion.getVersion());
     }
-
-    Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> deltaHistory;
-    try {
-      deltaHistory = wavelet.requestHistory(
-          CoreWaveletOperationSerializer.deserialize(startVersion),
-          CoreWaveletOperationSerializer.deserialize(endVersion));
-    } catch (WaveServerException e) {
-      LOG.severe("Error retrieving wavelet history: " + waveletName + " " + startVersion +
-          " - " + endVersion);
-      // TODO(soren): choose a better error code (depending on e)
-      listener.onFailure(FederationErrors.badRequest(
-          "Server error while retrieving wavelet history."));
-      return;
-    }
-
-    // TODO(soren): enforce length limit
-    ImmutableList.Builder<ByteString> deltaHistoryBytes = ImmutableList.builder();
-    for (ByteStringMessage<ProtocolAppliedWaveletDelta> d : deltaHistory) {
-      deltaHistoryBytes.add(d.getByteString());
-    }
-    // Now determine whether we received the entire requested wavelet history.
-    LOG.info("Found deltaHistory between " + startVersion + " - " + endVersion
-        + ", returning to requester domain " + domain + " -- " + deltaHistory);
-    listener.onSuccess(deltaHistoryBytes.build(), endVersion, endVersion.getVersion());
   }
 
   @Override
   public void getDeltaSignerInfo(ByteString signerId,
       WaveletName waveletName, ProtocolHashedVersion deltaEndVersion,
       DeltaSignerInfoResponseListener listener) {
-    // TODO: once we support federated groups, expand support to request remote wavelets too.
-    if (!isLocalWavelet(waveletName)) {
-      LOG.warning("Attempt to get delta signer info for remote wavelet " + waveletName);
-      listener.onFailure(FederationErrors.badRequest("Wavelet not hosted here."));
-      return;
-    }
-
-    LocalWaveletContainer wavelet;
-    try {
-      wavelet = getLocalWavelet(waveletName);
-    } catch (PersistenceException e) {
-      LOG.warning("Failed to lookup wavelet " + waveletName + " for delta signer info", e);
-      listener.onFailure(FederationErrors.internalServerError("Storage access failure"));
-      return;
-    } 
-    if (wavelet == null) {
-      LOG.info("getDeltaSignerInfo for nonexistent wavelet " + waveletName);
-      // TODO(soren): determine if it's ok to leak the fact that the wavelet doesn't exist,
-      // or if we should hide this information and return the same error code as for wrong
-      // version number or history hash
-      listener.onFailure(FederationErrors.badRequest("Wavelet does not exist"));
-      return;
-    }
-
-    HashedVersion endVersion = CoreWaveletOperationSerializer.deserialize(deltaEndVersion);
-    if (wavelet.isDeltaSigner(endVersion, signerId)) {
-      ProtocolSignerInfo signerInfo = certificateManager.retrieveSignerInfo(signerId);
-      if (signerInfo == null) {
-        // Oh no!  We are supposed to store it, and we already know they did sign this delta.
-        LOG.severe("No stored signer info for valid getDeltaSignerInfo on " + waveletName);
-        listener.onFailure(FederationErrors.badRequest("Unknown signer info"));
+    LocalWaveletContainer wavelet = loadLocalWavelet(waveletName, listener);
+    if (wavelet != null) {
+      HashedVersion endVersion = CoreWaveletOperationSerializer.deserialize(deltaEndVersion);
+      if (wavelet.isDeltaSigner(endVersion, signerId)) {
+        ProtocolSignerInfo signerInfo = certificateManager.retrieveSignerInfo(signerId);
+        if (signerInfo == null) {
+          // Oh no!  We are supposed to store it, and we already know they did sign this delta.
+          LOG.severe("No stored signer info for valid getDeltaSignerInfo on " + waveletName);
+          listener.onFailure(FederationErrors.badRequest("Unknown signer info"));
+        } else {
+          listener.onSuccess(signerInfo);
+        }
       } else {
-        listener.onSuccess(signerInfo);
+        LOG.info("getDeltaSignerInfo was not authrorised for wavelet " + waveletName
+            + ", end version " + deltaEndVersion);
+        listener.onFailure(FederationErrors.badRequest("Not authorised to get signer info"));
       }
-    } else {
-      LOG.info("getDeltaSignerInfo was not authrorised for wavelet " + waveletName
-          + ", end version " + deltaEndVersion);
-      listener.onFailure(FederationErrors.badRequest("Not authorised to get signer info"));
     }
   }
 
@@ -411,6 +366,41 @@ public class WaveServerImpl implements WaveletProvider,
         LOG.severe("Failed to add our own signer info to the certificate store", e);
       }
     }
+  }
+
+  /**
+   * Loads a local wavelet. If the request is invalid then the listener is
+   * notified and null returned.
+   *
+   * @param waveletName wavelet to load
+   * @param listener listener to notify on failure
+   * @return the wavelet container, or null on failure
+   */
+  private LocalWaveletContainer loadLocalWavelet(WaveletName waveletName,
+      FederationListener listener) {
+    // TODO(soren): once we support federated groups, expand support to request remote wavelets too.
+    if (!isLocalWavelet(waveletName)) {
+      LOG.warning("Attempt to get delta signer info for remote wavelet " + waveletName);
+      listener.onFailure(FederationErrors.badRequest("Wavelet not hosted here."));
+      return null;
+    }
+
+    LocalWaveletContainer wavelet = null;
+    try {
+      wavelet = getLocalWavelet(waveletName);
+    } catch (PersistenceException e) {
+      LOG.warning("Failed to lookup wavelet " + waveletName, e);
+      listener.onFailure(FederationErrors.internalServerError("Storage access failure"));
+      return null;
+    }
+    if (wavelet == null) {
+      LOG.info("Non-existent wavelet " + waveletName);
+      // TODO(soren): determine if it's ok to leak the fact that the wavelet doesn't exist,
+      // or if we should hide this information and return the same error code as for wrong
+      // version number or history hash
+      listener.onFailure(FederationErrors.badRequest("Wavelet does not exist"));
+    }
+    return wavelet;
   }
 
   private boolean isLocalWavelet(WaveletName waveletName) {
