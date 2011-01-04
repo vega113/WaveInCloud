@@ -66,8 +66,6 @@ public class WaveServerImpl implements WaveletProvider,
 
   private static final Log LOG = Log.get(WaveServerImpl.class);
 
-  protected static final long HISTORY_REQUEST_LENGTH_LIMIT_BYTES = 1024 * 1024;
-
   private final Executor listenerExecutor;
   private final CertificateManager certificateManager;
   private final WaveletFederationProvider federationRemote;

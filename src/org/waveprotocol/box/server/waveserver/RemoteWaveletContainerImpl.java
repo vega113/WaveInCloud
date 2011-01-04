@@ -60,16 +60,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Remote wavelets differ from local ones in that deltas are not submitted for OT,
  * rather they are updated when a remote wave service provider has applied and sent
  * a delta.
- *
- *
  */
-class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
-    RemoteWaveletContainer {
+class RemoteWaveletContainerImpl extends WaveletContainerImpl implements RemoteWaveletContainer {
   private static final Log LOG = Log.get(RemoteWaveletContainerImpl.class);
 
   /**
-   * Stores all pending deltas for this wavelet, whos insertions would cause
-   * discontinuous blocks of deltas. This must only be accessed under writeLock.
+   * Stores all pending deltas for this wavelet, whose insertions would cause
+   * discontiguous blocks of deltas. This must only be accessed under writeLock.
    */
   private final NavigableMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>>
       pendingDeltas = Maps.newTreeMap();

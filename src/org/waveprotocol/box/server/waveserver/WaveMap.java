@@ -147,6 +147,10 @@ public class WaveMap implements SearchProvider {
     }
   }
 
+  /**
+   * Returns a future whose result is the ids of stored wavelets in the given wave.
+   * Any failure is reported as a {@link PersistenceException}.
+   */
   private static ListenableFuture<ImmutableSet<WaveletId>> lookupWavelets(
       final WaveId waveId, final WaveletStore waveletStore, Executor lookupExecutor) {
     ListenableFutureTask<ImmutableSet<WaveletId>> task =

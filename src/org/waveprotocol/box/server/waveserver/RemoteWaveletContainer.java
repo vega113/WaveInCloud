@@ -51,7 +51,8 @@ interface RemoteWaveletContainer extends WaveletContainer {
    * @param federationProvider the provider where missing data may be sourced
    * @param certificateManager for verifying signatures and requesting signer info
    * @return future which is set after the deltas are applied to the local
-   *         state or a failure occurs
+   *         state or a failure occurs.
+   *         Any failure is reported as a {@link FederationException}.
    */
   ListenableFuture<Void> update(List<ByteString> deltas, String domain,
       WaveletFederationProvider federationProvider, CertificateManager certificateManager);

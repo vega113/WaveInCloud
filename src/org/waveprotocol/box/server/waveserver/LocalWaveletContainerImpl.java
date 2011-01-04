@@ -46,8 +46,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
  * operational transformation on the submitted delta and assign it the latest
  * version of the wavelet.
  */
-class LocalWaveletContainerImpl extends WaveletContainerImpl
-    implements LocalWaveletContainer {
+class LocalWaveletContainerImpl extends WaveletContainerImpl implements LocalWaveletContainer {
 
   private static final Function<RemoveParticipant, ParticipantId> PARTICIPANT_REMOVED_BY =
       new Function<RemoveParticipant, ParticipantId>() {

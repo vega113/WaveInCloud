@@ -18,9 +18,8 @@
 package org.waveprotocol.box.server.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
-import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuffer;
+import org.waveprotocol.wave.model.document.util.EmptyDocument;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
@@ -37,6 +36,7 @@ import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -190,11 +190,7 @@ public final class WaveletDataUtil {
    */
   public static BlipData addEmptyBlip(
       WaveletData wavelet, String blipId, ParticipantId author, long time) {
-    return wavelet.createDocument(blipId,
-        author,
-        Lists.newArrayList(author),
-        new DocInitializationBuffer().finish(),
-        time,
-        time);
+    return wavelet.createDocument(blipId, author, Collections.<ParticipantId>singleton(author),
+        EmptyDocument.EMPTY_DOCUMENT, time, time);
   }
 }

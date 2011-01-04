@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.common.DeltaSequence;
@@ -85,10 +84,9 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     CORRUPTED
   }
 
-  // TODO(soren): inject a proper executor, using sameThreadExecutor can be fragile
+  // TODO(soren): inject an executor which can be shared with other wavelets
   private final Executor storageContinuationExecutor =
       Executors.newSingleThreadExecutor();
-      //MoreExecutors.sameThreadExecutor();
 
   private final Lock readLock;
   private final ReentrantReadWriteLock.WriteLock writeLock;

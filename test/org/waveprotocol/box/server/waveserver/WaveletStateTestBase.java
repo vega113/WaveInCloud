@@ -55,23 +55,6 @@ import java.util.concurrent.Future;
  */
 public abstract class WaveletStateTestBase extends TestCase {
 
-  private static final class DeltaFacets {
-    final HashedVersion appliedAtVersion;
-    final ByteStringMessage<ProtocolAppliedWaveletDelta> applied;
-    final TransformedWaveletDelta transformed;
-
-    DeltaFacets(HashedVersion appliedAtVersion, ByteStringMessage<ProtocolAppliedWaveletDelta> applied,
-        TransformedWaveletDelta transformed) {
-      this.appliedAtVersion = appliedAtVersion;
-      this.applied = applied;
-      this.transformed = transformed;
-    }
-
-    HashedVersion getResultingVersion() {
-      return transformed.getResultingVersion();
-    }
-  }
-
   private static final WaveletName NAME = WaveletName.of(WaveId.of("example.com", "waveid"),
       WaveletId.of("example.com", "waveletid"));
   private static final ParticipantId AUTHOR = ParticipantId.ofUnsafe("author@example.com");
@@ -98,9 +81,9 @@ public abstract class WaveletStateTestBase extends TestCase {
    */
   protected abstract void awaitPersistence();
 
-  private DeltaFacets d1;
-  private DeltaFacets d2;
-  private DeltaFacets d3;
+  private WaveletDeltaRecord d1;
+  private WaveletDeltaRecord d2;
+  private WaveletDeltaRecord d3;
 
   private WaveletState target;
 
@@ -177,7 +160,7 @@ public abstract class WaveletStateTestBase extends TestCase {
 
   public void testDeltasAccesssibleByEndVersion() throws Exception {
     appendDeltas(d1, d2, d3);
-    for (DeltaFacets d : Arrays.asList(d1, d2, d3)) {
+    for (WaveletDeltaRecord d : Arrays.asList(d1, d2, d3)) {
       assertEquals(d.transformed,
           target.getTransformedDeltaByEndVersion(d.getResultingVersion()));
       assertEquals(d.applied,
@@ -235,13 +218,13 @@ public abstract class WaveletStateTestBase extends TestCase {
    * Checks that a request for the deltas spanning a contiguous sequence of
    * delta facets produces correct results.
    */
-  private void checkHistoryForDeltas(DeltaFacets... deltas) {
+  private void checkHistoryForDeltas(WaveletDeltaRecord... deltas) {
     HashedVersion beginVersion = deltas[0].appliedAtVersion;
     HashedVersion endVersion = deltas[deltas.length - 1].transformed.getResultingVersion();
 
     {
       List<TransformedWaveletDelta> expected = Lists.newArrayListWithExpectedSize(deltas.length);
-      for (DeltaFacets d : deltas) {
+      for (WaveletDeltaRecord d : deltas) {
         expected.add(d.transformed);
       }
       assertEquals(expected, target.getTransformedDeltaHistory(beginVersion, endVersion));
@@ -249,7 +232,7 @@ public abstract class WaveletStateTestBase extends TestCase {
     {
       List<ByteStringMessage<ProtocolAppliedWaveletDelta>> expected =
           Lists.newArrayListWithExpectedSize(deltas.length);
-      for (DeltaFacets d : deltas) {
+      for (WaveletDeltaRecord d : deltas) {
         expected.add(d.applied);
       }
       assertTrue(Iterables.elementsEqual(expected,
@@ -293,9 +276,9 @@ public abstract class WaveletStateTestBase extends TestCase {
   /**
    * Applies a delta to the target.
    */
-  private void appendDeltas(DeltaFacets... deltas) throws InvalidProtocolBufferException,
+  private void appendDeltas(WaveletDeltaRecord... deltas) throws InvalidProtocolBufferException,
       OperationException {
-    for (DeltaFacets delta : deltas) {
+    for (WaveletDeltaRecord delta : deltas) {
       target.appendDelta(delta.appliedAtVersion, delta.transformed, delta.applied);
     }
   }
@@ -304,14 +287,14 @@ public abstract class WaveletStateTestBase extends TestCase {
    * Creates a delta of no-ops and builds the corresponding applied and
    * transformed delta objects.
    */
-  private static DeltaFacets makeDelta(HashedVersion appliedAtVersion, long timestamp, int numOps)
-      throws InvalidProtocolBufferException {
+  private static WaveletDeltaRecord makeDelta(HashedVersion appliedAtVersion, long timestamp,
+      int numOps) throws InvalidProtocolBufferException {
     // Use no-op delta so the ops can actually apply.
     WaveletDelta delta = UTIL.makeNoOpDelta(appliedAtVersion, timestamp, numOps);
     ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta =
         WaveServerTestUtil.buildAppliedDelta(delta, timestamp);
     TransformedWaveletDelta transformedDelta =
         AppliedDeltaUtil.buildTransformedDelta(appliedDelta, delta);
-    return new DeltaFacets(appliedAtVersion, appliedDelta, transformedDelta);
+    return new WaveletDeltaRecord(appliedAtVersion, appliedDelta, transformedDelta);
   }
 }
