@@ -78,10 +78,9 @@
 
   <!-- === IDE helper targets === -->
 
-  <!-- Generates an eclipse .project file.
-       TODO(danilatos): Make this work on Windows as well. For now,
+  <!-- TODO(danilatos): Make this work on Windows as well. For now,
        windows users can just copy the .project_template file manually. -->
-  <target name="eclipse">
+  <target name="eclipse" description="Generates an eclipse .project file">
     <exec executable="tools/eclipse.sh"/>
   </target>
 
@@ -94,15 +93,15 @@
       Compiles generated proto sources. See build-proto.xml for generating
       proto sources from .proto files.
   === -->
-  <target name="proto_compile_dep">
-    <uptodate targetfile="${dep}/proto_compile" property="skip.proto_compile">
+  <target name="compile_proto_dep">
+    <uptodate targetfile="${dep}/compile_proto" property="skip.compile_proto">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
       <srcfiles dir="${src.proto.dir}" includes="**/*.java"/>
       <srcfiles dir="${src.proto.gwt.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="proto_compile" depends="init, proto_compile_dep"
-      unless="skip.proto_compile" description="Compiles protocol buffers">
+  <target name="compile_proto" depends="init, compile_proto_dep"
+      unless="skip.compile_proto" description="Compiles protocol buffers">
     <buildjava destdir="${build.proto.dir}">
       <src path="${src.proto.dir}"/>
       <src path="${src.proto.gwt.dir}" />
@@ -110,7 +109,7 @@
         <path refid="libpath"/>
       </classpath>
     </buildjava>
-    <touch file="${dep}/proto_compile"/>
+    <touch file="${dep}/compile_proto"/>
   </target>
 
   <!-- === GXP targets === -->
@@ -128,41 +127,41 @@
     <touch file="${dep}/gen_gxp"/>
   </target>
 
-  <target name="gxp_compile_dep">
-    <uptodate targetfile="${dep}/gxp_compile" property="skip.gxp_compile">
+  <target name="compile_gxp_dep">
+    <uptodate targetfile="${dep}/compile_gxp" property="skip.compile_gxp">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
       <srcfiles dir="${gen.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="gxp_compile" depends="init, gen_gxp, gxp_compile_dep"
-      unless="skip.gxp_compile" description="Compiles GXP classes">
+  <target name="compile_gxp" depends="init, gen_gxp, compile_gxp_dep"
+      unless="skip.compile_gxp" description="Compiles GXP classes">
     <buildjava destdir="${build.src.dir}">
       <src path="${gen.dir}" />
       <classpath>
         <path refid="libpath"/>
       </classpath>
     </buildjava>
-    <touch file="${dep}/gxp_compile"/>
+    <touch file="${dep}/compile_gxp"/>
   </target>
 
   <!-- === PST targets === -->
-  <target name="pst_compile_dep">
-    <uptodate targetfile="${dep}/pst_compile" property="skip.pst_compile">
+  <target name="compile_pst_dep">
+    <uptodate targetfile="${dep}/compile_pst" property="skip.compile_pst">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
       <srcfiles dir="${src.dir}" includes="org/waveprotocol/pst/**"/>
     </uptodate>
   </target>
-  <target name="pst_compile" depends="init, pst_compile_dep"
-      unless="skip.pst_compile">
+  <target name="compile_pst" depends="init, compile_pst_dep"
+      unless="skip.compile_pst" description="Compiles the PST tool">
     <buildjava destdir="${build.src.dir}">
       <src path="${src.dir}/org/waveprotocol/pst"/>
       <classpath>
         <path refid="libpath"/>
       </classpath>
     </buildjava>
-    <touch file="${dep}/pst_compile"/>
+    <touch file="${dep}/compile_pst"/>
   </target>
-  <target name="dist-pst" depends="pst_compile">
+  <target name="dist-pst" depends="compile_pst" description="Builds the PST distribution">
     <patternset id="srcs">
       <include name="org/waveprotocol/pst/**"/>
     </patternset>
@@ -170,17 +169,18 @@
   </target>
 
   <target name="messages_dep">
-    <uptodate targetfile="${dep}/messages_compile" property="skip.messages_compile">
+    <uptodate targetfile="${dep}/compile_messages" property="skip.compile_messages">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
       <srcfiles dir="${build.messages.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="messages_compile" depends="pst_compile, proto_compile, messages_dep"
-      unless="skip.messages_compile">
+  <target name="compile_messages" depends="compile_pst, compile_proto, messages_dep"
+      unless="skip.compile_messages"
+      description="Generates and compiles the communication classes">
     <pstmessage
       pkgpath="org/waveprotocol/box/server"
       proto="${build.proto.dir}/org/waveprotocol/box/common/comms/WaveClientRpc.class"/>
-    <touch file="${dep}/messages_compile"/>
+    <touch file="${dep}/compile_messages"/>
   </target>
 
   <!-- === Java targets === -->
@@ -191,7 +191,7 @@
       <srcfiles dir="${gen.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="compile" depends="proto_compile, gxp_compile, messages_compile, compile_dep"
+  <target name="compile" depends="compile_proto, compile_gxp, compile_messages, compile_dep"
       unless="skip.compile" description="Compiles all source">
     <depend srcdir="${src.dir}" destdir="${build.src.dir}" closure="yes"/>
     <subant target="compile" inheritall="true">
@@ -461,7 +461,7 @@
       description="Compiles, tests and assembles artifacts">
   </target>
 
-  <target name="dist-proto" depends="proto_compile" description="Builds the proto jar">
+  <target name="dist-proto" depends="compile_proto" description="Builds the proto jar">
     <jar destfile="${dist.dir}\proto.jar" basedir="${build.proto.dir}"/>
     <jar destfile="${dist.dir}\proto-src.jar" basedir="${src.proto.dir}"/>
   </target>
