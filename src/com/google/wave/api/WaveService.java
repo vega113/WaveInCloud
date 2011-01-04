@@ -25,6 +25,7 @@ import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
+import net.oauth.OAuthValidator;
 import net.oauth.SimpleOAuthValidator;
 import net.oauth.client.OAuthClient;
 import net.oauth.http.HttpClient;
@@ -50,13 +51,13 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.logging.Logger;
 
 /**
@@ -280,6 +281,9 @@ public class WaveService {
   /** Serializer to serialize events and operations in active mode. */
   private static final Gson SERIALIZER = new GsonFactory().create(OPERATION_NAMESPACE);
 
+  /** OAuth request validator. */
+  private static final OAuthValidator VALIDATOR = new SimpleOAuthValidator();
+
   /** A map of RPC server URL to its consumer data object. */
   private final Map<String, ConsumerData> consumerDataMap = new HashMap<String, ConsumerData>();
 
@@ -418,7 +422,7 @@ public class WaveService {
 
       OAuthAccessor accessor = consumerData.getAccessor();
       LOG.info("Signature base string: " + OAuthSignatureMethod.getBaseString(message));
-      message.validateMessage(accessor, new SimpleOAuthValidator());
+      VALIDATOR.validateMessage(message, accessor);
     } catch (NoSuchAlgorithmException e) {
       throw new OAuthException("Error validating OAuth request", e);
     } catch (URISyntaxException e) {

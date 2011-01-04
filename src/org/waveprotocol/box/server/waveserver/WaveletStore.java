@@ -46,7 +46,7 @@ public interface WaveletStore {
    * and appending deltas to the history.
    *
    * Callers must serialize all calls to
-   * {@link #appendDeltas(Collection<WaveletDeltaRecord>,ReadableWaveletData)}.
+   * {@link #appendDeltas(Collection,ReadableWaveletData)}.
    */
   interface WaveletAccess extends WaveletDeltaRecordReader, Closeable {
 

@@ -89,12 +89,12 @@ public class AggressiveSelectionHelperGwtTest extends GWTTestCase {
   public void testCreateSelectionPointIfNotFound() {
     setupTest("");
     aggressiveSelectionHelper.getFirstValidSelectionPoint();
-    String content = new Pretty().print(doc).replaceAll(">\\s+<", "><").trim();
+    String content = new Pretty<ContentNode>().print(doc).replaceAll(">\\s+<", "><").trim();
     assertEquals("<doc><body><line/></body></doc>", content);
 
     setupTest("");
     aggressiveSelectionHelper.getLastValidSelectionPoint();
-    content = new Pretty().print(doc).replaceAll(">\\s+<", "><").trim();
+    content = new Pretty<ContentNode>().print(doc).replaceAll(">\\s+<", "><").trim();
     assertEquals("<doc><body><line/></body></doc>", content);
   }
 

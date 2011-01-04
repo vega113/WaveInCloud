@@ -63,6 +63,7 @@ public class IdentityHashQueue<T> extends FastQueue<T> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public boolean remove(Object e) {
     if (e != null && indexMap.has((T) e)) {
       removeEntry(indexMap.get((T) e));

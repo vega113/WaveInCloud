@@ -66,7 +66,7 @@ public abstract class DocumentEventRouterTestBase extends TestCase {
   /**
    * The list of listeners currently registered on the document.
    */
-  private CopyOnWriteSet<Object> docListeners = CopyOnWriteSet.create();
+  private final CopyOnWriteSet<Object> docListeners = CopyOnWriteSet.create();
 
   private Doc.E elmOne;
   private Doc.E elmTwo;
@@ -278,6 +278,7 @@ public abstract class DocumentEventRouterTestBase extends TestCase {
   /**
    * Test that only the root of an insertion is given child notifications.
    */
+  @SuppressWarnings("unchecked") // Generic mocks.
   public void testRecursiveInsertion() {
     final Doc.E parent = elmOne;
     final DocumentEventRouter<Doc.N, Doc.E, ?> router = createRouter(doc);

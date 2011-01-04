@@ -146,6 +146,7 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
 
         @Override
         public void insertInlineAnchorBefore(BlipMetaDomImpl impl, AnchorView ref, AnchorView x) {
+          @SuppressWarnings("unchecked")
           AnchorDomImpl anchor = ((AnchorViewImpl<AnchorDomImpl>) x).getIntrinsic();
           impl.insertInlineLocatorBefore(elementOf(ref), anchor.getElement());
           anchor.setParentId(impl.getId());

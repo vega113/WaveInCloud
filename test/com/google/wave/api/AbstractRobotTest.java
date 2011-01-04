@@ -49,7 +49,6 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -77,13 +76,13 @@ public class AbstractRobotTest extends TestCase {
     public MockRobot() {
       super();
     }
-    
+
     // This method provided to enable mock on HttpFetcher
-    public  List<JsonRpcResponse> submit(Wavelet wavelet, String rpcServerUrl, WaveService service) 
+    public  List<JsonRpcResponse> submit(Wavelet wavelet, String rpcServerUrl, WaveService service)
     throws IOException {
       return service.submit(wavelet, rpcServerUrl);
     }
-    
+
     @Override
     protected String getRobotName() {
       return "Foo";
@@ -131,8 +130,8 @@ public class AbstractRobotTest extends TestCase {
 
   private final List<EventType> calledEvents = new ArrayList<EventType>();
 
+  @SuppressWarnings("unchecked")
   public void testSubmit() throws Exception {
-    
     HttpFetcher fetcher = mock(HttpFetcher.class);
     when(fetcher.execute(isA(HttpMessage.class),
         isA(Map.class)))
@@ -141,10 +140,10 @@ public class AbstractRobotTest extends TestCase {
 
     MockRobot robot = new MockRobot();
     robot.setupOAuth("consumerKey", "consumerSecret", "http://gmodules.com/api/rpc");
-    
+
     WaveService service = new WaveService(fetcher, robot.computeHash());
     service.setupOAuth("consumerKey", "consumerSecret", "http://gmodules.com/api/rpc");
-    
+
     OperationQueue opQueue = new OperationQueue();
     opQueue.appendOperation(OperationType.ROBOT_NOTIFY,
         Parameter.of(ParamsProperty.CAPABILITIES_HASH, "123"));

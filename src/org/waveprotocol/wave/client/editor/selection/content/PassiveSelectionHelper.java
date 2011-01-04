@@ -19,6 +19,7 @@ package org.waveprotocol.wave.client.editor.selection.content;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gwt.dom.client.Node;
+
 import org.waveprotocol.wave.client.editor.EditorImpl;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
@@ -33,7 +34,6 @@ import org.waveprotocol.wave.client.editor.extract.InconsistencyException.HtmlMi
 import org.waveprotocol.wave.client.editor.impl.NodeManager;
 import org.waveprotocol.wave.client.editor.selection.html.HtmlSelectionHelper;
 import org.waveprotocol.wave.client.editor.selection.html.NativeSelectionUtil;
-
 import org.waveprotocol.wave.common.logging.LoggerBundle;
 import org.waveprotocol.wave.model.document.indexed.LocationMapper;
 import org.waveprotocol.wave.model.document.util.FilteredView;
@@ -458,7 +458,7 @@ public class PassiveSelectionHelper implements SelectionHelper {
   }
 
   Point<ContentNode> findOrCreateValidSelectionPoint2(Point<ContentNode> point) {
-    Point.El asElementPoint = point.asElementPoint();
+    Point.El<ContentNode> asElementPoint = point.asElementPoint();
     return asElementPoint == null ? point : findOrCreateValidSelectionPoint(asElementPoint);
   }
 

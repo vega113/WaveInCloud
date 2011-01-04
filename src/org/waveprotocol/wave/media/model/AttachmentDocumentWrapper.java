@@ -131,7 +131,8 @@ public class AttachmentDocumentWrapper<N, E extends N, T extends N>
    * @param document the CWM document to wrap
    * @return a new wrapper
    */
-  public static <N> AttachmentDocumentWrapper create(ObservableMutableDocument<N, ?, ?> document) {
+  public static <N> AttachmentDocumentWrapper<N, ?, ?> create(
+      ObservableMutableDocument<N, ?, ?> document) {
     return internalCreate(document);
   }
 
@@ -337,7 +338,7 @@ public class AttachmentDocumentWrapper<N, E extends N, T extends N>
    * @param document the CWM document to wrap
    * @return a new wrapper
    */
-  private static <N, E extends N, T extends N> AttachmentDocumentWrapper internalCreate(
+  private static <N, E extends N, T extends N> AttachmentDocumentWrapper<N, ?, ?> internalCreate(
       ObservableMutableDocument<N, E, T> document) {
     return new AttachmentDocumentWrapper<N, E, T>(document);
   }

@@ -34,9 +34,9 @@ import java.util.Vector;
  */
 public class OpenSocialUrl {
 
-  private String base;
-  private List<String> components;
-  private Map<String, String> queryStringParameters;
+  private final String base;
+  private final List<String> components;
+  private final Map<String, String> queryStringParameters;
 
   public OpenSocialUrl(String base) {
     this.base = base;
@@ -46,7 +46,7 @@ public class OpenSocialUrl {
 
   /**
    * Adds passed String to the path component queue.
-   * 
+   *
    * @param  component Path component to add
    */
   public void addPathComponent(String component) {
@@ -58,7 +58,7 @@ public class OpenSocialUrl {
    * value; used for adding URL parameters such as oauth_signature and the
    * various other OAuth parameters that are required in order to submit a
    * signed request.
-   * 
+   *
    * @param  key Parameter name
    * @param  value Parameter value
    */
@@ -77,9 +77,8 @@ public class OpenSocialUrl {
    * followed by any path components added to the path component queue
    * and, last but not least, appending any query string parameters as
    * name-value pairs after the full path.
-   * 
-   * @return
    */
+  @Override
   public String toString() {
     StringBuilder s = new StringBuilder(this.base);
 

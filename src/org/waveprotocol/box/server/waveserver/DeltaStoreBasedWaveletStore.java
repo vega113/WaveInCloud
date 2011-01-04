@@ -126,7 +126,7 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
   }
 
   /**
-   * Creates a {@link WaveletAccess} instance which wraps {@code deltasAccess}.
+   * Creates a {@link WaveletStore.WaveletAccess} instance which wraps {@code deltasAccess}.
    *
    * @throws IllegalStateException if the delta history is bad
    */

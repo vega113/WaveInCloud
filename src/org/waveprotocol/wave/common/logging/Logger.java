@@ -66,6 +66,7 @@ public interface Logger {
    * @param xml
    * @deprecated use {@link #log} instead. XML will be escaped by default
    */
+  @Deprecated
   void logXml(String xml);
 
   /**

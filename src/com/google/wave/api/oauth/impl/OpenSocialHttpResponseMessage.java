@@ -45,8 +45,8 @@ class OpenSocialHttpResponseMessage extends HttpResponseMessage {
    * Returns the status code for the response.
    *
    * @return Status code
-   * @throws IOException if the status code is 0 (not set)
    */
+  @Override
   public int getStatusCode() {
     return this.status;
   }
