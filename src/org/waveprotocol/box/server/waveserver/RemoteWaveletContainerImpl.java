@@ -44,6 +44,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.WaveletFederationProvider.HistoryResponseListener;
+import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -77,17 +78,9 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
    * Create a new RemoteWaveletContainerImpl. Just pass through to the parent
    * constructor.
    */
-  public RemoteWaveletContainerImpl(WaveletNotificationSubscriber notifiee,
-      WaveletState waveletState) {
-    super(notifiee, waveletState);
-    state = State.LOADING;
-  }
-
-  /** Convenience method to assert state. */
-  protected void checkStateOkOrLoading() throws WaveletStateException {
-    if (state != State.LOADING) {
-      checkStateOk();
-    }
+  public RemoteWaveletContainerImpl(WaveletName waveletName, WaveletNotificationSubscriber notifiee,
+      ListenableFuture<? extends WaveletState> waveletStateFuture) {
+    super(waveletName, notifiee, waveletStateFuture);
   }
 
   @Override
@@ -121,7 +114,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         LOG.info("Invalid applied delta protobuf for incoming " + getWaveletName(), e);
         acquireWriteLock();
         try {
-          state = State.CORRUPTED;
+          markStateCorrupted();
         } finally {
           releaseWriteLock();
         }
@@ -185,7 +178,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
     LOG.info("Passed signer info check, now applying all " + appliedDeltas.size() + " deltas");
     acquireWriteLock();
     try {
-      checkStateOkOrLoading(); // TODO(soren): if CORRUPTED, throw away wavelet and start again
+      checkStateOk(); // TODO(soren): if CORRUPTED, throw away wavelet and start again
       HashedVersion expectedVersion = getCurrentVersion();
       boolean haveRequestedHistory = false;
 
@@ -220,7 +213,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         try {
           appliedAt = AppliedDeltaUtil.getHashedVersionAppliedAt(appliedDelta);
         } catch (InvalidProtocolBufferException e) {
-          state = State.CORRUPTED;
+          markStateCorrupted();
           throw new WaveServerException(
               "Authoritative server sent delta with badly formed original wavelet delta", e);
         }
@@ -278,7 +271,7 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
         if (appliedAt.getVersion() == expectedVersion.getVersion()) {
           // Confirm that the applied at hash matches the expected hash.
           if (!appliedAt.equals(expectedVersion)) {
-            state = State.CORRUPTED;
+            markStateCorrupted();
             throw new WaveServerException("Incoming delta applied at version "
                 + appliedAt.getVersion() + " is not applied to the correct hash");
           }
@@ -297,19 +290,14 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
             resultingDeltas.add(applicationResult);
             LOG.fine("Applied delta: " + appliedDelta);
           } catch (OperationException e) {
-            state = State.CORRUPTED;
+            markStateCorrupted();
             throw new WaveServerException("Couldn't apply authoritative delta", e);
           } catch (InvalidProtocolBufferException e) {
-            state = State.CORRUPTED;
+            markStateCorrupted();
             throw new WaveServerException("Couldn't apply authoritative delta", e);
           } catch (InvalidHashException e) {
-            state = State.CORRUPTED;
+            markStateCorrupted();
             throw new WaveServerException("Couldn't apply authoritative delta", e);
-          }
-
-          // This is the version 0 case - now we have a valid wavelet!
-          if (state == State.LOADING) {
-            state = State.OK;
           }
 
           // TODO: does waveletData update?
@@ -382,13 +370,13 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements
 
     if (transformed.size() == 0) {
       // The host shouldn't be forwarding empty deltas!
-      state = State.CORRUPTED;
+      markStateCorrupted();
       throw new WaveServerException("Couldn't apply authoritative delta, " +
           "it transformed away at version " + transformed.getTargetVersion().getVersion());
     }
 
     if (!transformed.getTargetVersion().equals(hashedVersion)) {
-      state = State.CORRUPTED;
+      markStateCorrupted();
       throw new WaveServerException("Couldn't apply authoritative delta, " +
           "it transformed to wrong version. Expected " + hashedVersion +
           ", actual " + transformed.getTargetVersion().getVersion());

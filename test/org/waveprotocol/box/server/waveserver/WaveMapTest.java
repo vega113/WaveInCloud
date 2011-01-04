@@ -17,6 +17,8 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.util.concurrent.Futures;
+
 import junit.framework.TestCase;
 
 import org.mockito.Mock;
@@ -79,7 +81,8 @@ public class WaveMapTest extends TestCase {
           public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
               WaveletName waveletName) {
             WaveletState waveletState = new MemoryWaveletState(waveletName);
-            return new LocalWaveletContainerImpl(notifiee, waveletState);
+            return new LocalWaveletContainerImpl(waveletName, notifiee,
+                Futures.immediateFuture(waveletState));
           }
         };
 

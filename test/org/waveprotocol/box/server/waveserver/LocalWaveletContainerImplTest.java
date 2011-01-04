@@ -18,6 +18,7 @@ package org.waveprotocol.box.server.waveserver;
 
 import static org.mockito.Mockito.mock;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
@@ -80,7 +81,9 @@ public class LocalWaveletContainerImplTest extends TestCase {
 
     WaveletNotificationSubscriber notifiee = mock(WaveletNotificationSubscriber.class);
     WaveletState waveletState = new MemoryWaveletState(WAVELET_NAME);
-    wavelet = new LocalWaveletContainerImpl(notifiee, waveletState);
+    wavelet = new LocalWaveletContainerImpl(WAVELET_NAME, notifiee,
+        Futures.immediateFuture(waveletState));
+    wavelet.awaitLoad();
   }
 
   @Override

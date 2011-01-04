@@ -17,6 +17,8 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -109,7 +111,7 @@ public class WaveServerModule extends AbstractModule {
       @Override
       public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
           WaveletName waveletName) {
-        return new LocalWaveletContainerImpl(notifiee, new MemoryWaveletState(waveletName));
+        return new LocalWaveletContainerImpl(waveletName, notifiee, loadWaveletState(waveletName));
       }
     };
   }
@@ -120,7 +122,7 @@ public class WaveServerModule extends AbstractModule {
       @Override
       public RemoteWaveletContainer create(WaveletNotificationSubscriber notifiee,
           WaveletName waveletName) {
-        return new RemoteWaveletContainerImpl(notifiee, new MemoryWaveletState(waveletName));
+        return new RemoteWaveletContainerImpl(waveletName, notifiee, loadWaveletState(waveletName));
       }
     };
   }
@@ -135,5 +137,10 @@ public class WaveServerModule extends AbstractModule {
     } else {
       return new CachedCertPathValidator(certCache, timeSource, trustRootsProvider);
     }
+  }
+
+  private ListenableFuture<MemoryWaveletState> loadWaveletState(WaveletName waveletName) {
+    // TODO(soren): replace by a ListenableFutureTask which loads to state from storage
+    return Futures.immediateFuture(new MemoryWaveletState(waveletName));
   }
 }

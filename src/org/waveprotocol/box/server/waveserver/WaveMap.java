@@ -104,12 +104,12 @@ public class WaveMap implements SearchProvider {
     }
 
     public LocalWaveletContainer getLocalWavelet(WaveletId waveletId)
-        throws PersistenceException {
+        throws WaveletStateException {
       return getWavelet(waveletId, localWavelets);
     }
 
     public RemoteWaveletContainer getRemoteWavelet(WaveletId waveletId)
-        throws PersistenceException {
+        throws WaveletStateException {
       return getWavelet(waveletId, remoteWavelets);
     }
 
@@ -122,23 +122,27 @@ public class WaveMap implements SearchProvider {
     }
 
     private <T extends WaveletContainer> T getWavelet(WaveletId waveletId,
-        ConcurrentMap<WaveletId, T> waveletsMap) throws PersistenceException {
+        ConcurrentMap<WaveletId, T> waveletsMap) throws WaveletStateException {
+      ImmutableSet<WaveletId> storedWavelets;
       try {
-        ImmutableSet<WaveletId> storedWavelets =
+        storedWavelets =
             FutureUtil.getResultOrPropagateException(lookedupWavelets, PersistenceException.class);
-        // Since waveletsMap is a computing map, we must call containsKey(waveletId)
-        // to tell if waveletId is mapped, we cannot test if get(waveletId) returns null.
-        if (!storedWavelets.contains(waveletId) && !waveletsMap.containsKey(waveletId)) {
-          return null;
-        } else {
-          T wavelet = waveletsMap.get(waveletId);
-          Preconditions.checkNotNull(wavelet, "computingMap returned null");
-          return wavelet.isEmpty() ? null : wavelet;
-        }
+      } catch (PersistenceException e) {
+        throw new WaveletStateException(
+            "Failed to lookup wavelet " + WaveletName.of(waveId, waveletId), e);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        // Let's call this a persistence exception because, ultimately, we failed to access storage.
-        throw new PersistenceException("Interrupted looking up wavelets for wave " + waveId, e);
+        throw new WaveletStateException(
+            "Interrupted looking up wavelet " + WaveletName.of(waveId, waveletId), e);
+      }
+      // Since waveletsMap is a computing map, we must call containsKey(waveletId)
+      // to tell if waveletId is mapped, we cannot test if get(waveletId) returns null.
+      if (!storedWavelets.contains(waveletId) && !waveletsMap.containsKey(waveletId)) {
+        return null;
+      } else {
+        T wavelet = waveletsMap.get(waveletId);
+        Preconditions.checkNotNull(wavelet, "computingMap returned null");
+        return wavelet.isEmpty() ? null : wavelet;
       }
     }
   }
@@ -190,19 +194,23 @@ public class WaveMap implements SearchProvider {
       WaveId waveId = entry.getKey();
       Wave wave = entry.getValue();
       for (WaveletContainer c : wave) {
-        if (c.hasParticipant(user)) {
-          if (resultIndex >= startAt && resultIndex < (startAt + numResults)) {
-            WaveViewData view = results.get(waveId);
-            if (view == null) {
-              view = WaveViewDataImpl.create(waveId);
-              results.put(waveId, view);
+        try {
+          if (c.hasParticipant(user)) {
+            if (resultIndex >= startAt && resultIndex < (startAt + numResults)) {
+              WaveViewData view = results.get(waveId);
+              if (view == null) {
+                view = WaveViewDataImpl.create(waveId);
+                results.put(waveId, view);
+              }
+              view.addWavelet(c.copyWaveletData());
             }
-            view.addWavelet(c.copyWaveletData());
+            resultIndex++;
+            if (resultIndex > startAt + numResults) {
+              return results.values();
+            }
           }
-          resultIndex++;
-          if (resultIndex > startAt + numResults) {
-            return results.values();
-          }
+        } catch (WaveletStateException e) {
+          LOG.info("Failed to access wavelet " + c.getWaveletName(), e);
         }
       }
     }
@@ -210,12 +218,12 @@ public class WaveMap implements SearchProvider {
   }
 
   public LocalWaveletContainer getLocalWavelet(WaveletName waveletName)
-      throws PersistenceException {
+      throws WaveletStateException {
     return waves.get(waveletName.waveId).getLocalWavelet(waveletName.waveletId);
   }
 
   public RemoteWaveletContainer getRemoteWavelet(WaveletName waveletName)
-      throws PersistenceException {
+      throws WaveletStateException {
     return waves.get(waveletName.waveId).getRemoteWavelet(waveletName.waveletId);
   }
 

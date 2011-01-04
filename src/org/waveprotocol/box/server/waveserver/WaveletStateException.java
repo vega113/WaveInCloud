@@ -18,12 +18,16 @@
 package org.waveprotocol.box.server.waveserver;
 
 /**
- * Exception thrown when an attempt is made to access Wavelet content where
- * it's state is not OK.
+ * Signals a failure to load a wavelet or an attempt to access a
+ * wavelet that has failed to load or is corrupted.
  */
 public class WaveletStateException extends WaveServerException {
 
   public WaveletStateException(String message) {
     super(message);
+  }
+
+  public WaveletStateException(String message, Throwable cause) {
+    super(message, cause);
   }
 }

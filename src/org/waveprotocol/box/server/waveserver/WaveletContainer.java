@@ -49,10 +49,10 @@ interface WaveletContainer {
   WaveletName getWaveletName();
 
   /** Returns a snapshot copy of the wavelet state. */
-  ObservableWaveletData copyWaveletData();
+  ObservableWaveletData copyWaveletData() throws WaveletStateException;
 
   /** Returns a snapshot of the wavelet state, last committed version. */
-  WaveletSnapshotAndVersion getSnapshot();
+  WaveletSnapshotAndVersion getSnapshot() throws WaveletStateException;
 
   /**
    * Retrieve the wavelet history of deltas applied to the wavelet.
@@ -107,10 +107,10 @@ interface WaveletContainer {
   /**
    * @return true if the participant id is a curent participant of the wavelet
    */
-  boolean hasParticipant(ParticipantId participant);
+  boolean hasParticipant(ParticipantId participant) throws WaveletStateException;
 
   /**
    * @return true if the wavelet is at version zero, i.e., has no delta history
    */
-  boolean isEmpty();
+  boolean isEmpty() throws WaveletStateException;
 }

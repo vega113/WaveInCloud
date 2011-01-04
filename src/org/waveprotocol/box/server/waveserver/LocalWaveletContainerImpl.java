@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -73,17 +74,19 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl
     return ImmutableSet.copyOf(Iterables.transform(participants, DOMAIN_OF));
   }
 
-  public LocalWaveletContainerImpl(WaveletNotificationSubscriber notifiee,
-      WaveletState waveletState) {
-    super(notifiee, waveletState);
+  public LocalWaveletContainerImpl(WaveletName waveletName, WaveletNotificationSubscriber notifiee,
+      ListenableFuture<? extends WaveletState> waveletStateFuture) {
+    super(waveletName, notifiee, waveletStateFuture);
   }
 
   @Override
-  public WaveletDeltaRecord submitRequest(WaveletName waveletName,
-      ProtocolSignedDelta signedDelta) throws OperationException,
-      InvalidProtocolBufferException, InvalidHashException, PersistenceException {
+  public WaveletDeltaRecord submitRequest(WaveletName waveletName, ProtocolSignedDelta signedDelta)
+      throws OperationException, InvalidProtocolBufferException, InvalidHashException,
+      PersistenceException, WaveletStateException {
+    awaitLoad();
     acquireWriteLock();
     try {
+      checkStateOk();
       WaveletDeltaRecord result = transformAndApplyLocalDelta(signedDelta);
       // Only publish and persist the delta if it wasn't transformed away.
       // (Right now it never is since the current OT algorithm doesn't transform ops away.)

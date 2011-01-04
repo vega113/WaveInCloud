@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Futures;
 import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
@@ -115,9 +116,13 @@ public class WaveletContainerTest extends TestCase {
     super.setUp();
     WaveletNotificationSubscriber notifiee = mock(WaveletNotificationSubscriber.class);
     WaveletState localWaveletState = new MemoryWaveletState(localWaveletName);
-    localWavelet = new LocalWaveletContainerImpl(notifiee, localWaveletState);
+    localWavelet = new LocalWaveletContainerImpl(localWaveletName, notifiee,
+        Futures.immediateFuture(localWaveletState));
+    localWavelet.awaitLoad();
     WaveletState remoteWaveletState = new MemoryWaveletState(remoteWaveletName);
-    remoteWavelet = new RemoteWaveletContainerImpl(notifiee, remoteWaveletState);
+    remoteWavelet = new RemoteWaveletContainerImpl(remoteWaveletName, notifiee,
+        Futures.immediateFuture(remoteWaveletState));
+    remoteWavelet.awaitLoad();
   }
 
   // Tests

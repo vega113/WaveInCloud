@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import junit.framework.TestCase;
@@ -98,7 +99,8 @@ public class WaveServerTest extends TestCase {
       public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
           WaveletName waveletName) {
         WaveletState waveletState = new MemoryWaveletState(waveletName);
-        return new LocalWaveletContainerImpl(notifiee, waveletState);
+        return new LocalWaveletContainerImpl(waveletName, notifiee,
+            Futures.immediateFuture(waveletState));
       }
     };
 

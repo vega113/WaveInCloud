@@ -137,8 +137,8 @@ public class WaveServerImpl implements WaveletProvider,
         RemoteWaveletContainer wavelet;
         try {
           wavelet = getRemoteWavelet(waveletName);
-        } catch (PersistenceException e) {
-          LOG.warning("Failed to lookup wavelet " + waveletName + " for commit update", e);
+        } catch (WaveletStateException e) {
+          LOG.warning("Failed to access wavelet " + waveletName + " for commit update", e);
           callback.onFailure(FederationErrors.internalServerError("Storage access failure"));
           return;
         }
@@ -388,8 +388,8 @@ public class WaveServerImpl implements WaveletProvider,
     LocalWaveletContainer wavelet = null;
     try {
       wavelet = getLocalWavelet(waveletName);
-    } catch (PersistenceException e) {
-      LOG.warning("Failed to lookup wavelet " + waveletName, e);
+    } catch (WaveletStateException e) {
+      LOG.warning("Failed to access wavelet " + waveletName, e);
       listener.onFailure(FederationErrors.internalServerError("Storage access failure"));
       return null;
     }
@@ -440,13 +440,13 @@ public class WaveServerImpl implements WaveletProvider,
   }
 
   private RemoteWaveletContainer getRemoteWavelet(WaveletName waveletName)
-      throws PersistenceException {
+      throws WaveletStateException {
     Preconditions.checkArgument(!isLocalWavelet(waveletName), "%s is not remote", waveletName);
     return waveMap.getRemoteWavelet(waveletName);
   }
 
   private LocalWaveletContainer getLocalWavelet(WaveletName waveletName)
-      throws PersistenceException {
+      throws WaveletStateException {
     Preconditions.checkArgument(isLocalWavelet(waveletName), "%s is not local", waveletName);
     return waveMap.getLocalWavelet(waveletName);
   }
@@ -460,12 +460,8 @@ public class WaveServerImpl implements WaveletProvider,
    * @throw WaveServerException if storage lookup fails
    */
   private WaveletContainer getWavelet(WaveletName waveletName) throws WaveServerException {
-    try {
-      return isLocalWavelet(waveletName) ?
-          waveMap.getLocalWavelet(waveletName) : waveMap.getRemoteWavelet(waveletName);
-    } catch (PersistenceException e) {
-      throw new WaveServerException("Failed to lookup wavelet " + waveletName, e);
-    }
+    return isLocalWavelet(waveletName) ?
+        waveMap.getLocalWavelet(waveletName) : waveMap.getRemoteWavelet(waveletName);
   }
 
   /**

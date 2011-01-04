@@ -29,6 +29,7 @@ import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -47,26 +48,36 @@ import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * Contains the history of a wavelet - applied and transformed deltas plus the content
- * of the wavelet.
+ * Contains the history of a wavelet - applied and transformed deltas plus the
+ * content of the wavelet.
+ *
+ * TODO(soren): Unload the wavelet (remove it from WaveMap) if it becomes
+ * corrupt or fails to load from storage.
  */
 abstract class WaveletContainerImpl implements WaveletContainer {
 
   private static final Log LOG = Log.get(WaveletContainerImpl.class);
 
+  private static final int AWAIT_LOAD_TIMEOUT_SECONDS = 10;
+
   protected enum State {
     /** Everything is working fine. */
     OK,
-    /** Wavelet's history is not yet available. */
+
+    /** Wavelet state is being loaded from storage. */
     LOADING,
+
     /** Wavelet has been deleted, the instance will not contain any data. */
     DELETED,
+
     /**
      * For some reason this instance is broken, e.g. a remote wavelet update
      * signature failed.
@@ -75,15 +86,19 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   // TODO(soren): inject a proper executor, using sameThreadExecutor can be fragile
-  private final Executor persistContinuationExecutor =
+  private final Executor storageContinuationExecutor =
       Executors.newSingleThreadExecutor();
       //MoreExecutors.sameThreadExecutor();
 
   private final Lock readLock;
   private final ReentrantReadWriteLock.WriteLock writeLock;
+  private final WaveletName waveletName;
   private final WaveletNotificationSubscriber notifiee;
-  private final WaveletState waveletState;
-  protected State state;
+  /** Is counted down when initial loading from storage completes. */
+  private final CountDownLatch loadLatch = new CountDownLatch(1);
+  /** Is set at most once, before loadLatch is counted down. */
+  private WaveletState waveletState;
+  private State state = State.LOADING;
 
   /**
    * Constructs an empty WaveletContainer for a wavelet.
@@ -92,14 +107,48 @@ abstract class WaveletContainerImpl implements WaveletContainer {
    * @param notifiee subscriber to notify of wavelet updates and commits
    * @param waveletState the wavelet's delta history and current state
    */
-  public WaveletContainerImpl(WaveletNotificationSubscriber notifiee, WaveletState waveletState) {
+  public WaveletContainerImpl(WaveletName waveletName, WaveletNotificationSubscriber notifiee,
+      final ListenableFuture<? extends WaveletState> waveletStateFuture) {
+    this.waveletName = waveletName;
+    this.notifiee = notifiee;
+
     ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     this.readLock = readWriteLock.readLock();
     this.writeLock = readWriteLock.writeLock();
 
-    this.notifiee = notifiee;
-    this.waveletState = waveletState;
-    this.state = State.OK;
+    waveletStateFuture.addListener(
+        new Runnable() {
+          @Override
+          public void run() {
+            acquireWriteLock();
+            try {
+              Preconditions.checkState(waveletState == null,
+                  "Repeat attempts to set wavelet state");
+              Preconditions.checkState(state == State.LOADING, "Unexpected state %s", state);
+              waveletState = FutureUtil.getResultOrPropagateException(
+                  waveletStateFuture, PersistenceException.class);
+              Preconditions.checkState(waveletState.getWaveletName().equals(getWaveletName()),
+                  "Wrong wavelet state, named %s, expected %s",
+                  waveletState.getWaveletName(), getWaveletName());
+              state = State.OK;
+            } catch (PersistenceException e) {
+              LOG.warning("Failed to load wavelet " + getWaveletName(), e);
+              state = State.CORRUPTED;
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+              LOG.warning("Interrupted loading wavelet " + getWaveletName(), e);
+              state = State.CORRUPTED;
+            } catch (RuntimeException e) {
+              // TODO(soren): would be better to terminate the process in this case
+              LOG.severe("Unexpected exception loading wavelet " + getWaveletName(), e);
+              state = State.CORRUPTED;
+            } finally {
+              releaseWriteLock();
+            }
+            loadLatch.countDown();
+          }
+        },
+        storageContinuationExecutor);
   }
 
   protected void acquireReadLock() {
@@ -134,10 +183,47 @@ abstract class WaveletContainerImpl implements WaveletContainer {
     notifiee.waveletCommitted(getWaveletName(), version, domainsToNotify);
   }
 
+  /**
+   * Blocks until the initial load of the wavelet state from storage completes.
+   * Should be called without the read or write lock held.
+   *
+   * @throws WaveletStateException if the wavelet fails to load,
+   *         either because of a storage access failure or timeout,
+   *         or because the current thread is interrupted.
+   */
+  protected void awaitLoad() throws WaveletStateException {
+    Preconditions.checkState(!writeLock.isHeldByCurrentThread(), "should not hold write lock");
+    try {
+      if (!loadLatch.await(AWAIT_LOAD_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+        throw new WaveletStateException("Timed out waiting for wavelet to load");
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new WaveletStateException("Interrupted waiting for wavelet to load");
+    }
+  }
+
+  /**
+   * Verifies that the wavelet is in an operational state (not loading,
+   * not corrupt).
+   *
+   * Should be preceded by a call to awaitLoad() so that the initial load from
+   * storage has completed. Should be called with the read or write lock held.
+   *
+   * @throws WaveletStateException if the wavelet is loading or marked corrupt.
+   */
   protected void checkStateOk() throws WaveletStateException {
     if (state != State.OK) {
       throw new WaveletStateException("The wavelet is in an unusable state: " + state);
     }
+  }
+
+  /**
+   * Flags the wavelet corrupted so future calls to checkStateOk() will fail.
+   */
+  protected void markStateCorrupted() {
+    Preconditions.checkState(writeLock.isHeldByCurrentThread(), "must hold write lock");
+    state = State.CORRUPTED;
   }
 
   protected void persist(final HashedVersion version, final ImmutableSet<String> domainsToNotify) {
@@ -156,16 +242,17 @@ abstract class WaveletContainerImpl implements WaveletContainer {
             }
           }
         },
-        persistContinuationExecutor);
+        storageContinuationExecutor);
   }
 
   @Override
   public WaveletName getWaveletName() {
-    return waveletState.getWaveletName();
+    return waveletName;
   }
 
   @Override
   public boolean checkAccessPermission(ParticipantId participantId) throws WaveletStateException {
+    awaitLoad();
     acquireReadLock();
     try {
       checkStateOk();
@@ -183,6 +270,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   @Override
   public HashedVersion getLastCommittedVersion() throws WaveletStateException {
+    awaitLoad();
     acquireReadLock();
     try {
       checkStateOk();
@@ -193,9 +281,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public ObservableWaveletData copyWaveletData() {
+  public ObservableWaveletData copyWaveletData() throws WaveletStateException {
+    awaitLoad();
     acquireReadLock();
     try {
+      checkStateOk();
       return WaveletDataUtil.copyWavelet(waveletState.getSnapshot());
     } finally {
       releaseReadLock();
@@ -203,9 +293,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public WaveletSnapshotAndVersion getSnapshot() {
+  public WaveletSnapshotAndVersion getSnapshot() throws WaveletStateException {
+    awaitLoad();
     acquireReadLock();
     try {
+      checkStateOk();
       ReadableWaveletData snapshot = waveletState.getSnapshot();
       return new WaveletSnapshotAndVersion(
           SnapshotSerializer.serializeWavelet(
@@ -386,6 +478,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   @Override
   public Collection<TransformedWaveletDelta> requestTransformedHistory(HashedVersion startVersion,
       HashedVersion endVersion) throws AccessControlException, WaveletStateException {
+    awaitLoad();
     acquireReadLock();
     try {
       checkStateOk();
@@ -398,9 +491,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public boolean hasParticipant(ParticipantId participant) {
+  public boolean hasParticipant(ParticipantId participant) throws WaveletStateException {
+    awaitLoad();
     acquireReadLock();
     try {
+      checkStateOk();
       ReadableWaveletData snapshot = waveletState.getSnapshot();
       return snapshot != null && snapshot.getParticipants().contains(participant);
     } finally {
@@ -409,9 +504,11 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public boolean isEmpty() {
+  public boolean isEmpty() throws WaveletStateException {
+    awaitLoad();
     acquireReadLock();
     try {
+      checkStateOk();
       return waveletState.getSnapshot() == null;
     } finally {
       releaseReadLock();
