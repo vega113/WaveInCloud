@@ -48,6 +48,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.util.logging.Log;
 
@@ -487,48 +488,47 @@ public class WaveServerImpl implements WaveletProvider,
     Preconditions.checkArgument(delta.getOperationCount() > 0, "empty delta");
 
     if (isLocalWavelet(waveletName)) {
+      LOG.info("Submit to " + waveletName + " by " + delta.getAuthor() + " @ "
+          + delta.getHashedVersion().getVersion() + " with " + delta.getOperationCount() + " ops");
+
+      // TODO(arb): add v0 policer here.
+      LocalWaveletContainer wavelet = getOrCreateLocalWavelet(waveletName);
       try {
-        LOG.info("Submit to " + waveletName + " by " + delta.getAuthor() + " @ "
-            + delta.getHashedVersion().getVersion() + " with " + delta.getOperationCount()
-            + " ops");
-
-        // TODO(arb): add v0 policer here.
-        LocalWaveletContainer wavelet = getOrCreateLocalWavelet(waveletName);
-
-        ParticipantId author = new ParticipantId(delta.getAuthor());
-        if (!wavelet.checkAccessPermission(author)) {
-          throw new AccessControlException(author + " is not a participant of " + waveletName);
+        if (!wavelet.checkAccessPermission(ParticipantId.of(delta.getAuthor()))) {
+          resultListener.onFailure(FederationErrors.badRequest(
+              delta.getAuthor() + " is not a participant of " + waveletName));
+          return;
         }
+      } catch (InvalidParticipantAddress e) {
+        resultListener.onFailure(FederationErrors.badRequest(
+            "Invalid author address: " + e.getMessage()));
+        return;
+      } catch (WaveServerException e) {
+        resultListener.onFailure(FederationErrors.internalServerError(e.getMessage()));
+        return;
+      }
 
+      try {
         WaveletDeltaRecord submitResult = wavelet.submitRequest(waveletName, signedDelta);
         TransformedWaveletDelta transformedDelta = submitResult.getTransformedDelta();
-
-        // Return result to caller.
-        ProtocolHashedVersion resultVersionProto =
-            CoreWaveletOperationSerializer.serialize(transformedDelta.getResultingVersion());
         LOG.info("Submit result for " + waveletName + " by "
             + transformedDelta.getAuthor() + " applied "
             + transformedDelta.size() + " ops at v: "
             + transformedDelta.getAppliedAtVersion() + " t: "
             + transformedDelta.getApplicationTimestamp());
-        resultListener.onSuccess(transformedDelta.size(), resultVersionProto,
+        resultListener.onSuccess(transformedDelta.size(),
+            CoreWaveletOperationSerializer.serialize(transformedDelta.getResultingVersion()),
             transformedDelta.getApplicationTimestamp());
       } catch (OperationException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
-        return;
-      } catch (IllegalArgumentException e) {
-        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
-        return;
       } catch (InvalidProtocolBufferException e) {
         resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
-        return;
+      } catch (InvalidHashException e) {
+        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
       } catch (PersistenceException e) {
-        // TODO(soren): pick a better error response than BAD_REQUEST
-        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
-        return;
-      } catch (WaveServerException e) {
-        resultListener.onFailure(FederationErrors.badRequest(e.getMessage()));
-        return;
+        resultListener.onFailure(FederationErrors.internalServerError(e.getMessage()));
+      } catch (WaveletStateException e) {
+        resultListener.onFailure(FederationErrors.internalServerError(e.getMessage()));
       }
     } else {
       // For remote wavelets post required signatures to the authorative server then send delta
