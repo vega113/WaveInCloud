@@ -152,7 +152,7 @@ public class WaveMap implements SearchProvider {
    * Any failure is reported as a {@link PersistenceException}.
    */
   private static ListenableFuture<ImmutableSet<WaveletId>> lookupWavelets(
-      final WaveId waveId, final WaveletStore waveletStore, Executor lookupExecutor) {
+      final WaveId waveId, final WaveletStore<?> waveletStore, Executor lookupExecutor) {
     ListenableFutureTask<ImmutableSet<WaveletId>> task =
         new ListenableFutureTask<ImmutableSet<WaveletId>>(
             new Callable<ImmutableSet<WaveletId>>() {
@@ -168,7 +168,7 @@ public class WaveMap implements SearchProvider {
   private final ConcurrentMap<WaveId, Wave> waves;
 
   @Inject
-  public WaveMap(final WaveletStore waveletStore,
+  public WaveMap(final WaveletStore<?> waveletStore,
       final WaveletNotificationSubscriber notifiee,
       final LocalWaveletContainer.Factory localFactory,
       final RemoteWaveletContainer.Factory remoteFactory) {

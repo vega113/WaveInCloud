@@ -67,7 +67,7 @@ public class WaveMapTest extends TestCase {
   @Mock private WaveletNotificationDispatcher notifiee;
   @Mock private RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
 
-  private WaveletStore waveletStore;
+  private WaveletStore<?> waveletStore;
   private WaveMap waveMap;
   private HashedVersionZeroFactoryImpl versionZeroFactory;
 
@@ -86,7 +86,7 @@ public class WaveMapTest extends TestCase {
           }
         };
 
-    waveletStore = new DeltaStoreBasedWaveletStore(new MemoryDeltaStore());
+    waveletStore = new DeltaStoreBasedSnapshotStore(new MemoryDeltaStore());
     waveMap = new WaveMap(
         waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
 

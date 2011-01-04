@@ -18,35 +18,49 @@
 package org.waveprotocol.box.server.waveserver;
 
 import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 
 import java.io.Closeable;
 import java.util.Collection;
 
 /**
- * Stores wavelet deltas.
+ * Stores wavelet deltas and snapshots.
  *
  * @author soren@google.com (Soren Lassen)
  */
-public interface DeltaStore extends WaveletStore<DeltaStore.DeltasAccess> {
+public interface DeltaAndSnapshotStore extends WaveletStore<DeltaAndSnapshotStore.WaveletAccess> {
 
   /**
-   * Accesses the delta history for a wavelet.
-   * Permits reading historical deltas and appending deltas to the history.
+   * Accesses the state for a wavelet.
+   * Permits reading a snapshot of the wavelet state and historical deltas,
+   * and appending deltas to the history.
+   *
+   * Callers must serialize all calls to
+   * {@link #appendDeltas(Collection,ReadableWaveletData)}.
    */
-  interface DeltasAccess extends WaveletDeltaRecordReader, Closeable {
+  interface WaveletAccess extends WaveletDeltaRecordReader, Closeable {
+
+    /**
+     * @return Immutable copy of the last known committed state of the wavelet.
+     */
+    ReadableWaveletData getSnapshot();
+
     /**
      * Blocking call to append deltas to the end of the delta history.
      * If the call returns normally (doesn't throw an exception), then
      * the deltas have been successfully and "durably" stored, that is,
      * the method forces the data to disk.
      *
-     * @param deltas contiguous deltas, beginning from the DeltaAccess object's
+     * @param deltas Contiguous deltas, beginning from the DeltaAccess object's
      *        end version. It is the caller's responsibility to ensure that
      *        everything matches up (applied and transformed deltas in the
      *        records match, that the hashes are correctly computed, etc).
+     * @param resultingSnapshot A snapshot of the state of the wavelet after
+     *        {@code deltas} are applied.
      * @throws PersistenceException if anything goes wrong with the underlying
      *         storage.
      */
-    void append(Collection<WaveletDeltaRecord> deltas) throws PersistenceException;
+    void appendDeltas(Collection<WaveletDeltaRecord> deltas,
+        ReadableWaveletData resultingSnapshot) throws PersistenceException;
   }
 }

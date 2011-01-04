@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
@@ -41,7 +42,7 @@ import java.util.Iterator;
  *
  * @author soren@google.com (Soren Lassen)
  */
-class DeltaStoreBasedWaveletStore implements WaveletStore {
+class DeltaStoreBasedSnapshotStore implements DeltaAndSnapshotStore {
 
   /**
    * Wraps an {@link IOException} in a {@link RuntimeException}.
@@ -126,7 +127,8 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
   }
 
   /**
-   * Creates a {@link WaveletStore.WaveletAccess} instance which wraps {@code deltasAccess}.
+   * Creates a {@link DeltaAndSnapshotStore.WaveletAccess} instance which wraps
+   * {@code deltasAccess}.
    *
    * @throws IllegalStateException if the delta history is bad
    */
@@ -205,12 +207,12 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
   private final DeltaStore deltaStore;
 
   /**
-   * Constructs a {@link WaveletStore} instance which wraps {@code deltaStore}.
+   * Constructs a {@link DeltaAndSnapshotStore} instance which wraps {@code deltaStore}.
    *
    * @param deltaStore The underlying {@link DeltaStore}.
    */
   @Inject
-  public DeltaStoreBasedWaveletStore(DeltaStore deltaStore) {
+  public DeltaStoreBasedSnapshotStore(DeltaStore deltaStore) {
     this.deltaStore = deltaStore;
   }
 
@@ -228,5 +230,11 @@ class DeltaStoreBasedWaveletStore implements WaveletStore {
   @Override
   public ImmutableSet<WaveletId> lookup(WaveId waveId) throws PersistenceException {
     return deltaStore.lookup(waveId);
+  }
+
+  @Override
+  public ExceptionalIterator<WaveId, PersistenceException> getWaveIdIterator()
+      throws PersistenceException {
+    return deltaStore.getWaveIdIterator();
   }
 }

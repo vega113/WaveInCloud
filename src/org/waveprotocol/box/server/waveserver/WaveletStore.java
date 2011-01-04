@@ -19,15 +19,12 @@ package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.collect.ImmutableSet;
 
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.persistence.FileNotFoundPersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
-
-import java.io.Closeable;
-import java.util.Collection;
 
 /**
  * Stores wavelets.
@@ -36,66 +33,51 @@ import java.util.Collection;
  * Callers must serialize all calls to {@link #open(WaveletName)} and
  * {@link #delete(WaveletName)} on the same wavelet.
  *
+ * @param <T> wavelet handle data type
+ *
  * @author soren@google.com (Soren Lassen)
  */
-public interface WaveletStore {
+public interface WaveletStore<T extends WaveletDeltaRecordReader> {
 
   /**
-   * Accesses the state for a wavelet.
-   * Permits reading a snapshot of the wavelet state and historical deltas,
-   * and appending deltas to the history.
+   * Opens a wavelet, which can be used to store wavelet state. If the wavelet
+   * doesn't exist, it is implicitly created when the first op is appended to
+   * it.
    *
-   * Callers must serialize all calls to
-   * {@link #appendDeltas(Collection,ReadableWaveletData)}.
+   * @throws PersistenceException if anything goes wrong with the underlying
+   *         storage.
    */
-  interface WaveletAccess extends WaveletDeltaRecordReader, Closeable {
-
-    /**
-     * @return Immutable copy of the last known committed state of the wavelet.
-     */
-    ReadableWaveletData getSnapshot();
-
-    /**
-     * Blocking call to append deltas to the end of the delta history.
-     * If the call returns normally (doesn't throw an exception), then
-     * the deltas have been successfully and "durably" stored, that is,
-     * the method forces the data to disk.
-     *
-     * @param deltas Contiguous deltas, beginning from the DeltaAccess object's
-     *        end version. It is the caller's responsibility to ensure that
-     *        everything matches up (applied and transformed deltas in the
-     *        records match, that the hashes are correctly computed, etc).
-     * @param resultingSnapshot A snapshot of the state of the wavelet after
-     *        {@code deltas} are applied.
-     * @throws PersistenceException if anything goes wrong with the underlying
-     *         storage.
-     */
-    void appendDeltas(Collection<WaveletDeltaRecord> deltas,
-        ReadableWaveletData resultingSnapshot) throws PersistenceException;
-  }
-
-  /**
-   * Opens a wavelet, which can be used to store deltas. If the wavelet doesn't
-   * exist, it is implicitly created when the first op is appended to it.
-   *
-   * @throws PersistenceException if anything goes wrong with the underlying storage.
-   */
-  WaveletAccess open(WaveletName waveletName) throws PersistenceException;
+  T open(WaveletName waveletName) throws PersistenceException;
 
   /**
    * Deletes a non-empty wavelet.
-   *
-   * @throws PersistenceException if anything goes wrong with the underlying storage.
-   * @throws FileNotFoundPersistenceException if this wavelet doesn't exist in
-   *         the wavelet store.
+   * 
+   * @throws PersistenceException if anything goes wrong with the underlying
+   *         storage.
+   * @throws FileNotFoundPersistenceException if the the wavelet does not exist
+   *         in the delta store.
    */
   void delete(WaveletName waveletName) throws PersistenceException,
       FileNotFoundPersistenceException;
 
   /**
-   * Looks up all wavelets with deltas in the wavelet store.
+   * Looks up all non-empty wavelets in the store.
    *
-   * @throws PersistenceException if anything goes wrong with the underlying storage.
+   * @throws PersistenceException if anything goes wrong with the underlying
+   *         storage.
    */
   ImmutableSet<WaveletId> lookup(WaveId waveId) throws PersistenceException;
+
+  /**
+   * Return an {@link ExceptionalIterator} that throws a {@link PersistenceException} if something
+   * goes wrong while iterating over the store's wave IDs. This will only return the ids of waves
+   * that have at least one non-empty wavelet.
+   * 
+   * The results returned from the iterator may or may not reflect concurrent modifications.
+   * the iterator itself is NOT thread safe and should only be used by one thread.
+   * 
+   * @throws PersistenceException if anything goes wrong with the underlying
+   *         storage while creating the iterator.
+   */
+  ExceptionalIterator<WaveId, PersistenceException> getWaveIdIterator() throws PersistenceException;
 }
