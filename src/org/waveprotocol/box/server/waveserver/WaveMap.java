@@ -168,7 +168,7 @@ public class WaveMap implements SearchProvider {
   private final ConcurrentMap<WaveId, Wave> waves;
 
   @Inject
-  public WaveMap(final WaveletStore<?> waveletStore,
+  public WaveMap(final DeltaStore waveletStore,
       final WaveletNotificationSubscriber notifiee,
       final LocalWaveletContainer.Factory localFactory,
       final RemoteWaveletContainer.Factory remoteFactory) {

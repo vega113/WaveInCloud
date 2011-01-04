@@ -78,7 +78,7 @@ public class WaveServerTest extends TestCase {
   @Mock private RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
 
   private CertificateManager certificateManager;
-  private WaveletStore<?> waveletStore;
+  private DeltaStore waveletStore;
   private WaveMap waveMap;
   private WaveServerImpl waveServer;
   private HashedVersionZeroFactoryImpl versionZeroFactory;
@@ -104,7 +104,7 @@ public class WaveServerTest extends TestCase {
       }
     };
 
-    waveletStore = new DeltaStoreBasedSnapshotStore(new MemoryDeltaStore());
+    waveletStore = new MemoryDeltaStore();
     waveMap = new WaveMap(
         waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
     waveServer = new WaveServerImpl(

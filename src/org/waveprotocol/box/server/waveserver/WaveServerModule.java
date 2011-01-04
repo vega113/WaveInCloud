@@ -100,7 +100,6 @@ public class WaveServerModule extends AbstractModule {
     bind(HashedVersionFactory.class).toInstance(HASH_FACTORY);
     bind(ClientFrontend.class).to(ClientFrontendImpl.class).in(Singleton.class);
     bind(ProtocolWaveClientRpc.Interface.class).to(WaveClientRpcImpl.class).in(Singleton.class);
-    bind(DeltaAndSnapshotStore.class).to(DeltaStoreBasedSnapshotStore.class).in(Singleton.class);
     bind(Executor.class).annotatedWith(Names.named("listener_executor")).toInstance(
         Executors.newFixedThreadPool(LISTENER_EXECUTOR_THREAD_COUNT));
   }
