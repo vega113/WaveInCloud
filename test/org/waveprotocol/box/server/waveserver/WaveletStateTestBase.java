@@ -72,14 +72,14 @@ public abstract class WaveletStateTestBase extends TestCase {
   /**
    * Creates a new, empty wavelet state.
    */
-  protected abstract WaveletState createEmptyState(WaveletName name);
+  protected abstract WaveletState createEmptyState(WaveletName name) throws Exception;
 
   /**
    * Waits for all pending persistence operations to be completed. All
    * persistence listener callbacks must be completed before this method
    * returns.
    */
-  protected abstract void awaitPersistence();
+  protected abstract void awaitPersistence() throws Exception;
 
   private WaveletDeltaRecord d1;
   private WaveletDeltaRecord d2;

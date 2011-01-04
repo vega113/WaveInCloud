@@ -17,13 +17,18 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
 
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
@@ -35,27 +40,88 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.util.logging.Log;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * All-in-memory implementation of wavelet state for testing.
+ * Simplistic {@link DeltaStore}-backed wavelet state implementation
+ * which keeps the entire delta history in memory.
  *
- * TODO(soren): delete this class once it has been replaced by
- * {@link DeltaStoreBasedWaveletState} everywhere
+ * TODO(soren): only keep in memory what's not persisted
+ *
+ * TODO(soren): rewire this class to be backed by {@link WaveletStore} and
+ * read the snapshot from there instead of computing it in the
+ * DeltaStoreBasedWaveletState constructor
+ *
+ * TODO(soren): refine the persist() logic to make it batch successive
+ * writes to storage, when write latency exceeds the intervals between
+ * calls to persist()
  *
  * @author soren@google.com (Soren Lassen)
  */
-class MemoryWaveletState implements WaveletState {
+class DeltaStoreBasedWaveletState implements WaveletState {
+
+  private static final Log LOG = Log.get(DeltaStoreBasedWaveletState.class);
 
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
 
   private static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionFactoryImpl(URI_CODEC);
+
+  private static final Function<WaveletDeltaRecord, TransformedWaveletDelta> TRANSFORMED =
+      new Function<WaveletDeltaRecord, TransformedWaveletDelta>() {
+        @Override
+        public TransformedWaveletDelta apply(WaveletDeltaRecord record) {
+          return record.getTransformedDelta();
+        }
+      };
+
+  public static DeltaStoreBasedWaveletState create(DeltaStore.DeltasAccess deltasAccess)
+      throws PersistenceException {
+    if (deltasAccess.isEmpty()) {
+      return new DeltaStoreBasedWaveletState(deltasAccess, ImmutableList.<WaveletDeltaRecord>of(),
+          null);
+    } else {
+      try {
+        ImmutableList<WaveletDeltaRecord> deltas = readAll(deltasAccess);
+        WaveletData snapshot = WaveletDataUtil.buildWaveletFromDeltas(deltasAccess.getWaveletName(),
+            Iterators.transform(deltas.iterator(), TRANSFORMED));
+        return new DeltaStoreBasedWaveletState(deltasAccess, deltas, snapshot);
+      } catch (IOException e) {
+        throw new PersistenceException("Failed to read stored deltas", e);
+      } catch (OperationException e) {
+        throw new PersistenceException("Failed to compose stored deltas", e);
+      }
+    }
+  }
+
+  /**
+   * Reads all deltas from 
+   */
+  private static ImmutableList<WaveletDeltaRecord> readAll(WaveletDeltaRecordReader reader)
+      throws IOException{
+    Preconditions.checkArgument(!reader.isEmpty());
+    ImmutableList.Builder<WaveletDeltaRecord> result = ImmutableList.builder();
+    HashedVersion endVersion = reader.getEndVersion();
+    long version = 0;
+    while (version < endVersion.getVersion()) {
+      WaveletDeltaRecord delta = reader.getDelta(version);
+      result.add(delta);
+      version = delta.getResultingVersion().getVersion();
+    }
+    return result.build();
+  }
 
   /**
    * @return An entry keyed by a hashed version with the given version number,
@@ -69,8 +135,9 @@ class MemoryWaveletState implements WaveletState {
     return (entry != null && entry.getKey().getVersion() == version) ? entry : null;
   }
 
-  private final WaveletName waveletName;
+  private final Executor persistExecutor;
   private final HashedVersion versionZero;
+  private final DeltaStore.DeltasAccess deltasAccess;
 
   /** Keyed by appliedAtVersion. */
   private final NavigableMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>>
@@ -83,18 +150,48 @@ class MemoryWaveletState implements WaveletState {
   /** Is null if the wavelet state is empty. */
   private WaveletData snapshot;
 
-  /** Last version persisted with a call to persist(), or null if never called. */
-  private HashedVersion lastPersistedVersion;
+  /**
+   * Last version persisted with a call to persist(), or null if never called.
+   * It's an atomic reference so we can set in one thread (which
+   * asynchronously writes deltas to storage) and read it in another,
+   * simultaneously.
+   */
+  private final AtomicReference<HashedVersion> lastPersistedVersion;
 
-  /** Constructs an empty wavelet state with the given name. */
-  public MemoryWaveletState(WaveletName waveletName) {
-    this.waveletName = waveletName;
-    this.versionZero = HASH_FACTORY.createVersionZero(waveletName);
+  /**
+   * Constructs a wavelet state with the given deltas and snapshot.
+   * The deltas must be the contents of deltasAccess, and they
+   * must be contiguous from version zero.
+   * The snapshot must be the composition of the deltas, or null if there
+   * are no deltas. The constructed object takes ownership of the
+   * snapshot and will mutate it if appendDelta() is called.
+   */
+  private DeltaStoreBasedWaveletState(DeltaStore.DeltasAccess deltasAccess,
+      List<WaveletDeltaRecord> deltas, WaveletData snapshot) {
+    Preconditions.checkArgument(deltasAccess.isEmpty() == deltas.isEmpty());
+    Preconditions.checkArgument(deltas.isEmpty() == (snapshot == null));
+
+    // Note that the logic in persist() depends on persistExecutor being single-threaded.
+    // TODO(soren): inject the executor, and finesse the logic in persist() so it
+    // doesn't require it to be single-threaded, because it would be useful to be
+    // able to use a shared executor with a thread-count set to the appropriate level
+    // of write parallelism for the storage subsystem
+    this.persistExecutor = Executors.newSingleThreadExecutor();
+
+    this.versionZero = HASH_FACTORY.createVersionZero(deltasAccess.getWaveletName());
+    this.deltasAccess = deltasAccess;
+    for (WaveletDeltaRecord delta : deltas) {
+      HashedVersion hashedVersion = delta.getAppliedAtVersion();
+      appliedDeltas.put(hashedVersion, delta.getAppliedDelta());
+      transformedDeltas.put(hashedVersion, delta.getTransformedDelta());
+    }      
+    this.snapshot = snapshot;
+    this.lastPersistedVersion = new AtomicReference<HashedVersion>(deltasAccess.getEndVersion());
   }
 
   @Override
   public WaveletName getWaveletName() {
-    return waveletName;
+    return deltasAccess.getWaveletName();
   }
 
   @Override
@@ -109,7 +206,8 @@ class MemoryWaveletState implements WaveletState {
 
   @Override
   public HashedVersion getLastPersistedVersion() {
-    return (lastPersistedVersion == null) ? versionZero : lastPersistedVersion;
+    HashedVersion version = lastPersistedVersion.get();
+    return (version == null) ? versionZero : version;
   }
 
   @Override
@@ -194,7 +292,7 @@ class MemoryWaveletState implements WaveletState {
         "Applied version %s doesn't match current version %s", appliedAtVersion, currentVersion);
 
     if (appliedAtVersion.getVersion() == 0) {
-      Preconditions.checkState(lastPersistedVersion == null);
+      Preconditions.checkState(lastPersistedVersion.get() == null);
       snapshot = WaveletDataUtil.buildWaveletFromFirstDelta(getWaveletName(), transformedDelta);
     } else {
       WaveletDataUtil.applyWaveletDelta(transformedDelta, snapshot);
@@ -212,13 +310,37 @@ class MemoryWaveletState implements WaveletState {
     Preconditions.checkArgument(isDeltaBoundary(version),
         "Version to persist %s matches no delta", version);
 
-    if (lastPersistedVersion == null || lastPersistedVersion.getVersion() < version.getVersion()) {
-      lastPersistedVersion = version;
-    }
-
-    // This implementation regards things as persisted when they are in memory, so
-    // we report the version as persisted as soon as we're asked to persist it.
-    return Futures.immediateFuture(null);
+    // The following logic relies on persistExecutor being single-threaded,
+    // so no two tasks execute in parallel.
+    ListenableFutureTask<Void> resultTask = new ListenableFutureTask<Void>(
+        new Callable<Void>() {
+          @Override
+          public Void call() throws PersistenceException {
+            HashedVersion last = lastPersistedVersion.get();
+            if (last != null && version.getVersion() <= last.getVersion()) {
+              LOG.info("Attempt to persist version " + version
+                  + " smaller than last persisted version " + last);
+              // done, version is already persisted
+            } else {
+              ImmutableList.Builder<WaveletDeltaRecord> deltas = ImmutableList.builder();
+              HashedVersion v = (last == null) ? versionZero : last;
+              do {
+                WaveletDeltaRecord d =
+                    new WaveletDeltaRecord(v, appliedDeltas.get(v), transformedDeltas.get(v));
+                deltas.add(d);
+                v = d.getResultingVersion();
+              } while (v.getVersion() < version.getVersion());
+              Preconditions.checkState(v.equals(version));
+              deltasAccess.append(deltas.build());
+              Preconditions.checkState(last == lastPersistedVersion.get(),
+                  "lastPersistedVersion changed while we were writing to storage");
+              lastPersistedVersion.set(version);
+            }
+            return null;
+          }
+        });
+    persistExecutor.execute(resultTask);
+    return resultTask;
   }
 
   @Override
