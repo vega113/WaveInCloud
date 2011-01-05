@@ -32,7 +32,7 @@ server.federation.config
 /build-proto.properties
 /dist
 /gen
-/junitvmwatcher*.properties
+/junit*.properties
 
 # Testing (ant junit)
 test_out

@@ -14,7 +14,7 @@ build
 build-proto.properties
 dist
 gen
-junitvmwatcher*.properties
+junit*.properties
 .git
 out
 *~
