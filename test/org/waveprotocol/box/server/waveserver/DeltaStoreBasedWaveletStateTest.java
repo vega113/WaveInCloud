@@ -17,10 +17,12 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
-import org.waveprotocol.box.server.waveserver.DeltaStore;
+import com.google.common.util.concurrent.MoreExecutors;
 
+import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.wave.model.id.WaveletName;
+
+import java.util.concurrent.Executor;
 
 /**
  * Runs wavelet state tests with the {@link DeltaStoreBasedWaveletState}.
@@ -29,6 +31,7 @@ import org.waveprotocol.wave.model.id.WaveletName;
  */
 public class DeltaStoreBasedWaveletStateTest extends WaveletStateTestBase {
 
+  private final Executor PERSIST_EXECUTOR = MoreExecutors.sameThreadExecutor();
   private DeltaStore store;
 
   @Override
@@ -39,12 +42,12 @@ public class DeltaStoreBasedWaveletStateTest extends WaveletStateTestBase {
 
   @Override
   protected WaveletState createEmptyState(WaveletName name) throws Exception {
-    return DeltaStoreBasedWaveletState.create(store.open(name));
+    return DeltaStoreBasedWaveletState.create(store.open(name), PERSIST_EXECUTOR);
   }
 
   @Override
   protected void awaitPersistence() throws Exception {
-    Thread.sleep(1); // TODO(soren): this is bad, rather inject persistExecutor and control it here
+    // Same-thread executor already completed.
     return;
   }
 

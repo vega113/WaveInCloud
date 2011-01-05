@@ -97,8 +97,7 @@ public class MemoryDeltaStore implements DeltaStore {
   }
 
   @Override
-  public ExceptionalIterator<WaveId, PersistenceException> getWaveIdIterator()
-      throws PersistenceException {
+  public ExceptionalIterator<WaveId, PersistenceException> getWaveIdIterator() {
     ImmutableSet.Builder<WaveId> builder = ImmutableSet.builder();
     // Filter out empty waves
     for (Map.Entry<WaveId, Map<WaveletId, MemoryDeltaCollection>> e : data.entrySet()) {

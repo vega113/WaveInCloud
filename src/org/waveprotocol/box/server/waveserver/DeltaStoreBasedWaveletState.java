@@ -17,12 +17,12 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 
@@ -47,10 +47,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -87,17 +85,34 @@ class DeltaStoreBasedWaveletState implements WaveletState {
         }
       };
 
-  public static DeltaStoreBasedWaveletState create(DeltaStore.DeltasAccess deltasAccess)
-      throws PersistenceException {
+  /**
+   * Creates a new delta store based state.
+   *
+   * The executor must ensure that only one thread executes at any time for each
+   * state instance.
+   *
+   * @param deltasAccess delta store accessor
+   * @param persistExecutor executor for making persistence calls
+   * @return a state initialized from the deltas
+   * @throws PersistenceException if a failure occurs while reading or
+   *         processing stored deltas
+   */
+  public static DeltaStoreBasedWaveletState create(DeltaStore.DeltasAccess deltasAccess,
+      Executor persistExecutor) throws PersistenceException {
+    // Note that the logic in persist() depends on persistExecutor being single-threaded.
+    // TODO(soren): finesse the logic in persist() so it
+    // doesn't require it to be single-threaded, because it would be useful to be
+    // able to use a shared executor with a thread-count set to the appropriate level
+    // of write parallelism for the storage subsystem.
     if (deltasAccess.isEmpty()) {
       return new DeltaStoreBasedWaveletState(deltasAccess, ImmutableList.<WaveletDeltaRecord>of(),
-          null);
+          null, persistExecutor);
     } else {
       try {
         ImmutableList<WaveletDeltaRecord> deltas = readAll(deltasAccess);
         WaveletData snapshot = WaveletDataUtil.buildWaveletFromDeltas(deltasAccess.getWaveletName(),
             Iterators.transform(deltas.iterator(), TRANSFORMED));
-        return new DeltaStoreBasedWaveletState(deltasAccess, deltas, snapshot);
+        return new DeltaStoreBasedWaveletState(deltasAccess, deltas, snapshot, persistExecutor);
       } catch (IOException e) {
         throw new PersistenceException("Failed to read stored deltas", e);
       } catch (OperationException e) {
@@ -107,7 +122,7 @@ class DeltaStoreBasedWaveletState implements WaveletState {
   }
 
   /**
-   * Reads all deltas from 
+   * Reads all deltas from
    */
   private static ImmutableList<WaveletDeltaRecord> readAll(WaveletDeltaRecordReader reader)
       throws IOException{
@@ -166,25 +181,19 @@ class DeltaStoreBasedWaveletState implements WaveletState {
    * are no deltas. The constructed object takes ownership of the
    * snapshot and will mutate it if appendDelta() is called.
    */
-  private DeltaStoreBasedWaveletState(DeltaStore.DeltasAccess deltasAccess,
-      List<WaveletDeltaRecord> deltas, WaveletData snapshot) {
+  @VisibleForTesting
+  DeltaStoreBasedWaveletState(DeltaStore.DeltasAccess deltasAccess,
+      List<WaveletDeltaRecord> deltas, WaveletData snapshot, Executor persistExecutor) {
     Preconditions.checkArgument(deltasAccess.isEmpty() == deltas.isEmpty());
     Preconditions.checkArgument(deltas.isEmpty() == (snapshot == null));
-
-    // Note that the logic in persist() depends on persistExecutor being single-threaded.
-    // TODO(soren): inject the executor, and finesse the logic in persist() so it
-    // doesn't require it to be single-threaded, because it would be useful to be
-    // able to use a shared executor with a thread-count set to the appropriate level
-    // of write parallelism for the storage subsystem
-    this.persistExecutor = Executors.newSingleThreadExecutor();
-
+    this.persistExecutor = persistExecutor;
     this.versionZero = HASH_FACTORY.createVersionZero(deltasAccess.getWaveletName());
     this.deltasAccess = deltasAccess;
     for (WaveletDeltaRecord delta : deltas) {
       HashedVersion hashedVersion = delta.getAppliedAtVersion();
       appliedDeltas.put(hashedVersion, delta.getAppliedDelta());
       transformedDeltas.put(hashedVersion, delta.getTransformedDelta());
-    }      
+    }
     this.snapshot = snapshot;
     this.lastPersistedVersion = new AtomicReference<HashedVersion>(deltasAccess.getEndVersion());
   }

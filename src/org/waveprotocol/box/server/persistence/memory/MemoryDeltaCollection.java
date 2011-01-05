@@ -43,7 +43,7 @@ public class MemoryDeltaCollection implements DeltasAccess {
   private final WaveletName waveletName;
 
   private HashedVersion endVersion = null;
-  
+
   public MemoryDeltaCollection(WaveletName waveletName) {
     Preconditions.checkNotNull(waveletName);
     this.waveletName = waveletName;
