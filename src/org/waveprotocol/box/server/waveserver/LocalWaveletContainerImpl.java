@@ -40,6 +40,7 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.util.logging.Log;
 
 /**
  * A local wavelet may be updated by submits. The local wavelet will perform
@@ -47,6 +48,8 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
  * version of the wavelet.
  */
 class LocalWaveletContainerImpl extends WaveletContainerImpl implements LocalWaveletContainer {
+
+  private static final Log LOG = Log.get(LocalWaveletContainerImpl.class);
 
   private static final Function<RemoveParticipant, ParticipantId> PARTICIPANT_REMOVED_BY =
       new Function<RemoveParticipant, ParticipantId>() {
@@ -86,10 +89,15 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl implements LocalWav
     acquireWriteLock();
     try {
       checkStateOk();
+      HashedVersion before = getCurrentVersion();
       WaveletDeltaRecord result = transformAndApplyLocalDelta(signedDelta);
-      // Only publish and persist the delta if it wasn't transformed away.
-      // (Right now it never is since the current OT algorithm doesn't transform ops away.)
-      if (!result.isEmpty()) {
+      HashedVersion after = getCurrentVersion();
+      // Only publish and persist the delta if it wasn't transformed away
+      // (right now it never is since the current OT algorithm doesn't transform ops away)
+      // and wasn't a duplicate of a previously applied delta.
+      if (!after.equals(before)) {
+        Preconditions.checkState(!result.isEmpty());
+        Preconditions.checkState(result.getAppliedAtVersion().equals(before));
         ImmutableSet<String> domainsToNotify = domainsOf(Iterables.concat(
             accessSnapshot().getParticipants(),
             participantsRemovedBy(result.getTransformedDelta())));
@@ -156,6 +164,7 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl implements LocalWav
       ByteStringMessage<ProtocolAppliedWaveletDelta> existingDeltaBytes =
           lookupAppliedDelta(transformed.getTargetVersion());
       TransformedWaveletDelta dupDelta = lookupTransformedDelta(transformed.getTargetVersion());
+      LOG.info("Duplicate delta " + dupDelta + " for wavelet " + getWaveletName());
       // TODO(anorth): Replace these comparisons with methods on delta classes.
       Preconditions.checkState(dupDelta.getAuthor().equals(transformed.getAuthor()),
           "Duplicate delta detected but mismatched author, expected %s found %s",
