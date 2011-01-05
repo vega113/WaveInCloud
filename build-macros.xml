@@ -60,7 +60,6 @@
     </sequential>
   </macrodef>
 
-
   <!-- Macro which builds a collection of sources -->
   <macrodef name="buildjava">
     <attribute name="srcpattern" description="Pattern id describing files to build"
@@ -75,7 +74,7 @@
       <javac destdir="@{destdir}" debug="true" includeAntRuntime="false">
         <patternset refid="@{srcpattern}"/>
         <!-- TODO(anorth): enable -Werror after fixing warnings. -->
-        <!--compilerarg value="-Werror"/-->
+        <compilerarg value="-Werror"/>
         <compilerarg value="-Xlint:all"/>
         <compilerarg value="-Xlint:-serial"/>
         <!-- Deprecation warnings are generated for .class files for some
