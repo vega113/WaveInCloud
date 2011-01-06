@@ -153,7 +153,7 @@ public final class DocumentBasedAbuseStore<N, E extends N> implements Observable
       ObservableElementList<WantedEvaluation, WantedEvaluation> list) {
     this.list = list;
 
-    class ListListener implements ObservableElementList.Listener<WantedEvaluation> {
+    this.list.addListener(new ObservableElementList.Listener<WantedEvaluation>() {
       @Override
       public void onValueAdded(WantedEvaluation entry) {
         triggerEvaluationAdded(entry);
@@ -163,9 +163,7 @@ public final class DocumentBasedAbuseStore<N, E extends N> implements Observable
       public void onValueRemoved(WantedEvaluation entry) {
         // This never happens, and, when it does, is safe to ignore.
       }
-    }
-
-    this.list.addListener(new ListListener());
+    });
   }
 
   @Override
