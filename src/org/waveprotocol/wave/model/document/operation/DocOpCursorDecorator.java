@@ -25,7 +25,7 @@ import org.waveprotocol.wave.model.util.Preconditions;
  *
  * @author ohler@google.com (Christian Ohler)
  */
-public abstract class ModifiableDocumentAdapter implements DocOpCursor {
+public class DocOpCursorDecorator implements DocOpCursor {
 
   /** The cursor we are delegating to */
   protected final DocOpCursor target;
@@ -34,7 +34,7 @@ public abstract class ModifiableDocumentAdapter implements DocOpCursor {
    * Constructs the adapter, taking the document that we will delegate to.
    * @param target Delegation target
    */
-  protected ModifiableDocumentAdapter(DocOpCursor target) {
+  protected DocOpCursorDecorator(DocOpCursor target) {
     Preconditions.checkNotNull(target, "Null target");
     this.target = target;
   }
