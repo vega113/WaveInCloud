@@ -25,15 +25,14 @@ package org.waveprotocol.wave.model.id;
  * @author anorth@google.com (Alex North)
  */
 public interface IdSerialiser {
-  /**
-   * Serialises a wave id into a string.
-   */
+  /** Serialises a wave id into a string. */
   String serialiseWaveId(WaveId waveId);
 
-  /**
-   * Serialises a wavelet id into a string.
-   */
+  /** Serialises a wavelet id into a string. */
   String serialiseWaveletId(WaveletId waveletId);
+
+  /** Serialises a wavelet name into a string. */
+  String serialiseWaveletName(WaveletName name);
 
   /**
    * Deserialises a wave id encoded in a string.
@@ -43,7 +42,16 @@ public interface IdSerialiser {
   WaveId deserialiseWaveId(String serialisedForm) throws InvalidIdException;
 
   /**
+   * Deserialises a wavelet id encoded in a string.
+   *
    * @throws InvalidIdException if the serialised id is invalid
    */
   WaveletId deserialiseWaveletId(String serialisedForm) throws InvalidIdException;
+
+  /**
+   * Deserialises a wavelet name encoded in a string.
+   *
+   * @throws InvalidIdException if the serialised name is invalid
+   */
+  WaveletName deserialiseWaveletName(String serializedForm) throws InvalidIdException;
 }

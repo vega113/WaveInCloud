@@ -33,9 +33,12 @@ public class ModernIdSerialiser implements IdSerialiser {
 
   public static final ModernIdSerialiser INSTANCE = new ModernIdSerialiser();
   private static final String SEP = "/";
+  private static final String ELIDE = "~";
 
   @Override
   public String serialiseWaveId(WaveId id) {
+    // These checks will be unnecessary once it's impossible to construct
+    // a wave id that violates them.
     Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, id.getDomain()), "Invalid domain");
     Preconditions.checkArgument(WaveIdentifiers.isValidIdentifier(id.getId()), "Invalid id");
     return new StringBuilder(id.getDomain()).append(SEP).append(id.getId()).toString();
@@ -43,9 +46,23 @@ public class ModernIdSerialiser implements IdSerialiser {
 
   @Override
   public String serialiseWaveletId(WaveletId id) {
+    // These checks will be unnecessary once it's impossible to construct
+    // a wavelet id that violates them.
     Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, id.getDomain()), "Invalid domain");
     Preconditions.checkArgument(WaveIdentifiers.isValidIdentifier(id.getId()), "Invalid id");
     return new StringBuilder(id.getDomain()).append(SEP).append(id.getId()).toString();
+  }
+
+  @Override
+  public String serialiseWaveletName(WaveletName name) {
+    StringBuilder b = new StringBuilder(serialiseWaveId(name.waveId)).append(SEP);
+    if (name.waveletId.getDomain().equals(name.waveId.getDomain())) {
+      b.append(ELIDE);
+    } else {
+      b.append(name.waveletId.getDomain());
+    }
+    b.append(SEP).append(name.waveletId.getId());
+    return b.toString();
   }
 
   @Override
@@ -53,7 +70,7 @@ public class ModernIdSerialiser implements IdSerialiser {
     String[] tokens = serialisedForm.split(SEP);
     if (tokens.length != 2) {
       throw new InvalidIdException(serialisedForm,
-          "Required 2 /-separated tokens in serialised wave id, found " + tokens.length);
+          "Required 2 '/'-separated tokens in serialised wave id: " + serialisedForm);
     }
     return WaveId.ofChecked(tokens[0], tokens[1]);
   }
@@ -63,9 +80,30 @@ public class ModernIdSerialiser implements IdSerialiser {
     String[] tokens = serialisedForm.split(SEP);
     if (tokens.length != 2) {
       throw new InvalidIdException(serialisedForm,
-          "Required 2 /-separated tokens in serialised wavelet id, found " + tokens.length);
+          "Required 2 '/'-separated tokens in serialised wavelet id: " + serialisedForm);
     }
     return WaveletId.ofChecked(tokens[0], tokens[1]);
+  }
+
+  @Override
+  public WaveletName deserialiseWaveletName(String serialisedForm) throws InvalidIdException {
+    if (serialisedForm.endsWith("/")) {
+      throw new InvalidIdException(serialisedForm, "Serialised wavelet name had trailing '/'");
+    }
+    String[] tokens = serialisedForm.split(SEP);
+    if (tokens.length != 4) {
+      throw new InvalidIdException(serialisedForm,
+          "Required 4 '/'-separated tokens in serialised wavelet name: " + serialisedForm);
+    }
+    if (tokens[2].equals(tokens[0])) {
+      throw new InvalidIdException(serialisedForm,
+          "Serialised wavelet name had un-normalised domains");
+    }
+    if (tokens[2].equals(ELIDE)) {
+      tokens[2] = tokens[0];
+    }
+    return WaveletName.of(WaveId.ofChecked(tokens[0], tokens[1]),
+        WaveletId.ofChecked(tokens[2], tokens[3]));
   }
 
   private ModernIdSerialiser() {

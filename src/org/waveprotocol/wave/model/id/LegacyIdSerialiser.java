@@ -22,6 +22,8 @@ package org.waveprotocol.wave.model.id;
  * Serialises and deserialises wave ids and wavelet ids to and from
  * the format &lt;domain&gt;!&lt;id&gt;.
  *
+ * This serialiser does not support methods for (de-)serialising wavelet names.
+ *
  * @author zdwang@google.com (David Wang)
  */
 public class LegacyIdSerialiser implements IdSerialiser {
@@ -39,6 +41,14 @@ public class LegacyIdSerialiser implements IdSerialiser {
   @Override
   public String serialiseWaveletId(WaveletId waveletId) {
     return waveletId.getDomain() + LegacyIdSerialiser.PART_SEPARATOR + waveletId.getId();
+  }
+
+  /**
+   * @throws UnsupportedOperationException always
+   */
+  @Override
+  public String serialiseWaveletName(WaveletName name) {
+    throw new UnsupportedOperationException("No legacy serialization for wavelet names");
   }
 
   @Override
@@ -69,6 +79,14 @@ public class LegacyIdSerialiser implements IdSerialiser {
     } catch (IllegalArgumentException ex) {
       throw new InvalidIdException(serialisedForm, ex.getMessage());
     }
+  }
+
+  /**
+   * @throws UnsupportedOperationException always
+   */
+  @Override
+  public WaveletName deserialiseWaveletName(String serializedForm) {
+    throw new UnsupportedOperationException("No legacy serialization for wavelet names");
   }
 
   private LegacyIdSerialiser() {
