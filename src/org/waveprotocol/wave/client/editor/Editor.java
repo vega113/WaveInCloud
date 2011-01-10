@@ -19,7 +19,6 @@ package org.waveprotocol.wave.client.editor;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.Widget;
 
 import org.waveprotocol.wave.client.common.util.KeySignalListener;

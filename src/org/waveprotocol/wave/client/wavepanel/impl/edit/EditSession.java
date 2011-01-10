@@ -150,6 +150,8 @@ public final class EditSession
       container.doOrphan(editor.getWidget());
       editor.blur();
       editor.setEditing(false);
+      // "removeContent" just means detach the editor from the document.
+      editor.removeContent();
       editor.reset();
       // TODO(user): this does not work if the view has been deleted and detached.
       editing.getMeta().deselect(MenuOption.EDIT);

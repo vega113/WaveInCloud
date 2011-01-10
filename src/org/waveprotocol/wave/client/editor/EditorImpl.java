@@ -1558,7 +1558,6 @@ public class EditorImpl extends LogicalPanel.Impl implements
       oldDoc.replaceOutgoingSink(SilentOperationSink.Void.get());
     } else {
       oldDoc.setInteractive();
-      oldDoc.replaceOutgoingSink(innerOutputSink);
     }
 
     // TODO(danilatos): Clear all the stuff initialised in setContent()

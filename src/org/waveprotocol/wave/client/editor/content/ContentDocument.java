@@ -1277,6 +1277,12 @@ public class ContentDocument {
     setupBehaviour(fullRawSubstrate.getDocumentElement(), oldLevel);
   }
 
+  /**
+   * Downgrades the current level to interactive.
+   *
+   * @throws IllegalStateException if the current level is not at or above
+   *         interactive.
+   */
   public void setInteractive() {
     Preconditions.checkState(logicalPanel != null, "Don't have a logicalPanel");
     assert level.isAtLeast(Level.INTERACTIVE);
