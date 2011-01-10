@@ -22,6 +22,7 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
+import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -100,18 +101,19 @@ public class DeltaTestUtil {
     return makeTransformedDelta(0L, HashedVersion.unsigned(initialVersion + 1), 1);
   }
 
-  /**
-   * Create a NoOp operation.
-   */
+  /** Create a NoOp operation. */
   public NoOp noOp() {
     return new NoOp(new WaveletOperationContext(author, 0L, 1L));
   }
 
-  /**
-   * Create an AddParticipant operation.
-   */
+  /** Create an AddParticipant operation. */
   public AddParticipant addParticipant(ParticipantId participant) {
     return new AddParticipant(new WaveletOperationContext(author, 0L, 1L), participant);
+  }
+
+  /** Creates a RemoveParticipant operation. */
+  public RemoveParticipant removeParticipant(ParticipantId participant) {
+    return new RemoveParticipant(new WaveletOperationContext(author, 0L, 1L), participant);
   }
 
   /**

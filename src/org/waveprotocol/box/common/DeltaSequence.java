@@ -123,6 +123,9 @@ public final class DeltaSequence extends ForwardingList<TransformedWaveletDelta>
 
   @Override
   public String toString() {
+    if (isEmpty()) {
+      return "[DeltaSequence empty]";
+    }
     return "[DeltaSequence " + deltas.size() + " deltas, v " + getStartVersion() + " -> "
         + getEndVersion() + ": " + deltas + "]";
   }

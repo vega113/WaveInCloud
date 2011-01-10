@@ -186,6 +186,8 @@ final class WaveViewSubscription {
    */
   private void sendUpdate(WaveletName waveletName, List<TransformedWaveletDelta> deltas,
       HashedVersion committedVersion) {
+    // Channel id needs to be sent with every message until views can be
+    // closed, see bug 128.
     openListener.onUpdate(waveletName, null, deltas, committedVersion, null, channelId);
   }
 
