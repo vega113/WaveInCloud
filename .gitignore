@@ -39,6 +39,12 @@ test_out
 TEST-*\.xml
 
 # Web archive (build artifact)
-war/org.waveprotocol.*
-war/waveharness
-war/webclient
+/war/org.waveprotocol.*
+/war/waveharness
+/war/webclient
+
+# Data stores
+/_accounts
+/_attachments
+/_certificates
+/_deltas
