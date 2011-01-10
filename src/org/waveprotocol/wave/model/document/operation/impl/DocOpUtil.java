@@ -20,12 +20,10 @@ import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMapBuilder;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitializationComponentType;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpComponentType;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
@@ -56,27 +54,9 @@ public class DocOpUtil {
    */
   public static final String PI_TARGET = "a";
 
-  public static BufferedDocOp buffer(DocOp op) {
-    if (op instanceof BufferedDocOp) {
-      return (BufferedDocOp) op;
-    }
-    DocOpBuffer b = new DocOpBuffer();
-    op.apply(b);
-    return b.finish();
-  }
-
-  public static BufferedDocInitialization buffer(DocInitialization m) {
-    if (m instanceof BufferedDocInitialization) {
-      return (BufferedDocInitialization) m;
-    }
-    DocInitializationBuffer b = new DocInitializationBuffer();
-    m.apply(b);
-    return b.finish();
-  }
-
-  public static BufferedDocInitialization asInitialization(final DocOp op) {
-    if (op instanceof BufferedDocInitialization) {
-      return (BufferedDocInitialization) op;
+  public static DocInitialization asInitialization(final DocOp op) {
+    if (op instanceof DocInitialization) {
+      return (DocInitialization) op;
     } else {
       return new AbstractBufferedDocInitialization() {
         @Override
@@ -474,16 +454,16 @@ public class DocOpUtil {
         .replace("\\\\", "\\");
   }
 
-  public static BufferedDocOp normalize(DocOp in) {
-    EvaluatingDocOpCursor<BufferedDocOp> n = new AnnotationsNormalizer<BufferedDocOp>(
-        new RangeNormalizer<BufferedDocOp>(new DocOpBuffer()));
+  public static DocOp normalize(DocOp in) {
+    EvaluatingDocOpCursor<DocOp> n = new AnnotationsNormalizer<DocOp>(
+        new RangeNormalizer<DocOp>(new DocOpBuffer()));
     in.apply(n);
     return n.finish();
   }
 
-  public static BufferedDocInitialization normalize(DocInitialization in) {
-    EvaluatingDocOpCursor<BufferedDocOp> n = new AnnotationsNormalizer<BufferedDocOp>(
-        new RangeNormalizer<BufferedDocOp>(new DocOpBuffer()));
+  public static DocInitialization normalize(DocInitialization in) {
+    EvaluatingDocOpCursor<DocOp> n = new AnnotationsNormalizer<DocOp>(
+        new RangeNormalizer<DocOp>(new DocOpBuffer()));
     in.apply(n);
     return asInitialization(n.finish());
   }
@@ -607,7 +587,7 @@ public class DocOpUtil {
 
     final StringBuilder[] builders = { docB, opB, indicesB };
 
-    final BufferedDocInitialization exploded = ExplodedDocOp.explode(doc);
+    final DocInitialization exploded = ExplodedDocOp.explode(doc);
 
     final int numDocComponents = exploded.size();
 
@@ -765,7 +745,7 @@ public class DocOpUtil {
       }
     }
 
-    BufferedDocOp op = builder.build();
+    DocOp op = builder.build();
     return DocOpUtil.asInitialization(op);
   }
 }

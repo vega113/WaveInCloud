@@ -28,7 +28,7 @@ import org.waveprotocol.wave.client.editor.testing.TestEditors;
 import org.waveprotocol.wave.client.editor.testing.TestInlineDoodad;
 import org.waveprotocol.wave.client.editor.testtools.ContentWithSelection;
 import org.waveprotocol.wave.model.document.AnnotationBehaviour.BiasDirection;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.util.FocusedRange;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
@@ -279,8 +279,8 @@ public class PasteExtractorGwtTest extends GWTTestCase {
       remote.setContent(local.getDocumentInitialization(),
           ConversationSchemas.BLIP_SCHEMA_CONSTRAINTS);
 
-      local.setOutputSink(new SilentOperationSink<BufferedDocOp>() {
-        public void consume(BufferedDocOp op) {
+      local.setOutputSink(new SilentOperationSink<DocOp>() {
+        public void consume(DocOp op) {
           remote.getContent().consume(op);
         }
       });

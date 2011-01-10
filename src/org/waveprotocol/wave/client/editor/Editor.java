@@ -33,7 +33,7 @@ import org.waveprotocol.wave.client.editor.content.RegistriesImpl;
 import org.waveprotocol.wave.client.editor.content.misc.AnnotationPaint;
 import org.waveprotocol.wave.client.editor.keys.KeyBindingRegistry;
 import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.util.AnnotationRegistryImpl;
@@ -116,7 +116,7 @@ public interface Editor extends EditorContext {
    * Give the editor a sink to send outgoing operations to
    * @param sink
    */
-  void setOutputSink(SilentOperationSink<BufferedDocOp> sink);
+  void setOutputSink(SilentOperationSink<DocOp> sink);
 
   /**
    * Makes this editor forget any previously registered output sink.

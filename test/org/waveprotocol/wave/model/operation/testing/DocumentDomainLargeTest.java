@@ -21,7 +21,7 @@ package org.waveprotocol.wave.model.operation.testing;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.bootstrap.BootstrapDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.operation.testing.DomainRandomTester.FailureException;
 import org.waveprotocol.wave.model.operation.testing.DomainRandomTester.Log;
 
@@ -29,7 +29,7 @@ import org.waveprotocol.wave.model.operation.testing.DomainRandomTester.Log;
 public class DocumentDomainLargeTest extends TestCase {
 
   private final int NUM_ITERATIONS = 100;
-  DomainRandomTester<BootstrapDocument, BufferedDocOp> t;
+  DomainRandomTester<BootstrapDocument, DocOp> t;
 
   boolean expectFailure = false;
 
@@ -59,8 +59,8 @@ public class DocumentDomainLargeTest extends TestCase {
     createTester(new DocumentDomain(), new DocOpGenerator());
   }
 
-  protected void createTester(DocumentDomain d, RandomOpGenerator<BootstrapDocument, BufferedDocOp> g) {
-    t = new DomainRandomTester<BootstrapDocument, BufferedDocOp>(new Log() {
+  protected void createTester(DocumentDomain d, RandomOpGenerator<BootstrapDocument, DocOp> g) {
+    t = new DomainRandomTester<BootstrapDocument, DocOp>(new Log() {
         @Override
         public void inconsistent(String... lines) {
           if (!expectFailure) {

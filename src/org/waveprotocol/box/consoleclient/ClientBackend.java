@@ -49,15 +49,14 @@ import org.waveprotocol.box.server.util.SuccessFailCallback;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
@@ -734,7 +733,7 @@ public class ClientBackend {
       }
       for (String documentId : wavelet.getDocumentIds()) {
         BlipData doc = wavelet.getDocument(documentId);
-        BufferedDocOp docOp = DocOpUtil.buffer(doc.getContent().asOperation());
+        DocOp docOp = doc.getContent().asOperation();
         events.add(
             new WaveletEventData(wavelet.getCreator().getAddress(), wavelet,
                 new WaveletBlipOperation(documentId,

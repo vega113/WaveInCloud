@@ -19,7 +19,6 @@ package org.waveprotocol.wave.model.document.util;
 
 import org.waveprotocol.wave.model.document.ReadableWDocument;
 import org.waveprotocol.wave.model.document.operation.Nindo;
-
 import org.waveprotocol.wave.model.util.Preconditions;
 
 /**

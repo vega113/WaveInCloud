@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.operation.wave;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.util.EmptyDocument;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.testing.BasicFactories;
@@ -231,7 +231,7 @@ public class VersionUpdateOpTest extends TestCase {
 
   private WaveletOperation mutateBlip(WaveletOperationContext context, String blipId)
       throws OperationException {
-    BufferedDocOp docOp = ModelTestUtils.createContent("Hello");
+    DocOp docOp = ModelTestUtils.createContent("Hello");
     BlipOperation blipOp = new BlipContentOperation(LOCAL_CONTEXT, docOp);
     WaveletOperation waveletBlipOp = new WaveletBlipOperation(blipId, blipOp);
     waveletBlipOp.apply(waveletData);

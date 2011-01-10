@@ -25,7 +25,6 @@ import org.waveprotocol.box.common.Snippets;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
@@ -90,7 +89,7 @@ public class ClientUtils {
    * @param index index to insert at
    * @return document operation which inserts text at a given index
    */
-  public static BufferedDocOp createTextInsertion(String text, int index, int previousTotalLength) {
+  public static DocOp createTextInsertion(String text, int index, int previousTotalLength) {
     DocOpBuilder builder = new DocOpBuilder();
 
     if (index > 0) {
@@ -164,7 +163,7 @@ public class ClientUtils {
   /**
    * @return an empty document
    */
-  public static BufferedDocOp createEmptyDocument() {
+  public static DocOp createEmptyDocument() {
     return new DocOpBuilder().build();
   }
 
@@ -173,7 +172,7 @@ public class ClientUtils {
    *
    * @return the manifest document.
    */
-  public static BufferedDocOp createManifest() {
+  public static DocOp createManifest() {
     return new DocOpBuilder()
         .elementStart(DocumentConstants.CONVERSATION, Attributes.EMPTY_MAP).elementEnd().build();
   }

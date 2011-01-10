@@ -23,7 +23,7 @@ import org.waveprotocol.box.common.IndexEntry;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
@@ -110,9 +110,9 @@ public class WebClientUtils {
    * @param documentStates the documents to render
    * @return A String containing the characters from all documents, in order
    */
-  public static String render(Iterable<BufferedDocOp> documentStates) {
+  public static String render(Iterable<DocOp> documentStates) {
     final StringBuilder resultBuilder = new StringBuilder();
-    for (BufferedDocOp documentState : documentStates) {
+    for (DocOp documentState : documentStates) {
       documentState.apply(InitializationCursorAdapter.adapt(new DocOpCursor() {
         @Override
         public void characters(String s) {
@@ -184,7 +184,7 @@ public class WebClientUtils {
    * @param index index to insert at
    * @return document operation which inserts text at a given index
    */
-  public static BufferedDocOp createTextInsertion(String text, int index,
+  public static DocOp createTextInsertion(String text, int index,
       int previousTotalLength) {
     DocOpBuilder builder = new DocOpBuilder();
 
@@ -207,10 +207,10 @@ public class WebClientUtils {
    * Add record of a blip to the end of the manifest.
    */
   public static CoreWaveletDocumentOperation appendToManifest(
-      BufferedDocOp manifestDocument, String blipId) {
+      DocOp manifestDocument, String blipId) {
     Map<String, String> newBlipAttributes = new HashMap<String, String>();
     newBlipAttributes.put(DocumentConstants.BLIP_ID, blipId);
-    BufferedDocOp manifestUpdateOp = new DocOpBuilder().retain(
+    DocOp manifestUpdateOp = new DocOpBuilder().retain(
         findDocumentSize(manifestDocument) - 1).elementStart(
         DocumentConstants.BLIP, new AttributesImpl(newBlipAttributes)).elementEnd() // </blip>
     .retain(1) // retain </conversation>
@@ -220,7 +220,7 @@ public class WebClientUtils {
   }
 
   public static CoreWaveletDocumentOperation insertReplyAfter(
-      BufferedDocOp manifestDocument, final String parentBlipId,
+      DocOp manifestDocument, final String parentBlipId,
       String childBlipId, boolean startThread) {
     // Fist, find the parent blip's offset
     class SearchCounter extends CountingDocOpCursor {
@@ -266,7 +266,7 @@ public class WebClientUtils {
       builder.elementEnd(); // </thread>
     }
     builder.retain(counter.size - skipCount); // rest of document
-    BufferedDocOp manifestUpdateOp = builder.build();
+    DocOp manifestUpdateOp = builder.build();
 
     return new CoreWaveletDocumentOperation(DocumentConstants.MANIFEST_DOCUMENT_ID,
         manifestUpdateOp);
@@ -287,7 +287,7 @@ public class WebClientUtils {
   /**
    * @return a empty document
    */
-  public static BufferedDocOp createEmptyDocument() {
+  public static DocOp createEmptyDocument() {
     return new DocOpBuilder().build();
   }
 
@@ -346,11 +346,11 @@ public class WebClientUtils {
     if (conversationRoot == null) {
       return null;
     }
-    final Map<String, BufferedDocOp> documents = conversationRoot.getDocuments();
+    final Map<String, DocOp> documents = conversationRoot.getDocuments();
     if (documents == null) {
       return null;
     }
-    BufferedDocOp bufferedDocOp = documents.get(DocumentConstants.CONVERSATION);
+    DocOp bufferedDocOp = documents.get(DocumentConstants.CONVERSATION);
     if (bufferedDocOp == null) {
       // Render whatever data we have and hope its good enough
       return render(documents.values());
@@ -381,7 +381,7 @@ public class WebClientUtils {
             if (DocumentConstants.BLIP.equals(type)) {
               String blipId = attrs.get(DocumentConstants.BLIP_ID);
               if (blipId != null) {
-                BufferedDocOp document = documents.get(blipId);
+                DocOp document = documents.get(blipId);
                 if (document == null) {
                   // We see this when a blip has been deleted
                   return;

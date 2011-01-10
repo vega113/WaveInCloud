@@ -17,7 +17,7 @@
 package org.waveprotocol.wave.model.testing;
 
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
@@ -26,7 +26,7 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 public class TestOperations {
 
   // The test case for the message-based implementation should also use this.
-  public static BufferedDocOp getBasicTestOp() {
+  public static DocOp getBasicTestOp() {
     DocOpBuffer b = new DocOpBuffer();
 
     // The operation starts with characters/deleteCharacters of various lengths

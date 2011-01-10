@@ -20,7 +20,7 @@ import org.waveprotocol.wave.model.testing.ExtraAsserts;
 import org.waveprotocol.wave.model.testing.FakeDocument;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.util.EmptyDocument;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -37,7 +37,7 @@ import java.util.List;
 
 public class BlipContentOperationTest extends OperationTestBase {
 
-  private final static BufferedDocOp docOp = new DocOpBuilder().characters("Hello").build();
+  private final static DocOp docOp = new DocOpBuilder().characters("Hello").build();
 
   public void testApply() throws OperationException {
     BlipContentOperation op = new BlipContentOperation(context, docOp);

@@ -19,7 +19,7 @@ package org.waveprotocol.wave.model.adt.docbased;
 import org.waveprotocol.wave.model.adt.ObservableSingletonTestBase;
 import org.waveprotocol.wave.model.document.Doc;
 import org.waveprotocol.wave.model.document.ObservableDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.algorithm.Composer;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpInverter;
@@ -167,7 +167,7 @@ public class ObservableSingletonWithDocumentBasedSingletonTest extends Observabl
 
   public void testAtomicReplacementOfEquivalentFiresNoEvents() {
     target.set("42");
-    BufferedDocOp replacement = createReplaceOp(createErasureOp(), createRestoreOp());
+    DocOp replacement = createReplaceOp(createErasureOp(), createRestoreOp());
     target.addListener(listener);
     doc.hackConsume(Nindo.fromDocOp(replacement, false));
     listener.verifyNoEvent();
@@ -176,13 +176,13 @@ public class ObservableSingletonWithDocumentBasedSingletonTest extends Observabl
   public void testAtomicReplacementFiresSingleEvent() {
     // Build "insert 42" state.
     target.set("42");
-    BufferedDocOp restore = createRestoreOp();
+    DocOp restore = createRestoreOp();
 
     // Build "delete 43" state.
     target.set("43");
-    BufferedDocOp erasure = createErasureOp();
+    DocOp erasure = createErasureOp();
 
-    BufferedDocOp restoration = createReplaceOp(erasure, restore);
+    DocOp restoration = createReplaceOp(erasure, restore);
     target.addListener(listener);
     doc.hackConsume(Nindo.fromDocOp(restoration, false));
     listener.verifyValueChanged(43, 42);
@@ -228,20 +228,20 @@ public class ObservableSingletonWithDocumentBasedSingletonTest extends Observabl
   }
 
   /** Creates an op that restores the doc's current state. */
-  private BufferedDocOp createRestoreOp() {
+  private DocOp createRestoreOp() {
     UncheckedDocOpBuffer builder = new UncheckedDocOpBuffer();
     doc.toInitialization().apply(builder);
     return builder.finish();
   }
 
   /** Creates an op that deletes the doc's current state. */
-  private BufferedDocOp createErasureOp() {
+  private DocOp createErasureOp() {
     UncheckedDocOpBuffer builder = new UncheckedDocOpBuffer();
     doc.toInitialization().apply(builder);
     return DocOpInverter.invert(builder.finish());
   }
 
-  private static BufferedDocOp createReplaceOp(BufferedDocOp erase, BufferedDocOp restore) {
+  private static DocOp createReplaceOp(DocOp erase, DocOp restore) {
     try {
       return Composer.compose(erase, restore);
     } catch (OperationException e) {

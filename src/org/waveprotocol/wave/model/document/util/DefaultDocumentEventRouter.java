@@ -18,11 +18,11 @@ package org.waveprotocol.wave.model.document.util;
 
 import org.waveprotocol.wave.model.document.ObservableMutableDocument;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent;
-import org.waveprotocol.wave.model.document.indexed.DocumentHandler;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent.AttributesModified;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent.ContentDeleted;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent.ContentInserted;
 import org.waveprotocol.wave.model.document.indexed.DocumentEvent.Type;
+import org.waveprotocol.wave.model.document.indexed.DocumentHandler;
 import org.waveprotocol.wave.model.util.AttributeListener;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;

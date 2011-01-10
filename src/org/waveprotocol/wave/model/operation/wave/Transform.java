@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.model.operation.wave;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.Transformer;
 import org.waveprotocol.wave.model.operation.OperationPair;
 import org.waveprotocol.wave.model.operation.TransformException;
@@ -114,9 +114,9 @@ public class Transform {
     if (clientOp instanceof BlipContentOperation && serverOp instanceof BlipContentOperation) {
       BlipContentOperation clientBlipContentOp = (BlipContentOperation) clientOp;
       BlipContentOperation serverBlipContentOp = (BlipContentOperation) serverOp;
-      BufferedDocOp clientContentOp = clientBlipContentOp.getContentOp();
-      BufferedDocOp serverContentOp = serverBlipContentOp.getContentOp();
-      OperationPair<? extends BufferedDocOp> transformedDocOps =
+      DocOp clientContentOp = clientBlipContentOp.getContentOp();
+      DocOp serverContentOp = serverBlipContentOp.getContentOp();
+      OperationPair<? extends DocOp> transformedDocOps =
           Transformer.transform(clientContentOp, serverContentOp);
       clientOp = new BlipContentOperation(clientBlipContentOp.getContext(),
           transformedDocOps.clientOp());

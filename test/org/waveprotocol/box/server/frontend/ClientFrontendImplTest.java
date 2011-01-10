@@ -52,7 +52,7 @@ import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.IdFilter;
@@ -392,7 +392,7 @@ public class ClientFrontendImplTest extends TestCase {
     clientFrontend.waveletUpdate(wavelet, deltas);
   }
 
-  private BufferedDocOp makeAppend(int retain, String text) {
+  private DocOp makeAppend(int retain, String text) {
     DocOpBuilder builder = new DocOpBuilder();
     if (retain > 0) {
       builder.retain(retain);

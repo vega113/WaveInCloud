@@ -31,7 +31,7 @@ import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
@@ -393,7 +393,7 @@ public class WaveViewServiceImpl implements WaveViewService {
     }
     for (int i = 0; i < update.getSnapshot().getDocumentCount(); i++) {
       DocumentSnapshot docSnapshot = update.getSnapshot().getDocument(i);
-      BufferedDocOp docOp =
+      DocOp docOp =
           WaveletOperationSerializer.deserialize(docSnapshot.getDocumentOperation());
       String docId = docSnapshot.getDocumentId();
 

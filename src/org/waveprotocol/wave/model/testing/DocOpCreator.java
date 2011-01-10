@@ -19,7 +19,7 @@ package org.waveprotocol.wave.model.testing;
 
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
@@ -41,9 +41,9 @@ public class DocOpCreator {
    */
   private static class SimplifyingDocOpBuilder {
 
-    private final EvaluatingDocOpCursor<BufferedDocOp> buffer = new DocOpBuffer();
+    private final EvaluatingDocOpCursor<DocOp> buffer = new DocOpBuffer();
 
-    public final BufferedDocOp build() {
+    public final DocOp build() {
       return buffer.finish();
     }
 
@@ -126,7 +126,7 @@ public class DocOpCreator {
    * @param characters The characters to insert.
    * @return The document operation.
    */
-  public static BufferedDocOp insertCharacters(int size, int location, String characters) {
+  public static DocOp insertCharacters(int size, int location, String characters) {
     return new SimplifyingDocOpBuilder()
         .retain(location)
         .characters(characters)
@@ -143,7 +143,7 @@ public class DocOpCreator {
    * @param attributes The attributes of the element.
    * @return The document operation.
    */
-  public static BufferedDocOp insertElement(int size, int location, String type,
+  public static DocOp insertElement(int size, int location, String type,
       Attributes attributes) {
     return new SimplifyingDocOpBuilder()
         .retain(location)
@@ -162,7 +162,7 @@ public class DocOpCreator {
    * @param characters The characters to delete.
    * @return The document operation.
    */
-  public static BufferedDocOp deleteCharacters(int size, int location, String characters) {
+  public static DocOp deleteCharacters(int size, int location, String characters) {
     return new SimplifyingDocOpBuilder()
         .retain(location)
         .deleteCharacters(characters)
@@ -180,7 +180,7 @@ public class DocOpCreator {
    * @param attributes The attributes of the element.
    * @return The document operation.
    */
-  public static BufferedDocOp deleteElement(int size, int location, String type,
+  public static DocOp deleteElement(int size, int location, String type,
       Attributes attributes) {
     return new SimplifyingDocOpBuilder()
         .retain(location)
@@ -199,7 +199,7 @@ public class DocOpCreator {
    * @param newAttr The new attributes that the element should have.
    * @return The document operation.
    */
-  public static BufferedDocOp replaceAttributes(int size, int location, Attributes oldAttr,
+  public static DocOp replaceAttributes(int size, int location, Attributes oldAttr,
       Attributes newAttr) {
     return new SimplifyingDocOpBuilder()
         .retain(location)
@@ -218,7 +218,7 @@ public class DocOpCreator {
    * @param newValue The value to which to set the attribute.
    * @return The document operation.
    */
-  public static BufferedDocOp setAttribute(int size, int location, String name, String oldValue,
+  public static DocOp setAttribute(int size, int location, String name, String oldValue,
       String newValue) {
     return new SimplifyingDocOpBuilder()
         .retain(location)
@@ -240,7 +240,7 @@ public class DocOpCreator {
    * @param newValue The new annotation value.
    * @return The document operation.
    */
-  public static BufferedDocOp setAnnotation(int size, int start, int end, String key,
+  public static DocOp setAnnotation(int size, int start, int end, String key,
       String oldValue, String newValue) {
     return new SimplifyingDocOpBuilder()
         .retain(start)
@@ -255,7 +255,7 @@ public class DocOpCreator {
    * @param size The size of the document.
    * @return The document operation.
    */
-  public static BufferedDocOp identity(int size) {
+  public static DocOp identity(int size) {
     return new SimplifyingDocOpBuilder()
         .retain(size)
         .build();

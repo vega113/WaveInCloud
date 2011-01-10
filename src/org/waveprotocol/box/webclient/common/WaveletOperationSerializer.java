@@ -28,7 +28,7 @@ import org.waveprotocol.wave.federation.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
@@ -107,7 +107,7 @@ public class WaveletOperationSerializer {
     inputOp.acceptVisitor(new BlipOperationVisitor() {
       @Override
       public void visitBlipContentOperation(BlipContentOperation op) {
-        BufferedDocOp mutationOp = op.getContentOp();
+        DocOp mutationOp = op.getContentOp();
         mutationOp.apply(new DocOpCursor() {
           private ProtocolDocumentOperation.Component.Builder newComponentBuilder() {
             return ProtocolDocumentOperation.Component.newBuilder();
@@ -306,7 +306,7 @@ public class WaveletOperationSerializer {
    * @param op protocol buffer document operation to deserialize
    * @return deserialized DocOp
    */
-  public static BufferedDocOp deserialize(ProtocolDocumentOperation op) {
+  public static DocOp deserialize(ProtocolDocumentOperation op) {
     DocOpBuilder output = new DocOpBuilder();
 
     for (ProtocolDocumentOperation.Component c : op.getComponentList()) {

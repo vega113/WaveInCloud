@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.operation.core;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -203,8 +203,8 @@ public class CoreWaveletOperationTest extends TestCase {
     assertEquals(w1.getWaveletName(), w2.getWaveletName());
     assertListEquals(w1.getParticipants(), w2.getParticipants());
 
-    Map<String, BufferedDocOp> docs1 = w1.getDocuments();
-    Map<String, BufferedDocOp> docs2 = w2.getDocuments();
+    Map<String, DocOp> docs1 = w1.getDocuments();
+    Map<String, DocOp> docs2 = w2.getDocuments();
 
     List<String> docKeys1 = CollectionUtils.newArrayList(docs1.keySet());
     Collections.sort(docKeys1);
@@ -224,7 +224,7 @@ public class CoreWaveletOperationTest extends TestCase {
     }
   }
 
-  private void assertOpEquals(BufferedDocOp op1, BufferedDocOp op2) {
+  private void assertOpEquals(DocOp op1, DocOp op2) {
     assertTrue(OpComparators.SYNTACTIC_IDENTITY.equal(op1, op2));
   }
 

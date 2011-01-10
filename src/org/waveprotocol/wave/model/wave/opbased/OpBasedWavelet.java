@@ -19,7 +19,7 @@ package org.waveprotocol.wave.model.wave.opbased;
 
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.ObservableDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.util.EmptyDocument;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -424,7 +424,7 @@ public class OpBasedWavelet implements ObservableWavelet {
    * op-based layer, where that factory signature allows this sink to be
    * injected on document creation.
    */
-  public SilentOperationSink<BufferedDocOp> getDocumentOperationSink(String blipId) {
+  public SilentOperationSink<DocOp> getDocumentOperationSink(String blipId) {
     return adapt(wavelet.getDocument(blipId)).getDocumentOperationSink();
   }
 

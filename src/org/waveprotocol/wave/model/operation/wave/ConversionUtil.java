@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.model.operation.wave;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
 import org.waveprotocol.wave.model.operation.core.CoreNoOp;
 import org.waveprotocol.wave.model.operation.core.CoreRemoveParticipant;
@@ -77,7 +77,7 @@ public final class ConversionUtil {
       WaveletBlipOperation waveletBlipOp = (WaveletBlipOperation) op;
       BlipOperation blipOp = waveletBlipOp.getBlipOp();
       if (blipOp instanceof BlipContentOperation) {
-        BufferedDocOp contentOp = ((BlipContentOperation) blipOp).getContentOp();
+        DocOp contentOp = ((BlipContentOperation) blipOp).getContentOp();
         return new CoreWaveletDocumentOperation(waveletBlipOp.getBlipId(), contentOp);
       } else if (blipOp instanceof SubmitBlip) {
         // There is no "core" submit operation, they are ignored by translating

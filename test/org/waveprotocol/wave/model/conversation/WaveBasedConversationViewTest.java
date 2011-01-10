@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 
 import org.mockito.InOrder;
 import org.waveprotocol.wave.model.document.Document;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.algorithm.Composer;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpInverter;
@@ -107,9 +107,9 @@ public class WaveBasedConversationViewTest extends ConversationViewTestBase {
     // No comment.
     UncheckedDocOpBuffer builder = new UncheckedDocOpBuffer();
     doc.toInitialization().apply(builder);
-    BufferedDocOp state = builder.finish();
-    BufferedDocOp erasure = DocOpInverter.invert(state);
-    BufferedDocOp restoration;
+    DocOp state = builder.finish();
+    DocOp erasure = DocOpInverter.invert(state);
+    DocOp restoration;
     try {
       restoration = Composer.compose(erasure, state);
     } catch (OperationException e) {

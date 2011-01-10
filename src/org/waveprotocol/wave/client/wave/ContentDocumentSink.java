@@ -23,7 +23,7 @@ import org.waveprotocol.wave.concurrencycontrol.wave.CcDocument;
 import org.waveprotocol.wave.model.document.Doc;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.MutableDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
@@ -48,7 +48,7 @@ public final class ContentDocumentSink extends MutableDocumentProxy<Doc.N, Doc.E
   private DocInitialization content;
 
   /** Sink to which local mutations are sent. Never cleared once set. */
-  private SilentOperationSink<? super BufferedDocOp> outputSink;
+  private SilentOperationSink<? super DocOp> outputSink;
 
   /**
    * Whether the MutableDocumentProxy's delegate has been set. Never cleared
@@ -103,7 +103,7 @@ public final class ContentDocumentSink extends MutableDocumentProxy<Doc.N, Doc.E
   }
 
   @Override
-  public void init(SilentOperationSink<? super BufferedDocOp> outputSink) {
+  public void init(SilentOperationSink<? super DocOp> outputSink) {
     this.outputSink = outputSink;
   }
 

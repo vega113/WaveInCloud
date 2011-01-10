@@ -27,9 +27,8 @@ import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.Automatons;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.NindoValidator;
@@ -382,11 +381,11 @@ public class IndexedDocumentImpl<N, E extends N, T extends N, V>
 
   private final NonInvertibleCursor nindoCursor = new NonInvertibleCursor();
 
-  public BufferedDocOp consumeAndReturnInvertible(Nindo op) throws OperationException {
+  public DocOp consumeAndReturnInvertible(Nindo op) throws OperationException {
     return consumeAndReturnInvertible(op, performValidation);
   }
 
-  public BufferedDocOp consumeAndReturnInvertible(Nindo op, boolean validate)
+  public DocOp consumeAndReturnInvertible(Nindo op, boolean validate)
       throws OperationException {
     checkConsistent();
 
@@ -566,7 +565,7 @@ public class IndexedDocumentImpl<N, E extends N, T extends N, V>
   }
 
   public class NonInvertibleCursor implements NindoCursor {
-    private AnnotationsNormalizer<BufferedDocOp> builder;
+    private AnnotationsNormalizer<DocOp> builder;
     int sizeDiffSoFar;
 
     StringMap<String> requestedValues = CollectionUtils.createStringMap();
@@ -582,13 +581,13 @@ public class IndexedDocumentImpl<N, E extends N, T extends N, V>
 
     private void begin2() {
       beginChange();
-      builder = new AnnotationsNormalizer<BufferedDocOp>(
+      builder = new AnnotationsNormalizer<DocOp>(
           performValidation ? new DocOpBuffer() : new UncheckedDocOpBuffer());
       sizeDiffSoFar = 0;
       deletionValues.clear();
     }
 
-    private BufferedDocOp finish2() throws OperationException {
+    private DocOp finish2() throws OperationException {
       endChange();
       return builder.finish();
     }
@@ -1506,12 +1505,12 @@ public class IndexedDocumentImpl<N, E extends N, T extends N, V>
       return EmptyDocument.EMPTY_DOCUMENT;
     }
 
-    BufferedDocOp domOp = serializeDom();
+    DocOp domOp = serializeDom();
 
-    BufferedDocOp annotationsOp = serializeAnnotations();
+    DocOp annotationsOp = serializeAnnotations();
 
     try {
-      final BufferedDocOp bothOps;
+      final DocOp bothOps;
       if (performValidation) {
         bothOps = Composer.compose(domOp, annotationsOp);
       } else {
@@ -1531,7 +1530,7 @@ public class IndexedDocumentImpl<N, E extends N, T extends N, V>
     return asOperation();
   }
 
-  private BufferedDocOp serializeDom() {
+  private DocOp serializeDom() {
     DocOpBuilder b = new DocOpBuilder();
     int depth = 0;
     for (N node : offsetList) {
@@ -1554,14 +1553,14 @@ public class IndexedDocumentImpl<N, E extends N, T extends N, V>
       }
     }
 
-    BufferedDocOp domOp = b.buildUnchecked();
+    DocOp domOp = b.buildUnchecked();
     assert DocOpValidator.isWellFormed(null, domOp);
     return domOp;
   }
 
-  private BufferedDocOp serializeAnnotations() {
-    final AnnotationsNormalizer<BufferedDocOp> b =
-        new AnnotationsNormalizer<BufferedDocOp>(new UncheckedDocOpBuffer());
+  private DocOp serializeAnnotations() {
+    final AnnotationsNormalizer<DocOp> b =
+        new AnnotationsNormalizer<DocOp>(new UncheckedDocOpBuffer());
 
     AnnotationInterval<Object> last = null;
     for (AnnotationInterval<Object> i : annotations.annotationIntervals(0, size(), knownKeys())) {
@@ -1588,7 +1587,7 @@ public class IndexedDocumentImpl<N, E extends N, T extends N, V>
           }
         });
     }
-    BufferedDocOp annotationsOp = b.finish();
+    DocOp annotationsOp = b.finish();
     assert DocOpValidator.isWellFormed(null, annotationsOp);
     return annotationsOp;
   }

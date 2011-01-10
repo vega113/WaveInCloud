@@ -22,7 +22,7 @@ import junit.framework.TestCase;
 import org.waveprotocol.wave.common.logging.PrintLogger;
 import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
 import org.waveprotocol.wave.concurrencycontrol.server.ConcurrencyControlCore;
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.SuperSink;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.document.util.DocProviders;
@@ -154,9 +154,8 @@ public class ClientAndServerTest extends TestCase {
      */
     public TestConfig checkClientDoc(int clientNumber, String xml) {
       clientsReceiveServerOperations();
-      BufferedDocInitialization expected = DocOpUtil.buffer(parse(xml).asOperation());
-      BufferedDocInitialization actual =
-          DocOpUtil.buffer(clientMocks.get(clientNumber).getDoc().asOperation());
+      DocInitialization expected = parse(xml).asOperation();
+      DocInitialization actual = clientMocks.get(clientNumber).getDoc().asOperation();
       assertTrue("[Expected: " + expected + "] [Actual: " + actual + "]",
           OpComparators.SYNTACTIC_IDENTITY.equal(expected, actual));
       return this;

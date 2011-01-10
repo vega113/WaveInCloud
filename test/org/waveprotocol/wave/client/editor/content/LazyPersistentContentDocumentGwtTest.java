@@ -19,7 +19,7 @@ package org.waveprotocol.wave.client.editor.content;
 
 import org.waveprotocol.wave.client.editor.testing.TestEditors;
 import org.waveprotocol.wave.model.document.ReadableDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.document.util.DocHelper;
@@ -45,13 +45,13 @@ public class LazyPersistentContentDocumentGwtTest extends EditorGwtTestCase {
   /** Simplest use of persistence, creating a node locally then persisting it. */
   public void testSimpleForcedPersist() {
     // set up document, with queue for outgoing messages.
-    final Queue<BufferedDocOp> opMessageQueue = new LinkedList<BufferedDocOp>();
+    final Queue<DocOp> opMessageQueue = new LinkedList<DocOp>();
     ContentDocument doc = TestEditors.createTestDocument();
     // Note: this replaces the output sink that the editor has injected into the
     // document, breaking an editor assumption.
-    doc.replaceOutgoingSink(new SilentOperationSink<BufferedDocOp>(){
+    doc.replaceOutgoingSink(new SilentOperationSink<DocOp>(){
       @Override
-      public void consume(BufferedDocOp op) {
+      public void consume(DocOp op) {
         opMessageQueue.add(op);
       }
     });
@@ -88,13 +88,13 @@ public class LazyPersistentContentDocumentGwtTest extends EditorGwtTestCase {
    */
   public void testSimpleLazyPersist() {
     // set up document, with queue for outgoing messages.
-    final Queue<BufferedDocOp> opMessageQueue = new LinkedList<BufferedDocOp>();
+    final Queue<DocOp> opMessageQueue = new LinkedList<DocOp>();
     ContentDocument doc = TestEditors.createTestDocument();
     // Note: this replaces the output sink that the editor has injected into the
     // document, breaking an editor assumption.
-    doc.replaceOutgoingSink(new SilentOperationSink<BufferedDocOp>(){
+    doc.replaceOutgoingSink(new SilentOperationSink<DocOp>(){
       @Override
-      public void consume(BufferedDocOp op) {
+      public void consume(DocOp op) {
         opMessageQueue.add(op);
       }
     });
@@ -142,13 +142,13 @@ public class LazyPersistentContentDocumentGwtTest extends EditorGwtTestCase {
   /** Using a complex tree, make sure state is correct before and after an opaque persist call. */
   public void testComplexSingleOpaquePersist() {
     // set up document, with queue for outgoing messages.
-    final Queue<BufferedDocOp> opMessageQueue = new LinkedList<BufferedDocOp>();
+    final Queue<DocOp> opMessageQueue = new LinkedList<DocOp>();
     ContentDocument doc = TestEditors.createTestDocument();
     // Note: this replaces the output sink that the editor has injected into the
     // document, breaking an editor assumption.
-    doc.replaceOutgoingSink(new SilentOperationSink<BufferedDocOp>(){
+    doc.replaceOutgoingSink(new SilentOperationSink<DocOp>(){
       @Override
-      public void consume(BufferedDocOp op) {
+      public void consume(DocOp op) {
         opMessageQueue.add(op);
       }
     });
@@ -214,13 +214,13 @@ public class LazyPersistentContentDocumentGwtTest extends EditorGwtTestCase {
   /** Checks multiple calls to opaque persist with related nodes. */
   public void testMultipleChildOpaquePersists() {
     // set up document, with queue for outgoing messages.
-    final Queue<BufferedDocOp> opMessageQueue = new LinkedList<BufferedDocOp>();
+    final Queue<DocOp> opMessageQueue = new LinkedList<DocOp>();
     ContentDocument doc = TestEditors.createTestDocument();
     // Note: this replaces the output sink that the editor has injected into the
     // document, breaking an editor assumption.
-    doc.replaceOutgoingSink(new SilentOperationSink<BufferedDocOp>(){
+    doc.replaceOutgoingSink(new SilentOperationSink<DocOp>(){
       @Override
-      public void consume(BufferedDocOp op) {
+      public void consume(DocOp op) {
         opMessageQueue.add(op);
       }
     });
@@ -292,7 +292,7 @@ public class LazyPersistentContentDocumentGwtTest extends EditorGwtTestCase {
   //
 
   // removes serialized op from the server queue and checks against expected string.
-  private static void popServerOp(Queue<BufferedDocOp> queue, String op) {
+  private static void popServerOp(Queue<DocOp> queue, String op) {
     assertTrue("Empty queue, " + op + " expected", !queue.isEmpty());
     String next = DocOpUtil.toConciseString(queue.poll());
     assertEquals(next + " sent, " + op + " expected", next, op);

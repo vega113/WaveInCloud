@@ -16,7 +16,7 @@
  */
 package org.waveprotocol.wave.model.wave.undo;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpCollector;
 
 /**
@@ -30,12 +30,12 @@ abstract class DocOpList {
    */
   static final class Singleton extends DocOpList {
 
-    final BufferedDocOp docOp;
+    final DocOp docOp;
 
     /**
      * @param docOp The single operation in the list.
      */
-    Singleton(BufferedDocOp docOp) {
+    Singleton(DocOp docOp) {
       this.docOp = docOp;
     }
 
@@ -86,7 +86,7 @@ abstract class DocOpList {
    *
    * @return The composition of all the operations in the list.
    */
-  BufferedDocOp composeAll() {
+  DocOp composeAll() {
     DocOpCollector collector = new DocOpCollector();
     collectInto(collector);
     return collector.composeAll();

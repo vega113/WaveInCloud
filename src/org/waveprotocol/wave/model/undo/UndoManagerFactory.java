@@ -17,7 +17,7 @@
 package org.waveprotocol.wave.model.undo;
 
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.Composer;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpInverter;
 import org.waveprotocol.wave.model.document.operation.algorithm.Transformer;
@@ -32,22 +32,22 @@ import java.util.List;
  */
 public final class UndoManagerFactory {
 
-  private static final UndoManagerImpl.Algorithms<BufferedDocOp> algorithms =
-      new UndoManagerImpl.Algorithms<BufferedDocOp>() {
+  private static final UndoManagerImpl.Algorithms<DocOp> algorithms =
+      new UndoManagerImpl.Algorithms<DocOp>() {
 
     @Override
-    public BufferedDocOp invert(BufferedDocOp operation) {
+    public DocOp invert(DocOp operation) {
       return DocOpInverter.invert(operation);
     }
 
     @Override
-    public BufferedDocOp compose(List<BufferedDocOp> operations) {
+    public DocOp compose(List<DocOp> operations) {
       return Composer.compose(operations);
     }
 
     @Override
-    public OperationPair<BufferedDocOp> transform(BufferedDocOp operation1,
-        BufferedDocOp operation2) throws TransformException {
+    public OperationPair<DocOp> transform(DocOp operation1,
+        DocOp operation2) throws TransformException {
       return Transformer.transform(operation1, operation2);
     }
 
@@ -58,8 +58,8 @@ public final class UndoManagerFactory {
    *
    * @return A new undo manager.
    */
-  public static UndoManagerPlus<BufferedDocOp> createUndoManager() {
-    return new UndoManagerImpl<BufferedDocOp>(algorithms);
+  public static UndoManagerPlus<DocOp> createUndoManager() {
+    return new UndoManagerImpl<DocOp>(algorithms);
   }
 
 }

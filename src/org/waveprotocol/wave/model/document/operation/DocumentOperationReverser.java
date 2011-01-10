@@ -31,7 +31,7 @@ public interface DocumentOperationReverser extends ModifiableDocument {
    *
    * @param reverseSink The sink into which reverse operations should be sunk.
    */
-  void registerReverseSink(SilentOperationSink<BufferedDocOp> reverseSink);
+  void registerReverseSink(SilentOperationSink<DocOp> reverseSink);
 
   /**
    * Unregisters the sink.

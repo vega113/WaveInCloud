@@ -19,7 +19,7 @@ package org.waveprotocol.wave.model.document.operation.impl;
 
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.AnnotationBoundary;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.Characters;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.DocInitializationComponent;
@@ -30,7 +30,7 @@ import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.E
 import java.util.ArrayList;
 
 /**
- * A builder for {@link BufferedDocInitialization}s.
+ * A builder for {@link DocInitialization}s.
  * 
  * Use {@link DocInitializationBuffer} instead if you need an implementation of
  * the interface
@@ -47,7 +47,7 @@ public class DocInitializationBuilder {
    * 
    * Behaviour is undefined if this builder is used after calling this method.
    */
-  public final BufferedDocInitialization build() {
+  public final DocInitialization build() {
     // TODO: This should not need a call to asInitialization().
     return DocOpUtil.asInitialization(BufferedDocOpImpl.create(accu.toArray(EMPTY_ARRAY)));
   }
@@ -55,7 +55,7 @@ public class DocInitializationBuilder {
   /** @see #build() */
   // This is dangerous; we currently use it for ill-formedness-detection
   // tests, and may use it for efficiency in other places in the future.
-  public final BufferedDocInitialization buildUnchecked() {
+  public final DocInitialization buildUnchecked() {
     // TODO: This should not need a call to asInitialization().
     return DocOpUtil.asInitialization(BufferedDocOpImpl.createUnchecked(accu.toArray(EMPTY_ARRAY)));
   }

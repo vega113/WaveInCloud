@@ -18,7 +18,7 @@
 package org.waveprotocol.wave.model.operation.testing;
 
 import org.waveprotocol.wave.model.document.bootstrap.BootstrapDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.algorithm.Composer;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpInverter;
@@ -29,7 +29,7 @@ import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.OperationPair;
 import org.waveprotocol.wave.model.operation.TransformException;
 
-public class DocumentDomain implements Domain<BootstrapDocument, BufferedDocOp> {
+public class DocumentDomain implements Domain<BootstrapDocument, DocOp> {
 
   @Override
   public BootstrapDocument initialState() {
@@ -37,32 +37,32 @@ public class DocumentDomain implements Domain<BootstrapDocument, BufferedDocOp> 
   }
 
   @Override
-  public void apply(BufferedDocOp op, BootstrapDocument state) throws OperationException {
+  public void apply(DocOp op, BootstrapDocument state) throws OperationException {
     state.consume(op);
   }
 
   @Override
-  public BufferedDocOp compose(BufferedDocOp f, BufferedDocOp g) throws OperationException {
+  public DocOp compose(DocOp f, DocOp g) throws OperationException {
     return Composer.compose(g, f);
   }
 
   @Override
-  public OperationPair<BufferedDocOp> transform(BufferedDocOp clientOp, BufferedDocOp serverOp)
+  public OperationPair<DocOp> transform(DocOp clientOp, DocOp serverOp)
       throws TransformException {
     return Transformer.transform(clientOp, serverOp);
   }
 
   @Override
-  public BufferedDocOp invert(BufferedDocOp operation) {
-    EvaluatingDocOpCursor<BufferedDocOp> inverter =
-        new DocOpInverter<BufferedDocOp>(new DocOpBuffer());
+  public DocOp invert(DocOp operation) {
+    EvaluatingDocOpCursor<DocOp> inverter =
+        new DocOpInverter<DocOp>(new DocOpBuffer());
     operation.apply(inverter);
     return inverter.finish();
   }
 
   @Override
-  public BufferedDocOp asOperation(BootstrapDocument state) {
-    EvaluatingDocOpCursor<BufferedDocOp> builder = new DocOpBuffer();
+  public DocOp asOperation(BootstrapDocument state) {
+    EvaluatingDocOpCursor<DocOp> builder = new DocOpBuffer();
     state.asOperation().apply(builder);
     return builder.finish();
   }

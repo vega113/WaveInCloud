@@ -33,7 +33,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
@@ -394,7 +394,7 @@ public class CoreWaveletOperationSerializer {
    * @param op protocol buffer document operation to deserialize
    * @return deserialized DocOp
    */
-  public static BufferedDocOp deserialize(ProtocolDocumentOperation op) {
+  public static DocOp deserialize(ProtocolDocumentOperation op) {
     DocOpBuilder output = new DocOpBuilder();
 
     for (ProtocolDocumentOperation.Component c : op.getComponentList()) {
@@ -513,7 +513,7 @@ public class CoreWaveletOperationSerializer {
     coreWavelet.addParticipant(ParticipantId.ofUnsafe(snapshot.getParticipantId(0)));
 
     for (DocumentSnapshot document : snapshot.getDocumentList()) {
-      BufferedDocOp op =
+      DocOp op =
           CoreWaveletOperationSerializer.deserialize(document.getDocumentOperation());
       coreWavelet.modifyDocument(document.getDocumentId(), op);
     }

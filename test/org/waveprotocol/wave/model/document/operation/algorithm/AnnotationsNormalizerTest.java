@@ -21,7 +21,7 @@ package org.waveprotocol.wave.model.document.operation.algorithm;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
@@ -58,8 +58,8 @@ public class AnnotationsNormalizerTest extends TestCase {
       .build();
 
   public void testAnnotationNormalization1() {
-    AnnotationsNormalizer<BufferedDocOp> normalizer =
-        new AnnotationsNormalizer<BufferedDocOp>(new DocOpBuffer());
+    AnnotationsNormalizer<DocOp> normalizer =
+        new AnnotationsNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS1);
     normalizer.retain(1);
@@ -69,8 +69,8 @@ public class AnnotationsNormalizerTest extends TestCase {
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS4);
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .annotationBoundary(ANNOTATIONS1)
         .retain(1)
@@ -85,8 +85,8 @@ public class AnnotationsNormalizerTest extends TestCase {
   }
 
   public void testAnnotationNormalization2() {
-    AnnotationsNormalizer<BufferedDocOp> normalizer =
-        new AnnotationsNormalizer<BufferedDocOp>(new DocOpBuffer());
+    AnnotationsNormalizer<DocOp> normalizer =
+        new AnnotationsNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS1);
     normalizer.annotationBoundary(ANNOTATIONS2);
@@ -95,8 +95,8 @@ public class AnnotationsNormalizerTest extends TestCase {
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS4);
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .annotationBoundary(ANNOTATIONS12)
         .retain(1)
@@ -109,8 +109,8 @@ public class AnnotationsNormalizerTest extends TestCase {
   }
 
   public void testAnnotationNormalization3() {
-    AnnotationsNormalizer<BufferedDocOp> normalizer =
-        new AnnotationsNormalizer<BufferedDocOp>(new DocOpBuffer());
+    AnnotationsNormalizer<DocOp> normalizer =
+        new AnnotationsNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS1);
     normalizer.retain(1);
@@ -119,8 +119,8 @@ public class AnnotationsNormalizerTest extends TestCase {
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS4);
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .annotationBoundary(ANNOTATIONS1)
         .retain(1)
@@ -133,8 +133,8 @@ public class AnnotationsNormalizerTest extends TestCase {
   }
 
   public void testAnnotationNormalization4() {
-    AnnotationsNormalizer<BufferedDocOp> normalizer =
-        new AnnotationsNormalizer<BufferedDocOp>(new DocOpBuffer());
+    AnnotationsNormalizer<DocOp> normalizer =
+        new AnnotationsNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS1);
     normalizer.annotationBoundary(ANNOTATIONS2);
@@ -142,8 +142,8 @@ public class AnnotationsNormalizerTest extends TestCase {
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS4);
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .annotationBoundary(ANNOTATIONS123)
         .retain(1)
@@ -154,8 +154,8 @@ public class AnnotationsNormalizerTest extends TestCase {
   }
 
   public void testEmptyRetainNormalization() {
-    AnnotationsNormalizer<BufferedDocOp> normalizer =
-        new AnnotationsNormalizer<BufferedDocOp>(new DocOpBuffer());
+    AnnotationsNormalizer<DocOp> normalizer =
+        new AnnotationsNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS1);
     normalizer.annotationBoundary(ANNOTATIONS2);
@@ -164,8 +164,8 @@ public class AnnotationsNormalizerTest extends TestCase {
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS4);
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .annotationBoundary(ANNOTATIONS123)
         .retain(1)
@@ -176,8 +176,8 @@ public class AnnotationsNormalizerTest extends TestCase {
   }
 
   public void testEmptyCharactersNormalization() {
-    AnnotationsNormalizer<BufferedDocOp> normalizer =
-        new AnnotationsNormalizer<BufferedDocOp>(new DocOpBuffer());
+    AnnotationsNormalizer<DocOp> normalizer =
+        new AnnotationsNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS1);
     normalizer.annotationBoundary(ANNOTATIONS2);
@@ -186,8 +186,8 @@ public class AnnotationsNormalizerTest extends TestCase {
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS4);
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .annotationBoundary(ANNOTATIONS123)
         .retain(1)
@@ -198,8 +198,8 @@ public class AnnotationsNormalizerTest extends TestCase {
   }
 
   public void testEmptyDeleteCharactersNormalization() {
-    AnnotationsNormalizer<BufferedDocOp> normalizer =
-        new AnnotationsNormalizer<BufferedDocOp>(new DocOpBuffer());
+    AnnotationsNormalizer<DocOp> normalizer =
+        new AnnotationsNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS1);
     normalizer.annotationBoundary(ANNOTATIONS2);
@@ -208,8 +208,8 @@ public class AnnotationsNormalizerTest extends TestCase {
     normalizer.retain(1);
     normalizer.annotationBoundary(ANNOTATIONS4);
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .annotationBoundary(ANNOTATIONS123)
         .retain(1)

@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.document.operation.impl;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpComponentType;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton.ViolationCollector;
@@ -46,7 +46,7 @@ import org.waveprotocol.wave.model.util.Preconditions;
  * <li>{@link DocInitializationBuffer}</li>
  * </ul>
  */
-final class BufferedDocOpImpl implements BufferedDocOp {
+final class BufferedDocOpImpl implements DocOp {
 
   private boolean knownToBeWellFormed = false;
 
@@ -77,7 +77,7 @@ final class BufferedDocOpImpl implements BufferedDocOp {
    * @param value op to check
    * @throws IllegalStateException if the op is ill-formed
    */
-  private static void checkWellformedness(BufferedDocOp value) {
+  private static void checkWellformedness(DocOp value) {
     if (!DocOpValidator.isWellFormed(null, value)) {
       // Check again, collecting violations this time.
       ViolationCollector v = new ViolationCollector();

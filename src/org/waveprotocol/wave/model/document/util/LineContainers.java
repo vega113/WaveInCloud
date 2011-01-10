@@ -19,9 +19,9 @@ package org.waveprotocol.wave.model.document.util;
 
 
 import org.waveprotocol.wave.model.document.MutableDocument;
+import org.waveprotocol.wave.model.document.MutableDocument.Action;
 import org.waveprotocol.wave.model.document.ReadableDocument;
 import org.waveprotocol.wave.model.document.ReadableWDocument;
-import org.waveprotocol.wave.model.document.MutableDocument.Action;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.util.Preconditions;
 

@@ -23,7 +23,7 @@ import org.waveprotocol.wave.model.undo.UndoManagerPlus;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.Composer;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.OpComparators;
@@ -40,7 +40,7 @@ import java.util.List;
 public class UndoManagerTest extends TestCase {
 
   public void testUndoRedo() {
-    UndoManager<BufferedDocOp> undoManager = UndoManagerFactory.createUndoManager();
+    UndoManager<DocOp> undoManager = UndoManagerFactory.createUndoManager();
     undoManager.checkpoint();
     undoManager.undoableOp(insert(3, 10));
     undoManager.checkpoint();
@@ -59,7 +59,7 @@ public class UndoManagerTest extends TestCase {
   }
 
   public void testUndoRedoWithNonundoableOps() {
-    UndoManager<BufferedDocOp> undoManager = UndoManagerFactory.createUndoManager();
+    UndoManager<DocOp> undoManager = UndoManagerFactory.createUndoManager();
     undoManager.checkpoint();
     undoManager.undoableOp(insert(3, 10));
     undoManager.nonUndoableOp(insert(1, 11));
@@ -78,7 +78,7 @@ public class UndoManagerTest extends TestCase {
   }
 
   public void testUndoRedoWithConsecutiveNonundoableOps() {
-    UndoManager<BufferedDocOp> undoManager = UndoManagerFactory.createUndoManager();
+    UndoManager<DocOp> undoManager = UndoManagerFactory.createUndoManager();
     undoManager.checkpoint();
     undoManager.undoableOp(insert(3, 10));
     undoManager.nonUndoableOp(insert(1, 11));
@@ -100,7 +100,7 @@ public class UndoManagerTest extends TestCase {
   }
 
   public void testUndoRedoInterspersedWithNonundoableOps() {
-    UndoManager<BufferedDocOp> undoManager = UndoManagerFactory.createUndoManager();
+    UndoManager<DocOp> undoManager = UndoManagerFactory.createUndoManager();
     undoManager.checkpoint();
     undoManager.undoableOp(insert(3, 10));
     undoManager.nonUndoableOp(insert(1, 11));
@@ -124,7 +124,7 @@ public class UndoManagerTest extends TestCase {
   }
 
   public void testUndoRedoWithNondenseCheckpointing() {
-    UndoManager<BufferedDocOp> undoManager = UndoManagerFactory.createUndoManager();
+    UndoManager<DocOp> undoManager = UndoManagerFactory.createUndoManager();
     undoManager.checkpoint();
     undoManager.undoableOp(insert(3, 10));
     undoManager.nonUndoableOp(insert(1, 11));
@@ -149,7 +149,7 @@ public class UndoManagerTest extends TestCase {
   }
 
   public void testUndoRedoWithNondenseCheckpointsInterspersedWithNonundoableOps() {
-    UndoManager<BufferedDocOp> undoManager = UndoManagerFactory.createUndoManager();
+    UndoManager<DocOp> undoManager = UndoManagerFactory.createUndoManager();
     undoManager.checkpoint();
     undoManager.undoableOp(insert(3, 10));
     undoManager.nonUndoableOp(insert(1, 11));
@@ -179,7 +179,7 @@ public class UndoManagerTest extends TestCase {
   }
 
   public void testPlusMethods() {
-    UndoManagerPlus<BufferedDocOp> undoManager = UndoManagerFactory.createUndoManager();
+    UndoManagerPlus<DocOp> undoManager = UndoManagerFactory.createUndoManager();
     undoManager.checkpoint();
     undoManager.undoableOp(insert(3, 10));
     undoManager.nonUndoableOp(insert(1, 11));
@@ -195,7 +195,7 @@ public class UndoManagerTest extends TestCase {
     undoManager.checkpoint();
     undoManager.undoableOp(insert(4, 16));
     undoManager.nonUndoableOp(insert(1, 17));
-    Pair<BufferedDocOp, BufferedDocOp> pair = undoManager.undoPlus();
+    Pair<DocOp, DocOp> pair = undoManager.undoPlus();
     assertTrue(OpComparators.SYNTACTIC_IDENTITY.equal(delete(5, 17), pair.first));
     compareDocOpList(Arrays.asList(
         insert(1, 16)
@@ -248,11 +248,11 @@ public class UndoManagerTest extends TestCase {
     ), pair.second);
   }
 
-  private static void compareDocOpList(List<BufferedDocOp> ops, BufferedDocOp op) {
+  private static void compareDocOpList(List<DocOp> ops, DocOp op) {
     assertTrue(OpComparators.SYNTACTIC_IDENTITY.equal(Composer.compose(ops), op));
   }
 
-  private static BufferedDocOp insert(int location, int size) {
+  private static DocOp insert(int location, int size) {
     return new DocOpBuilder()
         .retain(location)
         .characters("a")
@@ -260,7 +260,7 @@ public class UndoManagerTest extends TestCase {
         .build();
   }
 
-  private static BufferedDocOp delete(int location, int size) {
+  private static DocOp delete(int location, int size) {
     return new DocOpBuilder()
         .retain(location)
         .deleteCharacters("a")

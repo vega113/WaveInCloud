@@ -23,9 +23,8 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.bootstrap.BootstrapDocument;
 import org.waveprotocol.wave.model.document.operation.Automatons;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.ModifiableDocument;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.DocOp.IsDocOp;
@@ -111,7 +110,7 @@ public class IndexedDocumentImplRandomLargeTest extends TestCase {
 
       Nindo nindo = null;
       String finalXml = null;
-      BufferedDocOp docOpCopy = null;
+      DocOp docOpCopy = null;
       DocInitialization docAsOp = null;
 
       try {
@@ -135,7 +134,7 @@ public class IndexedDocumentImplRandomLargeTest extends TestCase {
         assertEquals(finalXml, DocOpUtil.toXmlString(doc.asOperation()));
 
         // UNDO
-        BufferedDocOp inverted1 = DocOpInverter.invert(op);
+        DocOp inverted1 = DocOpInverter.invert(op);
         validate(autoDoc, inverted1);
         doc.consume(inverted1);
         assertEquals(originalXml, DocOpUtil.toXmlString(doc.asOperation()));
@@ -152,7 +151,7 @@ public class IndexedDocumentImplRandomLargeTest extends TestCase {
         assertEquals(finalXml, DocOpUtil.toXmlString(copy2.asOperation()));
 
         // UNDO NINDO
-        BufferedDocOp inverted2 = DocOpInverter.invert(docOpCopy);
+        DocOp inverted2 = DocOpInverter.invert(docOpCopy);
         validate(checkAuto, inverted2);
         validate(autoDoc, inverted2);
         doc.consume(inverted2);
@@ -282,11 +281,11 @@ public class IndexedDocumentImplRandomLargeTest extends TestCase {
       System.out.print(".");
       if (testAsOperation) {
         Nindo nindo = RandomNindoGenerator.generate(random, params, constraints, doc);
-        BufferedDocOp docOp = doc.consumeAndReturnInvertible(nindo);
+        DocOp docOp = doc.consumeAndReturnInvertible(nindo);
         docs[i] = DocProviders.POJO.build(doc.asOperation(), constraints);
       } else if (testNindos) {
         Nindo nindo = RandomNindoGenerator.generate(random, params, constraints, doc);
-        BufferedDocOp docOp = doc.consumeAndReturnInvertible(nindo);
+        DocOp docOp = doc.consumeAndReturnInvertible(nindo);
         nindos[i] = nindo;
         nindos[NUM_OPS * 2 - i - 1] = Nindo.fromDocOp(DocOpInverter.invert(docOp), true);
       } else {

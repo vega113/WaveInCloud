@@ -16,7 +16,7 @@
  */
 package org.waveprotocol.wave.model.wave.undo;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpInverter;
 import org.waveprotocol.wave.model.document.operation.algorithm.Transformer;
 import org.waveprotocol.wave.model.operation.OperationPair;
@@ -235,9 +235,9 @@ final class AggregateOperation {
         if (comparison > 0) {
           transformedServerOps.add(fromServer);
         } else {
-          BufferedDocOp clientOp = fromClient.operations.composeAll();
-          BufferedDocOp serverOp = fromServer.operations.composeAll();
-          OperationPair<BufferedDocOp> transformedOps = Transformer.transform(clientOp, serverOp);
+          DocOp clientOp = fromClient.operations.composeAll();
+          DocOp serverOp = fromServer.operations.composeAll();
+          OperationPair<DocOp> transformedOps = Transformer.transform(clientOp, serverOp);
           transformedClientOps.add(new DocumentOperations(fromClient.id,
               new DocOpList.Singleton(transformedOps.clientOp())));
           transformedServerOps.add(new DocumentOperations(fromClient.id,

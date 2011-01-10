@@ -19,7 +19,7 @@ package org.waveprotocol.wave.model.document.operation.impl;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.AnnotationBoundary;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.Characters;
@@ -37,7 +37,7 @@ import java.util.ArrayList;
 
 /**
  * An implementation of {@link EvaluatingDocOpCursor} that buffers the operation
- * and returns it as a {@link BufferedDocOp}.
+ * and returns it as a {@link DocOp}.
  *
  * See also {@link DocOpBuilder}, which is similar but implements a standard
  * Java builder pattern instead of EvaluatingDocOpCursor.
@@ -49,7 +49,7 @@ import java.util.ArrayList;
  * for efficiency if profiling reveals it to be necessary. If in doubt, use
  * DocOpBuffer which does a well-formedness check.
  */
-public class UncheckedDocOpBuffer implements EvaluatingDocOpCursor<BufferedDocOp> {
+public class UncheckedDocOpBuffer implements EvaluatingDocOpCursor<DocOp> {
 
   private static final DocOpComponent[] EMPTY_ARRAY = new DocOpComponent[0];
 
@@ -61,7 +61,7 @@ public class UncheckedDocOpBuffer implements EvaluatingDocOpCursor<BufferedDocOp
    * Behaviour is undefined if this buffer is used after calling this method.
    */
   @Override
-  public BufferedDocOp finish() {
+  public DocOp finish() {
     return finishUnchecked();
   }
 
@@ -70,7 +70,7 @@ public class UncheckedDocOpBuffer implements EvaluatingDocOpCursor<BufferedDocOp
    *
    * Behaviour is undefined if this buffer is used after calling this method.
    */
-  public final BufferedDocOp finishChecked() {
+  public final DocOp finishChecked() {
     return BufferedDocOpImpl.create(accu.toArray(EMPTY_ARRAY));
   }
 
@@ -79,7 +79,7 @@ public class UncheckedDocOpBuffer implements EvaluatingDocOpCursor<BufferedDocOp
    */
   // This is dangerous; we currently use it for ill-formedness-detection
   // tests, and may use it for efficiency in other places in the future.
-  public final BufferedDocOp finishUnchecked() {
+  public final DocOp finishUnchecked() {
     return BufferedDocOpImpl.createUnchecked(accu.toArray(EMPTY_ARRAY));
   }
 

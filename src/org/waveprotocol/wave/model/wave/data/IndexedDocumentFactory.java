@@ -22,9 +22,8 @@ import org.waveprotocol.wave.model.document.util.DocProviders;
 
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.indexed.IndexedDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuffer;
 import org.waveprotocol.wave.model.document.raw.impl.Element;
@@ -76,7 +75,7 @@ public final class IndexedDocumentFactory implements DocumentFactory<DocumentOpe
       }
 
       @Override
-      public void init(SilentOperationSink<? super BufferedDocOp> outputSink) {
+      public void init(SilentOperationSink<? super DocOp> outputSink) {
         throw new UnsupportedOperationException(
             "This document implementation does not support mutable documents");
       }

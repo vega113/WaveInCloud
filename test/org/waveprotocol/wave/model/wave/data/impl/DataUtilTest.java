@@ -18,8 +18,8 @@ package org.waveprotocol.wave.model.wave.data.impl;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -49,11 +49,11 @@ public class DataUtilTest extends TestCase {
    * Creates map of sequentially generated docIds (beginning with prefix + "0")
    * to the given documents contents.
    */
-  private static Map<String, BufferedDocOp> createDocuments(String documentNamePrefix,
-      BufferedDocOp... contents) {
-    Map<String, BufferedDocOp> docs = new HashMap<String, BufferedDocOp>();
+  private static Map<String, DocOp> createDocuments(String documentNamePrefix,
+      DocOp... contents) {
+    Map<String, DocOp> docs = new HashMap<String, DocOp>();
     int i = 0;
-    for (BufferedDocOp c : contents) {
+    for (DocOp c : contents) {
       docs.put(documentNamePrefix + i, c);
       i++;
     }
@@ -64,13 +64,13 @@ public class DataUtilTest extends TestCase {
    * Creates a CoreWaveletData with the given name, documents, and participants.
    */
   private static CoreWaveletData createCoreWaveletData(WaveletName name,
-      Map<String, BufferedDocOp> documents, ParticipantId... participants)
+      Map<String, DocOp> documents, ParticipantId... participants)
       throws OperationException {
     CoreWaveletDataImpl data = new CoreWaveletDataImpl(name.waveId, name.waveletId);
     for (ParticipantId p : participants) {
       data.addParticipant(p);
     }
-    for (Map.Entry<String, BufferedDocOp> d : documents.entrySet()) {
+    for (Map.Entry<String, DocOp> d : documents.entrySet()) {
       data.modifyDocument(d.getKey(), d.getValue());
     }
     return data;
@@ -82,7 +82,7 @@ public class DataUtilTest extends TestCase {
 
   private static final WaveletName WAVELET_NAME =
       WaveletName.of(WaveId.of("example.com", "wave"), WaveletId.of("example.com", "wavelet"));
-  private static final BufferedDocInitialization[] CONTENTS = new BufferedDocInitialization[]{
+  private static final DocInitialization[] CONTENTS = new DocInitialization[]{
     ModelTestUtils.createContent("the quick brown fox"),
     ModelTestUtils.createContent("nothing to fear but fear itself"),
     ModelTestUtils.createContent("these are not the droids you are looking for")
@@ -93,7 +93,7 @@ public class DataUtilTest extends TestCase {
   HashedVersion VERSION = HashedVersion.of(42L, new byte[] {1, 2, 3, 4});
 
   public void testFromCoreWaveletData() throws Exception {
-    Map<String, BufferedDocOp> docs = createDocuments("b+", CONTENTS);
+    Map<String, DocOp> docs = createDocuments("b+", CONTENTS);
     CoreWaveletData core = createCoreWaveletData(WAVELET_NAME, docs, BOB, JOE);
     // sanity checks
     assertEquals(WAVELET_NAME, core.getWaveletName());
@@ -113,7 +113,7 @@ public class DataUtilTest extends TestCase {
     assertEquals(CollectionUtils.immutableSet(BOB, JOE), obs.getParticipants());
 
     assertEquals(docs.keySet(), obs.getDocumentIds());
-    for (Map.Entry<String, BufferedDocOp> d : docs.entrySet()) {
+    for (Map.Entry<String, DocOp> d : docs.entrySet()) {
       BlipData blip = obs.getDocument(d.getKey());
       WaveletData wavelet = blip.getWavelet();
       assertEquals(WAVELET_NAME.waveId, wavelet.getWaveId());

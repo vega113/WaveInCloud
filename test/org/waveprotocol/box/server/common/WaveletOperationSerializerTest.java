@@ -25,7 +25,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
@@ -305,7 +305,7 @@ public class WaveletOperationSerializerTest extends TestCase {
     assertReversible(makeBlipOp("emptyUpdateAttributes", m.build()));
   }
 
-  private static WaveletBlipOperation makeBlipOp(String blipId, BufferedDocOp mutation) {
+  private static WaveletBlipOperation makeBlipOp(String blipId, DocOp mutation) {
     return new WaveletBlipOperation(blipId, new BlipContentOperation(OP_CONTEXT, mutation));
   }
 }

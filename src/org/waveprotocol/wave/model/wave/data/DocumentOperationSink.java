@@ -19,7 +19,6 @@ package org.waveprotocol.wave.model.wave.data;
 import org.waveprotocol.wave.model.wave.OpaqueDocument;
 
 import org.waveprotocol.wave.model.document.Document;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.operation.OperationSink;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
@@ -49,7 +48,7 @@ public interface DocumentOperationSink extends OpaqueDocument, OperationSink<Doc
    * @param outputSink
    * @throws IllegalStateException if called more than once, or with null.
    */
-  void init(SilentOperationSink<? super BufferedDocOp> outputSink);
+  void init(SilentOperationSink<? super DocOp> outputSink);
 
   /**
    *

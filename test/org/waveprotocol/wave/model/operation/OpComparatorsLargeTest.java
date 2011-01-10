@@ -21,8 +21,8 @@ package org.waveprotocol.wave.model.operation;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.bootstrap.BootstrapDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
@@ -42,7 +42,7 @@ public class OpComparatorsLargeTest extends TestCase {
   public void testNullable() {
     OpEquator eq = OpComparators.SYNTACTIC_IDENTITY;
 
-    assertTrue(eq.equalNullable((BufferedDocOp) null, null));
+    assertTrue(eq.equalNullable((DocOp) null, null));
     assertFalse(eq.equalNullable(null, new DocOpBuffer().finish()));
     assertFalse(eq.equalNullable(new DocOpBuffer().finish(), null));
 
@@ -66,19 +66,19 @@ public class OpComparatorsLargeTest extends TestCase {
 
     DocOpBuffer ba1 = new DocOpBuffer();
     ba1.characters("a");
-    BufferedDocOp a1 = ba1.finish();
+    DocOp a1 = ba1.finish();
 
     DocOpBuffer ba2 = new DocOpBuffer();
     ba2.characters("a");
-    BufferedDocOp a2 = ba2.finish();
+    DocOp a2 = ba2.finish();
 
     DocOpBuffer bb1 = new DocOpBuffer();
     bb1.deleteCharacters("a");
-    BufferedDocOp b1 = bb1.finish();
+    DocOp b1 = bb1.finish();
 
     DocOpBuffer bb2 = new DocOpBuffer();
     bb2.deleteCharacters("a");
-    BufferedDocOp b2 = bb1.finish();
+    DocOp b2 = bb1.finish();
 
     assertTrue(eq.equal(a1, a1));
     assertTrue(eq.equal(a1, a2));
@@ -103,7 +103,7 @@ public class OpComparatorsLargeTest extends TestCase {
    * verifies that the two cases are considered distinct.
    */
   public void testEqualHandlesSpacesInAnnotationKeys() {
-    BufferedDocInitialization doc1 = DocOpUtil.buffer(new DocInitializationBuilder()
+    DocInitialization doc1 = new DocInitializationBuilder()
         .annotationBoundary(AnnotationBoundaryMapImpl.builder()
             .updateValues(
                 "x", null, "1",
@@ -115,9 +115,9 @@ public class OpComparatorsLargeTest extends TestCase {
         .characters("n")
         .annotationBoundary(AnnotationBoundaryMapImpl.builder()
             .initializationEnd("x y").build())
-        .build());
+        .build();
 
-    BufferedDocInitialization doc2 = DocOpUtil.buffer(new DocInitializationBuilder()
+    DocInitialization doc2 = new DocInitializationBuilder()
         .annotationBoundary(AnnotationBoundaryMapImpl.builder()
             .updateValues(
                 "x", null, "1",
@@ -129,7 +129,7 @@ public class OpComparatorsLargeTest extends TestCase {
         .characters("n")
         .annotationBoundary(AnnotationBoundaryMapImpl.builder()
             .initializationEnd("x", "y").build())
-        .build());
+        .build();
     assertFalse("\ndoc1: " + doc1 + "\ndoc2: " + doc2,
         OpComparators.SYNTACTIC_IDENTITY.equal(doc1, doc2));
     assertFalse("\ndoc1: " + DocOpUtil.toXmlString(doc1) + "\ndoc2: " + DocOpUtil.toXmlString(doc2),
@@ -141,7 +141,7 @@ public class OpComparatorsLargeTest extends TestCase {
    * any ambiguity in equality checks.
    */
   public void testEqualHandlesQuotesInAnnotationKeys() {
-    BufferedDocInitialization doc1 = DocOpUtil.buffer(new DocInitializationBuilder()
+    DocInitialization doc1 = new DocInitializationBuilder()
         .annotationBoundary(AnnotationBoundaryMapImpl.builder()
             .updateValues(
                 "x", null, "1",
@@ -153,9 +153,9 @@ public class OpComparatorsLargeTest extends TestCase {
         .characters("n")
         .annotationBoundary(AnnotationBoundaryMapImpl.builder()
             .initializationEnd("x\" \"y").build())
-        .build());
+        .build();
 
-    BufferedDocInitialization doc2 = DocOpUtil.buffer(new DocInitializationBuilder()
+    DocInitialization doc2 = new DocInitializationBuilder()
         .annotationBoundary(AnnotationBoundaryMapImpl.builder()
             .updateValues(
                 "x", null, "1",
@@ -167,7 +167,7 @@ public class OpComparatorsLargeTest extends TestCase {
         .characters("n")
         .annotationBoundary(AnnotationBoundaryMapImpl.builder()
             .initializationEnd("x", "y").build())
-        .build());
+        .build();
     assertFalse("\ndoc1: " + doc1 + "\ndoc2: " + doc2,
         OpComparators.SYNTACTIC_IDENTITY.equal(doc1, doc2));
     assertFalse("\ndoc1: " + DocOpUtil.toXmlString(doc1) + "\ndoc2: " + DocOpUtil.toXmlString(doc2),
@@ -183,8 +183,8 @@ public class OpComparatorsLargeTest extends TestCase {
       for (int j = 0; j < 20; j++) {
         RandomProvider ra = RandomProviderImpl.ofSeed(i * 20 + j);
         RandomProvider rb = RandomProviderImpl.ofSeed(i * 20 + j + 1);
-        BufferedDocOp a = DocOpUtil.buffer(RandomDocOpGenerator.generate(ra, p, doc));
-        BufferedDocOp b = DocOpUtil.buffer(RandomDocOpGenerator.generate(rb, p, doc));
+        DocOp a = RandomDocOpGenerator.generate(ra, p, doc);
+        DocOp b = RandomDocOpGenerator.generate(rb, p, doc);
         doc.consume(a);
         assertTrue(eq.equal(a, a));
         // The combination of RandomProvider and RandomDocOpGenerator doesn't

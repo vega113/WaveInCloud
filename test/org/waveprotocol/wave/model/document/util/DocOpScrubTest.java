@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
@@ -206,8 +206,8 @@ public class DocOpScrubTest extends TestCase {
     b1.annotationBoundary(ANNO);
     b2.annotationBoundary(ANNO_SCRUBBED);
 
-    BufferedDocOp o1 = DocOpScrub.scrub(b1.buildUnchecked());
-    BufferedDocOp o2 = b2.buildUnchecked();
+    DocOp o1 = DocOpScrub.scrub(b1.buildUnchecked());
+    DocOp o2 = b2.buildUnchecked();
     assertTrue("\n" + o1 + "\n but expected \n" + o2,
         OpComparators.SYNTACTIC_IDENTITY.equal(o1, o2));
   }

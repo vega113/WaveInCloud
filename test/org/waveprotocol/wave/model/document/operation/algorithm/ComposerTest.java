@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.document.operation.algorithm;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.OperationException;
 
@@ -45,8 +45,8 @@ public class ComposerTest extends TestCase {
   }
 
   public void testComposerChecking() throws OperationException {
-    BufferedDocOp checked = new DocOpBuilder().build();
-    BufferedDocOp unchecked = new DocOpBuilder().elementStart(".!$*.4!(,", Attributes.EMPTY_MAP)
+    DocOp checked = new DocOpBuilder().build();
+    DocOp unchecked = new DocOpBuilder().elementStart(".!$*.4!(,", Attributes.EMPTY_MAP)
         .elementEnd().buildUnchecked();
 
     try {

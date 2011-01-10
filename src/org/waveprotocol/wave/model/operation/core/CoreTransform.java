@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.model.operation.core;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.Transformer;
 import org.waveprotocol.wave.model.operation.OperationPair;
 import org.waveprotocol.wave.model.operation.RemovedAuthorException;
@@ -52,9 +52,9 @@ public class CoreTransform {
       CoreWaveletDocumentOperation serverWaveDocOp = (CoreWaveletDocumentOperation) serverOp;
       if (clientWaveDocOp.getDocumentId().equals(serverWaveDocOp.getDocumentId())) {
         // Transform document operations
-        BufferedDocOp clientMutation = clientWaveDocOp.getOperation();
-        BufferedDocOp serverMutation = serverWaveDocOp.getOperation();
-        OperationPair<BufferedDocOp> transformedDocOps =
+        DocOp clientMutation = clientWaveDocOp.getOperation();
+        DocOp serverMutation = serverWaveDocOp.getOperation();
+        OperationPair<DocOp> transformedDocOps =
           Transformer.transform(clientMutation, serverMutation);
         clientOp = new CoreWaveletDocumentOperation(clientWaveDocOp.getDocumentId(),
             transformedDocOps.clientOp());

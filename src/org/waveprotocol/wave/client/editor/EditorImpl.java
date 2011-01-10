@@ -117,13 +117,11 @@ import org.waveprotocol.wave.model.document.AnnotationBehaviour.ContentType;
 import org.waveprotocol.wave.model.document.AnnotationBehaviour.CursorDirection;
 import org.waveprotocol.wave.model.document.ReadableDocument;
 import org.waveprotocol.wave.model.document.indexed.LocationMapper;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema.PermittedCharacters;
-import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.document.util.Annotations;
 import org.waveprotocol.wave.model.document.util.DocHelper;
 import org.waveprotocol.wave.model.document.util.FocusedPointRange;
@@ -346,7 +344,7 @@ public class EditorImpl extends LogicalPanel.Impl implements
    */
   private EditorSettings settings = EditorSettings.DEFAULT;
 
-  private SilentOperationSink<? super BufferedDocOp> innerOutputSink;
+  private SilentOperationSink<? super DocOp> innerOutputSink;
 
   /**
    * Permits sending out operations, and receiving local operations.
@@ -355,16 +353,16 @@ public class EditorImpl extends LogicalPanel.Impl implements
   private boolean permitOperations = true;
 
   /** Buffer of outgoing ops, for when we suppress sending them. */
-  List<BufferedDocOp> suppressedOutgoingOps;
+  List<DocOp> suppressedOutgoingOps;
 
   /**
    * Sink for outgoing operations
    *
    * TODO(mtsui/danilatos): Move this out of the editor as well.
    */
-  private final SilentOperationSink<BufferedDocOp> outgoingOperationSink =
-      new SilentOperationSink<BufferedDocOp>() {
-        public void consume(BufferedDocOp op) {
+  private final SilentOperationSink<DocOp> outgoingOperationSink =
+      new SilentOperationSink<DocOp>() {
+        public void consume(DocOp op) {
           try {
             if (permitOperations) {
               innerOutputSink.consume(op);
@@ -1498,7 +1496,7 @@ public class EditorImpl extends LogicalPanel.Impl implements
    * {@inheritDoc}
    */
   @Override
-  public void setOutputSink(final SilentOperationSink<BufferedDocOp> sink) {
+  public void setOutputSink(final SilentOperationSink<DocOp> sink) {
     this.innerOutputSink = sink;
   }
 
@@ -1653,9 +1651,9 @@ public class EditorImpl extends LogicalPanel.Impl implements
       if (settings.undoEnabled()) {
         editorUndoManager = new EditorUndoManagerImpl(
             UndoManagerFactory.createUndoManager(),
-            new SilentOperationSink<BufferedDocOp>() {
+            new SilentOperationSink<DocOp>() {
               @Override
-              public void consume(BufferedDocOp op) {
+              public void consume(DocOp op) {
                 // This applies to the content document as well as sending
                 // it out remotely.
                 content.sourceNindo(Nindo.fromDocOp(op, true));
@@ -2559,7 +2557,7 @@ public class EditorImpl extends LogicalPanel.Impl implements
     }
 
     try {
-      editorUndoManager.nonUndoableOp(DocOpUtil.buffer(operation));
+      editorUndoManager.nonUndoableOp(operation);
       debugCheckHealth();
     } finally {
       // alert others on change:
@@ -2708,13 +2706,13 @@ public class EditorImpl extends LogicalPanel.Impl implements
     }
     permitOperations = isConnected;
     if (permitOperations) {
-      for (BufferedDocOp op : suppressedOutgoingOps) {
+      for (DocOp op : suppressedOutgoingOps) {
         outgoingOperationSink.consume(op);
       }
       suppressedOutgoingOps = null;
       ScheduleCommand.addCommand(consistencyQueue);
     } else {
-      suppressedOutgoingOps = new ArrayList<BufferedDocOp>();
+      suppressedOutgoingOps = new ArrayList<DocOp>();
     }
   }
 

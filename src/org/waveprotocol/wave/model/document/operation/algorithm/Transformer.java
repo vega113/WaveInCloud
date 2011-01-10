@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.document.operation.algorithm;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
@@ -426,7 +426,7 @@ public final class Transformer {
    * help of auxiliary information from a second mutation. These targets should
    * be used in pairs.
    */
-  private static final class Target implements EvaluatingDocOpCursor<BufferedDocOp> {
+  private static final class Target implements EvaluatingDocOpCursor<DocOp> {
 
     private final class DeleteCharactersCache extends RangeCache {
 
@@ -645,7 +645,7 @@ public final class Transformer {
     /**
      * The target to which to write the transformed mutation.
      */
-    private final EvaluatingDocOpCursor<BufferedDocOp> targetDocument;
+    private final EvaluatingDocOpCursor<DocOp> targetDocument;
 
     /**
      * The position of the processing cursor associated with this target
@@ -677,7 +677,7 @@ public final class Transformer {
      */
     private int depth = 0;
 
-    Target(EvaluatingDocOpCursor<BufferedDocOp> targetDocument, RelativePosition relativePosition,
+    Target(EvaluatingDocOpCursor<DocOp> targetDocument, RelativePosition relativePosition,
         AnnotationTracker annotationTracker) {
       this.targetDocument = targetDocument;
       this.relativePosition = relativePosition;
@@ -690,7 +690,7 @@ public final class Transformer {
       this.otherTarget = otherTarget;
     }
 
-    public BufferedDocOp finish() {
+    public DocOp finish() {
       annotationTracker.flush();
       return targetDocument.finish();
     }
@@ -847,9 +847,9 @@ public final class Transformer {
 
   }
 
-  private final EvaluatingDocOpCursor<BufferedDocOp> clientOperation =
+  private final EvaluatingDocOpCursor<DocOp> clientOperation =
       OperationNormalizer.createNormalizer(new DocOpBuffer());
-  private final EvaluatingDocOpCursor<BufferedDocOp> serverOperation =
+  private final EvaluatingDocOpCursor<DocOp> serverOperation =
       OperationNormalizer.createNormalizer(new DocOpBuffer());
 
   private final AnnotationProcessor clientAnnotationProcessor =
@@ -985,8 +985,8 @@ public final class Transformer {
    * @throws TransformException if a problem was encountered during the
    *         transformation process.
    */
-  public OperationPair<BufferedDocOp> transformOperations(BufferedDocOp clientOp,
-      BufferedDocOp serverOp) throws TransformException {
+  public OperationPair<DocOp> transformOperations(DocOp clientOp,
+      DocOp serverOp) throws TransformException {
     try {
       PositionTracker positionTracker = new PositionTracker();
 
@@ -1025,7 +1025,7 @@ public final class Transformer {
     } catch (InternalTransformException e) {
       throw new TransformException(e.getMessage());
     }
-    return new OperationPair<BufferedDocOp>(clientOp, serverOp);
+    return new OperationPair<DocOp>(clientOp, serverOp);
   }
 
   /**
@@ -1037,8 +1037,8 @@ public final class Transformer {
    * @throws TransformException if a problem was encountered during the
    *         transformation process.
    */
-  public static OperationPair<BufferedDocOp> transform(BufferedDocOp clientOp,
-      BufferedDocOp serverOp) throws TransformException {
+  public static OperationPair<DocOp> transform(DocOp clientOp,
+      DocOp serverOp) throws TransformException {
     return new Transformer().transformOperations(clientOp, serverOp);
   }
 

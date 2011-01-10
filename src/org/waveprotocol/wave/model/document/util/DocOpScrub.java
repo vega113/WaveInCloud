@@ -20,8 +20,6 @@ package org.waveprotocol.wave.model.document.util;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
@@ -211,7 +209,7 @@ public final class DocOpScrub {
    * Scrubs the given operation. Ill-formed input is permitted but may lead to
    * ill-formed output. Invalid characters will be clearly noted.
    */
-  public static BufferedDocOp scrub(final DocOp op) {
+  public static DocOp scrub(final DocOp op) {
     try {
       DocOpBuffer b = new DocOpBuffer();
       op.apply(createScrubber(b));
@@ -226,7 +224,7 @@ public final class DocOpScrub {
   /**
    * Same as {@link #scrub(DocOp)} but deals with {@link DocInitialization}s
    */
-  public static BufferedDocInitialization scrub(final DocInitialization op) {
+  public static DocInitialization scrub(final DocInitialization op) {
     return DocOpUtil.asInitialization(scrub((DocOp) op));
   }
 

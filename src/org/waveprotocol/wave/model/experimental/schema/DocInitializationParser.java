@@ -18,7 +18,7 @@
 package org.waveprotocol.wave.model.experimental.schema;
 
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 import org.waveprotocol.wave.model.document.operation.util.ImmutableStateMap.Attribute;
@@ -134,23 +134,23 @@ public final class DocInitializationParser {
   private DocInitializationParser() {}
 
   /**
-   * Parses an input stream into a {@link BufferedDocInitialization} object.
+   * Parses an input stream into a {@link DocInitialization} object.
    */
-  public static BufferedDocInitialization parse(InputStream stream)
+  public static DocInitialization parse(InputStream stream)
       throws IOException, ParseException {
     return parse(stream, new FullHandler());
   }
 
   /**
-   * Parses an input stream into a {@link BufferedDocInitialization} object,
+   * Parses an input stream into a {@link DocInitialization} object,
    * ignoring whitespace and disallowing non-whitespace character data.
    */
-  public static BufferedDocInitialization parseNonCharacterData(InputStream stream)
+  public static DocInitialization parseNonCharacterData(InputStream stream)
       throws IOException, ParseException {
     return parse(stream, new NonCharacterHandler());
   }
 
-  private static BufferedDocInitialization parse(InputStream stream, EventHandler handler)
+  private static DocInitialization parse(InputStream stream, EventHandler handler)
       throws IOException, ParseException {
     try {
       SAXParser parser = SAXParserFactory.newInstance().newSAXParser();

@@ -81,7 +81,7 @@ import org.waveprotocol.wave.client.widget.popup.PopupChromeProvider;
 import org.waveprotocol.wave.client.widget.popup.simple.Popup;
 import org.waveprotocol.wave.common.logging.AbstractLogger;
 import org.waveprotocol.wave.common.logging.LoggerBundle;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton.ViolationCollector;
@@ -434,7 +434,7 @@ public class EditorHarness extends Composite implements KeySignalListener {
   /**
    * A queue of operations
    */
-  ArrayList<BufferedDocOp> queue = new ArrayList<BufferedDocOp>();
+  ArrayList<DocOp> queue = new ArrayList<DocOp>();
 
   /**
    * Checkbox if harness should queue up operations from editor1 rather
@@ -594,7 +594,7 @@ public class EditorHarness extends Composite implements KeySignalListener {
    */
   private void playOne() {
     if (queue.size() > 0) {
-      BufferedDocOp operation = queue.remove(0);
+      DocOp operation = queue.remove(0);
       try {
         outputOperation(operation);
         editorBundle2.execute(operation);
@@ -656,7 +656,7 @@ public class EditorHarness extends Composite implements KeySignalListener {
    *
    * @param operation
    */
-  private void outputOperation(BufferedDocOp operation) {
+  private void outputOperation(DocOp operation) {
     if (!quiet) {
       operationOutput.setText(operation != null ? operation.toString() : "");
     }
@@ -1052,9 +1052,9 @@ public class EditorHarness extends Composite implements KeySignalListener {
     DomLogger.enableModule("test", true);
   }
 
-  private final SilentOperationSink<BufferedDocOp> editor1Sink =
-      new SilentOperationSink<BufferedDocOp>() {
-        public void consume(BufferedDocOp operation) {
+  private final SilentOperationSink<DocOp> editor1Sink =
+      new SilentOperationSink<DocOp>() {
+        public void consume(DocOp operation) {
           try {
             if (operation != null && sendOps) {
               if (queuingCheck.getValue()) {
@@ -1073,9 +1073,9 @@ public class EditorHarness extends Composite implements KeySignalListener {
         }
   };
 
-  private final SilentOperationSink<BufferedDocOp> editor2Sink =
-      new SilentOperationSink<BufferedDocOp>() {
-        public void consume(BufferedDocOp operation) {
+  private final SilentOperationSink<DocOp> editor2Sink =
+      new SilentOperationSink<DocOp>() {
+        public void consume(DocOp operation) {
           try {
             if (operation != null && sendOps) {
               editorBundle1.execute(operation);

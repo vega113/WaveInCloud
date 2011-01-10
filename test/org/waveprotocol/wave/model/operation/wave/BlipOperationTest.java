@@ -22,7 +22,7 @@ import org.waveprotocol.wave.model.testing.ModelTestUtils;
 import org.waveprotocol.wave.model.wave.data.BlipData;
 
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 
 import java.util.Collections;
@@ -82,7 +82,7 @@ public class BlipOperationTest extends OperationTestBase {
   private BlipOperation createSampleContentOperation(WaveletOperationContext context,
       UpdateContributorMethod method) {
     // Some random op that doesn't actually update the document but still "isWorthy"
-    BufferedDocOp op = new DocOpBuilder()
+    DocOp op = new DocOpBuilder()
         .retain(1)
         .deleteElementStart("line", Attributes.EMPTY_MAP)
         .deleteElementEnd()

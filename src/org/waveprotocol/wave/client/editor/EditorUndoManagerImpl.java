@@ -24,7 +24,7 @@ import org.waveprotocol.wave.common.logging.LoggerBundle;
 import org.waveprotocol.wave.common.logging.AbstractLogger.Level;
 import org.waveprotocol.wave.model.undo.UndoManagerPlus;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.util.FocusedRange;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.util.Pair;
@@ -41,14 +41,14 @@ import java.util.Stack;
  *
  */
 public class EditorUndoManagerImpl implements EditorUndoManager {
-  private final SilentOperationSink<BufferedDocOp> sink;
+  private final SilentOperationSink<DocOp> sink;
   private final SelectionHelper selectionHelper;
 
   private final Stack<FocusedRange> undoSelectionStack = new Stack<FocusedRange>();
   private final Stack<FocusedRange> redoSelectionStack = new Stack<FocusedRange>();
 
 
-  private final UndoManagerPlus<BufferedDocOp> undoManager;
+  private final UndoManagerPlus<DocOp> undoManager;
   private FocusedRange pendingCheckpoint;
 
   private static final LoggerBundle logger = new DomLogger("undo");
@@ -58,8 +58,8 @@ public class EditorUndoManagerImpl implements EditorUndoManager {
 
   private boolean bypass = false;
 
-  public EditorUndoManagerImpl(UndoManagerPlus<BufferedDocOp> undoManager,
-      SilentOperationSink<BufferedDocOp> sink, SelectionHelper selectionHelper) {
+  public EditorUndoManagerImpl(UndoManagerPlus<DocOp> undoManager,
+      SilentOperationSink<DocOp> sink, SelectionHelper selectionHelper) {
     Preconditions.checkNotNull(undoManager, "UndoManager must not be null");
     Preconditions.checkNotNull(sink, "Op sink must not be null");
     Preconditions.checkNotNull(selectionHelper, "Selection helper must not be null");
@@ -69,7 +69,7 @@ public class EditorUndoManagerImpl implements EditorUndoManager {
   }
 
   @Override
-  public void undoableOp(BufferedDocOp op) {
+  public void undoableOp(DocOp op) {
     if (bypass) {
       return;
     }
@@ -101,7 +101,7 @@ public class EditorUndoManagerImpl implements EditorUndoManager {
   }
 
   @Override
-  public void nonUndoableOp(BufferedDocOp op) {
+  public void nonUndoableOp(DocOp op) {
     if (bypass) {
       return;
     }
@@ -124,7 +124,7 @@ public class EditorUndoManagerImpl implements EditorUndoManager {
 
   @Override
   public void undo() {
-    Pair<BufferedDocOp, BufferedDocOp> pair = undoManager.undoPlus();
+    Pair<DocOp, DocOp> pair = undoManager.undoPlus();
 
     if (pair == null || pair.first == null)  {
       if (logger.trace().shouldLog()) {
@@ -133,8 +133,8 @@ public class EditorUndoManagerImpl implements EditorUndoManager {
       return;
     }
 
-    BufferedDocOp undo = pair.first;
-    BufferedDocOp transformedNonUndoable = pair.second;
+    DocOp undo = pair.first;
+    DocOp transformedNonUndoable = pair.second;
 
     {
       FocusedRange selection = selectionHelper.getSelectionRange();
@@ -153,7 +153,7 @@ public class EditorUndoManagerImpl implements EditorUndoManager {
 
   @Override
   public void redo() {
-    Pair<BufferedDocOp, BufferedDocOp> pair = undoManager.redoPlus();
+    Pair<DocOp, DocOp> pair = undoManager.redoPlus();
 
     if (pair == null || pair.first == null) {
       if (logger.trace().shouldLog()) {
@@ -162,8 +162,8 @@ public class EditorUndoManagerImpl implements EditorUndoManager {
       return;
     }
 
-    BufferedDocOp redo = pair.first;
-    BufferedDocOp transformedNonUndoable = pair.second;
+    DocOp redo = pair.first;
+    DocOp transformedNonUndoable = pair.second;
 
     {
       FocusedRange selection = selectionHelper.getSelectionRange();
@@ -188,7 +188,7 @@ public class EditorUndoManagerImpl implements EditorUndoManager {
    *
    * @param op
    */
-  private void bypassUndoStack(BufferedDocOp op) {
+  private void bypassUndoStack(DocOp op) {
     bypass = true;
     try {
       sink.consume(op);
@@ -197,7 +197,7 @@ public class EditorUndoManagerImpl implements EditorUndoManager {
     }
   }
 
-  private FocusedRange restoreSelectionAfterUndoRedo(BufferedDocOp transformedNonUndoable,
+  private FocusedRange restoreSelectionAfterUndoRedo(DocOp transformedNonUndoable,
       Stack<FocusedRange> selectionStack) {
     if (selectionStack.isEmpty()) {
       logger.log(Level.ERROR,

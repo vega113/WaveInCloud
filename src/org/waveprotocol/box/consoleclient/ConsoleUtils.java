@@ -24,8 +24,8 @@ import jline.ANSIBuffer;
 import org.waveprotocol.box.common.DocumentConstants;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
 
@@ -185,7 +185,7 @@ public class ConsoleUtils {
    * @param lineNumber of line (as an index) to delete
    * @return operation to delete a line from a document
    */
-  public static BufferedDocOp createLineDeletion(final BufferedDocOp doc, final int lineNumber) {
+  public static DocOp createLineDeletion(final DocOp doc, final int lineNumber) {
     final DocOpBuilder lineDeletion = new DocOpBuilder();
     final AtomicInteger currentLine = new AtomicInteger(-1);
 

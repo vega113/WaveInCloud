@@ -20,8 +20,8 @@ package org.waveprotocol.wave.model.document.operation.algorithm;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
@@ -784,7 +784,7 @@ public final class Composer {
 
   };
 
-  private final EvaluatingDocOpCursor<BufferedDocOp> normalizer;
+  private final EvaluatingDocOpCursor<DocOp> normalizer;
 
   private final Target defaultTarget = new DefaultPreTarget();
 
@@ -793,11 +793,11 @@ public final class Composer {
   /**
    * @param cursor Evaluation cursor used for the basis of the normalizer.
    */
-  private Composer(EvaluatingDocOpCursor<BufferedDocOp> cursor) {
+  private Composer(EvaluatingDocOpCursor<DocOp> cursor) {
     normalizer = OperationNormalizer.createNormalizer(cursor);
   }
 
-  private BufferedDocOp composeOperations(BufferedDocOp op1, BufferedDocOp op2)
+  private DocOp composeOperations(DocOp op1, DocOp op2)
       throws OperationException {
     target = defaultTarget;
     int op1Index = 0;
@@ -831,7 +831,7 @@ public final class Composer {
    * @return the result of the composition
    * @throws OperationException if applying op1 followed by op2 would be invalid
    */
-  public static BufferedDocOp compose(BufferedDocOp op1, BufferedDocOp op2)
+  public static DocOp compose(DocOp op1, DocOp op2)
       throws OperationException {
     try {
       return new Composer(new DocOpBuffer()).composeOperations(op1, op2);
@@ -851,9 +851,9 @@ public final class Composer {
    * @return the result of the composition
    * @throws OperationException if applying op1 followed by op2 would be invalid
    */
-  public static BufferedDocInitialization compose(BufferedDocInitialization op1, BufferedDocOp op2)
+  public static DocInitialization compose(DocInitialization op1, DocOp op2)
       throws OperationException {
-    return DocOpUtil.asInitialization(compose((BufferedDocOp) op1, op2));
+    return DocOpUtil.asInitialization(compose((DocOp) op1, op2));
   }
 
   /**
@@ -865,9 +865,9 @@ public final class Composer {
    * @return the result of the composition
    */
   // TODO: DocOpCollector's API is flawed; it should throw OperationException, and so should this.
-  public static BufferedDocOp compose(Iterable<BufferedDocOp> operations) {
+  public static DocOp compose(Iterable<DocOp> operations) {
     DocOpCollector collector = new DocOpCollector();
-    for (BufferedDocOp operation : operations) {
+    for (DocOp operation : operations) {
       collector.add(operation);
     }
     return collector.composeAll();
@@ -882,7 +882,7 @@ public final class Composer {
    * @return the result of the composition
    * @throws OperationException if applying op1 followed by op2 would be invalid
    */
-  public static BufferedDocOp composeUnchecked(BufferedDocOp op1, BufferedDocOp op2)
+  public static DocOp composeUnchecked(DocOp op1, DocOp op2)
       throws OperationException {
     try {
       return new Composer(new UncheckedDocOpBuffer()).composeOperations(op1, op2);

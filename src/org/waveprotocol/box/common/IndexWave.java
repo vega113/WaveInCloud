@@ -231,7 +231,7 @@ public final class IndexWave {
     return delta;
   }
 
-  /** Constructs a BufferedDocOp that transforms source into target. */
+  /** Constructs a DocOp that transforms source into target. */
   private static BlipOperation createEditOp(String source, String target,
       WaveletOperationContext context) {
     int commonPrefixLength = lengthOfCommonPrefix(source, target);

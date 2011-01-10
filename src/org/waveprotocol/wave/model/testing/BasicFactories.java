@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.testing;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.ObservableDocument;
 import org.waveprotocol.wave.model.document.indexed.IndexedDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.raw.impl.Element;
@@ -210,7 +210,7 @@ public class BasicFactories {
    * Creates an observable mutable document with some schema, content, and sink.
    */
   public static ObservableDocument createDocument(DocumentSchema schema,
-      String initialContent, SilentOperationSink<? super BufferedDocOp> sink) {
+      String initialContent, SilentOperationSink<? super DocOp> sink) {
     Preconditions.checkNotNull(sink, "Sink can't be null");
     DocInitialization init = DocProviders.POJO.parse(initialContent).asOperation();
     ObservablePluggableMutableDocument doc = new ObservablePluggableMutableDocument(schema, init);
@@ -222,7 +222,7 @@ public class BasicFactories {
    * Creates an observable mutable document with some schema and a sink.
    */
   public static ObservableDocument createDocument(
-      DocumentSchema schema, SilentOperationSink<? super BufferedDocOp> sink) {
+      DocumentSchema schema, SilentOperationSink<? super DocOp> sink) {
     return createDocument(schema, "", sink);
   }
 

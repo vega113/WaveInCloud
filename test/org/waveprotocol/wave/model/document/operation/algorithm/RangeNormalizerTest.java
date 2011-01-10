@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.document.operation.algorithm;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.OpComparators;
@@ -31,8 +31,8 @@ import org.waveprotocol.wave.model.operation.OpComparators;
 public class RangeNormalizerTest extends TestCase {
 
   public void testMultipleRetainNormalization() {
-    RangeNormalizer<BufferedDocOp> normalizer =
-        new RangeNormalizer<BufferedDocOp>(new DocOpBuffer());
+    RangeNormalizer<DocOp> normalizer =
+        new RangeNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.characters("a");
     normalizer.retain(1);
@@ -40,8 +40,8 @@ public class RangeNormalizerTest extends TestCase {
     normalizer.retain(1);
     normalizer.characters("b");
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .characters("a")
         .retain(3)
@@ -52,15 +52,15 @@ public class RangeNormalizerTest extends TestCase {
   }
 
   public void testEmptyRetainNormalization() {
-    RangeNormalizer<BufferedDocOp> normalizer =
-        new RangeNormalizer<BufferedDocOp>(new DocOpBuffer());
+    RangeNormalizer<DocOp> normalizer =
+        new RangeNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.characters("a");
     normalizer.retain(0);
     normalizer.characters("b");
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .characters("ab")
         .retain(1)
@@ -69,15 +69,15 @@ public class RangeNormalizerTest extends TestCase {
   }
 
   public void testMultipleCharactersNormalization() {
-    RangeNormalizer<BufferedDocOp> normalizer =
-        new RangeNormalizer<BufferedDocOp>(new DocOpBuffer());
+    RangeNormalizer<DocOp> normalizer =
+        new RangeNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.characters("a");
     normalizer.characters("b");
     normalizer.characters("c");
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .characters("abc")
         .retain(1)
@@ -86,28 +86,28 @@ public class RangeNormalizerTest extends TestCase {
   }
 
   public void testEmptyCharactersNormalization() {
-    RangeNormalizer<BufferedDocOp> normalizer =
-        new RangeNormalizer<BufferedDocOp>(new DocOpBuffer());
+    RangeNormalizer<DocOp> normalizer =
+        new RangeNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.characters("");
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(2)
         .build();
     assertTrue(OpComparators.SYNTACTIC_IDENTITY.equal(expected, docOp));
   }
 
   public void testMultipleDeleteCharactersNormalization() {
-    RangeNormalizer<BufferedDocOp> normalizer =
-        new RangeNormalizer<BufferedDocOp>(new DocOpBuffer());
+    RangeNormalizer<DocOp> normalizer =
+        new RangeNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.deleteCharacters("a");
     normalizer.deleteCharacters("b");
     normalizer.deleteCharacters("c");
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(1)
         .deleteCharacters("abc")
         .retain(1)
@@ -116,13 +116,13 @@ public class RangeNormalizerTest extends TestCase {
   }
 
   public void testEmptyDeleteCharactersNormalization() {
-    RangeNormalizer<BufferedDocOp> normalizer =
-        new RangeNormalizer<BufferedDocOp>(new DocOpBuffer());
+    RangeNormalizer<DocOp> normalizer =
+        new RangeNormalizer<DocOp>(new DocOpBuffer());
     normalizer.retain(1);
     normalizer.deleteCharacters("");
     normalizer.retain(1);
-    BufferedDocOp docOp = normalizer.finish();
-    BufferedDocOp expected = new DocOpBuilder()
+    DocOp docOp = normalizer.finish();
+    DocOp expected = new DocOpBuilder()
         .retain(2)
         .build();
     assertTrue(OpComparators.SYNTACTIC_IDENTITY.equal(expected, docOp));

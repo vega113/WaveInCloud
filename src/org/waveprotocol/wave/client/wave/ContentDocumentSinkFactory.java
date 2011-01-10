@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
 import org.waveprotocol.wave.client.editor.content.Registries;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.document.indexed.IndexedDocumentImpl;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -122,13 +122,13 @@ public final class ContentDocumentSinkFactory implements DocumentFactory<Documen
   /**
    * Gets the output sink for a document.
    */
-  private SilentOperationSink<BufferedDocOp> documentOutputSink(final String waveletId,
+  private SilentOperationSink<DocOp> documentOutputSink(final String waveletId,
       final String docId) {
-    return new SilentOperationSink<BufferedDocOp>() {
-      private SilentOperationSink<BufferedDocOp> sink;
+    return new SilentOperationSink<DocOp>() {
+      private SilentOperationSink<DocOp> sink;
 
       @Override
-      public void consume(BufferedDocOp op) {
+      public void consume(DocOp op) {
         if (sink == null) {
           sink = wavelets.get(waveletId).getDocumentOperationSink(docId);
           if (sink == null) {

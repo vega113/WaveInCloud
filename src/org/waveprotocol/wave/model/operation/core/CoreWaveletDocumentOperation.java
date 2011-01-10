@@ -16,7 +16,7 @@
 
 package org.waveprotocol.wave.model.operation.core;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpInverter;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.operation.OpComparators;
@@ -32,7 +32,7 @@ public final class CoreWaveletDocumentOperation extends CoreWaveletOperation {
   private final String documentId;
 
   /** Document operation which modifies the target document. */
-  private final BufferedDocOp operation;
+  private final DocOp operation;
 
   /**
    * Constructor.
@@ -40,7 +40,7 @@ public final class CoreWaveletDocumentOperation extends CoreWaveletOperation {
    * @param documentId
    * @param operation
    */
-  public CoreWaveletDocumentOperation(String documentId, BufferedDocOp operation) {
+  public CoreWaveletDocumentOperation(String documentId, DocOp operation) {
     Preconditions.checkNotNull(documentId, "Null document id");
     Preconditions.checkNotNull(operation, "Null document operation");
     this.documentId = documentId;
@@ -51,7 +51,7 @@ public final class CoreWaveletDocumentOperation extends CoreWaveletOperation {
     return documentId;
   }
 
-  public BufferedDocOp getOperation() {
+  public DocOp getOperation() {
     return operation;
   }
 
@@ -62,7 +62,7 @@ public final class CoreWaveletDocumentOperation extends CoreWaveletOperation {
 
   @Override
   public CoreWaveletOperation getInverse() {
-    DocOpInverter<BufferedDocOp> inverse = new DocOpInverter<BufferedDocOp>(new DocOpBuffer());
+    DocOpInverter<DocOp> inverse = new DocOpInverter<DocOp>(new DocOpBuffer());
     operation.apply(inverse);
     return new CoreWaveletDocumentOperation(documentId, inverse.finish());
   }

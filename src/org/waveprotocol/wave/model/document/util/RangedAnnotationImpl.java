@@ -18,7 +18,6 @@
 package org.waveprotocol.wave.model.document.util;
 
 import org.waveprotocol.wave.model.document.RangedAnnotation;
-
 import org.waveprotocol.wave.model.util.Preconditions;
 
 /**

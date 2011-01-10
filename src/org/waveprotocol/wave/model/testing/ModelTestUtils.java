@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.model.testing;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 
@@ -37,7 +37,7 @@ public final class ModelTestUtils {
    * @param contentText The content that the document should have.
    * @return The document with the given content.
    */
-  public static BufferedDocInitialization createContent(String contentText) {
+  public static DocInitialization createContent(String contentText) {
     if (contentText.isEmpty()) {
       return (new DocInitializationBuilder())
           .elementStart("body", new AttributesImpl())

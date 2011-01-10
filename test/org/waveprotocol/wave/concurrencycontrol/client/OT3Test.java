@@ -21,7 +21,7 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.common.logging.PrintLogger;
 import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.SuperSink;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
@@ -428,8 +428,8 @@ public class OT3Test extends TestCase {
      * Check client has a document that looks like the following.
      */
     public TestConfig checkClientDoc(String xml) {
-      BufferedDocInitialization expected = DocOpUtil.buffer(parse(xml).asOperation());
-      BufferedDocInitialization actual = DocOpUtil.buffer(clientMock.getDoc().asOperation());
+      DocInitialization expected = parse(xml).asOperation();
+      DocInitialization actual = clientMock.getDoc().asOperation();
       assertTrue(OpComparators.SYNTACTIC_IDENTITY.equal(expected, actual));
       return this;
     }

@@ -19,7 +19,7 @@ package org.waveprotocol.wave.model.document;
 
 import org.waveprotocol.wave.model.document.indexed.Locator;
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.Nindo.Builder;
@@ -383,8 +383,8 @@ public class MutableDocumentImpl<N, E extends N, T extends N> implements Mutable
 
     // step 1: initialise the operations for the DOM and annotations:
     DocOpBuffer domOp = new DocOpBuffer();
-    final AnnotationsNormalizer<BufferedDocOp> annotOp =
-      new AnnotationsNormalizer<BufferedDocOp>(new UncheckedDocOpBuffer());
+    final AnnotationsNormalizer<DocOp> annotOp =
+      new AnnotationsNormalizer<DocOp>(new UncheckedDocOpBuffer());
     if (addPosition > 0) {
       annotOp.retain(addPosition);
       domOp.retain(addPosition);
@@ -433,7 +433,7 @@ public class MutableDocumentImpl<N, E extends N, T extends N> implements Mutable
     deleteRange(removeStart, removeEnd);
 
     // step 6: compose then consume the insertion op:
-    BufferedDocOp atomicInsert;
+    DocOp atomicInsert;
     try {
       atomicInsert = Composer.compose(domOp.finish(), annotOp.finish());
       hackConsume(Nindo.fromDocOp(atomicInsert, true));

@@ -16,7 +16,7 @@
  */
 package org.waveprotocol.wave.concurrencycontrol.client;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.SuperSink;
 import org.waveprotocol.wave.model.document.operation.DocOp.IsDocOp;
@@ -119,7 +119,7 @@ public class ClientMock implements ConcurrencyControl.ConnectionListener {
    */
   public void doInsert(int offset, String chars) throws OperationException {
     Nindo nindo = Nindo.insertCharacters(offset, chars);
-    BufferedDocOp op = doc.consumeAndReturnInvertible(nindo);
+    DocOp op = doc.consumeAndReturnInvertible(nindo);
 
     BlipContentOperation blipOp = new BlipContentOperation(
         new WaveletOperationContext(participantId, 0L, 1), op);

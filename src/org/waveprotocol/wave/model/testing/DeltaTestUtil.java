@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.model.testing;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
@@ -72,7 +72,7 @@ public class DeltaTestUtil {
    * Creates an XmlDelete with the given data.
    */
   public WaveletOperation delete(int posStart, String characters, int remaining) {
-    BufferedDocOp op = new DocOpBuilder()
+    DocOp op = new DocOpBuilder()
         .retain(posStart)
         .deleteCharacters(characters)
         .retain(remaining)
@@ -185,7 +185,7 @@ public class DeltaTestUtil {
    * unique so we can identify it when it completes a round-trip.
    */
   private WaveletOperation randomOp(WaveletOperationContext context) {
-    BufferedDocOp blipOp = new DocOpBuilder()
+    DocOp blipOp = new DocOpBuilder()
         .retain(Math.abs(random.nextInt()) / 2 + 1)
         .characters("createRndOp#" + random.nextInt())
         .build();

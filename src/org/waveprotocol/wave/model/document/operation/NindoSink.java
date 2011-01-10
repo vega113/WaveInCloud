@@ -31,7 +31,7 @@ public interface NindoSink {
    * @return invertible version of {@code op}
    * @throws OperationException
    */
-  BufferedDocOp consumeAndReturnInvertible(Nindo op) throws OperationException;
+  DocOp consumeAndReturnInvertible(Nindo op) throws OperationException;
 
   /**
    * Version that does not throw operation exceptions.
@@ -41,6 +41,6 @@ public interface NindoSink {
   public interface Silent extends NindoSink {
 
     @Override
-    BufferedDocOp consumeAndReturnInvertible(Nindo op);
+    DocOp consumeAndReturnInvertible(Nindo op);
   }
 }

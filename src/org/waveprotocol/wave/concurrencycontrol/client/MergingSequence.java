@@ -16,7 +16,7 @@
  */
 package org.waveprotocol.wave.concurrencycontrol.client;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.Composer;
 import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
 import org.waveprotocol.wave.model.operation.wave.BlipOperation;
@@ -60,7 +60,7 @@ public class MergingSequence extends AbstractList<WaveletOperation> {
       return;
     }
 
-    ArrayList<BufferedDocOp> docOps = CollectionUtils.newArrayList();
+    ArrayList<DocOp> docOps = CollectionUtils.newArrayList();
     List<WaveletOperation> oldOperations = CollectionUtils.newArrayList(this);
     String currentId = null;
     WaveletOperationContext lastOperationContext = null;
@@ -92,7 +92,7 @@ public class MergingSequence extends AbstractList<WaveletOperation> {
   }
 
   private static void composeDocOps(List<WaveletOperation> operations, String id,
-      WaveletOperationContext context, List<BufferedDocOp> docOps) {
+      WaveletOperationContext context, List<DocOp> docOps) {
     operations.add(new WaveletBlipOperation(id,
         new BlipContentOperation(context, Composer.compose(docOps))));
     docOps.clear();

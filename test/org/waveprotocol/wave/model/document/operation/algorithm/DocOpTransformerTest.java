@@ -22,7 +22,6 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
@@ -40,13 +39,13 @@ public class DocOpTransformerTest extends TestCase {
 
   private static class TestParameters {
 
-    final BufferedDocOp clientMutation;
-    final BufferedDocOp serverMutation;
-    final BufferedDocOp transformedClientMutation;
-    final BufferedDocOp transformedServerMutation;
+    final DocOp clientMutation;
+    final DocOp serverMutation;
+    final DocOp transformedClientMutation;
+    final DocOp transformedServerMutation;
 
-    TestParameters(BufferedDocOp clientMutation, BufferedDocOp serverMutation,
-        BufferedDocOp transformedClientMutation, BufferedDocOp transformedServerMutation) {
+    TestParameters(DocOp clientMutation, DocOp serverMutation,
+        DocOp transformedClientMutation, DocOp transformedServerMutation) {
       this.clientMutation = clientMutation;
       this.serverMutation = serverMutation;
       this.transformedClientMutation = transformedClientMutation;
@@ -62,8 +61,8 @@ public class DocOpTransformerTest extends TestCase {
 
   private static final class ReversibleTestParameters extends TestParameters {
 
-    ReversibleTestParameters(BufferedDocOp clientMutation, BufferedDocOp serverMutation,
-        BufferedDocOp transformedClientMutation, BufferedDocOp transformedServerMutation) {
+    ReversibleTestParameters(DocOp clientMutation, DocOp serverMutation,
+        DocOp transformedClientMutation, DocOp transformedServerMutation) {
       super(clientMutation, serverMutation, transformedClientMutation, transformedServerMutation);
     }
 
@@ -1235,10 +1234,10 @@ public class DocOpTransformerTest extends TestCase {
     // TODO(ohler,user): exceptionTest(...)
   }
 
-  private static void singleTest(BufferedDocOp clientMutation, BufferedDocOp serverMutation,
-      BufferedDocOp transformedClientMutation, BufferedDocOp transformedServerMutation) {
+  private static void singleTest(DocOp clientMutation, DocOp serverMutation,
+      DocOp transformedClientMutation, DocOp transformedServerMutation) {
     try {
-      OperationPair<BufferedDocOp> mutationPair =
+      OperationPair<DocOp> mutationPair =
           Transformer.transform(clientMutation, serverMutation);
       testEquality(transformedClientMutation, mutationPair.clientOp());
       testEquality(transformedServerMutation, mutationPair.serverOp());
@@ -1247,7 +1246,7 @@ public class DocOpTransformerTest extends TestCase {
     }
   }
 
-  private static void exceptionTest(BufferedDocOp clientMutation, BufferedDocOp serverMutation) {
+  private static void exceptionTest(DocOp clientMutation, DocOp serverMutation) {
     try {
       Transformer.transform(clientMutation, serverMutation);
       fail("An expected exception was not thrown.");
@@ -1258,7 +1257,7 @@ public class DocOpTransformerTest extends TestCase {
     assertEquals(DocOpUtil.toConciseString(expected), DocOpUtil.toConciseString(actual));
   }
 
-  private static BufferedDocOp sampleStructural(int size, int location) {
+  private static DocOp sampleStructural(int size, int location) {
     return new DocOpBuilder()
         .retain(location)
         .elementStart("sampleElement", Attributes.EMPTY_MAP)

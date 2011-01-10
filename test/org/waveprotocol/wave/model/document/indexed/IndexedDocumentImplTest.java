@@ -26,7 +26,7 @@ import org.waveprotocol.wave.model.document.MutableDocument;
 import org.waveprotocol.wave.model.document.RangedAnnotation;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.Automatons;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpInverter;
@@ -253,7 +253,7 @@ public class IndexedDocumentImplTest extends TestCase {
         DocumentSchema.NO_SCHEMA_CONSTRAINTS);
     System.out.println(doc);
 
-    BufferedDocOp docOp = doc.consumeAndReturnInvertible(op);
+    DocOp docOp = doc.consumeAndReturnInvertible(op);
 
     System.out.println(op + "==========> " + docOp);
     ViolationCollector v = new ViolationCollector();
@@ -269,7 +269,7 @@ public class IndexedDocumentImplTest extends TestCase {
     assertEquals(
         DocOpUtil.toXmlString(doc.asOperation()),
         DocOpUtil.toXmlString(copy.asOperation()));
-    BufferedDocOp inverted = DocOpInverter.invert(docOp);
+    DocOp inverted = DocOpInverter.invert(docOp);
     v = new ViolationCollector();
     if (!DocOpValidator.validate(v, DocumentSchema.NO_SCHEMA_CONSTRAINTS,
         Automatons.fromReadable(copy), inverted).isValid()) {
@@ -586,7 +586,7 @@ public class IndexedDocumentImplTest extends TestCase {
     b.startAnnotation("a", null);
     b.skip(3);
     b.endAnnotation("a");
-    BufferedDocOp docOp = doc.consumeAndReturnInvertible(b.build());
+    DocOp docOp = doc.consumeAndReturnInvertible(b.build());
 
     doc2.consumeAndReturnInvertible(Nindo.fromDocOp(docOp, true));
     assertEquals(
@@ -622,7 +622,7 @@ public class IndexedDocumentImplTest extends TestCase {
     b.startAnnotation("z", "1");
     b.skip(doc.size());
     b.endAnnotation("z");
-    BufferedDocOp docOp = doc.consumeAndReturnInvertible(b.build());
+    DocOp docOp = doc.consumeAndReturnInvertible(b.build());
     assertEquals(3, docOp.size());
   }
 

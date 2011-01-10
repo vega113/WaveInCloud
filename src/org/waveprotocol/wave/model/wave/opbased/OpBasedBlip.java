@@ -25,7 +25,7 @@ import org.waveprotocol.wave.model.wave.data.BlipData;
 
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.MutableDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -60,15 +60,15 @@ public class OpBasedBlip implements Blip {
   private final SilentOperationSink<WaveletBlipOperation> outputSink;
 
   /** Sink to which operations produced by editor/document should be sent. */
-  private final SilentOperationSink<BufferedDocOp> fromDocument =
-    new SilentOperationSink<BufferedDocOp>() {
+  private final SilentOperationSink<DocOp> fromDocument =
+    new SilentOperationSink<DocOp>() {
       /**
        * Implements the strategy for consuming operations sent to this adapter from a document
        * adapter, after the operation has already been applied locally.  A received operation is
        * boxed as a blip operation, then used to update the primitive blip, then boxed as a wave
        * operation and sent to the wavelet adapter.
        */
-      public void consume(BufferedDocOp op) {
+      public void consume(DocOp op) {
         // Box as blip op, and update local blip
         BlipContentOperation blipOp = new BlipContentOperation(wavelet.createContext(), op);
         blipOp.update(blip);
@@ -114,7 +114,7 @@ public class OpBasedBlip implements Blip {
    * for routing editor operations through the wave model, until editors are
    * initialized with their blip's receiving sink.
    */
-  SilentOperationSink<BufferedDocOp> getDocumentOperationSink() {
+  SilentOperationSink<DocOp> getDocumentOperationSink() {
     return fromDocument;
   }
 

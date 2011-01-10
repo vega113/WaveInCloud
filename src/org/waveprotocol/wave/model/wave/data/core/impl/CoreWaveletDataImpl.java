@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.model.wave.data.core.impl;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.Composer;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -40,7 +40,7 @@ import java.util.Map;
 public class CoreWaveletDataImpl implements CoreWaveletData {
 
   /** A document (operation) with no contents. */
-  private static final BufferedDocOp EMPTY_DOC_OP = new DocOpBuffer().finish();
+  private static final DocOp EMPTY_DOC_OP = new DocOpBuffer().finish();
 
   /** Id of the wave to which this wavelet belongs. */
   private final WaveId waveId;
@@ -52,7 +52,7 @@ public class CoreWaveletDataImpl implements CoreWaveletData {
   private final List<ParticipantId> participants;
 
   /** The set of documents in this wave, indexed by their identifier. */
-  private final Map<String, BufferedDocOp> documents;
+  private final Map<String, DocOp> documents;
 
   /**
    * Creates a new wavelet.
@@ -71,11 +71,11 @@ public class CoreWaveletDataImpl implements CoreWaveletData {
     this.waveletId = waveletId;
     this.waveId = waveId;
     this.participants = new ArrayList<ParticipantId>();
-    this.documents = new HashMap<String, BufferedDocOp>();
+    this.documents = new HashMap<String, DocOp>();
   }
 
-  private BufferedDocOp getOrCreateDocument(String documentId) {
-    BufferedDocOp doc = documents.get(documentId);
+  private DocOp getOrCreateDocument(String documentId) {
+    DocOp doc = documents.get(documentId);
     if (doc == null) {
       doc = EMPTY_DOC_OP;
       documents.put(documentId, doc);
@@ -84,7 +84,7 @@ public class CoreWaveletDataImpl implements CoreWaveletData {
   }
 
   @Override
-  public Map<String, BufferedDocOp> getDocuments() {
+  public Map<String, DocOp> getDocuments() {
     return Collections.unmodifiableMap(documents);
   }
 
@@ -109,9 +109,9 @@ public class CoreWaveletDataImpl implements CoreWaveletData {
   }
 
   @Override
-  public boolean modifyDocument(String documentId, BufferedDocOp operation)
+  public boolean modifyDocument(String documentId, DocOp operation)
       throws OperationException {
-    BufferedDocOp newDoc = Composer.compose(getOrCreateDocument(documentId), operation);
+    DocOp newDoc = Composer.compose(getOrCreateDocument(documentId), operation);
     if (OpComparators.SYNTACTIC_IDENTITY.equal(newDoc, EMPTY_DOC_OP)) {
       documents.remove(documentId);
     } else {

@@ -19,19 +19,19 @@ package org.waveprotocol.wave.model.document.operation.impl;
 
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocInitializationCursor;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.util.DocOpScrub;
 
 /**
- * An abstract base class for BufferedDocInitialization with default
+ * An abstract base class for DocInitialization with default
  * implementations for the unsupported methods.
  *
  *
  */
 public abstract class AbstractBufferedDocInitialization
-    extends AbstractDocInitialization implements BufferedDocInitialization {
+    extends AbstractDocInitialization implements DocInitialization {
 
   @Override
   public void apply(DocOpCursor c) {

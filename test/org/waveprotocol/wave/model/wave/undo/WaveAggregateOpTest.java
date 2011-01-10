@@ -24,7 +24,7 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.OperationPair;
 import org.waveprotocol.wave.model.operation.TransformException;
@@ -50,7 +50,7 @@ public class WaveAggregateOpTest extends TestCase {
   private static final WaveletOperationContext CREATOR2_CONTEXT =
       new WaveletOperationContext(new ParticipantId(CREATOR2_ID), 0, 0);
 
-  private BufferedDocOp insertDocOp(int location, int size) {
+  private DocOp insertDocOp(int location, int size) {
     return new DocOpBuilder()
         .retain(location)
         .characters("a")
@@ -58,7 +58,7 @@ public class WaveAggregateOpTest extends TestCase {
         .build();
   }
 
-  private BufferedDocOp deleteDocOp(int location, int size) {
+  private DocOp deleteDocOp(int location, int size) {
     return new DocOpBuilder()
         .retain(location)
         .deleteCharacters("a")
@@ -81,7 +81,7 @@ public class WaveAggregateOpTest extends TestCase {
     }
 
     {
-      BufferedDocOp insertDocOp = insertDocOp(1, 5);
+      DocOp insertDocOp = insertDocOp(1, 5);
       WaveAggregateOp op1 = new WaveOpBuilder(CREATOR1_ID).addParticipant(TARGET1).build();
       WaveAggregateOp op2 = new WaveOpBuilder(CREATOR2_ID).docOp("doc", insertDocOp).build();
 
@@ -97,9 +97,9 @@ public class WaveAggregateOpTest extends TestCase {
 
     // Test compose of document op from the same creator
     {
-      BufferedDocOp insertDocOp1 = insertDocOp(1, 3);
-      BufferedDocOp insertDocOp2 = insertDocOp(3, 4);
-      BufferedDocOp deleteDocOp = deleteDocOp(2, 5);
+      DocOp insertDocOp1 = insertDocOp(1, 3);
+      DocOp insertDocOp2 = insertDocOp(3, 4);
+      DocOp deleteDocOp = deleteDocOp(2, 5);
       WaveAggregateOp op1 = new WaveOpBuilder(CREATOR1_ID).docOp("doc", insertDocOp1).build();
       WaveAggregateOp op2 = new WaveOpBuilder(CREATOR1_ID)
           .docOp("doc", insertDocOp2)
@@ -108,7 +108,7 @@ public class WaveAggregateOpTest extends TestCase {
 
       WaveAggregateOp composed = compose(op1, op2);
 
-      BufferedDocOp expectedDocOp = new DocOpBuilder()
+      DocOp expectedDocOp = new DocOpBuilder()
           .retain(1)
           .characters("a")
           .deleteCharacters("a")
@@ -204,7 +204,7 @@ public class WaveAggregateOpTest extends TestCase {
       creator = new ParticipantId(userName);
     }
 
-    public WaveOpBuilder docOp(String docId, BufferedDocOp docOp) {
+    public WaveOpBuilder docOp(String docId, DocOp docOp) {
       ops.add(new AggregateOperation(new CoreWaveletDocumentOperation(docId, docOp)));
       return this;
     }

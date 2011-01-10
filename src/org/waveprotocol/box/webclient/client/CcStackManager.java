@@ -36,7 +36,7 @@ import org.waveprotocol.wave.concurrencycontrol.wave.DuplexOpSinkFactory;
 import org.waveprotocol.wave.model.document.Doc;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.MutableDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.util.MutableDocumentProxy;
@@ -92,7 +92,7 @@ class CcStackManager {
     }
 
     @Override
-    public void init(SilentOperationSink<? super BufferedDocOp> outputSink) {
+    public void init(SilentOperationSink<? super DocOp> outputSink) {
       // nothing to do.
     }
 

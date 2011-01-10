@@ -19,7 +19,7 @@ package org.waveprotocol.wave.concurrencycontrol.client;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.SuperSink;
 import org.waveprotocol.wave.model.document.util.DocProviders;
@@ -174,7 +174,7 @@ public class MergingSequenceTest extends TestCase {
       docs.put(id, DocProviders.POJO.parse("<x></x>"));
     }
     Nindo nindo = Nindo.insertCharacters(1, "hi");
-    BufferedDocOp op = docs.get(id).consumeAndReturnInvertible(nindo);
+    DocOp op = docs.get(id).consumeAndReturnInvertible(nindo);
     return new WaveletBlipOperation(id, new BlipContentOperation(getContext(timestamp), op));
   }
 

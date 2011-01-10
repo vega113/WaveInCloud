@@ -18,7 +18,7 @@ package org.waveprotocol.wave.model.operation.wave;
 
 import org.waveprotocol.wave.model.wave.data.BlipData;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.algorithm.DocOpInverter;
 import org.waveprotocol.wave.model.operation.OpComparators;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -40,7 +40,7 @@ import java.util.List;
 public final class BlipContentOperation extends BlipOperation {
 
   /** Document operation to apply to the target blip's content. */
-  private final BufferedDocOp contentOp;
+  private final DocOp contentOp;
 
   private final UpdateContributorMethod method;
 
@@ -50,7 +50,7 @@ public final class BlipContentOperation extends BlipOperation {
    * @param context     operation context
    * @param contentOp   document operation to apply to the target blip
    */
-  public BlipContentOperation(WaveletOperationContext context, BufferedDocOp contentOp) {
+  public BlipContentOperation(WaveletOperationContext context, DocOp contentOp) {
     this(context, contentOp, UpdateContributorMethod.ADD);
   }
 
@@ -61,7 +61,7 @@ public final class BlipContentOperation extends BlipOperation {
    * @param contentOp   document operation to apply to the target blip
    * @param update      contributor update method
    */
-  BlipContentOperation(WaveletOperationContext context, BufferedDocOp contentOp,
+  BlipContentOperation(WaveletOperationContext context, DocOp contentOp,
       UpdateContributorMethod update) {
     super(context, WorthyChangeChecker.isWorthy(contentOp));
     Preconditions.checkNotNull(contentOp, "Null document mutation");
@@ -97,7 +97,7 @@ public final class BlipContentOperation extends BlipOperation {
 
     blip.getContent().consume(contentOp);
 
-    BufferedDocOp reverseContentOp = DocOpInverter.invert(contentOp);
+    DocOp reverseContentOp = DocOpInverter.invert(contentOp);
 
     BlipContentOperation reverseOp =
         new BlipContentOperation(reverseContext, reverseContentOp, reverseMethod);
@@ -123,7 +123,7 @@ public final class BlipContentOperation extends BlipOperation {
    *
    * @return the contained document operation.
    */
-  public BufferedDocOp getContentOp() {
+  public DocOp getContentOp() {
     return contentOp;
   }
 

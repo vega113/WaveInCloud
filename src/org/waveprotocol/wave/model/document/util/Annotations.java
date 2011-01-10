@@ -20,7 +20,6 @@ package org.waveprotocol.wave.model.document.util;
 import org.waveprotocol.wave.model.document.MutableAnnotationSet;
 import org.waveprotocol.wave.model.document.ReadableAnnotationSet;
 import org.waveprotocol.wave.model.util.CollectionUtils;
-
 import org.waveprotocol.wave.model.util.Preconditions;
 
 /**

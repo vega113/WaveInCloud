@@ -16,12 +16,12 @@
 
 package org.waveprotocol.wave.model.document.operation.impl;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 
 /**
  * An implementation of {@link EvaluatingDocOpCursor} that buffers the operation
- * and returns it as a {@link BufferedDocOp}.
+ * and returns it as a {@link DocOp}.
  *
  * This differs from {@link UncheckedDocOpBuffer} in that the default finish() behaviour
  * is to throw an exception if the operation would be ill-formed.
@@ -31,7 +31,7 @@ import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 public class DocOpBuffer extends UncheckedDocOpBuffer {
 
   @Override
-  public final BufferedDocOp finish() {
+  public final DocOp finish() {
     return super.finishChecked();
   }
 }

@@ -19,8 +19,6 @@ package org.waveprotocol.wave.model.document.operation.util;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
@@ -111,11 +109,11 @@ public class ExplodedDocOp {
     return cursor.finish();
   }
 
-  public static BufferedDocOp explode(DocOp op) {
+  public static DocOp explode(DocOp op) {
     return new ExplodedDocOp(op).explodeWith(new DocOpBuffer());
   }
 
-  public static BufferedDocInitialization explode(DocInitialization op) {
+  public static DocInitialization explode(DocInitialization op) {
     return DocOpUtil.asInitialization(explode((DocOp) op));
   }
 }

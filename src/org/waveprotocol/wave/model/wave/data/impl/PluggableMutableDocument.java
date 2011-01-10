@@ -24,9 +24,8 @@ import org.waveprotocol.wave.model.document.Doc.N;
 import org.waveprotocol.wave.model.document.Doc.T;
 import org.waveprotocol.wave.model.document.indexed.DocumentHandler;
 import org.waveprotocol.wave.model.document.indexed.IndexedDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.SuperSink;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
@@ -93,10 +92,10 @@ public class PluggableMutableDocument extends MutableDocumentProxy.DocumentProxy
    */
   private final static class BasicSequencer implements OperationSequencer<Nindo> {
     private final SuperSink sink;
-    private final SilentOperationSink<? super BufferedDocOp> outputSink;
+    private final SilentOperationSink<? super DocOp> outputSink;
 
     private BasicSequencer(SuperSink sink,
-        SilentOperationSink<? super BufferedDocOp> outputSink) {
+        SilentOperationSink<? super DocOp> outputSink) {
       this.sink = sink;
       this.outputSink = outputSink;
     }
@@ -118,7 +117,7 @@ public class PluggableMutableDocument extends MutableDocumentProxy.DocumentProxy
     @Override
     public void consume(Nindo op) {
       try {
-        BufferedDocOp docOp = sink.consumeAndReturnInvertible(op);
+        DocOp docOp = sink.consumeAndReturnInvertible(op);
         if (outputSink != null) {
           outputSink.consume(docOp);
         }
@@ -142,7 +141,7 @@ public class PluggableMutableDocument extends MutableDocumentProxy.DocumentProxy
    */
   private DocumentCreationContext documentCreationContext;
 
-  private SilentOperationSink<? super BufferedDocOp> outputSink;
+  private SilentOperationSink<? super DocOp> outputSink;
 
   private boolean isInitialized = false;
 
@@ -189,7 +188,7 @@ public class PluggableMutableDocument extends MutableDocumentProxy.DocumentProxy
   }
 
   @Override
-  public void init(final SilentOperationSink<? super BufferedDocOp> outputSink) {
+  public void init(final SilentOperationSink<? super DocOp> outputSink) {
     if (isInitialized) {
       throw new IllegalStateException("Output sink may only be set once");
     }

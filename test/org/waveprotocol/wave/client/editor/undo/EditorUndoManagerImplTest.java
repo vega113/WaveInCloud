@@ -27,7 +27,7 @@ import org.waveprotocol.wave.model.document.util.DocProviders;
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.indexed.IndexedDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.raw.impl.Element;
 import org.waveprotocol.wave.model.document.raw.impl.Node;
@@ -40,7 +40,7 @@ import org.waveprotocol.wave.model.operation.SilentOperationSink;
 
 public class EditorUndoManagerImplTest extends TestCase {
   IndexedDocument<Node, Element, Text> doc;
-  SilentOperationSink<BufferedDocOp> silentOperationSink;
+  SilentOperationSink<DocOp> silentOperationSink;
   DocumentFreeSelectionHelper selectionHelper;
   EditorUndoManager undoManager;
   Responsibility.Manager responsibility;
@@ -51,8 +51,8 @@ public class EditorUndoManagerImplTest extends TestCase {
 
     doc = DocProviders.POJO.parse("<doc>hello</doc>");
     silentOperationSink =
-        new SilentOperationSink<BufferedDocOp>() {
-          public void consume(BufferedDocOp op) {
+        new SilentOperationSink<DocOp>() {
+          public void consume(DocOp op) {
             try {
               doc.consume(op);
             } catch (OperationException e) {
@@ -206,7 +206,7 @@ public class EditorUndoManagerImplTest extends TestCase {
   }
 
   private void insert(int location, int size) {
-    BufferedDocOp op = new DocOpBuilder()
+    DocOp op = new DocOpBuilder()
         .retain(location)
         .characters("a")
         .retain(size - location)

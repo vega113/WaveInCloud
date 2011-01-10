@@ -22,9 +22,8 @@ import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
-import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -68,8 +67,8 @@ public class FakeDocument extends ObservablePluggableMutableDocument {
       // The sink factory will have a sink ready soon after this method returns.
       // This means we can't inject the sink now, since it's not ready. Instead,
       // we inject a sink that will pull out the real sink lazily.
-      doc.init(new SilentOperationSink<BufferedDocOp>() {
-        private SilentOperationSink<BufferedDocOp> output;
+      doc.init(new SilentOperationSink<DocOp>() {
+        private SilentOperationSink<DocOp> output;
 
         private void fetchOutputSink() {
           OpBasedWavelet sinkFactory = sinkFactories.get(waveletId);
@@ -81,7 +80,7 @@ public class FakeDocument extends ObservablePluggableMutableDocument {
         }
 
         @Override
-        public void consume(BufferedDocOp op) {
+        public void consume(DocOp op) {
           if (output == null) {
             fetchOutputSink();
           }

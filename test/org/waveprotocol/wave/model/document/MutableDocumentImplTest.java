@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 import org.waveprotocol.wave.model.document.MutableAnnotationSet.CompareRangedValueByStartThenEnd;
 import org.waveprotocol.wave.model.document.MutableAnnotationSet.RangedValue;
 import org.waveprotocol.wave.model.document.indexed.IndexedDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
@@ -80,7 +80,7 @@ public class MutableDocumentImplTest extends TestCase {
   /** MutableDocument that gets tested */
   MutableDocumentImpl<Node, Element, Text> doc;
   /** Latest document mutation to have been applied */
-  BufferedDocOp latestOp;
+  DocOp latestOp;
 
   /**
    * Creates and returns a sequencer which applies incoming ops to the given document

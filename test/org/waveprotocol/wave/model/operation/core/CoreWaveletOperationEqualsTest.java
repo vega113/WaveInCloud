@@ -20,7 +20,7 @@ package org.waveprotocol.wave.model.operation.core;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.operation.OpComparators;
 import org.waveprotocol.wave.model.operation.OpComparators.OpEquator;
@@ -111,7 +111,7 @@ public class CoreWaveletOperationEqualsTest extends TestCase {
 
     DocOpBuffer b = new DocOpBuffer();
     b.characters("a");
-    BufferedDocOp d = b.finish();
+    DocOp d = b.finish();
 
     CoreWaveletDocumentOperation a1 = new CoreWaveletDocumentOperation("a", d);
     CoreWaveletDocumentOperation a2 = new CoreWaveletDocumentOperation("a", d);
@@ -139,10 +139,10 @@ public class CoreWaveletOperationEqualsTest extends TestCase {
 
     DocOpBuffer ba = new DocOpBuffer();
     ba.characters("a");
-    BufferedDocOp da = ba.finish();
+    DocOp da = ba.finish();
     DocOpBuffer bb = new DocOpBuffer();
     bb.deleteCharacters("a");
-    BufferedDocOp db = bb.finish();
+    DocOp db = bb.finish();
 
     CoreWaveletDocumentOperation a1 = new CoreWaveletDocumentOperation("a", da);
     CoreWaveletDocumentOperation a2 = new CoreWaveletDocumentOperation("a", da);

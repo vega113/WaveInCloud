@@ -17,8 +17,8 @@
 
 package org.waveprotocol.wave.model.document.util;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocInitialization;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 
@@ -31,13 +31,13 @@ public final class EmptyDocument {
   /**
    * An empty document.
    */
-  public static final BufferedDocInitialization EMPTY_DOCUMENT =
+  public static final DocInitialization EMPTY_DOCUMENT =
       new DocInitializationBuilder().build();
 
   /**
    * An empty document operation.
    */
-  public static final BufferedDocOp EMPTY_DOC_OP = new DocOpBuilder().build();
+  public static final DocOp EMPTY_DOC_OP = new DocOpBuilder().build();
 
   private EmptyDocument() {}
 

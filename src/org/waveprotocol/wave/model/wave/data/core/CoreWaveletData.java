@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.model.wave.data.core;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -38,7 +38,7 @@ public interface CoreWaveletData {
    * documents in this wavelet to the corresponding document.
    */
   // TODO: Make this code use BufferedDocInitializations.
-  Map<String, BufferedDocOp> getDocuments();
+  Map<String, DocOp> getDocuments();
 
   /**
    * An immutable list of this wave's participants, in the order in which
@@ -80,5 +80,5 @@ public interface CoreWaveletData {
    * Modify the document contained in the wavelet. If a document with the
    * given id did not previously exist, it will be created.
    */
-  boolean modifyDocument(String documentId, BufferedDocOp op) throws OperationException;
+  boolean modifyDocument(String documentId, DocOp op) throws OperationException;
 }

@@ -21,7 +21,7 @@ import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWaveView;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWaveViewImpl;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcDataDocumentImpl;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -62,11 +62,11 @@ public class SimpleCcDocumentFactory implements
       BlipView blipView = new BlipView(content);
       CcDocument doc = new SimpleCcDocument(blipView);
       blipView.getEditor().setOutputSink(
-          new SilentOperationSink<BufferedDocOp>() {
-            private SilentOperationSink<BufferedDocOp> sink;
+          new SilentOperationSink<DocOp>() {
+            private SilentOperationSink<DocOp> sink;
 
             @Override
-            public void consume(BufferedDocOp op) {
+            public void consume(DocOp op) {
               if (sink == null) {
                 sink = view.getWavelet(waveletId).getOpBasedWavelet().getDocumentOperationSink(
                     docId);
@@ -81,11 +81,11 @@ public class SimpleCcDocumentFactory implements
 
     CcDataDocumentImpl ccDataDocumentImpl = new CcDataDocumentImpl(
         new ConversationSchemas().getSchemaForId(waveletId, docId), content);
-    ccDataDocumentImpl.init(new SilentOperationSink<BufferedDocOp>() {
-      private SilentOperationSink<BufferedDocOp> sink;
+    ccDataDocumentImpl.init(new SilentOperationSink<DocOp>() {
+      private SilentOperationSink<DocOp> sink;
 
       @Override
-      public void consume(BufferedDocOp op) {
+      public void consume(DocOp op) {
         if (sink == null) {
           sink = view.getWavelet(waveletId).getOpBasedWavelet().getDocumentOperationSink(
               docId);

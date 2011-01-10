@@ -19,7 +19,7 @@ package org.waveprotocol.wave.client.editor.content;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
 
 import org.waveprotocol.wave.model.document.indexed.LocationMapper;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.ModifiableDocument;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
@@ -57,7 +57,7 @@ import java.util.Map;
  * @author patcoleman@google.com (Pat Coleman)
  */
 public class LazyPersistenceManager {
-  private final SilentOperationSink<BufferedDocOp> sink;
+  private final SilentOperationSink<DocOp> sink;
   private final LocalDocument<ContentNode, ContentElement, ContentTextNode> localDoc;
   private final LocationMapper<ContentNode> persistedLocations;
   private final ReadableDocumentView<ContentNode, ContentElement, ContentTextNode> persistedView;
@@ -82,15 +82,15 @@ public class LazyPersistenceManager {
    * @param localCorrectionSink Internal sink for the fix-up persistence ops.
    */
   public LazyPersistenceManager(
-      final SilentOperationSink<BufferedDocOp> outgoingSink,
+      final SilentOperationSink<DocOp> outgoingSink,
       LocalDocument<ContentNode, ContentElement, ContentTextNode> localDoc,
       LocationMapper<ContentNode> persistedLocations,
       ReadableDocumentView<ContentNode, ContentElement, ContentTextNode> persistedView,
       final ModifiableDocument localCorrectionSink) {
     // combine both sinks into one:
-    this.sink = new SilentOperationSink<BufferedDocOp>() {
+    this.sink = new SilentOperationSink<DocOp>() {
       @Override
-      public void consume(BufferedDocOp op) {
+      public void consume(DocOp op) {
         try {
           localCorrectionSink.consume(op);
           outgoingSink.consume(op);
@@ -169,7 +169,7 @@ public class LazyPersistenceManager {
     safeRetain(opBuffer, position);
     DomOperationUtil.buildDomInitializationFromSubtree(localDoc, localNode, opBuffer);
     safeRetain(opBuffer, remainder);
-    BufferedDocOp op = opBuffer.finish();
+    DocOp op = opBuffer.finish();
 
     // fake out the node creation, and consume:
     nodeCreationDelegate =

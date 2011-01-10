@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.model.document.operation.algorithm;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.operation.OperationException;
 
 import java.util.ArrayList;
@@ -30,12 +30,12 @@ import java.util.ListIterator;
  */
 public final class DocOpCollector {
 
-  private final List<BufferedDocOp> operations = new ArrayList<BufferedDocOp>();
+  private final List<DocOp> operations = new ArrayList<DocOp>();
 
-  public void add(BufferedDocOp operation) {
-    ListIterator<BufferedDocOp> iterator = operations.listIterator();
+  public void add(DocOp operation) {
+    ListIterator<DocOp> iterator = operations.listIterator();
     while (iterator.hasNext()) {
-      BufferedDocOp nextOperation = iterator.next();
+      DocOp nextOperation = iterator.next();
       if (nextOperation == null) {
         iterator.set(operation);
         return;
@@ -46,9 +46,9 @@ public final class DocOpCollector {
     operations.add(operation);
   }
 
-  public BufferedDocOp composeAll() {
-    BufferedDocOp result = null;
-    for (BufferedDocOp operation : operations) {
+  public DocOp composeAll() {
+    DocOp result = null;
+    for (DocOp operation : operations) {
       if (operation != null) {
         result = (result != null) ? compose(operation, result) : operation;
       }
@@ -57,7 +57,7 @@ public final class DocOpCollector {
     return result;
   }
 
-  private BufferedDocOp compose(BufferedDocOp op1, BufferedDocOp op2) {
+  private DocOp compose(DocOp op1, DocOp op2) {
     try {
       return Composer.compose(op1, op2);
     } catch (OperationException e) {

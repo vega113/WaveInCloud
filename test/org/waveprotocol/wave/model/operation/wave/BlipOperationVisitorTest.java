@@ -21,7 +21,7 @@ import org.waveprotocol.wave.model.testing.ModelTestUtils;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
@@ -64,7 +64,7 @@ public class BlipOperationVisitorTest extends TestCase {
   }
 
   public void testBlipContentOperationVisitor() {
-    BufferedDocOp docOp = ModelTestUtils.createContent("Hello");
+    DocOp docOp = ModelTestUtils.createContent("Hello");
     BlipContentOperation op = new BlipContentOperation(context, docOp);
     op.acceptVisitor(visitor);
     assertEquals(op, visitor.visitedBlipContentOperation);

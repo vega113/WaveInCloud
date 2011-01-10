@@ -20,7 +20,6 @@ package org.waveprotocol.wave.model.document;
 import junit.framework.Assert;
 
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.ModifiableDocument;
 import org.waveprotocol.wave.model.document.operation.algorithm.Composer;
@@ -729,7 +728,7 @@ public class DocumentTestCases {
         .build();
   }
 
-  private static DocOp compose(BufferedDocOp... operations) {
+  private static DocOp compose(DocOp... operations) {
     return Composer.compose(Arrays.asList(operations));
   }
 

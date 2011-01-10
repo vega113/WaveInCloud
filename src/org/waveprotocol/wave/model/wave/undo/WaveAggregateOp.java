@@ -18,7 +18,7 @@ package org.waveprotocol.wave.model.wave.undo;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.operation.OperationPair;
 import org.waveprotocol.wave.model.operation.TransformException;
 import org.waveprotocol.wave.model.operation.core.CoreAddParticipant;
@@ -254,7 +254,7 @@ class WaveAggregateOp {
     } else if (op instanceof CoreWaveletDocumentOperation) {
       CoreWaveletDocumentOperation waveletDocOp = (CoreWaveletDocumentOperation) op;
       String documentId = waveletDocOp.getDocumentId();
-      BufferedDocOp operation = waveletDocOp.getOperation();
+      DocOp operation = waveletDocOp.getOperation();
       return new WaveletBlipOperation(documentId, new BlipContentOperation(context, operation));
     }
 

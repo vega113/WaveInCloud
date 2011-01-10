@@ -19,7 +19,7 @@ package org.waveprotocol.wave.client.editor;
 
 import org.waveprotocol.wave.common.logging.LoggerBundle;
 import org.waveprotocol.wave.common.logging.AbstractLogger.Level;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 
 /**
  * Interface for an UndoManager adapted for editor use.
@@ -35,14 +35,14 @@ public interface EditorUndoManager {
    *
    * @param op the operation that should be undone by an appropriate undo
    */
-  void undoableOp(BufferedDocOp op);
+  void undoableOp(DocOp op);
 
   /**
    * Places into the undo manager an operation that should not be undone by undos.
    *
    * @param op the operation that should not be undone by any undos
    */
-  void nonUndoableOp(BufferedDocOp op);
+  void nonUndoableOp(DocOp op);
 
   /**
    * Adds an undo checkpoint if any undoable ops have been applied.
@@ -75,11 +75,11 @@ public interface EditorUndoManager {
     private final LoggerBundle logger = EditorStaticDeps.logger;
 
     @Override
-    public void nonUndoableOp(BufferedDocOp op) {
+    public void nonUndoableOp(DocOp op) {
     }
 
     @Override
-    public void undoableOp(BufferedDocOp op) {
+    public void undoableOp(DocOp op) {
     }
 
     @Override

@@ -21,8 +21,7 @@ import org.waveprotocol.wave.model.document.indexed.DocumentHandler;
 import org.waveprotocol.wave.model.wave.SourcesEvents;
 
 /**
- * An extension of the {@link OpaqueDocument} interface that includes an opaque
- * mutator.
+ * A {@link DocumentOperationSink} that broadcasts document events.
  *
  */
 public interface ObservableDocumentOperationSink<N, E extends N, T extends N>

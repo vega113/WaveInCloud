@@ -33,7 +33,7 @@ import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -242,12 +242,12 @@ public class WaveletContainerTest extends TestCase {
 
   public void testOperationsOfDifferentSizes() throws Exception {
     String docId = "b+somedoc";
-    BufferedDocOp docOp1 = new DocOpBuilder().characters("hi").build();
+    DocOp docOp1 = new DocOpBuilder().characters("hi").build();
     WaveletDelta delta1 = createDelta(docId, docOp1, localVersion0);
 
     WaveServerTestUtil.applyDeltaToWavelet(localWavelet, delta1, 0L);
     try {
-      BufferedDocOp docOp2 = new DocOpBuilder().characters("bye").build();
+      DocOp docOp2 = new DocOpBuilder().characters("bye").build();
       WaveletDelta delta2 = createDelta(docId, docOp2, localWavelet.getCurrentVersion());
 
       WaveServerTestUtil.applyDeltaToWavelet(localWavelet, delta2, 0L);
@@ -263,7 +263,7 @@ public class WaveletContainerTest extends TestCase {
    * Returns a {@link WaveletDelta} for the list of operations performed by
    * the author set in the constants.
    */
-  private WaveletDelta createDelta(String docId, BufferedDocOp docOp, HashedVersion version) {
+  private WaveletDelta createDelta(String docId, DocOp docOp, HashedVersion version) {
     return new WaveletDelta(author, version, Arrays.asList(new WaveletBlipOperation(
         docId, new BlipContentOperation(CONTEXT, docOp))));
   }

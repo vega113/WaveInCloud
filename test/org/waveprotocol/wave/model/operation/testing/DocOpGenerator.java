@@ -18,7 +18,7 @@
 package org.waveprotocol.wave.model.operation.testing;
 
 import org.waveprotocol.wave.model.document.bootstrap.BootstrapDocument;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuffer;
 import org.waveprotocol.wave.model.testing.RandomDocOpGenerator;
@@ -26,11 +26,11 @@ import org.waveprotocol.wave.model.testing.RandomDocOpGenerator.RandomProvider;
 
 import java.util.Random;
 
-public class DocOpGenerator implements RandomOpGenerator<BootstrapDocument, BufferedDocOp> {
+public class DocOpGenerator implements RandomOpGenerator<BootstrapDocument, DocOp> {
 
   // TODO: replace the argument with RandomProvider to make this work in GWT
   @Override
-  public BufferedDocOp randomOperation(BootstrapDocument state, final Random random) {
+  public DocOp randomOperation(BootstrapDocument state, final Random random) {
     RandomProvider randomProvider = new RandomProvider() {
       @Override
       public boolean nextBoolean() {
@@ -42,7 +42,7 @@ public class DocOpGenerator implements RandomOpGenerator<BootstrapDocument, Buff
         return random.nextInt(upperBound);
       }
     };
-    EvaluatingDocOpCursor<BufferedDocOp> builder = new DocOpBuffer();
+    EvaluatingDocOpCursor<DocOp> builder = new DocOpBuffer();
     RandomDocOpGenerator.generate(randomProvider, new RandomDocOpGenerator.Parameters(),
         state).apply(builder);
     return builder.finish();

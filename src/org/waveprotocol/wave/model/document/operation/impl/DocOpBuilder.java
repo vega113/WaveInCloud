@@ -19,7 +19,7 @@ package org.waveprotocol.wave.model.document.operation.impl;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.AnnotationBoundary;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.Characters;
 import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.DeleteCharacters;
@@ -35,7 +35,7 @@ import org.waveprotocol.wave.model.document.operation.impl.OperationComponents.U
 import java.util.ArrayList;
 
 /**
- * A builder for {@link BufferedDocOp}s.
+ * A builder for {@link DocOp}s.
  *
  * Use {@link DocOpBuffer} instead if you need an implementation of the interface
  * {@link org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor}.
@@ -50,14 +50,14 @@ public class DocOpBuilder {
    *
    * Behaviour is undefined if this builder is used after calling this method.
    */
-  public final BufferedDocOp build() {
+  public final DocOp build() {
     return BufferedDocOpImpl.create(accu.toArray(EMPTY_ARRAY));
   }
 
   /** @see #build() */
   // This is dangerous; we currently use it for ill-formedness-detection
   // tests, and may use it for efficiency in other places in the future.
-  public final BufferedDocOp buildUnchecked() {
+  public final DocOp buildUnchecked() {
     // TODO: This should not need a call to asInitialization().
     return BufferedDocOpImpl.createUnchecked(accu.toArray(EMPTY_ARRAY));
   }

@@ -66,7 +66,7 @@ import org.waveprotocol.wave.model.document.indexed.SimpleAnnotationSet;
 import org.waveprotocol.wave.model.document.indexed.StubModifiableAnnotations;
 import org.waveprotocol.wave.model.document.indexed.Validator;
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.Nindo;
@@ -209,16 +209,16 @@ public class ContentDocument {
   /**
    * Singleton listener
    */
-  private SilentOperationSink<? super BufferedDocOp> outgoingOperationSink =
+  private SilentOperationSink<? super DocOp> outgoingOperationSink =
       SilentOperationSink.Void.get();
 
   /**
    * Wraps up the listener also with a call to repaint nodes.
    */
-  private final SilentOperationSink<BufferedDocOp> outgoingRepaintSink =
-      new SilentOperationSink<BufferedDocOp>() {
+  private final SilentOperationSink<DocOp> outgoingRepaintSink =
+      new SilentOperationSink<DocOp>() {
         @Override
-        public void consume(BufferedDocOp op) {
+        public void consume(DocOp op) {
           outgoingOperationSink.consume(op);
           flushNodeRepaint();
         }};
@@ -235,8 +235,8 @@ public class ContentDocument {
     }
 
     @Override
-    public BufferedDocOp consumeAndReturnInvertible(Nindo op) {
-      BufferedDocOp docOp = consumeLocal(op, saveSelection);
+    public DocOp consumeAndReturnInvertible(Nindo op) {
+      DocOp docOp = consumeLocal(op, saveSelection);
       outgoingOperationSink.consume(docOp);
       return docOp;
     }
@@ -1216,7 +1216,7 @@ public class ContentDocument {
         persistentContentView, renderedContentView);
   }
 
-  public void setOutgoingSink(SilentOperationSink<? super BufferedDocOp> outgoingOperationSink) {
+  public void setOutgoingSink(SilentOperationSink<? super DocOp> outgoingOperationSink) {
     Preconditions.checkNotNull(outgoingOperationSink, "Outgoing operation sink cannot be null");
     Preconditions.checkState(this.outgoingOperationSink == SilentOperationSink.Void.get(),
         "Already has a sink");
@@ -1229,10 +1229,10 @@ public class ContentDocument {
    * @param newSink new sink to use
    * @return previous sink
    */
-  public SilentOperationSink<? super BufferedDocOp> replaceOutgoingSink(
-      SilentOperationSink<? super BufferedDocOp> newSink) {
+  public SilentOperationSink<? super DocOp> replaceOutgoingSink(
+      SilentOperationSink<? super DocOp> newSink) {
     Preconditions.checkState(outgoingOperationSink != null, "");
-    SilentOperationSink<? super BufferedDocOp> oldSink = outgoingOperationSink;
+    SilentOperationSink<? super DocOp> oldSink = outgoingOperationSink;
     outgoingOperationSink = newSink;
     return oldSink;
   }
@@ -1665,7 +1665,7 @@ public class ContentDocument {
 
   private boolean isConsistent = true;
 
-  private BufferedDocOp consumeLocal(Nindo nindo, boolean saveSelection) {
+  private DocOp consumeLocal(Nindo nindo, boolean saveSelection) {
 
     if (!isConsistent) {
       throw new IllegalStateException("Document is not in a consistent state - " +
@@ -1687,7 +1687,7 @@ public class ContentDocument {
 
     beginConsume(saveSelection);
 
-    BufferedDocOp op = null;
+    DocOp op = null;
     try {
       op = indexedDoc.consumeAndReturnInvertible(nindo, false);
     } catch (OperationException e) {

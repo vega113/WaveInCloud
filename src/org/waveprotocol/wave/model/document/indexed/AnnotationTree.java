@@ -20,8 +20,6 @@ package org.waveprotocol.wave.model.document.indexed;
 import org.waveprotocol.wave.model.document.AnnotationCursor;
 import org.waveprotocol.wave.model.document.AnnotationInterval;
 import org.waveprotocol.wave.model.document.RangedAnnotation;
-import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
 import org.waveprotocol.wave.model.document.util.Annotations;
 import org.waveprotocol.wave.model.document.util.GenericAnnotationCursor;
 import org.waveprotocol.wave.model.document.util.GenericAnnotationIntervalIterable;

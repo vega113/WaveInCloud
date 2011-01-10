@@ -17,7 +17,7 @@
 
 package org.waveprotocol.box.server.robots.util;
 
-import org.waveprotocol.wave.model.document.operation.BufferedDocOp;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
@@ -59,12 +59,12 @@ public class WaveletPluginDocumentFactory implements DocumentFactory<DocumentOpe
     this.wavelet = wavelet;
   }
 
-  private SilentOperationSink<? super BufferedDocOp> documentOutputSink(final String blipId) {
-    return new SilentOperationSink<BufferedDocOp>() {
-      private SilentOperationSink<BufferedDocOp> sink;
+  private SilentOperationSink<? super DocOp> documentOutputSink(final String blipId) {
+    return new SilentOperationSink<DocOp>() {
+      private SilentOperationSink<DocOp> sink;
 
       @Override
-      public void consume(BufferedDocOp op) {
+      public void consume(DocOp op) {
         if (sink == null) {
           sink = wavelet.getDocumentOperationSink(blipId);
         }
