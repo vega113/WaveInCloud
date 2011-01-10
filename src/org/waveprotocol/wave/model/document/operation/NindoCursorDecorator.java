@@ -27,7 +27,7 @@ import java.util.Map;
  *
  * @author danilatos@google.com (Daniel Danilatos)
  */
-public abstract class NindoCursorProxy implements NindoCursor {
+public abstract class NindoCursorDecorator implements NindoCursor {
 
   /** the target */
   protected final NindoCursor target;
@@ -35,7 +35,7 @@ public abstract class NindoCursorProxy implements NindoCursor {
   /**
    * @param target target to delegate to
    */
-  protected NindoCursorProxy(NindoCursor target) {
+  protected NindoCursorDecorator(NindoCursor target) {
     this.target = target;
   }
 

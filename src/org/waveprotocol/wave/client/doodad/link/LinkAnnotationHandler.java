@@ -149,7 +149,7 @@ public class LinkAnnotationHandler implements AnnotationMutationHandler {
       // the data is cleaned.
       ret = Link.toHrefFromUri((String) map.get(WAVE_KEY));
     } else {
-      ret = map.get(AUTO_KEY);
+      ret = Link.toHrefFromUri((String) map.get(AUTO_KEY));
     }
     if (ret instanceof String) {
       return (String) ret;
