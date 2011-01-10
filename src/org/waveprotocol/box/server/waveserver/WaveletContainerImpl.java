@@ -25,9 +25,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.common.DeltaSequence;
-import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.SnapshotSerializer;
-import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
+import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
@@ -291,16 +289,14 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   }
 
   @Override
-  public WaveletSnapshotAndVersion getSnapshot() throws WaveletStateException {
+  public CommittedWaveletSnapshot getSnapshot() throws WaveletStateException {
     awaitLoad();
     acquireReadLock();
     try {
       checkStateOk();
       ReadableWaveletData snapshot = waveletState.getSnapshot();
-      return new WaveletSnapshotAndVersion(
-          SnapshotSerializer.serializeWavelet(
-              waveletState.getSnapshot(), snapshot.getHashedVersion()),
-          CoreWaveletOperationSerializer.serialize(waveletState.getLastPersistedVersion()));
+      return new CommittedWaveletSnapshot(waveletState.getSnapshot(),
+          waveletState.getLastPersistedVersion());
     } finally {
       releaseReadLock();
     }

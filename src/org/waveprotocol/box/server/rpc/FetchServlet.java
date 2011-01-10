@@ -23,14 +23,15 @@ import com.google.protobuf.MessageLite;
 
 import org.waveprotocol.box.common.comms.WaveClientRpc.DocumentSnapshot;
 import org.waveprotocol.box.common.comms.WaveClientRpc.WaveViewSnapshot;
-import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.authentication.SessionManager;
-import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
-import org.waveprotocol.box.server.waveserver.WaveletProvider;
+import org.waveprotocol.box.server.common.SnapshotSerializer;
+import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.waveserver.WaveServerException;
+import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 import org.waveprotocol.wave.util.escapers.jvm.JavaWaverefEncoder;
@@ -132,41 +133,41 @@ public final class FetchServlet extends HttpServlet {
 
     WaveletName waveletName = WaveletName.of(waveref.getWaveId(), waveletId);
 
-    WaveletSnapshotAndVersion snapshotAndV;
+    CommittedWaveletSnapshot committedSnapshot;
     try {
       if (!waveletProvider.checkAccessPermission(waveletName, requester)) {
         dest.sendError(HttpServletResponse.SC_FORBIDDEN);
         return;
       }
       LOG.info("Fetching snapshot of wavelet " + waveletName);
-      snapshotAndV = waveletProvider.getSnapshot(waveletName);
+      committedSnapshot = waveletProvider.getSnapshot(waveletName);
     } catch (WaveServerException e) {
       throw new IOException(e);
     }
-    if (snapshotAndV != null) {
-      WaveletSnapshot snapshot = snapshotAndV.snapshot;
+    if (committedSnapshot != null) {
+      ReadableWaveletData snapshot = committedSnapshot.snapshot;
       if (waveref.hasDocumentId()) {
         // We have a wavelet id and document id. Find the document in the
-        // snapshot
-        // and return it.
+        // snapshot and return it.
         DocumentSnapshot docSnapshot = null;
-        for (DocumentSnapshot ds : snapshot.getDocumentList()) {
-          if (ds.getDocumentId().equals(waveref.getDocumentId())) {
-            docSnapshot = ds;
+        for (String docId : snapshot.getDocumentIds()) {
+          if (docId.equals(waveref.getDocumentId())) {
+            docSnapshot = SnapshotSerializer.serializeDocument(snapshot.getDocument(docId));
             break;
           }
         }
         serializeObjectToServlet(docSnapshot, dest);
       } else if (waveref.hasWaveletId()) {
         // We have a wavelet id. Pull up the wavelet snapshot and return it.
-        serializeObjectToServlet(snapshot, dest);
+        serializeObjectToServlet(SnapshotSerializer.serializeWavelet(snapshot,
+            snapshot.getHashedVersion()), dest);
       } else {
         // Wrap the conv+root we fetched earlier in a WaveSnapshot object and
         // send it.
-        WaveViewSnapshot waveSnapshot =
-            WaveViewSnapshot.newBuilder().setWaveId(waveref.getWaveId().serialise()).addWavelet(
-                snapshot).build();
-
+        WaveViewSnapshot waveSnapshot = WaveViewSnapshot.newBuilder()
+            .setWaveId(waveref.getWaveId().serialise())
+            .addWavelet(SnapshotSerializer.serializeWavelet(snapshot, snapshot.getHashedVersion()))
+            .build();
         serializeObjectToServlet(waveSnapshot, dest);
       }
     } else {

@@ -32,10 +32,7 @@ import com.google.wave.api.event.WaveletBlipCreatedEvent;
 
 import junit.framework.TestCase;
 
-import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
-import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.SnapshotSerializer;
-import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
+import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
@@ -79,7 +76,6 @@ public class OperationContextImplTest extends TestCase {
   private RobotWaveletData wavelet;
   private OperationContextImpl boundOperationContext;
   private ConversationUtil conversationUtil;
-  private WaveletSnapshot snapshot;
   private ObservableWaveletData waveletData;
 
   @Override
@@ -97,9 +93,8 @@ public class OperationContextImplTest extends TestCase {
     HashedVersion hashedVersionZero = HASH_FACTORY.createVersionZero(WAVELET_NAME);
     wavelet = new RobotWaveletData(waveletData, hashedVersionZero);
 
-    snapshot = SnapshotSerializer.serializeWavelet(waveletData, hashedVersionZero);
-    WaveletSnapshotAndVersion snapshotAndVersion = new WaveletSnapshotAndVersion(
-        snapshot, CoreWaveletOperationSerializer.serialize(hashedVersionZero));
+    CommittedWaveletSnapshot snapshotAndVersion = new CommittedWaveletSnapshot(
+        waveletData, hashedVersionZero);
     when(waveletProvider.getSnapshot(WAVELET_NAME)).thenReturn(snapshotAndVersion);
 
     boundOperationContext =

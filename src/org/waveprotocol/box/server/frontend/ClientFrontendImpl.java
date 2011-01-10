@@ -28,7 +28,6 @@ import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.box.common.Snippets;
 import org.waveprotocol.box.common.comms.WaveClientRpc;
-import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
@@ -169,7 +168,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         // where to start sending deltas from.
 
         DeltaSequence deltasToSend;
-        WaveletSnapshotAndVersion snapshotToSend;
+        CommittedWaveletSnapshot snapshotToSend;
         HashedVersion endVersion;
 
         if (isIndexWave) {
@@ -215,8 +214,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         } else {
           // Send the snapshot.
           openListener.onUpdate(waveletName, snapshotToSend, deltasToSend,
-              CoreWaveletOperationSerializer.deserialize(snapshotToSend.committedVersion), false,
-              channelId);
+              snapshotToSend.committedVersion, false, channelId);
         }
       }
 

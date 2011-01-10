@@ -17,11 +17,9 @@
 
 package org.waveprotocol.box.server.rpc;
 
-import org.waveprotocol.box.server.common.SnapshotSerializer;
-import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
+import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.util.TestDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
@@ -41,7 +39,7 @@ import java.util.Collection;
 public class WaveletProviderStub implements WaveletProvider {
   private final WaveletData wavelet;
   private HashedVersion currentVersionOverride;
-  private ProtocolHashedVersion committedVersion;
+  private HashedVersion committedVersion;
   private boolean allowsAccess = true;
 
   public WaveletProviderStub() {
@@ -52,7 +50,7 @@ public class WaveletProviderStub implements WaveletProvider {
   }
 
   @Override
-  public WaveletSnapshotAndVersion getSnapshot(WaveletName waveletName) {
+  public CommittedWaveletSnapshot getSnapshot(WaveletName waveletName) {
     final byte[] JUNK_BYTES = new byte[] {0, 1, 2, 3, 4, 5, -128, 127};
 
     if (waveletName.waveId.equals(getHostedWavelet().getWaveId())
@@ -60,8 +58,7 @@ public class WaveletProviderStub implements WaveletProvider {
       HashedVersion version =
           (currentVersionOverride != null) ? currentVersionOverride : HashedVersion.of(
               getHostedWavelet().getVersion(), JUNK_BYTES);
-      return new WaveletSnapshotAndVersion(
-          SnapshotSerializer.serializeWavelet(getHostedWavelet(), version), getCommittedVersion());
+      return new CommittedWaveletSnapshot(getHostedWavelet(), getCommittedVersion());
     } else {
       return null;
     }
@@ -101,14 +98,14 @@ public class WaveletProviderStub implements WaveletProvider {
   /**
    * @param committedVersion the committedVersion to set
    */
-  public void setCommittedVersion(ProtocolHashedVersion committedVersion) {
+  public void setCommittedVersion(HashedVersion committedVersion) {
     this.committedVersion = committedVersion;
   }
 
   /**
    * @return the committedVersion
    */
-  public ProtocolHashedVersion getCommittedVersion() {
+  public HashedVersion getCommittedVersion() {
     return committedVersion;
   }
 

@@ -17,7 +17,7 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
+import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
@@ -99,5 +99,5 @@ public interface WaveletProvider {
    * @throws WaveServerException if storage access fails or if the wavelet is in
    *         a bad state
    */
-  WaveletSnapshotAndVersion getSnapshot(WaveletName waveletName) throws WaveServerException;
+  CommittedWaveletSnapshot getSnapshot(WaveletName waveletName) throws WaveServerException;
 }

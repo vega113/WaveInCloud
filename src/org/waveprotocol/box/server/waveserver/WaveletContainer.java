@@ -17,7 +17,7 @@
 
 package org.waveprotocol.box.server.waveserver;
 
-import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
+import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
@@ -52,7 +52,7 @@ interface WaveletContainer {
   ObservableWaveletData copyWaveletData() throws WaveletStateException;
 
   /** Returns a snapshot of the wavelet state, last committed version. */
-  WaveletSnapshotAndVersion getSnapshot() throws WaveletStateException;
+  CommittedWaveletSnapshot getSnapshot() throws WaveletStateException;
 
   /**
    * Retrieve the wavelet history of deltas applied to the wavelet.

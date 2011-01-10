@@ -27,7 +27,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
+import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.SignerInfo;
@@ -284,7 +284,7 @@ public class WaveServerImpl implements WaveletProvider,
   }
 
   @Override
-  public WaveletSnapshotAndVersion getSnapshot(WaveletName waveletName) throws WaveServerException {
+  public CommittedWaveletSnapshot getSnapshot(WaveletName waveletName) throws WaveServerException {
     WaveletContainer wavelet = getWavelet(waveletName);
     if (wavelet == null) {
       LOG.info("client requested snapshot for non-existent wavelet: " + waveletName);

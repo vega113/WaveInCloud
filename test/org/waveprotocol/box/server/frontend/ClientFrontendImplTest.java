@@ -39,18 +39,15 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.common.IndexWave;
-import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletVersion;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.frontend.ClientFrontend.OpenListener;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
-import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
@@ -166,7 +163,7 @@ public class ClientFrontendImplTest extends TestCase {
     WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WAVELET_NAME, USER, VERSION_0, 0L);
     clientFrontend.waveletUpdate(wavelet, DELTAS);
     verify(listener, Mockito.never()).onUpdate(eq(WAVELET_NAME),
-        any(WaveletSnapshotAndVersion.class), Matchers.anyList(),
+        any(CommittedWaveletSnapshot.class), Matchers.anyList(),
         any(HashedVersion.class), isNullMarker(), anyString());
   }
 
@@ -244,7 +241,7 @@ public class ClientFrontendImplTest extends TestCase {
     clientFrontend.participantUpdate(WAVELET_NAME, USER, deltas, true, false, "", "");
 
     verify(listener, Mockito.never()).onUpdate(eq(dummyWaveletName),
-        any(WaveletSnapshotAndVersion.class),
+        any(CommittedWaveletSnapshot.class),
         argThat(new IsNonEmptySequence()),
         any(HashedVersion.class), isNullMarker(), anyString());
   }
@@ -262,7 +259,7 @@ public class ClientFrontendImplTest extends TestCase {
    */
   static final class UpdateListener implements OpenListener {
     WaveletName waveletName = null;
-    WaveletSnapshotAndVersion snapshot = null;
+    CommittedWaveletSnapshot snapshot = null;
     DeltaSequence deltas = null;
 
     @Override
@@ -271,7 +268,7 @@ public class ClientFrontendImplTest extends TestCase {
     }
 
     @Override
-    public void onUpdate(WaveletName wn, @Nullable WaveletSnapshotAndVersion snapshot,
+    public void onUpdate(WaveletName wn, @Nullable CommittedWaveletSnapshot snapshot,
         List<TransformedWaveletDelta> newDeltas, @Nullable HashedVersion committedVersion,
         @Nullable Boolean hasMarker, @Nullable String channelId) {
 
@@ -340,9 +337,7 @@ public class ClientFrontendImplTest extends TestCase {
         makeAppendOp("docId", 0, "Hello, world", makeContext(0L, VERSION_2)));
     assertFalse(oldListener.deltas.isEmpty());
 
-    ProtocolHashedVersion startVersion = CoreWaveletOperationSerializer.serialize(VERSION_0);
-    WaveletSnapshot snapshot = SnapshotSerializer.serializeWavelet(wavelet, VERSION_2);
-    WaveletSnapshotAndVersion snapshotAndV = new WaveletSnapshotAndVersion(snapshot, startVersion);
+    CommittedWaveletSnapshot snapshotAndV = new CommittedWaveletSnapshot(wavelet, VERSION_0);
     when(waveletProvider.getSnapshot(eq(WAVELET_NAME))).thenReturn(snapshotAndV);
 
     UpdateListener newListener = new UpdateListener();
@@ -418,8 +413,8 @@ public class ClientFrontendImplTest extends TestCase {
         null, true, null);
   }
 
-  private static WaveletSnapshotAndVersion isNullSnapshot() {
-    return (WaveletSnapshotAndVersion) Mockito.isNull();
+  private static CommittedWaveletSnapshot isNullSnapshot() {
+    return (CommittedWaveletSnapshot) Mockito.isNull();
   }
 
   private static HashedVersion isNullVersion() {

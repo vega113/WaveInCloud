@@ -54,7 +54,7 @@ public interface ClientFrontend {
      * @param hasMarker optional (true/false/absent) marker
      * @param channelId channel id (first message only)
      */
-    void onUpdate(WaveletName waveletName, @Nullable WaveletSnapshotAndVersion snapshot,
+    void onUpdate(WaveletName waveletName, @Nullable CommittedWaveletSnapshot snapshot,
         List<TransformedWaveletDelta> deltas, @Nullable HashedVersion committedVersion,
         @Nullable Boolean hasMarker, String channelId);
 

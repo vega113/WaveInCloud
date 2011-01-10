@@ -20,9 +20,9 @@ package org.waveprotocol.box.server.robots;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.EventSerializationException;
@@ -30,22 +30,20 @@ import com.google.wave.api.event.EventSerializer;
 import com.google.wave.api.event.EventType;
 import com.google.wave.api.event.OperationErrorEvent;
 
-import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.SnapshotSerializer;
-import org.waveprotocol.box.server.frontend.WaveletSnapshotAndVersion;
+import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.robots.util.OperationUtil;
-import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.server.waveserver.WaveServerException;
+import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
+import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 import org.waveprotocol.wave.util.logging.Log;
 
@@ -61,6 +59,9 @@ import java.util.Map;
 public class OperationContextImpl implements OperationContext, OperationResults {
 
   private static final Log LOG = Log.get(OperationContextImpl.class);
+
+  private static final ObservableWaveletData.Factory<? extends ObservableWaveletData> FACTORY =
+      WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
 
   /**
    * Maps operation ID's to responses.
@@ -206,7 +207,7 @@ public class OperationContextImpl implements OperationContext, OperationResults 
     RobotWaveletData wavelet = openedWavelets.get(waveletName);
     if (wavelet == null) {
       // Open a wavelet from the server
-      WaveletSnapshotAndVersion snapshot;
+      CommittedWaveletSnapshot snapshot;
       try {
         snapshot = waveletProvider.getSnapshot(waveletName);
       } catch (WaveServerException e) {
@@ -218,27 +219,13 @@ public class OperationContextImpl implements OperationContext, OperationResults 
         throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
       }
 
-      // Note: The error messages relayed to the client don't give away that the
-      // wavelet actually exists.
-      ObservableWaveletData obsWavelet;
-      try {
-        obsWavelet = SnapshotSerializer.deserializeWavelet(snapshot.snapshot, waveletName.waveId);
-      } catch (OperationException e) {
-        LOG.severe("Unable to parse retrieved snapshot", e);
-        throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
-      } catch (InvalidParticipantAddress e) {
-        LOG.severe("Found invalid participant when parsing a snapshot", e);
-        throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
-      }
-      HashedVersion committedVersion =
-          CoreWaveletOperationSerializer.deserialize(snapshot.committedVersion);
-
+      ObservableWaveletData obsWavelet = FACTORY.create(snapshot.snapshot);
       if (!obsWavelet.getParticipants().contains(participant)) {
         LOG.severe(
             participant + " tried to open " + waveletName + " which it isn't participating in");
         throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
       }
-      wavelet = new RobotWaveletData(obsWavelet, committedVersion);
+      wavelet = new RobotWaveletData(obsWavelet, snapshot.committedVersion);
       openedWavelets.put(waveletName, wavelet);
     }
     return wavelet.getOpBasedWavelet(participant);

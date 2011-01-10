@@ -30,6 +30,7 @@ import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolSubmitResponse;
 import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveletUpdate;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.rpc.ServerRpcController;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
@@ -99,7 +100,7 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
 
           @Override
           public void onUpdate(WaveletName waveletName,
-              @Nullable WaveletSnapshotAndVersion snapshot, List<TransformedWaveletDelta> deltas,
+              @Nullable CommittedWaveletSnapshot snapshot, List<TransformedWaveletDelta> deltas,
               @Nullable HashedVersion committedVersion, Boolean hasMarker, String channel_id) {
             ProtocolWaveletUpdate.Builder builder = ProtocolWaveletUpdate.newBuilder();
             if (hasMarker != null) {
@@ -120,13 +121,15 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
                     deltas.get((deltas.size() - 1)).getResultingVersion()));
               }
               if (snapshot != null) {
-                Preconditions.checkState(committedVersion.equals(
-                    CoreWaveletOperationSerializer.deserialize(snapshot.committedVersion)),
+                Preconditions.checkState(committedVersion.equals(snapshot.committedVersion),
                     "Mismatched commit versions, snapshot: " + snapshot.committedVersion
-                    + " expected: " + committedVersion);
-                builder.setSnapshot(snapshot.snapshot);
-                builder.setResultingVersion(snapshot.snapshot.getVersion());
-                builder.setCommitNotice(snapshot.committedVersion);
+                        + " expected: " + committedVersion);
+                builder.setSnapshot(SnapshotSerializer.serializeWavelet(snapshot.snapshot,
+                    snapshot.committedVersion));
+                builder.setResultingVersion(CoreWaveletOperationSerializer.serialize(
+                    snapshot.snapshot.getHashedVersion()));
+                builder.setCommitNotice(CoreWaveletOperationSerializer.serialize(
+                    snapshot.committedVersion));
               } else {
                 if (committedVersion != null) {
                   builder.setCommitNotice(
