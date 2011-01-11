@@ -221,6 +221,18 @@ public class WaveMap implements SearchProvider {
     return results.values();
   }
 
+  public ImmutableSet<WaveletId> lookupWavelets(WaveId waveId) throws WaveletStateException {
+    ListenableFuture<ImmutableSet<WaveletId>> future = waves.get(waveId).lookedupWavelets;
+    try {
+      return FutureUtil.getResultOrPropagateException(future, PersistenceException.class);
+    } catch (PersistenceException e) {
+      throw new WaveletStateException("Failed to look up wave " + waveId, e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new WaveletStateException("Interrupted while looking up wave " + waveId, e);
+    }
+  }
+
   public LocalWaveletContainer getLocalWavelet(WaveletName waveletName)
       throws WaveletStateException {
     return waves.get(waveletName.waveId).getLocalWavelet(waveletName.waveletId);

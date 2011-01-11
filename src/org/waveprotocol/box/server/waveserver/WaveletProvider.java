@@ -17,8 +17,12 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -90,6 +94,15 @@ public interface WaveletProvider {
    */
   boolean checkAccessPermission(WaveletName waveletName, ParticipantId participantId)
       throws WaveServerException;
+
+  /**
+   * Looks up all wavelets in a wave.
+   *
+   * @param waveId wave to look up
+   * @return ids of all non-empty wavelets
+   * @throws WaveServerException if storage access fails
+   */
+  ImmutableSet<WaveletId> getWaveletIds(WaveId waveId) throws WaveServerException;
 
   /**
    * Request the current state of the wavelet.

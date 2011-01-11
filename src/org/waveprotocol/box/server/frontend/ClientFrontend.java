@@ -51,12 +51,12 @@ public interface ClientFrontend {
      * @param snapshot optional snapshot
      * @param deltas optional deltas, not necessarily contiguous
      * @param committedVersion optional commit notice
-     * @param hasMarker optional (true/false/absent) marker
+     * @param marker optional (true/false/absent) marker
      * @param channelId channel id (first message only)
      */
     void onUpdate(WaveletName waveletName, @Nullable CommittedWaveletSnapshot snapshot,
         List<TransformedWaveletDelta> deltas, @Nullable HashedVersion committedVersion,
-        @Nullable Boolean hasMarker, String channelId);
+        @Nullable Boolean marker, String channelId);
 
     /**
      * Called when the stream fails. No further updates will be received.

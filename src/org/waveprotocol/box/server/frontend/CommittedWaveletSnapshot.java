@@ -35,7 +35,27 @@ public final class CommittedWaveletSnapshot {
   public CommittedWaveletSnapshot(ReadableWaveletData snapshot,
       HashedVersion committedVersion) {
     Preconditions.checkNotNull(snapshot);
+    Preconditions.checkNotNull(committedVersion);
     this.snapshot = snapshot;
     this.committedVersion = committedVersion;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj != null && getClass() == obj.getClass()) {
+      CommittedWaveletSnapshot other = (CommittedWaveletSnapshot) obj;
+      return committedVersion.equals(other.committedVersion) && snapshot.equals(other.snapshot);
+    }
+    return false;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((committedVersion == null) ? 0 : committedVersion.hashCode());
+    result = prime * result + ((snapshot == null) ? 0 : snapshot.hashCode());
+    return result;
   }
 }

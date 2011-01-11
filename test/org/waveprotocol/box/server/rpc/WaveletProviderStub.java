@@ -17,10 +17,14 @@
 
 package org.waveprotocol.box.server.rpc;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.util.TestDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
@@ -30,7 +34,7 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 import java.util.Collection;
 
 /**
- * Stub of {@link WaveletProvider} for testing. It only supports getSnapshot().
+ * Stub of {@link WaveletProvider} for testing.
  *
  * It currently hosts a single wavelet, which contains a single document.
  *
@@ -44,9 +48,13 @@ public class WaveletProviderStub implements WaveletProvider {
 
   public WaveletProviderStub() {
     wavelet = TestDataUtil.createSimpleWaveletData();
+    setCommittedVersion(HashedVersion.unsigned(0));
+  }
 
-    // This will be null in practice until the persistence store is in place.
-    setCommittedVersion(null);
+  @Override
+  public ImmutableSet<WaveletId> getWaveletIds(WaveId waveId) {
+    return (waveId.equals(wavelet.getWaveId())) ? ImmutableSet.of(wavelet.getWaveletId())
+        : ImmutableSet.<WaveletId> of();
   }
 
   @Override

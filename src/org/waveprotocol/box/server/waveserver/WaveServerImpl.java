@@ -19,6 +19,7 @@ package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -44,6 +45,8 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
@@ -284,6 +287,12 @@ public class WaveServerImpl implements WaveletProvider,
   }
 
   @Override
+  public
+  ImmutableSet<WaveletId> getWaveletIds(WaveId waveId) throws WaveServerException {
+    return waveMap.lookupWavelets(waveId);
+  }
+
+  @Override
   public CommittedWaveletSnapshot getSnapshot(WaveletName waveletName) throws WaveServerException {
     WaveletContainer wavelet = getWavelet(waveletName);
     if (wavelet == null) {
@@ -343,11 +352,9 @@ public class WaveServerImpl implements WaveletProvider,
    * @param waveMap records the waves and wavelets in memory
    */
   @Inject
-  public WaveServerImpl(
-      @Named("listener_executor") Executor listenerExecutor,
+  WaveServerImpl(@Named("listener_executor") Executor listenerExecutor,
       CertificateManager certificateManager,
-      @FederationRemoteBridge WaveletFederationProvider federationRemote,
-      WaveMap waveMap) {
+      @FederationRemoteBridge WaveletFederationProvider federationRemote, WaveMap waveMap) {
     this.listenerExecutor = listenerExecutor;
     this.certificateManager = certificateManager;
     this.federationRemote = federationRemote;
