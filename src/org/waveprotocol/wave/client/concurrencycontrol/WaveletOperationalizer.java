@@ -19,6 +19,7 @@ package org.waveprotocol.wave.client.concurrencycontrol;
 import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
@@ -27,8 +28,8 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext.Factory;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.Pair;
-import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
 import org.waveprotocol.wave.model.util.StringMap;
+import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
@@ -118,7 +119,8 @@ public final class WaveletOperationalizer {
    */
   private LiveTarget<ObservableWaveletData, WaveletOperation> createSinks(
       ObservableWaveletData data) {
-    return putAndReturn(wavelets, data.getWaveletId().serialise(),
+    return putAndReturn(wavelets,
+        ModernIdSerialiser.INSTANCE.serialiseWaveletId(data.getWaveletId()),
         LiveTarget.<ObservableWaveletData, WaveletOperation>create(data));
   }
 

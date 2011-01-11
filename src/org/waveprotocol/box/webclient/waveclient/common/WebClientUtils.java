@@ -31,6 +31,8 @@ import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.InitializationCursorAdapter;
 import org.waveprotocol.wave.model.id.IdConstants;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.core.CoreWaveletDocumentOperation;
@@ -306,7 +308,14 @@ public class WebClientUtils {
 
     for (CoreWaveletData wavelet : indexWave.getWavelets()) {
       // The wave id is encoded as the wavelet id
-      WaveId waveId = WaveId.deserialise(wavelet.getWaveletName().waveletId.serialise());
+      WaveId waveId;
+      try {
+        waveId = ModernIdSerialiser.INSTANCE.deserialiseWaveId(
+            ModernIdSerialiser.INSTANCE.serialiseWaveletId(wavelet.getWaveletName().waveletId));
+      } catch (InvalidIdException e) {
+        // Ignore this entry.
+        continue;
+      }
       String digest = WebClientUtils.renderSnippet(wavelet, Integer.MAX_VALUE);
       indexEntries.add(new IndexEntry(waveId, digest));
     }

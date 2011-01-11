@@ -28,6 +28,7 @@ import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -165,7 +166,7 @@ public final class FetchServlet extends HttpServlet {
         // Wrap the conv+root we fetched earlier in a WaveSnapshot object and
         // send it.
         WaveViewSnapshot waveSnapshot = WaveViewSnapshot.newBuilder()
-            .setWaveId(waveref.getWaveId().serialise())
+            .setWaveId(ModernIdSerialiser.INSTANCE.serialiseWaveId(waveref.getWaveId()))
             .addWavelet(SnapshotSerializer.serializeWavelet(snapshot, snapshot.getHashedVersion()))
             .build();
         serializeObjectToServlet(waveSnapshot, dest);

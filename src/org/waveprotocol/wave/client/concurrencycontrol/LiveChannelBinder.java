@@ -26,6 +26,7 @@ import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiple
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexer.KnownWavelet;
 import org.waveprotocol.wave.concurrencycontrol.common.CorruptionDetail;
 import org.waveprotocol.wave.model.id.IdFilter;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.StringMap;
@@ -148,7 +149,7 @@ public final class LiveChannelBinder
 
   @Override
   public void onWaveletAdded(ObservableWavelet wavelet) {
-    String id = wavelet.getId().serialise();
+    String id = ModernIdSerialiser.INSTANCE.serialiseWaveletId(wavelet.getId());
     if (channels.containsKey(id)) {
       connect(id);
     } else {
@@ -161,7 +162,7 @@ public final class LiveChannelBinder
   public void onOperationChannelCreated(
       OperationChannel channel, ObservableWaveletData snapshot, Accessibility accessibility) {
     WaveletId wid = snapshot.getWaveletId();
-    String id = wid.serialise();
+    String id = ModernIdSerialiser.INSTANCE.serialiseWaveletId(wid);
 
     Preconditions.checkState(!channels.containsKey(id));
     channels.put(id, channel);

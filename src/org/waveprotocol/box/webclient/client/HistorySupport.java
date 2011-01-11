@@ -22,8 +22,8 @@ import com.google.gwt.user.client.History;
 
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.util.Log;
-import org.waveprotocol.wave.client.doodad.link.Link;
-import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 
 import javax.annotation.Nullable;
@@ -60,13 +60,15 @@ public class HistorySupport {
    */
   @Nullable
   static WaveRef waveRefFromHistoryToken(String encodedToken) {
-    WaveRef waveRef = null;
     try {
-      waveRef = Link.inferWaveRef(encodedToken);
-    } catch (InvalidWaveRefException e) {
-      // Ignore.
+      return WaveRef.of(ModernIdSerialiser.INSTANCE.deserialiseWaveId(encodedToken));
+    } catch (InvalidIdException e) {
+      return null;
     }
-    return waveRef;
+  }
+
+  static String historyTokenFromWaveref(WaveRef ref) {
+    return ModernIdSerialiser.INSTANCE.serialiseWaveId(ref.getWaveId());
   }
 
   private HistorySupport() {

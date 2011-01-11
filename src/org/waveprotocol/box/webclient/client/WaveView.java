@@ -46,6 +46,8 @@ import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveBasedConversationView;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
@@ -267,7 +269,7 @@ public class WaveView extends Composite {
     blipsById.clear();
     blipsToNext.clear();
 
-    History.newItem(waveRef.getWaveId().serialise(), false);
+    History.newItem(ModernIdSerialiser.INSTANCE.serialiseWaveId(waveRef.getWaveId()), false);
   }
 
   public ObservableConversationView getConversationView() {
@@ -279,7 +281,14 @@ public class WaveView extends Composite {
   }
 
   private void renderBlip(ObservableConversation conversation, String blipId) {
-    WaveletId waveletId = WaveletId.deserialise(conversation.getId());
+    WaveletId waveletId;
+    try {
+      waveletId = ModernIdSerialiser.INSTANCE.deserialiseWaveletId(conversation.getId());
+    } catch (InvalidIdException e) {
+      // Ignore broken wave.
+      LOG.info("Ignoring conversation with invalid id: " + conversation.getId());
+      return;
+    }
     BlipView blipView = ((SimpleCcDocument) docFactory.get(waveletId, blipId)).getBlipView();
     panel.add(blipView);
     getElement().getStyle().setProperty("visibility", "visible");

@@ -32,14 +32,13 @@ import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveletUpdate;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.rpc.ServerRpcController;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.model.id.IdFilter;
-import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -62,9 +61,6 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
 
   private final ClientFrontend frontend;
 
-  private final IdURIEncoderDecoder uriCodec = new IdURIEncoderDecoder(
-      new URLEncoderDecoderBasedPercentEncoderDecoder());
-
   /**
    * Constructor.
    *
@@ -80,9 +76,9 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
       final RpcCallback<ProtocolWaveletUpdate> done) {
     WaveId waveId;
     try {
-      waveId = WaveId.deserialise(request.getWaveId());
-    } catch (IllegalArgumentException e) {
-      LOG.warning(e.getMessage());
+      waveId = ModernIdSerialiser.INSTANCE.deserialiseWaveId(request.getWaveId());
+    } catch (InvalidIdException e) {
+      LOG.warning("Invalid id in open", e);
       controller.setFailed(e.getMessage());
       return;
     }
@@ -109,38 +105,33 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
             if (channel_id != null) {
               builder.setChannelId(channel_id);
             }
-            try {
-              builder.setWaveletName(uriCodec.waveletNameToURI(waveletName));
-              for (TransformedWaveletDelta d : deltas) {
-                // TODO(anorth): Add delta application metadata to the result
-                // when the c/s protocol supports it.
-                builder.addAppliedDelta(CoreWaveletOperationSerializer.serialize(d));
-              }
-              if (!deltas.isEmpty()) {
-                builder.setResultingVersion(CoreWaveletOperationSerializer.serialize(
-                    deltas.get((deltas.size() - 1)).getResultingVersion()));
-              }
-              if (snapshot != null) {
-                Preconditions.checkState(committedVersion.equals(snapshot.committedVersion),
-                    "Mismatched commit versions, snapshot: " + snapshot.committedVersion
-                        + " expected: " + committedVersion);
-                builder.setSnapshot(SnapshotSerializer.serializeWavelet(snapshot.snapshot,
-                    snapshot.committedVersion));
-                builder.setResultingVersion(CoreWaveletOperationSerializer.serialize(
-                    snapshot.snapshot.getHashedVersion()));
-                builder.setCommitNotice(CoreWaveletOperationSerializer.serialize(
-                    snapshot.committedVersion));
-              } else {
-                if (committedVersion != null) {
-                  builder.setCommitNotice(
-                      CoreWaveletOperationSerializer.serialize(committedVersion));
-                }
-              }
-              done.run(builder.build());
-            } catch (EncodingException e) {
-              LOG.warning(e.getMessage());
-              controller.setFailed(e.getMessage());
+            builder.setWaveletName(ModernIdSerialiser.INSTANCE.serialiseWaveletName(waveletName));
+            for (TransformedWaveletDelta d : deltas) {
+              // TODO(anorth): Add delta application metadata to the result
+              // when the c/s protocol supports it.
+              builder.addAppliedDelta(CoreWaveletOperationSerializer.serialize(d));
             }
+            if (!deltas.isEmpty()) {
+              builder.setResultingVersion(CoreWaveletOperationSerializer.serialize(
+                  deltas.get((deltas.size() - 1)).getResultingVersion()));
+            }
+            if (snapshot != null) {
+              Preconditions.checkState(committedVersion.equals(snapshot.committedVersion),
+                  "Mismatched commit versions, snapshot: " + snapshot.committedVersion
+                      + " expected: " + committedVersion);
+              builder.setSnapshot(SnapshotSerializer.serializeWavelet(snapshot.snapshot,
+                  snapshot.committedVersion));
+              builder.setResultingVersion(CoreWaveletOperationSerializer.serialize(
+                  snapshot.snapshot.getHashedVersion()));
+              builder.setCommitNotice(CoreWaveletOperationSerializer.serialize(
+                  snapshot.committedVersion));
+            } else {
+              if (committedVersion != null) {
+                builder.setCommitNotice(
+                    CoreWaveletOperationSerializer.serialize(committedVersion));
+              }
+            }
+            done.run(builder.build());
           }
         });
   }
@@ -148,45 +139,40 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
   @Override
   public void submit(RpcController controller, ProtocolSubmitRequest request,
       final RpcCallback<ProtocolSubmitResponse> done) {
-    WaveletName waveletName;
-    String errorMessage = null;
+    WaveletName waveletName = null;
     try {
-      waveletName = uriCodec.uriToWaveletName(request.getWaveletName());
-      String channelId;
-      if (request.hasChannelId()) {
-        channelId = request.getChannelId();
-      } else {
-        channelId = null;
-      }
-      ParticipantId loggedInUser = asBoxController(controller).getLoggedInUser();
-      frontend.submitRequest(loggedInUser, waveletName, request.getDelta(), channelId,
-          new SubmitRequestListener() {
-            @Override
-            public void onFailure(String error) {
-              done.run(ProtocolSubmitResponse.newBuilder()
-                  .setOperationsApplied(0).setErrorMessage(error).build());
-            }
-
-            @Override
-            public void onSuccess(int operationsApplied,
-                HashedVersion hashedVersionAfterApplication, long applicationTimestamp) {
-              done.run(ProtocolSubmitResponse.newBuilder()
-                  .setOperationsApplied(operationsApplied)
-                  .setHashedVersionAfterApplication(
-                      CoreWaveletOperationSerializer.serialize(hashedVersionAfterApplication))
-                  .build());
-              // TODO(arb): applicationTimestamp??
-            }
-          });
-    } catch (EncodingException e) {
-      errorMessage = e.getMessage();
+      waveletName = ModernIdSerialiser.INSTANCE.deserialiseWaveletName(request.getWaveletName());
+    } catch (InvalidIdException e) {
+      LOG.warning("Invalid id in submit", e);
+      controller.setFailed(e.getMessage());
+      return;
     }
-
-    if (errorMessage != null) {
-      LOG.warning(errorMessage);
-      done.run(ProtocolSubmitResponse.newBuilder()
-          .setOperationsApplied(0).setErrorMessage(errorMessage).build());
+    String channelId;
+    if (request.hasChannelId()) {
+      channelId = request.getChannelId();
+    } else {
+      channelId = null;
     }
+    ParticipantId loggedInUser = asBoxController(controller).getLoggedInUser();
+    frontend.submitRequest(loggedInUser, waveletName, request.getDelta(), channelId,
+        new SubmitRequestListener() {
+          @Override
+          public void onFailure(String error) {
+            done.run(ProtocolSubmitResponse.newBuilder()
+                .setOperationsApplied(0).setErrorMessage(error).build());
+          }
+
+          @Override
+          public void onSuccess(int operationsApplied,
+              HashedVersion hashedVersionAfterApplication, long applicationTimestamp) {
+            done.run(ProtocolSubmitResponse.newBuilder()
+                .setOperationsApplied(operationsApplied)
+                .setHashedVersionAfterApplication(
+                    CoreWaveletOperationSerializer.serialize(hashedVersionAfterApplication))
+                .build());
+            // TODO(arb): applicationTimestamp??
+          }
+        });
   }
 
   @Override

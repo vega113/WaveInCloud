@@ -26,6 +26,8 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.waveref.WaveRef;
@@ -154,7 +156,14 @@ public final class Actions {
     // TODO(Yuri Z.) Change to use the conversation model when the Conversation
     // exposes a reference to its ConversationView.
     WaveId waveId = blip.hackGetRaw().getWavelet().getWaveId();
-    WaveletId waveletId = WaveletId.deserialise(blip.getConversation().getId());
+    WaveletId waveletId;
+    try {
+      waveletId = ModernIdSerialiser.INSTANCE.deserialiseWaveletId(blip.getConversation().getId());
+    } catch (InvalidIdException e) {
+      Window.alert("Unable to link to this blip, invalid conversation id "
+          + blip.getConversation().getId());
+      return;
+    }
     WaveRef waveRef = WaveRef.of(waveId, waveletId, blip.getId());
     String waveRefStringValue =
         WaveRefConstants.WAVE_URI_PREFIX + GwtWaverefEncoder.encodeToUriPathSegment(waveRef);

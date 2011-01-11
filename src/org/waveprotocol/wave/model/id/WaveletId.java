@@ -184,7 +184,7 @@ public final class WaveletId implements Comparable<WaveletId>, Serializable {
 
   @Override
   public String toString() {
-    return "[WaveletId " + serialise() + "]";
+    return "[WaveletId " + ModernIdSerialiser.INSTANCE.serialiseWaveletId(this) + "]";
   }
 
   @Override

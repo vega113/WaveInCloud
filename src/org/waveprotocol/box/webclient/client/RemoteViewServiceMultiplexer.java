@@ -21,10 +21,9 @@ import org.waveprotocol.box.common.comms.ProtocolOpenRequest;
 import org.waveprotocol.box.common.comms.ProtocolSubmitRequest;
 import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
 import org.waveprotocol.box.webclient.waveclient.common.SubmitResponseCallback;
-import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.model.id.IdFilter;
-import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -37,10 +36,6 @@ import java.util.Map;
  * protocol) into per-wave streams.
  */
 public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback {
-
-  /** Codec for parsing wavelet names, for identifying each update's target .*/
-  private static final IdURIEncoderDecoder URI_CODEC =
-      new IdURIEncoderDecoder(new ClientPercentEncoderDecoder());
 
   /** Per-wave streams. */
   private final Map<WaveId, WaveWebSocketCallback> streams = CollectionUtils.newHashMap();
@@ -125,7 +120,7 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
 
     // Request those updates.
     ProtocolOpenRequest request = ProtocolOpenRequest.create();
-    request.setWaveId(id.serialise());
+    request.setWaveId(ModernIdSerialiser.INSTANCE.serialiseWaveId(id));
     request.setParticipantId(userId);
     for (String prefix : filter.getPrefixes()) {
       request.addWaveletIdPrefix(prefix);
@@ -167,17 +162,13 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
 
   public static WaveletName deserialize(String name) {
     try {
-      return URI_CODEC.uriToWaveletName(name);
-    } catch (URIEncoderDecoder.EncodingException e) {
+      return ModernIdSerialiser.INSTANCE.deserialiseWaveletName(name);
+    } catch (InvalidIdException e) {
       throw new IllegalArgumentException(e);
     }
   }
 
   public static String serialize(WaveletName name) {
-    try {
-      return URI_CODEC.waveletNameToURI(name);
-    } catch (URIEncoderDecoder.EncodingException e) {
-      throw new IllegalArgumentException(e);
-    }
+    return ModernIdSerialiser.INSTANCE.serialiseWaveletName(name);
   }
 }

@@ -31,14 +31,13 @@ import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveletUpdate;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.frontend.testing.FakeClientFrontend;
 import org.waveprotocol.box.server.rpc.testing.FakeServerRpcController;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.util.testing.TestingConstants;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
-import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
@@ -69,23 +68,16 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
 
   private WaveClientRpcImpl rpcImpl;
 
-  private final IdURIEncoderDecoder uriCodec = new IdURIEncoderDecoder(
-      new URLEncoderDecoderBasedPercentEncoderDecoder());
-
   private WaveletName getWaveletName(String waveletName) {
     try {
-      return uriCodec.uriToWaveletName(waveletName);
-    } catch (EncodingException e) {
-      return null;
+      return ModernIdSerialiser.INSTANCE.deserialiseWaveletName(waveletName);
+    } catch (InvalidIdException e) {
+      throw new IllegalStateException(e);
     }
   }
 
   private String getWaveletUri(WaveletName waveletName) {
-    try {
-      return uriCodec.waveletNameToURI(waveletName);
-    } catch (EncodingException e) {
-      return null;
-    }
+    return ModernIdSerialiser.INSTANCE.serialiseWaveletName(waveletName);
   }
 
   @Override
@@ -105,7 +97,7 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
   public void testOpenCommit() {
     ProtocolOpenRequest request = ProtocolOpenRequest.newBuilder()
         .setParticipantId(USER)
-        .setWaveId(WAVE_ID.serialise()).build();
+        .setWaveId(ModernIdSerialiser.INSTANCE.serialiseWaveId(WAVE_ID)).build();
     counter = 0;
     rpcImpl.open(controller, request, new RpcCallback<ProtocolWaveletUpdate>() {
       @Override
@@ -128,7 +120,7 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
   public void testOpenFailure() {
     ProtocolOpenRequest request = ProtocolOpenRequest.newBuilder()
         .setParticipantId(USER)
-        .setWaveId(WAVE_ID.serialise()).build();
+        .setWaveId(ModernIdSerialiser.INSTANCE.serialiseWaveId(WAVE_ID)).build();
     counter = 0;
     rpcImpl.open(controller, request, new RpcCallback<ProtocolWaveletUpdate>() {
       @Override
@@ -148,7 +140,7 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
   public void testOpenUpdate() {
     ProtocolOpenRequest request = ProtocolOpenRequest.newBuilder()
         .setParticipantId(USER)
-        .setWaveId(WAVE_ID.serialise()).build();
+        .setWaveId(ModernIdSerialiser.INSTANCE.serialiseWaveId(WAVE_ID)).build();
     counter = 0;
     rpcImpl.open(controller, request, new RpcCallback<ProtocolWaveletUpdate>() {
       @Override
@@ -225,6 +217,7 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
         @Override
         public void run(ProtocolWaveletUpdate update) {
           ++counter;
+          fail("Unexpected callback");
         }
       });
     } catch (IllegalArgumentException e) {
@@ -248,7 +241,7 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
         @Override
         public void run(ProtocolSubmitResponse response) {
           ++counter;
-          assertTrue(response.hasErrorMessage());
+          fail("Unexpected callback");
         }
       });
     } catch (IllegalArgumentException e) {

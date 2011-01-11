@@ -22,6 +22,8 @@ import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -67,7 +69,7 @@ public class SnapshotSerializer {
       HashedVersion hashedVersion) {
     WaveletSnapshot.Builder builder = WaveletSnapshot.newBuilder();
 
-    builder.setWaveletId(wavelet.getWaveletId().serialise());
+    builder.setWaveletId(ModernIdSerialiser.INSTANCE.serialiseWaveletId(wavelet.getWaveletId()));
     for (ParticipantId participant : wavelet.getParticipants()) {
       builder.addParticipantId(participant.toString());
     }
@@ -91,14 +93,15 @@ public class SnapshotSerializer {
    * @param snapshot the {@link WaveletSnapshot} to deserialize.
    * @throws OperationException if the ops in the snapshot can not be applied.
    * @throws InvalidParticipantAddress
+   * @throws InvalidIdException
    */
   public static ObservableWaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
-      throws OperationException, InvalidParticipantAddress {
+      throws OperationException, InvalidParticipantAddress, InvalidIdException {
     ObservableWaveletData.Factory<? extends ObservableWaveletData> factory
         = WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
 
     ParticipantId author = ParticipantId.of(snapshot.getCreator());
-    WaveletId waveletId = WaveletId.deserialise(snapshot.getWaveletId());
+    WaveletId waveletId = ModernIdSerialiser.INSTANCE.deserialiseWaveletId(snapshot.getWaveletId());
     long creationTime = snapshot.getCreationTime();
 
     ObservableWaveletData wavelet = factory.create(new EmptyWaveletSnapshot(waveId, waveletId,

@@ -312,7 +312,7 @@ public class WebClient implements EntryPoint {
         return;
       }
     }
-    History.newItem(waveRef.getWaveId().serialise(), false);
+    History.newItem(HistorySupport.historyTokenFromWaveref(waveRef), false);
   }
 
   /**

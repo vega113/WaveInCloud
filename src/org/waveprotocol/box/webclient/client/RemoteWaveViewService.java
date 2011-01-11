@@ -38,9 +38,10 @@ import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.id.WaveletIdSerializer;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -361,11 +362,16 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   }
 
   private ObservableWaveletData deserialize(WaveId waveId, WaveletSnapshot snapshot) {
+    WaveletId id;
+    try {
+      id = ModernIdSerialiser.INSTANCE.deserialiseWaveletId(snapshot.getWaveletId());
+    } catch (InvalidIdException e) {
+      throw new IllegalArgumentException(e);
+    }
     ParticipantId creator = ParticipantId.ofUnsafe(snapshot.getParticipantId(0));
     HashedVersion version = deserialize(snapshot.getVersion());
     long lmt = (long) snapshot.getLastModifiedTime();
     long ctime = (long) snapshot.getCreationTime();
-    WaveletId id = WaveletIdSerializer.INSTANCE.fromString(snapshot.getWaveletId());
     long lmv = version.getVersion();
 
     WaveletDataImpl waveletData =
@@ -399,7 +405,8 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   }
 
   private static WaveletName deserialize(String wavelet) {
-    return RemoteViewServiceMultiplexer.deserialize(wavelet);
+    WaveletName name = RemoteViewServiceMultiplexer.deserialize(wavelet);
+    return name;
   }
 
   private static ProtocolHashedVersion serialize(HashedVersion version) {

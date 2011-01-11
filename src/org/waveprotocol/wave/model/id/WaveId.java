@@ -179,7 +179,7 @@ public final class WaveId implements Comparable<WaveId>, Serializable {
 
   @Override
   public String toString() {
-    return "[WaveId " + serialise() + "]";
+    return "[WaveId " + ModernIdSerialiser.INSTANCE.serialiseWaveId(this) + "]";
   }
 
   @Override

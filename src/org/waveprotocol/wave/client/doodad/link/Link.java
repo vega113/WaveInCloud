@@ -21,8 +21,8 @@ import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.client.common.safehtml.EscapeUtils;
 import org.waveprotocol.wave.client.common.util.WaveRefConstants;
+import org.waveprotocol.wave.model.id.DualIdSerialiser;
 import org.waveprotocol.wave.model.id.InvalidIdException;
-import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.ReadableStringSet;
 import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
@@ -173,13 +173,13 @@ public final class Link {
     return new String[] {scheme, uri.substring(scheme.length() + sepLength)};
   }
 
-  public static WaveRef inferWaveRef(String rawString) throws InvalidWaveRefException {
+  private static WaveRef inferWaveRef(String rawString) throws InvalidWaveRefException {
     try {
       return GwtWaverefEncoder.decodeWaveRefFromPath(rawString);
     } catch (InvalidWaveRefException e) {
       // Let's try decoding it as a serialized wave id instead
       try {
-        return WaveRef.of(WaveId.checkedDeserialise(rawString));
+        return WaveRef.of(DualIdSerialiser.MODERN.deserialiseWaveId(rawString));
       } catch (InvalidIdException e1) {
         // Didn't work. Just re-throw the original exception
         throw e;

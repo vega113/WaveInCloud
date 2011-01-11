@@ -17,8 +17,7 @@
 
 package org.waveprotocol.wave.model.id;
 
-import com.google.common.base.Preconditions;
-
+import org.waveprotocol.wave.model.util.Preconditions;
 
 /**
  * Id serialiser for spec-conforming identifiers.
@@ -39,8 +38,10 @@ public class ModernIdSerialiser implements IdSerialiser {
   public String serialiseWaveId(WaveId id) {
     // These checks will be unnecessary once it's impossible to construct
     // a wave id that violates them.
-    Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, id.getDomain()), "Invalid domain");
-    Preconditions.checkArgument(WaveIdentifiers.isValidIdentifier(id.getId()), "Invalid id");
+    Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, id.getDomain()),
+        "Invalid domain %s", id.getDomain());
+    Preconditions.checkArgument(WaveIdentifiers.isValidIdentifier(id.getId()),
+        "Invalid id %s", id.getId());
     return new StringBuilder(id.getDomain()).append(SEP).append(id.getId()).toString();
   }
 
@@ -48,8 +49,10 @@ public class ModernIdSerialiser implements IdSerialiser {
   public String serialiseWaveletId(WaveletId id) {
     // These checks will be unnecessary once it's impossible to construct
     // a wavelet id that violates them.
-    Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, id.getDomain()), "Invalid domain");
-    Preconditions.checkArgument(WaveIdentifiers.isValidIdentifier(id.getId()), "Invalid id");
+    Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, id.getDomain()),
+        "Invalid domain %s", id.getDomain());
+    Preconditions.checkArgument(WaveIdentifiers.isValidIdentifier(id.getId()),
+        "Invalid id %s", id.getId());
     return new StringBuilder(id.getDomain()).append(SEP).append(id.getId()).toString();
   }
 

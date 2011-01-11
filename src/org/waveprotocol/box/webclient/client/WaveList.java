@@ -38,6 +38,8 @@ import org.waveprotocol.box.webclient.client.events.WaveIndexUpdatedEventHandler
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.box.webclient.util.Log;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 
@@ -83,7 +85,14 @@ public class WaveList extends Composite {
         }
         event.stopPropagation();
         String serializedWaveId = elt.getId().substring(WAVE_ID_PREFIX.length());
-        WaveId waveId = WaveId.deserialise(serializedWaveId);
+        WaveId waveId;
+        try {
+          waveId = ModernIdSerialiser.INSTANCE.deserialiseWaveId(serializedWaveId);
+        } catch (InvalidIdException e) {
+          // Ignore click.
+          LOG.info("Click on invalid wave id: " + serializedWaveId);
+          return;
+        }
         ClientEvents.get().fireEvent(new WaveSelectionEvent(WaveRef.of(waveId)));
       }
     }, ClickEvent.getType());
@@ -115,7 +124,7 @@ public class WaveList extends Composite {
     if (currentSelection != null) {
       currentSelection.removeClassName(style.selected());
     }
-    String serializedId = waveRef.getWaveId().serialise();
+    String serializedId = ModernIdSerialiser.INSTANCE.serialiseWaveId(waveRef.getWaveId());
     String eltId = WAVE_ID_PREFIX + serializedId;
     Element elt = panel.getElementById(eltId);
     currentSelection = elt;
@@ -130,7 +139,7 @@ public class WaveList extends Composite {
 
   private void update(List<IndexEntry> entries) {
     for (IndexEntry entry : entries) {
-      String serializedId = entry.getWaveId().serialise();
+      String serializedId = ModernIdSerialiser.INSTANCE.serialiseWaveId(entry.getWaveId());
       String eltId = WAVE_ID_PREFIX + serializedId;
       Element elt = panel.getElementById(eltId);
 

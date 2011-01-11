@@ -26,6 +26,8 @@ import com.google.common.collect.Lists;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.IdUtil;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -160,7 +162,7 @@ public final class IndexWave {
    */
   public static WaveletName indexWaveletNameFor(WaveId waveId) {
     Preconditions.checkArgument(canBeIndexed(waveId), "Wave %s cannot be indexed", waveId);
-    return WaveletName.of(INDEX_WAVE_ID, WaveletId.deserialise(waveId.serialise()));
+    return WaveletName.of(INDEX_WAVE_ID, WaveletId.of(waveId.getDomain(), waveId.getId()));
   }
 
   /**
@@ -192,7 +194,12 @@ public final class IndexWave {
   public static WaveId waveIdFromIndexWavelet(WaveletName indexWaveletName) {
     WaveId waveId = indexWaveletName.waveId;
     Preconditions.checkArgument(isIndexWave(waveId), waveId + " is not an index wave");
-    return WaveId.deserialise(indexWaveletName.waveletId.serialise());
+    try {
+      return ModernIdSerialiser.INSTANCE.deserialiseWaveId(
+          ModernIdSerialiser.INSTANCE.serialiseWaveletId(indexWaveletName.waveletId));
+    } catch (InvalidIdException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   /**

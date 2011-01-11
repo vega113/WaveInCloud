@@ -28,6 +28,7 @@ import org.waveprotocol.box.webclient.common.SnapshotSerializer;
 import org.waveprotocol.box.webclient.common.communication.callback.SimpleCallback;
 import org.waveprotocol.wave.client.debug.logger.DomLogger;
 import org.waveprotocol.wave.common.logging.LoggerBundle;
+import org.waveprotocol.wave.model.id.InvalidIdException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
@@ -88,8 +89,10 @@ public final class SnapshotFetcher {
           } catch (InvalidParticipantAddress e) {
             callback.onFailure(e);
             return;
+          } catch (InvalidIdException e) {
+            callback.onFailure(e);
+            return;
           }
-
           callback.onSuccess(waveView);
         }
       }

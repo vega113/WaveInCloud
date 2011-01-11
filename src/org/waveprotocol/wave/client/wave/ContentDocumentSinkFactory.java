@@ -25,6 +25,7 @@ import org.waveprotocol.wave.model.document.indexed.IndexedDocumentImpl;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.id.IdUtil;
+import org.waveprotocol.wave.model.id.LegacyIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.schema.SchemaProvider;
@@ -89,7 +90,8 @@ public final class ContentDocumentSinkFactory implements DocumentFactory<Documen
   public DocumentOperationSink create(final WaveletId waveletId, final String blipId,
       final DocInitialization content) {
 
-    String waveletIdStr = waveletId.serialise();
+    // This one needs to use the legacy serializer to match Conversation.getId()
+    String waveletIdStr = LegacyIdSerialiser.INSTANCE.serialiseWaveletId(waveletId);
     DocumentOperationSink sink;
     if (IdUtil.isBlipId(blipId)) {
       ContentDocumentSink document = new ContentDocumentSink(baseRegistries, content);
@@ -148,7 +150,7 @@ public final class ContentDocumentSinkFactory implements DocumentFactory<Documen
    * @param wavelet  wavelet to which outoing document operations are to be sent
    */
   public void registerOpBasedWavelet(OpBasedWavelet wavelet) {
-    String waveletId = wavelet.getId().serialise();
+    String waveletId = LegacyIdSerialiser.INSTANCE.serialiseWaveletId(wavelet.getId());
     Preconditions.checkArgument(!wavelets.containsKey(waveletId));
     wavelets.put(waveletId, wavelet);
   }

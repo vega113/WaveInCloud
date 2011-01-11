@@ -33,7 +33,8 @@ import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -70,7 +71,8 @@ public class WebClientBackend {
   /**
    * A cache of known waves. TODO(arb): think about ways to stop this growing without limit.
    */
-  private final Map<WaveId, WaveViewServiceImpl> waveViews = new HashMap<WaveId, WaveViewServiceImpl>();
+  private final Map<WaveId, WaveViewServiceImpl> waveViews =
+      new HashMap<WaveId, WaveViewServiceImpl>();
 
   /**
    * Id URI encoder and decoder.
@@ -195,8 +197,9 @@ public class WebClientBackend {
 
     WaveletName waveletName;
     try {
-      waveletName = URI_CODEC.uriToWaveletName(waveletUpdate.getWaveletName());
-    } catch (URIEncoderDecoder.EncodingException e) {
+      waveletName =
+          ModernIdSerialiser.INSTANCE.deserialiseWaveletName(waveletUpdate.getWaveletName());
+    } catch (InvalidIdException e) {
       throw new IllegalArgumentException(e);
     }
     LOG.info("wavelet name decoding " + waveletUpdate.getWaveletName() + " -> " + waveletName);
@@ -280,7 +283,7 @@ public class WebClientBackend {
     if (isIndexWave(waveletName) && !oldWaveletData.getParticipants().contains(getUserId())) {
       wave.removeWavelet(waveletName.waveletId);
     }
-    LOG.info("applied wavelet update for " + waveletName.waveletId.serialise());
+    LOG.info("applied wavelet update for " + waveletName.waveletId);
 
     if (waveViews.containsKey(wave.getWaveId())) {
       WaveViewServiceImpl waveView = waveViews.get(wave.getWaveId());
@@ -342,7 +345,7 @@ public class WebClientBackend {
     ProtocolOpenRequest openRequest = ProtocolOpenRequest.create();
 
     openRequest.setParticipantId(getUserId().getAddress());
-    openRequest.setWaveId(waveId.serialise());
+    openRequest.setWaveId(ModernIdSerialiser.INSTANCE.serialiseWaveId(waveId));
     if (waveletIdPrefix != null) {
       openRequest.addWaveletIdPrefix(waveletIdPrefix);
     } else {

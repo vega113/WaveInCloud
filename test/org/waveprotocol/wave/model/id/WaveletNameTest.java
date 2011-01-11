@@ -45,7 +45,7 @@ public class WaveletNameTest extends TestCase {
     final WaveId waveId = WaveId.of("example.com", "w+abcd1234");
     final WaveletId waveletId = WaveletId.of("acmewave.com", "conv+blah");
     WaveletName name = WaveletName.of(waveId, waveletId);
-    String expected = "[WaveletName example.com!w+abcd1234 acmewave.com!conv+blah]";
+    String expected = "[WaveletName example.com/w+abcd1234/acmewave.com/conv+blah]";
     assertEquals(expected, name.toString());
   }
 }

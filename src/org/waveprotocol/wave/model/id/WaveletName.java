@@ -65,7 +65,8 @@ public class WaveletName implements Comparable<WaveletName>, Serializable {
 
   @Override
   public String toString() {
-    return "[WaveletName " + waveId.serialise() + " " + waveletId.serialise() + "]";
+    return "[WaveletName " + ModernIdSerialiser.INSTANCE.serialiseWaveId(waveId)
+        + "/" + ModernIdSerialiser.INSTANCE.serialiseWaveletId(waveletId) + "]";
   }
 
   @Override

@@ -23,6 +23,8 @@ import org.waveprotocol.box.common.comms.WaveletSnapshot;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -69,7 +71,7 @@ public class SnapshotSerializer {
       HashedVersion hashedVersion) {
     WaveletSnapshot.Builder builder = WaveletSnapshot.newBuilder();
 
-    builder.setWaveletId(wavelet.getWaveletId().serialise());
+    builder.setWaveletId(ModernIdSerialiser.INSTANCE.serialiseWaveletId(wavelet.getWaveletId()));
     for (ParticipantId participant : wavelet.getParticipants()) {
       builder.addParticipantId(participant.toString());
     }
@@ -93,14 +95,17 @@ public class SnapshotSerializer {
    * @param snapshot the {@link WaveletSnapshot} to deserialize.
    * @throws OperationException if the ops in the snapshot can not be applied.
    * @throws InvalidParticipantAddress
+   * @throws InvalidIdException
    */
   public static ObservableWaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId,
-      DocumentFactory<?> docFactory) throws OperationException, InvalidParticipantAddress {
+      DocumentFactory<?> docFactory) throws OperationException, InvalidParticipantAddress,
+      InvalidIdException {
     ObservableWaveletData.Factory<? extends ObservableWaveletData> factory
         = WaveletDataImpl.Factory.create(docFactory);
 
     ParticipantId author = ParticipantId.of(snapshot.getCreator());
-    WaveletId waveletId = WaveletId.deserialise(snapshot.getWaveletId());
+    WaveletId waveletId =
+        ModernIdSerialiser.INSTANCE.deserialiseWaveletId(snapshot.getWaveletId());
     long creationTime = (long) snapshot.getCreationTime();
 
     ObservableWaveletData wavelet = factory.create(new EmptyWaveletSnapshot(waveId, waveletId,
@@ -171,10 +176,12 @@ public class SnapshotSerializer {
    * @return the deserialized snapshot
    * @throws OperationException
    * @throws InvalidParticipantAddress
+   * @throws InvalidIdException
    */
   public static WaveViewData deserializeWave(WaveViewSnapshot snapshot,
-      DocumentFactory<?> docFactory) throws OperationException, InvalidParticipantAddress {
-    WaveId waveId = WaveId.deserialise(snapshot.getWaveId());
+      DocumentFactory<?> docFactory) throws OperationException, InvalidParticipantAddress,
+      InvalidIdException {
+    WaveId waveId = ModernIdSerialiser.INSTANCE.deserialiseWaveId(snapshot.getWaveId());
     Collection<ObservableWaveletData> wavelets = CollectionUtils.newArrayList();
     for (WaveletSnapshot s : snapshot.getWaveletList()) {
       wavelets.add(deserializeWavelet(s, waveId, docFactory));

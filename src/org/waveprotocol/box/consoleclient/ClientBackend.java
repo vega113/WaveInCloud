@@ -53,7 +53,8 @@ import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder.EncodingException;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -460,7 +461,7 @@ public class ClientBackend {
     ProtocolOpenRequest.Builder openRequest = ProtocolOpenRequest.newBuilder();
 
     openRequest.setParticipantId(getUserId().getAddress());
-    openRequest.setWaveId(waveId.serialise());
+    openRequest.setWaveId(ModernIdSerialiser.INSTANCE.serialiseWaveId(waveId));
     openRequest.addWaveletIdPrefix(waveletIdPrefix);
 
     final RpcController rpcController = rpcChannel.newRpcController();
@@ -572,13 +573,7 @@ public class ClientBackend {
       final SuccessFailCallback<ProtocolSubmitResponse, String> callback) {
     // Build the submit request.
     ProtocolSubmitRequest.Builder submitRequest = ProtocolSubmitRequest.newBuilder();
-
-    try {
-      submitRequest.setWaveletName(URI_CODEC.waveletNameToURI(waveletName));
-    } catch (EncodingException e) {
-      throw new IllegalArgumentException(e);
-    }
-
+    submitRequest.setWaveletName(ModernIdSerialiser.INSTANCE.serialiseWaveletName(waveletName));
     submitRequest.setDelta(CoreWaveletOperationSerializer.serialize(delta));
 
     final RpcController rpcController = rpcChannel.newRpcController();
@@ -825,13 +820,11 @@ public class ClientBackend {
    *         {@link ProtocolWaveletUpdate} could not be decoded.
    */
   private WaveletName getWaveletName(ProtocolWaveletUpdate waveletUpdate) {
-    WaveletName waveletName;
     try {
-      waveletName = URI_CODEC.uriToWaveletName(waveletUpdate.getWaveletName());
-    } catch (EncodingException e) {
+      return ModernIdSerialiser.INSTANCE.deserialiseWaveletName(waveletUpdate.getWaveletName());
+    } catch (InvalidIdException e) {
       throw new IllegalArgumentException(e);
     }
-    return waveletName;
   }
 
   /**

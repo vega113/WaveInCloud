@@ -35,7 +35,7 @@ import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.URIEncoderDecoder;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -179,13 +179,7 @@ public class WaveViewServiceImpl implements WaveViewService {
     }
     LOG.info("Submitting to " + waveletName + " version " + waveletVersion);
     ProtocolSubmitRequest submitRequest = ProtocolSubmitRequest.create();
-    String waveletNameString;
-    try {
-      waveletNameString =
-          URI_CODEC.waveletNameToURI(WaveletName.of(waveletName.waveId, waveletName.waveletId));
-    } catch (URIEncoderDecoder.EncodingException e) {
-      throw new IllegalArgumentException(e);
-    }
+    String waveletNameString = ModernIdSerialiser.INSTANCE.serialiseWaveletName(waveletName);
     submitRequest.setWaveletName(waveletNameString);
     ProtocolWaveletDelta protocolDelta = ProtocolWaveletDelta.create();
     for (WaveletOperation op : delta) {
@@ -354,7 +348,7 @@ public class WaveViewServiceImpl implements WaveViewService {
   void reopen() {
     ProtocolOpenRequest openRequest = ProtocolOpenRequest.create();
     openRequest.setParticipantId(clientBackend.getUserId().getAddress());
-    openRequest.setWaveId(waveId.serialise());
+    openRequest.setWaveId(ModernIdSerialiser.INSTANCE.serialiseWaveId(waveId));
     if (waveletIdPrefix != null) {
       openRequest.addWaveletIdPrefix(waveletIdPrefix);
     } else {
@@ -371,7 +365,8 @@ public class WaveViewServiceImpl implements WaveViewService {
       }
       openRequest.addKnownWavelet(WaveletVersion.create()
           .setHashedVersion(hashedVersion)
-          .setWaveletId(wavelet.getWaveletName().waveletId.serialise()));
+          .setWaveletId(ModernIdSerialiser.INSTANCE.serialiseWaveletId(
+              wavelet.getWaveletName().waveletId)));
     }
     LOG.info("Opening wave " + waveId + " for prefix \"" + waveletIdPrefix
         + "\" with " + openRequest.getKnownWaveletCount() + " known wavelets.");
