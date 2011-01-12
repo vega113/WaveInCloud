@@ -26,8 +26,8 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
+import org.waveprotocol.wave.model.id.DualIdSerialiser;
 import org.waveprotocol.wave.model.id.InvalidIdException;
-import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.waveref.WaveRef;
@@ -158,7 +158,7 @@ public final class Actions {
     WaveId waveId = blip.hackGetRaw().getWavelet().getWaveId();
     WaveletId waveletId;
     try {
-      waveletId = ModernIdSerialiser.INSTANCE.deserialiseWaveletId(blip.getConversation().getId());
+      waveletId = DualIdSerialiser.MODERN.deserialiseWaveletId(blip.getConversation().getId());
     } catch (InvalidIdException e) {
       Window.alert("Unable to link to this blip, invalid conversation id "
           + blip.getConversation().getId());
