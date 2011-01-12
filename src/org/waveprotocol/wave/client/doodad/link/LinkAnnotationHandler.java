@@ -26,16 +26,16 @@ import static org.waveprotocol.wave.client.doodad.link.Link.WAVE_KEY;
 import org.waveprotocol.wave.client.doodad.suggestion.Suggestion;
 import org.waveprotocol.wave.client.doodad.suggestion.SuggestionRenderer;
 import org.waveprotocol.wave.client.editor.content.AnnotationPainter;
-import org.waveprotocol.wave.client.editor.content.AnnotationPainter.BoundaryFunction;
-import org.waveprotocol.wave.client.editor.content.AnnotationPainter.PaintFunction;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.PainterRegistry;
 import org.waveprotocol.wave.client.editor.content.Registries;
+import org.waveprotocol.wave.client.editor.content.AnnotationPainter.BoundaryFunction;
+import org.waveprotocol.wave.client.editor.content.AnnotationPainter.PaintFunction;
 import org.waveprotocol.wave.client.editor.content.misc.AnnotationPaint;
 import org.waveprotocol.wave.client.editor.sugg.SuggestionsManager.HasSuggestions;
+import org.waveprotocol.wave.model.document.AnnotationMutationHandler;
 import org.waveprotocol.wave.model.document.AnnotationBehaviour.AnnotationFamily;
 import org.waveprotocol.wave.model.document.AnnotationBehaviour.DefaultAnnotationBehaviour;
-import org.waveprotocol.wave.model.document.AnnotationMutationHandler;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.util.AnnotationRegistry;
 import org.waveprotocol.wave.model.document.util.DocumentContext;
@@ -43,8 +43,8 @@ import org.waveprotocol.wave.model.document.util.LocalDocument;
 import org.waveprotocol.wave.model.util.Box;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.ReadableStringSet;
-import org.waveprotocol.wave.model.util.ReadableStringSet.Proc;
 import org.waveprotocol.wave.model.util.StringMap;
+import org.waveprotocol.wave.model.util.ReadableStringSet.Proc;
 
 import java.util.Collections;
 import java.util.Map;
@@ -141,14 +141,14 @@ public class LinkAnnotationHandler implements AnnotationMutationHandler {
 
   @SuppressWarnings("deprecation")
   public static String getLink(Map<String, Object> map) {
-    Object ret;
+    Object ret = null;
     if (map.containsKey(MANUAL_KEY)) {
       ret = Link.toHrefFromUri((String) map.get(MANUAL_KEY));
     } else if (map.containsKey(WAVE_KEY)) {
       // This is for backwards compatibility. Stop supporting WAVE_KEY once
       // the data is cleaned.
       ret = Link.toHrefFromUri((String) map.get(WAVE_KEY));
-    } else {
+    } else if (map.containsKey(AUTO_KEY)) {
       ret = Link.toHrefFromUri((String) map.get(AUTO_KEY));
     }
     if (ret instanceof String) {
