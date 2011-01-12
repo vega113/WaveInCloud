@@ -78,11 +78,7 @@ class WebSocketClientChannel extends WebSocketChannel {
    * Propagate a String message to the websocket client.
    */
   @Override
-  public void sendMessageString(String data) {
-    try {
-      websocket.send(data);
-    } catch (IOException e) {
-      LOG.warning("Websocket send failed.", e);
-    }
+  public void sendMessageString(String data) throws IOException {
+    websocket.send(data);
   }
 }

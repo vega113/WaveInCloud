@@ -94,15 +94,14 @@ public class SocketIOServerChannel extends WebSocketChannel implements SocketIOI
    * @param data
    */
   @Override
-  protected void sendMessageString(String data) {
+  protected void sendMessageString(String data) throws SocketIOException {
     synchronized (this) {
       if (outbound == null) {
-        throw new IllegalStateException("Connection has been disconnected.");
-      }
-      try {
+        // Just drop the message. It's rude to throw an exception since the
+        // caller had no way of knowing.
+        LOG.warning("Websocket is not connected");
+      } else {
         outbound.sendMessage(data);
-      } catch (SocketIOException e) {
-        throw new IllegalStateException(e);
       }
     }
   }

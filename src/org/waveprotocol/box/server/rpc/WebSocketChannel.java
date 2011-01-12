@@ -59,9 +59,9 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
   }
 
   private final ProtoCallback callback;
-  private Gson gson = new Gson();
-  private Map<String, Class<? extends Message>> protosByName;
-  private ProtoSerializer serializer;
+  private final Gson gson = new Gson();
+  private final Map<String, Class<? extends Message>> protosByName;
+  private final ProtoSerializer serializer;
 
   /**
    * Constructs a new WebSocketChannel, using the callback to handle any
@@ -104,11 +104,12 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
   }
 
   /**
-   * Send the given data String
+   * Sends a message on the socket.
    *
-   * @param data
+   * @param data message to send
+   * @throws IOException if the communication fails
    */
-  protected abstract void sendMessageString(String data);
+  protected abstract void sendMessageString(String data) throws IOException;
 
   @Override
   public void sendMessage(long sequenceNo, Message message) {
@@ -122,8 +123,15 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
 
     MessageWrapper wrapper = new MessageWrapper(VERSION, sequenceNo,
         message.getDescriptorForType().getName(), json);
-    sendMessageString(gson.toJson(wrapper));
-    LOG.fine("sent JSON message over websocket, sequence number " + sequenceNo
-        + ", message " + message.toString());
+    try {
+      sendMessageString(gson.toJson(wrapper));
+      LOG.fine("sent JSON message over websocket, sequence number " + sequenceNo
+          + ", message " + message);
+    } catch (IOException e) {
+      // TODO(anorth): This failure should be communicated to the caller
+      // so it can attempt retransmission.
+      LOG.warning("Failed to transmit message on socket, sequence number " + sequenceNo
+          + ", message " + message, e);
+    }
   }
 }

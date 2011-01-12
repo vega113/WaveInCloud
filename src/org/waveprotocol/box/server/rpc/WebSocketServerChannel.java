@@ -85,19 +85,15 @@ public class WebSocketServerChannel extends WebSocketChannel implements WebSocke
    * @param data
    */
   @Override
-  protected void sendMessageString(String data) {
+  protected void sendMessageString(String data) throws IOException {
     synchronized (this) {
       if (outbound == null) {
         // Just drop the message. It's rude to throw an exception since the
         // caller had no way of knowing.
         LOG.warning("Websocket is not connected");
       } else {
-        try {
-          // we always use null to frame our UTF-8 strings.
-          outbound.sendMessage((byte) 0x00, data);
-        } catch (IOException e) {
-          throw new IllegalStateException(e);
-        }
+        // we always use null to frame our UTF-8 strings.
+        outbound.sendMessage((byte) 0x00, data);
       }
     }
   }
