@@ -25,12 +25,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
-import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolWaveClientRpc;
 import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.frontend.ClientFrontend;
-import org.waveprotocol.box.server.frontend.ClientFrontendImpl;
-import org.waveprotocol.box.server.frontend.WaveClientRpcImpl;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.crypto.CachedCertPathValidator;
 import org.waveprotocol.wave.crypto.CertPathStore;
@@ -98,13 +94,12 @@ public class WaveServerModule extends AbstractModule {
     bind(SearchProvider.class).to(WaveMap.class).in(Singleton.class);
     bind(WaveletProvider.class).to(WaveServerImpl.class).in(Singleton.class);
     bind(HashedVersionFactory.class).toInstance(HASH_FACTORY);
-    bind(ClientFrontend.class).to(ClientFrontendImpl.class).in(Singleton.class);
-    bind(ProtocolWaveClientRpc.Interface.class).to(WaveClientRpcImpl.class).in(Singleton.class);
     bind(Executor.class).annotatedWith(Names.named("listener_executor")).toInstance(
         Executors.newFixedThreadPool(LISTENER_EXECUTOR_THREAD_COUNT));
   }
 
   @Provides
+  @SuppressWarnings("unused")
   private LocalWaveletContainer.Factory provideLocalWaveletContainerFactory() {
     return new LocalWaveletContainer.Factory() {
       @Override
@@ -116,6 +111,7 @@ public class WaveServerModule extends AbstractModule {
   }
 
   @Provides
+  @SuppressWarnings("unused")
   private RemoteWaveletContainer.Factory provideRemoteWaveletContainerFactory() {
     return new RemoteWaveletContainer.Factory() {
       @Override
@@ -127,6 +123,7 @@ public class WaveServerModule extends AbstractModule {
   }
 
   @Provides
+  @SuppressWarnings("unused")
   private WaveCertPathValidator provideWaveCertPathValidator(
       @Named(CoreSettings.WAVESERVER_DISABLE_SIGNER_VERIFICATION) boolean disableSignerVerification,
       TimeSource timeSource, VerifiedCertChainCache certCache,

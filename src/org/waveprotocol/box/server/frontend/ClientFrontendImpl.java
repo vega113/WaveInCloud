@@ -22,7 +22,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.common.IndexWave;
@@ -98,9 +97,20 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   private final Map<WaveId, Map< WaveletId, PerWavelet>> perWavelet;
   private final WaveletProvider waveletProvider;
 
-  @Inject
-  public ClientFrontendImpl(final HashedVersionFactory hashedVersionFactory,
+
+  public static ClientFrontendImpl create(HashedVersionFactory hashedVersionFactory,
       WaveletProvider waveletProvider, WaveBus wavebus) {
+    ClientFrontendImpl impl = new ClientFrontendImpl(hashedVersionFactory, waveletProvider);
+
+    // TODO(anorth): Initialize index here until a separate index system exists.
+
+    wavebus.subscribe(impl);
+    return impl;
+  }
+
+  @VisibleForTesting
+  ClientFrontendImpl(final HashedVersionFactory hashedVersionFactory,
+      WaveletProvider waveletProvider) {
     this.waveletProvider = waveletProvider;
 
     final MapMaker mapMaker = new MapMaker();
@@ -123,9 +133,6 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         return new UserManager();
       }
     });
-
-    // TODO(anorth): Fix unsafe publishing in constructor.
-    wavebus.subscribe(this);
   }
 
   @Override

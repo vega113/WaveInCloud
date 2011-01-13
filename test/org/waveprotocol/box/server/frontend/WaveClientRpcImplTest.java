@@ -86,7 +86,7 @@ public class WaveClientRpcImplTest extends TestCase implements TestingConstants 
     counter = 0;
     controller = new FakeServerRpcController();
     frontend = new FakeClientFrontend();
-    rpcImpl = new WaveClientRpcImpl(frontend);
+    rpcImpl = WaveClientRpcImpl.create(frontend, false);
   }
 
   // TODO(arb): test with channelIds.

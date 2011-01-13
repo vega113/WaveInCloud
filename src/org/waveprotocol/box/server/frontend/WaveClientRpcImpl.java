@@ -18,7 +18,6 @@
 package org.waveprotocol.box.server.frontend;
 
 import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
@@ -60,15 +59,23 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
   private static final Log LOG = Log.get(WaveClientRpcImpl.class);
 
   private final ClientFrontend frontend;
+  private final boolean handleAuthentication;
 
   /**
-   * Constructor.
+   * Creates a new RPC interface to the front-end.
    *
-   * @param frontend ClientFrontend that consumes the operations.
+   * @param frontend front-end to which to forward requests
+   * @param handleAuthentication whether to handle authentication; it's
+   *        otherwise expected to be handled before this class
    */
-  @Inject
-  public WaveClientRpcImpl(ClientFrontend frontend) {
+  public static WaveClientRpcImpl create(ClientFrontend frontend,
+      boolean handleAuthentication) {
+    return new WaveClientRpcImpl(frontend, handleAuthentication);
+  }
+
+  private WaveClientRpcImpl(ClientFrontend frontend, boolean handleAuthentication) {
     this.frontend = frontend;
+    this.handleAuthentication = handleAuthentication;
   }
 
   @Override
@@ -178,7 +185,9 @@ public class WaveClientRpcImpl implements ProtocolWaveClientRpc.Interface {
   @Override
   public void authenticate(RpcController controller, ProtocolAuthenticate request,
       RpcCallback<ProtocolAuthenticationResult> done) {
-    throw new IllegalStateException("ProtocolAuthenticate should be handled in ServerRpcProvider");
+    Preconditions.checkState(handleAuthentication,
+        "ProtocolAuthenticate should be handled in ServerRpcProvider");
+    done.run(ProtocolAuthenticationResult.getDefaultInstance());
   }
 
   ServerRpcController asBoxController(RpcController controller) {

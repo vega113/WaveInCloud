@@ -22,7 +22,6 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -122,8 +121,7 @@ public class ClientFrontendImplTest extends TestCase {
     when(waveletProvider.getWaveletIds(any(WaveId.class))).thenReturn(ImmutableSet.<WaveletId>of());
 
     WaveBus waveBus = mock(WaveBus.class);
-    this.clientFrontend = new ClientFrontendImpl(HASH_FACTORY, waveletProvider, waveBus);
-    verify(waveBus).subscribe((WaveBus.Subscriber) isNotNull());
+    this.clientFrontend = new ClientFrontendImpl(HASH_FACTORY, waveletProvider);
   }
 
   public void testOpenEmptyWaveReceivesChannelIdAndMarker() {
