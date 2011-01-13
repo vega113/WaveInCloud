@@ -91,6 +91,11 @@ public class ServerMain {
     boolean enableFederation = settingsInjector.getInstance(Key.get(Boolean.class,
         Names.named(CoreSettings.ENABLE_FEDERATION)));
 
+    Module federationSettings =
+      SettingsBinder.bindSettings(PROPERTIES_FILE_KEY, FederationSettings.class);
+    // This MUST happen first, or bindings will fail if federation is enabled.
+    settingsInjector = settingsInjector.createChildInjector(federationSettings);
+
     Module federationModule = buildFederationModule(settingsInjector, enableFederation);
     PersistenceModule persistenceModule = settingsInjector.getInstance(PersistenceModule.class);
     Injector injector =
@@ -114,9 +119,6 @@ public class ServerMain {
       throws ConfigurationException {
     Module federationModule;
     if (enableFederation) {
-      Module federationSettings =
-          SettingsBinder.bindSettings(PROPERTIES_FILE_KEY, FederationSettings.class);
-      settingsInjector = settingsInjector.createChildInjector(federationSettings);
       federationModule = settingsInjector.getInstance(XmppFederationModule.class);
     } else {
       federationModule = settingsInjector.getInstance(NoOpFederationModule.class);
