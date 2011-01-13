@@ -29,7 +29,7 @@ import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
  *
  * @author soren@google.com (Soren Lassen)
  */
-interface WaveletNotificationSubscriber {
+public interface WaveletNotificationSubscriber {
   /**
    * Notifies of a wavelet update.
    *
