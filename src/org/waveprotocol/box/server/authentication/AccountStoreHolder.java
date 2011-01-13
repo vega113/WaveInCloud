@@ -38,7 +38,7 @@ public class AccountStoreHolder {
     Preconditions.checkNotNull(defaultDomain, "Default domain cannot be null");
     Preconditions.checkState(AccountStoreHolder.store == null, "Account store already set");
     AccountStoreHolder.store = store;
-    AccountStoreHolder.defaultDomain = defaultDomain;
+    AccountStoreHolder.defaultDomain = defaultDomain.toLowerCase();
   }
 
   /**
@@ -48,7 +48,7 @@ public class AccountStoreHolder {
     Preconditions.checkNotNull(store, "Account store not set");
     return store;
   }
-  
+
   /**
    * @return the non-null default domain
    */
@@ -56,7 +56,7 @@ public class AccountStoreHolder {
     Preconditions.checkNotNull(defaultDomain, "Default domain not set");
     return defaultDomain;
   }
-  
+
   /** Needed for testing. */
   public static void resetForTesting() {
     store = null;

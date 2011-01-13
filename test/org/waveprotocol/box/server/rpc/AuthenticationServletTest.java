@@ -73,8 +73,8 @@ public class AuthenticationServletTest extends TestCase {
         new HumanAccountDataImpl(USER, new PasswordDigest("password".toCharArray()));
     store.putAccount(account);
 
-    servlet = new AuthenticationServlet(AuthTestUtil.makeConfiguration(), manager, "example.com");
-    AccountStoreHolder.init(store, "example.com");
+    servlet = new AuthenticationServlet(AuthTestUtil.makeConfiguration(), manager, "examPLe.com");
+    AccountStoreHolder.init(store, "eXaMple.com");
   }
 
   @Override

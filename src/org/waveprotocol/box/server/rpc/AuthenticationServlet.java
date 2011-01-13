@@ -83,7 +83,7 @@ public class AuthenticationServlet extends HttpServlet {
     Preconditions.checkNotNull(sessionManager, "Session manager is null");
     this.configuration = configuration;
     this.sessionManager = sessionManager;
-    this.domain = domain;
+    this.domain = domain.toLowerCase();
   }
 
   @SuppressWarnings("unchecked")
