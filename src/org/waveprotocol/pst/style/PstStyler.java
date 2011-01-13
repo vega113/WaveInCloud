@@ -40,7 +40,7 @@ import java.util.List;
  *
  * @author kalman@google.com (Benjamin Kalman)
  */
-public final class PstStyler implements JavaStyler {
+public final class PstStyler implements Styler {
 
   private static final String BACKUP_SUFFIX = ".prePstStyler";
   private static final String INDENT = "  ";
@@ -55,7 +55,7 @@ public final class PstStyler implements JavaStyler {
   /**
    * Builder for a series of composed style components.
    */
-  private static class Styler {
+  private static class StyleBuilder {
 
     /**
      * Styles a single line, outputting generated lines to a generator.
@@ -187,7 +187,7 @@ public final class PstStyler implements JavaStyler {
       return result.getList();
     }
 
-    public Styler addNewLineBefore(final char newLineBefore) {
+    public StyleBuilder addNewLineBefore(final char newLineBefore) {
       lineStylers.add(new StatefulLineStyler() {
         @Override public void doNext(String line, LineGenerator generator) {
           // TODO(kalman): this is heavy-handed; be fine-grained and just don't
@@ -211,7 +211,7 @@ public final class PstStyler implements JavaStyler {
       return this;
     }
 
-    public Styler addNewLineAfter(final char newLineAfter) {
+    public StyleBuilder addNewLineAfter(final char newLineAfter) {
       lineStylers.add(new StatefulLineStyler() {
         @Override public void doNext(String line, LineGenerator generator) {
           // TODO(kalman): same as above.
@@ -234,7 +234,7 @@ public final class PstStyler implements JavaStyler {
       return this;
     }
 
-    public Styler trim() {
+    public StyleBuilder trim() {
       lineStylers.add(new LineStyler() {
         @Override public void next(String line, LineGenerator generator) {
           generator.yield(line.trim());
@@ -243,7 +243,7 @@ public final class PstStyler implements JavaStyler {
       return this;
     }
 
-    public Styler removeRepeatedSpacing() {
+    public StyleBuilder removeRepeatedSpacing() {
       lineStylers.add(new LineStyler() {
         @Override public void next(String line, LineGenerator generator) {
           generator.yield(line.replaceAll("[ \t]+", " "));
@@ -252,7 +252,7 @@ public final class PstStyler implements JavaStyler {
       return this;
     }
 
-    public Styler stripEmptyLines() {
+    public StyleBuilder stripEmptyLines() {
       lineStylers.add(new LineStyler() {
         @Override public void next(String line, LineGenerator generator) {
           if (!line.isEmpty()) {
@@ -263,7 +263,7 @@ public final class PstStyler implements JavaStyler {
       return this;
     }
 
-    public Styler indentBraces() {
+    public StyleBuilder indentBraces() {
       lineStylers.add(new StatefulLineStyler() {
         private int indentLevel = 0;
 
@@ -293,7 +293,7 @@ public final class PstStyler implements JavaStyler {
       return this;
     }
 
-    public Styler indentLongComments() {
+    public StyleBuilder indentLongComments() {
       lineStylers.add(new StatefulLineStyler() {
         @Override void doNext(String line, LineGenerator generator) {
           if (inComment() && !inStartOfComment()) {
@@ -306,7 +306,7 @@ public final class PstStyler implements JavaStyler {
       return this;
     }
 
-    public Styler doubleIndentUnfinishedLines() {
+    public StyleBuilder doubleIndentUnfinishedLines() {
       lineStylers.add(new StatefulLineStyler() {
         boolean previousUnfinished = false;
 
@@ -323,7 +323,7 @@ public final class PstStyler implements JavaStyler {
       return this;
     }
 
-    public Styler addBlankLineBeforeMatching(final String s) {
+    public StyleBuilder addBlankLineBeforeMatching(final String s) {
       lineStylers.add(new StatefulLineStyler() {
         @Override public void doNext(String line, LineGenerator generator) {
           if ((!inComment() || inStartOfComment()) && line.contains(s)) {
@@ -335,7 +335,7 @@ public final class PstStyler implements JavaStyler {
       return this;
     }
 
-    public Styler addBlankLineAfterMatching(final String s) {
+    public StyleBuilder addBlankLineAfterMatching(final String s) {
       lineStylers.add(new StatefulLineStyler() {
         boolean previousLineMatched = false;
 
@@ -391,7 +391,7 @@ public final class PstStyler implements JavaStyler {
   }
 
   private List<String> styleLines(List<String> lines) {
-    return new Styler()
+    return new StyleBuilder()
         .trim()
         .removeRepeatedSpacing()
         .addNewLineBefore('}')

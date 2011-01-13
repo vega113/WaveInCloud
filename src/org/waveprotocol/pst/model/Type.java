@@ -30,10 +30,13 @@ public final class Type {
 
   private final FieldDescriptor field;
   private final String templateName;
+  private final MessageProperties extraProperties;
+  private Message messageType;
 
-  public Type(FieldDescriptor field, String templateName) {
+  public Type(FieldDescriptor field, String templateName, MessageProperties extraProperties) {
     this.field = field;
     this.templateName = templateName;
+    this.extraProperties = extraProperties;
   }
 
   /**
@@ -54,7 +57,7 @@ public final class Type {
       case BOOLEAN:
         return "boolean";
       case BYTE_STRING:
-        return "ByteString";
+        return "Blob";
       case DOUBLE:
         return "double";
       case ENUM:
@@ -66,7 +69,7 @@ public final class Type {
       case LONG:
         return "long";
       case MESSAGE:
-        return field.getMessageType().getName() + Util.capitalize(templateName);
+        return getMessage().getJavaType();
       case STRING:
         return "String";
       default:
@@ -122,7 +125,7 @@ public final class Type {
   }
 
   /**
-   * Gets the default value of the field (null for objects, empty strings/arrays, zero, false, etc).
+   * Gets the default value of the field (null for objects, zero, false, etc).
    *
    * @return the "default value" of the field
    */
@@ -131,7 +134,7 @@ public final class Type {
       case BOOLEAN:
         return "false";
       case BYTE_STRING:
-        return "ByteString.EMPTY";
+        return "null";
       case DOUBLE:
         return "0.0";
       case ENUM:
@@ -145,54 +148,20 @@ public final class Type {
       case MESSAGE:
         return "null";
       case STRING:
-        return "\"\"";
+        return "null";
       default:
         throw new UnsupportedOperationException("Unsupported field type " + field.getJavaType());
     }
   }
 
   /**
-   * Returns the message type of the field without template suffix, for example:
-   * <ul>
-   * <li>org.waveprotocol.pst.examples.Example1.Person.first_name = undefined</li>
-   * <li>org.waveprotocol.pst.examples.Example1.Person.age = undefined</li>
-   * <li>org.waveprotocol.pst.examples.Example1.Person.gender = undefined</li>
-   * <li>org.waveprotocol.pst.examples.Example1.Person.address =
-   *     "Address" (regardless of template name)</li>
-   * </ul>
-   *
-   * @return the message type of the field without template suffix
+   * @return this type as a message.
    */
-  public String getMessageType() {
-    return field.getMessageType().getName();
-  }
-
-  /**
-   * Returns the full type of the protocol buffer enum or message, for example
-   * <ul>
-   * <li>org.waveprotocol.pst.examples.Example1.Person.first_name = undefined</li>
-   * <li>org.waveprotocol.pst.examples.Example1.Person.age = undefined</li>
-   * <li>org.waveprotocol.pst.examples.Example1.Person.gender =
-   *     "org.waveprotocol.pst.examples.Example1.Person"</li>
-   * <li>org.waveprotocol.pst.examples.Example1.Person.address =
-   *     "org.waveprotocol.pst.examples.Example1.Address"</li>
-   * </ul>
-   *
-   * @return the full type of the protocol buffer enum or message
-   */
-  public String getProtoType() {
-    Descriptor containingType = null;
-    switch (field.getType()) {
-      case ENUM:
-        containingType = field.getEnumType().getContainingType();
-        break;
-      case MESSAGE:
-        containingType = field.getMessageType().getContainingType();
-        break;
-      default:
-        throw new IllegalArgumentException("field is neither an enum nor message type");
+  public Message getMessage() {
+    if (messageType == null) {
+      messageType = adapt(field.getMessageType()); 
     }
-    return new Message(containingType, templateName).getProtoType();
+    return messageType;
   }
 
   /**
@@ -210,6 +179,13 @@ public final class Type {
   }
 
   /**
+   * @return whether the field is a byte string.
+   */
+  public boolean isBlob() {
+    return field.getType().equals(FieldDescriptor.Type.BYTES);
+  }
+
+  /**
    * @return whether the field type is a Java primitive
    */
   public boolean isPrimitive() {
@@ -223,6 +199,10 @@ public final class Type {
       default:
         return false;
     }
+  }
+  
+  private Message adapt(Descriptor d) {
+    return new Message(d, templateName, extraProperties);
   }
 
   @Override

@@ -15,30 +15,29 @@
  *
  */
 
+package $m.package$;
 
-package org.waveprotocol.pst.model;
+$imports(m=m)$
+
+import static org.waveprotocol.wave.communication.gwt.JsonHelper.*;
+
+import com.google.gwt.core.client.*;
+
+import org.waveprotocol.pst.lib.Blob;
+
+import org.waveprotocol.wave.communication.gwt.*;
+import org.waveprotocol.wave.communication.json.*;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
- * Util methods for model objects.
+ * Client implementation of $m.name$ backed by a GWT JavaScriptObject.
  *
- * @author kalman@google.com (Benjamin Kalman)
+ * Do not edit.
+ *
+ * Generated from $m.filename$.
  */
-public final class Util {
-
-  private Util() {
-  }
-
-  /**
-   * @return the given string, capitalized ("fooBar" = "FooBar")
-   */
-  public static String capitalize(String s) {
-    return s.isEmpty() ? "" : Character.toUpperCase(s.charAt(0)) + s.substring(1);
-  }
-
-  /**
-   * @return the given string, uncapitalized ("FooBar" = "fooBar")
-   */
-  public static String uncapitalize(String s) {
-    return s.isEmpty() ? "" : Character.toLowerCase(s.charAt(0)) + s.substring(1);
-  }
-}
+$class(m=m)$

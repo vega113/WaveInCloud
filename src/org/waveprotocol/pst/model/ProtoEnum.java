@@ -14,13 +14,17 @@
  * limitations under the License.
  *
  */
-
 package org.waveprotocol.pst.model;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 
+import org.apache.commons.httpclient.methods.GetMethod;
+
+import java.util.Deque;
 import java.util.List;
 
 /**
@@ -33,9 +37,16 @@ import java.util.List;
 public final class ProtoEnum {
 
   private final EnumDescriptor descriptor;
+  private final String templateName;
+  private final MessageProperties extra;
 
-  public ProtoEnum(EnumDescriptor descriptor) {
+  private String fullName;
+  private String fullJavaType;
+  
+  public ProtoEnum(EnumDescriptor descriptor, String templateName, MessageProperties extra) {
     this.descriptor = descriptor;
+    this.templateName = templateName;
+    this.extra = extra;
   }
 
   /**
@@ -48,6 +59,65 @@ public final class ProtoEnum {
    */
   public String getName() {
     return descriptor.getName();
+  }
+
+  /**
+   * Returns the short name of the Java type generated for this enum, for example:
+   * <ul>
+   * <li>org.waveprotocol.pst.examples.Example1.Person.Gender = "Gender"</li>
+   * </ul>
+   *
+   * @return the name of the java type of the enum
+   */
+  public String getJavaType() {
+    return getName();
+  }
+
+  /**
+   * Returns the fully-qualified name of the enum in abstract space. For
+   * example:
+   * <ul>
+   * <li>org.waveprotocol.pst.examples.Example1.Person.Gender =
+   * "org.waveprotocol.pst.examples.Person.Gender"</li>
+   * </ul>
+   *
+   * @return the name of the enum
+   */
+  public String getFullName() {
+    if (fullName == null) {
+      fullName = getContainingMessage().getFullName() + "." + getName();
+    }
+    return fullName;
+  }
+
+  /**
+   * Returns the fully-qualified name of the Java type for this enum.
+   * example:
+   * <ul>
+   * <li>org.waveprotocol.pst.examples.Example1.Person.Gender =
+   * "org.waveprotocol.pst.examples.Person.Gender"</li>
+   * </ul>
+   *
+   * @return the name of the enum
+   */
+  public String getFullJavaType() {
+    if (fullJavaType == null) {
+      fullJavaType = getContainingMessage().getFullJavaType() + "." + getName();
+    }
+    return fullJavaType;
+  }
+  
+  /**
+   * Returns the qualified type of the protobuf enum, for example:
+   * <ul>
+   * <li>org.waveprotocol.pst.examples.Example1.Person =
+   *     "org.waveprotocol.pst.examples.Example1.Person"</li>
+   * </ul>
+   *
+   * @return the full type of the protocol buffer enum
+   */
+  public String getProtoType() {
+    return getContainingMessage().getProtoType() + "." + getName();
   }
 
   /**
@@ -64,5 +134,9 @@ public final class ProtoEnum {
       enums.add(new EnumValue(evd));
     }
     return enums;
+  }
+  
+  private Message getContainingMessage() {
+    return new Message(descriptor.getContainingType(), templateName, extra);
   }
 }

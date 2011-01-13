@@ -18,6 +18,7 @@
 package org.waveprotocol.pst;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import com.google.protobuf.Descriptors.FileDescriptor;
 
 import org.apache.commons.cli.ParseException;
@@ -47,7 +48,10 @@ public final class PstMain {
       System.exit(0);
     }
 
-    FileDescriptor fd = PstFileDescriptor.load(cl.getProtoFile().getPath());
+    FileDescriptor fd = PstFileDescriptor.load(
+        cl.getProtoFile().getPath(),
+        cl.shouldSaveJava() ? cl.getOutputDir() : Files.createTempDir(),
+        cl.getProtoPath());
     if (fd == null) {
       System.err.println("Error: cannot find file descriptor for " + cl.getProtoFile());
       System.exit(1);
@@ -65,7 +69,7 @@ public final class PstMain {
       }
     }
 
-    Pst pst = new Pst(cl.getOutputDir(), fd, cl.getStyler(), templates, cl.shouldSaveBackups());
+    Pst pst = new Pst(cl.getOutputDir(), fd, cl.getStyler(), templates, cl.shouldSavePreStyled());
     try {
       pst.run();
     } catch (PstException e) {

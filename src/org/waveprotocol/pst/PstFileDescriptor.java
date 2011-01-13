@@ -17,6 +17,7 @@
 
 package org.waveprotocol.pst;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
@@ -29,6 +30,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -51,25 +53,30 @@ public final class PstFileDescriptor {
   private final FileDescriptor descriptor;
 
   /**
-   * Loads the {@link FileDescriptor} from a path.  The path may be a class name
+   * Loads the {@link FileDescriptor} from a path. The path may be a class name
    * (e.g. foo.Bar), path to a class (e.g. bin/foo/Bar.class), or a path to a
    * Java source file (e.g. src/foo/Bar.java).
    *
    * In each case it is the caller's responsibility to ensure that the classpath
    * of the Java runtime is correct.
+   *
+   * @param path the path to load the proto description from
+   * @param saveintermediateJavaDir path to save the intermediate protoc-
+   *        generated Java file (if any)
+   * @param protoPath any additional path to pass to the protoc compiler
    */
-  public static FileDescriptor load(String path) {
-    return new PstFileDescriptor(path).get();
+  public static FileDescriptor load(String path, File intermediateJavaDir, File protoPath) {
+    return new PstFileDescriptor(path, intermediateJavaDir, protoPath).get();
   }
 
-  private  PstFileDescriptor(String path) {
+  private  PstFileDescriptor(String path, File intermediateJavaDir, File protoPath) {
     Class<?> clazz = null;
     if (path.endsWith(".class")) {
       clazz = fromPathToClass(path);
     } else if (path.endsWith(".java")) {
       clazz = fromPathToJava(path);
     } else if (path.endsWith(".proto")) {
-      clazz = fromPathToProto(path);
+      clazz = fromPathToProto(path, intermediateJavaDir, protoPath);
     } else {
       clazz = fromClassName(path);
     }
@@ -133,13 +140,14 @@ public final class PstFileDescriptor {
           "-cp", determineClasspath(pathToJava) + ":" + determineSystemClasspath()
       };
       Process javac = Runtime.getRuntime().exec(javacCommand);
-      // TODO(user): configure timeout?
-      killProcessAfter(10, TimeUnit.SECONDS, javac);
+      consumeStdOut(javac);
+      List<String> stdErr = readLines(javac.getErrorStream());
       int exitCode = javac.waitFor();
       if (exitCode != 0) {
         // Couldn't compile the file.
-        System.err.printf("ERROR: running javac %s failed (%s):", pathToJava, exitCode);
-        for (String line : readLines(javac.getErrorStream())) {
+        System.err.printf("ERROR: running \"%s\" failed (%s):",
+            Joiner.on(' ').join(javacCommand), exitCode);
+        for (String line : stdErr) {
           System.err.println(line);
         }
         return null;
@@ -147,7 +155,7 @@ public final class PstFileDescriptor {
         // Compiled the file!  Now to determine where javac put it.
         Pattern pattern = Pattern.compile("\\[wrote ([^\\]]*)\\]");
         String pathToClass = null;
-        for (String line : readLines(javac.getErrorStream())) {
+        for (String line : stdErr) {
           Matcher lineMatcher = pattern.matcher(line);
           if (lineMatcher.matches()) {
             pathToClass = lineMatcher.group(1);
@@ -166,6 +174,27 @@ public final class PstFileDescriptor {
           + e.getMessage());
       return null;
     }
+  }
+
+  /**
+   * Fires off a background thread to consume anything written to a process'
+   * standard output. Without running this, a process that outputs too much data
+   * will block.
+   */
+  private void consumeStdOut(Process p) {
+    final InputStream o = p.getInputStream();
+    Thread t = new Thread() {
+      @Override
+      public void run() {
+        try {
+          while (o.read() != -1) {}
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    };
+    t.setDaemon(true);
+    t.start();
   }
 
   private String determineClasspath(String pathToJava) {
@@ -204,40 +233,44 @@ public final class PstFileDescriptor {
     return s.toString();
   }
 
-  private Class<?> fromPathToProto(String pathToProto) {
+  private Class<?> fromPathToProto(String pathToProto, File intermediateJavaDir, File protoPath) {
     try {
-      File dir = Files.createTempDir();
+      intermediateJavaDir.mkdirs();
+      File proto = new File(pathToProto);
       String[] protocCommand = new String[] {
-          "protoc", pathToProto, "--java_out", dir.getAbsolutePath()
+          "protoc", tryGetRelativePath(proto),
+          "-I" + protoPath.getPath(),
+          "--java_out", intermediateJavaDir.getAbsolutePath()
       };
       Process protoc = Runtime.getRuntime().exec(protocCommand);
-      // TODO(user): configure timeout?
+      // TODO(ben): configure timeout?
       killProcessAfter(10, TimeUnit.SECONDS, protoc);
       int exitCode = protoc.waitFor();
       if (exitCode != 0) {
         // Couldn't compile the file.
-        System.err.printf("ERROR: running protoc %s failed (%s):", pathToProto, exitCode);
+        System.err.printf("ERROR: running \"%s\" failed (%s):",
+            Joiner.on(' ').join(protocCommand), exitCode);
         for (String line : readLines(protoc.getErrorStream())) {
           System.err.println(line);
         }
         return null;
       } else {
-        // Find the java file that protoc produced.  For now, just use the first
-        // java file that we find.
-        String pathToJava = find(dir, new Predicate<File>() {
-          @Override public boolean apply(File file) {
-            return file.getName().endsWith(".java");
+        final String javaFileName = capitalize(stripSuffix(".proto", proto.getName())) + ".java";
+        String maybeJavaFilePath = find(intermediateJavaDir, new Predicate<File>() {
+          @Override public boolean apply(File f) {
+            return f.getName().equals(javaFileName);
           }
         });
-        if (pathToJava == null) {
-          System.err.println("ERROR: couldn't find result of protoc in " + dir.getAbsolutePath());
+        if (maybeJavaFilePath == null) {
+          System.err.println("ERROR: couldn't find result of protoc in " + intermediateJavaDir);
           return null;
         }
-        return fromPathToJava(pathToJava);
+        return fromPathToJava(maybeJavaFilePath);
       }
     } catch (Exception e) {
       System.err.println("WARNING: exception while processing " + pathToProto + ": "
           + e.getMessage());
+      e.printStackTrace();
       return null;
     }
   }
@@ -257,8 +290,32 @@ public final class PstFileDescriptor {
     return null;
   }
 
-  private List<String> readLines(InputStream is) throws IOException {
-    return CharStreams.readLines(new InputStreamReader(is));
+  private String tryGetRelativePath(File file) {
+    String pwd = System.getProperty("user.dir");
+    return stripPrefix(pwd + File.separator, file.getAbsolutePath());
+  }
+
+  private String stripPrefix(String prefix, String s) {
+    return s.startsWith(prefix) ? s.substring(prefix.length()) : s;
+  }
+
+  private String stripSuffix(String suffix, String s) {
+    return s.endsWith(suffix) ? s.substring(0, s.length() - suffix.length()) : s;
+  }
+
+  private String capitalize(String s) {
+    return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+  }
+
+  private List<String> readLines(InputStream is) {
+    try {
+      return CharStreams.readLines(new InputStreamReader(is));
+    } catch (IOException e) {
+     e.printStackTrace();
+      // TODO(kalman): this is a bit hacky, deal with it properly.
+      return Collections.singletonList("(Error, couldn't read lines from the input stream. " +
+          "Try running the command external to PST to view the output.)");
+    }
   }
 
   private FileDescriptor asFileDescriptor(Class<?> clazz) {

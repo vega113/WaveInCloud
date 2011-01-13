@@ -14,31 +14,24 @@
  * limitations under the License.
  *
  */
+package $m.package$;
 
+$m.referencedMessages: {t|
+  import $t.fullJavaType$;
+}$
 
-package org.waveprotocol.pst.model;
+$m.referencedEnums: {t|
+  import $t.fullJavaType$;
+}$
+
+import org.waveprotocol.pst.lib.Blob;
+import org.waveprotocol.wave.communication.json.ProtoEnums;
+
+import java.util.List;
 
 /**
- * Util methods for model objects.
+ * Model interface for $m.name$.
  *
- * @author kalman@google.com (Benjamin Kalman)
+ * Generated from $m.filename$. Do not edit.
  */
-public final class Util {
-
-  private Util() {
-  }
-
-  /**
-   * @return the given string, capitalized ("fooBar" = "FooBar")
-   */
-  public static String capitalize(String s) {
-    return s.isEmpty() ? "" : Character.toUpperCase(s.charAt(0)) + s.substring(1);
-  }
-
-  /**
-   * @return the given string, uncapitalized ("FooBar" = "fooBar")
-   */
-  public static String uncapitalize(String s) {
-    return s.isEmpty() ? "" : Character.toLowerCase(s.charAt(0)) + s.substring(1);
-  }
-}
+$interface(m=m)$

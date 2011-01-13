@@ -15,30 +15,29 @@
  *
  */
 
+package org.waveprotocol.pst.style;
 
-package org.waveprotocol.pst.model;
+import java.io.File;
 
 /**
- * Util methods for model objects.
+ * Styles a source file.
  *
  * @author kalman@google.com (Benjamin Kalman)
  */
-public final class Util {
-
-  private Util() {
-  }
+public interface Styler {
 
   /**
-   * @return the given string, capitalized ("fooBar" = "FooBar")
+   * Styles a source file.
+   *
+   * @param f the file to style
+   * @param saveBackup whether to save a backup
    */
-  public static String capitalize(String s) {
-    return s.isEmpty() ? "" : Character.toUpperCase(s.charAt(0)) + s.substring(1);
-  }
+  void style(File f, boolean saveBackup);
 
   /**
-   * @return the given string, uncapitalized ("FooBar" = "fooBar")
+   * No-op implementation.
    */
-  public static String uncapitalize(String s) {
-    return s.isEmpty() ? "" : Character.toLowerCase(s.charAt(0)) + s.substring(1);
-  }
+  Styler EMPTY = new Styler() {
+    @Override public void style(File f, boolean saveBackup) {}
+  };
 }

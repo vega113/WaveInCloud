@@ -42,15 +42,15 @@ public final class Diff {
     public boolean hasWaveId() { return hasWaveId; }
     public java.lang.String getWaveId() { return waveId_; }
     
-    // repeated .diff.WaveletVersion knownWavelet = 2;
+    // repeated .concurrencycontrol.WaveletVersion knownWavelet = 2;
     public static final int KNOWNWAVELET_FIELD_NUMBER = 2;
-    private java.util.List<org.waveprotocol.wave.diff.Diff.WaveletVersion> knownWavelet_ =
+    private java.util.List<org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion> knownWavelet_ =
       java.util.Collections.emptyList();
-    public java.util.List<org.waveprotocol.wave.diff.Diff.WaveletVersion> getKnownWaveletList() {
+    public java.util.List<org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion> getKnownWaveletList() {
       return knownWavelet_;
     }
     public int getKnownWaveletCount() { return knownWavelet_.size(); }
-    public org.waveprotocol.wave.diff.Diff.WaveletVersion getKnownWavelet(int index) {
+    public org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion getKnownWavelet(int index) {
       return knownWavelet_.get(index);
     }
     
@@ -58,7 +58,7 @@ public final class Diff {
     }
     public final boolean isInitialized() {
       if (!hasWaveId) return false;
-      for (org.waveprotocol.wave.diff.Diff.WaveletVersion element : getKnownWaveletList()) {
+      for (org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion element : getKnownWaveletList()) {
         if (!element.isInitialized()) return false;
       }
       return true;
@@ -70,7 +70,7 @@ public final class Diff {
       if (hasWaveId()) {
         output.writeString(1, getWaveId());
       }
-      for (org.waveprotocol.wave.diff.Diff.WaveletVersion element : getKnownWaveletList()) {
+      for (org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion element : getKnownWaveletList()) {
         output.writeMessage(2, element);
       }
       getUnknownFields().writeTo(output);
@@ -86,7 +86,7 @@ public final class Diff {
         size += com.google.protobuf.CodedOutputStream
           .computeStringSize(1, getWaveId());
       }
-      for (org.waveprotocol.wave.diff.Diff.WaveletVersion element : getKnownWaveletList()) {
+      for (org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion element : getKnownWaveletList()) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, element);
       }
@@ -257,7 +257,7 @@ public final class Diff {
         }
         if (!other.knownWavelet_.isEmpty()) {
           if (result.knownWavelet_.isEmpty()) {
-            result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.WaveletVersion>();
+            result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion>();
           }
           result.knownWavelet_.addAll(other.knownWavelet_);
         }
@@ -291,7 +291,7 @@ public final class Diff {
               break;
             }
             case 18: {
-              org.waveprotocol.wave.diff.Diff.WaveletVersion.Builder subBuilder = org.waveprotocol.wave.diff.Diff.WaveletVersion.newBuilder();
+              org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion.Builder subBuilder = org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion.newBuilder();
               input.readMessage(subBuilder, extensionRegistry);
               addKnownWavelet(subBuilder.buildPartial());
               break;
@@ -322,48 +322,48 @@ public final class Diff {
         return this;
       }
       
-      // repeated .diff.WaveletVersion knownWavelet = 2;
-      public java.util.List<org.waveprotocol.wave.diff.Diff.WaveletVersion> getKnownWaveletList() {
+      // repeated .concurrencycontrol.WaveletVersion knownWavelet = 2;
+      public java.util.List<org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion> getKnownWaveletList() {
         return java.util.Collections.unmodifiableList(result.knownWavelet_);
       }
       public int getKnownWaveletCount() {
         return result.getKnownWaveletCount();
       }
-      public org.waveprotocol.wave.diff.Diff.WaveletVersion getKnownWavelet(int index) {
+      public org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion getKnownWavelet(int index) {
         return result.getKnownWavelet(index);
       }
-      public Builder setKnownWavelet(int index, org.waveprotocol.wave.diff.Diff.WaveletVersion value) {
+      public Builder setKnownWavelet(int index, org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion value) {
         if (value == null) {
           throw new NullPointerException();
         }
         result.knownWavelet_.set(index, value);
         return this;
       }
-      public Builder setKnownWavelet(int index, org.waveprotocol.wave.diff.Diff.WaveletVersion.Builder builderForValue) {
+      public Builder setKnownWavelet(int index, org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion.Builder builderForValue) {
         result.knownWavelet_.set(index, builderForValue.build());
         return this;
       }
-      public Builder addKnownWavelet(org.waveprotocol.wave.diff.Diff.WaveletVersion value) {
+      public Builder addKnownWavelet(org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion value) {
         if (value == null) {
           throw new NullPointerException();
         }
         if (result.knownWavelet_.isEmpty()) {
-          result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.WaveletVersion>();
+          result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion>();
         }
         result.knownWavelet_.add(value);
         return this;
       }
-      public Builder addKnownWavelet(org.waveprotocol.wave.diff.Diff.WaveletVersion.Builder builderForValue) {
+      public Builder addKnownWavelet(org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion.Builder builderForValue) {
         if (result.knownWavelet_.isEmpty()) {
-          result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.WaveletVersion>();
+          result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion>();
         }
         result.knownWavelet_.add(builderForValue.build());
         return this;
       }
       public Builder addAllKnownWavelet(
-          java.lang.Iterable<? extends org.waveprotocol.wave.diff.Diff.WaveletVersion> values) {
+          java.lang.Iterable<? extends org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion> values) {
         if (result.knownWavelet_.isEmpty()) {
-          result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.WaveletVersion>();
+          result.knownWavelet_ = new java.util.ArrayList<org.waveprotocol.wave.concurrencycontrol.ClientServer.WaveletVersion>();
         }
         super.addAll(values, result.knownWavelet_);
         return this;
@@ -412,31 +412,31 @@ public final class Diff {
       return org.waveprotocol.wave.diff.Diff.internal_static_diff_FetchDiffResponse_fieldAccessorTable;
     }
     
-    public static final class Wavelet extends
+    public static final class WaveletDiff extends
         com.google.protobuf.GeneratedMessage {
-      // Use Wavelet.newBuilder() to construct.
-      private Wavelet() {
+      // Use WaveletDiff.newBuilder() to construct.
+      private WaveletDiff() {
         initFields();
       }
-      private Wavelet(boolean noInit) {}
+      private WaveletDiff(boolean noInit) {}
       
-      private static final Wavelet defaultInstance;
-      public static Wavelet getDefaultInstance() {
+      private static final WaveletDiff defaultInstance;
+      public static WaveletDiff getDefaultInstance() {
         return defaultInstance;
       }
       
-      public Wavelet getDefaultInstanceForType() {
+      public WaveletDiff getDefaultInstanceForType() {
         return defaultInstance;
       }
       
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.waveprotocol.wave.diff.Diff.internal_static_diff_FetchDiffResponse_Wavelet_descriptor;
+        return org.waveprotocol.wave.diff.Diff.internal_static_diff_FetchDiffResponse_WaveletDiff_descriptor;
       }
       
       protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.waveprotocol.wave.diff.Diff.internal_static_diff_FetchDiffResponse_Wavelet_fieldAccessorTable;
+        return org.waveprotocol.wave.diff.Diff.internal_static_diff_FetchDiffResponse_WaveletDiff_fieldAccessorTable;
       }
       
       // required string waveletId = 1;
@@ -495,41 +495,41 @@ public final class Diff {
         return size;
       }
       
-      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet parseFrom(
+      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return newBuilder().mergeFrom(data).buildParsed();
       }
-      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet parseFrom(
+      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return newBuilder().mergeFrom(data, extensionRegistry)
                  .buildParsed();
       }
-      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet parseFrom(byte[] data)
+      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return newBuilder().mergeFrom(data).buildParsed();
       }
-      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet parseFrom(
+      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff parseFrom(
           byte[] data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return newBuilder().mergeFrom(data, extensionRegistry)
                  .buildParsed();
       }
-      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet parseFrom(java.io.InputStream input)
+      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff parseFrom(java.io.InputStream input)
           throws java.io.IOException {
         return newBuilder().mergeFrom(input).buildParsed();
       }
-      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet parseFrom(
+      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return newBuilder().mergeFrom(input, extensionRegistry)
                  .buildParsed();
       }
-      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet parseDelimitedFrom(java.io.InputStream input)
+      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
         Builder builder = newBuilder();
         if (builder.mergeDelimitedFrom(input)) {
@@ -538,7 +538,7 @@ public final class Diff {
           return null;
         }
       }
-      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet parseDelimitedFrom(
+      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -549,12 +549,12 @@ public final class Diff {
           return null;
         }
       }
-      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet parseFrom(
+      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
         return newBuilder().mergeFrom(input).buildParsed();
       }
-      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet parseFrom(
+      public static org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -564,25 +564,25 @@ public final class Diff {
       
       public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet prototype) {
+      public static Builder newBuilder(org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff prototype) {
         return newBuilder().mergeFrom(prototype);
       }
       public Builder toBuilder() { return newBuilder(this); }
       
       public static final class Builder extends
           com.google.protobuf.GeneratedMessage.Builder<Builder> {
-        private org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet result;
+        private org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff result;
         
-        // Construct using org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet.newBuilder()
+        // Construct using org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff.newBuilder()
         private Builder() {}
         
         private static Builder create() {
           Builder builder = new Builder();
-          builder.result = new org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet();
+          builder.result = new org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff();
           return builder;
         }
         
-        protected org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet internalGetResult() {
+        protected org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff internalGetResult() {
           return result;
         }
         
@@ -591,7 +591,7 @@ public final class Diff {
             throw new IllegalStateException(
               "Cannot call clear() after build().");
           }
-          result = new org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet();
+          result = new org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff();
           return this;
         }
         
@@ -601,24 +601,24 @@ public final class Diff {
         
         public com.google.protobuf.Descriptors.Descriptor
             getDescriptorForType() {
-          return org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet.getDescriptor();
+          return org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff.getDescriptor();
         }
         
-        public org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet getDefaultInstanceForType() {
-          return org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet.getDefaultInstance();
+        public org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff getDefaultInstanceForType() {
+          return org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff.getDefaultInstance();
         }
         
         public boolean isInitialized() {
           return result.isInitialized();
         }
-        public org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet build() {
+        public org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff build() {
           if (result != null && !isInitialized()) {
             throw newUninitializedMessageException(result);
           }
           return buildPartial();
         }
         
-        private org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet buildParsed()
+        private org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff buildParsed()
             throws com.google.protobuf.InvalidProtocolBufferException {
           if (!isInitialized()) {
             throw newUninitializedMessageException(
@@ -627,27 +627,27 @@ public final class Diff {
           return buildPartial();
         }
         
-        public org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet buildPartial() {
+        public org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff buildPartial() {
           if (result == null) {
             throw new IllegalStateException(
               "build() has already been called on this Builder.");
           }
-          org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet returnMe = result;
+          org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff returnMe = result;
           result = null;
           return returnMe;
         }
         
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet) {
-            return mergeFrom((org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet)other);
+          if (other instanceof org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff) {
+            return mergeFrom((org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff)other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
         
-        public Builder mergeFrom(org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet other) {
-          if (other == org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet.getDefaultInstance()) return this;
+        public Builder mergeFrom(org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff other) {
+          if (other == org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff.getDefaultInstance()) return this;
           if (other.hasWaveletId()) {
             setWaveletId(other.getWaveletId());
           }
@@ -755,16 +755,16 @@ public final class Diff {
           return this;
         }
         
-        // @@protoc_insertion_point(builder_scope:diff.FetchDiffResponse.Wavelet)
+        // @@protoc_insertion_point(builder_scope:diff.FetchDiffResponse.WaveletDiff)
       }
       
       static {
-        defaultInstance = new Wavelet(true);
+        defaultInstance = new WaveletDiff(true);
         org.waveprotocol.wave.diff.Diff.internalForceInit();
         defaultInstance.initFields();
       }
       
-      // @@protoc_insertion_point(class_scope:diff.FetchDiffResponse.Wavelet)
+      // @@protoc_insertion_point(class_scope:diff.FetchDiffResponse.WaveletDiff)
     }
     
     // required .concurrencycontrol.ResponseStatus status = 1;
@@ -774,15 +774,15 @@ public final class Diff {
     public boolean hasStatus() { return hasStatus; }
     public org.waveprotocol.wave.concurrencycontrol.ClientServer.ResponseStatus getStatus() { return status_; }
     
-    // repeated .diff.FetchDiffResponse.Wavelet wavelet = 2;
+    // repeated .diff.FetchDiffResponse.WaveletDiff wavelet = 2;
     public static final int WAVELET_FIELD_NUMBER = 2;
-    private java.util.List<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet> wavelet_ =
+    private java.util.List<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff> wavelet_ =
       java.util.Collections.emptyList();
-    public java.util.List<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet> getWaveletList() {
+    public java.util.List<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff> getWaveletList() {
       return wavelet_;
     }
     public int getWaveletCount() { return wavelet_.size(); }
-    public org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet getWavelet(int index) {
+    public org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff getWavelet(int index) {
       return wavelet_.get(index);
     }
     
@@ -792,7 +792,7 @@ public final class Diff {
     public final boolean isInitialized() {
       if (!hasStatus) return false;
       if (!getStatus().isInitialized()) return false;
-      for (org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet element : getWaveletList()) {
+      for (org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff element : getWaveletList()) {
         if (!element.isInitialized()) return false;
       }
       return true;
@@ -804,7 +804,7 @@ public final class Diff {
       if (hasStatus()) {
         output.writeMessage(1, getStatus());
       }
-      for (org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet element : getWaveletList()) {
+      for (org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff element : getWaveletList()) {
         output.writeMessage(2, element);
       }
       getUnknownFields().writeTo(output);
@@ -820,7 +820,7 @@ public final class Diff {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getStatus());
       }
-      for (org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet element : getWaveletList()) {
+      for (org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff element : getWaveletList()) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, element);
       }
@@ -991,7 +991,7 @@ public final class Diff {
         }
         if (!other.wavelet_.isEmpty()) {
           if (result.wavelet_.isEmpty()) {
-            result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet>();
+            result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff>();
           }
           result.wavelet_.addAll(other.wavelet_);
         }
@@ -1030,7 +1030,7 @@ public final class Diff {
               break;
             }
             case 18: {
-              org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet.Builder subBuilder = org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet.newBuilder();
+              org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff.Builder subBuilder = org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff.newBuilder();
               input.readMessage(subBuilder, extensionRegistry);
               addWavelet(subBuilder.buildPartial());
               break;
@@ -1077,48 +1077,48 @@ public final class Diff {
         return this;
       }
       
-      // repeated .diff.FetchDiffResponse.Wavelet wavelet = 2;
-      public java.util.List<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet> getWaveletList() {
+      // repeated .diff.FetchDiffResponse.WaveletDiff wavelet = 2;
+      public java.util.List<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff> getWaveletList() {
         return java.util.Collections.unmodifiableList(result.wavelet_);
       }
       public int getWaveletCount() {
         return result.getWaveletCount();
       }
-      public org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet getWavelet(int index) {
+      public org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff getWavelet(int index) {
         return result.getWavelet(index);
       }
-      public Builder setWavelet(int index, org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet value) {
+      public Builder setWavelet(int index, org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff value) {
         if (value == null) {
           throw new NullPointerException();
         }
         result.wavelet_.set(index, value);
         return this;
       }
-      public Builder setWavelet(int index, org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet.Builder builderForValue) {
+      public Builder setWavelet(int index, org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff.Builder builderForValue) {
         result.wavelet_.set(index, builderForValue.build());
         return this;
       }
-      public Builder addWavelet(org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet value) {
+      public Builder addWavelet(org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff value) {
         if (value == null) {
           throw new NullPointerException();
         }
         if (result.wavelet_.isEmpty()) {
-          result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet>();
+          result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff>();
         }
         result.wavelet_.add(value);
         return this;
       }
-      public Builder addWavelet(org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet.Builder builderForValue) {
+      public Builder addWavelet(org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff.Builder builderForValue) {
         if (result.wavelet_.isEmpty()) {
-          result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet>();
+          result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff>();
         }
         result.wavelet_.add(builderForValue.build());
         return this;
       }
       public Builder addAllWavelet(
-          java.lang.Iterable<? extends org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet> values) {
+          java.lang.Iterable<? extends org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff> values) {
         if (result.wavelet_.isEmpty()) {
-          result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet>();
+          result.wavelet_ = new java.util.ArrayList<org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff>();
         }
         super.addAll(values, result.wavelet_);
         return this;
@@ -1138,360 +1138,6 @@ public final class Diff {
     }
     
     // @@protoc_insertion_point(class_scope:diff.FetchDiffResponse)
-  }
-  
-  public static final class WaveletVersion extends
-      com.google.protobuf.GeneratedMessage {
-    // Use WaveletVersion.newBuilder() to construct.
-    private WaveletVersion() {
-      initFields();
-    }
-    private WaveletVersion(boolean noInit) {}
-    
-    private static final WaveletVersion defaultInstance;
-    public static WaveletVersion getDefaultInstance() {
-      return defaultInstance;
-    }
-    
-    public WaveletVersion getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-    
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.waveprotocol.wave.diff.Diff.internal_static_diff_WaveletVersion_descriptor;
-    }
-    
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return org.waveprotocol.wave.diff.Diff.internal_static_diff_WaveletVersion_fieldAccessorTable;
-    }
-    
-    // required string waveletId = 1;
-    public static final int WAVELETID_FIELD_NUMBER = 1;
-    private boolean hasWaveletId;
-    private java.lang.String waveletId_ = "";
-    public boolean hasWaveletId() { return hasWaveletId; }
-    public java.lang.String getWaveletId() { return waveletId_; }
-    
-    // required .federation.ProtocolHashedVersion version = 2;
-    public static final int VERSION_FIELD_NUMBER = 2;
-    private boolean hasVersion;
-    private org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion version_;
-    public boolean hasVersion() { return hasVersion; }
-    public org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion getVersion() { return version_; }
-    
-    private void initFields() {
-      version_ = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance();
-    }
-    public final boolean isInitialized() {
-      if (!hasWaveletId) return false;
-      if (!hasVersion) return false;
-      if (!getVersion().isInitialized()) return false;
-      return true;
-    }
-    
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      if (hasWaveletId()) {
-        output.writeString(1, getWaveletId());
-      }
-      if (hasVersion()) {
-        output.writeMessage(2, getVersion());
-      }
-      getUnknownFields().writeTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-    
-      size = 0;
-      if (hasWaveletId()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeStringSize(1, getWaveletId());
-      }
-      if (hasVersion()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, getVersion());
-      }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
-      return size;
-    }
-    
-    public static org.waveprotocol.wave.diff.Diff.WaveletVersion parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
-    }
-    public static org.waveprotocol.wave.diff.Diff.WaveletVersion parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
-    }
-    public static org.waveprotocol.wave.diff.Diff.WaveletVersion parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
-    }
-    public static org.waveprotocol.wave.diff.Diff.WaveletVersion parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
-    }
-    public static org.waveprotocol.wave.diff.Diff.WaveletVersion parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
-    }
-    public static org.waveprotocol.wave.diff.Diff.WaveletVersion parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
-    }
-    public static org.waveprotocol.wave.diff.Diff.WaveletVersion parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      Builder builder = newBuilder();
-      if (builder.mergeDelimitedFrom(input)) {
-        return builder.buildParsed();
-      } else {
-        return null;
-      }
-    }
-    public static org.waveprotocol.wave.diff.Diff.WaveletVersion parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      Builder builder = newBuilder();
-      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
-        return builder.buildParsed();
-      } else {
-        return null;
-      }
-    }
-    public static org.waveprotocol.wave.diff.Diff.WaveletVersion parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
-    }
-    public static org.waveprotocol.wave.diff.Diff.WaveletVersion parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
-    }
-    
-    public static Builder newBuilder() { return Builder.create(); }
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.waveprotocol.wave.diff.Diff.WaveletVersion prototype) {
-      return newBuilder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() { return newBuilder(this); }
-    
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> {
-      private org.waveprotocol.wave.diff.Diff.WaveletVersion result;
-      
-      // Construct using org.waveprotocol.wave.diff.Diff.WaveletVersion.newBuilder()
-      private Builder() {}
-      
-      private static Builder create() {
-        Builder builder = new Builder();
-        builder.result = new org.waveprotocol.wave.diff.Diff.WaveletVersion();
-        return builder;
-      }
-      
-      protected org.waveprotocol.wave.diff.Diff.WaveletVersion internalGetResult() {
-        return result;
-      }
-      
-      public Builder clear() {
-        if (result == null) {
-          throw new IllegalStateException(
-            "Cannot call clear() after build().");
-        }
-        result = new org.waveprotocol.wave.diff.Diff.WaveletVersion();
-        return this;
-      }
-      
-      public Builder clone() {
-        return create().mergeFrom(result);
-      }
-      
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.waveprotocol.wave.diff.Diff.WaveletVersion.getDescriptor();
-      }
-      
-      public org.waveprotocol.wave.diff.Diff.WaveletVersion getDefaultInstanceForType() {
-        return org.waveprotocol.wave.diff.Diff.WaveletVersion.getDefaultInstance();
-      }
-      
-      public boolean isInitialized() {
-        return result.isInitialized();
-      }
-      public org.waveprotocol.wave.diff.Diff.WaveletVersion build() {
-        if (result != null && !isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return buildPartial();
-      }
-      
-      private org.waveprotocol.wave.diff.Diff.WaveletVersion buildParsed()
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        if (!isInitialized()) {
-          throw newUninitializedMessageException(
-            result).asInvalidProtocolBufferException();
-        }
-        return buildPartial();
-      }
-      
-      public org.waveprotocol.wave.diff.Diff.WaveletVersion buildPartial() {
-        if (result == null) {
-          throw new IllegalStateException(
-            "build() has already been called on this Builder.");
-        }
-        org.waveprotocol.wave.diff.Diff.WaveletVersion returnMe = result;
-        result = null;
-        return returnMe;
-      }
-      
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.waveprotocol.wave.diff.Diff.WaveletVersion) {
-          return mergeFrom((org.waveprotocol.wave.diff.Diff.WaveletVersion)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-      
-      public Builder mergeFrom(org.waveprotocol.wave.diff.Diff.WaveletVersion other) {
-        if (other == org.waveprotocol.wave.diff.Diff.WaveletVersion.getDefaultInstance()) return this;
-        if (other.hasWaveletId()) {
-          setWaveletId(other.getWaveletId());
-        }
-        if (other.hasVersion()) {
-          mergeVersion(other.getVersion());
-        }
-        this.mergeUnknownFields(other.getUnknownFields());
-        return this;
-      }
-      
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder(
-            this.getUnknownFields());
-        while (true) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              this.setUnknownFields(unknownFields.build());
-              return this;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                this.setUnknownFields(unknownFields.build());
-                return this;
-              }
-              break;
-            }
-            case 10: {
-              setWaveletId(input.readString());
-              break;
-            }
-            case 18: {
-              org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.Builder subBuilder = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.newBuilder();
-              if (hasVersion()) {
-                subBuilder.mergeFrom(getVersion());
-              }
-              input.readMessage(subBuilder, extensionRegistry);
-              setVersion(subBuilder.buildPartial());
-              break;
-            }
-          }
-        }
-      }
-      
-      
-      // required string waveletId = 1;
-      public boolean hasWaveletId() {
-        return result.hasWaveletId();
-      }
-      public java.lang.String getWaveletId() {
-        return result.getWaveletId();
-      }
-      public Builder setWaveletId(java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  result.hasWaveletId = true;
-        result.waveletId_ = value;
-        return this;
-      }
-      public Builder clearWaveletId() {
-        result.hasWaveletId = false;
-        result.waveletId_ = getDefaultInstance().getWaveletId();
-        return this;
-      }
-      
-      // required .federation.ProtocolHashedVersion version = 2;
-      public boolean hasVersion() {
-        return result.hasVersion();
-      }
-      public org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion getVersion() {
-        return result.getVersion();
-      }
-      public Builder setVersion(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        result.hasVersion = true;
-        result.version_ = value;
-        return this;
-      }
-      public Builder setVersion(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.Builder builderForValue) {
-        result.hasVersion = true;
-        result.version_ = builderForValue.build();
-        return this;
-      }
-      public Builder mergeVersion(org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion value) {
-        if (result.hasVersion() &&
-            result.version_ != org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance()) {
-          result.version_ =
-            org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.newBuilder(result.version_).mergeFrom(value).buildPartial();
-        } else {
-          result.version_ = value;
-        }
-        result.hasVersion = true;
-        return this;
-      }
-      public Builder clearVersion() {
-        result.hasVersion = false;
-        result.version_ = org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion.getDefaultInstance();
-        return this;
-      }
-      
-      // @@protoc_insertion_point(builder_scope:diff.WaveletVersion)
-    }
-    
-    static {
-      defaultInstance = new WaveletVersion(true);
-      org.waveprotocol.wave.diff.Diff.internalForceInit();
-      defaultInstance.initFields();
-    }
-    
-    // @@protoc_insertion_point(class_scope:diff.WaveletVersion)
   }
   
   public static final class WaveletDiffSnapshot extends
@@ -3303,15 +2949,10 @@ public final class Diff {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_diff_FetchDiffResponse_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_diff_FetchDiffResponse_Wavelet_descriptor;
+    internal_static_diff_FetchDiffResponse_WaveletDiff_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_diff_FetchDiffResponse_Wavelet_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_diff_WaveletVersion_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_diff_WaveletVersion_fieldAccessorTable;
+      internal_static_diff_FetchDiffResponse_WaveletDiff_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_diff_WaveletDiffSnapshot_descriptor;
   private static
@@ -3333,36 +2974,34 @@ public final class Diff {
     java.lang.String[] descriptorData = {
       "\n%org/waveprotocol/wave/diff/diff.proto\022" +
       "\004diff\032)org/waveprotocol/box/server/rpc/r" +
-      "pc.proto\0326org/waveprotocol/wave/federati" +
-      "on/federation.protodevel\032;org/waveprotoc" +
-      "ol/wave/concurrencycontrol/clientserver." +
-      "proto\"N\n\020FetchDiffRequest\022\016\n\006waveId\030\001 \002(" +
-      "\t\022*\n\014knownWavelet\030\002 \003(\0132\024.diff.WaveletVe" +
-      "rsion\"\304\001\n\021FetchDiffResponse\0222\n\006status\030\001 " +
-      "\002(\0132\".concurrencycontrol.ResponseStatus\022" +
-      "0\n\007wavelet\030\002 \003(\0132\037.diff.FetchDiffRespons",
-      "e.Wavelet\032I\n\007Wavelet\022\021\n\twaveletId\030\001 \002(\t\022" +
-      "+\n\010snapshot\030\002 \001(\0132\031.diff.WaveletDiffSnap" +
-      "shot\"W\n\016WaveletVersion\022\021\n\twaveletId\030\001 \002(" +
-      "\t\0222\n\007version\030\002 \002(\0132!.federation.Protocol" +
-      "HashedVersion\"\226\002\n\023WaveletDiffSnapshot\022\021\n" +
-      "\twaveletId\030\001 \002(\t\022\023\n\013participant\030\002 \003(\t\022\030\n" +
-      "\020addedParticipant\030\025 \003(\t\022\032\n\022removedPartic" +
-      "ipant\030\026 \003(\t\022,\n\010document\030\003 \003(\0132\032.diff.Doc" +
-      "umentDiffSnapshot\0222\n\007version\030\004 \002(\0132!.fed" +
-      "eration.ProtocolHashedVersion\022\030\n\020lastMod",
-      "ifiedTime\030\005 \002(\003\022\017\n\007creator\030\006 \002(\t\022\024\n\014crea" +
-      "tionTime\030\007 \002(\003\"\247\002\n\024DocumentDiffSnapshot\022" +
-      "\022\n\ndocumentId\030\001 \002(\t\0224\n\005state\030\002 \002(\0132%.fed" +
-      "eration.ProtocolDocumentOperation\0223\n\004dif" +
-      "f\030\025 \002(\0132%.federation.ProtocolDocumentOpe" +
-      "ration\022\016\n\006author\030\003 \002(\t\022\023\n\013contributor\030\004 " +
-      "\003(\t\022\030\n\020addedContributor\030\026 \003(\t\022\032\n\022removed" +
-      "Contributor\030\027 \003(\t\022\033\n\023lastModifiedVersion" +
-      "\030\005 \002(\003\022\030\n\020lastModifiedTime\030\006 \002(\0032L\n\020Fetc" +
-      "hDiffService\0228\n\005Fetch\022\026.diff.FetchDiffRe",
-      "quest\032\027.diff.FetchDiffResponseB\"\n\032org.wa" +
-      "veprotocol.wave.diffB\004Diff"
+      "pc.proto\032;org/waveprotocol/wave/concurre" +
+      "ncycontrol/clientserver.proto\0326org/wavep" +
+      "rotocol/wave/federation/federation.proto" +
+      "devel\"\\\n\020FetchDiffRequest\022\016\n\006waveId\030\001 \002(" +
+      "\t\0228\n\014knownWavelet\030\002 \003(\0132\".concurrencycon" +
+      "trol.WaveletVersion\"\314\001\n\021FetchDiffRespons" +
+      "e\0222\n\006status\030\001 \002(\0132\".concurrencycontrol.R" +
+      "esponseStatus\0224\n\007wavelet\030\002 \003(\0132#.diff.Fe",
+      "tchDiffResponse.WaveletDiff\032M\n\013WaveletDi" +
+      "ff\022\021\n\twaveletId\030\001 \002(\t\022+\n\010snapshot\030\002 \001(\0132" +
+      "\031.diff.WaveletDiffSnapshot\"\226\002\n\023WaveletDi" +
+      "ffSnapshot\022\021\n\twaveletId\030\001 \002(\t\022\023\n\013partici" +
+      "pant\030\002 \003(\t\022\030\n\020addedParticipant\030\025 \003(\t\022\032\n\022" +
+      "removedParticipant\030\026 \003(\t\022,\n\010document\030\003 \003" +
+      "(\0132\032.diff.DocumentDiffSnapshot\0222\n\007versio" +
+      "n\030\004 \002(\0132!.federation.ProtocolHashedVersi" +
+      "on\022\030\n\020lastModifiedTime\030\005 \002(\003\022\017\n\007creator\030" +
+      "\006 \002(\t\022\024\n\014creationTime\030\007 \002(\003\"\247\002\n\024Document",
+      "DiffSnapshot\022\022\n\ndocumentId\030\001 \002(\t\0224\n\005stat" +
+      "e\030\002 \002(\0132%.federation.ProtocolDocumentOpe" +
+      "ration\0223\n\004diff\030\025 \002(\0132%.federation.Protoc" +
+      "olDocumentOperation\022\016\n\006author\030\003 \002(\t\022\023\n\013c" +
+      "ontributor\030\004 \003(\t\022\030\n\020addedContributor\030\026 \003" +
+      "(\t\022\032\n\022removedContributor\030\027 \003(\t\022\033\n\023lastMo" +
+      "difiedVersion\030\005 \002(\003\022\030\n\020lastModifiedTime\030" +
+      "\006 \002(\0032L\n\020FetchDiffService\0228\n\005Fetch\022\026.dif" +
+      "f.FetchDiffRequest\032\027.diff.FetchDiffRespo" +
+      "nseB\"\n\032org.waveprotocol.wave.diffB\004Diff"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3385,24 +3024,16 @@ public final class Diff {
               new java.lang.String[] { "Status", "Wavelet", },
               org.waveprotocol.wave.diff.Diff.FetchDiffResponse.class,
               org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Builder.class);
-          internal_static_diff_FetchDiffResponse_Wavelet_descriptor =
+          internal_static_diff_FetchDiffResponse_WaveletDiff_descriptor =
             internal_static_diff_FetchDiffResponse_descriptor.getNestedTypes().get(0);
-          internal_static_diff_FetchDiffResponse_Wavelet_fieldAccessorTable = new
+          internal_static_diff_FetchDiffResponse_WaveletDiff_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_diff_FetchDiffResponse_Wavelet_descriptor,
+              internal_static_diff_FetchDiffResponse_WaveletDiff_descriptor,
               new java.lang.String[] { "WaveletId", "Snapshot", },
-              org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet.class,
-              org.waveprotocol.wave.diff.Diff.FetchDiffResponse.Wavelet.Builder.class);
-          internal_static_diff_WaveletVersion_descriptor =
-            getDescriptor().getMessageTypes().get(2);
-          internal_static_diff_WaveletVersion_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_diff_WaveletVersion_descriptor,
-              new java.lang.String[] { "WaveletId", "Version", },
-              org.waveprotocol.wave.diff.Diff.WaveletVersion.class,
-              org.waveprotocol.wave.diff.Diff.WaveletVersion.Builder.class);
+              org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff.class,
+              org.waveprotocol.wave.diff.Diff.FetchDiffResponse.WaveletDiff.Builder.class);
           internal_static_diff_WaveletDiffSnapshot_descriptor =
-            getDescriptor().getMessageTypes().get(3);
+            getDescriptor().getMessageTypes().get(2);
           internal_static_diff_WaveletDiffSnapshot_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_diff_WaveletDiffSnapshot_descriptor,
@@ -3410,7 +3041,7 @@ public final class Diff {
               org.waveprotocol.wave.diff.Diff.WaveletDiffSnapshot.class,
               org.waveprotocol.wave.diff.Diff.WaveletDiffSnapshot.Builder.class);
           internal_static_diff_DocumentDiffSnapshot_descriptor =
-            getDescriptor().getMessageTypes().get(4);
+            getDescriptor().getMessageTypes().get(3);
           internal_static_diff_DocumentDiffSnapshot_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_diff_DocumentDiffSnapshot_descriptor,
@@ -3424,8 +3055,8 @@ public final class Diff {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.waveprotocol.box.server.rpc.Rpc.getDescriptor(),
-          org.waveprotocol.wave.federation.Proto.getDescriptor(),
           org.waveprotocol.wave.concurrencycontrol.ClientServer.getDescriptor(),
+          org.waveprotocol.wave.federation.Proto.getDescriptor(),
         }, assigner);
   }
   

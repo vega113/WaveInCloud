@@ -18,12 +18,13 @@
 // The wave diff-on-open fetch service.
 //
 // Author: hearnden@google.com (David Hearnden)
+//         anorth@google.com (Alex North)
 
 syntax = "proto2";
 
 import "org/waveprotocol/box/server/rpc/rpc.proto";
-import "org/waveprotocol/wave/federation/federation.protodevel";
 import "org/waveprotocol/wave/concurrencycontrol/clientserver.proto";
+import "org/waveprotocol/wave/federation/federation.protodevel";
 
 package diff;
 
@@ -48,27 +49,19 @@ message FetchDiffRequest {
   required string waveId = 1;
   // Wavelet versions the client already knows.
   // At most one version per wavelet.
-  repeated WaveletVersion knownWavelet = 2;
+  repeated concurrencycontrol.WaveletVersion knownWavelet = 2;
 }
 
 message FetchDiffResponse {
   required concurrencycontrol.ResponseStatus status = 1;
   
-  message Wavelet {
+  message WaveletDiff {
     // The wavelet in view, URI path format.
     required string waveletId = 1;
     // Snapshot of the wavelet; omitted if the client already knew it.
     optional WaveletDiffSnapshot snapshot = 2;
   }
-  repeated Wavelet wavelet = 2;
-}
-
-/* A wavelet with a known hashed version of that wavelet. */
-message WaveletVersion {
-  // Known wavelet, URI path format.
-  required string waveletId = 1;
-  // Known hashed version of the wavelet.
-  required federation.ProtocolHashedVersion version = 2;
+  repeated WaveletDiff wavelet = 2;
 }
 
 /* A wavelet and associated metadata. */

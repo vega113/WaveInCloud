@@ -15,30 +15,21 @@
  *
  */
 
+package $m.package$;
 
-package org.waveprotocol.pst.model;
+$imports(m=m)$
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.waveprotocol.pst.lib.Blob;
 
 /**
- * Util methods for model objects.
+ * Pojo implementation of $m.name$.
  *
- * @author kalman@google.com (Benjamin Kalman)
+ * Do not edit.
+ *
+ * Generated from $m.filename$.
  */
-public final class Util {
-
-  private Util() {
-  }
-
-  /**
-   * @return the given string, capitalized ("fooBar" = "FooBar")
-   */
-  public static String capitalize(String s) {
-    return s.isEmpty() ? "" : Character.toUpperCase(s.charAt(0)) + s.substring(1);
-  }
-
-  /**
-   * @return the given string, uncapitalized ("FooBar" = "fooBar")
-   */
-  public static String uncapitalize(String s) {
-    return s.isEmpty() ? "" : Character.toLowerCase(s.charAt(0)) + s.substring(1);
-  }
-}
+$class(m=m)$

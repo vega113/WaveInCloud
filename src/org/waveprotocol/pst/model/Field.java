@@ -19,6 +19,8 @@ package org.waveprotocol.pst.model;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
 
+import org.waveprotocol.pst.protobuf.Extensions;
+
 /**
  * Wraps a {@link FieldDescriptor} with methods suitable for stringtemplate.
  *
@@ -98,9 +100,18 @@ public final class Field {
    * @return the message type of the field without template suffix
    */
   public String getMessageType() {
-    return type.getMessageType();
+    return type.getMessage().getName();
   }
 
+  /**
+   * Gets the type of this field.
+   * 
+   * @return the type of this field.
+   */
+  public Type getType() {
+    return type;
+  }
+  
   /**
    * Returns the name of the field as uncapitalizedCamelCase, for example
    * <ul>
@@ -180,6 +191,17 @@ public final class Field {
     return "set" + getCapName();
   }
 
+  /**
+   * Gets whether the field is of type int53. This means that although the
+   * field's native type is int64, only 53 bits of information are used.
+   *
+   * @return whether the field is a 53-bit integer
+   */
+  public boolean isInt53() {
+    return field.getOptions().hasExtension(Extensions.int53) && 
+        field.getOptions().getExtension(Extensions.int53);
+  }
+  
   //
   // These map directly to the .proto definitions (except for isPrimitive, but that's pretty
   // self explanatory).
@@ -227,6 +249,13 @@ public final class Field {
     return type.isPrimitive();
   }
 
+  /**
+   * @return whether the field type is a data blob.
+   */
+  public boolean isBlob() {
+    return type.isBlob();
+  }
+  
   /**
    * @return whether the field type is a Java primitive and not repeated
    */

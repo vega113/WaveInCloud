@@ -168,18 +168,24 @@
     <distlib libname="pst" srcpattern="srcs"/>
   </target>
 
-  <target name="messages-dep">
+  <target name="compile-messages-dep">
     <uptodate targetfile="${dep}/compile-messages" property="skip.compile-messages">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
+      <srcfiles dir="${src.proto.dir}" includes="**/*"/>
       <srcfiles dir="${build.messages.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="compile-messages" depends="compile-pst, compile-proto, messages-dep"
+  <target name="compile-messages" depends="compile-pst, compile-proto, compile-messages-dep"
       unless="skip.compile-messages"
       description="Generates and compiles the communication classes">
     <pstmessage
-      pkgpath="org/waveprotocol/box/server"
       proto="${build.proto.dir}/org/waveprotocol/box/common/comms/WaveClientRpc.class"/>
+    <pstmessage
+      proto="${build.proto.dir}/org/waveprotocol/wave/federation/Proto.class"/>
+    <pstmessage
+      proto="${build.proto.dir}/org/waveprotocol/wave/concurrencycontrol/ClientServer.class"/>
+    <pstmessage
+      proto="${build.proto.dir}/org/waveprotocol/wave/diff/Diff.class"/>
     <touch file="${dep}/compile-messages"/>
   </target>
 
@@ -191,7 +197,7 @@
       <srcfiles dir="${gen.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="compile" depends="compile-proto, compile-gxp, compile-messages, compile-dep"
+  <target name="compile" depends="compile-proto, compile-gxp, compile-dep"
       unless="skip.compile" description="Compiles all source">
     <depend srcdir="${src.dir}" destdir="${build.src.dir}" closure="yes"/>
     <subant target="compile" inheritall="true">
@@ -295,7 +301,7 @@
 
   <!-- compiles pre-generated gwt proto sources; does NOT generate protos -->
   <target name="compile-proto-gwt-dep">
-    <uptodate targetfile="${dep}/compile-proto-gwt-dep" property="skip.compile-proto-gwt">
+    <uptodate targetfile="${dep}/compile-proto-gwt" property="skip.compile-proto-gwt">
       <srcfiles dir="${lib.dir}" includes="**/*"/>
       <srcfiles dir="${src.proto.gwt.dir}" includes="**/*.java"/>
     </uptodate>
@@ -305,7 +311,7 @@
       <src path="${src.proto.gwt.dir}" />
       <classpath refid="libpath"/>
     </buildjava>
-    <touch file="${dep}/compile-proto-gwt-dep"/>
+    <touch file="${dep}/compile-proto-gwt"/>
   </target>
 
   <target name="compile-gwt-dep">

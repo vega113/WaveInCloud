@@ -26,7 +26,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.waveprotocol.pst.style.JavaStyler;
+import org.waveprotocol.pst.style.Styler;
 import org.waveprotocol.pst.style.PstStyler;
 
 import java.io.File;
@@ -40,8 +40,9 @@ import java.util.Map;
 public final class PstCommandLine {
 
   private static final String DEFAULT_OUTPUT_DIR = ".";
-  private static final Map<String, JavaStyler> STYLERS = ImmutableMap.<String, JavaStyler> builder()
-      .put("none", JavaStyler.EMPTY)
+  private static final String DEFAULT_PROTO_PATH = ".";
+  private static final Map<String, Styler> STYLERS = ImmutableMap.<String, Styler> builder()
+      .put("none", Styler.EMPTY)
       .put("pst", new PstStyler())
       .build();
 
@@ -69,7 +70,12 @@ public final class PstCommandLine {
         "The base directory to output generated files to (default: %s)", DEFAULT_OUTPUT_DIR));
     options.addOption("s", "styler", true, "The styler to use, if any (default: none). " +
         "Available options: " + STYLERS.keySet());
-    options.addOption("b", "backup", false, "Save backups of intermediate files (e.g. pre-style)");
+    options.addOption("i", "save_pre_styled", false, "Save the intermediate pre-styled files");
+    options.addOption("j", "save_java", false, "Save the protoc-generated Java file, if any");
+    options.addOption("I", "proto_path", true, "Extra path to search for proto extensions. " +
+        "This needs to be specified if the target file is a .proto file with any of the PST-" +
+        "specific extensions (e.g. int53), in which case the path should include both PST source " +
+        "base and the protoc source base; i.e., /PATH/TO/PST/src:/PATH/TO/PROTOC/src");
     return options;
   }
 
@@ -104,21 +110,29 @@ public final class PstCommandLine {
     return new File(cl.hasOption('d') ? cl.getOptionValue('d') : DEFAULT_OUTPUT_DIR);
   }
 
-  public JavaStyler getStyler() {
+  public File getProtoPath() {
+    return new File(cl.hasOption('I') ? cl.getOptionValue('I') : DEFAULT_PROTO_PATH);
+  }
+
+  public Styler getStyler() {
     if (cl.hasOption('s')) {
       String stylerName = cl.getOptionValue('s');
       if (STYLERS.containsKey(stylerName)) {
         return STYLERS.get(stylerName);
       } else {
         System.err.println("WARNING: unrecognised styler: " + stylerName + ", using none");
-        return JavaStyler.EMPTY;
+        return Styler.EMPTY;
       }
     } else {
-      return JavaStyler.EMPTY;
+      return Styler.EMPTY;
     }
   }
 
-  public boolean shouldSaveBackups() {
-    return cl.hasOption('b');
+  public boolean shouldSavePreStyled() {
+    return cl.hasOption('p');
+  }
+
+  public boolean shouldSaveJava() {
+    return cl.hasOption('j');
   }
 }

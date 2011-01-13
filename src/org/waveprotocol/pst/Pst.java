@@ -27,7 +27,8 @@ import com.google.protobuf.Descriptors.FileDescriptor;
 import org.antlr.stringtemplate.StringTemplate;
 import org.antlr.stringtemplate.StringTemplateGroup;
 import org.waveprotocol.pst.model.Message;
-import org.waveprotocol.pst.style.JavaStyler;
+import org.waveprotocol.pst.model.MessageProperties;
+import org.waveprotocol.pst.style.Styler;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -83,7 +84,7 @@ public final class Pst {
 
   private final File outputDir;
   private final FileDescriptor fd;
-  private final JavaStyler styler;
+  private final Styler styler;
   private final Iterable<File> templates;
   private final boolean saveBackups;
 
@@ -95,7 +96,7 @@ public final class Pst {
    * @param templates the collection of string templates to use
    * @param saveBackups whether to save intermediate generated files
    */
-  public Pst(File outputDir, FileDescriptor fd, JavaStyler styler, Iterable<File> templates,
+  public Pst(File outputDir, FileDescriptor fd, Styler styler, Iterable<File> templates,
       boolean saveBackups) {
     this.outputDir = checkNotNull(outputDir, "outputDir cannot be null");
     this.fd = checkNotNull(fd, "fd cannot be null");
@@ -110,17 +111,26 @@ public final class Pst {
   public void run() throws PstException {
     List<PstException.TemplateException> exceptions = Lists.newArrayList();
     for (File template : templates) {
-      String templateName = stripSuffix(".st", template.getName());
       try {
-        StringTemplateGroup group = new StringTemplateGroup(templateName + "Group", dir(template));
-        StringTemplate st = group.getInstanceOf(templateName);
-        for (Descriptor message : fd.getMessageTypes()) {
+        File propertiesFile = new File(template.getParentFile().getPath() + File.separator + "properties");
+        MessageProperties properties = propertiesFile.exists() ?
+            MessageProperties.createFromFile(propertiesFile) : MessageProperties.createEmpty();
+        String groupName = stripSuffix(".st", template.getName());
+        String templateName = properties.hasTemplateName() ?
+            properties.getTemplateName() : "";
+        StringTemplateGroup group = new StringTemplateGroup(groupName + "Group", dir(template));
+        StringTemplate st = group.getInstanceOf(groupName);
+        for (Descriptor messageDescriptor : fd.getMessageTypes()) {
+          Message message = new Message(messageDescriptor, templateName, properties);
           st.reset();
-          st.setAttribute("m", new Message(message, templateName));
-          write(st, message);
+          st.setAttribute("m", message);
+          write(st, new File(
+              outputDir.getPath() + File.separator +
+              message.getFullJavaType().replace('.', File.separatorChar) + "." +
+              (properties.hasFileExtension() ? properties.getFileExtension() : "java")));
         }
       } catch (Exception e) {
-        exceptions.add(new PstException.TemplateException(templateName, e));
+        exceptions.add(new PstException.TemplateException(template.getPath(), e));
       }
     }
     if (!exceptions.isEmpty()) {
@@ -142,12 +152,9 @@ public final class Pst {
     return s.endsWith(suffix) ? s.substring(0, s.length() - suffix.length()) : s;
   }
 
-  private void write(StringTemplate st, Descriptor message) throws IOException {
-    File f = new File(
-        outputDir.getPath() + File.separator +
-        message.getFullName().replace('.', File.separatorChar) + st.getName() + ".java");
-    f.getParentFile().mkdirs();
-    BufferedWriter writer = new BufferedWriter(new FileWriter(f));
+  private void write(StringTemplate st, File output) throws IOException {
+    output.getParentFile().mkdirs();
+    BufferedWriter writer = new BufferedWriter(new FileWriter(output));
     try {
       writer.write(st.toString());
     } finally {
@@ -161,6 +168,6 @@ public final class Pst {
         // exception anyway?
       }
     }
-    styler.style(f, saveBackups);
+    styler.style(output, saveBackups);
   }
 }
