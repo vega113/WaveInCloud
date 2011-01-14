@@ -17,6 +17,7 @@
 package org.waveprotocol.wave.client.wavepanel.view.impl;
 
 import org.waveprotocol.wave.client.wavepanel.view.AnchorView;
+import org.waveprotocol.wave.client.wavepanel.view.BlipLinkPopupView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineConversationView;
@@ -65,6 +66,8 @@ public final class BlipViewImpl<I extends IntrinsicBlipView> // \u2620
 
     InlineConversationView insertConversationBefore(I impl, InlineConversationView ref,
         Conversation c);
+
+    BlipLinkPopupView createLinkPopup(I impl);
   }
 
   public BlipViewImpl(Helper<? super I> helper, I impl) {
@@ -128,5 +131,10 @@ public final class BlipViewImpl<I extends IntrinsicBlipView> // \u2620
   @Override
   public void remove() {
     helper.removeBlip(impl);
+  }
+
+  @Override
+  public BlipLinkPopupView createLinkPopup() {
+    return helper.createLinkPopup(impl);
   }
 }

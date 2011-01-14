@@ -30,6 +30,7 @@ import com.google.gwt.dom.client.Style.Display;
 import org.waveprotocol.wave.client.common.util.UserAgent;
 import org.waveprotocol.wave.client.scroll.TargetScroller;
 import org.waveprotocol.wave.client.wavepanel.view.AnchorView;
+import org.waveprotocol.wave.client.wavepanel.view.BlipLinkPopupView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.ContinuationIndicatorView;
@@ -46,6 +47,7 @@ import org.waveprotocol.wave.client.wavepanel.view.ThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 import org.waveprotocol.wave.client.wavepanel.view.View.Type;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipLinkPopupWidget;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.FocusFrame;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.WaveRenderer;
 import org.waveprotocol.wave.client.wavepanel.view.impl.AbstractConversationViewImpl;
@@ -217,6 +219,11 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
         @Override
         public void removeBlip(BlipViewDomImpl impl) {
           impl.remove();
+        }
+
+        @Override
+        public BlipLinkPopupView createLinkPopup(BlipViewDomImpl impl) {
+          return new BlipLinkPopupWidget(impl.getElement());
         }
       };
 

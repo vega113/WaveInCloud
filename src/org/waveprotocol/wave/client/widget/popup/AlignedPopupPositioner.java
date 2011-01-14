@@ -198,6 +198,10 @@ public final class AlignedPopupPositioner implements RelativePopupPositioner {
   public static final RelativePopupPositioner BELOW_RIGHT = new AlignedPopupPositioner(
       Insets.NONE, Horizontal.RIGHT, Horizontal.LEFT, Vertical.BOTTOM, Vertical.TOP);
 
+  /** An above-right positioner. */
+  public static final RelativePopupPositioner ABOVE_RIGHT = new AlignedPopupPositioner(
+      Insets.NONE, Horizontal.RIGHT, Horizontal.LEFT, Vertical.TOP, Vertical.BOTTOM);
+
   private final Insets insets;
   private final Horizontal primaryHorz;
   private final Horizontal secondaryHorz;

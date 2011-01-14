@@ -20,6 +20,7 @@ import com.google.gwt.user.client.Window;
 
 import org.waveprotocol.wave.client.common.util.WaveRefConstants;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
+import org.waveprotocol.wave.client.wavepanel.view.BlipLinkPopupView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.ThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
@@ -151,6 +152,11 @@ public final class Actions {
     focus.focus(blipUi);
   }
 
+  /**
+   * Pops up a link info for the blip.
+   *
+   * @param blipUi Ui view for the blip
+   */
   public void popupLink(BlipView blipUi) {
     ConversationBlip blip = views.getBlip(blipUi);
     // TODO(Yuri Z.) Change to use the conversation model when the Conversation
@@ -165,10 +171,11 @@ public final class Actions {
       return;
     }
     WaveRef waveRef = WaveRef.of(waveId, waveletId, blip.getId());
-    String waveRefStringValue =
+    final String waveRefStringValue =
         WaveRefConstants.WAVE_URI_PREFIX + GwtWaverefEncoder.encodeToUriPathSegment(waveRef);
-    // TODO(Yuri Z.) replace with custom popup.
-    Window.prompt("Link to this blip:", waveRefStringValue);
+    BlipLinkPopupView blipLinkPopupView = blipUi.createLinkPopup();
+    blipLinkPopupView.setLinkInfo(waveRefStringValue);
+    blipLinkPopupView.show();
   }
 
   //

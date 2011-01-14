@@ -41,6 +41,8 @@ public interface BlipView extends View, IntrinsicBlipView {
   InlineConversationView getConversationAfter(InlineConversationView ref);
   InlineConversationView insertConversationBefore(InlineConversationView ref, Conversation c);
 
+  BlipLinkPopupView createLinkPopup();
+
   /**
    * @return the thread that contains this blip.
    */

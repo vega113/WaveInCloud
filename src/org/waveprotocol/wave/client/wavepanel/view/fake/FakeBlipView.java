@@ -18,6 +18,7 @@ package org.waveprotocol.wave.client.wavepanel.view.fake;
 
 import org.waveprotocol.wave.client.common.util.LinkedSequence;
 import org.waveprotocol.wave.client.wavepanel.view.AnchorView;
+import org.waveprotocol.wave.client.wavepanel.view.BlipLinkPopupView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineConversationView;
@@ -112,5 +113,10 @@ public final class FakeBlipView implements BlipView {
   @Override
   public String toString() {
     return "Blip " + (anchors.isEmpty() ? "" : " " + anchors.toString());
+  }
+
+  @Override
+  public BlipLinkPopupView createLinkPopup() {
+    return new FakeBlipLinkPopupView(this);
   }
 }
