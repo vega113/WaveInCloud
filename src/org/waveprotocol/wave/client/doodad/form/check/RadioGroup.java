@@ -31,7 +31,7 @@ import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
  * Group of radio buttons
  */
 public final class RadioGroup {
-  private static final String FULL_TAGNAME = "w:radiogroup";
+  private static final String TAGNAME = "radiogroup";
 
   private static final NodeMutationHandler<ContentNode, ContentElement>
       RADIO_GROUP_MUTATION_HANDLER =
@@ -73,8 +73,8 @@ public final class RadioGroup {
    * Registers subclasses
    */
   public static void register(ElementHandlerRegistry handlerRegistry) {
-    handlerRegistry.registerRenderer(FULL_TAGNAME, NullRenderer.INSTANCE);
-    handlerRegistry.registerMutationHandler(FULL_TAGNAME, RADIO_GROUP_MUTATION_HANDLER);
+    handlerRegistry.registerRenderer(TAGNAME, NullRenderer.INSTANCE);
+    handlerRegistry.registerMutationHandler(TAGNAME, RADIO_GROUP_MUTATION_HANDLER);
   }
 
   /**
@@ -84,7 +84,7 @@ public final class RadioGroup {
    */
   public static XmlStringBuilder constructXml(String name, String value) {
     return XmlStringBuilder.createEmpty().wrap(
-        FULL_TAGNAME, ContentElement.NAME, name, CheckConstants.VALUE, value);
+        TAGNAME, ContentElement.NAME, name, CheckConstants.VALUE, value);
   }
 
   /**
@@ -93,12 +93,12 @@ public final class RadioGroup {
    * @return A content xml string containing a checkbox
    */
   public static XmlStringBuilder constructXml(String name, String value, String submit) {
-    return XmlStringBuilder.createEmpty().wrap(FULL_TAGNAME,
+    return XmlStringBuilder.createEmpty().wrap(TAGNAME,
         ContentElement.NAME, name, CheckConstants.VALUE, value, ContentElement.SUBMIT, submit);
   }
 
   public static boolean isRadioGroup(ContentElement element) {
-    return EditorDocHelper.isNamedElement(element, FULL_TAGNAME);
+    return EditorDocHelper.isNamedElement(element, TAGNAME);
   }
 
   /**

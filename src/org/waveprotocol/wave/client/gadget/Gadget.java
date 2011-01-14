@@ -17,7 +17,7 @@
 
 package org.waveprotocol.wave.client.gadget;
 
-import static org.waveprotocol.wave.model.gadget.GadgetConstants.FULL_TAGNAME;
+import static org.waveprotocol.wave.model.gadget.GadgetConstants.TAGNAME;
 
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.doodad.DoodadInstallers;
@@ -55,12 +55,12 @@ public final class Gadget {
     GadgetRenderer renderer =
         new GadgetRenderer(waveletName, blip, supplement, profileManager, loginName);
 
-    registry.registerEventHandler(FULL_TAGNAME, ChunkyElementHandler.INSTANCE);
-    registry.registerRenderingMutationHandler(FULL_TAGNAME, renderer);
+    registry.registerEventHandler(TAGNAME, ChunkyElementHandler.INSTANCE);
+    registry.registerRenderingMutationHandler(TAGNAME, renderer);
   }
 
   public static boolean isGadget(ContentNode node) {
-    return EditorDocHelper.isNamedElement(node, GadgetConstants.FULL_TAGNAME);
+    return EditorDocHelper.isNamedElement(node, GadgetConstants.TAGNAME);
   }
 
   public static BlipInstaller install(final ProfileManager profileManager,

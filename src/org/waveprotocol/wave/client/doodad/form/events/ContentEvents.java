@@ -31,13 +31,13 @@ import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 /** Useful document elements for representing user events inside the document. */
 public final class ContentEvents {
 
-  private static final String FULL_TAGNAME = "w:events";
+  private static final String TAGNAME = "events";
 
   /** Register all behaviours for the events elements. */
   public static void register(ElementHandlerRegistry handlerRegistry) {
-    handlerRegistry.registerRenderer(FULL_TAGNAME, NullRenderer.INSTANCE);
-    handlerRegistry.registerEventHandler(FULL_TAGNAME, ContentEventsNodeHandler.getInstance());
-    handlerRegistry.registerMutationHandler(FULL_TAGNAME, ContentEventsNodeMutationHandler.getInstance());
+    handlerRegistry.registerRenderer(TAGNAME, NullRenderer.INSTANCE);
+    handlerRegistry.registerEventHandler(TAGNAME, ContentEventsNodeHandler.getInstance());
+    handlerRegistry.registerMutationHandler(TAGNAME, ContentEventsNodeMutationHandler.getInstance());
 
     // Register all {@link Event} subclasses here
     Click.register(handlerRegistry);
@@ -47,7 +47,7 @@ public final class ContentEvents {
    * @return A content xml string containing an empty events list
    */
   public static XmlStringBuilder constructXml() {
-    return XmlStringBuilder.createEmpty().wrap(FULL_TAGNAME);
+    return XmlStringBuilder.createEmpty().wrap(TAGNAME);
   }
 
   private ContentEvents() {
@@ -100,7 +100,7 @@ public final class ContentEvents {
    * @param node
    */
   public static boolean isContentEvents(ContentNode node) {
-    return EditorDocHelper.isNamedElement(node, FULL_TAGNAME);
+    return EditorDocHelper.isNamedElement(node, TAGNAME);
   }
 
   /**

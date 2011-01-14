@@ -25,7 +25,7 @@ import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 public final class Click {
 
-  private static final String FULL_TAGNAME = "w:click";
+  private static final String TAGNAME = "click";
 
   /**
    * NOTE(user): Unused, think about what to do with these, or delete.
@@ -36,7 +36,7 @@ public final class Click {
       = new String[] {TIME, CLICKER};
 
   public static void register(ElementHandlerRegistry handlerRegistry) {
-    handlerRegistry.registerRenderer(FULL_TAGNAME, NullRenderer.INSTANCE);
+    handlerRegistry.registerRenderer(TAGNAME, NullRenderer.INSTANCE);
   }
 
   private Click() {
@@ -48,10 +48,10 @@ public final class Click {
    * TODO(user): record clicker + time, etc. in the click node
    */
   public static XmlStringBuilder constructXml() {
-    return XmlStringBuilder.createEmpty().wrap(FULL_TAGNAME);
+    return XmlStringBuilder.createEmpty().wrap(TAGNAME);
   }
 
   public static boolean isClick(ContentNode node) {
-    return EditorDocHelper.isNamedElement(node, FULL_TAGNAME);
+    return EditorDocHelper.isNamedElement(node, TAGNAME);
   }
 }

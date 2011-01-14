@@ -148,7 +148,7 @@ table {
 
 /* TODO: factor this out */
 
-.editor p, .editor w\:title {
+.editor p {
   margin:5px 0;
 }
 

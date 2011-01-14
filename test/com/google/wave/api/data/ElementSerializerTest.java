@@ -53,37 +53,37 @@ public class ElementSerializerTest extends TestCase {
   }
 
   public void testLabelSerialization() {
-    convertBackAndForth("<w:label for=\"something\">label</w:label>");
+    convertBackAndForth("<label for=\"something\">label</label>");
   }
 
   public void testInputSerialization() {
-    convertBackAndForth("<w:input name=\"inputbox\">value</w:input>");
+    convertBackAndForth("<input name=\"inputbox\">value</input>");
   }
 
   public void testPasswordSerialization() {
-    convertBackAndForth("<w:password name=\"lbl\" value=\"something\"></w:password>");
+    convertBackAndForth("<password name=\"lbl\" value=\"something\"></password>");
   }
 
   public void testTextareaSerialization() {
     convertBackAndForth(
-        "<w:textarea name=\"lbl\"><line></line>line 1<line></line>line 2</w:textarea>");
+        "<textarea name=\"lbl\"><line></line>line 1<line></line>line 2</textarea>");
   }
 
   public void testButtonSerialization() {
     convertBackAndForth(
-        "<w:button name=\"button\"><w:caption>button</w:caption><w:events></w:events></w:button>");
+        "<button name=\"button\"><caption>button</caption><events></events></button>");
   }
 
   public void testRadiogroupSerialization() {
-    convertBackAndForth("<w:radiogroup name=\"rgroup\"></w:radiogroup>");
+    convertBackAndForth("<radiogroup name=\"rgroup\"></radiogroup>");
   }
 
   public void testRadioSerialization() {
-    convertBackAndForth("<w:radio name=\"radio\" group=\"group\"></w:radio>");
+    convertBackAndForth("<radio name=\"radio\" group=\"group\"></radio>");
   }
 
   public void testCheckboxSerialization() {
-    String xml = "<w:check name=\"include\" submit=\"true\" value=\"false\"></w:check>";
+    String xml = "<check name=\"include\" submit=\"true\" value=\"false\"></check>";
     FormElement element = (FormElement) createApiElementFromXml(xml);
     assertEquals("include", element.getName());
     assertEquals("false", element.getValue());
@@ -92,11 +92,11 @@ public class ElementSerializerTest extends TestCase {
   }
 
   public void testGadgetSerialization() throws Exception {
-    convertBackAndForth("<w:gadget url=\"http://www.example.com/gadget.xml\"></w:gadget>");
-    convertBackAndForth("<w:gadget url=\"http://www.example.com/gadget.xml\">"
-        + "<w:pref value=\"value\"></w:pref>" + "</w:gadget>");
-    convertBackAndForth("<w:gadget url=\"http://www.example.com/gadget.xml\">"
-        + "<w:state name=\"key\" value=\"value\"></w:state>" + "</w:gadget>");
+    convertBackAndForth("<gadget url=\"http://www.example.com/gadget.xml\"></gadget>");
+    convertBackAndForth("<gadget url=\"http://www.example.com/gadget.xml\">"
+        + "<pref value=\"value\"></pref>" + "</gadget>");
+    convertBackAndForth("<gadget url=\"http://www.example.com/gadget.xml\">"
+        + "<state name=\"key\" value=\"value\"></state>" + "</gadget>");
   }
 
   public void testImgSerialization() {
@@ -110,11 +110,11 @@ public class ElementSerializerTest extends TestCase {
   }
 
   public void testAttachmentSerialization() {
-    convertBackAndForth("<w:image attachment=\"id\"></w:image>");
-    convertBackAndForth("<w:image attachment=\"id\"><w:caption>caption</w:caption></w:image>");
+    convertBackAndForth("<image attachment=\"id\"></image>");
+    convertBackAndForth("<image attachment=\"id\"><caption>caption</caption></image>");
     Element element = createApiElementFromXml(
-        "<w:image attachment=\"id\"><w:gadge>something</w:gadge>" +
-            "<w:caption>caption</w:caption><w:fake>fake</w:fake></w:image>", createWavelet("id"));
+        "<image attachment=\"id\"><gadge>something</gadge>" +
+            "<caption>caption</caption><fake>fake</fake></image>", createWavelet("id"));
     assertTrue(element instanceof Attachment);
     assertEquals("caption", ((Attachment) element).getCaption());
     assertEquals("id", ((Attachment) element).getAttachmentId());

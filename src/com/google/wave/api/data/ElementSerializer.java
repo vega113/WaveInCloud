@@ -133,7 +133,7 @@ public abstract class ElementSerializer {
   }
 
   static {
-    register(new ElementSerializer("w:label", ElementType.LABEL) {
+    register(new ElementSerializer("label", ElementType.LABEL) {
       @Override
       public XmlStringBuilder toXml(Element e) {
         String value = e.getProperty("value");
@@ -155,7 +155,7 @@ public abstract class ElementSerializer {
       }
     });
 
-    register(new ElementSerializer("w:input", ElementType.INPUT) {
+    register(new ElementSerializer("input", ElementType.INPUT) {
       @Override
       public XmlStringBuilder toXml(Element e) {
         String value = e.getProperty("value");
@@ -177,7 +177,7 @@ public abstract class ElementSerializer {
       }
     });
 
-    register(new ElementSerializer("w:password", ElementType.PASSWORD) {
+    register(new ElementSerializer("password", ElementType.PASSWORD) {
       @Override
       public XmlStringBuilder toXml(Element e) {
         String value = e.getProperty("value");
@@ -193,7 +193,7 @@ public abstract class ElementSerializer {
       }
     });
 
-    register(new ElementSerializer("w:textarea", ElementType.TEXTAREA) {
+    register(new ElementSerializer("textarea", ElementType.TEXTAREA) {
       @Override
       public XmlStringBuilder toXml(Element e) {
         XmlStringBuilder res = XmlStringBuilder.createEmpty();
@@ -207,7 +207,7 @@ public abstract class ElementSerializer {
             res.append(XmlStringBuilder.createText(paragraph));
           }
         }
-        return res.wrap("w:textarea", "name", e.getProperty("name"));
+        return res.wrap("textarea", "name", e.getProperty("name"));
       }
 
       @Override
@@ -236,13 +236,13 @@ public abstract class ElementSerializer {
       }
     });
 
-    register(new ElementSerializer("w:button", ElementType.BUTTON) {
+    register(new ElementSerializer("button", ElementType.BUTTON) {
       @Override
       public XmlStringBuilder toXml(Element element) {
         XmlStringBuilder res = XmlStringBuilder.createEmpty();
         res.append(XmlStringBuilder.createText(element.getProperty("value")).wrap(CAPTION_TAG));
-        res.append(XmlStringBuilder.createEmpty().wrap("w:events"));
-        return res.wrap("w:button", "name", element.getProperty("name"));
+        res.append(XmlStringBuilder.createEmpty().wrap("events"));
+        return res.wrap("button", "name", element.getProperty("name"));
       }
 
       @Override
@@ -271,7 +271,7 @@ public abstract class ElementSerializer {
       }
     });
 
-    register(new ElementSerializer("w:radiogroup", ElementType.RADIO_BUTTON_GROUP) {
+    register(new ElementSerializer("radiogroup", ElementType.RADIO_BUTTON_GROUP) {
       @Override
       public XmlStringBuilder toXml(Element e) {
         return wrap("name", e.getProperty("name"));
@@ -285,7 +285,7 @@ public abstract class ElementSerializer {
       }
     });
 
-    register(new ElementSerializer("w:radio", ElementType.RADIO_BUTTON) {
+    register(new ElementSerializer("radio", ElementType.RADIO_BUTTON) {
       @Override
       public XmlStringBuilder toXml(Element e) {
         return wrap("name", e.getProperty("name"), "group", e.getProperty("value"));
@@ -299,7 +299,7 @@ public abstract class ElementSerializer {
       }
     });
 
-    register(new ElementSerializer("w:check", ElementType.CHECK) {
+    register(new ElementSerializer("check", ElementType.CHECK) {
       @Override
       public XmlStringBuilder toXml(Element e) {
         return wrap("name", e.getProperty("name"),
@@ -316,7 +316,7 @@ public abstract class ElementSerializer {
       }
     });
 
-    register(new ElementSerializer("w:extension_installer", ElementType.INSTALLER) {
+    register(new ElementSerializer("extension_installer", ElementType.INSTALLER) {
       @Override
       public XmlStringBuilder toXml(Element e) {
         return wrap("manifest", e.getProperty("manifest"));
@@ -331,21 +331,21 @@ public abstract class ElementSerializer {
       }
     });
 
-    register(new ElementSerializer("w:gadget", ElementType.GADGET) {
+    register(new ElementSerializer("gadget", ElementType.GADGET) {
       @Override
       public XmlStringBuilder toXml(Element element) {
         XmlStringBuilder res = XmlStringBuilder.createEmpty();
         if (element.getProperties().containsKey("category")) {
           res.append(XmlStringBuilder.createEmpty().wrap(
-              "w:category", "name", element.getProperty("category")));
+              "category", "name", element.getProperty("category")));
         }
         if (element.getProperties().containsKey("title")) {
           res.append(XmlStringBuilder.createEmpty().wrap(
-              "w:title", "value", element.getProperty("title")));
+              "title", "value", element.getProperty("title")));
         }
         if (element.getProperties().containsKey("thumbnail")) {
           res.append(XmlStringBuilder.createEmpty().wrap(
-              "w:thumbnail", "value", element.getProperty("thumbnail")));
+              "thumbnail", "value", element.getProperty("thumbnail")));
         }
         for (Map.Entry<String, String> property : element.getProperties().entrySet()) {
           if (property.getKey().equals("category") || property.getKey().equals("url") ||
@@ -353,9 +353,9 @@ public abstract class ElementSerializer {
               property.getKey().equals("author")) {
             continue;
           } else if (property.getKey().equals("pref")) {
-            res.append(XmlStringBuilder.createEmpty().wrap("w:pref", "value", property.getValue()));
+            res.append(XmlStringBuilder.createEmpty().wrap("pref", "value", property.getValue()));
           } else {
-            res.append(XmlStringBuilder.createEmpty().wrap("w:state",
+            res.append(XmlStringBuilder.createEmpty().wrap("state",
                 "name", property.getKey(),
                 "value", property.getValue()));
           }
@@ -371,7 +371,7 @@ public abstract class ElementSerializer {
         }
         String[] asArray = new String[attributes.size()];
         attributes.toArray(asArray);
-        return res.wrap("w:gadget", asArray);
+        return res.wrap("gadget", asArray);
       }
 
       @Override
@@ -392,17 +392,17 @@ public abstract class ElementSerializer {
         // get a list of child elements or attributes, then automate this.
         E child = doc.asElement(doc.getFirstChild(element));
         while (child != null) {
-          if (doc.getTagName(child).equals("w:name")) {
+          if (doc.getTagName(child).equals("name")) {
             gadget.setProperty("name", doc.getAttribute(child, "value"));
-          } else if (doc.getTagName(child).equals("w:title")) {
+          } else if (doc.getTagName(child).equals("title")) {
             gadget.setProperty("title", doc.getAttribute(child, "value"));
-          } else if (doc.getTagName(child).equals("w:thumbnail")) {
+          } else if (doc.getTagName(child).equals("thumbnail")) {
             gadget.setProperty("thumbnail", doc.getAttribute(child, "value"));
-          } else if (doc.getTagName(child).equals("w:pref")) {
+          } else if (doc.getTagName(child).equals("pref")) {
             gadget.setProperty("pref", doc.getAttribute(child, "value"));
-          } else if (doc.getTagName(child).equals("w:state")) {
+          } else if (doc.getTagName(child).equals("state")) {
             gadget.setProperty(doc.getAttribute(child, "name"), doc.getAttribute(child, "value"));
-          } else if (doc.getTagName(child).equals("w:category")) {
+          } else if (doc.getTagName(child).equals("category")) {
             gadget.setProperty("category", doc.getAttribute(child, "name"));
           }
           child = doc.asElement(doc.getNextSibling(child));
@@ -455,16 +455,16 @@ public abstract class ElementSerializer {
       }
     });
 
-    register(new ElementSerializer("w:image", ElementType.ATTACHMENT) {
+    register(new ElementSerializer("image", ElementType.ATTACHMENT) {
       @Override
       public XmlStringBuilder toXml(Element element) {
         XmlStringBuilder res = XmlStringBuilder.createEmpty();
         if (element.getProperties().containsKey("attachmentId")) {
           if (element.getProperty(CAPTION_STR) != null) {
             res.append(XmlStringBuilder.createText(element.getProperty(CAPTION_STR))
-                .wrap("w:caption"));
+                .wrap("caption"));
           }
-          return res.wrap("w:image", ATTACHMENT_STR, element.getProperty("attachmentId"));
+          return res.wrap("image", ATTACHMENT_STR, element.getProperty("attachmentId"));
         }
         return res;
       }

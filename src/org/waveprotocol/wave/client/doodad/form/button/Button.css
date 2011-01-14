@@ -41,7 +41,7 @@
 
 @if user.agent safari gecko1_8 {
   /* Turns off ugly highlighting around focused editable regions. */
-  .button w\:caption:focus {
+  .button .w-caption:focus {
     outline: 0;
   }
 }

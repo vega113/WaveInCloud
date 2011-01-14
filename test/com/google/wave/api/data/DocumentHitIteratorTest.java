@@ -22,25 +22,23 @@ import static org.mockito.Mockito.mock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.wave.api.Attachment;
+import com.google.wave.api.ElementType;
+import com.google.wave.api.Range;
+import com.google.wave.api.Restriction;
+
+import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.conversation.Blips;
+import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.indexed.IndexedDocument;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.raw.impl.Element;
 import org.waveprotocol.wave.model.document.raw.impl.Node;
 import org.waveprotocol.wave.model.document.raw.impl.Text;
-import org.waveprotocol.wave.model.document.util.DocumentImpl;
 import org.waveprotocol.wave.model.document.util.DocProviders;
+import org.waveprotocol.wave.model.document.util.DocumentImpl;
 import org.waveprotocol.wave.model.document.util.LineContainers;
-import com.google.wave.api.Attachment;
-import com.google.wave.api.ElementType;
-import com.google.wave.api.Range;
-import com.google.wave.api.Restriction;
-import com.google.wave.api.data.ApiView;
-
-import junit.framework.TestCase;
-
-import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.OperationRuntimeException;
 import org.waveprotocol.wave.model.operation.OperationSequencer;
@@ -110,19 +108,19 @@ public class DocumentHitIteratorTest extends TestCase {
   }
 
   public void testBasicElementMatcher() {
-    String xml = "text <w:gadget></w:gadget> <w:something/> <w:gadget/> hello";
+    String xml = "text <gadget></gadget> <something/> <gadget/> hello";
     ApiView apiView = createApiViewFromXml(xml);
     DocumentHitIterator it = new DocumentHitIterator.ElementMatcher(
         apiView, ElementType.GADGET, Collections.<String, String>emptyMap(), -1);
     List<Integer> hits = Lists.newArrayList();
-    assertEquals(xml.indexOf("<w:gadget>") + 1, it.next().getStart());
+    assertEquals(xml.indexOf("<gadget>") + 1, it.next().getStart());
     assertEquals(10, it.next().getStart()); // Elements get counted as 1
     assertNull(it.next());
    }
 
   public void testElementMatcherWithRestrictions() {
-    String xml = "text <w:image attachment=\"nR_0YFT75\" style=\"full\">"
-        + "<w:caption>good times</w:caption></w:image> hello";
+    String xml = "text <image attachment=\"nR_0YFT75\" style=\"full\">"
+        + "<caption>good times</caption></image> hello";
     ApiView apiView = createApiViewFromXml(xml);
     Map<String, String> restrictions = Maps.newHashMap();
     assertEquals(1,

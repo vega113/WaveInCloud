@@ -44,9 +44,9 @@ public class LineContainersTest extends TestCase {
     {
       addChildren(null, "body");
 
-      addChildren("body", "line", "w:input");
+      addChildren("body", "line", "input");
       containsBlipText("body");
-      containsBlipText("w:input");
+      containsBlipText("input");
 
       addRequiredInitial("body", Collections.singletonList("line"));
 
@@ -308,43 +308,43 @@ public class LineContainersTest extends TestCase {
     getDocWithSchema("<body><line/>abc</body>");
     Point<Node> afterLine = Point.after(doc, DocHelper.getElementWithTagName(doc, "line"));
     LineContainers.insertInto(doc, afterLine,
-        XmlStringBuilder.createText("blah").wrap("w:input"));
-    assertEquals("<body><line></line><w:input>blah</w:input>abc</body>",
+        XmlStringBuilder.createText("blah").wrap("input"));
+    assertEquals("<body><line></line><input>blah</input>abc</body>",
         XmlStringBuilder.innerXml(doc).toString());
 
     getDocWithSchema("<body><line/>abc</body>");
     Point<Node> beforeLine = Point.before(doc, DocHelper.getElementWithTagName(doc, "line"));
     LineContainers.insertInto(doc, beforeLine,
-        XmlStringBuilder.createText("blah").wrap("w:input"));
-    assertEquals("<body><line></line><w:input>blah</w:input><line></line>abc</body>",
+        XmlStringBuilder.createText("blah").wrap("input"));
+    assertEquals("<body><line></line><input>blah</input><line></line>abc</body>",
         XmlStringBuilder.innerXml(doc).toString());
   }
 
   public void testInsertContentIntoLineStart() {
     getDocWithSchema("<body><line/>abc</body>");
     LineContainers.insertContentIntoLineStart(doc, DocHelper.getElementWithTagName(doc, "line"),
-        XmlStringBuilder.createText("blah").wrap("w:input"));
-    assertEquals("<body><line></line><w:input>blah</w:input>abc</body>",
+        XmlStringBuilder.createText("blah").wrap("input"));
+    assertEquals("<body><line></line><input>blah</input>abc</body>",
         XmlStringBuilder.innerXml(doc).toString());
   }
 
   public void testInsertContentIntoLineEnd() {
     getDocWithSchema("<body><line/>abc</body>");
     LineContainers.insertContentIntoLineEnd(doc, DocHelper.getElementWithTagName(doc, "line"),
-        XmlStringBuilder.createText("blah").wrap("w:input"));
-    assertEquals("<body><line></line>abc<w:input>blah</w:input></body>",
+        XmlStringBuilder.createText("blah").wrap("input"));
+    assertEquals("<body><line></line>abc<input>blah</input></body>",
         XmlStringBuilder.innerXml(doc).toString());
   }
 
   public void testAppendToLastLine() {
     getDocWithSchema("<body><line/>abc</body>");
-    LineContainers.appendToLastLine(doc, XmlStringBuilder.createText("blah").wrap("w:input"));
-    assertEquals("<body><line></line>abc<w:input>blah</w:input></body>",
+    LineContainers.appendToLastLine(doc, XmlStringBuilder.createText("blah").wrap("input"));
+    assertEquals("<body><line></line>abc<input>blah</input></body>",
         XmlStringBuilder.innerXml(doc).toString());
 
     getDocWithoutSchema("");
-    LineContainers.appendToLastLine(doc, XmlStringBuilder.createText("blah").wrap("w:input"));
-    assertEquals("<body><line></line><w:input>blah</w:input></body>",
+    LineContainers.appendToLastLine(doc, XmlStringBuilder.createText("blah").wrap("input"));
+    assertEquals("<body><line></line><input>blah</input></body>",
         XmlStringBuilder.innerXml(doc).toString());
   }
 
@@ -381,10 +381,10 @@ public class LineContainersTest extends TestCase {
     getDocWithSchema("<body><line/>abc</body>");
     checkLineRanges("abc");
 
-    getDocWithSchema("<body><line/>abc<w:input/>def</body>");
+    getDocWithSchema("<body><line/>abc<input/>def</body>");
     checkLineRanges("abcdef");
 
-    getDocWithSchema("<body><line/>abc<w:input>_</w:input>def</body>");
+    getDocWithSchema("<body><line/>abc<input>_</input>def</body>");
     checkLineRanges("abc_def");
 
     getDocWithSchema("<body><line/>abc<line/>def</body>");

@@ -42,10 +42,13 @@ public class Input extends LinoTextEventHandler {
     Css css();
   }
 
-  public interface Css extends CssResource {}
+  public interface Css extends CssResource {
+    String input();
+    String textarea();
+  }
 
-  public static final String INPUT_FULL_TAGNAME = "w:input";
-  public static final String TEXTAREA_FULL_TAGNAME = "w:textarea";
+  public static final String INPUT_TAGNAME = "input";
+  public static final String TEXTAREA_TAGNAME = "textarea";
 
   private static final String NAME = ContentElement.NAME;
   private static final String SUBMIT = ContentElement.SUBMIT;
@@ -57,31 +60,35 @@ public class Input extends LinoTextEventHandler {
    * Registers subclass with ContentElement
    */
   public static void register(final ElementHandlerRegistry registry) {
-    Editor.TAB_TARGETS.add(INPUT_FULL_TAGNAME);
-    Editor.TAB_TARGETS.add(TEXTAREA_FULL_TAGNAME);
+    Editor.TAB_TARGETS.add(INPUT_TAGNAME);
+    Editor.TAB_TARGETS.add(TEXTAREA_TAGNAME);
 
     // Also register text area.
     // TODO(danilatos): Do proper text area doodad, needs a non-paragraph
     // implementation as it does not contain text directly, it is more
     // akin to a top-level container element.
-    Paragraph.register(INPUT_FULL_TAGNAME, registry);
-    registry.registerEventHandler(INPUT_FULL_TAGNAME, new Input());
-    registry.registerRenderer(INPUT_FULL_TAGNAME, new ParagraphRenderer(
+    Paragraph.register(INPUT_TAGNAME, registry);
+    registry.registerEventHandler(INPUT_TAGNAME, new Input());
+    registry.registerRenderer(INPUT_TAGNAME, new ParagraphRenderer(
         new DefaultParagraphHtmlRenderer() {
           @Override
           protected Element createNodelet(Renderable element) {
-            return DomHelper.setContentEditable(
-                Document.get().createElement(INPUT_FULL_TAGNAME), true, true);
+            Element e = DomHelper.setContentEditable(
+                Document.get().createElement("span"), true, true);
+            e.setClassName(css.input());
+            return e;
           }
         }));
 
-    LineRendering.registerContainer(TEXTAREA_FULL_TAGNAME, registry);
-    registry.registerRenderer(TEXTAREA_FULL_TAGNAME, new Renderer() {
+    LineRendering.registerContainer(TEXTAREA_TAGNAME, registry);
+    registry.registerRenderer(TEXTAREA_TAGNAME, new Renderer() {
 
       @Override
       public Element createDomImpl(Renderable element) {
-        return element.setAutoAppendContainer(DomHelper.setContentEditable(
-            Document.get().createElement(TEXTAREA_FULL_TAGNAME), true, true));
+        Element e = DomHelper.setContentEditable(
+            Document.get().createElement(TEXTAREA_TAGNAME), true, true);
+        e.setClassName(css.textarea());
+        return element.setAutoAppendContainer(e);
       }
     });
   }
@@ -103,7 +110,7 @@ public class Input extends LinoTextEventHandler {
    * @return A content xml string containing an input field
    */
   public static XmlStringBuilder constructXml(XmlStringBuilder value, String name) {
-    return value.wrap(INPUT_FULL_TAGNAME, NAME, name);
+    return value.wrap(INPUT_TAGNAME, NAME, name);
   }
 
   /**
@@ -113,7 +120,7 @@ public class Input extends LinoTextEventHandler {
    */
   public static XmlStringBuilder constructXml(
         XmlStringBuilder value, String name, String submit) {
-    return value.wrap(INPUT_FULL_TAGNAME, NAME, name, SUBMIT, submit);
+    return value.wrap(INPUT_TAGNAME, NAME, name, SUBMIT, submit);
   }
 
 }

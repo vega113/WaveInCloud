@@ -96,7 +96,7 @@ public class AnnotationPainterTest extends AnnotationPainterTestBase {
     MutableDocument<Node, Element, Text> doc = cxt.document();
     Element lc = doc.createChildElement(doc.getDocumentElement(), "body", Attributes.EMPTY_MAP);
     Element l = doc.createChildElement(lc, "line", Attributes.EMPTY_MAP);
-    Element label = doc.createChildElement(lc, "w:label", Attributes.EMPTY_MAP);
+    Element label = doc.createChildElement(lc, "label", Attributes.EMPTY_MAP);
     doc.insertText(Point.end((Node)label), "test");
 
     // set up local content, moving the label into it

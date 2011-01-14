@@ -81,55 +81,55 @@ public final class ConversationSchemas implements SchemaProvider {
       // NOTE: for now, value constraints for indent implemented explicitly
       addAttrWithValues("line", "i");
 
-      addChildren("w:image", "w:caption");
-      addAttrWithValues("w:image", "attachment");
-      addAttrWithValues("w:image", "style", "full");
-      addChildren("w:image", "w:gadget");
+      addChildren("image", "caption");
+      addAttrWithValues("image", "attachment");
+      addAttrWithValues("image", "style", "full");
+      addChildren("image", "gadget");
 
-      oneLiner("w:caption");
-      addChildren("w:caption", "reply");
-      oneLiner("w:label");
-      oneLiner("w:input");
+      oneLiner("caption");
+      addChildren("caption", "reply");
+      oneLiner("label");
+      oneLiner("input");
 
       addAttrs("reply", "id");
 
       containsFormElements("body");
-      lineContainer("w:textarea");
-      addAttrs("w:button", "name");
-      addChildren("w:button", "w:caption", "w:events");
-      addChildren("w:events", "w:click");
-      addAttrs("w:click", "time", "clicker");
-      addAttrs("w:check", "name", "submit", "value");
-      addAttrs("w:radiogroup", "name", "submit", "value");
-      addAttrs("w:password", "name", "submit", "value");
-      addAttrs("w:textarea", "name", "submit", "value");
-      addAttrs("w:input", "name", "submit");
-      addAttrs("w:radio", "name", "group");
-      addAttrs("w:click", "time", "clicker");
-      addAttrs("w:label", "for");
+      lineContainer("textarea");
+      addAttrs("button", "name");
+      addChildren("button", "caption", "events");
+      addChildren("events", "click");
+      addAttrs("click", "time", "clicker");
+      addAttrs("check", "name", "submit", "value");
+      addAttrs("radiogroup", "name", "submit", "value");
+      addAttrs("password", "name", "submit", "value");
+      addAttrs("textarea", "name", "submit", "value");
+      addAttrs("input", "name", "submit");
+      addAttrs("radio", "name", "group");
+      addAttrs("click", "time", "clicker");
+      addAttrs("label", "for");
 
-      addChildren("w:gadget", "w:title", "w:thumbnail", "w:category", "w:state", "w:pref");
+      addChildren("gadget", "title", "thumbnail", "category", "state", "pref");
       // Some of these attributes might be obsolete and/or require stricter
       // validation
-      addAttrs("w:gadget", "url", "title", "prefs", "state", "author", "height", "width", "id",
+      addAttrs("gadget", "url", "title", "prefs", "state", "author", "height", "width", "id",
           "extension", "ifr", "snippet");
-      for (String gadgetEl : new String[] {"w:category", "w:state", "w:pref"}) {
+      for (String gadgetEl : new String[] {"category", "state", "pref"}) {
         addAttrs(gadgetEl, "name");
       }
-      for (String gadgetEl : new String[] {"w:title", "w:thumbnail", "w:state", "w:pref"}) {
+      for (String gadgetEl : new String[] {"title", "thumbnail", "state", "pref"}) {
         addAttrs(gadgetEl, "value");
       }
 
-      addChildren("profile", "profile-field", "w:gadget");
+      addChildren("profile", "profile-field", "gadget");
       addAttrs("profile-field", "name", "user-set");
       addAttrs("profile", "avatar-url");
       containsBlipText("profile-field");
 
-      addChildren("w:mediasearch", "w:result", "w:customsearch");
-      addAttrs("w:mediasearch", "page", "corpora", "query", "selected", "pending", "lang");
-      addAttrs("w:result", "thumbnail", "thumbwidth", "thumbheight", "content", "url", "dispurl",
+      addChildren("mediasearch", "result", "customsearch");
+      addAttrs("mediasearch", "page", "corpora", "query", "selected", "pending", "lang");
+      addAttrs("result", "thumbnail", "thumbwidth", "thumbheight", "content", "url", "dispurl",
           "title", "snippet", "num", "type", "disphtml");
-      addAttrs("w:customsearch", "name", "icon", "shortname", "resultrows", "resultcols",
+      addAttrs("customsearch", "name", "icon", "shortname", "resultrows", "resultcols",
           "addmethod");
 
       addChildren("body", "trustreq");
@@ -147,8 +147,8 @@ public final class ConversationSchemas implements SchemaProvider {
       addChildren("invitation", "invited");
       addAttrs("invited", "address");
 
-      addAttrWithValues("w:eqn", "format", "tex");
-      containsBlipText("w:eqn");
+      addAttrWithValues("eqn", "format", "tex");
+      containsBlipText("eqn");
 
       addChildren("body", "settings");
       addAttrs("settings", "name");
@@ -172,15 +172,15 @@ public final class ConversationSchemas implements SchemaProvider {
       addAttrs("namevaluepair", "name");
       addAttrs("namevaluepair", "value");
 
-      addChildren("body", "w:translation");
-      addChildren("w:translation", "w:stanza");
-      lineContainer("w:stanza");
-      addAttrs("w:stanza", "lang", "users");
+      addChildren("body", "translation");
+      addChildren("translation", "stanza");
+      lineContainer("stanza");
+      addAttrs("stanza", "lang", "users");
 
-      addChildren("body", "w:extension_installer");
+      addChildren("body", "extension_installer");
       // Can it contain form elements?
       // TODO(user): Remove img when I know it's safe.
-      addAttrs("w:extension_installer", "manifest", "img", "installed");
+      addAttrs("extension_installer", "manifest", "img", "installed");
 
       addChildren("body", "ext-settings");
       addAttrs("ext-settings", "manifest", "enabled");
@@ -197,8 +197,8 @@ public final class ConversationSchemas implements SchemaProvider {
     }
 
     private void lineContainer(String element) {
-      addChildren(element, "line", "w:image", "w:gadget", "w:eqn",
-          "experimental", "w:mediasearch", "img", "reply", "profile");
+      addChildren(element, "line", "image", "gadget", "eqn",
+          "experimental", "mediasearch", "img", "reply", "profile");
       containsBlipText(element);
       addRequiredInitial(element, Collections.singletonList("line"));
     }
@@ -209,8 +209,8 @@ public final class ConversationSchemas implements SchemaProvider {
     }
 
     private void containsFormElements(String element) {
-      addChildren(element, "w:button", "w:check", "w:input", "w:label", "w:password",
-          "w:radiogroup", "w:radio", "w:textarea");
+      addChildren(element, "button", "check", "input", "label", "password",
+          "radiogroup", "radio", "textarea");
     }
 
     @Override

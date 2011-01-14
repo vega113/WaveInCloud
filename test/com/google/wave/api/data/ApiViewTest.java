@@ -172,7 +172,7 @@ public class ApiViewTest extends TestCase {
 
   public void testTransformToXmlOffset() {
     Document document = BasicFactories.documentProvider().parse(
-        LineContainers.debugContainerWrap("some text<w:gadget></w:gadget>"));
+        LineContainers.debugContainerWrap("some text<gadget></gadget>"));
     ApiView api = new ApiView(document, mock(Wavelet.class));
     api.insert(3, new Image("id", "caption"));
     List<ElementInfo> apiElements = api.getElements();
@@ -210,7 +210,7 @@ public class ApiViewTest extends TestCase {
 
   public void testTransformToTextOffset() {
     Document document = BasicFactories.documentProvider().parse(
-        LineContainers.debugContainerWrap("123<w:gadget><w:state>foo</w:state></w:gadget>456"));
+        LineContainers.debugContainerWrap("123<gadget><state>foo</state></gadget>456"));
     ApiView api = new ApiView(document, mock(Wavelet.class));
 
     // Assert the text offsets of <body>, <line> and </line>.
@@ -223,7 +223,7 @@ public class ApiViewTest extends TestCase {
     assertEquals(2, api.transformToTextOffset(4));
     assertEquals(3, api.transformToTextOffset(5));
 
-    // Assert the text offsets of <w:gadget><w:state>foo</w:state></w:gadget>.
+    // Assert the text offsets of <gadget><state>foo</state></gadget>.
     assertEquals(4, api.transformToTextOffset(6));
     assertEquals(4, api.transformToTextOffset(7));
     assertEquals(4, api.transformToTextOffset(8));

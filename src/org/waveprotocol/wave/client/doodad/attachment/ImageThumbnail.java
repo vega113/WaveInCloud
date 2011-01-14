@@ -50,7 +50,7 @@ public class ImageThumbnail {
     boolean onClick(ImageThumbnailWrapper thumbnail);
   }
 
-  public static final String FULL_TAGNAME = "w:image";
+  public static final String TAGNAME = "image";
 
   /**
    * The attachment id attribute
@@ -94,12 +94,12 @@ public class ImageThumbnail {
     // E.g. currently they are created in WaveManager?
     attachmentsManager.addListener(attachmentListener);
 
-    registry.registerEventHandler(FULL_TAGNAME, eventHandler);
-    registry.registerRenderingMutationHandler(FULL_TAGNAME, renderer);
+    registry.registerEventHandler(TAGNAME, eventHandler);
+    registry.registerRenderingMutationHandler(TAGNAME, renderer);
 
-    // let the editor know w:image persistent tag can't have selection, but contains things that can
+    // let the editor know image persistent tag can't have selection, but contains things that can
     ValidSelectionStrategy.registerTagForSelections(
-        ImageThumbnail.FULL_TAGNAME, true, Skip.SHALLOW);
+        ImageThumbnail.TAGNAME, true, Skip.SHALLOW);
   }
 
   /**
@@ -109,8 +109,8 @@ public class ImageThumbnail {
    */
   public static XmlStringBuilder constructXml(
       String attachmentId, String xmlCaption) {
-    return XmlStringBuilder.createText(xmlCaption).wrap(Caption.FULL_TAGNAME).wrap(
-        FULL_TAGNAME, ATTACHMENT_ATTR, attachmentId);
+    return XmlStringBuilder.createText(xmlCaption).wrap(Caption.TAGNAME).wrap(
+        TAGNAME, ATTACHMENT_ATTR, attachmentId);
   }
 
   /**
@@ -123,8 +123,8 @@ public class ImageThumbnail {
     if (!full) {
       return constructXml(attachmentId, xmlCaption);
     }
-    return XmlStringBuilder.createText(xmlCaption).wrap(Caption.FULL_TAGNAME).wrap(
-        FULL_TAGNAME, ATTACHMENT_ATTR, attachmentId, STYLE_ATTR, STYLE_FULL);
+    return XmlStringBuilder.createText(xmlCaption).wrap(Caption.TAGNAME).wrap(
+        TAGNAME, ATTACHMENT_ATTR, attachmentId, STYLE_ATTR, STYLE_FULL);
   }
 
   private ImageThumbnail() {}
@@ -137,6 +137,6 @@ public class ImageThumbnail {
    */
   public static boolean isThumbnailElement(ContentNode node) {
     assert node != null;
-    return EditorDocHelper.isNamedElement(node, FULL_TAGNAME);
+    return EditorDocHelper.isNamedElement(node, TAGNAME);
   }
 }

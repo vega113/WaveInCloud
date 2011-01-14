@@ -32,7 +32,7 @@ import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 public final class RadioButton {
-  private static final String FULL_TAGNAME = "w:radio";
+  private static final String TAGNAME = "radio";
   private static final String GROUP = "group";
 
   private static final RenderingMutationHandler RADIO_BUTTON_MUTATING_RENDERER =
@@ -109,8 +109,8 @@ public final class RadioButton {
   };
 
   public static void register(ElementHandlerRegistry handlerRegistry) {
-    handlerRegistry.registerRenderingMutationHandler(FULL_TAGNAME, RADIO_BUTTON_MUTATING_RENDERER);
-    handlerRegistry.registerEventHandler(FULL_TAGNAME, RADIO_BUTTON_NODE_EVENT_HANDLER);
+    handlerRegistry.registerRenderingMutationHandler(TAGNAME, RADIO_BUTTON_MUTATING_RENDERER);
+    handlerRegistry.registerEventHandler(TAGNAME, RADIO_BUTTON_NODE_EVENT_HANDLER);
   }
 
   /**
@@ -136,7 +136,7 @@ public final class RadioButton {
    */
   public static XmlStringBuilder constructXml(String group, String name) {
     return XmlStringBuilder.createEmpty().wrap(
-        FULL_TAGNAME, GROUP, group, ContentElement.NAME, name);
+        TAGNAME, GROUP, group, ContentElement.NAME, name);
   }
 
   /**
@@ -148,11 +148,11 @@ public final class RadioButton {
   public static XmlStringBuilder constructXml(
       String group, String name, String submit) {
     return XmlStringBuilder.createEmpty().wrap(
-        FULL_TAGNAME, GROUP, group, ContentElement.NAME, name, ContentElement.SUBMIT,
+        TAGNAME, GROUP, group, ContentElement.NAME, name, ContentElement.SUBMIT,
         submit);
   }
 
   public static boolean isRadioButton(ContentElement button) {
-    return EditorDocHelper.isNamedElement(button, FULL_TAGNAME);
+    return EditorDocHelper.isNamedElement(button, TAGNAME);
   }
 }

@@ -58,7 +58,7 @@ public class TitleExtractorTest extends TestCase {
     String blip =  "<blip><p _t=\"title\">Time for another trip!!!</p><p></p><p>I'm sure you all " +
       "remember the rafting trip from last time: http://picasaweb.google.com/gdalesandre </p>" +
       "<p></p>" +
-      "<p><w:gadget prefs=\"\" state=\"%7B%22maybe%22%3A%22jochen%40google.com%2Cthorogood" +
+      "<p><gadget prefs=\"\" state=\"%7B%22maybe%22%3A%22jochen%40google.com%2Cthorogood" +
       "%40google.com%2Cwhitelaw%40google.com%22%2C%22no%22%3A%22duff%40google.com%2Cgregd" +
       "%40google.com%22%2C%22yes%22%3A%22douwe%40google.com%2Cahaberlach%40google.com%22%2C" +
       "%220%22%3A%22%7B%22%2C%221%22%3A%22%5C%22%22%2C%222%22%3A%22y%22%2C%223%22%3A%22e%22" +
@@ -73,7 +73,7 @@ public class TitleExtractorTest extends TestCase {
       "%22n%22%2C%2235%22%3A%22u%22%2C%2236%22%3A%22l%22%2C%2237%22%3A%22l%22%2C%2238%22%3A%22" +
       "%7D%22%2C%22typeId%24%22%3A%222%22%7D\" title=\"\" " +
       "url=\"http://hosting.gmodules.com/ig/gadgets/file/103849234114306421973/whoscoming.xml\">" +
-      "</w:gadget></p></blip>";
+      "</gadget></p></blip>";
 
 
     String title = TitleExtractor.extractTitle(blip);

@@ -18,8 +18,8 @@
 package org.waveprotocol.wave.model.gadget;
 
 import static org.waveprotocol.wave.model.gadget.GadgetConstants.AUTHOR_ATTRIBUTE;
-import static org.waveprotocol.wave.model.gadget.GadgetConstants.CATEGORY_FULL_TAGNAME;
-import static org.waveprotocol.wave.model.gadget.GadgetConstants.FULL_TAGNAME;
+import static org.waveprotocol.wave.model.gadget.GadgetConstants.CATEGORY_TAGNAME;
+import static org.waveprotocol.wave.model.gadget.GadgetConstants.TAGNAME;
 import static org.waveprotocol.wave.model.gadget.GadgetConstants.KEY_ATTRIBUTE;
 import static org.waveprotocol.wave.model.gadget.GadgetConstants.PREFS_ATTRIBUTE;
 import static org.waveprotocol.wave.model.gadget.GadgetConstants.STATE_ATTRIBUTE;
@@ -73,11 +73,11 @@ public final class GadgetXmlUtil {
       for (int i = 0; i < categories.length; ++i) {
         builder.append(
             XmlStringBuilder.createText("").wrap(
-                CATEGORY_FULL_TAGNAME, KEY_ATTRIBUTE, categories[i]));
+                CATEGORY_TAGNAME, KEY_ATTRIBUTE, categories[i]));
       }
     }
     builder.wrap(
-        FULL_TAGNAME,
+        TAGNAME,
         URL_ATTRIBUTE, url,
         TITLE_ATTRIBUTE, "",
         PREFS_ATTRIBUTE, prefs != null ? prefs : "",

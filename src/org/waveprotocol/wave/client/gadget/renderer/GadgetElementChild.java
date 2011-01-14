@@ -16,11 +16,11 @@
  */
 package org.waveprotocol.wave.client.gadget.renderer;
 
-import static org.waveprotocol.wave.model.gadget.GadgetConstants.CATEGORY_FULL_TAGNAME;
+import static org.waveprotocol.wave.model.gadget.GadgetConstants.CATEGORY_TAGNAME;
 import static org.waveprotocol.wave.model.gadget.GadgetConstants.KEY_ATTRIBUTE;
-import static org.waveprotocol.wave.model.gadget.GadgetConstants.PREF_FULL_TAGNAME;
-import static org.waveprotocol.wave.model.gadget.GadgetConstants.STATE_FULL_TAGNAME;
-import static org.waveprotocol.wave.model.gadget.GadgetConstants.TITLE_FULL_TAGNAME;
+import static org.waveprotocol.wave.model.gadget.GadgetConstants.PREF_TAGNAME;
+import static org.waveprotocol.wave.model.gadget.GadgetConstants.STATE_TAGNAME;
+import static org.waveprotocol.wave.model.gadget.GadgetConstants.TITLE_TAGNAME;
 import static org.waveprotocol.wave.model.gadget.GadgetConstants.VALUE_ATTRIBUTE;
 
 import org.waveprotocol.wave.client.editor.content.ContentElement;
@@ -40,13 +40,13 @@ public class GadgetElementChild {
    */
   public static enum Type {
     /** Name element type. */
-    CATEGORIES(CATEGORY_FULL_TAGNAME),
+    CATEGORIES(CATEGORY_TAGNAME),
     /** Title element type. */
-    TITLE(TITLE_FULL_TAGNAME),
+    TITLE(TITLE_TAGNAME),
     /** State element type. */
-    STATE(STATE_FULL_TAGNAME),
+    STATE(STATE_TAGNAME),
     /** Preference element type. */
-    PREF(PREF_FULL_TAGNAME),
+    PREF(PREF_TAGNAME),
     /** Unknown element type. */
     UNKNOWN("?");
 
@@ -82,7 +82,7 @@ public class GadgetElementChild {
    */
   public static XmlStringBuilder constructCategoriesXml(String categories) {
     return XmlStringBuilder.createText("")
-                           .wrap(CATEGORY_FULL_TAGNAME, KEY_ATTRIBUTE, categories);
+                           .wrap(CATEGORY_TAGNAME, KEY_ATTRIBUTE, categories);
   }
 
   /**
@@ -92,7 +92,7 @@ public class GadgetElementChild {
    * @return XML builder for the title element
    */
   public static XmlStringBuilder constructTitleXml(String title) {
-    return XmlStringBuilder.createText("").wrap(TITLE_FULL_TAGNAME, VALUE_ATTRIBUTE, title);
+    return XmlStringBuilder.createText("").wrap(TITLE_TAGNAME, VALUE_ATTRIBUTE, title);
   }
 
   /**
@@ -116,7 +116,7 @@ public class GadgetElementChild {
    */
   public static XmlStringBuilder constructStateXml(String key, String value) {
     return XmlStringBuilder.createText("").wrap(
-        STATE_FULL_TAGNAME, KEY_ATTRIBUTE, key, VALUE_ATTRIBUTE, value);
+        STATE_TAGNAME, KEY_ATTRIBUTE, key, VALUE_ATTRIBUTE, value);
   }
 
   /**
@@ -128,7 +128,7 @@ public class GadgetElementChild {
    */
   public static XmlStringBuilder constructPrefXml(String key, String value) {
     return XmlStringBuilder.createText("").wrap(
-        PREF_FULL_TAGNAME, KEY_ATTRIBUTE, key, VALUE_ATTRIBUTE, value);
+        PREF_TAGNAME, KEY_ATTRIBUTE, key, VALUE_ATTRIBUTE, value);
   }
 
   /**

@@ -58,9 +58,9 @@ public abstract class TestBase extends GWTTestCase {
   /**
    * A map of abbreviations, e.g.,
    * <smiles/> ->
-   * <w:image attachment='pics/Smiles.jpg'>
-   *    <w:caption>Smiles</w:caption>
-   * </w:image>
+   * <image attachment='pics/Smiles.jpg'>
+   *    <caption>Smiles</caption>
+   * </image>
    */
   protected Abbreviations abbreviations = new Abbreviations();
 

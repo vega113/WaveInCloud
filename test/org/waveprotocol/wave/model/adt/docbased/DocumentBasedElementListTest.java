@@ -165,7 +165,7 @@ public class DocumentBasedElementListTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    buildListHelper(BasicFactories.observableDocumentProvider().create("w:data",
+    buildListHelper(BasicFactories.observableDocumentProvider().create("data",
         Collections.<String, String>emptyMap()));
   }
 

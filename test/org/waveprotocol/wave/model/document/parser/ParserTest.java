@@ -149,13 +149,13 @@ public class ParserTest extends TestCase {
 
     {
       try {
-        StreamingXmlParser parser = new StreamingXmlParser("<w:doc abc='def' hello=\"world\">asdf</w:doc>");
+        StreamingXmlParser parser = new StreamingXmlParser("<doc abc='def' hello=\"world\">asdf</doc>");
         Item start = parser.startTag();
         Item text = parser.getTextChunk();
         Item end = parser.endTag();
-        assertEquals("w:doc", start.name);
+        assertEquals("doc", start.name);
         assertEquals("asdf", text.data);
-        assertEquals("w:doc", end.name);
+        assertEquals("doc", end.name);
       } catch (XmlParseException e) {
         fail(e.getMessage());
       }

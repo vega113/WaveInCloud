@@ -51,8 +51,8 @@ public class PasteExtractorGwtTest extends GWTTestCase {
   @Override
   protected void gwtSetUp() throws Exception {
     super.gwtSetUp();
-    TestInlineDoodad.register(Editor.ROOT_HANDLER_REGISTRY, "w:label");
-    TestInlineDoodad.register(Editor.ROOT_HANDLER_REGISTRY, "w:input");
+    TestInlineDoodad.register(Editor.ROOT_HANDLER_REGISTRY, "label");
+    TestInlineDoodad.register(Editor.ROOT_HANDLER_REGISTRY, "input");
   }
 
   @Override
@@ -85,14 +85,14 @@ public class PasteExtractorGwtTest extends GWTTestCase {
   }
 
   public void testCutElements() {
-    executeSimpleCut("<line></line>[<w:label></w:label>]");
-    executeSimpleCut("<line></line>[<w:label>abc</w:label>]");
-    executeSimpleCut("<line></line>[<w:label>hello</w:label>]<line></line>some stuff here");
-    executeSimpleCut("<line></line>[<w:label>abc</w:label>]<w:label></w:label>");
-    executeSimpleCut("<line></line>[<w:label>abc</w:label><w:label></w:label>]");
-    executeSimpleCut("<line></line>[<line></line><w:label>abc</w:label><w:label></w:label>]");
-    executeSimpleCut("<line></line>[<line></line><w:label>abc</w:label>"
-        + "<w:label></w:label><line></line>]<line></line>");
+    executeSimpleCut("<line></line>[<label></label>]");
+    executeSimpleCut("<line></line>[<label>abc</label>]");
+    executeSimpleCut("<line></line>[<label>hello</label>]<line></line>some stuff here");
+    executeSimpleCut("<line></line>[<label>abc</label>]<label></label>");
+    executeSimpleCut("<line></line>[<label>abc</label><label></label>]");
+    executeSimpleCut("<line></line>[<line></line><label>abc</label><label></label>]");
+    executeSimpleCut("<line></line>[<line></line><label>abc</label>"
+        + "<label></label><line></line>]<line></line>");
     executeCut("<line></line>[this<line></line>is<line></line>a<line></line>]test",
         "<line></line>test");
   }
@@ -111,14 +111,14 @@ public class PasteExtractorGwtTest extends GWTTestCase {
     executeSimplePaste("<line></line>abc|", "x");
     executeSimplePaste("<line></line>|", "xyz");
     executeSimplePaste("<line></line>ab|c", "xyz");
-    executeSimplePaste("<line></line><w:label>|abc</w:label>", "xyz");
+    executeSimplePaste("<line></line><label>|abc</label>", "xyz");
   }
 
 //  TODO(danilatos/davidbyttow): Bring something similar to this back, once annotations extraction
 //  is done for paste.
 //
 //  public void testPasteInlineElements() {
-//    executePaste("<p>|</p>", "<b>x</b>", "<p><w:style fontWeight=\"bold\">x</w:style></p>");
+//    executePaste("<p>|</p>", "<b>x</b>", "<p><style fontWeight=\"bold\">x</style></p>");
 //  }
 
   public void testPasteTwoLines() {

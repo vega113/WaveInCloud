@@ -61,7 +61,7 @@
     position: relative;
   }
 
-  .imageThumbnail w\:caption {
+  .imageThumbnail .w-caption {
     outline: 0;
   }
 }
@@ -73,7 +73,7 @@
     zoom: 1;  /* Gives the .imageThumbnail element layout, to fix IE positioning bug. */
   }
 
-  .imageThumbnail w\:caption {
+  .imageThumbnail .w-caption {
     /* Prevents caption from vertically expanding when text is entered. */
     min-height: 1.35em;
   }
@@ -257,7 +257,7 @@
   background-color: white;
 }
 
-.imageThumbnail w\:caption {
+.imageThumbnail .w-caption {
   text-align: center;
   padding: 4px;
   color: black;  /* Can't assume font color is not changed by the page theme. */

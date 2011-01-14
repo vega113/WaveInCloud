@@ -105,8 +105,8 @@ public final class RandomDocOpGenerator {
     // AnnotationOptions comparable, which is more work.
 
     List<String> elementTypes = Collections.unmodifiableList(Arrays.asList(
-        "body", "line", "w:input",
-        "w:image", "w:caption", "br"// "w:gadget",
+        "body", "line", "input",
+        "image", "caption", "br"// "gadget",
         ));
     List<String> attributeNames = Collections.unmodifiableList(Arrays.asList(
         "_t", "t", "i", "attachment",

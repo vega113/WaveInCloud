@@ -38,7 +38,7 @@ public class ObservableBasicSetWithDocumentBasedBasicSetTest extends ObservableB
   @Override
   protected void createEmptyMap() {
     ObservablePluggableMutableDocument doc = BasicFactories.observableDocumentProvider().create(
-        "w:data", Collections.<String, String> emptyMap());
+        "data", Collections.<String, String> emptyMap());
 
     set = DocumentBasedBasicSet.create(
         DefaultDocumentEventRouter.create(doc), doc.getDocumentElement(), Serializer.STRING,

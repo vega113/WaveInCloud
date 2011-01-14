@@ -17,12 +17,13 @@
 
 package org.waveprotocol.wave.client.editor.content.misc;
 
+import com.google.gwt.dom.client.Element;
+
 import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.client.editor.NodeEventHandler;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.paragraph.DefaultParagraphHtmlRenderer;
-import org.waveprotocol.wave.client.editor.content.paragraph.Paragraph;
 import org.waveprotocol.wave.client.editor.content.paragraph.ParagraphRenderer;
 import org.waveprotocol.wave.client.editor.util.EditorDocHelper;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
@@ -36,7 +37,7 @@ import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
  */
 public class Caption {
 
-  public static final String FULL_TAGNAME = "w:caption";
+  public static final String TAGNAME = "caption";
 
   public static final NodeEventHandler CAPTION_EVENT_HANDLER = new LinoTextEventHandler() {
     @Override
@@ -50,11 +51,19 @@ public class Caption {
    * Registers subclass with ContentElement
    */
   public static void register(ElementHandlerRegistry registry) {
-    registry.registerEventHandler(FULL_TAGNAME, CAPTION_EVENT_HANDLER);
-    registry.registerMutationHandler(FULL_TAGNAME, Paragraph.DEFAULT_RENDERER);
+    registry.registerEventHandler(TAGNAME, CAPTION_EVENT_HANDLER);
+    ParagraphRenderer renderer = new ParagraphRenderer(
+        new DefaultParagraphHtmlRenderer("div") {
+          @Override
+          protected Element createNodelet(Renderable element) {
+            Element e = super.createNodelet(element);
+            e.setClassName("w-caption");
+            return e;
+          }
+        });
+    registry.registerMutationHandler(TAGNAME, renderer);
     // TODO(danilatos): Stop using non-html tags
-    registry.registerRenderer(FULL_TAGNAME,
-        new ParagraphRenderer(new DefaultParagraphHtmlRenderer(FULL_TAGNAME)));
+    registry.registerRenderer(TAGNAME, renderer);
   }
 
 
@@ -71,7 +80,7 @@ public class Caption {
    * @return A content xml string containing a caption
    */
   public static XmlStringBuilder constructXml(XmlStringBuilder caption) {
-    return caption.wrap(FULL_TAGNAME);
+    return caption.wrap(TAGNAME);
   }
 
   /**
@@ -79,6 +88,6 @@ public class Caption {
    * @return true if this node is a caption node
    */
   public static boolean isCaption(ContentNode node) {
-    return EditorDocHelper.isNamedElement(node, FULL_TAGNAME);
+    return EditorDocHelper.isNamedElement(node, TAGNAME);
   }
 }

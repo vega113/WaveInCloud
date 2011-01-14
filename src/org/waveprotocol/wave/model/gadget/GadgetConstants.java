@@ -25,7 +25,7 @@ public final class GadgetConstants {
   private GadgetConstants() {} // Non-instantiable.
 
   /** Gadget tag */
-  public static final String FULL_TAGNAME ="w:gadget";
+  public static final String TAGNAME ="gadget";
 
   /** Gadget ID Attribute. */
   public static final String ID_ATTRIBUTE = "id";
@@ -63,16 +63,16 @@ public final class GadgetConstants {
   public static final String EXTENSION_ATTRIBUTE = "extension";
 
   /** Name element tag. */
-  public static final String CATEGORY_FULL_TAGNAME = "w:category";
+  public static final String CATEGORY_TAGNAME = "category";
 
   /** Title element tag. */
-  public static final String TITLE_FULL_TAGNAME = "w:title";
+  public static final String TITLE_TAGNAME = "title";
 
   /** State element tag. */
-  public static final String STATE_FULL_TAGNAME = "w:state";
+  public static final String STATE_TAGNAME = "state";
 
   /** Pref element tag. */
-  public static final String PREF_FULL_TAGNAME = "w:pref";
+  public static final String PREF_TAGNAME = "pref";
 
   /** Name Attribute used in inner nodes. */
   public static final String KEY_ATTRIBUTE = "name";

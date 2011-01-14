@@ -31,7 +31,7 @@ import org.waveprotocol.wave.model.document.util.Property;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 public final class Button {
-  private static final String FULL_TAGNAME = "w:button";
+  private static final String TAGNAME = "button";
 
   static final Property<ClickButton> BUTTON_LOGIC_PROP = Property.immutable("button_logic");
 
@@ -61,8 +61,8 @@ public final class Button {
    */
   public static void register(
       final ElementHandlerRegistry registry) {
-    registry.registerEventHandler(FULL_TAGNAME, NODE_EVENT_HANDLER);
-    registry.registerRenderingMutationHandler(FULL_TAGNAME, RENDERING_MUTATION_HANDLER);
+    registry.registerEventHandler(TAGNAME, NODE_EVENT_HANDLER);
+    registry.registerRenderingMutationHandler(TAGNAME, RENDERING_MUTATION_HANDLER);
   }
 
   /**
@@ -74,7 +74,7 @@ public final class Button {
       XmlStringBuilder caption, String name) {
     return Caption.constructXml(caption)
         .append(ContentEvents.constructXml())
-        .wrap(FULL_TAGNAME, ContentElement.NAME, name);
+        .wrap(TAGNAME, ContentElement.NAME, name);
   }
 
   /** Utility class */

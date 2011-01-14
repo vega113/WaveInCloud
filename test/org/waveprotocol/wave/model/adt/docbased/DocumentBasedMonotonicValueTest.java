@@ -161,7 +161,7 @@ public class DocumentBasedMonotonicValueTest extends TestCase {
    * @return a map-context view of the document state
    */
   private static ValueContext<?, ?> substrate(Integer ... values) {
-    return substrate(BasicFactories.observableDocumentProvider().create("w:data",
+    return substrate(BasicFactories.observableDocumentProvider().create("data",
         Collections.<String, String>emptyMap()),
         values);
   }

@@ -20,7 +20,6 @@ package org.waveprotocol.wave.client.editor.integration;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorTestingUtil;
-
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
@@ -233,10 +232,10 @@ public class OperationGwtTest extends TestBase {
 
     // Setup abbreviations from <l/> to <tagName/>
     abbreviations.add("<l/>", "<" + LineContainers.LINE_TAGNAME + "/>");
-    abbreviations.add("<u>", "<w:span>");
-    abbreviations.add("</u>", "</w:span>");
-    abbreviations.add("<i>", "<w:span>");
-    abbreviations.add("</i>", "</w:span>");
+    abbreviations.add("<u>", "<span>");
+    abbreviations.add("</u>", "</span>");
+    abbreviations.add("<i>", "<span>");
+    abbreviations.add("</i>", "</span>");
 
     // Test inserting X into empty paragraph
     testInsertText(
@@ -535,10 +534,10 @@ public class OperationGwtTest extends TestBase {
 
     // Setup abbreviations from <l/> to <tagName/>
     abbreviations.add("<l/>", "<" + LineContainers.LINE_TAGNAME + "/>");
-    abbreviations.add("<u>", "<w:label>");
-    abbreviations.add("</u>", "</w:label>");
-    abbreviations.add("<i>", "<w:label>");
-    abbreviations.add("</i>", "</w:label>");
+    abbreviations.add("<u>", "<label>");
+    abbreviations.add("</u>", "</label>");
+    abbreviations.add("<i>", "<label>");
+    abbreviations.add("</i>", "</label>");
 
     // Test inserting simple <br/> element into text node
     // TODO(user, lars): XmlInsertXml doesn't parse <br/> correctly
@@ -760,10 +759,10 @@ public class OperationGwtTest extends TestBase {
 
     // Setup abbreviations from <l/> to <tagName/>
     abbreviations.add("<l/>", "<" + LineContainers.LINE_TAGNAME + "/>");
-    abbreviations.add("<u>", "<w:label>");
-    abbreviations.add("</u>", "</w:label>");
-    abbreviations.add("<i>", "<w:label>");
-    abbreviations.add("</i>", "</w:label>");
+    abbreviations.add("<u>", "<label>");
+    abbreviations.add("</u>", "</label>");
+    abbreviations.add("<i>", "<label>");
+    abbreviations.add("</i>", "</label>");
 
     // simple delete all
     testDelete(

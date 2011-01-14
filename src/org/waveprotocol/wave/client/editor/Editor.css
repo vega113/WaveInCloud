@@ -70,12 +70,6 @@
   }
 }
 
-w\:caption {
-  display:block;
-  /* Restore pre-wrap for text region. */
-  white-space: pre-wrap;
-}
-
 /*
  * These attributes are required to make a paragraph look like a list-item
  * across browsers.

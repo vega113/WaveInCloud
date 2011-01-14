@@ -120,7 +120,7 @@ public class DocumentBasedBasicSetTest extends TestCase {
    * @return a map-context view of the document state
    */
   private static ValueContext<?, ?> substrate(int ... value) {
-    return substrate(BasicFactories.observableDocumentProvider().create("w:data",
+    return substrate(BasicFactories.observableDocumentProvider().create("data",
         Collections.<String, String>emptyMap()), value);
   }
 

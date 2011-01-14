@@ -21,6 +21,7 @@ import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
+
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentView;
 import org.waveprotocol.wave.model.document.util.Point;
@@ -54,7 +55,7 @@ import org.waveprotocol.wave.model.document.util.Point;
  * being cloned is not attached to the document.
  *
  * The flag appears to work for all block elements, including
- * custom ones like <w:title style="display:block">. (However
+ * custom ones like <title style="display:block">. (However
  * the test above appears only to work for non-custom HTML block
  * elements.)
  *
@@ -118,7 +119,7 @@ public class ParagraphHelperIE extends ParagraphHelper {
       Element nodelet = paragraph.getImplNodelet();
       assert 0 == nodelet.getChildCount() : "Empty Paragraph nodelet should have no chldren";
       // Magic flag test
-      // TODO(user): can we find a test for this also for the <w:title> element?
+      // TODO(user): can we find a test for this also for the <title> element?
       // NOTE(user): temporarily disabling this, as it messes with setting
       // carets in the paragraph
       if (false) {
@@ -161,7 +162,7 @@ public class ParagraphHelperIE extends ParagraphHelper {
    */
   public static void openEmptyParagraph(Element nodelet) {
     // Add + delete an arbitrary char from the paragraph
-    // TODO(user): why does this throw exception in <w:caption> elements?
+    // TODO(user): why does this throw exception in <caption> elements?
     try {
       Point<Node> point = IeNodeletHelper.beforeImplementation(nodelet);
       nodelet.setInnerHTML("x");

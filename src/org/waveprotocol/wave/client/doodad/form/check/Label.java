@@ -21,11 +21,11 @@ import org.waveprotocol.wave.client.editor.ElementHandlerRegistry;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 public class Label {
-  protected static final String FULL_TAGNAME = "w:label";
+  protected static final String TAGNAME = "label";
   protected static final String FOR = "for";
 
   public static void register(ElementHandlerRegistry handlerRegistry) {
-    handlerRegistry.registerRenderingMutationHandler(FULL_TAGNAME,
+    handlerRegistry.registerRenderingMutationHandler(TAGNAME,
         LabelRenderingMutationHandler.getInstance());
   }
 
@@ -38,6 +38,6 @@ public class Label {
    * @return A content xml string containing a label
    */
   public static XmlStringBuilder constructXml(XmlStringBuilder value, String forAttr) {
-    return value.wrap(FULL_TAGNAME, FOR, forAttr);
+    return value.wrap(TAGNAME, FOR, forAttr);
   }
 }

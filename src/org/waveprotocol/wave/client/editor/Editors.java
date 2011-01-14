@@ -97,7 +97,7 @@ public final class Editors {
 
     // TODO(danilatos/patcoleman): Fix up this kludge
     Editor.TAB_TARGETS.addAll(CollectionUtils.newStringSet(
-        Caption.FULL_TAGNAME, "profile-field", "text-setting"));
+        Caption.TAGNAME, "profile-field", "text-setting"));
 
     ImeExtractor.register(ROOT_HANDLER_REGISTRY);
     ContentDocElement.register(ROOT_HANDLER_REGISTRY, ContentDocElement.DEFAULT_TAGNAME);

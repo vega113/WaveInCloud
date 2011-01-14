@@ -19,7 +19,6 @@ package org.waveprotocol.wave.model.conversation;
 
 import static org.waveprotocol.wave.model.schema.conversation.ConversationSchemas.BLIP_SCHEMA_CONSTRAINTS;
 
-
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema.PermittedCharacters;
@@ -41,7 +40,7 @@ public class SchemaConstraintsTest extends TestCase {
     assertEquals(Collections.singletonList("line"),
         BLIP_SCHEMA_CONSTRAINTS.getRequiredInitialChildren("body"));
     assertEquals(Collections.singletonList("line"),
-        BLIP_SCHEMA_CONSTRAINTS.getRequiredInitialChildren("w:textarea"));
+        BLIP_SCHEMA_CONSTRAINTS.getRequiredInitialChildren("textarea"));
     assertEquals(Collections.emptyList(),
         BLIP_SCHEMA_CONSTRAINTS.getRequiredInitialChildren("line"));
     assertTrue(
@@ -53,21 +52,21 @@ public class SchemaConstraintsTest extends TestCase {
     assertFalse(
         BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("line", "t", "z"));
     assertTrue(
-        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("w:image", "attachment"));
+        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("image", "attachment"));
     assertTrue(
-        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("w:image", "attachment", "blahblah"));
+        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("image", "attachment", "blahblah"));
     assertFalse(
-        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("w:image", "something"));
+        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("image", "something"));
     assertFalse(
-        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("w:image", "something", "stuff"));
+        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("image", "something", "stuff"));
     assertFalse(
-        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("w:caption", "something"));
+        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("caption", "something"));
     assertFalse(
-        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("w:caption", "something", "stuff"));
+        BLIP_SCHEMA_CONSTRAINTS.permitsAttribute("caption", "something", "stuff"));
     assertTrue(
         BLIP_SCHEMA_CONSTRAINTS.permitsChild("body", "line"));
     assertTrue(
-        BLIP_SCHEMA_CONSTRAINTS.permitsChild("w:textarea", "line"));
+        BLIP_SCHEMA_CONSTRAINTS.permitsChild("textarea", "line"));
     assertTrue(
         BLIP_SCHEMA_CONSTRAINTS.permitsChild(null, "body"));
     assertFalse(

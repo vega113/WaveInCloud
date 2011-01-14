@@ -56,7 +56,7 @@ public class Password {
   }
 
   /***/
-  public static final String FULL_TAGNAME = "w:password";
+  public static final String TAGNAME = "password";
 
   /***/
   public static final String VALUE = "value";
@@ -71,8 +71,8 @@ public class Password {
 
     PasswordEventHandler eventHandler = new PasswordEventHandler();
     PasswordRenderer renderer = new PasswordRenderer(eventHandler);
-    registry.registerEventHandler(FULL_TAGNAME, eventHandler);
-    registry.registerRenderingMutationHandler(FULL_TAGNAME, renderer);
+    registry.registerEventHandler(TAGNAME, eventHandler);
+    registry.registerRenderingMutationHandler(TAGNAME, renderer);
   }
 
   /**

@@ -34,7 +34,7 @@ import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 /** Doodad definition for a checkbox which stores its value in the doc. */
 public class CheckBox {
-  private static final String FULL_TAGNAME = "w:check";
+  private static final String TAGNAME = "check";
 
 
   private static final NodeEventHandler CHECKBOX_NODE_EVENT_HANDLER = new NodeEventHandlerImpl() {
@@ -52,8 +52,8 @@ public class CheckBox {
   public static void register(ElementHandlerRegistry handlerRegistry) {
     RenderingMutationHandler renderingMutationHandler =
         CheckBoxRendereringMutationHandler.getInstance();
-    handlerRegistry.registerRenderingMutationHandler(FULL_TAGNAME, renderingMutationHandler);
-    handlerRegistry.registerEventHandler(FULL_TAGNAME, CHECKBOX_NODE_EVENT_HANDLER);
+    handlerRegistry.registerRenderingMutationHandler(TAGNAME, renderingMutationHandler);
+    handlerRegistry.registerEventHandler(TAGNAME, CHECKBOX_NODE_EVENT_HANDLER);
   }
 
   /**
@@ -63,7 +63,7 @@ public class CheckBox {
    */
   public static XmlStringBuilder constructXml(String name, boolean value) {
     return XmlStringBuilder.createEmpty().wrap(
-        FULL_TAGNAME, ContentElement.NAME, name, CheckConstants.VALUE, String.valueOf(value));
+        TAGNAME, ContentElement.NAME, name, CheckConstants.VALUE, String.valueOf(value));
   }
 
   /**
@@ -72,7 +72,7 @@ public class CheckBox {
    * @return A content xml string containing a checkbox
    */
   public static XmlStringBuilder constructXml(String name, String submit, boolean value) {
-    return XmlStringBuilder.createEmpty().wrap(FULL_TAGNAME, ContentElement.SUBMIT,
+    return XmlStringBuilder.createEmpty().wrap(TAGNAME, ContentElement.SUBMIT,
         submit, ContentElement.NAME, name, CheckConstants.VALUE, String.valueOf(value));
   }
 
@@ -144,7 +144,7 @@ public class CheckBox {
    * @return true iff the element is a checkbox element
    */
   public static boolean isCheckBox(ContentElement element) {
-    return FULL_TAGNAME.equalsIgnoreCase(element.getTagName());
+    return TAGNAME.equalsIgnoreCase(element.getTagName());
   }
 
   /** Utility class */

@@ -38,7 +38,7 @@ public class ObservableBasicMapWithDocumentBasedBasicMapTest extends ObservableB
   @Override
   protected void createMap() {
     ObservablePluggableMutableDocument doc = BasicFactories.observableDocumentProvider().create(
-        "w:data", Collections.<String, String> emptyMap());
+        "data", Collections.<String, String> emptyMap());
 
     map = DocumentBasedBasicMap.create(DefaultDocumentEventRouter.create(doc),
         doc.getDocumentElement(), Serializer.STRING, Serializer.INTEGER, ENTRY_TAG,

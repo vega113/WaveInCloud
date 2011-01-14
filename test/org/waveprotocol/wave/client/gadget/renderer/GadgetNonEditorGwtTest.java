@@ -17,8 +17,8 @@
 package org.waveprotocol.wave.client.gadget.renderer;
 
 import static org.waveprotocol.wave.model.gadget.GadgetConstants.AUTHOR_ATTRIBUTE;
-import static org.waveprotocol.wave.model.gadget.GadgetConstants.CATEGORY_FULL_TAGNAME;
-import static org.waveprotocol.wave.model.gadget.GadgetConstants.FULL_TAGNAME;
+import static org.waveprotocol.wave.model.gadget.GadgetConstants.CATEGORY_TAGNAME;
+import static org.waveprotocol.wave.model.gadget.GadgetConstants.TAGNAME;
 import static org.waveprotocol.wave.model.gadget.GadgetConstants.KEY_ATTRIBUTE;
 import static org.waveprotocol.wave.model.gadget.GadgetConstants.PREFS_ATTRIBUTE;
 import static org.waveprotocol.wave.model.gadget.GadgetConstants.STATE_ATTRIBUTE;
@@ -71,30 +71,30 @@ public class GadgetNonEditorGwtTest extends GWTTestCase {
     String xmlSource = "http://test.com/gadget.xml";
     XmlStringBuilder builder = GadgetXmlUtil.constructXml(xmlSource, "", LOGIN_NAME);
     String xml = builder.toString();
-    String expectedValue = "<" + FULL_TAGNAME +
+    String expectedValue = "<" + TAGNAME +
         " " + URL_ATTRIBUTE + "=\"" + xmlSource + "\"" +
         " " + TITLE_ATTRIBUTE + "=\"\"" +
         " " + PREFS_ATTRIBUTE + "=\"\"" +
         " " + STATE_ATTRIBUTE + "=\"\"" +
         " " + AUTHOR_ATTRIBUTE + "=\"johnny_addgadget@rentacoder.com\">" +
-        "</" + FULL_TAGNAME + ">";
+        "</" + TAGNAME + ">";
     assertEquals(expectedValue, xml);
     String[] categories = {"chess", "game"};
     builder = GadgetXmlUtil.constructXml(xmlSource, "my pref", categories, LOGIN_NAME);
     xml = builder.toString();
-    expectedValue = "<" + FULL_TAGNAME +
+    expectedValue = "<" + TAGNAME +
         " " + URL_ATTRIBUTE + "=\"" + xmlSource + "\"" +
         " " + TITLE_ATTRIBUTE + "=\"\"" +
         " " + PREFS_ATTRIBUTE + "=\"my pref\"" +
         " " + STATE_ATTRIBUTE + "=\"\"" +
         " " + AUTHOR_ATTRIBUTE + "=\"johnny_addgadget@rentacoder.com\">" +
-        "<" + CATEGORY_FULL_TAGNAME +
+        "<" + CATEGORY_TAGNAME +
         " " + KEY_ATTRIBUTE + "=\"chess\"" + ">" +
-        "</" + CATEGORY_FULL_TAGNAME + ">" +
-        "<" + CATEGORY_FULL_TAGNAME +
+        "</" + CATEGORY_TAGNAME + ">" +
+        "<" + CATEGORY_TAGNAME +
         " " + KEY_ATTRIBUTE + "=\"game\"" + ">" +
-        "</" + CATEGORY_FULL_TAGNAME + ">" +
-        "</" + FULL_TAGNAME + ">";
+        "</" + CATEGORY_TAGNAME + ">" +
+        "</" + TAGNAME + ">";
     assertEquals(expectedValue, xml);
   }
 

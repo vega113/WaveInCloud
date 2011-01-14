@@ -4,7 +4,7 @@
  * Author: lars@google.com (Lars Rasmussen)
  */
 
-w\:input, w\:textarea {
+.input, .textarea {
   display:block;
   border:1px solid silver;
   padding:4px;
