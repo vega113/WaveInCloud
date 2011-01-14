@@ -58,8 +58,8 @@ public abstract class ElementSerializer {
   private static final Map<ElementType, ElementSerializer> typeToSerializer = Maps.newHashMap();
   private static final Map<String, ElementSerializer> tagToSerializer = Maps.newHashMap();
 
-  private static final String CAPTION_TAG = "w:caption";
-  private static final String CLICK_TAG = "w:click";
+  private static final String CAPTION_TAG = "caption";
+  private static final String CLICK_TAG = "click";
   private static final String ATTACHMENT_STR = "attachment";
   private static final String CAPTION_STR = "caption";
 
