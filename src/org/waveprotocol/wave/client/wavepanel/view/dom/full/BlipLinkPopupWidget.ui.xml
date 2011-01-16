@@ -4,7 +4,7 @@
     xmlns:w="urn:import:org.waveprotocol.wave.client.widget.common">
   <ui:with 
       field='style'
-      type='org.waveprotocol.wave.client.widget.link.BlipLinkPopupWidget.Style' />
+      type='org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipLinkPopupWidget.Style' />
   <g:HTMLPanel styleName="{style.self}">
     <div class="{style.title}">Link to this blip</div>
     <div class="{style.explanation}">Use this Wave ID to link
