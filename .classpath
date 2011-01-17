@@ -68,7 +68,6 @@
 	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-parser-1.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-runtime-1.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/socketio/socketio-java.jar" sourcepath="third_party/runtime/socketio/socketio-java-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/wave-robot-java-client/wave-robot-api-20100910.jar" sourcepath="third_party/runtime/wave-robot-java-client/wave-robot-api-20100910-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/websocket/websocket.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/whack/whack.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/whack/xmpp.jar"/>
