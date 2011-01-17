@@ -31,7 +31,7 @@ import org.waveprotocol.wave.federation.FederationErrors;
 import junit.framework.TestCase;
 
 /**
- * Performs naïve tests over RemoteDisco. Integration testing is performed in
+ * Performs naive tests over RemoteDisco. Integration testing is performed in
  * {@link XmppDiscoTest}.
  *
  * @author thorogood@google.com (Sam Thorogood)
