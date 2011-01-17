@@ -729,8 +729,8 @@ public class Blip implements Serializable {
 
     // Add primitive properties.
     blipData.setBlipId(blipId);
-    blipData.setWaveId(wavelet.getWaveId().serialise());
-    blipData.setWaveletId(wavelet.getWaveletId().serialise());
+    blipData.setWaveId(ApiIdSerializer.instance().serialiseWaveId(wavelet.getWaveId()));
+    blipData.setWaveletId(ApiIdSerializer.instance().serialiseWaveletId(wavelet.getWaveletId()));
     blipData.setParentBlipId(parentBlipId);
     blipData.setThreadId(thread.getId());
     blipData.setCreator(creator);

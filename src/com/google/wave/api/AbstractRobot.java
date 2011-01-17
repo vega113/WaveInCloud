@@ -41,6 +41,7 @@ import com.google.wave.api.impl.GsonFactory;
 
 import net.oauth.OAuthException;
 
+import org.waveprotocol.wave.model.id.InvalidIdException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 
@@ -269,9 +270,10 @@ public abstract class AbstractRobot extends HttpServlet implements EventHandler 
    *
    * @throws IOException if there is a problem submitting the operation to the
    *      server, when {@code submit} is {@code true}.
+   * @throws InvalidIdException
    */
   public Wavelet newWave(String domain, Set<String> participants, String msg, String proxyForId,
-      String rpcServerUrl) throws IOException {
+      String rpcServerUrl) throws IOException, InvalidIdException {
     return waveService.newWave(domain, participants, msg, proxyForId, rpcServerUrl);
   }
 

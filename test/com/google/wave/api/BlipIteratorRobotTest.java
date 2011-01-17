@@ -46,8 +46,8 @@ public class BlipIteratorRobotTest extends TestCase {
   protected void setUp() throws Exception {
     wavelet = mock(Wavelet.class);
     when(wavelet.getOperationQueue()).thenReturn(new OperationQueue());
-    when(wavelet.getWaveId()).thenReturn(WaveId.deserialise("google.com!wave1"));
-    when(wavelet.getWaveletId()).thenReturn(WaveletId.deserialise("google.com!wavelet1"));
+    when(wavelet.getWaveId()).thenReturn(WaveId.of("example.com", "wave1"));
+    when(wavelet.getWaveletId()).thenReturn(WaveletId.of("example.com", "wavelet1"));
   }
 
   public void testSingleshotIterator() throws Exception {

@@ -15,9 +15,9 @@
 
 package com.google.wave.api;
 
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.anyString;
 
 import com.google.common.collect.Lists;
 import com.google.wave.api.Function.BlipContentFunction;
@@ -49,7 +49,7 @@ public class BlipRobotTest extends TestCase {
   private static final String ROOT_BLIP_ID = "b+43";
   private static final String CHILD_BLIP_ID = "b+44";
 
-  private Map<String, Blip> blips = new HashMap<String, Blip>();
+  private final Map<String, Blip> blips = new HashMap<String, Blip>();
   private Wavelet wavelet;
 
   @Override
@@ -57,9 +57,9 @@ public class BlipRobotTest extends TestCase {
     wavelet = mock(Wavelet.class);
     when(wavelet.getBlips()).thenReturn(blips);
     when(wavelet.getOperationQueue()).thenReturn(new OperationQueue());
-    when(wavelet.getWaveId()).thenReturn(WaveId.deserialise("google.com!wave1"));
-    when(wavelet.getWaveletId()).thenReturn(WaveletId.deserialise("google.com!wavelet1"));
-    when(wavelet.getThread(anyString())).thenReturn(new BlipThread("rootThread", -1, 
+    when(wavelet.getWaveId()).thenReturn(WaveId.of("example.com", "wave1"));
+    when(wavelet.getWaveletId()).thenReturn(WaveletId.of("example.com", "wavelet1"));
+    when(wavelet.getThread(anyString())).thenReturn(new BlipThread("rootThread", -1,
         Lists.newArrayList(ROOT_BLIP_ID, CHILD_BLIP_ID), blips));
   }
 

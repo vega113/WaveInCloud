@@ -29,6 +29,7 @@ import static org.waveprotocol.box.server.util.testing.TestingConstants.WAVE_ID;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
+import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.SearchResult;
@@ -67,8 +68,8 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.ReadOnlyWaveView;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
-import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
@@ -245,7 +246,7 @@ public class SearchServiceTest extends TestCase {
 
         Digest digest = results.getDigests().get(0);
         assertEquals(title, digest.getTitle());
-        assertEquals(waveId.serialise(), digest.getWaveId());
+        assertEquals(ApiIdSerializer.instance().serialiseWaveId(waveId), digest.getWaveId());
 
         Builder<ParticipantId> participantIds = ImmutableSet.builder();
         for (String name : digest.getParticipants()) {

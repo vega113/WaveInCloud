@@ -18,6 +18,7 @@ package com.google.wave.api;
 import com.google.wave.api.Participants.Role;
 import com.google.wave.api.impl.WaveletData;
 
+import org.waveprotocol.wave.model.id.InvalidIdException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 
@@ -95,7 +96,7 @@ public class Wavelet implements Serializable {
   @NonJsonSerializable private final Map<String, BlipThread> threads;
 
   /** The operation queue to queue operation to the robot proxy. */
-  @NonJsonSerializable private OperationQueue operationQueue;
+  @NonJsonSerializable private final OperationQueue operationQueue;
 
   /** The address of the current robot. */
   @NonJsonSerializable private String robotAddress;
@@ -579,8 +580,8 @@ public class Wavelet implements Serializable {
     WaveletData waveletData = new WaveletData();
 
     // Add primitive properties.
-    waveletData.setWaveId(waveId.serialise());
-    waveletData.setWaveletId(waveletId.serialise());
+    waveletData.setWaveId(ApiIdSerializer.instance().serialiseWaveId(waveId));
+    waveletData.setWaveletId(ApiIdSerializer.instance().serialiseWaveletId(waveletId));
     waveletData.setCreator(creator);
     waveletData.setCreationTime(creationTime);
     waveletData.setLastModifiedTime(lastModifiedTime);
@@ -625,8 +626,14 @@ public class Wavelet implements Serializable {
    */
   public static Wavelet deserialize(OperationQueue operationQueue, Map<String, Blip> blips,
       Map<String, BlipThread> threads, WaveletData waveletData) {
-    WaveId waveId = WaveId.deserialise(waveletData.getWaveId());
-    WaveletId waveletId = WaveletId.deserialise(waveletData.getWaveletId());
+    WaveId waveId;
+    WaveletId waveletId;
+    try {
+      waveId = ApiIdSerializer.instance().deserialiseWaveId(waveletData.getWaveId());
+      waveletId = ApiIdSerializer.instance().deserialiseWaveletId(waveletData.getWaveletId());
+    } catch (InvalidIdException e) {
+      throw new IllegalArgumentException(e);
+    }
     String creator = waveletData.getCreator();
     long creationTime = waveletData.getCreationTime();
     long lastModifiedTime = waveletData.getLastModifiedTime();
@@ -650,12 +657,12 @@ public class Wavelet implements Serializable {
   }
 
   private void writeObject(ObjectOutputStream out) throws IOException {
-    serializedWaveId = waveId.serialise();
-    serializedWaveletId = waveletId.serialise();
+    serializedWaveId = ApiIdSerializer.instance().serialiseWaveId(waveId);
+    serializedWaveletId = ApiIdSerializer.instance().serialiseWaveletId(waveletId);
     out.defaultWriteObject();
   }
 
-  private void readObject(ObjectInputStream in) throws IOException {
+  private void readObject(ObjectInputStream in) throws IOException, InvalidIdException {
     try {
       in.defaultReadObject();
     } catch(ClassNotFoundException e) {
@@ -663,7 +670,7 @@ public class Wavelet implements Serializable {
       throw new IOException("Incorrect serial versions" + e);
     }
 
-    waveId = WaveId.deserialise(serializedWaveId);
-    waveletId = WaveletId.deserialise(serializedWaveletId);
+    waveId = ApiIdSerializer.instance().deserialiseWaveId(serializedWaveId);
+    waveletId = ApiIdSerializer.instance().deserialiseWaveletId(serializedWaveletId);
   }
 }

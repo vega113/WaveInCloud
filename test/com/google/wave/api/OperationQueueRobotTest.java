@@ -42,9 +42,9 @@ public class OperationQueueRobotTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     wavelet = mock(Wavelet.class);
-    when(wavelet.getWaveId()).thenReturn(WaveId.deserialise("google.com!wave1"));
-    when(wavelet.getWaveletId()).thenReturn(WaveletId.deserialise("google.com!wavelet1"));
-    when(wavelet.getThread(anyString())).thenReturn(new BlipThread("rootThread", -1, 
+    when(wavelet.getWaveId()).thenReturn(WaveId.of("example.com", "wave1"));
+    when(wavelet.getWaveletId()).thenReturn(WaveletId.of("example.com", "wavelet1"));
+    when(wavelet.getThread(anyString())).thenReturn(new BlipThread("rootThread", -1,
         Lists.<String>newArrayList(), new HashMap<String, Blip>()));
   }
 
@@ -65,8 +65,8 @@ public class OperationQueueRobotTest extends TestCase {
     assertEquals("foo", ops.get(1).getParameter(ParamsProperty.PROXYING_FOR));
 
     OperationQueue nonProxyingForQueue = proxyingForQueue.proxyFor(null);
-    nonProxyingForQueue.fetchWavelet(WaveId.deserialise("google.com!wave2"),
-        WaveletId.deserialise("google.com!wavelet2"));
+    nonProxyingForQueue.fetchWavelet(WaveId.of("example.com", "wave2"),
+        WaveletId.of("example.com", "wavelet2"));
 
     ops = nonProxyingForQueue.getPendingOperations();
     assertEquals(3, ops.size());
@@ -75,7 +75,7 @@ public class OperationQueueRobotTest extends TestCase {
 
   public void testSubmitWith() throws Exception {
     OperationQueue queue = new OperationQueue();
-    queue.createWavelet("google.com", Collections.<String>emptySet());
+    queue.createWavelet("example.com", Collections.<String>emptySet());
 
     OperationQueue queue2 = new OperationQueue();
     queue2.setTitleOfWavelet(wavelet, "My title");

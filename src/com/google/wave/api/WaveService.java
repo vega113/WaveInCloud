@@ -35,6 +35,7 @@ import net.oauth.signature.OAuthSignatureMethod;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.waveprotocol.wave.model.id.InvalidIdException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 
@@ -565,10 +566,11 @@ public class WaveService {
    *
    * @throws IOException if there is a problem submitting the operation to the
    *         server, when {@code submit} is {@code true}.
+   * @throws InvalidIdException
    */
   public Wavelet newWave(
       String domain, Set<String> participants, String msg, String proxyForId, String rpcServerUrl)
-      throws IOException {
+      throws IOException, InvalidIdException {
     Util.checkIsValidProxyForId(proxyForId);
     OperationQueue opQueue = new OperationQueue(proxyForId);
     Wavelet newWavelet = opQueue.createWavelet(domain, participants, msg);
@@ -580,9 +582,10 @@ public class WaveService {
       if (response.isError()) {
         throw new IOException(response.getErrorMessage());
       }
-      WaveId waveId = WaveId.deserialise((String) response.getData().get(ParamsProperty.WAVE_ID));
-      WaveletId waveletId =
-          WaveletId.deserialise((String) response.getData().get(ParamsProperty.WAVELET_ID));
+      WaveId waveId = ApiIdSerializer.instance().deserialiseWaveId(
+          (String) response.getData().get(ParamsProperty.WAVE_ID));
+      WaveletId waveletId = ApiIdSerializer.instance().deserialiseWaveletId(
+          (String) response.getData().get(ParamsProperty.WAVELET_ID));
       String rootBlipId = (String) response.getData().get(ParamsProperty.BLIP_ID);
 
       Map<String, Blip> blips = new HashMap<String, Blip>();

@@ -18,6 +18,7 @@
 package org.waveprotocol.box.server.robots.operations;
 
 import com.google.common.collect.Lists;
+import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.JsonRpcConstant.ParamsProperty;
@@ -121,8 +122,9 @@ public class CreateWaveletService implements OperationService {
     String message = OperationUtil.getOptionalParameter(operation, ParamsProperty.MESSAGE);
     WaveletCreatedEvent event =
         new WaveletCreatedEvent(null, null, participant.getAddress(), System.currentTimeMillis(),
-            rootBlip.getId(), message, waveletName.waveId.serialise(),
-            waveletName.waveletId.serialise());
+            rootBlip.getId(), message,
+            ApiIdSerializer.instance().serialiseWaveId(waveletName.waveId),
+            ApiIdSerializer.instance().serialiseWaveletId(waveletName.waveletId));
     context.processEvent(operation, event);
   }
 

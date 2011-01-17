@@ -37,8 +37,8 @@ import java.util.Set;
  */
 public class WaveletRobotTest extends TestCase {
 
-  private static final WaveId WAVE_ID = WaveId.deserialise("google.com!wave1");
-  private static final WaveletId WAVELET_ID = WaveletId.deserialise("google.com!wavelet1");
+  private static final WaveId WAVE_ID = WaveId.of("example.com", "wave1");
+  private static final WaveletId WAVELET_ID = WaveletId.of("example.com", "wavelet1");
 
   private OperationQueue opQueue;
   private Wavelet wavelet;
@@ -56,7 +56,7 @@ public class WaveletRobotTest extends TestCase {
     participants.add("foo@bar.com");
     Map<String, String> roles = new HashMap<String, String>();
     Map<String, BlipThread> threads = new HashMap<String, BlipThread>();
-    
+
     opQueue = mock(OperationQueue.class);
     wavelet = new Wavelet(WAVE_ID, WAVELET_ID, "foo@bar.com", 1l, 1l, "Hello world", "blip1",
         null, roles, participants, dataDocument, tags, blips, threads, opQueue);
@@ -97,7 +97,7 @@ public class WaveletRobotTest extends TestCase {
   }
 
   public void testGetDomain() throws Exception {
-    assertEquals("google.com", wavelet.getDomain());
+    assertEquals("example.com", wavelet.getDomain());
   }
 
   public void testProxyFor() throws Exception {
@@ -224,8 +224,8 @@ public class WaveletRobotTest extends TestCase {
     Map<String, BlipThread> threads = new HashMap<String, BlipThread>();
 
     OperationQueue opQueue = mock(OperationQueue.class);
-    Wavelet expectedWavelet = new Wavelet(WaveId.deserialise("google.com!wave1"),
-        WaveletId.deserialise("google.com!wavelet1"), "foo@bar.com", 1l, 1l, "Hello world",
+    Wavelet expectedWavelet = new Wavelet(WaveId.of("example.com", "wave1"),
+        WaveletId.of("example.com", "wavelet1"), "foo@bar.com", 1l, 1l, "Hello world",
         "blip1", null, roles, participants, dataDocument, tags, blips, threads, opQueue);
 
     WaveletData waveletData = expectedWavelet.serialize();

@@ -17,6 +17,8 @@ package com.google.wave.api;
 
 import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest.Parameter;
+
+import org.waveprotocol.wave.model.id.InvalidIdException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 
@@ -178,7 +180,7 @@ public class OperationQueue implements Serializable {
     appendOperation(OperationType.WAVELET_REMOVE_PARTICIPANT_NEWSYNTAX, wavelet,
         Parameter.of(ParamsProperty.PARTICIPANT_ID, participantId));
   }
-  
+
   /**
    * Creates a new wavelet.
    *
@@ -478,12 +480,12 @@ public class OperationQueue implements Serializable {
       String blipId, int index, Parameter... parameters) {
     String waveIdString = null;
     if (waveId != null) {
-      waveIdString = waveId.serialise();
+      waveIdString = ApiIdSerializer.instance().serialiseWaveId(waveId);
     }
 
     String waveletIdString = null;
     if (waveletId != null) {
-      waveletIdString = waveletId.serialise();
+      waveletIdString = ApiIdSerializer.instance().serialiseWaveletId(waveletId);
     }
 
     OperationRequest operation = new OperationRequest(opType.method(),
@@ -506,7 +508,8 @@ public class OperationQueue implements Serializable {
    * @return a temporary blip id.
    */
   private static String generateTempBlipId(Wavelet wavelet) {
-    return String.format(TEMP_BLIP_ID_FORMAT, wavelet.getWaveletId().serialise(),
+    return String.format(TEMP_BLIP_ID_FORMAT,
+        ApiIdSerializer.instance().serialiseWaveletId(wavelet.getWaveletId()),
         ID_GENERATOR.nextInt());
   }
 
@@ -555,11 +558,19 @@ public class OperationQueue implements Serializable {
       participants = Collections.emptySet();
     }
 
-    WaveId waveId = WaveId.deserialise(String.format(TEMP_WAVE_ID_FORMAT, domain,
-        ID_GENERATOR.nextInt()));
-    WaveletId waveletId = WaveletId.deserialise(String.format(TEMP_WAVELET_ID_FORMAT, domain));
+    WaveId waveId;
+    WaveletId waveletId;
+    try {
+      waveId = ApiIdSerializer.instance().deserialiseWaveId(
+          String.format(TEMP_WAVE_ID_FORMAT, domain, ID_GENERATOR.nextInt()));
+      waveletId = ApiIdSerializer.instance().deserialiseWaveletId(
+          String.format(TEMP_WAVELET_ID_FORMAT, domain));
+    } catch (InvalidIdException e) {
+      throw new IllegalStateException("Invalid temporary id", e);
+    }
 
-    String rootBlipId = String.format(TEMP_BLIP_ID_FORMAT, waveletId.serialise(),
+    String rootBlipId = String.format(TEMP_BLIP_ID_FORMAT,
+        ApiIdSerializer.instance().serialiseWaveletId(waveletId),
         ID_GENERATOR.nextInt());
     Map<String, Blip> blips = new HashMap<String, Blip>();
     Map<String, String> roles = new HashMap<String, String>();

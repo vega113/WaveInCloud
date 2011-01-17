@@ -20,10 +20,11 @@ package org.waveprotocol.box.server.robots.operations;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.SearchResult;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.SearchResult.Digest;
 
 import org.waveprotocol.box.common.Snippets;
@@ -117,7 +118,7 @@ public class SearchService implements OperationService {
     }
 
     String snippet = Snippets.renderSnippet(waveletData, DIGEST_SNIPPET_LENGTH);
-    String waveId = waveletData.getWaveId().serialise();
+    String waveId = ApiIdSerializer.instance().serialiseWaveId(waveletData.getWaveId());
     List<String> participants = CollectionUtils.newArrayList();
     for (ParticipantId p : waveletData.getParticipants()) {
       participants.add(p.getAddress());

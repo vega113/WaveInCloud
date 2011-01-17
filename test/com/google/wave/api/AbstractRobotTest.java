@@ -66,6 +66,8 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class AbstractRobotTest extends TestCase {
 
+  private static final WaveId WAVE_1 = WaveId.of("example.com", "wave1");
+  private static final WaveletId WAVELET_1 = WaveletId.of("example.com", "wavelet1");
   private static final String PROFILE_PATH = "/basepath/_wave/robot/profile";
   private static final String CAPABILITIES_XML_PATH = "/basepath/_wave/capabilities.xml";
   private static final String JSONRPC_PATH = "/basepath/_wave/robot/jsonrpc";
@@ -127,7 +129,7 @@ public class AbstractRobotTest extends TestCase {
       return string;
     }
   }
-  
+
   private static <K, V> Map<K, V> anyMapOf(Class<K> keyClass, Class<V> valueClass) {
     return Matchers.<Map<K, V>>any();
   }
@@ -292,8 +294,7 @@ public class AbstractRobotTest extends TestCase {
 
   public void testBlindWavelet() throws Exception {
     AbstractRobot robot = new MockRobot();
-    Wavelet blindWavelet = robot.blindWavelet(WaveId.deserialise("test.com!wave1"),
-        WaveletId.deserialise("test.com!wavelet1"));
+    Wavelet blindWavelet = robot.blindWavelet(WAVE_1, WAVELET_1);
     assertEquals(0, blindWavelet.getOperationQueue().getPendingOperations().size());
     blindWavelet.getParticipants().add("foo@test.com");
     blindWavelet.reply("\n");
@@ -306,8 +307,7 @@ public class AbstractRobotTest extends TestCase {
 
   public void testProxiedBlindWavelet() throws Exception {
     AbstractRobot robot = new MockRobot();
-    Wavelet blindWavelet = robot.blindWavelet(WaveId.deserialise("test.com!wave1"),
-        WaveletId.deserialise("test.com!wavelet1"), "proxyid");
+    Wavelet blindWavelet = robot.blindWavelet(WAVE_1, WAVELET_1, "proxyid");
     assertEquals(0, blindWavelet.getOperationQueue().getPendingOperations().size());
     blindWavelet.reply("\n");
 
@@ -318,8 +318,7 @@ public class AbstractRobotTest extends TestCase {
 
     // Assert that proxy id should be valid.
     try {
-      robot.blindWavelet(WaveId.deserialise("test.com!wave1"),
-          WaveletId.deserialise("test.com!wavelet1"), "foo@bar.com");
+      robot.blindWavelet(WAVE_1, WAVELET_1, "foo@bar.com");
       fail("Should have failed since proxy id is not valid.");
     } catch (IllegalArgumentException e) {
       // Expected.

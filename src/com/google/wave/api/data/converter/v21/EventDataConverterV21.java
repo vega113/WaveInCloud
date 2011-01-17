@@ -19,8 +19,8 @@ package com.google.wave.api.data.converter.v21;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-
 import com.google.wave.api.Annotation;
+import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.BlipData;
 import com.google.wave.api.Range;
 import com.google.wave.api.data.ApiView;
@@ -61,8 +61,8 @@ public class EventDataConverterV21 implements EventDataConverter {
     final WaveletData waveletData = new WaveletData();
     waveletData.setCreationTime(wavelet.getCreationTime());
     waveletData.setCreator(wavelet.getCreatorId().getAddress());
-    waveletData.setWaveId(wavelet.getWaveId().serialise());
-    waveletData.setWaveletId(wavelet.getId().serialise());
+    waveletData.setWaveId(ApiIdSerializer.instance().serialiseWaveId(wavelet.getWaveId()));
+    waveletData.setWaveletId(ApiIdSerializer.instance().serialiseWaveletId(wavelet.getId()));
     waveletData.setLastModifiedTime(wavelet.getLastModifiedTime());
     waveletData.setParticipants(idsToParticipantIdList(wavelet.getParticipantIds()));
     waveletData.setRootBlipId(conversation.getRootThread().getFirstBlip().getId());
@@ -122,8 +122,8 @@ public class EventDataConverterV21 implements EventDataConverter {
     blipData.setLastModifiedTime(blip.getLastModifiedTime());
     blipData.setVersion(blip.getLastModifiedVersion());
     blipData.setParentBlipId(parentBlip == null ? null : parentBlip.getId());
-    blipData.setWaveId(wavelet.getWaveId().serialise());
-    blipData.setWaveletId(wavelet.getId().serialise());
+    blipData.setWaveId(ApiIdSerializer.instance().serialiseWaveId(wavelet.getWaveId()));
+    blipData.setWaveletId(ApiIdSerializer.instance().serialiseWaveletId(wavelet.getId()));
     blipData.setChildBlipIds(toBlipIdList(findBlipChildren(blip)));
 
     if (!blip.isDeleted()) {
