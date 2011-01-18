@@ -470,6 +470,7 @@
   <target name="dist-proto" depends="compile-proto" description="Builds the proto jar">
     <jar destfile="${dist.dir}\proto.jar" basedir="${build.proto.dir}"/>
     <jar destfile="${dist.dir}\proto-src.jar" basedir="${src.proto.dir}"/>
+    <jar destfile="${dist.dir}\proto-gwt.jar" basedir="${src.proto.gwt.dir}"/>
   </target>
 
   <target name="dist-libraries" depends="compile, dist-proto, dist-pst">
