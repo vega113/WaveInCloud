@@ -38,9 +38,7 @@ public class TestInlineDoodad {
     }
   }
 
-  private static final String NS = "w";
-  private static final String TAGNAME = "span";
-  public static final String FULL_TAGNAME = NS + ":" + TAGNAME;
+  public static final String FULL_TAGNAME = "span";
 
   public static void register(ElementHandlerRegistry handlerRegistry) {
     register(handlerRegistry, FULL_TAGNAME);
