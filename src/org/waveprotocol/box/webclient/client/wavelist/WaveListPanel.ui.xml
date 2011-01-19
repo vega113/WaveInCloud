@@ -1,0 +1,44 @@
+<!--
+  Template for WaveListPanel.
+  Author: vega113@gmail.com (Yuri Z.)
+-->
+
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+  xmlns:g="urn:import:com.google.gwt.user.client.ui" 
+  xmlns:t='urn:import:org.waveprotocol.box.webclient.client.wavelist'
+  xmlns:s='urn:import:org.waveprotocol.wave.client.widget.toolbar'>
+  <ui:with field="res"
+    type="org.waveprotocol.box.webclient.client.wavelist.WaveListPanel.Resources">
+  </ui:with>
+  <g:HTMLPanel>
+    <div class="{res.css.frame}">
+      <div class="{res.css.north}"/>
+      <div class="{res.css.northEast}"/>
+      <div class="{res.css.north}">
+        <t:RangeLabelPager ui:field="rangePagerLabel"
+          styleName="{res.css.rangePager}"/>
+      </div>
+      <div class="{res.css.east}"/>
+      <div class="{res.css.southEast}"/>
+      <div class="{res.css.south}"/>
+      <div class="{res.css.southWest}"/>
+      <div class="{res.css.west}"/>
+      <div class="{res.css.northWest}"/>
+      <div class="{res.css.contentContainer}">
+        <div class="{res.css.panel}">
+          <!-- TODO (Yuri Z.) is it possible to get the search icon from 
+            Google Wave? -->
+          <!-- TODO (Yuri Z.) Put here the search box when search functionality 
+            will be added. -->
+          <!-- TODO (Yuri Z.) Is it possible to make the search box to have 
+            rounded edges? -->
+        </div>
+        <s:ToplevelToolbarWidget ui:field="toolbarUi"
+          styleName="{res.css.toolbar} {res.css.toolbarMenu}"/>
+        <t:ShowMorePagerPanel ui:field='pagerPanel'
+          addStyleNames="{res.css.pagerPanel}"/>
+      </div>
+    </div>
+  </g:HTMLPanel>
+</ui:UiBinder> 

@@ -33,6 +33,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
+import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEventHandler;
@@ -40,7 +41,7 @@ import org.waveprotocol.box.webclient.client.events.WaveIndexUpdatedEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveUpdatedEvent;
-import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
+import org.waveprotocol.box.webclient.client.wavelist.WaveListPanel;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.waveclient.common.ClientIdGenerator;
 import org.waveprotocol.box.webclient.waveclient.common.WaveViewServiceImpl;
@@ -87,6 +88,9 @@ public class WebClient implements EntryPoint {
   ImplPanel contentPanel;
 
   @UiField
+  WaveListPanel listPanel;
+
+  @UiField
   DebugMessagePanel logPanel;
 
   static Log LOG = Log.get(WebClient.class);
@@ -124,6 +128,7 @@ public class WebClient implements EntryPoint {
     // sticks inline styles on elements without permission. They must be
     // cleared.
     self.getElement().getStyle().clearPosition();
+    splitPanel.setWidgetMinSize(listPanel, 200);
 
     if (LogLevel.showDebug()) {
       logPanel.enable();
