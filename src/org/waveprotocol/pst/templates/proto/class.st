@@ -1,5 +1,7 @@
+// We have to use fully-qualified name of the GsonSerializable class here in order to make it
+// visible in case of nested classes.
 public $if(m.inner)$static$endif$ final class $m.javaType$
-    implements $m.name$, GsonSerializable {
+    implements $m.name$, org.waveprotocol.wave.communication.gson.GsonSerializable {
 
   $m.nestedMessages: {nested|$class(m=nested)$}$
 

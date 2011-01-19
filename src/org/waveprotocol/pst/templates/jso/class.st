@@ -1,4 +1,6 @@
-public $if(m.inner)$static$endif$ final class $m.javaType$ extends JsonMessage
+// We have to use fully-qualified name of the GsonSerializable class here in order to make it
+// visible in case of nested classes.
+public $if(m.inner)$static$endif$ final class $m.javaType$ extends org.waveprotocol.wave.communication.gwt.JsonMessage
     implements $m.name$ {
 
   $m.nestedMessages: {nested|$class(m=nested)$}$
