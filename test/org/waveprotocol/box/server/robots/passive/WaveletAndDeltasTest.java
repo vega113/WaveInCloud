@@ -44,9 +44,8 @@ import java.util.Collections;
  */
 public class WaveletAndDeltasTest extends TestCase {
 
-  private static final String WAVE_ID = "example.com!waveid";
-  private static final String WAVELET_ID = "example!conv+root";
-  private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
+  private static final WaveletName WAVELET_NAME = WaveletName.of(
+      "example.com", "waveid", "example.com", "waveletid");
   private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
   private static final ParticipantId BOB = ParticipantId.ofUnsafe("bob@example.com");
   private static final ParticipantId CAROL = ParticipantId.ofUnsafe("carol@example.com");

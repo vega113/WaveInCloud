@@ -17,20 +17,18 @@ package org.waveprotocol.box.server.robots.operations;
 
 import com.google.wave.api.BlipData;
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
-import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.OperationType;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
+import com.google.wave.api.OperationRequest.Parameter;
 
-import junit.framework.TestCase;
-
+import org.waveprotocol.box.server.robots.RobotsTestBase;
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.OperationContextImpl;
 import org.waveprotocol.box.server.robots.testing.OperationServiceHelper;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Set;
@@ -40,18 +38,12 @@ import java.util.Set;
  *
  * @author anthony dot watkins at sesi dot com (Anthony Watkins)
  */
-public class ParticipantServicesTest extends TestCase {
+public class ParticipantServicesTest extends RobotsTestBase {
 
-  private static final String OPERATION_ID = "op1";
-  private static final String OPERATION2_ID = "op2";
   private static final String TEMP_BLIP_ID = OperationContext.TEMP_ID_MARKER + "blip1";
   private static final String NEW_BLIP_CONTENT = "Hello World";
-  private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
   private static final ParticipantId ROBOT = ParticipantId.ofUnsafe("robot@example.com");
   private static final String MALFORMED_ADDRESS = "malformed!@@#$%(*)^_^@@.com";
-  private static final String WAVE_ID = "example.com!waveid";
-  private static final String WAVELET_ID = "example.com!conv+root";
-  private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
 
   private ParticipantServices service;
   private OperationServiceHelper helper;
@@ -63,7 +55,7 @@ public class ParticipantServicesTest extends TestCase {
     helper = new OperationServiceHelper(WAVELET_NAME, ROBOT);
     // BlipData constructor is broken, it doesn't set the blipId passed in the
     // constructor
-    blipData = new BlipData(WAVE_ID, WAVELET_ID, TEMP_BLIP_ID, NEW_BLIP_CONTENT);
+    blipData = new BlipData(s(WAVE_ID), s(WAVELET_ID), TEMP_BLIP_ID, NEW_BLIP_CONTENT);
     blipData.setBlipId(TEMP_BLIP_ID);
   }
 
@@ -75,13 +67,12 @@ public class ParticipantServicesTest extends TestCase {
 
     // Confirm alex is not on wave prior to operation.
     Set<ParticipantId> participants = conversation.getParticipantIds();
-    assertFalse("Alex should not be a participant on wavelet prior to operation to add him.", 
+    assertFalse("Alex should not be a participant on wavelet prior to operation to add him.",
         participants.contains(ALEX));
-    
+
     OperationRequest operation =
-        new OperationRequest(OperationType.WAVELET_ADD_PARTICIPANT_NEWSYNTAX.method(), OPERATION_ID,
-            WAVE_ID, WAVELET_ID, rootBlipId, Parameter.of(ParamsProperty.PARTICIPANT_ID, 
-                ALEX.getAddress()));
+        operationRequest(OperationType.WAVELET_ADD_PARTICIPANT_NEWSYNTAX, rootBlipId,
+            Parameter.of(ParamsProperty.PARTICIPANT_ID,ALEX.getAddress()));
 
     service.execute(operation, context, ROBOT);
 
@@ -92,7 +83,7 @@ public class ParticipantServicesTest extends TestCase {
     participants = conversation.getParticipantIds();
     assertTrue("Alex should now be a participant on the wavelet.", participants.contains(ALEX));
   }
-  
+
   public void testAddThrowsOnDuplicateParticipant() throws Exception {
     OperationContextImpl context = helper.getContext();
     ObservableConversation conversation =
@@ -101,23 +92,22 @@ public class ParticipantServicesTest extends TestCase {
 
     // Confirm robot is on wave prior to operation to re-add it.
     Set<ParticipantId> participants = conversation.getParticipantIds();
-    assertTrue("Robot should be a participant on wavelet prior to test operation to add it.", 
+    assertTrue("Robot should be a participant on wavelet prior to test operation to add it.",
         participants.contains(ROBOT));
-    
+
     OperationRequest operation =
-        new OperationRequest(OperationType.WAVELET_ADD_PARTICIPANT_NEWSYNTAX.method(), OPERATION_ID,
-            WAVE_ID, WAVELET_ID, rootBlipId, Parameter.of(ParamsProperty.PARTICIPANT_ID, 
-                ROBOT.getAddress()));
+        operationRequest(OperationType.WAVELET_ADD_PARTICIPANT_NEWSYNTAX, rootBlipId,
+            Parameter.of(ParamsProperty.PARTICIPANT_ID, ROBOT.getAddress()));
 
     try {
       service.execute(operation, context, ROBOT);
-      
+
       fail("Duplicate add of participant should have generated error in service execution.");
     } catch(InvalidRequestException e) {
       // Good.
     }
   }
-  
+
   public void testRemoveParticipant() throws Exception {
     OperationContextImpl context = helper.getContext();
     ObservableConversation conversation =
@@ -126,12 +116,12 @@ public class ParticipantServicesTest extends TestCase {
 
     // Confirm alex is not on wave prior to operation.
     Set<ParticipantId> participants = conversation.getParticipantIds();
-    assertFalse("Alex should not be a participant on wavelet prior to operation to add him.", 
+    assertFalse("Alex should not be a participant on wavelet prior to operation to add him.",
         participants.contains(ALEX));
-    
+
     OperationRequest operation =
         new OperationRequest(OperationType.WAVELET_ADD_PARTICIPANT_NEWSYNTAX.method(), OPERATION_ID,
-            WAVE_ID, WAVELET_ID, rootBlipId, Parameter.of(ParamsProperty.PARTICIPANT_ID, 
+            s(WAVE_ID), s(WAVELET_ID), rootBlipId, Parameter.of(ParamsProperty.PARTICIPANT_ID,
                 ALEX.getAddress()));
 
     service.execute(operation, context, ROBOT);
@@ -142,18 +132,17 @@ public class ParticipantServicesTest extends TestCase {
 
     // Attempt to remove Alex.
     OperationRequest operation2 =
-      new OperationRequest(OperationType.WAVELET_REMOVE_PARTICIPANT_NEWSYNTAX.method(), 
-          OPERATION2_ID, WAVE_ID, WAVELET_ID, rootBlipId, 
-          Parameter.of(ParamsProperty.PARTICIPANT_ID, ALEX.getAddress()));
+        operationRequest(OperationType.WAVELET_REMOVE_PARTICIPANT_NEWSYNTAX, OPERATION2_ID,
+            rootBlipId, Parameter.of(ParamsProperty.PARTICIPANT_ID, ALEX.getAddress()));
 
     service.execute(operation2, context, ROBOT);
-    
+
     // Verify Alex is no longer a participant on the wave.
     participants = conversation.getParticipantIds();
-    assertFalse("Alex should no longer be a participant on the wavelet.", 
+    assertFalse("Alex should no longer be a participant on the wavelet.",
         participants.contains(ALEX));
   }
-  
+
   public void testRemoveThrowsOnNonWaveletParticipant() throws Exception {
     OperationContextImpl context = helper.getContext();
     ObservableConversation conversation =
@@ -162,23 +151,22 @@ public class ParticipantServicesTest extends TestCase {
 
     // Confirm alex is not on wave prior to operation.
     Set<ParticipantId> participants = conversation.getParticipantIds();
-    assertFalse("Alex should not be a participant on wavelet prior to operation to add him.", 
+    assertFalse("Alex should not be a participant on wavelet prior to operation to add him.",
         participants.contains(ALEX));
-    
+
     OperationRequest operation =
-        new OperationRequest(OperationType.WAVELET_REMOVE_PARTICIPANT_NEWSYNTAX.method(), 
-            OPERATION_ID, WAVE_ID, WAVELET_ID, rootBlipId, 
+        operationRequest(OperationType.WAVELET_REMOVE_PARTICIPANT_NEWSYNTAX, rootBlipId,
             Parameter.of(ParamsProperty.PARTICIPANT_ID, ALEX.getAddress()));
 
     try {
       service.execute(operation, context, ROBOT);
-      
+
       fail("Removal of non-participant should have generated error in service execution.");
     } catch(InvalidRequestException e) {
       // Good.
     }
   }
-  
+
   public void testInvalidParticipantAddress() throws Exception {
     OperationContextImpl context = helper.getContext();
     ObservableConversation conversation =
@@ -186,14 +174,13 @@ public class ParticipantServicesTest extends TestCase {
     String rootBlipId = ConversationUtil.getRootBlipId(conversation);
 
     OperationRequest operation =
-        new OperationRequest(OperationType.WAVELET_ADD_PARTICIPANT_NEWSYNTAX.method(), OPERATION_ID,
-            WAVE_ID, WAVELET_ID, rootBlipId, Parameter.of(ParamsProperty.PARTICIPANT_ID, 
-                MALFORMED_ADDRESS));
+        operationRequest(OperationType.WAVELET_ADD_PARTICIPANT_NEWSYNTAX, rootBlipId,
+            Parameter.of(ParamsProperty.PARTICIPANT_ID, MALFORMED_ADDRESS));
 
     try {
       service.execute(operation, context, ROBOT);
-      
-      fail("Addition of invalid particpant address should have generated error in service " + 
+
+      fail("Addition of invalid particpant address should have generated error in service " +
           "execution.");
     } catch(InvalidRequestException e) {
       // Good.

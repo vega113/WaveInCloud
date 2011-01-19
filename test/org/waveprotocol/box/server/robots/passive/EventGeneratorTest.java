@@ -34,10 +34,9 @@ import com.google.wave.api.impl.EventMessageBundle;
 import com.google.wave.api.robot.Capability;
 import com.google.wave.api.robot.RobotName;
 
-import junit.framework.TestCase;
-
 import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
+import org.waveprotocol.box.server.robots.RobotsTestBase;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.robots.util.WaveletPluginDocumentFactory;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
@@ -49,7 +48,6 @@ import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.CapturingOperationSink;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
@@ -85,22 +83,15 @@ import java.util.Set;
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
-public class EventGeneratorTest extends TestCase {
+public class EventGeneratorTest extends RobotsTestBase {
 
-  private final static String ROBOT_ADDRESS = "robot@example.com";
-  private final static RobotName ROBOT_NAME = RobotName.fromAddress(ROBOT_ADDRESS);
+  private final static RobotName ROBOT_NAME = RobotName.fromAddress(ROBOT.getAddress());
   private final static EventDataConverter CONVERTER = new EventDataConverterV22();
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
   private static final WaveletPluginDocumentFactory DOCUMENT_FACTORY =
       new WaveletPluginDocumentFactory(SchemaCollection.empty());
-  private static final String WAVE_ID = "example.com!waveid";
-  private static final String WAVELET_ID = "example.com!conv+root";
-  private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
-  private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
-  private static final ParticipantId BOB = ParticipantId.ofUnsafe("bob@example.com");
-  private static final ParticipantId ROBOT = ParticipantId.ofUnsafe("robot@example.com");
   private static final WaveletOperationContext.Factory CONTEXT_FACTORY =
       new WaveletOperationContext.Factory() {
         @Override

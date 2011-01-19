@@ -19,7 +19,6 @@ package org.waveprotocol.box.server.robots.testing;
 
 import static org.mockito.Mockito.mock;
 
-import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.data.converter.v22.EventDataConverterV22;
 
@@ -99,8 +98,7 @@ public class OperationServiceHelper {
     conversation.getRootThread().appendBlip();
 
     context = new OperationContextImpl(waveletProvider, converter, conversationUtil);
-    context.putWavelet(ApiIdSerializer.instance().serialiseWaveId(waveletName.waveId),
-        ApiIdSerializer.instance().serialiseWaveletId(waveletName.waveletId),
+    context.putWavelet(waveletName.waveId, waveletName.waveletId,
         new RobotWaveletData(waveletData, HASH_FACTORY.createVersionZero(waveletName)));
   }
 

@@ -34,6 +34,9 @@ import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
@@ -116,7 +119,14 @@ public class CreateWaveletService implements OperationService {
 
     // Store the temporary id of the wavelet and rootblip so that future
     // operations can reference it.
-    context.putWavelet(waveletData.getWaveId(), waveletData.getWaveletId(), newWavelet);
+    try {
+      WaveId waveId = ApiIdSerializer.instance().deserialiseWaveId(waveletData.getWaveId());
+      WaveletId waveletId =
+          ApiIdSerializer.instance().deserialiseWaveletId(waveletData.getWaveletId());
+      context.putWavelet(waveId, waveletId, newWavelet);
+    } catch (InvalidIdException e) {
+      throw new InvalidRequestException("Invalid id", operation, e);
+    }
     context.putBlip(waveletData.getRootBlipId(), rootBlip);
 
     String message = OperationUtil.getOptionalParameter(operation, ParamsProperty.MESSAGE);

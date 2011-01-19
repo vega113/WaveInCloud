@@ -18,8 +18,8 @@
 package org.waveprotocol.box.server.robots;
 
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 
@@ -27,6 +27,8 @@ import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
@@ -89,7 +91,7 @@ public interface OperationContext {
    * @param waveletId the wavelet id.
    * @param newWavelet the new wavelet to remember.
    */
-  void putWavelet(String waveId, String waveletId, RobotWaveletData newWavelet);
+  void putWavelet(WaveId waveId, WaveletId waveletId, RobotWaveletData newWavelet);
 
   /**
    * Opens a wavelet for the given wave id and wavelet id.
@@ -100,7 +102,7 @@ public interface OperationContext {
    *        wavelet.
    * @throws InvalidRequestException if the wavelet can not be opened.
    */
-  OpBasedWavelet openWavelet(String waveId, String waveletId, ParticipantId participant)
+  OpBasedWavelet openWavelet(WaveId waveId, WaveletId waveletId, ParticipantId participant)
       throws InvalidRequestException;
 
   /**
@@ -126,7 +128,7 @@ public interface OperationContext {
    * @throws InvalidRequestException if the wavelet can not be opened.
    */
   ObservableConversationView openConversation(
-      String waveId, String waveletId, ParticipantId participant) throws InvalidRequestException;
+      WaveId waveId, WaveletId waveletId, ParticipantId participant) throws InvalidRequestException;
 
   /**
    * Gets the conversation for of wavelet specified in the operation. Tries to

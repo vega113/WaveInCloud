@@ -44,13 +44,10 @@ public class WaveletName implements Comparable<WaveletName>, Serializable {
     return new WaveletName(waveId, waveletId);
   }
 
-  /**
-   * Constructs a wavelet name for a serialised wave id and wavelet id.
-   *
-   * @throws IllegalArgumentException if either string is invalid
-   */
-  public static WaveletName of(String waveId, String waveletId) {
-    return new WaveletName(WaveId.deserialise(waveId), WaveletId.deserialise(waveletId));
+  /** Constructs a wavelet name for wave and wavelet id components. */
+  public static WaveletName of(String waveDomain, String waveId, String waveletDomain,
+      String waveletId) {
+    return new WaveletName(WaveId.of(waveDomain, waveId), WaveletId.of(waveletDomain, waveletId));
   }
 
   /** Private constructor to allow future instance optimisation. */

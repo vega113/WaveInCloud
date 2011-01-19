@@ -30,11 +30,6 @@ import com.google.common.collect.Lists;
 
 import org.waveprotocol.box.common.Snippets;
 import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolSubmitResponse;
-import org.waveprotocol.box.consoleclient.ClientAuthenticator;
-import org.waveprotocol.box.consoleclient.ClientBackend;
-import org.waveprotocol.box.consoleclient.ClientUtils;
-import org.waveprotocol.box.consoleclient.ClientWaveView;
-import org.waveprotocol.box.consoleclient.ConsoleClient;
 import org.waveprotocol.box.server.util.BlockingSuccessFailCallback;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
@@ -149,7 +144,7 @@ public class ClientTestingUtil {
    * ClientWaveView} and not stored in the client backend.
    */
   public WaveletData createWavelet() throws OperationException {
-    return createWavelet(WaveletName.of("example.com!wave", "example.com!wavelet"), userId);
+    return createWavelet(WaveletName.of("example.com", "wave", "example.com", "wavelet"), userId);
   }
 
   /**

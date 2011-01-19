@@ -19,6 +19,7 @@ package org.waveprotocol.box.server.robots;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
@@ -38,6 +39,9 @@ import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
+import org.waveprotocol.wave.model.id.InvalidIdException;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -181,23 +185,23 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   }
 
   @Override
-  public void putWavelet(String waveId, String waveletId, RobotWaveletData newWavelet) {
+  public void putWavelet(WaveId waveId, WaveletId waveletId, RobotWaveletData newWavelet) {
     WaveletName waveletName = newWavelet.getWaveletName();
     Preconditions.checkArgument(!openedWavelets.containsKey(waveletName),
         "Not allowed to put an already open wavelet in as a new wavelet");
 
     // New wavelets are indicated by the temporary marker in their waveId.
-    if (waveId.contains("!" + TEMP_ID_MARKER)) {
+    if (waveId.getId().startsWith(TEMP_ID_MARKER)) {
       tempWaveletNameMap.put(WaveletName.of(waveId, waveletId), waveletName);
     }
     openedWavelets.put(waveletName, newWavelet);
   }
 
   @Override
-  public OpBasedWavelet openWavelet(String waveId, String waveletId, ParticipantId participant)
+  public OpBasedWavelet openWavelet(WaveId waveId, WaveletId waveletId, ParticipantId participant)
       throws InvalidRequestException {
     WaveletName waveletName;
-    if (waveId.contains("!" + TEMP_ID_MARKER)) {
+    if (waveId.getId().startsWith(TEMP_ID_MARKER)) {
       WaveletName tempWaveletName = WaveletName.of(waveId, waveletId);
       waveletName = tempWaveletNameMap.get(tempWaveletName);
     } else {
@@ -234,14 +238,20 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   @Override
   public OpBasedWavelet openWavelet(OperationRequest operation, ParticipantId participant)
       throws InvalidRequestException {
-    String waveId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVE_ID);
-    String waveletId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVELET_ID);
-    return openWavelet(waveId, waveletId, participant);
+    try {
+      WaveId waveId = ApiIdSerializer.instance().deserialiseWaveId(
+          OperationUtil.<String>getRequiredParameter(operation, ParamsProperty.WAVE_ID));
+      WaveletId waveletId = ApiIdSerializer.instance().deserialiseWaveletId(
+          OperationUtil.<String>getRequiredParameter(operation, ParamsProperty.WAVELET_ID));
+      return openWavelet(waveId, waveletId, participant);
+    } catch (InvalidIdException e) {
+      throw new InvalidRequestException("Invalid id", operation, e);
+    }
   }
 
   @Override
-  public ObservableConversationView openConversation(
-      String waveId, String waveletId, ParticipantId participant) throws InvalidRequestException {
+  public ObservableConversationView openConversation(WaveId waveId, WaveletId waveletId,
+      ParticipantId participant) throws InvalidRequestException {
     WaveletName waveletName = WaveletName.of(waveId, waveletId);
 
     if (!openedConversations.containsKey(waveletName)) {
@@ -262,9 +272,15 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   @Override
   public ObservableConversationView openConversation(
       OperationRequest operation, ParticipantId participant) throws InvalidRequestException {
-    String waveId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVE_ID);
-    String waveletId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVELET_ID);
-    return openConversation(waveId, waveletId, participant);
+    try {
+      WaveId waveId = ApiIdSerializer.instance().deserialiseWaveId(
+          OperationUtil.<String>getRequiredParameter(operation, ParamsProperty.WAVE_ID));
+      WaveletId waveletId = ApiIdSerializer.instance().deserialiseWaveletId(
+          OperationUtil.<String>getRequiredParameter(operation, ParamsProperty.WAVELET_ID));
+      return openConversation(waveId, waveletId, participant);
+    } catch (InvalidIdException e) {
+      throw new InvalidRequestException("Invalid id", operation, e);
+    }
   }
 
   // OperationResults implementation begins here

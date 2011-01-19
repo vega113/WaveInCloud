@@ -20,6 +20,7 @@ package org.waveprotocol.box.server.robots.operations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
@@ -36,6 +37,8 @@ import org.waveprotocol.box.server.robots.OperationContextImpl;
 import org.waveprotocol.box.server.robots.RobotWaveletData;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
@@ -100,8 +103,10 @@ public class CreateWaveletServiceTest extends TestCase {
     Map<ParamsProperty, Object> responseData = response.getData();
     assertEquals("Expected message to be set", MESSAGE, responseData.get(ParamsProperty.MESSAGE));
 
-    String waveId = (String) responseData.get(ParamsProperty.WAVE_ID);
-    String waveletId = (String) responseData.get(ParamsProperty.WAVELET_ID);
+    WaveId waveId = ApiIdSerializer.instance().deserialiseWaveId(
+        (String)responseData.get(ParamsProperty.WAVE_ID));
+    WaveletId waveletId = ApiIdSerializer.instance().deserialiseWaveletId(
+        (String) responseData.get(ParamsProperty.WAVELET_ID));
     RobotWaveletData newWavelet = context.getOpenWavelets().get(WaveletName.of(waveId, waveletId));
     assertNotNull("A new wavelet must be open", newWavelet);
 

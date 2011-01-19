@@ -21,24 +21,23 @@ import com.google.wave.api.BlipData;
 import com.google.wave.api.Element;
 import com.google.wave.api.ElementType;
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
-import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.OperationType;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
+import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.data.ApiView;
 
-import junit.framework.TestCase;
-
+import org.waveprotocol.box.server.robots.RobotsTestBase;
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.OperationContextImpl;
 import org.waveprotocol.box.server.robots.testing.OperationServiceHelper;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
-import org.waveprotocol.wave.model.conversation.ConversationBlip.InlineReplyThread;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
+import org.waveprotocol.wave.model.conversation.ConversationBlip.InlineReplyThread;
 import org.waveprotocol.wave.model.document.Doc;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
@@ -46,8 +45,6 @@ import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuil
 import org.waveprotocol.wave.model.document.util.DocHelper;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.Point;
-import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
 import java.util.Iterator;
@@ -57,15 +54,10 @@ import java.util.Iterator;
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
-public class BlipOperationServicesTest extends TestCase {
+public class BlipOperationServicesTest extends RobotsTestBase {
 
-  private static final String OPERATION_ID = "op1";
   private static final String TEMP_BLIP_ID = OperationContext.TEMP_ID_MARKER + "blip1";
   private static final String NEW_BLIP_CONTENT = "Hello World";
-  private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
-  private static final String WAVE_ID = "example.com!waveid";
-  private static final String WAVELET_ID = "example.com!conv+root";
-  private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
 
   private BlipOperationServices service;
   private OperationServiceHelper helper;
@@ -77,7 +69,7 @@ public class BlipOperationServicesTest extends TestCase {
     helper = new OperationServiceHelper(WAVELET_NAME, ALEX);
     // BlipData constructor is broken, it doesn't set the blipId passed in the
     // constructor
-    blipData = new BlipData(WAVE_ID, WAVELET_ID, TEMP_BLIP_ID, NEW_BLIP_CONTENT);
+    blipData = new BlipData(s(WAVE_ID), s(WAVELET_ID), TEMP_BLIP_ID, NEW_BLIP_CONTENT);
     blipData.setBlipId(TEMP_BLIP_ID);
   }
 
@@ -92,9 +84,8 @@ public class BlipOperationServicesTest extends TestCase {
 
     // Append to continue the thread of the root blip
     String rootBlipId = ConversationUtil.getRootBlipId(conversation);
-    OperationRequest operation =
-        new OperationRequest(OperationType.BLIP_CONTINUE_THREAD.method(), OPERATION_ID, WAVE_ID,
-            WAVELET_ID, rootBlipId, Parameter.of(ParamsProperty.BLIP_DATA, blipData));
+    OperationRequest operation = operationRequest(OperationType.BLIP_CONTINUE_THREAD,
+        rootBlipId, Parameter.of(ParamsProperty.BLIP_DATA, blipData));
 
     service.execute(operation, context, ALEX);
 
@@ -120,9 +111,8 @@ public class BlipOperationServicesTest extends TestCase {
 
     // Create a child to the rootblip
     String rootBlipId = ConversationUtil.getRootBlipId(conversation);
-    OperationRequest operation =
-        new OperationRequest(OperationType.BLIP_CREATE_CHILD.method(), OPERATION_ID, WAVE_ID,
-            WAVELET_ID, rootBlipId, Parameter.of(ParamsProperty.BLIP_DATA, blipData));
+    OperationRequest operation = operationRequest(OperationType.BLIP_CREATE_CHILD, rootBlipId,
+        Parameter.of(ParamsProperty.BLIP_DATA, blipData));
 
     service.execute(operation, context, ALEX);
 
@@ -138,9 +128,8 @@ public class BlipOperationServicesTest extends TestCase {
   }
 
   public void testAppendBlip() throws Exception {
-    OperationRequest operation =
-        new OperationRequest(OperationType.WAVELET_APPEND_BLIP.method(), OPERATION_ID, WAVE_ID,
-            WAVELET_ID, Parameter.of(ParamsProperty.BLIP_DATA, blipData));
+    OperationRequest operation = operationRequest(OperationType.WAVELET_APPEND_BLIP,
+        Parameter.of(ParamsProperty.BLIP_DATA, blipData));
 
     OperationContextImpl context = helper.getContext();
     service.execute(operation, context, ALEX);
@@ -161,7 +150,7 @@ public class BlipOperationServicesTest extends TestCase {
   public void testAppendBadMarkup() throws Exception {
     // Set markup with different end tag.
     String markup = "<custom>"+NEW_BLIP_CONTENT+"</diffcustom>";
-    
+
     OperationContextImpl context = helper.getContext();
     ObservableConversation conversation =
         context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
@@ -169,23 +158,21 @@ public class BlipOperationServicesTest extends TestCase {
     // Append the custom markup to the newly created blip.
     ConversationBlip markupBlip = conversation.getRootThread().appendBlip();
 
-    OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_APPEND_MARKUP.method(), OPERATION_ID,
-            WAVE_ID, WAVELET_ID, markupBlip.getId(), Parameter.of(ParamsProperty.CONTENT, 
-                markup));
+    OperationRequest operation = operationRequest(OperationType.DOCUMENT_APPEND_MARKUP,
+        markupBlip.getId(), Parameter.of(ParamsProperty.CONTENT, markup));
 
     try {
       service.execute(operation, context, ALEX);
-      
+
       fail("Bad Markup should have generated error in service execution.");
     } catch(IllegalArgumentException e) {
       // Good.
     }
   }
-  
+
   public void testAppendCustomMarkup() throws Exception {
     String markup = "<custom>this is custom markup</custom>";
-    
+
     OperationContextImpl context = helper.getContext();
     ObservableConversation conversation =
         context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
@@ -193,10 +180,8 @@ public class BlipOperationServicesTest extends TestCase {
     // Append the custom markup to the newly created blip.
     ConversationBlip markupBlip = conversation.getRootThread().appendBlip();
 
-    OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_APPEND_MARKUP.method(), OPERATION_ID,
-            WAVE_ID, WAVELET_ID, markupBlip.getId(), Parameter.of(ParamsProperty.CONTENT, 
-                markup));
+    OperationRequest operation = operationRequest(OperationType.DOCUMENT_APPEND_MARKUP,
+        markupBlip.getId(), Parameter.of(ParamsProperty.CONTENT, markup));
 
     service.execute(operation, context, ALEX);
 
@@ -205,10 +190,10 @@ public class BlipOperationServicesTest extends TestCase {
 
     // The xml in new blip should match custom markup.
     String actualContent = markupBlip.getContent().toXmlString();
-    assertTrue("Expected the new blip to contain the custom markup as specified in the " + 
+    assertTrue("Expected the new blip to contain the custom markup as specified in the " +
         "operation. actualcontent: " + actualContent, actualContent.contains(markup));
   }
-  
+
   /**
    * Validates the behavior when a caller invokes the DOCUMENT_APPEND_MARKUP
    * without actually passing in xml markup (so just the text).  The behavior
@@ -220,7 +205,7 @@ public class BlipOperationServicesTest extends TestCase {
   public void testAppendLineMarkup() throws Exception {
     // Just insert text. should create <line></line>Text.
     String markup = NEW_BLIP_CONTENT;
-    
+
     OperationContextImpl context = helper.getContext();
     ObservableConversation conversation =
         context.openConversation(WAVE_ID, WAVELET_ID, ALEX).getRoot();
@@ -228,23 +213,21 @@ public class BlipOperationServicesTest extends TestCase {
     // Append the text markup to the newly created blip.
     DocInitialization blipInitContent = new DocInitializationBuilder().build();
     ConversationBlip markupBlip = conversation.getRootThread().appendBlip(blipInitContent);
-    
-    OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_APPEND_MARKUP.method(), OPERATION_ID,
-            WAVE_ID, WAVELET_ID, markupBlip.getId(), Parameter.of(ParamsProperty.CONTENT, 
-                markup));
+
+    OperationRequest operation = operationRequest(OperationType.DOCUMENT_APPEND_MARKUP,
+        markupBlip.getId(), Parameter.of(ParamsProperty.CONTENT, markup));
 
     service.execute(operation, context, ALEX);
 
     JsonRpcResponse response = context.getResponse(OPERATION_ID);
     assertFalse("LineMarkup generated error in service execution.", response.isError());
-    
+
     // The output should now include the default <line/> element.
     String lineContent = markupBlip.getContent().toXmlString();
-    assertTrue("Expected the blip to append the default wave <line/> element. " + 
+    assertTrue("Expected the blip to append the default wave <line/> element. " +
         "actual content: " + lineContent, lineContent.contains("<line/>"+markup));
-  }  
-  
+  }
+
   public void testAppendInlineBlip() throws Exception {
     OperationContextImpl context = helper.getContext();
     ObservableConversation conversation =
@@ -252,9 +235,8 @@ public class BlipOperationServicesTest extends TestCase {
 
     // Append the inline blip to the root blip
     String rootBlipId = ConversationUtil.getRootBlipId(conversation);
-    OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_APPEND_INLINE_BLIP.method(), OPERATION_ID,
-            WAVE_ID, WAVELET_ID, rootBlipId, Parameter.of(ParamsProperty.BLIP_DATA, blipData));
+    OperationRequest operation = operationRequest(OperationType.DOCUMENT_APPEND_INLINE_BLIP,
+        rootBlipId, Parameter.of(ParamsProperty.BLIP_DATA, blipData));
 
     service.execute(operation, context, ALEX);
 
@@ -289,10 +271,9 @@ public class BlipOperationServicesTest extends TestCase {
 
     // Append the inline blip to the root blip
     String rootBlipId = ConversationUtil.getRootBlipId(conversation);
-    OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_INSERT_INLINE_BLIP.method(), OPERATION_ID,
-            WAVE_ID, WAVELET_ID, rootBlipId, Parameter.of(ParamsProperty.BLIP_DATA, blipData),
-            Parameter.of(ParamsProperty.INDEX, insertAtApiLocation));
+    OperationRequest operation = operationRequest(OperationType.DOCUMENT_INSERT_INLINE_BLIP,
+        rootBlipId, Parameter.of(ParamsProperty.BLIP_DATA, blipData),
+        Parameter.of(ParamsProperty.INDEX, insertAtApiLocation));
 
     service.execute(operation, context, ALEX);
 
@@ -326,11 +307,10 @@ public class BlipOperationServicesTest extends TestCase {
     String rootBlipId = ConversationUtil.getRootBlipId(conversation);
     Element inlineBlipElement = new Element(ElementType.INLINE_BLIP);
     inlineBlipElement.setProperty("id", firstInlineBlip.getId());
-    OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_INSERT_INLINE_BLIP_AFTER_ELEMENT.method(),
-            OPERATION_ID, WAVE_ID, WAVELET_ID, rootBlipId,
-            Parameter.of(ParamsProperty.BLIP_DATA, blipData),
-            Parameter.of(ParamsProperty.ELEMENT, inlineBlipElement));
+    OperationRequest operation = operationRequest(
+        OperationType.DOCUMENT_INSERT_INLINE_BLIP_AFTER_ELEMENT, rootBlipId,
+        Parameter.of(ParamsProperty.BLIP_DATA, blipData),
+        Parameter.of(ParamsProperty.ELEMENT, inlineBlipElement));
 
     service.execute(operation, context, ALEX);
 
@@ -355,8 +335,7 @@ public class BlipOperationServicesTest extends TestCase {
 
     // Delete the root blip
     String rootBlipId = ConversationUtil.getRootBlipId(conversation);
-    OperationRequest operation = new OperationRequest(
-        OperationType.BLIP_DELETE.method(), OPERATION_ID, WAVE_ID, WAVELET_ID, rootBlipId);
+    OperationRequest operation = operationRequest(OperationType.BLIP_DELETE, rootBlipId);
 
     service.execute(operation, context, ALEX);
 

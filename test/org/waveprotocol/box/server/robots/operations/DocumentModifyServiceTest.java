@@ -19,25 +19,22 @@ package org.waveprotocol.box.server.robots.operations;
 
 import com.google.wave.api.Element;
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
-import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.OperationType;
 import com.google.wave.api.Range;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
+import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.data.ApiView;
 import com.google.wave.api.impl.DocumentModifyAction;
 import com.google.wave.api.impl.DocumentModifyAction.BundledAnnotation;
 import com.google.wave.api.impl.DocumentModifyAction.ModifyHow;
 
-import junit.framework.TestCase;
-
+import org.waveprotocol.box.server.robots.RobotsTestBase;
 import org.waveprotocol.box.server.robots.testing.OperationServiceHelper;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
-import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collections;
 import java.util.List;
@@ -47,7 +44,7 @@ import java.util.List;
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
-public class DocumentModifyServiceTest extends TestCase {
+public class DocumentModifyServiceTest extends RobotsTestBase {
 
   private static final String NO_ANNOTATION_KEY = null;
   private static final List<String> NO_VALUES = Collections.<String> emptyList();
@@ -58,11 +55,6 @@ public class DocumentModifyServiceTest extends TestCase {
   private static final String INITIAL_CONTENT = "Hello world!";
   private static final int CONTENT_START_TEXT = 1;
   private static final int CONTENT_START_XML = 3;
-  private static final String OPERATION_ID = "op1";
-  private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
-  private static final String WAVE_ID = "example.com!waveid";
-  private static final String WAVELET_ID = "example.com!conv+root";
-  private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
 
   private DocumentModifyService service;
   private OperationServiceHelper helper;
@@ -81,8 +73,7 @@ public class DocumentModifyServiceTest extends TestCase {
 
   public void testFailOnMultipleWhereParams() throws Exception {
     OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_MODIFY.method(), OPERATION_ID, WAVE_ID,
-            WAVELET_ID, rootBlipId,
+        operationRequest(OperationType.DOCUMENT_MODIFY, rootBlipId,
             Parameter.of(ParamsProperty.MODIFY_ACTION, new DocumentModifyAction()),
             Parameter.of(ParamsProperty.RANGE, new Range(0, 1)),
             Parameter.of(ParamsProperty.INDEX, 0));
@@ -97,8 +88,7 @@ public class DocumentModifyServiceTest extends TestCase {
 
   public void testAnnotate() throws Exception {
     OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_MODIFY.method(), OPERATION_ID, WAVE_ID,
-            WAVELET_ID, rootBlipId,
+        operationRequest(OperationType.DOCUMENT_MODIFY, rootBlipId,
             Parameter.of(ParamsProperty.MODIFY_ACTION, new DocumentModifyAction(ModifyHow.ANNOTATE,
                 Collections.singletonList(ANNOTATION_VALUE), ANNOTATION_KEY, NO_ELEMENTS,
                 NO_BUNDLED_ANNOTATIONS, false)),
@@ -120,8 +110,7 @@ public class DocumentModifyServiceTest extends TestCase {
     assertEquals("Expected the text to be annotated", ANNOTATION_VALUE, annotation);
 
     OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_MODIFY.method(), OPERATION_ID, WAVE_ID,
-            WAVELET_ID, rootBlipId,
+      operationRequest(OperationType.DOCUMENT_MODIFY, rootBlipId,
             Parameter.of(ParamsProperty.MODIFY_ACTION,
                 new DocumentModifyAction(ModifyHow.CLEAR_ANNOTATION, NO_VALUES, ANNOTATION_KEY,
                     NO_ELEMENTS, NO_BUNDLED_ANNOTATIONS, false)),
@@ -135,8 +124,7 @@ public class DocumentModifyServiceTest extends TestCase {
 
   public void testDelete() throws Exception {
     OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_MODIFY.method(), OPERATION_ID, WAVE_ID,
-            WAVELET_ID, rootBlipId,
+      operationRequest(OperationType.DOCUMENT_MODIFY, rootBlipId,
             Parameter.of(ParamsProperty.MODIFY_ACTION,
                 new DocumentModifyAction(ModifyHow.DELETE, NO_VALUES, NO_ANNOTATION_KEY,
                     NO_ELEMENTS, NO_BUNDLED_ANNOTATIONS, false)),
@@ -154,8 +142,7 @@ public class DocumentModifyServiceTest extends TestCase {
 
     // Insert a new piece of annotated text before the current text.
     OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_MODIFY.method(), OPERATION_ID, WAVE_ID,
-            WAVELET_ID, rootBlipId,
+        operationRequest(OperationType.DOCUMENT_MODIFY, rootBlipId,
             Parameter.of(ParamsProperty.MODIFY_ACTION,
                 new DocumentModifyAction(ModifyHow.INSERT, Collections.singletonList(toInsert),
                     NO_ANNOTATION_KEY, NO_ELEMENTS,
@@ -176,8 +163,7 @@ public class DocumentModifyServiceTest extends TestCase {
   public void testInsertAfter() throws Exception {
     String toInsert = "insertedText";
     OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_MODIFY.method(), OPERATION_ID, WAVE_ID,
-            WAVELET_ID, rootBlipId,
+        operationRequest(OperationType.DOCUMENT_MODIFY, rootBlipId,
             Parameter.of(ParamsProperty.MODIFY_ACTION,
                 new DocumentModifyAction(ModifyHow.INSERT_AFTER,
                     Collections.singletonList(toInsert), NO_ANNOTATION_KEY, NO_ELEMENTS,
@@ -195,8 +181,7 @@ public class DocumentModifyServiceTest extends TestCase {
   public void testReplace() throws Exception {
     String replacement = "replacedText";
     OperationRequest operation =
-        new OperationRequest(OperationType.DOCUMENT_MODIFY.method(), OPERATION_ID, WAVE_ID,
-            WAVELET_ID, rootBlipId,
+        operationRequest(OperationType.DOCUMENT_MODIFY, rootBlipId,
             Parameter.of(ParamsProperty.MODIFY_ACTION,
                 new DocumentModifyAction(ModifyHow.REPLACE, Collections.singletonList(replacement),
                     NO_ANNOTATION_KEY, NO_ELEMENTS, NO_BUNDLED_ANNOTATIONS, false)),

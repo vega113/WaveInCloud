@@ -49,6 +49,8 @@ import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
@@ -71,8 +73,8 @@ public class RobotOperationApplicatorTest extends TestCase {
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
   private static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionZeroFactoryImpl(URI_CODEC);
-  private static final String WAVE_ID = "example.com!waveid";
-  private static final String WAVELET_ID = "example!conv+root";
+  private static final WaveId WAVE_ID = WaveId.of("example.com", "waveid");
+  private static final WaveletId WAVELET_ID = WaveletId.of("example", "conv+root");
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
   private static final ParticipantId ROBOT_PARTICIPANT =

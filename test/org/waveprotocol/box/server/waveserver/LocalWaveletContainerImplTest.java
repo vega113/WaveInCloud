@@ -35,10 +35,8 @@ import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorit
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation.MutateDocument;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
-import org.waveprotocol.wave.model.wave.ParticipantId;
 
 
 /**
@@ -52,7 +50,7 @@ public class LocalWaveletContainerImplTest extends TestCase {
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
 
-  private static final WaveletName WAVELET_NAME = WaveletName.of("a!a", "b!b");
+  private static final WaveletName WAVELET_NAME = WaveletName.of("a", "a", "b", "b");
   private static final ProtocolSignature SIGNATURE = ProtocolSignature.newBuilder()
       .setSignatureAlgorithm(SignatureAlgorithm.SHA1_RSA)
       .setSignatureBytes(ByteString.EMPTY)

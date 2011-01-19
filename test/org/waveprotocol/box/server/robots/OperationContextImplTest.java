@@ -40,6 +40,8 @@ import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
@@ -61,8 +63,8 @@ public class OperationContextImplTest extends TestCase {
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
   private static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionZeroFactoryImpl(URI_CODEC);
-  private static final String WAVE_ID = "example.com!waveid";
-  private static final String WAVELET_ID = "example.com!conv+root";
+  private static final WaveId WAVE_ID = WaveId.of("example.com", "waveid");
+  private static final WaveletId WAVELET_ID = WaveletId.of("example.com", "conv+root");
   private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
   private static final String ERROR_MESSAGE = "ERROR_MESSAGE";
   private static final String USERNAME = "test@example.com";
@@ -158,8 +160,8 @@ public class OperationContextImplTest extends TestCase {
 
   public void testPutTemporaryWavelet() throws Exception {
     OpBasedWavelet opBasedWavelet = wavelet.getOpBasedWavelet(PARTICIPANT);
-    String tempWaveId = "example.com!" + OperationContextImpl.TEMP_ID_MARKER + "random";
-    String tempWaveletId = "example.com!conv+root";
+    WaveId tempWaveId = WaveId.of("example.com", OperationContextImpl.TEMP_ID_MARKER + "random");
+    WaveletId tempWaveletId = WaveletId.of("example.com", "conv+root");
     operationContext.putWavelet(tempWaveId, tempWaveletId, wavelet);
     assertEquals(
         opBasedWavelet, operationContext.openWavelet(tempWaveId, tempWaveletId, PARTICIPANT));
@@ -177,7 +179,7 @@ public class OperationContextImplTest extends TestCase {
 
   public void testOpenNonExistingWaveletThrowsInvalidRequestException() throws Exception {
     try {
-      operationContext.openWavelet(WAVE_ID, WAVELET_ID + "nonexisting", PARTICIPANT);
+      operationContext.openWavelet(WAVE_ID, WaveletId.of("example.com", "unreal"), PARTICIPANT);
       fail("Expected InvalidRequestException");
     } catch (InvalidRequestException e) {
       // expected

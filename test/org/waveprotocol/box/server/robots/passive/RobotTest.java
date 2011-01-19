@@ -75,9 +75,8 @@ public class RobotTest extends TestCase {
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
-  private static final String WAVE_ID = "example.com!waveid";
-  private static final String WAVELET_ID = "example!conv+root";
-  private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
+  private static final WaveletName WAVELET_NAME = WaveletName.of(
+      "example.com", "waveid", "example.com", "waveletid");
   private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
   private static final RobotName ROBOT_NAME = RobotName.fromAddress("robot@example.com");
   private static final ParticipantId ROBOT = ParticipantId.ofUnsafe(ROBOT_NAME.toEmailAddress());

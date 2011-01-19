@@ -18,33 +18,23 @@
 package org.waveprotocol.box.server.robots.operations;
 
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
-import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.OperationType;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
+import com.google.wave.api.OperationRequest.Parameter;
 
-import junit.framework.TestCase;
-
+import org.waveprotocol.box.server.robots.RobotsTestBase;
 import org.waveprotocol.box.server.robots.OperationContextImpl;
 import org.waveprotocol.box.server.robots.testing.OperationServiceHelper;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
-import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
  * Unit tests for {@link FetchWaveService}.
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
-public class FetchWaveServiceTest extends TestCase {
-
-  private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
-  private static final String WAVE_ID = "example.com!waveid";
-  private static final String WAVELET_ID = "example.com!conv+root";
-  private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
-  private static final String OPERATION_ID = "op1";
-  private static final String FETCH_OP_NAME = OperationType.ROBOT_FETCH_WAVE.method();
+public class FetchWaveServiceTest extends RobotsTestBase {
 
   private FetchWaveService service;
   private OperationServiceHelper helper;
@@ -58,7 +48,7 @@ public class FetchWaveServiceTest extends TestCase {
   public void testFetchWave() throws Exception {
     String message = "A message";
     OperationRequest operation =
-        new OperationRequest(FETCH_OP_NAME, OPERATION_ID, WAVE_ID, WAVELET_ID,
+        operationRequest(OperationType.ROBOT_FETCH_WAVE,
             Parameter.of(ParamsProperty.MESSAGE, message));
     OperationContextImpl context = helper.getContext();
 
@@ -81,7 +71,8 @@ public class FetchWaveServiceTest extends TestCase {
 
   public void testFetchWaveWithMissingParamThrowsInvalidRequestException() throws Exception {
     // No wave id or wavelet id set.
-    OperationRequest operation = new OperationRequest(FETCH_OP_NAME, OPERATION_ID);
+    OperationRequest operation = new OperationRequest(OperationType.ROBOT_FETCH_WAVE.method(),
+        OPERATION_ID);
     OperationContextImpl context = helper.getContext();
 
     try {

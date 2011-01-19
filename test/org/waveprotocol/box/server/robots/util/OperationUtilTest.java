@@ -24,20 +24,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
-import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.OperationType;
 import com.google.wave.api.ProtocolVersion;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
+import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.data.converter.EventDataConverter;
-
-import junit.framework.TestCase;
 
 import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.waveprotocol.box.server.robots.OperationContextImpl;
 import org.waveprotocol.box.server.robots.OperationResults;
 import org.waveprotocol.box.server.robots.OperationServiceRegistry;
 import org.waveprotocol.box.server.robots.RobotWaveletData;
+import org.waveprotocol.box.server.robots.RobotsTestBase;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
@@ -47,7 +46,6 @@ import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuilder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
@@ -61,16 +59,12 @@ import java.util.Collections;
  *
  * @author ljvderijk@google.com (Lennard de Rijk)
  */
-public class OperationUtilTest extends TestCase {
+public class OperationUtilTest extends RobotsTestBase {
 
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
   private static final HashedVersionFactory HASH_FACTORY =
       new HashedVersionZeroFactoryImpl(URI_CODEC);
-  private static final String WAVELET_ID = "example.com!conv+root";
-  private static final String WAVE_ID = "example.com!waveid";
-  private static final WaveletName WAVELET_NAME = WaveletName.of(WAVE_ID, WAVELET_ID);
-  private static final ParticipantId ALEX = ParticipantId.ofUnsafe("alex@example.com");
   private static final ParticipantId BOB = ParticipantId.ofUnsafe("bob@example.com");
 
   private OperationRequest operation;
@@ -86,13 +80,13 @@ public class OperationUtilTest extends TestCase {
     ConversationUtil conversationUtil = mock(ConversationUtil.class);
     converter = mock(EventDataConverter.class);
 
-    operation = new OperationRequest("wavelet.fetch", "op1", WAVE_ID, WAVELET_ID);
+    operation = new OperationRequest("wavelet.fetch", "op1", s(WAVE_ID), s(WAVELET_ID));
     context = new OperationContextImpl(waveletProvider, converter, conversationUtil);
   }
 
   public void testGetRequiredParameter() throws Exception {
     String waveId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVE_ID);
-    assertEquals(WAVE_ID, waveId);
+    assertEquals(s(WAVE_ID), waveId);
   }
 
   public void testGetRequiredParameterThrowsInvalidRequestException() throws Exception {
@@ -106,7 +100,7 @@ public class OperationUtilTest extends TestCase {
 
   public void testGetOptionalParameter() throws Exception {
     String waveId = OperationUtil.getOptionalParameter(operation, ParamsProperty.WAVE_ID);
-    assertEquals(WAVE_ID, waveId);
+    assertEquals(s(WAVE_ID), waveId);
 
     assertNull("Non existing properties should return null when optional",
         OperationUtil.getOptionalParameter(operation, ParamsProperty.ANNOTATION));
