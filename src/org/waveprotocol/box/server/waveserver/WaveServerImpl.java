@@ -27,6 +27,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.persistence.PersistenceException;
@@ -74,6 +75,7 @@ public class WaveServerImpl implements WaveletProvider,
   private final CertificateManager certificateManager;
   private final WaveletFederationProvider federationRemote;
   private final WaveMap waveMap;
+  private boolean initialized = false;
 
   //
   // WaveletFederationListener.Factory implementation.
@@ -276,8 +278,16 @@ public class WaveServerImpl implements WaveletProvider,
   //
 
   @Override
+  public void initialize() throws WaveServerException {
+    Preconditions.checkState(!initialized, "Wave server already initialized");
+    waveMap.loadAllWavelets();
+    initialized = true;
+  }
+
+  @Override
   public Collection<TransformedWaveletDelta> getHistory(WaveletName waveletName,
       HashedVersion startVersion, HashedVersion endVersion) throws WaveServerException {
+    Preconditions.checkState(initialized, "Wave server not yet initialized");
     WaveletContainer wavelet = getWavelet(waveletName);
     if (wavelet == null) {
       throw new AccessControlException(
@@ -288,12 +298,21 @@ public class WaveServerImpl implements WaveletProvider,
 
   @Override
   public
+  ExceptionalIterator<WaveId, WaveServerException> getWaveIds() {
+    Preconditions.checkState(initialized, "Wave server not yet initialized");
+    return waveMap.getWaveIds();
+  }
+
+  @Override
+  public
   ImmutableSet<WaveletId> getWaveletIds(WaveId waveId) throws WaveServerException {
+    Preconditions.checkState(initialized, "Wave server not yet initialized");
     return waveMap.lookupWavelets(waveId);
   }
 
   @Override
   public CommittedWaveletSnapshot getSnapshot(WaveletName waveletName) throws WaveServerException {
+    Preconditions.checkState(initialized, "Wave server not yet initialized");
     WaveletContainer wavelet = getWavelet(waveletName);
     if (wavelet == null) {
       LOG.info("client requested snapshot for non-existent wavelet: " + waveletName);
@@ -306,6 +325,7 @@ public class WaveServerImpl implements WaveletProvider,
   @Override
   public void submitRequest(WaveletName waveletName, ProtocolWaveletDelta delta,
       final SubmitRequestListener listener) {
+    Preconditions.checkState(initialized, "Wave server not yet initialized");
     if (delta.getOperationCount() == 0) {
       listener.onFailure("Empty delta at version " + delta.getHashedVersion().getVersion());
       return;
@@ -334,13 +354,10 @@ public class WaveServerImpl implements WaveletProvider,
   @Override
   public boolean checkAccessPermission(WaveletName waveletName, ParticipantId participantId)
       throws WaveServerException {
+    Preconditions.checkState(initialized, "Wave server not yet initialized");
     WaveletContainer wavelet = getWavelet(waveletName);
     return wavelet != null && wavelet.checkAccessPermission(participantId);
   }
-
-  //
-  // Constructor and privates.
-  //
 
   /**
    * Constructor.

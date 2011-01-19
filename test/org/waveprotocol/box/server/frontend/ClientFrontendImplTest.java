@@ -39,6 +39,7 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.waveprotocol.box.common.DeltaSequence;
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletVersion;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
@@ -71,6 +72,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
+import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.Arrays;
@@ -124,6 +126,16 @@ public class ClientFrontendImplTest extends TestCase {
     this.clientFrontend = new ClientFrontendImpl(HASH_FACTORY, waveletProvider);
   }
 
+  public void testCannotOpenWavesWhenNotLoggedIn() throws Exception {
+    OpenListener listener = mock(OpenListener.class);
+    clientFrontend.openRequest(null, WAVE_ID, IdFilters.ALL_IDS, NO_KNOWN_WAVELETS, listener);
+    verify(listener).onFailure("Not logged in");
+
+    CommittedWaveletSnapshot snapshot = provideWavelet(WN1);
+    clientFrontend.waveletUpdate(snapshot.snapshot, DELTAS);
+    Mockito.verifyNoMoreInteractions(listener);
+  }
+
   public void testOpenEmptyWaveReceivesChannelIdAndMarker() {
     OpenListener listener = openWave(IdFilters.ALL_IDS);
     verifyChannelId(listener);
@@ -140,7 +152,7 @@ public class ClientFrontendImplTest extends TestCase {
     assertFalse(ch1.equals(ch2));
   }
 
-  public void testOpenWaveRecievesSnapshotsThenMarker() throws WaveServerException {
+  public void testOpenWaveRecievesSnapshotsThenMarker() throws Exception {
     CommittedWaveletSnapshot snapshot1 = provideWavelet(WN1);
     CommittedWaveletSnapshot snapshot2 = provideWavelet(WN2);
     when(waveletProvider.getWaveletIds(WAVE_ID)).thenReturn(ImmutableSet.of(W1, W2));
@@ -155,14 +167,15 @@ public class ClientFrontendImplTest extends TestCase {
 
   /**
    * Tests that a snapshot not matching the subscription filter is not received.
+   * @throws WaveServerException
    */
   @SuppressWarnings("unchecked") // Mock container
-  public void testUnsubscribedSnapshotNotRecieved() {
+  public void testUnsubscribedSnapshotNotRecieved() throws Exception {
     OpenListener listener = openWave(IdFilter.ofPrefixes("non-existing"));
     verifyChannelId(listener);
     verifyMarker(listener, WAVE_ID);
 
-    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WN1, USER, V0, 0L);
+    ReadableWaveletData wavelet = provideWavelet(WN1).snapshot;
     clientFrontend.waveletUpdate(wavelet, DELTAS);
     verify(listener, Mockito.never()).onUpdate(eq(WN1),
         any(CommittedWaveletSnapshot.class), Matchers.anyList(),
@@ -172,7 +185,7 @@ public class ClientFrontendImplTest extends TestCase {
   /**
    * Tests that we get deltas.
    */
-  public void testReceivedDeltasSentToClient() throws WaveServerException {
+  public void testReceivedDeltasSentToClient() throws Exception {
     CommittedWaveletSnapshot snapshot = provideWavelet(WN1);
     when(waveletProvider.getWaveletIds(WAVE_ID)).thenReturn(ImmutableSet.of(W1));
 
@@ -181,9 +194,11 @@ public class ClientFrontendImplTest extends TestCase {
         eq(V0), isNullMarker(), any(String.class));
     verifyMarker(listener, WAVE_ID);
 
-    // Never mind that the deltas didn't actually apply to that snapshot.
-    clientFrontend.waveletUpdate(snapshot.snapshot, DELTAS);
-    verify(listener).onUpdate(eq(WN1), isNullSnapshot(), eq(DELTAS),
+    TransformedWaveletDelta delta = TransformedWaveletDelta.cloneOperations(USER, V2, 1234567890L,
+        Arrays.asList(UTIL.noOp()));
+    DeltaSequence deltas = DeltaSequence.of(delta);
+    clientFrontend.waveletUpdate(snapshot.snapshot, deltas);
+    verify(listener).onUpdate(eq(WN1), isNullSnapshot(), eq(deltas),
         isNullVersion(), isNullMarker(), anyString());
   }
 
@@ -201,7 +216,8 @@ public class ClientFrontendImplTest extends TestCase {
     verifyZeroInteractions(submitListener);
   }
 
-  public void testCannotSubmitToIndexWave() {
+  public void testCannotSubmitToIndexWave() throws WaveServerException {
+    provideWaves(Collections.<WaveId> emptySet());
     OpenListener openListener = openWave(INDEX_WAVE_ID, IdFilters.ALL_IDS);
     String channelId = verifyChannelId(openListener);
 
@@ -223,14 +239,17 @@ public class ClientFrontendImplTest extends TestCase {
     verify(submitListener, never()).onSuccess(anyInt(), (HashedVersion) any(), anyLong());
   }
 
-  public void testCannotOpenWavesWhenNotLoggedIn() throws WaveServerException {
-    OpenListener listener = mock(OpenListener.class);
-    clientFrontend.openRequest(null, WAVE_ID, IdFilters.ALL_IDS, NO_KNOWN_WAVELETS, listener);
-    verify(listener).onFailure("Not logged in");
+  public void testIndexContainsWaveFromStore() throws Exception {
+    provideWaves(Collections.singleton(WAVE_ID));
+    CommittedWaveletSnapshot snapshot1 = provideWavelet(WN1);
+    clientFrontend.initialiseAllWaves();
 
-    CommittedWaveletSnapshot snapshot = provideWavelet(WN1);
-    clientFrontend.waveletUpdate(snapshot.snapshot, DELTAS);
-    Mockito.verifyNoMoreInteractions(listener);
+    OpenListener listener = openWave(INDEX_WAVE_ID, IdFilters.ALL_IDS);
+    verifyMarker(listener, INDEX_WAVE_ID);
+
+    WaveletName indexWavelet1 = IndexWave.indexWaveletNameFor(WAVE_ID);
+    verify(listener).onUpdate(eq(indexWavelet1), isNullSnapshot(),
+        isDeltasStartingAt(0), isNullVersion(), isNullMarker(), any(String.class));
   }
 
   /**
@@ -238,7 +257,10 @@ public class ClientFrontendImplTest extends TestCase {
    * original wave if they contain no interesting operations (add/remove
    * participant or text).
    */
-  public void testUninterestingDeltasDontUpdateIndex() {
+  public void testUninterestingDeltasDontUpdateIndex() throws WaveServerException {
+    provideWaves(Collections.<WaveId> emptySet());
+    clientFrontend.initialiseAllWaves();
+
     OpenListener listener = openWave(INDEX_WAVE_ID, IdFilters.ALL_IDS);
     verifyChannelId(listener);
     verifyMarker(listener, INDEX_WAVE_ID);
@@ -263,69 +285,29 @@ public class ClientFrontendImplTest extends TestCase {
    * the changes to the digest text and the participants, ignoring any
    * text from the first \n onwards.
    */
-  public void testInterestingDeltasUpdateIndex() throws OperationException {
+  public void testInterestingDeltasUpdateIndex() throws OperationException, WaveServerException {
+    provideWaves(Collections.singleton(WAVE_ID));
+    CommittedWaveletSnapshot snapshot1 = provideWavelet(WN1);
+    clientFrontend.initialiseAllWaves();
+
     OpenListener listener = openWave(INDEX_WAVE_ID, IdFilters.ALL_IDS);
-    String channelId = verifyChannelId(listener);
     verifyMarker(listener, INDEX_WAVE_ID);
 
-    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WN1, USER, V0, 0L);
+    WaveletData wavelet = ((WaveletData) snapshot1.snapshot);
     BlipData blip = WaveletDataUtil.addEmptyBlip(wavelet, "default", USER, 0L);
     blip.getContent().consume(makeAppend(0, "Hello, world\nignored text"));
 
-    HashedVersion v2 = HashedVersion.unsigned(2L);
-    waveletUpdate(v2, 0L, wavelet, UTIL.addParticipant(USER), UTIL.noOp());
-    verify(listener).onUpdate(eq(INDEX_WAVELET_NAME), isNullSnapshot(), isDeltasStartingAt(0),
-        isNullVersion(), isNullMarker(), eq(channelId));
+    waveletUpdate(V2, 0L, wavelet, UTIL.addParticipant(USER));
 
     WaveletOperation expectedDigestOp =
         makeAppendOp(IndexWave.DIGEST_DOCUMENT_ID, 0, "Hello, world", new WaveletOperationContext(
-            IndexWave.DIGEST_AUTHOR, 0L, 1, v2));
-
+            IndexWave.DIGEST_AUTHOR, 0L, 1, V2));
     HashedVersion v1 = HashedVersion.unsigned(1);
     DeltaSequence expectedDeltas = DeltaSequence.of(
         makeDelta(USER, v1, 0L, UTIL.addParticipant(USER)),
-        makeDelta(IndexWave.DIGEST_AUTHOR, v2, 0L, expectedDigestOp));
+        makeDelta(IndexWave.DIGEST_AUTHOR, V2, 0L, expectedDigestOp));
     verify(listener).onUpdate(eq(INDEX_WAVELET_NAME), isNullSnapshot(), eq(expectedDeltas),
-        isNullVersion(), isNullMarker(), eq(channelId));
-  }
-
-  /**
-   * Tests that when a subscription is added later than version 0, that listener
-   * gets a snapshot and both existing listeners and the new listener get
-   * subsequent updates.
-   */
-  public void testOpenAfterVersionZero() throws Exception {
-    OpenListener oldListener = openWave(IdFilters.ALL_IDS);
-    String oldChannelId = verifyChannelId(oldListener);
-    verifyMarker(oldListener, WAVE_ID);
-
-    WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(WN1, USER, V0, 0L);
-    waveletUpdate(V2, 0L, wavelet, UTIL.addParticipant(USER),
-        UTIL.noOpDocOp("docId"));
-    verify(oldListener).onUpdate(eq(WN1), isNullSnapshot(), isDeltasStartingAt(0),
-        isNullVersion(), isNullMarker(), eq(oldChannelId));
-
-    CommittedWaveletSnapshot snapshot = new CommittedWaveletSnapshot(wavelet, V0);
-    when(waveletProvider.getSnapshot(eq(WN1))).thenReturn(snapshot);
-
-    OpenListener newListener = mock(OpenListener.class);
-    clientFrontend.openRequest(USER, WAVE_ID, IdFilters.ALL_IDS, NO_KNOWN_WAVELETS, newListener);
-    verify(newListener).onUpdate(eq(WN1), eq(snapshot), eq(DeltaSequence.empty()),
-        any(HashedVersion.class), isNullMarker(), any(String.class));
-
-    verifyMarker(newListener, WAVE_ID);
-
-    HashedVersion v5 = HashedVersion.unsigned(5);
-    waveletUpdate(v5, 0L, wavelet,
-        UTIL.addParticipant(new ParticipantId("another-user")),
-        UTIL.noOp(),
-        UTIL.removeParticipant(USER));
-
-    // Subsequent deltas go to both listeners
-    verify(newListener).onUpdate(eq(WN1), isNullSnapshot(), isDeltasStartingAt(2),
         isNullVersion(), isNullMarker(), any(String.class));
-    verify(oldListener).onUpdate(eq(WN1), isNullSnapshot(), isDeltasStartingAt(2),
-        isNullVersion(), isNullMarker(), eq(oldChannelId));
   }
 
   /**
@@ -348,15 +330,28 @@ public class ClientFrontendImplTest extends TestCase {
   }
 
   /**
+   * Initialises the wavelet provider to provide a collection of waves.
+   */
+  private void provideWaves(Collection<WaveId> waves) throws WaveServerException {
+    when(waveletProvider.getWaveIds()).thenReturn(
+        ExceptionalIterator.FromIterator.<WaveId, WaveServerException> create(
+            waves.iterator()));
+  }
+
+  /**
    * Prepares the wavelet provider to provide a new wavelet.
    *
    * @param name new wavelet name
    * @return the new wavelet snapshot
    */
-  private CommittedWaveletSnapshot provideWavelet(WaveletName name) throws WaveServerException {
+  private CommittedWaveletSnapshot provideWavelet(WaveletName name) throws WaveServerException,
+      OperationException {
     WaveletData wavelet = WaveletDataUtil.createEmptyWavelet(name, USER, V0, 1234567890L);
+    DELTA.get(0).apply(wavelet);
     CommittedWaveletSnapshot snapshot = new CommittedWaveletSnapshot(wavelet, V0);
     when(waveletProvider.getSnapshot(name)).thenReturn(snapshot);
+    when(waveletProvider.getHistory(name, V0, V1)).thenReturn(DELTAS);
+    when(waveletProvider.getWaveletIds(name.waveId)).thenReturn(ImmutableSet.of(name.waveletId));
     return snapshot;
   }
 

@@ -50,6 +50,7 @@ import org.waveprotocol.box.server.rpc.SignOutServlet;
 import org.waveprotocol.box.server.rpc.UserRegistrationServlet;
 import org.waveprotocol.box.server.rpc.WaveClientServlet;
 import org.waveprotocol.box.server.waveserver.WaveBus;
+import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.federation.FederationSettings;
@@ -82,11 +83,13 @@ public class ServerMain {
       LOG.severe("PersistenceException when running server:", e);
     } catch (ConfigurationException e) {
       LOG.severe("ConfigurationException when running server:", e);
+    } catch (WaveServerException e) {
+      LOG.severe("WaveServerException when running server:", e);
     }
   }
 
   public static void run(Module coreSettings) throws PersistenceException,
-      ConfigurationException {
+      ConfigurationException, WaveServerException {
     Injector settingsInjector = Guice.createInjector(coreSettings);
     boolean enableFederation = settingsInjector.getInstance(Key.get(Boolean.class,
         Names.named(CoreSettings.ENABLE_FEDERATION)));
@@ -107,7 +110,7 @@ public class ServerMain {
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
     WaveBus waveBus = injector.getInstance(WaveBus.class);
 
-    initializeStores(injector);
+    initializeServer(injector);
     initializeServlets(injector, server);
     initializeRobots(injector, waveBus);
     initializeFrontend(injector, server, waveBus);
@@ -128,17 +131,22 @@ public class ServerMain {
     return federationModule;
   }
 
-  private static void initializeStores(Injector injector) throws PersistenceException {
+  private static void initializeServer(Injector injector) throws PersistenceException,
+      WaveServerException {
     AccountStore accountStore = injector.getInstance(AccountStore.class);
     accountStore.initializeAccountStore();
     AccountStoreHolder.init(accountStore,
         injector.getInstance(Key.get(String.class, Names.named(CoreSettings.WAVE_SERVER_DOMAIN))));
 
-    // Initialize the SignerInfoStore
+    // Initialize the SignerInfoStore.
     CertPathStore certPathStore = injector.getInstance(CertPathStore.class);
     if (certPathStore instanceof SignerInfoStore) {
       ((SignerInfoStore)certPathStore).initializeSignerInfoStore();
     }
+
+    // Initialize the server.
+    WaveletProvider waveServer = injector.getInstance(WaveletProvider.class);
+    waveServer.initialize();
   }
 
   private static void initializeServlets(Injector injector, ServerRpcProvider server) {
@@ -176,7 +184,7 @@ public class ServerMain {
   }
 
   private static void initializeFrontend(Injector injector, ServerRpcProvider server,
-      WaveBus waveBus) {
+      WaveBus waveBus) throws WaveServerException {
     HashedVersionFactory hashFactory = injector.getInstance(HashedVersionFactory.class);
     WaveletProvider provider = injector.getInstance(WaveletProvider.class);
     ClientFrontend frontend = ClientFrontendImpl.create(hashFactory, provider, waveBus);

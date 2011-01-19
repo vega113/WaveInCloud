@@ -19,8 +19,10 @@ package org.waveprotocol.box.server.rpc;
 
 import com.google.common.collect.ImmutableSet;
 
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.util.TestDataUtil;
+import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -32,6 +34,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Stub of {@link WaveletProvider} for testing.
@@ -41,7 +44,7 @@ import java.util.Collection;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class WaveletProviderStub implements WaveletProvider {
-  private final WaveletData wavelet;
+  private WaveletData wavelet = null;
   private HashedVersion currentVersionOverride;
   private HashedVersion committedVersion;
   private boolean allowsAccess = true;
@@ -49,6 +52,16 @@ public class WaveletProviderStub implements WaveletProvider {
   public WaveletProviderStub() {
     wavelet = TestDataUtil.createSimpleWaveletData();
     setCommittedVersion(HashedVersion.unsigned(0));
+  }
+
+  @Override
+  public void initialize() {
+  }
+
+  @Override
+  public ExceptionalIterator<WaveId, WaveServerException> getWaveIds() {
+    return ExceptionalIterator.FromIterator.create(
+        Collections.singleton(wavelet.getWaveId()).iterator());
   }
 
   @Override

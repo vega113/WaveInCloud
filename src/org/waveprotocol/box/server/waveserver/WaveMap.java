@@ -27,8 +27,8 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -51,7 +51,6 @@ import java.util.concurrent.Executors;
  *
  * @author soren@google.com (Soren Lassen)
  */
-@Singleton
 public class WaveMap implements SearchProvider {
 
   private static final Log LOG = Log.get(WaveMap.class);
@@ -142,7 +141,7 @@ public class WaveMap implements SearchProvider {
       } else {
         T wavelet = waveletsMap.get(waveletId);
         Preconditions.checkNotNull(wavelet, "computingMap returned null");
-        return wavelet.isEmpty() ? null : wavelet;
+        return wavelet;
       }
     }
   }
@@ -166,13 +165,17 @@ public class WaveMap implements SearchProvider {
   }
 
   private final ConcurrentMap<WaveId, Wave> waves;
+  private final WaveletStore<?> store;
 
   @Inject
-  public WaveMap(final DeltaStore waveletStore,
+  public WaveMap(final DeltaAndSnapshotStore waveletStore,
       final WaveletNotificationSubscriber notifiee,
       final LocalWaveletContainer.Factory localFactory,
       final RemoteWaveletContainer.Factory remoteFactory) {
+    // NOTE(anorth): DeltaAndSnapshotStore is more specific than necessary, but
+    // helps Guice out.
     // TODO(soren): inject a proper executor (with a pool of configurable size)
+    this.store = waveletStore;
     final Executor lookupExecutor = Executors.newSingleThreadExecutor();
     waves = new MapMaker().makeComputingMap(
         new Function<WaveId, Wave>() {
@@ -183,6 +186,23 @@ public class WaveMap implements SearchProvider {
             return new Wave(waveId, lookedupWavelets, notifiee, localFactory, remoteFactory);
           }
         });
+  }
+
+  /**
+   * Loads all wavelets from storage.
+   *
+   * @throws WaveletStateException if storage access fails.
+   */
+  public void loadAllWavelets() throws WaveletStateException {
+    try {
+      ExceptionalIterator<WaveId, PersistenceException> itr = store.getWaveIdIterator();
+      while (itr.hasNext()) {
+        WaveId waveId = itr.next();
+        lookupWavelets(waveId);
+      }
+    } catch (PersistenceException e) {
+      throw new WaveletStateException("Failed to scan waves", e);
+    }
   }
 
   @Override
@@ -219,6 +239,11 @@ public class WaveMap implements SearchProvider {
       }
     }
     return results.values();
+  }
+
+  public ExceptionalIterator<WaveId, WaveServerException> getWaveIds() {
+    Iterator<WaveId> inner = waves.keySet().iterator();
+    return ExceptionalIterator.FromIterator.create(inner);
   }
 
   public ImmutableSet<WaveletId> lookupWavelets(WaveId waveId) throws WaveletStateException {

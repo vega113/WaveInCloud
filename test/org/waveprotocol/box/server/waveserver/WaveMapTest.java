@@ -17,14 +17,19 @@
 
 package org.waveprotocol.box.server.waveserver;
 
+import static org.mockito.Mockito.mock;
+
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 
 import junit.framework.TestCase;
 
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -67,7 +72,7 @@ public class WaveMapTest extends TestCase {
   @Mock private WaveletNotificationDispatcher notifiee;
   @Mock private RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
 
-  private DeltaStore waveletStore;
+  private DeltaAndSnapshotStore waveletStore;
   private WaveMap waveMap;
   private HashedVersionZeroFactoryImpl versionZeroFactory;
 
@@ -86,13 +91,46 @@ public class WaveMapTest extends TestCase {
           }
         };
 
-    waveletStore = new MemoryDeltaStore();
+    waveletStore = mock(DeltaAndSnapshotStore.class);// new DeltaStoreBasedSnapshotStore(new MemoryDeltaStore());
     waveMap = new WaveMap(
         waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
 
     IdURIEncoderDecoder uriCodec =
         new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
     versionZeroFactory = new HashedVersionZeroFactoryImpl(uriCodec);
+  }
+
+  public void testWaveMapStartsEmpty() throws WaveServerException {
+    assertFalse(waveMap.getWaveIds().hasNext());
+  }
+
+  public void testWavesStartWithNoWavelets() throws WaveletStateException, PersistenceException {
+    Mockito.when(waveletStore.lookup(WAVE_ID)).thenReturn(ImmutableSet.<WaveletId>of());
+    assertNull(waveMap.getLocalWavelet(WAVELET_NAME));
+    assertNull(waveMap.getRemoteWavelet(WAVELET_NAME));
+  }
+
+  public void testWaveAvailableAfterLoad() throws PersistenceException, WaveServerException {
+    Mockito.when(waveletStore.getWaveIdIterator()).thenReturn(eitr(WAVE_ID));
+    waveMap.loadAllWavelets();
+
+    ExceptionalIterator<WaveId, WaveServerException> waves = waveMap.getWaveIds();
+    assertTrue(waves.hasNext());
+    assertEquals(WAVE_ID, waves.next());
+  }
+
+  public void testWaveletAvailableAfterLoad() throws WaveletStateException, PersistenceException {
+    Mockito.when(waveletStore.getWaveIdIterator()).thenReturn(eitr(WAVE_ID));
+    Mockito.when(waveletStore.lookup(WAVE_ID)).thenReturn(ImmutableSet.<WaveletId>of(WAVELET_ID));
+    waveMap.loadAllWavelets();
+
+    assertNotNull(waveMap.getLocalWavelet(WAVELET_NAME));
+  }
+
+  public void testGetOrCreateCreatesWavelets() throws WaveletStateException, PersistenceException {
+    Mockito.when(waveletStore.lookup(WAVE_ID)).thenReturn(ImmutableSet.<WaveletId>of());
+    LocalWaveletContainer wavelet = waveMap.getOrCreateLocalWavelet(WAVELET_NAME);
+    assertSame(wavelet, waveMap.getLocalWavelet(WAVELET_NAME));
   }
 
   public void testSearchEmptyInboxReturnsNothing() {
@@ -152,6 +190,11 @@ public class WaveMapTest extends TestCase {
       // Each wave should appear exactly once in the results
       assertEquals(1, saw_wave[i]);
     }
+  }
+
+  private ExceptionalIterator<WaveId, PersistenceException> eitr(WaveId... waves) {
+    return ExceptionalIterator.FromIterator.<WaveId, PersistenceException>create(
+        Arrays.asList(waves).iterator());
   }
 
   // *** Helpers

@@ -90,6 +90,7 @@ public class WaveServerModule extends AbstractModule {
     bind(WaveletNotificationSubscriber.class).to(WaveletNotificationDispatcher.class);
     bind(TrustRootsProvider.class).to(DefaultTrustRootsProvider.class).in(Singleton.class);
     bind(CertificateManager.class).to(CertificateManagerImpl.class).in(Singleton.class);
+    bind(DeltaAndSnapshotStore.class).to(DeltaStoreBasedSnapshotStore.class).in(Singleton.class);
     bind(WaveMap.class).in(Singleton.class);
     bind(SearchProvider.class).to(WaveMap.class).in(Singleton.class);
     bind(WaveletProvider.class).to(WaveServerImpl.class).in(Singleton.class);

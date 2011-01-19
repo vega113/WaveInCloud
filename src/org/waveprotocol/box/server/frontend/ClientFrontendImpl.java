@@ -23,7 +23,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Sets;
 
+import org.waveprotocol.box.common.CommonConstants;
 import org.waveprotocol.box.common.DeltaSequence;
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.common.IndexWave;
 import org.waveprotocol.box.common.Snippets;
 import org.waveprotocol.box.common.comms.WaveClientRpc;
@@ -98,12 +100,17 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   private final WaveletProvider waveletProvider;
 
 
+  /**
+   * Creates a client frontend and subscribes it to the wave bus.
+   *
+   * @throws WaveServerException if the server fails during initialisation
+   */
   public static ClientFrontendImpl create(HashedVersionFactory hashedVersionFactory,
-      WaveletProvider waveletProvider, WaveBus wavebus) {
+      WaveletProvider waveletProvider, WaveBus wavebus) throws WaveServerException {
     ClientFrontendImpl impl = new ClientFrontendImpl(hashedVersionFactory, waveletProvider);
 
-    // TODO(anorth): Initialize index here until a separate index system exists.
-
+    // Initialize index here until a separate index system exists.
+    impl.initialiseAllWaves();
     wavebus.subscribe(impl);
     return impl;
   }
@@ -152,8 +159,11 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
       return;
     }
 
+    boolean isIndexWave = IndexWave.isIndexWave(waveId);
     try {
-      initialiseWave(waveId);
+      if (!isIndexWave) {
+        initialiseWave(waveId);
+      }
     } catch (WaveServerException e) {
       LOG.severe("Wave server failed lookup for " + waveId, e);
       openListener.onFailure("Wave server failed to look up wave");
@@ -161,7 +171,6 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
     }
 
     String channelId = generateChannelID();
-    boolean isIndexWave = IndexWave.isIndexWave(waveId);
     UserManager userManager = perUser.get(loggedInUser);
     synchronized (userManager) {
       WaveViewSubscription subscription =
@@ -245,16 +254,41 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   }
 
   /**
+   * Initialises in-memory state for all waves, and the index wave,
+   * by scanning the wavelet provider.
+   *
+   * The index wave is the main driver of this behaviour; when it's factored
+   * out this should not be necessary.
+   */
+  @VisibleForTesting
+  void initialiseAllWaves() throws WaveServerException {
+    ExceptionalIterator<WaveId, WaveServerException> witr = waveletProvider.getWaveIds();
+    Map<WaveletId, PerWavelet> indexWavelets = perWavelet.get(CommonConstants.INDEX_WAVE_ID);
+    while (witr.hasNext()) {
+      WaveId waveId = witr.next();
+      Preconditions.checkState(!IndexWave.isIndexWave(waveId), "Index wave should not persist");
+      initialiseWave(waveId);
+      WaveletName indexWaveletName = IndexWave.indexWaveletNameFor(waveId);
+      // IndexWavelets is a computing map, so get() initialises the entry.
+      // Because the index wavelets are not persistent wavelets there's
+      // no need to initialise participant or digest information.
+      indexWavelets.get(indexWaveletName.waveletId);
+    }
+  }
+
+  /**
    * Initialises front-end information from the wave store, if necessary.
    */
   private void initialiseWave(WaveId waveId) throws WaveServerException {
+    Preconditions.checkArgument(!IndexWave.isIndexWave(waveId),
+        "Late initialisation of index wave");
     if (!perWavelet.containsKey(waveId)) {
-      Map<WaveletId, PerWavelet> wave = perWavelet.get(waveId);
+      Map<WaveletId, PerWavelet> wavelets = perWavelet.get(waveId);
       for (WaveletId waveletId : waveletProvider.getWaveletIds(waveId)) {
         ReadableWaveletData wavelet =
             waveletProvider.getSnapshot(WaveletName.of(waveId, waveletId)).snapshot;
-        // Fetching from the computing map initialises the entry.
-        PerWavelet waveletInfo = wave.get(waveletId);
+        // Wavelets is a computing map, so get() initialises the entry.
+        PerWavelet waveletInfo = wavelets.get(waveletId);
         synchronized (waveletInfo) {
           waveletInfo.currentVersion = wavelet.getHashedVersion();
           waveletInfo.digest = digest(Snippets.renderSnippet(wavelet, 80));

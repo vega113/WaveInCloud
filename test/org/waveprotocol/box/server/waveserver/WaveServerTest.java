@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
@@ -78,7 +79,7 @@ public class WaveServerTest extends TestCase {
   @Mock private RemoteWaveletContainer.Factory remoteWaveletContainerFactory;
 
   private CertificateManager certificateManager;
-  private DeltaStore waveletStore;
+  private DeltaAndSnapshotStore waveletStore;
   private WaveMap waveMap;
   private WaveServerImpl waveServer;
   private HashedVersionZeroFactoryImpl versionZeroFactory;
@@ -104,15 +105,23 @@ public class WaveServerTest extends TestCase {
       }
     };
 
-    waveletStore = new MemoryDeltaStore();
+    waveletStore = new DeltaStoreBasedSnapshotStore(new MemoryDeltaStore());
     waveMap = new WaveMap(
         waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
     waveServer = new WaveServerImpl(
         MoreExecutors.sameThreadExecutor(), certificateManager, federationRemote, waveMap);
+    waveServer.initialize();
 
     IdURIEncoderDecoder uriCodec =
         new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
     versionZeroFactory = new HashedVersionZeroFactoryImpl(uriCodec);
+  }
+
+  public void testWaveIdsList() throws WaveServerException {
+    waveMap.getOrCreateLocalWavelet(WAVELET_NAME);
+    ExceptionalIterator<WaveId, WaveServerException> waves = waveServer.getWaveIds();
+    assertTrue(waves.hasNext());
+    assertEquals(WAVE_ID, waves.next());
   }
 
   public void testWaveletNotification() {
@@ -130,7 +139,7 @@ public class WaveServerTest extends TestCase {
       WaveletOperation... ops) {
     HashedVersion version = versionZeroFactory.createVersionZero(name);
 
-    WaveletDelta delta = new WaveletDelta(user, version, ImmutableList.of(ops));
+    WaveletDelta delta = new WaveletDelta(user, version, ImmutableList.copyOf(ops));
 
     ProtocolWaveletDelta protoDelta = CoreWaveletOperationSerializer.serialize(delta);
 

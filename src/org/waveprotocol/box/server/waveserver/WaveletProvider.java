@@ -19,6 +19,7 @@ package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.collect.ImmutableSet;
 
+import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -35,7 +36,6 @@ import java.util.Collection;
  * wavelets.
  */
 public interface WaveletProvider {
-
   /**
    * Receives the result of a delta submission request.
    */
@@ -55,6 +55,12 @@ public interface WaveletProvider {
      */
     void onFailure(String errorMessage);
   }
+
+  /**
+   * Initializes the provider from storage. No other method is valid until
+   * initialization is complete.
+   */
+  void initialize() throws WaveServerException;
 
   /**
    * Request that a given delta is submitted to the wavelet.
@@ -94,6 +100,16 @@ public interface WaveletProvider {
    */
   boolean checkAccessPermission(WaveletName waveletName, ParticipantId participantId)
       throws WaveServerException;
+
+  /**
+   * Returns an iterator over all waves in the server.
+   *
+   * The iterator may or may not include waves created after the iterator is returned.
+   *
+   * @return an iterator over the ids of all waves
+   * @throws WaveServerException if storage access fails
+   */
+  ExceptionalIterator<WaveId, WaveServerException> getWaveIds() throws WaveServerException;
 
   /**
    * Looks up all wavelets in a wave.
