@@ -426,9 +426,14 @@
     </java>
   </target>
 
-  <target name="run-server" depends="compile" description="Runs Wave in a Box server">
+  <target name="check-server-config" description="Checks server configuration is available">
     <available file="server.config" property="server.config.present"/>
-    <fail message="You need to copy server.config.example to server.config and edit it." unless="server.config.present"/>
+    <fail message="You need to copy server.config.example to server.config and edit it."
+      unless="server.config.present"/>
+  </target>
+
+  <target name="run-server" depends="compile, check-server-config"
+      description="Runs Wave in a Box server">
     <java failonerror="true" fork="true" classname="org.waveprotocol.box.server.ServerMain">
       <classpath>
         <path refid="libpath"/>
@@ -440,7 +445,23 @@
       <jvmarg value="-Dwave.server.config=server.config"/>
     </java>
   </target>
-    
+
+  <target name="debug-server" depends="compile, check-server-config"
+      description="Runs Wave in a Box server with debugging">
+    <java failonerror="true" fork="true" classname="org.waveprotocol.box.server.ServerMain">
+      <classpath>
+        <path refid="libpath"/>
+        <path location="${build.proto.dir}"/>
+        <path location="${build.src.dir}"/>
+      </classpath>
+      <jvmarg value="-Dorg.eclipse.jetty.util.log.DEBUG=true"/>
+      <jvmarg value="-Djava.security.auth.login.config=jaas.config"/>
+      <jvmarg value="-Dwave.server.config=server.config"/>
+      <jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=10898"/>
+    </java>
+  </target>
+
+
   <target name="stage-dep">
     <uptodate targetfile="${dep}/stage" property="skip.stage">
       <srcfiles dir="${lib.runtime}" includes="**/*.jar"/>
