@@ -47,17 +47,15 @@ import org.waveprotocol.wave.model.conversation.ConversationView;
 import org.waveprotocol.wave.model.conversation.WaveBasedConversationView;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 import org.waveprotocol.wave.model.id.IdGenerator;
-import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.schema.SchemaProvider;
 import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 import org.waveprotocol.wave.model.testing.BasicFactories;
-import org.waveprotocol.wave.model.testing.FakeDocument;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
 import org.waveprotocol.wave.model.util.StringMap;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
@@ -286,7 +284,7 @@ public class UndercurrentHarness implements EntryPoint {
       final ParticipantId sampleAuthor = ParticipantId.ofUnsafe("nobody@example.com");
       IdGenerator gen = FakeIdGenerator.create();
       final WaveViewDataImpl waveData = WaveViewDataImpl.create(gen.newWaveId());
-      final FakeDocument.Factory docFactory = BasicFactories.fakeDocumentFactory();
+      final DocumentFactory<?> docFactory = BasicFactories.fakeDocumentFactory();
       final ObservableWaveletData.Factory<?> waveletDataFactory =
           new ObservableWaveletData.Factory<WaveletDataImpl>() {
             private final ObservableWaveletData.Factory<WaveletDataImpl> inner =
@@ -299,20 +297,12 @@ public class UndercurrentHarness implements EntryPoint {
               return wavelet;
             }
           };
-      WaveletFactory<OpBasedWavelet> waveletFactory = new WaveletFactory<OpBasedWavelet>() {
-        final WaveletFactory<OpBasedWavelet> inner = BasicFactories
+      WaveletFactory<OpBasedWavelet> waveletFactory = BasicFactories
             .opBasedWaveletFactoryBuilder()
             .with(waveletDataFactory)
             .with(sampleAuthor)
             .build();
 
-        @Override
-        public OpBasedWavelet create(WaveId waveId, WaveletId waveletId, ParticipantId creator) {
-          OpBasedWavelet wavelet = inner.create(waveId, waveletId, creator);
-          docFactory.registerSinkFactory(wavelet);
-          return wavelet;
-        }
-      };
       WaveViewImpl<?> wave = WaveViewImpl.create(
           waveletFactory, waveData.getWaveId(), gen, sampleAuthor, WaveletConfigurator.ADD_CREATOR);
 

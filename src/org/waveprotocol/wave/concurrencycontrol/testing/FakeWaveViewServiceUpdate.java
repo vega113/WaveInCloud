@@ -27,8 +27,8 @@ import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
-import org.waveprotocol.wave.model.wave.data.ReadOnlyDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
+import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ import java.util.List;
 public class FakeWaveViewServiceUpdate implements WaveViewService.WaveViewServiceUpdate {
   private final SchemaProvider schemas = SchemaCollection.empty();
   private final WaveletDataImpl.Factory dataFactory =
-      WaveletDataImpl.Factory.create(new ReadOnlyDocumentFactory(schemas));
+      WaveletDataImpl.Factory.create(ObservablePluggableMutableDocument.createFactory(schemas));
 
   public String channelId;
   public WaveletId waveletId;

@@ -19,7 +19,6 @@ package org.waveprotocol.wave.model.wave.opbased;
 
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.ObservableDocument;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.util.EmptyDocument;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -415,17 +414,6 @@ public class OpBasedWavelet implements ObservableWavelet {
       blips.put(blip.getId(), oblip);
     }
     return oblip;
-  }
-
-  /**
-   * HACK(user):
-   * Gets the operation sink to inject into an editor.
-   * This will go away once a MutableDocument.Factory is injected into the
-   * op-based layer, where that factory signature allows this sink to be
-   * injected on document creation.
-   */
-  public SilentOperationSink<DocOp> getDocumentOperationSink(String blipId) {
-    return adapt(wavelet.getDocument(blipId)).getDocumentOperationSink();
   }
 
   @Override

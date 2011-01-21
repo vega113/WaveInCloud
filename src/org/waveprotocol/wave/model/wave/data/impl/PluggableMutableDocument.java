@@ -17,15 +17,15 @@
 
 package org.waveprotocol.wave.model.wave.data.impl;
 
-import org.waveprotocol.wave.model.document.Document;
-import org.waveprotocol.wave.model.document.MutableDocument;
 import org.waveprotocol.wave.model.document.Doc.E;
 import org.waveprotocol.wave.model.document.Doc.N;
 import org.waveprotocol.wave.model.document.Doc.T;
+import org.waveprotocol.wave.model.document.Document;
+import org.waveprotocol.wave.model.document.MutableDocument;
 import org.waveprotocol.wave.model.document.indexed.DocumentHandler;
 import org.waveprotocol.wave.model.document.indexed.IndexedDocument;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.SuperSink;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
@@ -41,6 +41,7 @@ import org.waveprotocol.wave.model.operation.OperationRuntimeException;
 import org.waveprotocol.wave.model.operation.OperationSequencer;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.schema.SchemaProvider;
+import org.waveprotocol.wave.model.util.Preconditions;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
 
@@ -143,8 +144,6 @@ public class PluggableMutableDocument extends MutableDocumentProxy.DocumentProxy
 
   private SilentOperationSink<? super DocOp> outputSink;
 
-  private boolean isInitialized = false;
-
   /**
    * Creates a mutable document. This document will not be observable.
    *
@@ -183,26 +182,36 @@ public class PluggableMutableDocument extends MutableDocumentProxy.DocumentProxy
    */
   protected PluggableMutableDocument(DocInitialization content, DocumentSchema schema,
       DocumentHandler<Node, Element, Text> handlerManager) {
-    super(null, "Output sink not yet initialised");
+    super(null, "Impossible");
     this.documentCreationContext = new DocumentCreationContext(content, schema, handlerManager);
   }
 
   @Override
   public void init(final SilentOperationSink<? super DocOp> outputSink) {
-    if (isInitialized) {
-      throw new IllegalStateException("Output sink may only be set once");
-    }
-    isInitialized = true;
+    Preconditions.checkState(this.outputSink == null, "Output sink may only be set once");
+    Preconditions.checkArgument(outputSink != null, "Output sink may not be null");
     this.outputSink = outputSink;
   }
 
   @Override
   protected MutableDocument<N, E, T> getDelegate() {
-    if (!hasDelegate() && isInitialized) {
-      DocumentImpl delegate = new DocumentImpl(
-          new BasicSequencer(getDocument(), outputSink), getDocument());
+    if (!hasDelegate()) {
+      SilentOperationSink<? super DocOp> delegateSink;
+      if (outputSink != null) {
+        delegateSink = outputSink;
+      } else {
+        // Output sink not set yet.  That's ok, so long as ops aren't caused yet.
+        delegateSink = new SilentOperationSink<DocOp>() {
+          @Override
+          public void consume(DocOp op) {
+            Preconditions.checkState(outputSink != null, "Output sink not yet initialized");
+            outputSink.consume(op);
+          }
+        };
+      }
+      DocumentImpl delegate =
+          new DocumentImpl(new BasicSequencer(getDocument(), delegateSink), getDocument());
       setDelegate(delegate);
-      outputSink = null;
     }
     return super.getDelegate();
   }

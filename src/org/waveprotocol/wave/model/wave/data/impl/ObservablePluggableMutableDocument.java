@@ -44,10 +44,8 @@ public class ObservablePluggableMutableDocument extends PluggableMutableDocument
     ObservableDocument {
 
   /**
-   * Factory.  The type is named explicitly in the method name to avoid shadowing
-   * this method in subclasses.
+   * Factory.
    */
-  @SuppressWarnings("hiding")
   public static DocumentFactory<? extends ObservablePluggableMutableDocument> createFactory(
       final SchemaProvider schemas) {
     return new DocumentFactory<ObservablePluggableMutableDocument>() {

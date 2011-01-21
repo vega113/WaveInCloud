@@ -60,8 +60,8 @@ public class OperationServiceHelper {
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
-  private static final DocumentFactory<DocumentOperationSink> DOCUMENT_FACTORY =
-      BasicFactories.muteDocumentFactory();
+  private static final DocumentFactory<? extends DocumentOperationSink> DOCUMENT_FACTORY =
+      BasicFactories.observablePluggableMutableDocumentFactory();
 
   private final WaveletProvider waveletProvider;
   private final OperationContextImpl context;

@@ -38,7 +38,6 @@ import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.robots.RobotsTestBase;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
-import org.waveprotocol.box.server.robots.util.WaveletPluginDocumentFactory;
 import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
@@ -61,9 +60,11 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
+import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
+import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
@@ -90,8 +91,8 @@ public class EventGeneratorTest extends RobotsTestBase {
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
-  private static final WaveletPluginDocumentFactory DOCUMENT_FACTORY =
-      new WaveletPluginDocumentFactory(SchemaCollection.empty());
+  private static final DocumentFactory<?> DOCUMENT_FACTORY =
+      ObservablePluggableMutableDocument.createFactory(SchemaCollection.empty());
   private static final WaveletOperationContext.Factory CONTEXT_FACTORY =
       new WaveletOperationContext.Factory() {
         @Override
@@ -144,7 +145,6 @@ public class EventGeneratorTest extends RobotsTestBase {
     wavelet =
         new OpBasedWavelet(waveletData.getWaveId(), waveletData, CONTEXT_FACTORY,
             ParticipationHelper.IGNORANT, executor, output);
-    DOCUMENT_FACTORY.setWavelet(wavelet);
 
     // Make a conversation and clear the sink
     WaveletBasedConversation.makeWaveletConversational(wavelet);

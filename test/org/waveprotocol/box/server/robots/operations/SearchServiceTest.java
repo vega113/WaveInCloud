@@ -31,9 +31,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.InvalidRequestException;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.SearchResult;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.SearchResult.Digest;
 
 import junit.framework.TestCase;
@@ -45,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
+import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.SearchProvider;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
@@ -63,7 +64,6 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.testing.BasicFactories;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.ReadOnlyWaveView;
@@ -98,35 +98,31 @@ public class SearchServiceTest extends TestCase {
    * Builds a wavelet and provides direct access to the various layers of
    * abstraction.
    */
-  private class TestingWaveletData {
-    public final ObservableWaveletData waveletData;
-    public final ObservableWavelet wavelet;
-    public final ReadOnlyWaveView waveView;
-    public final ConversationView conversationView;
-    public final Conversation conversation;
-    public final WaveViewData waveViewData;
+  private static class TestingWaveletData {
+    private final ObservableWaveletData waveletData;
+    private final Conversation conversation;
+    private final WaveViewData waveViewData;
 
     public TestingWaveletData(
         WaveId waveId, WaveletId waveletId, ParticipantId author, boolean isConversational) {
       waveletData =
           new WaveletDataImpl(waveletId, author, 1234567890, 0, HashedVersion.unsigned(0), 0,
-              waveId, BasicFactories.muteDocumentFactory());
-      wavelet =
+              waveId, BasicFactories.observablePluggableMutableDocumentFactory());
+      OpBasedWavelet wavelet =
         new OpBasedWavelet(waveId, waveletData, new BasicWaveletOperationContextFactory(author),
             ParticipationHelper.IGNORANT,
             SilentOperationSink.Executor.<WaveletOperation, WaveletData>build(waveletData),
             SilentOperationSink.VOID);
-      waveView = new ReadOnlyWaveView(waveId);
+      ReadOnlyWaveView waveView = new ReadOnlyWaveView(waveId);
       waveView.addWavelet(wavelet);
 
       if (isConversational) {
-        conversationView = WaveBasedConversationView.create(waveView, FakeIdGenerator.create());
+        ConversationView conversationView = WaveBasedConversationView.create(waveView, FakeIdGenerator.create());
         WaveletBasedConversation.makeWaveletConversational(wavelet);
         conversation = conversationView.getRoot();
 
         conversation.addParticipant(author);
       } else {
-        conversationView = null;
         conversation = null;
       }
 
@@ -137,6 +133,15 @@ public class SearchServiceTest extends TestCase {
       ConversationBlip blip = conversation.getRootThread().appendBlip();
       LineContainers.appendToLastLine(blip.getContent(), XmlStringBuilder.createText(text));
       TitleHelper.maybeFindAndSetImplicitTitle(blip.getContent());
+    }
+
+    public ObservableWaveletData copyWaveletData() {
+      // This data object already has an op-based owner on top.  Must copy it.
+      return WaveletDataUtil.copyWavelet(waveletData);
+    }
+
+    public WaveViewData copyViewData() {
+      return WaveViewDataImpl.create(waveViewData.getWaveId(), ImmutableList.of(copyWaveletData()));
     }
   }
 
@@ -157,7 +162,7 @@ public class SearchServiceTest extends TestCase {
     data.appendBlipWithText("title");
 
     when(searchProvider.search(USER, "in:inbox", 0, 10)).thenReturn(
-        Arrays.asList(data.waveViewData));
+        Arrays.asList(data.copyViewData()));
     service.execute(operation, context, USER);
 
     verify(context).constructResponse(
@@ -170,7 +175,7 @@ public class SearchServiceTest extends TestCase {
     TestingWaveletData data =
         new TestingWaveletData(WAVE_ID, CONVERSATION_WAVELET_ID, PARTICIPANT, true);
 
-    Digest digest = service.generateDigestFromWavelet(data.waveletData);
+    Digest digest = service.generateDigestFromWavelet(data.copyWaveletData());
     assertEquals("", digest.getTitle());
     assertEquals(digest.getBlipCount(), 0);
   }
@@ -179,11 +184,11 @@ public class SearchServiceTest extends TestCase {
     TestingWaveletData data =
       new TestingWaveletData(WAVE_ID, CONVERSATION_WAVELET_ID, PARTICIPANT, false);
 
-    Digest digest = service.generateDigestFromWavelet(data.waveletData);
+    Digest digest = service.generateDigestFromWavelet(data.copyWaveletData());
     assertNull(digest);
 
     when(searchProvider.search(USER, "in:inbox", 0, 10)).thenReturn(
-        Arrays.asList(data.waveViewData));
+        Arrays.asList(data.copyViewData()));
     service.execute(operation, context, USER);
 
     verify(context).constructResponse(

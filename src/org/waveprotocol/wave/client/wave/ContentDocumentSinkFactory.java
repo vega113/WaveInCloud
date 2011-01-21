@@ -22,19 +22,16 @@ import com.google.common.base.Preconditions;
 import org.waveprotocol.wave.client.editor.content.Registries;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.document.indexed.IndexedDocumentImpl;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.LegacyIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.schema.SchemaProvider;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.StringMap;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
 import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
-import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
 /**
  * A document factory for creating content documents if the document is a blip.
@@ -59,9 +56,6 @@ public final class ContentDocumentSinkFactory implements DocumentFactory<Documen
 
   /** All the documents, indexed by conversation id then blip id. */
   private final StringMap<StringMap<ContentDocumentSink>> documents = CollectionUtils.createStringMap();
-
-  /** All the registered wavelets, indexed by wavelet id. */
-  private final StringMap<OpBasedWavelet> wavelets = CollectionUtils.createStringMap();
 
   @VisibleForTesting
   ContentDocumentSinkFactory(
@@ -98,13 +92,10 @@ public final class ContentDocumentSinkFactory implements DocumentFactory<Documen
       StringMap<ContentDocumentSink> convDocuments = getConversationDocuments(waveletIdStr);
       Preconditions.checkState(!convDocuments.containsKey(blipId));
       convDocuments.put(blipId, document);
-      sink = document;
+      return document;
     } else {
-      sink = dataDocFactory.create(waveletId, blipId, content);
+      return dataDocFactory.create(waveletId, blipId, content);
     }
-
-    sink.init(documentOutputSink(waveletIdStr, blipId));
-    return sink;
   }
 
   /**
@@ -119,40 +110,6 @@ public final class ContentDocumentSinkFactory implements DocumentFactory<Documen
       documents.put(id, convDocuments);
     }
     return convDocuments;
-  }
-
-  /**
-   * Gets the output sink for a document.
-   */
-  private SilentOperationSink<DocOp> documentOutputSink(final String waveletId,
-      final String docId) {
-    return new SilentOperationSink<DocOp>() {
-      private SilentOperationSink<DocOp> sink;
-
-      @Override
-      public void consume(DocOp op) {
-        if (sink == null) {
-          sink = wavelets.get(waveletId).getDocumentOperationSink(docId);
-          if (sink == null) {
-            throw new RuntimeException("containing wavelet not registered");
-          }
-        }
-        sink.consume(op);
-      }
-    };
-  }
-
-  /**
-   * Registers a wavelet. The outgoing operation-sink for a conversation
-   * document will be pulled from its registered wavelet when it starts being
-   * used.
-   *
-   * @param wavelet  wavelet to which outoing document operations are to be sent
-   */
-  public void registerOpBasedWavelet(OpBasedWavelet wavelet) {
-    String waveletId = LegacyIdSerialiser.INSTANCE.serialiseWaveletId(wavelet.getId());
-    Preconditions.checkArgument(!wavelets.containsKey(waveletId));
-    wavelets.put(waveletId, wavelet);
   }
 
   /**

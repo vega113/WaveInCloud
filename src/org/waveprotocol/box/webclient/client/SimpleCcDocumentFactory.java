@@ -16,16 +16,13 @@
  */
 package org.waveprotocol.box.webclient.client;
 
-import org.waveprotocol.box.webclient.client.CcStackManager.SimpleCcDocument;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWaveView;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWaveViewImpl;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcDataDocumentImpl;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcDocument;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
@@ -58,43 +55,11 @@ public class SimpleCcDocumentFactory implements
   public CcDocument create(final WaveletId waveletId, final String docId,
       DocInitialization content) {
     if (IdUtil.isBlipId(docId)) {
-      // create editor here.
-      BlipView blipView = new BlipView(content);
-      CcDocument doc = new SimpleCcDocument(blipView);
-      blipView.getEditor().setOutputSink(
-          new SilentOperationSink<DocOp>() {
-            private SilentOperationSink<DocOp> sink;
-
-            @Override
-            public void consume(DocOp op) {
-              if (sink == null) {
-                sink = view.getWavelet(waveletId).getOpBasedWavelet().getDocumentOperationSink(
-                    docId);
-              }
-              sink.consume(op);
-            }
-          });
-      HashMap<String, CcDocument> map = getWaveletIdMap(waveletId);
-      map.put(docId, doc);
-      return doc;
+      throw new IllegalArgumentException("Legacy factory does not support blips");
     }
 
-    CcDataDocumentImpl ccDataDocumentImpl = new CcDataDocumentImpl(
+    return new CcDataDocumentImpl(
         new ConversationSchemas().getSchemaForId(waveletId, docId), content);
-    ccDataDocumentImpl.init(new SilentOperationSink<DocOp>() {
-      private SilentOperationSink<DocOp> sink;
-
-      @Override
-      public void consume(DocOp op) {
-        if (sink == null) {
-          sink = view.getWavelet(waveletId).getOpBasedWavelet().getDocumentOperationSink(
-              docId);
-        }
-        sink.consume(op);
-      }
-    });
-
-    return ccDataDocumentImpl;
   }
 
   public void setView(CcBasedWaveView view) {

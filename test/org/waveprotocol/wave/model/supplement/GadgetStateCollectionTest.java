@@ -20,14 +20,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import org.waveprotocol.wave.model.supplement.ObservablePrimitiveSupplement.Listener;
-
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.Doc;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.util.DefaultDocumentEventRouter;
 import org.waveprotocol.wave.model.document.util.DocProviders;
+import org.waveprotocol.wave.model.operation.SilentOperationSink;
+import org.waveprotocol.wave.model.supplement.ObservablePrimitiveSupplement.Listener;
 import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 
 /**
@@ -81,7 +81,7 @@ public class GadgetStateCollectionTest extends TestCase {
     ObservablePluggableMutableDocument doc =
         new ObservablePluggableMutableDocument(
             DocumentSchema.NO_SCHEMA_CONSTRAINTS, DocProviders.POJO.parse("").asOperation());
-    doc.init(null);
+    doc.init(SilentOperationSink.VOID);
     listener = mock(Listener.class);
     states = GadgetStateCollection.create(DefaultDocumentEventRouter.create(doc),
         doc.getDocumentElement(), listener);

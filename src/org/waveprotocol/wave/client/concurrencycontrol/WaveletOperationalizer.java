@@ -18,7 +18,6 @@ package org.waveprotocol.wave.client.concurrencycontrol;
 
 import com.google.common.base.Preconditions;
 
-import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
 import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
@@ -28,8 +27,8 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext.Factory;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.Pair;
-import org.waveprotocol.wave.model.util.StringMap;
 import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
+import org.waveprotocol.wave.model.util.StringMap;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
@@ -48,23 +47,20 @@ public final class WaveletOperationalizer {
   private final WaveId waveId;
   private final StringMap<LiveTarget<ObservableWaveletData, WaveletOperation>> wavelets =
       CollectionUtils.createStringMap();
-  private final ContentDocumentSinkFactory docRegistry;
   private final WaveletOperationContext.Factory opContextFactory;
 
   private WaveletOperationalizer(
-      WaveId waveId, ContentDocumentSinkFactory docRegistry, Factory opContextFactory) {
+      WaveId waveId, Factory opContextFactory) {
     this.waveId = waveId;
-    this.docRegistry = docRegistry;
     this.opContextFactory = opContextFactory;
   }
 
   /**
    * Creates an operationalizer.
    */
-  public static WaveletOperationalizer create(
-      WaveId wave, ContentDocumentSinkFactory docRegistry, ParticipantId user) {
+  public static WaveletOperationalizer create(WaveId wave, ParticipantId user) {
     WaveletOperationContext.Factory opContexts = new BasicWaveletOperationContextFactory(user);
-    return new WaveletOperationalizer(wave, docRegistry, opContexts);
+    return new WaveletOperationalizer(wave, opContexts);
   }
 
   /**
@@ -85,14 +81,12 @@ public final class WaveletOperationalizer {
    */
   public OpBasedWavelet operationalize(ObservableWaveletData data) {
     LiveTarget<ObservableWaveletData, WaveletOperation> target = createSinks(data);
-    OpBasedWavelet wavelet = new OpBasedWavelet(waveId,
+    return new OpBasedWavelet(waveId,
         data,
         opContextFactory,
         ParticipationHelper.IGNORANT,
         target.getExecutorSink(),
         target.getOutputSink());
-    docRegistry.registerOpBasedWavelet(wavelet);
-    return wavelet;
   }
 
   /** @return all the operation-controlled targets in this wave. */

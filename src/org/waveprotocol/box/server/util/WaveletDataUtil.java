@@ -28,11 +28,11 @@ import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.BlipData;
-import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
+import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.ArrayList;
@@ -49,7 +49,8 @@ public final class WaveletDataUtil {
 
   // TODO(ljvderijk): Schemas should be enforced, see issue 109.
   private static final ObservableWaveletData.Factory<?> WAVELET_FACTORY =
-      WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
+      WaveletDataImpl.Factory.create(
+          ObservablePluggableMutableDocument.createFactory(SchemaCollection.empty()));
 
   private WaveletDataUtil() {
   }

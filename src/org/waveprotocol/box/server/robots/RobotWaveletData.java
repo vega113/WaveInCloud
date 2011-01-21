@@ -20,7 +20,6 @@ package org.waveprotocol.box.server.robots;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.waveprotocol.box.server.robots.util.WaveletPluginDocumentFactory;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.CapturingOperationSink;
@@ -32,9 +31,11 @@ import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
+import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
@@ -111,11 +112,12 @@ public class RobotWaveletData {
     // wavelet after the OpBasedWavelet has been created to inject the
     // CapturingOperationSink.
     // TODO(ljvderijk): Proper schemas need to be enforced here.
-    WaveletPluginDocumentFactory waveletPluginFactory =
-        new WaveletPluginDocumentFactory(SchemaCollection.empty());
+
+    DocumentFactory<?> docFactory =
+        ObservablePluggableMutableDocument.createFactory(SchemaCollection.empty());
 
     ObservableWaveletData perAuthorWavelet =
-        WaveletDataImpl.Factory.create(waveletPluginFactory).create(snapshot);
+        WaveletDataImpl.Factory.create(docFactory).create(snapshot);
 
     SilentOperationSink<WaveletOperation> executor =
         SilentOperationSink.Executor.<WaveletOperation, WaveletData>build(perAuthorWavelet);
@@ -128,10 +130,6 @@ public class RobotWaveletData {
     OpBasedWavelet w =
         new OpBasedWavelet(perAuthorWavelet.getWaveId(), perAuthorWavelet, contextFactory,
             ParticipationHelper.IGNORANT, executor, output);
-
-    // IMPORTANT: Set this wavelet in the document factory so we can capture the
-    // ops
-    waveletPluginFactory.setWavelet(w);
 
     // Store the new sink and wavelet
     sinkMap.put(opAuthor, output);

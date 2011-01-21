@@ -93,33 +93,21 @@ public final class FakeWaveView implements ObservableWaveView, Factory<OpBasedWa
       }
 
       // Document factory that accepts output-sink registrations.
-      final FakeDocument.Factory docFactory = FakeDocument.Factory.create(schemas);
+      FakeDocument.Factory docFactory = FakeDocument.Factory.create(schemas);
 
       // Wavelet factory that does all the work.
-      final OpBasedWaveletFactory innerWaveletFactory = OpBasedWaveletFactory // \u2620
+      OpBasedWaveletFactory waveletFactory = OpBasedWaveletFactory // \u2620
           .builder(schemas) // \u2620
           .with(WaveletDataImpl.Factory.create(docFactory)) // \u2620
           .with(sink) // \u2620
           .with(viewer) // \u2620
           .build();
 
-      // Sink-hooking-up factory
-      WaveViewImpl.WaveletFactory<OpBasedWavelet> waveletFactory =
-          new WaveViewImpl.WaveletFactory<OpBasedWavelet>() {
-            @Override
-            public OpBasedWavelet create(WaveId waveId, WaveletId waveletId,
-                ParticipantId creator) {
-              OpBasedWavelet w = innerWaveletFactory.create(waveId, waveletId, creator);
-              docFactory.registerSinkFactory(w);
-              return w;
-            }
-          };
-
       // And the view implementation using that factory.
       WaveViewImpl<OpBasedWavelet> view =
           WaveViewImpl.create(waveletFactory, waveId, idGenerator, viewer, configurator);
 
-      return new FakeWaveView(innerWaveletFactory, view);
+      return new FakeWaveView(waveletFactory, view);
     }
   }
 

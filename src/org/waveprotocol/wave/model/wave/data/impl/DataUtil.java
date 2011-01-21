@@ -26,7 +26,6 @@ import org.waveprotocol.wave.model.wave.data.BlipData;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.DocumentOperationSink;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
-import org.waveprotocol.wave.model.wave.data.ReadOnlyDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.core.CoreWaveletData;
 
 import java.util.Collection;
@@ -40,8 +39,8 @@ public final class DataUtil {
 
   public static ObservableWaveletData fromCoreWaveletData(
       CoreWaveletData wavelet, HashedVersion version, SchemaProvider schemas) {
-    return UnmodifiableWaveletData.FACTORY.create(
-        new CoreWrapperWaveletData(wavelet, version, new ReadOnlyDocumentFactory(schemas)));
+    return UnmodifiableWaveletData.FACTORY.create(new CoreWrapperWaveletData(
+        wavelet, version, ObservablePluggableMutableDocument.createFactory(schemas)));
   }
 
   /**

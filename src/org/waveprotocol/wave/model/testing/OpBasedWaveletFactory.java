@@ -29,10 +29,10 @@ import org.waveprotocol.wave.model.schema.SchemaProvider;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
-import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
+import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 import org.waveprotocol.wave.model.wave.opbased.WaveViewImpl;
@@ -108,7 +108,7 @@ public final class OpBasedWaveletFactory implements WaveViewImpl.WaveletFactory<
 
     public OpBasedWaveletFactory build() {
       if (holderFactory == null) {
-        DocumentFactory<?> docFactory = new MuteDocumentFactory(schemas);
+        DocumentFactory<?> docFactory = ObservablePluggableMutableDocument.createFactory(schemas);
         holderFactory = WaveletDataImpl.Factory.create(docFactory);
       }
       if (sink == null) {
@@ -168,7 +168,7 @@ public final class OpBasedWaveletFactory implements WaveViewImpl.WaveletFactory<
         .create(new EmptyWaveletSnapshot(waveId, waveletId, creator, v0, now));
     lastContextFactory = new MockWaveletOperationContextFactory().setParticipantId(author);
     lastAuthoriser = new MockParticipationHelper();
-    SilentOperationSink<WaveletOperation> executor = 
+    SilentOperationSink<WaveletOperation> executor =
         Executor.<WaveletOperation, WaveletData>build(waveData);
     SilentOperationSink<WaveletOperation> out = new VersionIncrementingSink(waveData, sink);
     return new OpBasedWavelet(waveId, waveData, lastContextFactory, lastAuthoriser, executor, out);

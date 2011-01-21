@@ -21,9 +21,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.InvalidRequestException;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.EventSerializationException;
@@ -45,8 +45,8 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 import org.waveprotocol.wave.util.logging.Log;
@@ -65,7 +65,8 @@ public class OperationContextImpl implements OperationContext, OperationResults 
   private static final Log LOG = Log.get(OperationContextImpl.class);
 
   private static final ObservableWaveletData.Factory<? extends ObservableWaveletData> FACTORY =
-      WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
+      WaveletDataImpl.Factory.create(
+          ObservablePluggableMutableDocument.createFactory(SchemaCollection.empty()));
 
   /**
    * Maps operation ID's to responses.

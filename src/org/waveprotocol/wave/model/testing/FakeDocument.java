@@ -17,20 +17,14 @@
 
 package org.waveprotocol.wave.model.testing;
 
-import org.waveprotocol.wave.model.schema.SchemaProvider;
-import org.waveprotocol.wave.model.wave.data.DocumentFactory;
-import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
-import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
-
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.SilentOperationSink;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.waveprotocol.wave.model.schema.SchemaProvider;
+import org.waveprotocol.wave.model.wave.data.DocumentFactory;
+import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 
 /**
  * A document implementation and factory for use in tests.
@@ -41,9 +35,6 @@ public class FakeDocument extends ObservablePluggableMutableDocument {
   public static class Factory implements DocumentFactory<FakeDocument> {
 
     private final SchemaProvider schemas;
-
-    private final Map<WaveletId, OpBasedWavelet> sinkFactories =
-        new HashMap<WaveletId, OpBasedWavelet>();
 
     public static Factory create(SchemaProvider schemas) {
       return new Factory(schemas);
@@ -61,43 +52,8 @@ public class FakeDocument extends ObservablePluggableMutableDocument {
     @Override
     public FakeDocument create(final WaveletId waveletId, final String blipId,
         DocInitialization content) {
-      FakeDocument doc =
-          new FakeDocument(content, getSchemaForId(waveletId, blipId));
-
-      // The sink factory will have a sink ready soon after this method returns.
-      // This means we can't inject the sink now, since it's not ready. Instead,
-      // we inject a sink that will pull out the real sink lazily.
-      doc.init(new SilentOperationSink<DocOp>() {
-        private SilentOperationSink<DocOp> output;
-
-        private void fetchOutputSink() {
-          OpBasedWavelet sinkFactory = sinkFactories.get(waveletId);
-          if (sinkFactory == null) {
-            throw new IllegalStateException("Can not create a document without a sink factory");
-          } else {
-            output = sinkFactory.getDocumentOperationSink(blipId);
-          }
-        }
-
-        @Override
-        public void consume(DocOp op) {
-          if (output == null) {
-            fetchOutputSink();
-          }
-          output.consume(op);
-        }
-
-      });
-      return doc;
+      return new FakeDocument(content, getSchemaForId(waveletId, blipId));
     }
-
-    public void registerSinkFactory(OpBasedWavelet wavelet) {
-      sinkFactories.put(wavelet.getId(), wavelet);
-    }
-  }
-
-  public static Factory createFactory(SchemaProvider schemas) {
-    return Factory.create(schemas);
   }
 
   private DocOp consumed;

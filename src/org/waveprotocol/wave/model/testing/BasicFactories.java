@@ -20,8 +20,8 @@ package org.waveprotocol.wave.model.testing;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.ObservableDocument;
 import org.waveprotocol.wave.model.document.indexed.IndexedDocument;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.raw.impl.Element;
 import org.waveprotocol.wave.model.document.raw.impl.Node;
@@ -35,7 +35,6 @@ import org.waveprotocol.wave.model.schema.SchemaProvider;
 import org.waveprotocol.wave.model.util.Preconditions;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
-import org.waveprotocol.wave.model.wave.data.ReadOnlyDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.PluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
@@ -88,11 +87,11 @@ public class BasicFactories {
           return build(DocProviders.POJO.parse(text).asOperation());
         }
 
-        private ObservablePluggableMutableDocument build(DocInitialization doc) {
-          ObservablePluggableMutableDocument impl =
-              new ObservablePluggableMutableDocument(DocumentSchema.NO_SCHEMA_CONSTRAINTS, doc);
-          impl.init(null);
-          return impl;
+        private ObservablePluggableMutableDocument build(DocInitialization init) {
+          ObservablePluggableMutableDocument doc =
+              new ObservablePluggableMutableDocument(DocumentSchema.NO_SCHEMA_CONSTRAINTS, init);
+          doc.init(SilentOperationSink.VOID);
+          return doc;
         }
       };
 
@@ -146,19 +145,11 @@ public class BasicFactories {
   }
 
   /**
-   * Returns a read-only document factory whose document schemas comes from the
-   * current provider.
-   */
-  public static ReadOnlyDocumentFactory readOnlyDocumentFactory() {
-    return new ReadOnlyDocumentFactory(getSchemas());
-  }
-
-  /**
    * Returns a fake document factory whose document schemas comes from the
    * current provider.
    */
-  public static FakeDocument.Factory fakeDocumentFactory() {
-    return FakeDocument.createFactory(getSchemas());
+  public static DocumentFactory<FakeDocument> fakeDocumentFactory() {
+    return FakeDocument.Factory.create(getSchemas());
   }
 
   /**

@@ -356,8 +356,7 @@ public interface StageTwo {
     }
 
     protected WaveletOperationalizer createWavelets() {
-      return WaveletOperationalizer.create(
-          getWaveData().getWaveId(), getDocumentRegistry(), getSignedInUser());
+      return WaveletOperationalizer.create(getWaveData().getWaveId(), getSignedInUser());
     }
 
     protected WaveViewImpl<OpBasedWavelet> createWave() {

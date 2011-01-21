@@ -32,12 +32,12 @@ import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
-import org.waveprotocol.wave.model.wave.data.MuteDocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableBlipData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
+import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 
 import java.util.Collection;
@@ -97,8 +97,9 @@ public class SnapshotSerializer {
    */
   public static ObservableWaveletData deserializeWavelet(WaveletSnapshot snapshot, WaveId waveId)
       throws OperationException, InvalidParticipantAddress, InvalidIdException {
-    ObservableWaveletData.Factory<? extends ObservableWaveletData> factory
-        = WaveletDataImpl.Factory.create(new MuteDocumentFactory(SchemaCollection.empty()));
+    ObservableWaveletData.Factory<? extends ObservableWaveletData> factory =
+        WaveletDataImpl.Factory.create(
+            ObservablePluggableMutableDocument.createFactory(SchemaCollection.empty()));
 
     ParticipantId author = ParticipantId.of(snapshot.getCreator());
     WaveletId waveletId = ModernIdSerialiser.INSTANCE.deserialiseWaveletId(snapshot.getWaveletId());

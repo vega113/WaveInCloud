@@ -22,9 +22,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.InvalidRequestException;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.SearchResult;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.SearchResult.Digest;
 
 import org.waveprotocol.box.common.Snippets;
@@ -94,6 +94,8 @@ public class SearchService implements OperationService {
 
   @VisibleForTesting
   SearchResult.Digest generateDigestFromWavelet(ObservableWaveletData waveletData) {
+    // Attaching an OpBasedWavelet to a data object makes it an owner.
+    // This means that copies must be made.
     ObservableWavelet wavelet = OpBasedWavelet.createReadOnly(waveletData);
     if (!WaveletBasedConversation.waveletHasConversation(wavelet)) {
       // Wavelet doesn't actually have a conversation model inside. Skip it.
