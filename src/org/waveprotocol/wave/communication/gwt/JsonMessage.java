@@ -17,7 +17,6 @@
 
 package org.waveprotocol.wave.communication.gwt;
 
-import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.communication.json.JsonException;
 import org.waveprotocol.wave.communication.json.RawStringData;
 
@@ -32,6 +31,7 @@ import com.google.gwt.core.client.JavaScriptObject;
  */
 public class JsonMessage extends JavaScriptObject {
   private static final JsonSerializer serializer;
+  private static boolean registerToString = false;
 
   static {
     if (GWT.isClient() && BrowserAidedJsonSerailizer.hasBrowserSupport()) {
@@ -192,8 +192,18 @@ public class JsonMessage extends JavaScriptObject {
     return instance.toJson();
   }
 
+  /** Enables toString on JSOs */
+  public static void enableJsoToString() {
+    registerToString = true;
+  }
+
+  /** Disables toString on JSOs */
+  public static void disableJsoToString() {
+    registerToString = false;
+  }
+
   protected static final void registerNativeJsonMessageToString(JsonMessage instance) {
-    if (ClientFlags.get().enableJsonMessageDebug()) {
+    if (registerToString) {
       nativeRegisterNativeJsonMessageToString(instance);
     }
   }
