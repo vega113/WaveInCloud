@@ -18,12 +18,15 @@ package org.waveprotocol.wave.client.wavepanel.impl.reader;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.waveprotocol.wave.client.wave.DocumentRegistry;
+import org.waveprotocol.wave.client.wave.InteractiveDocument;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
-import org.waveprotocol.wave.client.wavepanel.impl.focus.ViewTraverser;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter.FocusOrder;
+import org.waveprotocol.wave.client.wavepanel.impl.focus.ViewTraverser;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
+import org.waveprotocol.wave.model.supplement.ObservableSupplementedWave;
 import org.waveprotocol.wave.model.supplement.SupplementedWave;
 
 /**
@@ -35,11 +38,14 @@ public final class Reader implements FocusFramePresenter.Listener, FocusOrder {
   private final SupplementedWave supplement;
   private final ModelAsViewProvider models;
   private final ViewTraverser traverser;
+  private final DocumentRegistry<? extends InteractiveDocument> documents;
 
   @VisibleForTesting
-  Reader(SupplementedWave supplement, ModelAsViewProvider models, ViewTraverser traverser) {
+  Reader(ObservableSupplementedWave supplement, ModelAsViewProvider models,
+      DocumentRegistry<? extends InteractiveDocument> documents, ViewTraverser traverser) {
     this.supplement = supplement;
     this.models = models;
+    this.documents = documents;
     this.traverser = traverser;
   }
 
@@ -48,10 +54,10 @@ public final class Reader implements FocusFramePresenter.Listener, FocusOrder {
    *
    * @return the feature.
    */
-  public static Reader createAndInstall(SupplementedWave supplement, FocusFramePresenter focus,
-      ModelAsViewProvider models) {
+  public static Reader install(ObservableSupplementedWave supplement, FocusFramePresenter focus,
+      ModelAsViewProvider models, DocumentRegistry<? extends InteractiveDocument> documents) {
     ViewTraverser traverser = new ViewTraverser();
-    Reader reader = new Reader(supplement, models, traverser);
+    final Reader reader = new Reader(supplement, models, documents, traverser);
     focus.setOrder(reader);
     focus.addListener(reader);
     return reader;
@@ -61,29 +67,38 @@ public final class Reader implements FocusFramePresenter.Listener, FocusOrder {
   public void onFocusMoved(BlipView oldUi, BlipView newUi) {
     if (oldUi != null) {
       ConversationBlip oldBlip = models.getBlip(oldUi);
+      InteractiveDocument document = documents.get(oldBlip);
       if (oldBlip != null) {
-        stopReading(oldBlip);
+        markAsRead(oldBlip);
+        // In case the document has diffs but is logically read, marking it as
+        // read may not be enough to trigger the diff clearing.
+        document.clearDiffs();
       }
     }
     if (newUi != null) {
+      // UI hack: normally, becoming read triggers diff clearing, except when
+      // the cause of becoming read is focus-frame placement.
       ConversationBlip newBlip = models.getBlip(newUi);
+      InteractiveDocument document = documents.get(newBlip);
       if (newBlip != null) {
-        startReading(newBlip);
+        document.disableDiffClearing();
+        markAsRead(newBlip);
+        document.enableDiffClearing();
       }
     }
   }
 
-  void startReading(ConversationBlip blip) {
-    supplement.markAsRead(blip);
-  }
-
-  void stopReading(ConversationBlip blip) {
+  private void markAsRead(ConversationBlip blip) {
     supplement.markAsRead(blip);
   }
 
   private boolean isRead(BlipView blipUi) {
     return !supplement.isUnread(models.getBlip(blipUi));
   }
+
+  //
+  // Next/Previous blips based on read/unread state.
+  //
 
   @Override
   public BlipView getNext(BlipView start) {

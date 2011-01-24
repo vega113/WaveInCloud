@@ -27,6 +27,7 @@ import org.waveprotocol.wave.model.schema.SchemaProvider;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.WaveViewListener;
+import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.ObservableWaveView;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
@@ -45,9 +46,15 @@ public final class FakeWaveView implements ObservableWaveView, Factory<OpBasedWa
     private ParticipantId viewer;
     private SilentOperationSink<? super WaveletOperation> sink;
     private WaveViewImpl.WaveletConfigurator configurator;
+    private DocumentFactory<?> docFactory;
 
     private Builder(SchemaProvider schemas) {
       this.schemas = schemas;
+    }
+
+    public Builder with(DocumentFactory<?> docFactory) {
+      this.docFactory = docFactory;
+      return this;
     }
 
     public Builder with(IdGenerator idGenerator) {
@@ -91,9 +98,10 @@ public final class FakeWaveView implements ObservableWaveView, Factory<OpBasedWa
       if (configurator == null) {
         configurator = WaveViewImpl.WaveletConfigurator.ADD_CREATOR;
       }
-
-      // Document factory that accepts output-sink registrations.
-      FakeDocument.Factory docFactory = FakeDocument.Factory.create(schemas);
+      if (docFactory == null) {
+        // Document factory that accepts output-sink registrations.
+        docFactory = FakeDocument.Factory.create(schemas);
+      }
 
       // Wavelet factory that does all the work.
       OpBasedWaveletFactory waveletFactory = OpBasedWaveletFactory // \u2620

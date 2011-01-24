@@ -19,12 +19,13 @@ package org.waveprotocol.wave.client.concurrencycontrol;
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.Command;
 
-import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
+import org.waveprotocol.wave.client.wave.WaveDocuments;
 import org.waveprotocol.wave.concurrencycontrol.channel.Accessibility;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannel;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexer;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexer.KnownWavelet;
 import org.waveprotocol.wave.concurrencycontrol.common.CorruptionDetail;
+import org.waveprotocol.wave.concurrencycontrol.wave.CcDocument;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -97,7 +98,7 @@ public final class LiveChannelBinder
    */
   public static void openAndBind(WaveletOperationalizer operationalizer,
       WaveViewImpl<OpBasedWavelet> wave,
-      ContentDocumentSinkFactory docRegistry,
+      WaveDocuments<? extends CcDocument> docRegistry,
       OperationChannelMultiplexer mux,
       IdFilter filter,
       Command whenOpened) {

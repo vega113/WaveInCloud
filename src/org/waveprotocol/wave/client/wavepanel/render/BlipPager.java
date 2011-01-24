@@ -16,13 +16,12 @@
 package org.waveprotocol.wave.client.wavepanel.render;
 
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.common.util.StringSequence;
 import org.waveprotocol.wave.client.editor.content.Registries;
-import org.waveprotocol.wave.client.wave.ContentDocumentSink;
-import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
+import org.waveprotocol.wave.client.wave.DocumentRegistry;
+import org.waveprotocol.wave.client.wave.InteractiveDocument;
 import org.waveprotocol.wave.client.wavepanel.view.AnchorView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.ViewIdMapper;
@@ -62,7 +61,7 @@ public final class BlipPager implements PagingHandler {
    * Maps models to implementations.
    */
   interface DocProvider {
-    ContentDocumentSink docOf(ConversationBlip blip);
+    InteractiveDocument docOf(ConversationBlip blip);
   }
 
   private BlipPager(DocumentRegistries registries, ShallowBlipRenderer blipPopulator,
@@ -79,13 +78,13 @@ public final class BlipPager implements PagingHandler {
   /**
    * Creates a pager.
    */
-  public static BlipPager create(final ContentDocumentSinkFactory docFactory,
+  public static BlipPager create(final DocumentRegistry<? extends InteractiveDocument> docRegistry,
       DocumentRegistries registries, DomAsViewProvider views, ModelAsViewProvider viewProvider,
       ShallowBlipRenderer blipPopulator, LogicalPanel logicalPanel) {
     DocProvider docProvider = new DocProvider() {
       @Override
-      public ContentDocumentSink docOf(ConversationBlip blip) {
-        return docFactory.get(blip);
+      public InteractiveDocument docOf(ConversationBlip blip) {
+        return docRegistry.get(blip);
       }
     };
 
@@ -116,13 +115,6 @@ public final class BlipPager implements PagingHandler {
     }
   }
 
-  /**
-   * @return the repaired rendering of a document.
-   */
-  private Element getRendering(ContentDocumentSink doc) {
-    return doc.getDocument().getFullContentView().getDocumentElement().getImplNodelet();
-  }
-
   @SuppressWarnings("unchecked")
   @Override
   public void pageIn(ConversationBlip blip) {
@@ -132,7 +124,7 @@ public final class BlipPager implements PagingHandler {
       BlipViewDomImpl blipDom = blipUi.getIntrinsic();
       BlipMetaDomImpl metaDom =
           ((BlipMetaViewImpl<BlipMetaDomImpl>) blipUi.getMeta()).getIntrinsic();
-      ContentDocumentSink doc = docProvider.docOf(blip);
+      InteractiveDocument doc = docProvider.docOf(blip);
       Registries r = registries.get(blip);
 
       // Very first thing that must be done is to extract and save the DOM of
@@ -143,7 +135,8 @@ public final class BlipPager implements PagingHandler {
       // apply on a fresh state.
       metaDom.clearContent();
       doc.startRendering(r, logicalPanel);
-      metaDom.setContent(getRendering(doc));
+      metaDom.setContent(
+          doc.getDocument().getFullContentView().getDocumentElement().getImplNodelet());
       blipPopulator.render(blip, metaDom);
     }
   }
@@ -157,7 +150,7 @@ public final class BlipPager implements PagingHandler {
       BlipViewDomImpl blipDom = blipUi.getIntrinsic();
       BlipMetaDomImpl metaDom =
           ((BlipMetaViewImpl<BlipMetaDomImpl>) blipUi.getMeta()).getIntrinsic();
-      ContentDocumentSink doc = docProvider.docOf(blip);
+      InteractiveDocument doc = docProvider.docOf(blip);
 
       // TODO: remove meta instead
       doc.stopRendering();

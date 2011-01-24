@@ -46,7 +46,7 @@ public class ObservablePluggableMutableDocument extends PluggableMutableDocument
   /**
    * Factory.
    */
-  public static DocumentFactory<? extends ObservablePluggableMutableDocument> createFactory(
+  public static DocumentFactory<ObservablePluggableMutableDocument> createFactory(
       final SchemaProvider schemas) {
     return new DocumentFactory<ObservablePluggableMutableDocument>() {
         @Override

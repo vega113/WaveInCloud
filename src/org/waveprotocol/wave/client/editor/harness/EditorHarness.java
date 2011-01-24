@@ -53,7 +53,6 @@ import org.waveprotocol.wave.client.debug.logger.DomLogger;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
 import org.waveprotocol.wave.client.debug.logger.LoggerListener;
 import org.waveprotocol.wave.client.doodad.diff.DiffAnnotationHandler;
-import org.waveprotocol.wave.client.doodad.diff.DiffController;
 import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler;
 import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler.LinkAttributeAugmenter;
 import org.waveprotocol.wave.client.editor.Editor;
@@ -81,7 +80,6 @@ import org.waveprotocol.wave.client.widget.popup.PopupChromeProvider;
 import org.waveprotocol.wave.client.widget.popup.simple.Popup;
 import org.waveprotocol.wave.common.logging.AbstractLogger;
 import org.waveprotocol.wave.common.logging.LoggerBundle;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.automaton.DocOpAutomaton.ViolationCollector;
@@ -468,7 +466,7 @@ public class EditorHarness extends Composite implements KeySignalListener {
   private final Button clearAnnotationsButton = new Button("Clear Annotations",
       new ClickHandler() {
         public void onClick(ClickEvent e) {
-          editorBundle1.getDiffController().clearDiffs();
+          editorBundle1.clearDiffs();
 //          ((EditorImpl)editor1).clearProblemMarkers();
         }
       }
@@ -480,7 +478,7 @@ public class EditorHarness extends Composite implements KeySignalListener {
   private final CheckBox diffCheck = new CheckBox("Diffs");
   private final ClickHandler diffCheckHandler = new ClickHandler() {
     public void onClick(ClickEvent e) {
-      editorBundle2.getDiffController().setShowDiffMode(diffCheck.getValue());
+      editorBundle2.setShowDiffMode(diffCheck.getValue());
     }
   };
 
@@ -960,7 +958,7 @@ public class EditorHarness extends Composite implements KeySignalListener {
     DiffAnnotationHandler.register(
         registries.getAnnotationHandlerRegistry(),
         registries.getPaintRegistry());
-    
+
     LinkAnnotationHandler.register(registries, new LinkAttributeAugmenter() {
       @Override
       public Map<String, String> augment(Map<String, Object> annotations, boolean isEditing,
@@ -997,24 +995,28 @@ public class EditorHarness extends Composite implements KeySignalListener {
   private class EditorBundle {
     private final HighlightingDiffState diffState;
     private final boolean is1;
+    private boolean showDiffs;
 
     EditorBundle(Editor editor, boolean is1) {
-      diffState = new HighlightingDiffState(EditorStaticDeps.logger);
-      diffState.setEditor(editor);
+      this.diffState = new HighlightingDiffState(editor);
       this.is1 = is1;
     }
 
-    public DiffController getDiffController() {
-      return diffState;
+    void setShowDiffMode(boolean showDiffs) {
+      this.showDiffs = showDiffs;
     }
 
     void execute(DocOp op) throws OperationException {
-      if (diffState.shouldShowAsDiff()) {
+      if (showDiffs) {
         diffState.consume(op);
       } else {
         // TODO(danilatos): Clean this up
         (is1 ? doc1 : doc2).consume(op);
       }
+    }
+
+    void clearDiffs() {
+      diffState.clearDiffs();
     }
   }
 

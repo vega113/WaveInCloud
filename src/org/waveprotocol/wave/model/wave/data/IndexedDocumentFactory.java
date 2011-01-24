@@ -17,9 +17,6 @@
 
 package org.waveprotocol.wave.model.wave.data;
 
-import org.waveprotocol.wave.model.schema.SchemaProvider;
-import org.waveprotocol.wave.model.document.util.DocProviders;
-
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.indexed.IndexedDocument;
 import org.waveprotocol.wave.model.document.operation.DocOp;
@@ -29,9 +26,11 @@ import org.waveprotocol.wave.model.document.operation.impl.DocInitializationBuff
 import org.waveprotocol.wave.model.document.raw.impl.Element;
 import org.waveprotocol.wave.model.document.raw.impl.Node;
 import org.waveprotocol.wave.model.document.raw.impl.Text;
+import org.waveprotocol.wave.model.document.util.DocProviders;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.OperationException;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
+import org.waveprotocol.wave.model.schema.SchemaProvider;
 
 /**
  * A factory for plain old non-observable indexed documents.

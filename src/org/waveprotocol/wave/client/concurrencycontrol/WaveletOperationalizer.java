@@ -49,8 +49,7 @@ public final class WaveletOperationalizer {
       CollectionUtils.createStringMap();
   private final WaveletOperationContext.Factory opContextFactory;
 
-  private WaveletOperationalizer(
-      WaveId waveId, Factory opContextFactory) {
+  private WaveletOperationalizer(WaveId waveId, Factory opContextFactory) {
     this.waveId = waveId;
     this.opContextFactory = opContextFactory;
   }

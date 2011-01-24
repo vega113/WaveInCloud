@@ -31,6 +31,7 @@ public interface DocOp extends Operation<DocOpCursor> {
    */
   void apply(DocOpCursor c);
 
+  /** @return the number of components to this operation. */
   int size();
   DocOpComponentType getType(int i);
 

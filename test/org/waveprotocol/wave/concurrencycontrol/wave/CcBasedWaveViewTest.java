@@ -28,7 +28,6 @@ import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.concurrencycontrol.testing.FakeWaveViewServiceUpdate;
 import org.waveprotocol.wave.concurrencycontrol.testing.MockWaveViewService;
 import org.waveprotocol.wave.model.document.Document;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.id.IdFilters;

@@ -26,9 +26,6 @@ import org.waveprotocol.wave.client.StageTwo;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
 import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
-import org.waveprotocol.wave.client.wavepanel.impl.reader.Reader;
-import org.waveprotocol.wave.client.wavepanel.render.FullDomWaveRendererImpl;
-import org.waveprotocol.wave.client.wavepanel.view.dom.full.WaveRenderer;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -121,19 +118,15 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
           getConnector().connect(new Command() {
             @Override
             public void execute() {
-              WaveRenderer waveRenderer =
-                  FullDomWaveRendererImpl.create(getConversations(), getProfileManager(),
-                      getBlipDetailer(), getViewIdMapper(), getBlipQueue(), 
-                      getThreadReadStateMonitor());
-
-              stageOne.getDomAsViewProvider().setRenderer(waveRenderer);
+              // This code must be kept in sync with the default install()
+              // method, but excluding the connect() call.
 
               // Ensure the wave is rendered.
-              renderWave(waveRenderer);
+              stageOne.getDomAsViewProvider().setRenderer(getRenderer());
+              ensureRendered();
 
-              // Eagerly install some features.
-              Reader.createAndInstall(
-                  getSupplement(), stageOne.getFocusFrame(), getModelAsViewProvider());
+              // Install eager UI.
+              installFeatures();
 
               // Rendering, and therefore the whole stage is now ready.
               whenReady.use(StageTwoProvider.this);

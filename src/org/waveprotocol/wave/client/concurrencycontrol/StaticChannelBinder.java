@@ -16,7 +16,7 @@
  */
 package org.waveprotocol.wave.client.concurrencycontrol;
 
-import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
+import org.waveprotocol.wave.client.wave.WaveDocuments;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannel;
 import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
 import org.waveprotocol.wave.concurrencycontrol.wave.CcDocument;
@@ -35,7 +35,7 @@ import org.waveprotocol.wave.model.util.Pair;
 public final class StaticChannelBinder {
 
   private final WaveletOperationalizer operationalizer;
-  private final ContentDocumentSinkFactory docRegistry;
+  private final WaveDocuments<? extends CcDocument> docRegistry;
 
   /**
    * Creates a binder for a wave.
@@ -44,7 +44,7 @@ public final class StaticChannelBinder {
    * @param docRegistry document registry of the wave
    */
   public StaticChannelBinder(
-      WaveletOperationalizer operationalizer, ContentDocumentSinkFactory docRegistry) {
+      WaveletOperationalizer operationalizer, WaveDocuments<? extends CcDocument> docRegistry) {
     this.operationalizer = operationalizer;
     this.docRegistry = docRegistry;
   }
@@ -79,7 +79,7 @@ public final class StaticChannelBinder {
       public boolean flush(WaveletOperation op, Runnable c) {
         if (op instanceof WaveletBlipOperation) {
           CcDocument doc =
-              docRegistry.getSpecial(waveletId, ((WaveletBlipOperation) op).getBlipId());
+              docRegistry.getBlipDocument(waveletId, ((WaveletBlipOperation) op).getBlipId());
           if (doc != null) {
             return doc.flush(c);
           }

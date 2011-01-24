@@ -37,7 +37,6 @@ import org.waveprotocol.wave.client.concurrencycontrol.MuxConnector;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.util.NullTypedSource;
 import org.waveprotocol.wave.client.util.OverridingTypedSource;
-import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
 import org.waveprotocol.wave.common.bootstrap.FlagConstants;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.model.conversation.Conversation;
@@ -258,7 +257,7 @@ public class UndercurrentHarness implements EntryPoint {
      * @param docFactory factory/registry for documents in the wave
      * @return the wave state of the sample wave.
      */
-    public static WaveViewDataImpl create(ContentDocumentSinkFactory docFactory) {
+    public static WaveViewDataImpl create(DocumentFactory<?> docFactory) {
       // Create a sample wave.
       WaveViewData sampleData = createSampleWave();
 

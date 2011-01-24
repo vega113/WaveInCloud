@@ -1,5 +1,5 @@
 /**
- * Copyright 2010 Google Inc.
+ * Copyright 2011 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,22 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.client.editor;
+package org.waveprotocol.wave.client.wave;
+
+import org.waveprotocol.wave.model.conversation.ConversationBlip;
 
 /**
- * This contains a method returning whether we should show diff.
+ * Manages the collection of blip documents for all conversations in a wave,
+ * providing access to blip documents.
  *
+ * @param <D> the document type for blip documents
  */
-public interface DiffState {
+public interface DocumentRegistry<D> {
   /**
-   * @return whether diffs should be rendered. This is a function of internal
-   *         logic and the state of diff mode.
+   * Gets the document implementation for a blip.
+   *
+   * @param blip blip
+   * @return document implementation for {@code blip}.
    */
-  boolean shouldShowAsDiff();
+  D get(ConversationBlip blip);
 }

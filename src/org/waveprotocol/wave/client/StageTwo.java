@@ -28,6 +28,8 @@ import org.waveprotocol.wave.client.concurrencycontrol.LiveChannelBinder;
 import org.waveprotocol.wave.client.concurrencycontrol.MuxConnector;
 import org.waveprotocol.wave.client.concurrencycontrol.WaveletOperationalizer;
 import org.waveprotocol.wave.client.doodad.DoodadInstallers;
+import org.waveprotocol.wave.client.doodad.diff.DiffAnnotationHandler;
+import org.waveprotocol.wave.client.doodad.diff.DiffDeleteRenderer;
 import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler;
 import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler.LinkAttributeAugmenter;
 import org.waveprotocol.wave.client.editor.content.Registries;
@@ -38,8 +40,12 @@ import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
 import org.waveprotocol.wave.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.state.ThreadReadStateMonitorImpl;
 import org.waveprotocol.wave.client.util.ClientFlags;
-import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
+import org.waveprotocol.wave.client.wave.InteractiveDocument;
+import org.waveprotocol.wave.client.wave.LazyContentDocument;
 import org.waveprotocol.wave.client.wave.RegistriesHolder;
+import org.waveprotocol.wave.client.wave.SimpleDiffDoc;
+import org.waveprotocol.wave.client.wave.WaveDocuments;
+import org.waveprotocol.wave.client.wavepanel.impl.diff.DiffController;
 import org.waveprotocol.wave.client.wavepanel.impl.reader.Reader;
 import org.waveprotocol.wave.client.wavepanel.render.BlipPager;
 import org.waveprotocol.wave.client.wavepanel.render.DocumentRegistries;
@@ -69,6 +75,8 @@ import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.UnsavedDataListenerFactory;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveBasedConversationView;
+import org.waveprotocol.wave.model.document.indexed.IndexedDocumentImpl;
+import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.IdGenerator;
@@ -91,8 +99,10 @@ import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.Wavelet;
+import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
+import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 import org.waveprotocol.wave.model.wave.opbased.WaveViewImpl;
@@ -119,7 +129,7 @@ public interface StageTwo {
   ObservableSupplementedWave getSupplement();
 
   /** @return the registry of document objects used for conversational blips. */
-  ContentDocumentSinkFactory getDocumentRegistry();
+  WaveDocuments<? extends InteractiveDocument> getDocumentRegistry();
 
   /** @return the provider of view objects given model objects. */
   ModelAsViewProvider getModelAsViewProvider();
@@ -135,6 +145,9 @@ public interface StageTwo {
    *         requiring synchronous rendering.
    */
   BlipQueueRenderer getBlipQueue();
+
+  /** The controller of diff state. */
+  DiffController getDiffController();
 
   /**
    * @return the signed in user.
@@ -169,7 +182,7 @@ public interface StageTwo {
     // Wave stack.
 
     private IdGenerator idGenerator;
-    private ContentDocumentSinkFactory documentRegistry;
+    private WaveDocuments<LazyContentDocument> documentRegistry;
     private WaveletOperationalizer wavelets;
     private WaveViewImpl<OpBasedWavelet> wave;
     private MuxConnector connector;
@@ -187,8 +200,10 @@ public interface StageTwo {
 
     private ViewIdMapper viewIdMapper;
     private ShallowBlipRenderer blipDetailer;
+    private WaveRenderer renderer;
     private BlipQueueRenderer queueRenderer;
     private ModelAsViewProvider modelAsView;
+    private DiffController diffController;
 
     public DefaultProvider(StageOne stageOne) {
       this.stageOne = stageOne;
@@ -253,6 +268,10 @@ public interface StageTwo {
       return blipDetailer == null ? blipDetailer = createBlipDetailer() : blipDetailer;
     }
 
+    protected final WaveRenderer getRenderer() {
+      return renderer == null ? renderer = createRenderer() : renderer;
+    }
+
     protected final ThreadReadStateMonitor getThreadReadStateMonitor() {
       return threadReadStateMonitor == null ? threadReadStateMonitor =
         createThreadReadStateMonitor() : threadReadStateMonitor;
@@ -311,7 +330,7 @@ public interface StageTwo {
     }
 
     @Override
-    public final ContentDocumentSinkFactory getDocumentRegistry() {
+    public final WaveDocuments<LazyContentDocument> getDocumentRegistry() {
       return documentRegistry == null
           ? documentRegistry = createDocumentRegistry() : documentRegistry;
     }
@@ -319,6 +338,11 @@ public interface StageTwo {
     protected final WaveViewData getWaveData() {
       Preconditions.checkState(waveData != null, "wave not ready");
       return waveData;
+    }
+
+    @Override
+    public final DiffController getDiffController() {
+      return diffController == null ? diffController = createDiffController() : diffController;
     }
 
     /** @return the id mangler for model objects. Subclasses may override. */
@@ -408,8 +432,25 @@ public interface StageTwo {
     }
 
     /** @return the registry of documents in the wave. Subclasses may override. */
-    protected ContentDocumentSinkFactory createDocumentRegistry() {
-      return ContentDocumentSinkFactory.create(createSchemas(), RegistriesHolder.get());
+    protected WaveDocuments<LazyContentDocument> createDocumentRegistry() {
+      IndexedDocumentImpl.performValidation = false;
+
+      DocumentFactory<?> dataDocFactory =
+          ObservablePluggableMutableDocument.createFactory(createSchemas());
+      DocumentFactory<LazyContentDocument> blipDocFactory =
+          new DocumentFactory<LazyContentDocument>() {
+            private final Registries registries = RegistriesHolder.get();
+
+            @Override
+            public LazyContentDocument create(
+                WaveletId waveletId, String docId, DocInitialization content) {
+              // TODO(piotrkaleta,hearnden): hook up real diff state.
+              SimpleDiffDoc noDiff = SimpleDiffDoc.create(content, null);
+              return LazyContentDocument.create(registries, noDiff);
+            }
+          };
+
+      return WaveDocuments.create(blipDocFactory, dataDocFactory);
     }
 
     protected abstract SchemaProvider createSchemas();
@@ -517,6 +558,16 @@ public interface StageTwo {
       return BlipQueueRenderer.create(pagingHandler);
     }
 
+    protected WaveRenderer createRenderer() {
+      return FullDomWaveRendererImpl.create(getConversations(), getProfileManager(),
+          getBlipDetailer(), getViewIdMapper(), getBlipQueue(), getThreadReadStateMonitor());
+    }
+
+    protected DiffController createDiffController() {
+      return DiffController.create(
+          getConversations(), getSupplement(), getDocumentRegistry(), getModelAsViewProvider());
+    }
+
     /**
      * Fetches and builds the core wave state.
      *
@@ -537,6 +588,8 @@ public interface StageTwo {
       return doodads.use(new DoodadInstallers.GlobalInstaller() {
         @Override
         public void install(Registries r) {
+          DiffAnnotationHandler.register(r.getAnnotationHandlerRegistry(), r.getPaintRegistry());
+          DiffDeleteRenderer.register(r.getElementHandlerRegistry());
           StyleAnnotationHandler.register(r);
           LinkAnnotationHandler.register(r, new LinkAttributeAugmenter() {
             @Override
@@ -562,32 +615,41 @@ public interface StageTwo {
      * Subclasses may override this to change the set of installed features.
      */
     protected void install() {
-      WaveRenderer waveRenderer =
-          FullDomWaveRendererImpl.create(getConversations(), getProfileManager(), getBlipDetailer(),
-              getViewIdMapper(), getBlipQueue(), getThreadReadStateMonitor());
-      stageOne.getDomAsViewProvider().setRenderer(waveRenderer);
+      // Install diff control before rendering, because logical diff state may
+      // need to be adjusted due to arbitrary UI policies.
+      getDiffController().install();
 
-      // Ensure the wave is rendered.
-      renderWave(waveRenderer);
+      // Install rendering capabilities, then render if necessary.
+      stageOne.getDomAsViewProvider().setRenderer(getRenderer());
+      ensureRendered();
+
+      // Install eager UI features
+      installFeatures();
 
       // Activate liveness.
       getConnector().connect(null);
-
-      // Eagerly install some features.
-      Reader.createAndInstall(getSupplement(), stageOne.getFocusFrame(), getModelAsViewProvider());
     }
 
     /**
      * Ensures that the wave is rendered.
      * <p>
      * Subclasses may override (e.g., to use server-side rendering).
-     *
-     * @param renderer renderer to use, if necessary
      */
-    protected void renderWave(WaveRenderer renderer) {
+    protected void ensureRendered() {
       // Default behaviour is to render the whole wave.
-      Element e = renderer.render(getConversations());
+      Element e = getRenderer().render(getConversations());
       stageOne.getWavePanel().init(e);
+    }
+
+    /**
+     * Installs the eager features of this stage.
+     */
+    protected void installFeatures() {
+      // Eagerly install some features.
+      Reader.install(getSupplement(), stageOne.getFocusFrame(), getModelAsViewProvider(),
+          getDocumentRegistry());
+
+      getDiffController().upgrade(stageOne.getFocusFrame());
     }
   }
 }

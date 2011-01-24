@@ -19,7 +19,8 @@ import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
 import org.waveprotocol.wave.client.util.ClientFlags;
-import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
+import org.waveprotocol.wave.client.wave.DocumentRegistry;
+import org.waveprotocol.wave.client.wave.InteractiveDocument;
 import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.Actions;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.EditActionsBuilder;
@@ -40,7 +41,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
  * This stage includes editing capabilities.
  *
  */
-public interface StageThree{
+public interface StageThree {
 
   Actions getEditActions();
 
@@ -59,6 +60,7 @@ public interface StageThree{
     //
 
     private Actions actions;
+    private EditSession edit;
 
     public DefaultProvider(StageTwo stageTwo) {
       this.stageTwo = stageTwo;
@@ -90,23 +92,27 @@ public interface StageThree{
       return actions == null ? actions = createEditActions() : actions;
     }
 
+    protected final EditSession getEditSession() {
+      return edit == null ? edit = createEditSession() : edit;
+    }
+
     protected Actions createEditActions() {
       StageOne stageOne = stageTwo.getStageOne();
       WavePanelImpl panel = stageOne.getWavePanel();
       FocusFramePresenter focus = stageOne.getFocusFrame();
       ModelAsViewProvider views = stageTwo.getModelAsViewProvider();
       BlipQueueRenderer blipQueue = stageTwo.getBlipQueue();
-      ContentDocumentSinkFactory documents = stageTwo.getDocumentRegistry();
-      ParticipantId user = stageTwo.getSignedInUser();
       ProfileManager profiles = stageTwo.getProfileManager();
+      EditSession edit = getEditSession();
 
-      EditSession edit = new EditSession(views, documents, panel.getGwtPanel());
-      Actions actions =
-          EditActionsBuilder.createAndInstall(panel, views, profiles, edit, blipQueue, focus);
-      MenuController.install(actions, panel);
-      EditToolbar.install(panel, edit, user);
-      ReplyIndicatorController.install(actions, edit, panel);
-      return actions;
+      return EditActionsBuilder.createAndInstall(panel, views, profiles, edit, blipQueue, focus);
+    }
+
+    protected EditSession createEditSession() {
+      WavePanelImpl panel = stageTwo.getStageOne().getWavePanel();
+      ModelAsViewProvider views = stageTwo.getModelAsViewProvider();
+      DocumentRegistry<? extends InteractiveDocument> documents = stageTwo.getDocumentRegistry();
+      return new EditSession(views, documents, panel.getGwtPanel());
     }
 
     protected void install() {
@@ -114,7 +120,14 @@ public interface StageThree{
       EditorStaticDeps.setPopupChromeProvider(PopupChromeFactory.getProvider());
 
       // Eagerly install some features.
-      getEditActions();
+      WavePanelImpl panel = stageTwo.getStageOne().getWavePanel();
+      ParticipantId user = stageTwo.getSignedInUser();
+      Actions actions = getEditActions();
+      EditSession edit = getEditSession();
+      MenuController.install(actions, panel);
+      EditToolbar.install(panel, edit, user);
+      ReplyIndicatorController.install(actions, edit, panel);
+      stageTwo.getDiffController().upgrade(edit);
     }
   }
 }

@@ -148,7 +148,7 @@ public class BasicFactories {
    * Returns a fake document factory whose document schemas comes from the
    * current provider.
    */
-  public static DocumentFactory<FakeDocument> fakeDocumentFactory() {
+  public static FakeDocument.Factory fakeDocumentFactory() {
     return FakeDocument.Factory.create(getSchemas());
   }
 

@@ -31,13 +31,13 @@ import org.waveprotocol.wave.client.editor.Editors;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
 import org.waveprotocol.wave.client.editor.keys.KeyBindingRegistry;
 import org.waveprotocol.wave.client.util.ClientFlags;
-import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
+import org.waveprotocol.wave.client.wave.DocumentRegistry;
+import org.waveprotocol.wave.client.wave.InteractiveDocument;
 import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.IntrinsicBlipMetaView.MenuOption;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
-import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 
 /**
@@ -50,30 +50,34 @@ public final class EditSession
 
   public interface Listener {
     void onSessionStart(Editor e, BlipView blipUi);
+
     void onSessionEnd(Editor e, BlipView blipUi);
   }
 
-  private static final EditorSettings EDITOR_SETTINGS = new EditorSettings()
-      .setHasDebugDialog(LogLevel.showErrors() || ClientFlags.get().enableEditorDebugging())
-      .setUndoEnabled(ClientFlags.get().enableUndo())
-      .setUseFancyCursorBias(ClientFlags.get().useFancyCursorBias())
-      .setUseSemanticCopyPaste(ClientFlags.get().useSemanticCopyPaste())
-      .setUseWhitelistInEditor(ClientFlags.get().useWhitelistInEditor())
-      .setUseWebkitCompositionEvents(ClientFlags.get().useWebkitCompositionEvents())
-      .setCloseSuggestionsMenuDelayMs(ClientFlags.get().closeSuggestionsMenuDelayMs());
+  private static final EditorSettings EDITOR_SETTINGS =
+      new EditorSettings().setHasDebugDialog(
+          LogLevel.showErrors() || ClientFlags.get().enableEditorDebugging()).setUndoEnabled(
+          ClientFlags.get().enableUndo()).setUseFancyCursorBias(
+          ClientFlags.get().useFancyCursorBias()).setUseSemanticCopyPaste(
+          ClientFlags.get().useSemanticCopyPaste()).setUseWhitelistInEditor(
+          ClientFlags.get().useWhitelistInEditor()).setUseWebkitCompositionEvents(
+          ClientFlags.get().useWebkitCompositionEvents()).setCloseSuggestionsMenuDelayMs(
+          ClientFlags.get().closeSuggestionsMenuDelayMs());
 
   private static final KeyBindingRegistry KEY_BINDINGS = new KeyBindingRegistry();
 
   private final ModelAsViewProvider views;
-  private final ContentDocumentSinkFactory documents;
+  private final DocumentRegistry<? extends InteractiveDocument> documents;
   private final LogicalPanel container;
   private final CopyOnWriteSet<Listener> listeners = CopyOnWriteSet.create();
 
+  /** The UI of the document being edited. */
   private BlipView editing;
+  /** Editor control. */
   private Editor editor;
 
-  public EditSession(
-      ModelAsViewProvider views, ContentDocumentSinkFactory documents, LogicalPanel container) {
+  public EditSession(ModelAsViewProvider views,
+      DocumentRegistry<? extends InteractiveDocument> documents, LogicalPanel container) {
     this.views = views;
     this.documents = documents;
     this.container = container;
@@ -125,8 +129,7 @@ public final class EditSession
     assert editing == null && blipUi != null;
 
     // Find the document.
-    ConversationBlip blip = views.getBlip(blipUi);
-    ContentDocument document = documents.get(blip).getDocument();
+    ContentDocument document = documents.get(views.getBlip(blipUi)).getDocument();
     blipUi.getMeta().select(MenuOption.EDIT);
 
     // Create or re-use and editor for it.
@@ -153,7 +156,8 @@ public final class EditSession
       // "removeContent" just means detach the editor from the document.
       editor.removeContent();
       editor.reset();
-      // TODO(user): this does not work if the view has been deleted and detached.
+      // TODO(user): this does not work if the view has been deleted and
+      // detached.
       editing.getMeta().deselect(MenuOption.EDIT);
       Editor oldEditor = editor;
       BlipView oldEditing = editing;

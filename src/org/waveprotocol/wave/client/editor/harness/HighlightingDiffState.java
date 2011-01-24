@@ -17,14 +17,11 @@
 
 package org.waveprotocol.wave.client.editor.harness;
 
-import com.google.common.base.Preconditions;
+import com.google.gwt.dev.util.Preconditions;
 
-import org.waveprotocol.wave.client.doodad.diff.DiffController;
-import org.waveprotocol.wave.client.editor.DiffState;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
 import org.waveprotocol.wave.client.editor.content.DiffHighlightingFilter;
-import org.waveprotocol.wave.common.logging.LoggerBundle;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.operation.OperationException;
 
@@ -32,47 +29,30 @@ import org.waveprotocol.wave.model.operation.OperationException;
  * This class maintains diff state and consumes diff ops
  *
  */
-public final class HighlightingDiffState implements DiffState, DiffController {
+public final class HighlightingDiffState {
 
-  private final LoggerBundle logger;
+  // The corresponding editor
+  private final Editor editor;
 
   // Keeps track of the currentContentDoc associated with this DiffState.
-  private ContentDocument currentContentDoc = null;
+  // Loaded lazily, because an editor may or may not have a document at any time.
+  private ContentDocument currentContentDoc;
 
   // The diffFilter corresponding to the current content document. If the
   // contentDocument is changed, this needs to be reinitialized.
   private DiffHighlightingFilter diffFilter;
 
-  // Whether to highlight diffs as remote ops are applied
-  private boolean showDiffMode = false;
-
-  // The corresponding editor
-  private Editor editor;
-
-  public HighlightingDiffState(LoggerBundle logger) {
-    this.logger = logger;
+  public HighlightingDiffState(Editor editor) {
+    this.editor = editor;
   }
 
-  @Override
+  /**
+   * Clears diffs.
+   */
   public void clearDiffs() {
     // This null check is needed when the editor is not rendered, hence
     // diffFilter not attached.
-    DiffHighlightingFilter filter = getDiffFilter();
-    if (filter != null) {
-      filter.clearDiffs();
-    } else {
-      logger.error().log("clear diff called with uninitialized filter");
-    }
-  }
-
-  @Override
-  public void setShowDiffMode(boolean isOn) {
-    showDiffMode = isOn;
-  }
-
-  @Override
-  public boolean shouldShowAsDiff() {
-    return showDiffMode; // TODO(user) Clean this up: && !WaveletUndoController.isUndoing();
+    getDiffFilter().clearDiffs();
   }
 
   /**
@@ -82,44 +62,11 @@ public final class HighlightingDiffState implements DiffState, DiffController {
    * @throws OperationException
    */
   public void consume(DocOp operation) throws OperationException {
-    Preconditions.checkState(shouldShowAsDiff());
-    DiffHighlightingFilter filter = getDiffFilter();
-    if (filter != null) {
-      filter.consume(operation);
-    } else {
-      logger.error().log("clear diff called with uninitialized filter");
-    }
-  }
-
-  /**
-   * Ideally, this should be setDocument, however, the document can change from
-   * under an editor and be attached/detached at any time. So it is safer to do
-   * this.
-   *
-   * @param e
-   */
-  public void setEditor(Editor e) {
-    this.editor = e;
-
-    // Null these out when we set a new editor. These will be lazily assigned when required.
-    currentContentDoc = null;
-    diffFilter = null;
-  }
-
-  /**
-   * Resets the DiffState.
-   */
-  public void reset() {
-    showDiffMode = false;
-    diffFilter = null;
-    currentContentDoc = null;
+    getDiffFilter().consume(operation);
   }
 
   private DiffHighlightingFilter getDiffFilter() {
-    if (editor == null || editor.getContent()  == null) {
-      return null;
-    }
-
+    Preconditions.checkNotNull(editor.getContent());
     if (editor.getContent() != currentContentDoc) {
       currentContentDoc = editor.getContent();
       diffFilter = new DiffHighlightingFilter(currentContentDoc.getDiffTarget());

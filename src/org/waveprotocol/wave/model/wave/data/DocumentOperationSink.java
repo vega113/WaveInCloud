@@ -16,12 +16,11 @@
  */
 package org.waveprotocol.wave.model.wave.data;
 
-import org.waveprotocol.wave.model.wave.OpaqueDocument;
-
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.operation.OperationSink;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
+import org.waveprotocol.wave.model.wave.OpaqueDocument;
 
 /**
  * An extension of the {@link OpaqueDocument} interface that includes an opaque

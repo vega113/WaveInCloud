@@ -36,7 +36,6 @@ import org.waveprotocol.wave.concurrencycontrol.wave.DuplexOpSinkFactory;
 import org.waveprotocol.wave.model.document.Doc;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.MutableDocument;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.util.MutableDocumentProxy;

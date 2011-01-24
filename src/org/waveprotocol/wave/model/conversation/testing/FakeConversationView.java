@@ -27,6 +27,7 @@ import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.testing.FakeWaveView;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.DocumentFactory;
 import org.waveprotocol.wave.model.wave.opbased.ObservableWaveView;
 
 import java.util.Collection;
@@ -46,8 +47,14 @@ public final class FakeConversationView implements ObservableConversationView {
     private IdGenerator idGenerator;
     private WaveId waveId;
     private ParticipantId viewer;
+    private DocumentFactory<?> docFactory;
 
     private Builder() {
+    }
+
+    public Builder with(DocumentFactory<?> docFactory) {
+      this.docFactory = docFactory;
+      return this;
     }
 
     public Builder with(SchemaProvider schemas) {
@@ -82,6 +89,7 @@ public final class FakeConversationView implements ObservableConversationView {
       }
 
       FakeWaveView waveView = FakeWaveView.builder(schemas) // \u2620
+          .with(docFactory) // \u2620
           .with(idGenerator) // \u2620
           .with(waveId) // \u2620
           .with(viewer) // \u2620
