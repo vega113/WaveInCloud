@@ -127,6 +127,28 @@ public final class JsoView extends JavaScriptObject {
   /**
    * @param key
    * @return The value with the given key, or null if not present. The value is
+   *         assumed to be a JSO. The method may fail at runtime if the type
+   *         is not correct.
+   */
+  public JsoView getJsoView(String key) {
+    JavaScriptObject jso = getJso(key);
+    return jso == null ? null : JsoView.as(jso);
+  }
+
+  /**
+   * @param key
+   * @return The value with the given key, or null if not present. The value is
+   *         assumed to be a JSO. The method may fail at runtime if the type
+   *         is not correct.
+   */
+  public JsoView getJsoView(int key) {
+    JavaScriptObject jso = getJso(key);
+    return jso == null ? null : JsoView.as(jso);
+  }
+
+  /**
+   * @param key
+   * @return The value with the given key, or null if not present. The value is
    *         assumed to be a "java" object. The method may fail at runtime if
    *         the type is not correct.
    */
