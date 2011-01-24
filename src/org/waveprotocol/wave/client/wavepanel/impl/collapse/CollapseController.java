@@ -19,9 +19,9 @@ package org.waveprotocol.wave.client.wavepanel.impl.collapse;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 
+import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.event.EventHandlerRegistry;
 import org.waveprotocol.wave.client.wavepanel.event.WaveMouseDownHandler;
-import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.view.InlineThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.View.Type;
 import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
@@ -46,7 +46,7 @@ public final class CollapseController implements WaveMouseDownHandler {
   /**
    * Installs the collapse/expand feature in a wave panel.
    */
-  public static void install(CollapsePresenter focus, WavePanelImpl panel) {
+  public static void install(CollapsePresenter focus, WavePanel panel) {
     new CollapseController(focus, panel.getViewProvider()).install(panel.getHandlers());
   }
 

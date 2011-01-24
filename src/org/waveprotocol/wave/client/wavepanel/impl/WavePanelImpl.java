@@ -32,20 +32,12 @@ import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
-import org.waveprotocol.wave.model.wave.SourcesEvents;
 
 /**
  * A wave panel, which is just a view and an event system.
  *
  */
-public final class WavePanelImpl implements WavePanel, Focusable, SourcesEvents<
-    WavePanelImpl.LifecycleListener> {
-
-  public interface LifecycleListener {
-    void onInit();
-
-    void onReset();
-  }
+public final class WavePanelImpl implements WavePanel, Focusable {
 
   /** Event system on which features install their controllers. */
   private final EventDispatcherPanel panel;
@@ -117,61 +109,41 @@ public final class WavePanelImpl implements WavePanel, Focusable, SourcesEvents<
     // because the compiler treats the two x captures as not substitutable.
     // Therefore, this method can not be implemented with a ternary.
     if (scroller == null) {
-      scroller = getMain().getScroller();
+      scroller = getContents().getScroller();
     }
     return scroller;
   }
 
 
-  /**
-   * This method is intended to be visible only to subpackages.
-   *
-   * @return the provider of views of dom elements.
-   */
+  @Override
   public DomAsViewProvider getViewProvider() {
     return views;
   }
 
-  /**
-   * This method is intended to be visible only to subpackages.
-   *
-   * @return the registry against which event handlers are registered.
-   */
+  @Override
   public EventHandlerRegistry getHandlers() {
     return panel;
   }
 
-  /**
-   * This method is intended to be visible only to subpackages.
-   *
-   * @return the panel for connecting GWT widgets.
-   */
+  @Override
   public LogicalPanel getGwtPanel() {
     return panel;
   }
 
-  /**
-   * This method is intended to be visible only to subpackages.
-   *
-   * @return the registry of key handlers for when focus is on the wave panel.
-   */
+  @Override
   public KeySignalRouter getKeyRouter() {
     return keys;
   }
 
-  /**
-   * This method is intended to be visible only to subpackages.
-   *
-   * @return the UI of the main conversation in this panel.
-   */
-  public TopConversationView getMain() {
-    Preconditions.checkState(frame != null);
-    return main == null ? main = frame.getContents() : main;
-  }
-
-  /** @return true if this panel has contents. */
+  @Override
   public boolean hasContents() {
     return frame != null;
+  }
+
+  @Override
+  public TopConversationView getContents() {
+    Preconditions.checkState(frame != null);
+    return main == null ? main = frame.getContents() : main;
   }
 
   //

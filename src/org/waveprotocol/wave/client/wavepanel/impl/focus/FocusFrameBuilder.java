@@ -16,7 +16,7 @@
  */
 package org.waveprotocol.wave.client.wavepanel.impl.focus;
 
-import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
+import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.view.FocusFrameView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.FocusFrame;
 
@@ -34,7 +34,7 @@ public final class FocusFrameBuilder {
    * @param panel wave panel to hold the feature
    * @return the feature.
    */
-  public static FocusFramePresenter createAndInstallIn(WavePanelImpl panel) {
+  public static FocusFramePresenter createAndInstallIn(WavePanel panel) {
     FocusFrameView view = new FocusFrame();
     ViewTraverser traverser = new ViewTraverser();
     traverser.skipCollapsedContent();

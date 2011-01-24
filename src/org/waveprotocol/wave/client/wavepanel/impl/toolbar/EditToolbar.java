@@ -42,7 +42,7 @@ import org.waveprotocol.wave.client.scheduler.BucketRateLimiter;
 import org.waveprotocol.wave.client.scheduler.CancellableCommand;
 import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
 import org.waveprotocol.wave.client.scheduler.TimerService;
-import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
+import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.EditSession;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.widget.toolbar.SubmenuToolbarView;
@@ -298,14 +298,14 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
   }
 
   private final EditorToolbarResources.Css css;
-  private final WavePanelImpl panel;
+  private final WavePanel panel;
   private final ToplevelToolbarWidget toolbarUi;
   private final ParticipantId user;
 
   private final ButtonUpdater updater;
   private EditorContext editor;
 
-  private EditToolbar(EditorToolbarResources.Css css, WavePanelImpl panel,
+  private EditToolbar(EditorToolbarResources.Css css, WavePanel panel,
       ToplevelToolbarWidget toolbarUi, ButtonUpdater updater, ParticipantId user) {
     this.css = css;
     this.panel = panel;
@@ -317,7 +317,7 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
   /**
    * Attaches editor behaviour to a toolbar, adding all the edit buttons.
    */
-  public static void install(WavePanelImpl panel, EditSession edit, ParticipantId user) {
+  public static void install(WavePanel panel, EditSession edit, ParticipantId user) {
     ToplevelToolbarWidget toolbarUi = new ToplevelToolbarWidget();
     EditorToolbarResources.Css css = EditorToolbarResources.Loader.res.css();
     TimerService timer = SchedulerInstance.getMediumPriorityTimer();
@@ -647,7 +647,7 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
     Preconditions.checkState(this.editor == null);
     Preconditions.checkArgument(editor != null);
 
-    panel.getMain().setToolbar(toolbarUi.getElement());
+    panel.getContents().setToolbar(toolbarUi.getElement());
     panel.getGwtPanel().doAdopt(toolbarUi);
     this.editor = editor;
     this.editor.addUpdateListener(this);
@@ -667,7 +667,7 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
     this.editor.removeUpdateListener(this);
     this.editor = null;
     panel.getGwtPanel().doOrphan(toolbarUi);
-    panel.getMain().setToolbar(null);
+    panel.getContents().setToolbar(null);
   }
 
   @Override

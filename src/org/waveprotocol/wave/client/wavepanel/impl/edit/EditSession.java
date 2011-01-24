@@ -32,7 +32,7 @@ import org.waveprotocol.wave.client.editor.content.ContentDocument;
 import org.waveprotocol.wave.client.editor.keys.KeyBindingRegistry;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.wave.ContentDocumentSinkFactory;
-import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
+import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.IntrinsicBlipMetaView.MenuOption;
@@ -46,7 +46,7 @@ import org.waveprotocol.wave.model.util.CopyOnWriteSet;
  *
  */
 public final class EditSession
-    implements FocusFramePresenter.Listener, WavePanelImpl.LifecycleListener, KeySignalListener {
+    implements FocusFramePresenter.Listener, WavePanel.LifecycleListener, KeySignalListener {
 
   public interface Listener {
     void onSessionStart(Editor e, BlipView blipUi);

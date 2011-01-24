@@ -20,8 +20,8 @@ import com.google.gwt.event.dom.client.MouseDownEvent;
 
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.uibuilder.BuilderHelper;
+import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.event.WaveMouseDownHandler;
-import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.Actions;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.EditSession;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.EditSession.Listener;
@@ -47,7 +47,7 @@ public final class ReplyIndicatorController implements WaveMouseDownHandler, Lis
    * @param actions
    * @param panel
    */
-  private ReplyIndicatorController(Actions actions, EditSession editSession, 
+  private ReplyIndicatorController(Actions actions, EditSession editSession,
       DomAsViewProvider panel) {
     this.actions = actions;
     this.panel = panel;
@@ -58,12 +58,12 @@ public final class ReplyIndicatorController implements WaveMouseDownHandler, Lis
   /**
    * Installs the reply indicator feature in a wave panel.
    */
-  public static void install(Actions handler, EditSession editSession, WavePanelImpl panel) {
-    ReplyIndicatorController controller = new ReplyIndicatorController(handler, editSession, 
+  public static void install(Actions handler, EditSession editSession, WavePanel panel) {
+    ReplyIndicatorController controller = new ReplyIndicatorController(handler, editSession,
         panel.getViewProvider());
-    panel.getHandlers().registerMouseDownHandler(TypeCodes.kind(Type.REPLY_BOX), 
+    panel.getHandlers().registerMouseDownHandler(TypeCodes.kind(Type.REPLY_BOX),
         controller);
-    panel.getHandlers().registerMouseDownHandler(TypeCodes.kind(Type.CONTINUATION_INDICATOR), 
+    panel.getHandlers().registerMouseDownHandler(TypeCodes.kind(Type.CONTINUATION_INDICATOR),
         controller);
   }
 
@@ -72,7 +72,7 @@ public final class ReplyIndicatorController implements WaveMouseDownHandler, Lis
     if (event.getNativeButton() != NativeEvent.BUTTON_LEFT) {
       return false;
     }
-    
+
     if (TypeCodes.kind(Type.REPLY_BOX).equals(
         context.getAttribute(BuilderHelper.KIND_ATTRIBUTE))) {
       ReplyBoxView indicatorView = panel.asReplyBox(context);
@@ -88,7 +88,7 @@ public final class ReplyIndicatorController implements WaveMouseDownHandler, Lis
     event.preventDefault();
     return true;
   }
-  
+
   @Override
   public void onSessionStart(Editor e, BlipView blipUi) {
     ThreadView threadUi = blipUi.getParent();

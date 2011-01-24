@@ -24,9 +24,9 @@ import com.google.gwt.user.client.Window;
 import org.waveprotocol.wave.client.account.Profile;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.safehtml.EscapeUtils;
+import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.event.EventHandlerRegistry;
 import org.waveprotocol.wave.client.wavepanel.event.WaveClickHandler;
-import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.view.ParticipantView;
 import org.waveprotocol.wave.client.wavepanel.view.ParticipantsView;
 import org.waveprotocol.wave.client.wavepanel.view.View.Type;
@@ -62,7 +62,7 @@ public final class ParticipantController {
    * @param panel wave panel to hold the feature
    */
   public static void install(
-      WavePanelImpl panel, ModelAsViewProvider models, ProfileManager profiles) {
+      WavePanel panel, ModelAsViewProvider models, ProfileManager profiles) {
     ParticipantController controller =
         new ParticipantController(panel.getViewProvider(), models, profiles);
     controller.install(panel.getHandlers());

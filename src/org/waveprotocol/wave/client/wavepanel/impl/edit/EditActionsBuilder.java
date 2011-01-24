@@ -17,7 +17,7 @@
 package org.waveprotocol.wave.client.wavepanel.impl.edit;
 
 import org.waveprotocol.wave.client.account.ProfileManager;
-import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
+import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
@@ -36,7 +36,7 @@ public final class EditActionsBuilder {
    * @param panel wave panel to hold the feature
    * @return the feature.
    */
-  public static Actions createAndInstall(WavePanelImpl panel, ModelAsViewProvider views,
+  public static Actions createAndInstall(WavePanel panel, ModelAsViewProvider views,
       ProfileManager profiles, EditSession edit, BlipQueueRenderer blipQueue,
       FocusFramePresenter focus) {
     focus.addListener(edit);

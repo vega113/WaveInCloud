@@ -16,9 +16,74 @@
  */
 package org.waveprotocol.wave.client.wavepanel;
 
+import org.waveprotocol.wave.client.common.util.LogicalPanel;
+import org.waveprotocol.wave.client.wavepanel.event.EventHandlerRegistry;
+import org.waveprotocol.wave.client.wavepanel.event.KeySignalRouter;
+import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
+import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
+import org.waveprotocol.wave.model.wave.SourcesEvents;
+
 /**
- * Presents a wave.
+ * A UI component for interacting with a wave.
+ * <p>
+ * This interface does not expose features; rather, it exposes mechanisms
+ * through which features can be implemented.
  *
+ * @author hearnden@google.com (David Hearnden)
  */
-public interface WavePanel {
+public interface WavePanel extends SourcesEvents<WavePanel.LifecycleListener> {
+
+  /**
+   * Observer of events affecting this panel's lifecycle.
+   */
+  public interface LifecycleListener {
+    /**
+     * Notifies this listener that the wave panel is now showing a wave.
+     */
+    void onInit();
+
+    /**
+     * Notifies this listener that the wave panel it no longer showing a wave
+     * and has been discarded.
+     */
+    void onReset();
+  }
+
+  /**
+   * This method is intended to be visible only to subpackages.
+   *
+   * @return the provider of views of dom elements.
+   */
+  DomAsViewProvider getViewProvider();
+
+  /**
+   * This method is intended to be visible only to subpackages.
+   *
+   * @return the registry against which event handlers are registered.
+   */
+  EventHandlerRegistry getHandlers();
+
+  /**
+   * This method is intended to be visible only to subpackages.
+   *
+   * @return the registry of key handlers for when focus is on the wave panel.
+   */
+  KeySignalRouter getKeyRouter();
+
+  /**
+   * This method is intended to be visible only to subpackages.
+   *
+   * @return the panel for connecting GWT widgets.
+   */
+  LogicalPanel getGwtPanel();
+
+  /** @return true if this panel has contents. */
+  boolean hasContents();
+
+  /**
+   * This method is intended to be visible only to subpackages.
+   *
+   * @return the UI of the main conversation in this panel.
+   */
+  TopConversationView getContents();
 }

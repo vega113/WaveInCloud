@@ -20,8 +20,8 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 
+import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.event.WaveMouseDownHandler;
-import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.Actions;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMenuItemView;
 import org.waveprotocol.wave.client.wavepanel.view.View.Type;
@@ -50,7 +50,7 @@ public final class MenuController implements WaveMouseDownHandler {
   /**
    * Installs the focus-frame feature in a wave panel.
    */
-  public static void install(Actions handler, WavePanelImpl panel) {
+  public static void install(Actions handler, WavePanel panel) {
     MenuController controller = new MenuController(handler, panel.getViewProvider());
     panel.getHandlers().registerMouseDownHandler(TypeCodes.kind(Type.MENU_ITEM), controller);
   }

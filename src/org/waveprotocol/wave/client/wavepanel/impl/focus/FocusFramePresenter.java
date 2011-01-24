@@ -16,10 +16,12 @@
  */
 package org.waveprotocol.wave.client.wavepanel.impl.focus;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.client.common.util.KeyCombo;
 import org.waveprotocol.wave.client.scroll.TargetScroller;
+import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.FocusFrameView;
@@ -60,7 +62,7 @@ public final class FocusFramePresenter implements SourcesEvents<FocusFramePresen
   private final CopyOnWriteSet<Listener> listeners = CopyOnWriteSet.create();
 
   /** Panel in which this feature is installed. */
-  private final WavePanelImpl panel;
+  private final WavePanel panel;
 
   /** Order generator, optionally installed. */
   private FocusOrder order;
@@ -76,7 +78,8 @@ public final class FocusFramePresenter implements SourcesEvents<FocusFramePresen
   /**
    * Creates a focus-frame presenter.
    */
-  FocusFramePresenter(FocusFrameView view, WavePanelImpl panel, ViewTraverser traverser) {
+  @VisibleForTesting
+  FocusFramePresenter(FocusFrameView view, WavePanel panel, ViewTraverser traverser) {
     this.view = view;
     this.panel = panel;
     this.traverser = traverser;
@@ -91,7 +94,7 @@ public final class FocusFramePresenter implements SourcesEvents<FocusFramePresen
     // The wave panel contents may be empty if there are no conversations. If
     // there are no conversations in view, then the focus frame is not usable
     // (all public methods will throw IllegalStateException).
-    TopConversationView main = panel.getMain();
+    TopConversationView main = panel.getContents();
     if (main != null) {
       scroller = main.getScroller();
     }
