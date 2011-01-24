@@ -18,7 +18,6 @@
 package org.waveprotocol.wave.model.conversation;
 
 import org.waveprotocol.wave.model.adt.BasicValue;
-import org.waveprotocol.wave.model.adt.ObservableBasicValue;
 import org.waveprotocol.wave.model.adt.ObservableElementList;
 import org.waveprotocol.wave.model.adt.docbased.DocumentBasedBasicValue;
 import org.waveprotocol.wave.model.adt.docbased.DocumentBasedElementList;
@@ -69,13 +68,9 @@ final class DocumentBasedManifestBlip implements ObservableManifestBlip {
 
   private static final String THREAD_TAG = "thread";
   private static final String BLIP_ID_ATTR = "id";
-  private static final String BLIP_DELETED_ATTR = "deleted";
 
   /** The id of the blip. */
   private final BasicValue<String> id;
-
-  /** Whether this blip is deleted. */
-  private final ObservableBasicValue<Boolean> isDeleted;
 
   /** Replies to this blip, both inline and not. */
   private final ObservableElementList<ObservableManifestThread, ThreadInitialiser> replies;
@@ -93,9 +88,7 @@ final class DocumentBasedManifestBlip implements ObservableManifestBlip {
     return new DocumentBasedManifestBlip(
         DocumentBasedElementList.create(router, container, THREAD_TAG,
             DocumentBasedManifestThread.<E> factory()),
-        DocumentBasedBasicValue.create(router, container, Serializer.STRING, BLIP_ID_ATTR),
-        DocumentBasedBasicValue.create(router, container, Serializer.BOOLEAN,
-            BLIP_DELETED_ATTR));
+        DocumentBasedBasicValue.create(router, container, Serializer.STRING, BLIP_ID_ATTR));
   }
 
   /**
@@ -122,11 +115,10 @@ final class DocumentBasedManifestBlip implements ObservableManifestBlip {
    *
    * @param replies the replies list
    * @param id the id attribute
-   * @param isDeleted the deleted attribute
    */
   DocumentBasedManifestBlip(
       ObservableElementList<ObservableManifestThread, ThreadInitialiser> replies,
-      BasicValue<String> id, ObservableBasicValue<Boolean> isDeleted) {
+      BasicValue<String> id) {
     ObservableElementList.Listener<ObservableManifestThread> repliesListener =
         new ObservableElementList.Listener<ObservableManifestThread>() {
           public void onValueAdded(ObservableManifestThread entry) {
@@ -139,22 +131,9 @@ final class DocumentBasedManifestBlip implements ObservableManifestBlip {
           }
         };
 
-    ObservableBasicValue.Listener<Boolean> deletedListener =
-        new ObservableBasicValue.Listener<Boolean>() {
-          public void onValueChanged(Boolean oldValue, Boolean newValue) {
-            if ((newValue != null) && newValue) {
-              triggerOnDeleted();
-            } else {
-              triggerOnUndeleted();
-            }
-          }
-    };
-
     this.replies = replies;
     this.replies.addListener(repliesListener);
     this.id = id;
-    this.isDeleted = isDeleted;
-    this.isDeleted.addListener(deletedListener);
   }
 
   @Override
@@ -200,17 +179,6 @@ final class DocumentBasedManifestBlip implements ObservableManifestBlip {
   }
 
   @Override
-  public boolean isDeleted() {
-    Boolean deleted = isDeleted.get();
-    return (deleted != null) ? deleted : false;
-  }
-
-  @Override
-  public void setDeleted(boolean deleted) {
-    isDeleted.set(deleted);
-  }
-
-  @Override
   public void detachListeners() {
     listeners.clear();
   }
@@ -227,7 +195,7 @@ final class DocumentBasedManifestBlip implements ObservableManifestBlip {
 
   @Override
   public String toString() {
-    return getClass().getName() + "(id = " + id.get() + ", isDeleted = " + isDeleted.get() + ")";
+    return getClass().getName() + "(id = " + id.get() + ")";
   }
 
   private void triggerOnManifestThreadAdded(ObservableManifestThread entry) {
@@ -239,18 +207,6 @@ final class DocumentBasedManifestBlip implements ObservableManifestBlip {
   private void triggerOnManifestThreadRemoved(ObservableManifestThread entry) {
     for (Listener l : listeners) {
       l.onReplyRemoved(entry);
-    }
-  }
-
-  private void triggerOnDeleted() {
-    for (Listener l : listeners) {
-      l.onDeleted();
-    }
-  }
-
-  private void triggerOnUndeleted() {
-    for (Listener l : listeners) {
-      l.onUndeleted();
     }
   }
 }

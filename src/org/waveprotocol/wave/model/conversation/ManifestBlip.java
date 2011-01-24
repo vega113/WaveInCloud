@@ -74,14 +74,4 @@ public interface ManifestBlip {
    * @return the number of reply threads in this blip
    */
   int numReplies();
-
-  /**
-   * @return whether this blip is logically deleted
-   */
-  boolean isDeleted();
-
-  /**
-   * Sets whether blip is deleted.
-   */
-  void setDeleted(boolean deleted);
 }

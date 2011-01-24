@@ -40,15 +40,6 @@ public final class BlipIterators {
     }
   };
 
-  /**
-   * A predicate that accepts non-deleted blips.
-   */
-  private final static Predicate<ConversationBlip> NOT_DELETED = new Predicate<ConversationBlip>() {
-    public boolean apply(ConversationBlip target) {
-      return !target.isDeleted();
-    }
-  };
-
   private static final class BlipIterator implements Iterator<ConversationBlip> {
 
     private final Predicate<ConversationBlip> acceptsBlip;
@@ -116,7 +107,7 @@ public final class BlipIterators {
     return new Iterable<ConversationBlip>() {
       @Override
       public Iterator<ConversationBlip> iterator() {
-        return new BlipIterator(thread, NOT_DELETED);
+        return new BlipIterator(thread, ALL);
       }
     };
   }

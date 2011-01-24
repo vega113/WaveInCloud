@@ -81,12 +81,6 @@ public abstract class ConversationTestBase extends TestCase {
    */
   protected abstract ObservableConversation mirrorConversation(ObservableConversation toMirror);
 
-  /**
-   * Restores a blip which has previously been logically deleted but remains
-   * as a parent to some replies.
-   */
-  protected abstract void undeleteBlip(ConversationBlip blip);
-
   /** Checks that a blip is still valid. */
   protected abstract void assertBlipValid(ConversationBlip blip);
 
@@ -376,14 +370,7 @@ public abstract class ConversationTestBase extends TestCase {
 
   public void testDeleteSingleRootThreadBlipRemovesIt() {
     ConversationBlip blip = target.getRootThread().appendBlip();
-    assertTrue(blip.delete());
-    assertNull(target.getRootThread().getFirstBlip());
-    assertBlipInvalid(blip);
-  }
-
-  public void testDeleteRecursiveSingleRootThreadBlipRemovesIt() {
-    ConversationBlip blip = target.getRootThread().appendBlip();
-    blip.deleteRecursive();
+    blip.delete();
     assertNull(target.getRootThread().getFirstBlip());
     assertBlipInvalid(blip);
   }
@@ -392,16 +379,7 @@ public abstract class ConversationTestBase extends TestCase {
     ConversationThread thread = target.getRootThread().appendBlip().appendReplyThread();
     ConversationBlip unDeleted = thread.appendBlip();
     ConversationBlip blip = thread.appendBlip();
-    assertTrue(blip.delete());
-    assertEquals(Arrays.asList(unDeleted), getBlipList(thread));
-    assertBlipInvalid(blip);
-  }
-
-  public void testDeleteRecursiveSingleNonRootThreadBlipRemovesIt() {
-    ConversationThread thread = target.getRootThread().appendBlip().appendReplyThread();
-    ConversationBlip unDeleted = thread.appendBlip();
-    ConversationBlip blip = thread.appendBlip();
-    blip.deleteRecursive();
+    blip.delete();
     assertEquals(Arrays.asList(unDeleted), getBlipList(thread));
     assertBlipInvalid(blip);
   }
@@ -421,7 +399,7 @@ public abstract class ConversationTestBase extends TestCase {
     reply.appendBlip();
 
     second.delete();
-    first.deleteRecursive();
+    first.delete();
 
     ConversationBlip newFirst = target.getRootThread().appendBlip();
     assertBlipValid(newFirst);
@@ -432,10 +410,10 @@ public abstract class ConversationTestBase extends TestCase {
     ConversationBlip b2 = target.getRootThread().appendBlip();
     ConversationBlip b3 = target.getRootThread().appendBlip();
 
-    assertTrue(b2.delete());
+    b2.delete();
     assertEquals(Arrays.asList(b1, b3), getBlipList(target.getRootThread()));
 
-    assertTrue(b1.delete());
+    b1.delete();
     assertEquals(Arrays.asList(b3), getBlipList(target.getRootThread()));
   }
 
@@ -445,50 +423,13 @@ public abstract class ConversationTestBase extends TestCase {
     ConversationThread reply = blip.appendInlineReplyThread(locateAfterLineElement(doc));
     ConversationBlip replyBlip = reply.appendBlip();
 
-    assertTrue(blip.delete());
+    blip.delete();
     assertNull(target.getRootThread().getFirstBlip());
     assertThreadInvalid(reply);
     assertBlipInvalid(replyBlip);
   }
 
-  public void testDeleteBlipWithReplyLeavesTombstoneAndReply() {
-    ConversationBlip blip = target.getRootThread().appendBlip();
-    ConversationThread reply = blip.appendReplyThread();
-    ConversationBlip replyBlip = reply.appendBlip();
-
-    assertFalse(blip.delete());
-    assertSame(blip, target.getRootThread().getFirstBlip());
-    assertTrue(blip.isDeleted());
-    assertSame(reply, blip.getReplyThreads().iterator().next());
-    assertSame(replyBlip, blip.getReplyThreads().iterator().next().getFirstBlip());
-    assertThreadChildrenConsistent(blip);
-    assertBlipInvalid(blip);
-  }
-
-  public void testDeleteBlipWithManyRepliesLeavesOnlyNonInlineReplies() {
-    ConversationBlip blip = target.getRootThread().appendBlip();
-    MutableDocument<?, ?, ?> doc = blip.getContent();
-    ConversationThread reply1 = blip.appendReplyThread();
-    reply1.appendBlip();
-    ConversationThread inlineReply1 = blip.appendInlineReplyThread(locateAfterLineElement(doc));
-    inlineReply1.appendBlip();
-    ConversationThread reply2 = blip.appendReplyThread();
-    reply2.appendBlip();
-    ConversationThread inlineReply2 = blip.appendInlineReplyThread(locateAfterLineElement(doc));
-    inlineReply2.appendBlip();
-
-    assertFalse(blip.delete());
-    assertSame(blip, target.getRootThread().getFirstBlip());
-    assertTrue(blip.isDeleted());
-    assertEquals(Arrays.asList(reply1, reply2), CollectionUtils.newArrayList(
-        blip.getReplyThreads()));
-    assertFalse(blip.getInlineReplyThreads().iterator().hasNext());
-    assertThreadChildrenConsistent(blip);
-    assertThreadInvalid(inlineReply1);
-    assertThreadInvalid(inlineReply2);
-  }
-
-  public void testDeleteRecursiveBlipWithManyRepliesDeletesReplies() {
+  public void testDeleteBlipWithManyRepliesDeletesReplies() {
     ConversationBlip blip = target.getRootThread().appendBlip();
     MutableDocument<?, ?, ?> doc = blip.getContent();
     ConversationThread reply1 = blip.appendReplyThread();
@@ -501,7 +442,7 @@ public abstract class ConversationTestBase extends TestCase {
     ConversationThread inlineReply2 = blip.appendInlineReplyThread(locateAfterLineElement(doc));
     inlineReply2.appendBlip();
 
-    blip.deleteRecursive();
+    blip.delete();
     assertNull(target.getRootThread().getFirstBlip());
     assertBlipInvalid(blip);
     assertThreadInvalid(reply1);
@@ -589,38 +530,6 @@ public abstract class ConversationTestBase extends TestCase {
     assertThreadInvalid(replyThread);
   }
 
-  public void testDeleteLastReplyToDeletedBlipRemovesBlip() {
-    ConversationBlip first = target.getRootThread().appendBlip();
-    ConversationThread replyThread = first.appendReplyThread();
-    ConversationBlip replyBlip = replyThread.appendBlip();
-
-    // Delete second, but it remains as a tombstone.
-    first.delete();
-    assertSame(first, target.getRootThread().getFirstBlip());
-    // Delete its last reply, now it's gone.
-    replyBlip.delete();
-    assertThreadInvalid(replyThread);
-    assertBlipInvalid(first);
-    assertNull(target.getRootThread().getFirstBlip());
-  }
-
-  public void testEmptiedDeletedBlipIsRemovedFromThread() {
-    ConversationBlip first = target.getRootThread().appendBlip();
-    ConversationBlip second = target.getRootThread().appendBlip();
-    ConversationThread replyThread = first.appendReplyThread();
-    ConversationBlip replyBlip = replyThread.appendBlip();
-
-    LineContainers.appendToLastLine(first.getContent(), XmlStringBuilder.createText("content"));
-    first.delete();
-    assertEquals(first.getContent().toXmlString(), "");
-
-    replyBlip.delete();
-    assertBlipInvalid(first);
-    assertBlipValid(second);
-    assertSame(second, target.getRootThread().getFirstBlip());
-    assertEquals(Arrays.asList(second), getBlipList(target.getRootThread()));
-  }
-
   // Bug 2220263.
   public void testCanReplyAfterDeletingReplyThread() {
     ConversationThread topThread = target.getRootThread().appendBlip().appendReplyThread();
@@ -650,21 +559,6 @@ public abstract class ConversationTestBase extends TestCase {
     assertBlipInvalid(inlineReplyBlip);
     assertThreadInvalid(inlineReply);
     assertStructureEquivalent(xmlBefore, blip.getContent());
-  }
-
-  public void testRestoredBlipIsAccessible() {
-    ConversationBlip first = target.getRootThread().appendBlip();
-    ConversationThread replyThread = first.appendReplyThread();
-    replyThread.appendBlip();
-
-    // Delete second, but it remains as a tombstone.
-    first.delete();
-    assertSame(first, target.getRootThread().getFirstBlip());
-    // Restore first blip.
-    undeleteBlip(first);
-
-    assertBlipValid(first);
-    assertNotNull(target.getRootThread().getFirstBlip());
   }
 
   public void testDeleteRootThreadRemovesAllBlips() {
@@ -714,7 +608,6 @@ public abstract class ConversationTestBase extends TestCase {
     assertBlipInvalid(blip);
     assertBlipAccessible(blip);
 
-    assertFalse(blip.isDeleted());
     assertEquals(target.getRootThread(), blip.getThread());
     assertEquals(Collections.emptyList(), getBlipList(target.getRootThread()));
     assertEquals(Collections.emptyList(), getAllReplyList(blip));
@@ -726,20 +619,16 @@ public abstract class ConversationTestBase extends TestCase {
    */
   public void testBlipWithThreadCanBeAccessedAfterDeletion() {
     ConversationBlip blip = target.getRootThread().appendBlip();
-    // Append a reply thread so that blip will remain a child of the root
-    // thread after deletion (just with its content deleted).
     ConversationThread thread = blip.appendReplyThread();
     blip.delete();
 
     assertBlipInvalid(blip);
     assertBlipAccessible(blip);
-    assertThreadValid(thread);
 
-    assertTrue(blip.isDeleted());
     assertEquals(target.getRootThread(), blip.getThread());
-    assertEquals(Collections.singletonList(blip), getBlipList(target.getRootThread()));
+    assertEquals(Collections.emptyList(), getBlipList(target.getRootThread()));
     assertEquals(blip, thread.getParentBlip());
-    assertEquals(Collections.singletonList(thread), getAllReplyList(blip));
+    assertEquals(Collections.emptyList(), getAllReplyList(blip));
   }
 
   /**
@@ -757,7 +646,6 @@ public abstract class ConversationTestBase extends TestCase {
     assertThreadInvalid(thread);
     assertThreadAccessible(thread);
 
-    assertFalse(replyBlip.isDeleted());
     assertEquals(blip, thread.getParentBlip());
     assertEquals(Collections.emptyList(), blip.getReplyThreads());
     assertEquals(thread, replyBlip.getThread());
@@ -905,44 +793,7 @@ public abstract class ConversationTestBase extends TestCase {
     verifyNoMoreInteractions(convListener);
   }
 
-  public void testBlipDeleteWithoutRemovalFiresEvent() {
-    ObservableConversation mirror = mirrorConversation(target);
-    ObservableConversationBlip b1 = target.getRootThread().appendBlip();
-    ObservableConversationBlip b1mirror = mirror.getRootThread().getFirstBlip();
-    ObservableConversationThread t1 = b1.appendReplyThread();
-    t1.appendBlip();
-
-    mirror.addListener(convListener);
-
-    b1.delete();
-    verify(convListener).onBlipContentDeleted(b1mirror);
-
-    allowBlipTimestampChanged(convListener);
-    verifyNoMoreInteractions(convListener);
-  }
-
-  public void testRestoreBlipFiresEvent() {
-    ObservableConversation mirror = mirrorConversation(target);
-    ObservableConversationBlip b1 = target.getRootThread().appendBlip();
-    ObservableConversationBlip b1Mirror = mirror.getRootThread().getFirstBlip();
-    ConversationThread t1 = b1.appendReplyThread();
-    t1.appendBlip();
-
-    // Delete second, but it remains as a tombstone.
-    b1.delete();
-
-    mirror.addListener(convListener);
-
-    // Restore first blip.
-    undeleteBlip(b1);
-
-    verify(convListener).onBlipContentUndeleted(b1Mirror);
-
-    allowBlipTimestampChanged(convListener);
-    verifyNoMoreInteractions(convListener);
-  }
-
-  public void testCascadingEventsFireBottomUp() {
+  public void testCompoundEventsFireBottomUp() {
     ObservableConversation mirror = mirrorConversation(target);
 
     // Build tall structure.
@@ -960,11 +811,8 @@ public abstract class ConversationTestBase extends TestCase {
 
     mirror.addListener(convListener);
 
-    // Attempt to delete b1, remains as deleted.
-    b1.delete();
-
     // Trigger cascading deletion.
-    b2.delete();
+    b1.delete();
 
     // Timestamp changed events may have also occurred on the blip listeners.
     // Mockito doesn't support atMost on inOrder verifications, hence we cannot
@@ -972,7 +820,6 @@ public abstract class ConversationTestBase extends TestCase {
     // TODO(anorth): verifyNoMoreInteractions when the CWM injects a clock.
 
     InOrder order = inOrder(convListener);
-    order.verify(convListener).onBlipContentDeleted(b1mirror);
     order.verify(convListener).onBlipDeleted(b2mirror);
     order.verify(convListener).onThreadDeleted(t1mirror);
     order.verify(convListener).onBlipDeleted(b1mirror);
@@ -996,7 +843,6 @@ public abstract class ConversationTestBase extends TestCase {
     mirror.removeListener(convListener);
 
     b1.delete();
-    b2.delete();
 
     verifyNoMoreInteractions(convListener);
   }
@@ -1154,7 +1000,6 @@ public abstract class ConversationTestBase extends TestCase {
     blip.getReplyThreads();
     blip.getThread();
     blip.hackGetRaw();
-    blip.isDeleted();
     blip.isRoot();
   }
 

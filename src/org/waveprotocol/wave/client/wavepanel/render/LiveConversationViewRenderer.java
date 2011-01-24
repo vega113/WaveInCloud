@@ -159,16 +159,6 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
     }
 
     @Override
-    public void onBlipContentDeleted(ObservableConversationBlip blip) {
-
-    }
-
-    @Override
-    public void onBlipContentUndeleted(ObservableConversationBlip blip) {
-
-    }
-
-    @Override
     public void onBlipContributorAdded(ObservableConversationBlip blip, ParticipantId c) {
       profileUpdateMonitor.addContributorToMonitor(blip, c);
     }

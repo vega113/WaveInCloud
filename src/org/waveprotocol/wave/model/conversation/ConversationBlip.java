@@ -172,41 +172,10 @@ public interface ConversationBlip {
   long getLastModifiedVersion();
 
   /**
-   * This is a legacy method, that is no longer supported.
-   *
-   * @throws UnsupportedOperationException
-   */
-  @Deprecated
-  void submit();
-
-  /**
-   * Clears this blip's content document and deletes all inline reply threads.
-   * If this blip has no non-inline replies it is removed from its thread and
-   * the conversation entirely. If it has non-inline replies then it remains as
-   * a "deleted" blip.
-   *
-   * If this method returns true then this blip was removed and is no longer
-   * usable. If it returns false then this blip remains as a deleted blip.
-   *
-   * If this method is called on a deleted blip with replies it has no effect.
-   * If it is called on a deleted blip with no replies then the blip is
-   * completely removed and becomes unusable.
-   *
-   * @return true if this blip is removed entirely, false if it remains
-   */
-  boolean delete();
-
-  /**
    * Clears this blip's content document and deletes all reply threads. The blip
    * is removed from the conversation and is no longer usable.
    */
-  void deleteRecursive();
-
-  /**
-   * Checks whether this blip has been deleted. If so, the only valid methods on
-   * the blips are those which query its state, not modify it.
-   */
-  boolean isDeleted();
+  void delete();
 
   /**
    * Gets an id for this blip. Blip ids are unique in the scope of the

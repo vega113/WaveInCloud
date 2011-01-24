@@ -28,7 +28,6 @@ import junit.framework.TestCase;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.waveprotocol.wave.model.adt.BasicValue;
-import org.waveprotocol.wave.model.adt.ObservableBasicValue;
 import org.waveprotocol.wave.model.adt.ObservableElementList;
 import org.waveprotocol.wave.model.document.ObservableMutableDocument;
 import org.waveprotocol.wave.model.document.util.DefaultDocumentEventRouter;
@@ -51,7 +50,6 @@ public class DocumentBasedManifestBlipTest extends TestCase {
         DocumentBasedManifestBlip.ThreadInitialiser>
             threads = mock(ObservableElementList.class, "threads");
     final BasicValue<String> id = mock(BasicValue.class, "id");
-    final ObservableBasicValue<Boolean> isTombstone = mock(ObservableBasicValue.class);
 
     // Create mock objects to use as return value.
     final ObservableManifestThread thread = mock(ObservableManifestThread.class, "thread");
@@ -60,15 +58,12 @@ public class DocumentBasedManifestBlipTest extends TestCase {
     // Listeners that the manifest blip will add.
     ArgumentCaptor<ObservableElementList.Listener> threadsListener =
         ArgumentCaptor.forClass(ObservableElementList.Listener.class);
-    ArgumentCaptor<ObservableBasicValue.Listener> tombstoneListener =
-      ArgumentCaptor.forClass(ObservableBasicValue.Listener.class);
 
     // Create a blip to test.
-    DocumentBasedManifestBlip blip = new DocumentBasedManifestBlip(threads, id, isTombstone);
+    DocumentBasedManifestBlip blip = new DocumentBasedManifestBlip(threads, id);
 
     // Expect adding of listeners.
     verify(threads).addListener(threadsListener.capture());
-    verify(isTombstone).addListener(tombstoneListener.capture());
 
     // Listener to the target blip
     final ObservableManifestBlip.Listener blipListener = mock(
@@ -79,21 +74,17 @@ public class DocumentBasedManifestBlipTest extends TestCase {
     // Pretend xml list events.
     threadsListener.getValue().onValueAdded(thread);
     threadsListener.getValue().onValueRemoved(thread);
-    tombstoneListener.getValue().onValueChanged(null, Boolean.TRUE);
-    tombstoneListener.getValue().onValueChanged(Boolean.TRUE, null);
 
     // Pretends events from xml should cause emit of events on blip listener.
     verify(blipListener).onReplyAdded(same(thread));
     verify(blipListener).onReplyRemoved(same(thread));
     verify(thread).detachListeners();
-    verify(blipListener).onDeleted();
-    verify(blipListener).onUndeleted();
 
     when(threads.add(new DocumentBasedManifestBlip.ThreadInitialiser("t1", false))).thenReturn(thread);
     when(threads.add(1, new DocumentBasedManifestBlip.ThreadInitialiser("t2", true))).thenReturn(thread);
     when(threads.get(2)).thenReturn(thread);
     when(threads.getValues()).thenReturn(iterator);
-    when(threads.indexOf(same(thread))).thenReturn(1);;
+    when(threads.indexOf(same(thread))).thenReturn(1);
     when(threads.remove(same(thread))).thenReturn(true);
     when(threads.size()).thenReturn(2);
 

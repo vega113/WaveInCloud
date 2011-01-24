@@ -126,7 +126,7 @@ public final class Actions {
       }
     }
 
-    views.getBlip(blipUi).deleteRecursive();
+    views.getBlip(blipUi).delete();
   }
 
   /**

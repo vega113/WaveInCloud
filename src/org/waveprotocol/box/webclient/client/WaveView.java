@@ -162,16 +162,6 @@ public class WaveView extends Composite {
           }
 
           @Override
-          public void onBlipContentDeleted(ObservableConversationBlip blip) {
-            log("blip content deleted");
-          }
-
-          @Override
-          public void onBlipContentUndeleted(ObservableConversationBlip blip) {
-            log("blip content undeleted");
-          }
-
-          @Override
           public void onBlipContributorAdded(ObservableConversationBlip blip,
               ParticipantId contributor) {
             log("blip contributor added");

@@ -300,7 +300,7 @@ public class OperationContextImpl implements OperationContext, OperationResults 
     String actualBlipId = blipId.startsWith(TEMP_ID_MARKER) ? tempBlipIdMap.get(blipId) : blipId;
 
     ConversationBlip blip = conversation.getBlip(actualBlipId);
-    if (blip == null || blip.isDeleted()) {
+    if (blip == null) {
       throw new InvalidRequestException(
           "Blip with id " + blipId + " does not exist or has been deleted");
     }

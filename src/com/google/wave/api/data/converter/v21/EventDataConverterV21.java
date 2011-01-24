@@ -126,16 +126,14 @@ public class EventDataConverterV21 implements EventDataConverter {
     blipData.setWaveletId(ApiIdSerializer.instance().serialiseWaveletId(wavelet.getId()));
     blipData.setChildBlipIds(toBlipIdList(findBlipChildren(blip)));
 
-    if (!blip.isDeleted()) {
-      ApiView apiView = new ApiView(blip.getContent(), wavelet);
-      // Set content.
-      blipData.setContent(apiView.apiContents());
-      // Set Annotations.
-      blipData.setAnnotations(extractAnnotations(blip.getContent(), apiView));
-      // blip.getContent().rangedAnnotations(0, blip.getContent().size(), null),
-      // Set Form Elements.
-      blipData.setElements(ElementSerializer.serialize(blip.getContent(), wavelet));
-    }
+    ApiView apiView = new ApiView(blip.getContent(), wavelet);
+    // Set content.
+    blipData.setContent(apiView.apiContents());
+    // Set Annotations.
+    blipData.setAnnotations(extractAnnotations(blip.getContent(), apiView));
+    // blip.getContent().rangedAnnotations(0, blip.getContent().size(), null),
+    // Set Form Elements.
+    blipData.setElements(ElementSerializer.serialize(blip.getContent(), wavelet));
     return blipData;
   }
 
@@ -265,9 +263,7 @@ public class EventDataConverterV21 implements EventDataConverter {
   private static List<String> toBlipIdList(List<ConversationBlip> children) {
     List<String> ids = Lists.newArrayListWithCapacity(children.size());
     for (ConversationBlip child : children) {
-      if (!child.isDeleted()) {
-        ids.add(child.getId());
-      }
+      ids.add(child.getId());
     }
     return ids;
   }

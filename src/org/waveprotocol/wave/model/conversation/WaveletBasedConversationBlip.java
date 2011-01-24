@@ -28,7 +28,6 @@ import org.waveprotocol.wave.model.document.util.Point;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 import org.waveprotocol.wave.model.util.Preconditions;
-import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
 import org.waveprotocol.wave.model.util.StringMap;
 import org.waveprotocol.wave.model.wave.Blip;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
@@ -37,6 +36,7 @@ import org.waveprotocol.wave.model.wave.SourcesEvents;
 import org.waveprotocol.wave.model.wave.WaveletListener;
 import org.waveprotocol.wave.model.wave.opbased.WaveletListenerImpl;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -56,11 +56,6 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
 
   /**
    * Receives events on a conversation blip.
-   *
-   * When a blip is deleted either {@link #onDeleted()} is called if the blip is
-   * removed entirely, or {@link #onContentDeleted()} is called if the blip remains as
-   * a parent to reply threads. If those replies are subsequently removed then
-   * {@link #onDeleted()} is called.
    */
   interface Listener {
     /**
@@ -77,23 +72,6 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
      * @param location the location at which the thread is anchored
      */
     void onInlineReplyAdded(WaveletBasedConversationThread reply, int location);
-
-    /**
-     * Notifies this listener that the blip was deleted, but remains as a parent
-     * to one or more reply threads. The blip is usable only as an accessor to
-     * its replies; no content or replies may be added.
-     *
-     * @see ConversationBlip#delete()
-     */
-    void onContentDeleted();
-
-    /**
-     * Notifies this listener that the blip deletion was reversed. The blip is
-     * once again usable.
-     *
-     * @see #onContentDeleted()
-     */
-    void onContentUndeleted();
 
     /**
      * Notifies this listener that the blip was removed from the conversation.
@@ -295,7 +273,7 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
 
   @Override
   public WaveletBasedConversationThread appendReplyThread() {
-    checkIsUsableAndNotDeleted();
+    checkIsUsable();
     String id = helper.createThreadId();
     manifestBlip.appendReply(id, false);
     return replies.get(id);
@@ -303,7 +281,7 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
 
   @Override
   public WaveletBasedConversationThread appendInlineReplyThread(final int location) {
-    checkIsUsableAndNotDeleted();
+    checkIsUsable();
     final String threadId = helper.createThreadId();
     createInlineReplyAnchor(threadId, location);
     manifestBlip.appendReply(threadId, true);
@@ -338,55 +316,19 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
   }
 
   @Override
-  @Deprecated
-  public void submit() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public boolean delete() {
-    checkIsUsableAndNotDeleted();
-    final List<WaveletBasedConversationThread> inlineReplies = CollectionUtils.newArrayList();
-    final boolean hasNonInlineReplies[] = { false };
-    replies.each(new ProcV<WaveletBasedConversationThread>() {
-      @Override
-      public void apply(String key, WaveletBasedConversationThread reply) {
-        if (reply.isInline()) {
-          inlineReplies.add(reply);
-        } else {
-          hasNonInlineReplies[0] = true;
-        }
-
-      }
-    });
-    // Delete inline reply threads.
+  public void delete() {
+    checkIsUsable();
+    Collection<WaveletBasedConversationThread> allReplies = CollectionUtils.createQueue();
+    CollectionUtils.copyValuesToJavaCollection(replies, allReplies);
+    // Delete reply threads.
     // TODO(anorth): Move this loop to WBCT, where it can delete all the
     // inline reply anchors in one pass.
-    for (WaveletBasedConversationThread replyThread : inlineReplies) {
+    for (WaveletBasedConversationThread replyThread : allReplies) {
       deleteThread(replyThread);
     }
 
-    if (hasNonInlineReplies[0]) {
-      // Mark deleted in the manifest then clear content so any stray content
-      // mutations don't affect conversational interperation.
-      manifestBlip.setDeleted(true);
-      clearContent();
-    } else {
-      // All replies have been deleted, so remove this empty blip.
-      parentThread.deleteBlip(this, true);
-    }
-    return !hasNonInlineReplies[0];
-  }
-
-  @Override
-  public void deleteRecursive() {
-    checkIsUsableAndNotDeleted();
+    // All replies have been deleted, so remove this empty blip.
     parentThread.deleteBlip(this, true);
-  }
-
-  @Override
-  public boolean isDeleted() {
-    return manifestBlip.isDeleted();
   }
 
   @Override
@@ -426,16 +368,6 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
   @Override
   public void onReplyRemoved(final ObservableManifestThread thread) {
     forgetThread(replies.get(thread.getId()));
-  }
-
-  @Override
-  public void onDeleted() {
-    triggerOnContentDeleted();
-  }
-
-  @Override
-  public void onUndeleted() {
-    triggerOnContentUndeleted();
   }
 
   @Override
@@ -483,7 +415,6 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
     if (threadWasInline) {
       clearInlineReplyAnchor(threadToDelete.getId());
     }
-    deleteSelfIfEmpty();
   }
 
   /**
@@ -501,13 +432,6 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
       manifestBlip.removeReply(threadToDelete.getManifestThread());
     }
     clearAllInlineReplyAnchors();
-  }
-
-
-  void deleteSelfIfEmpty() {
-    if (isDeleted() && replies.isEmpty()) {
-      parentThread.deleteBlip(this, true);
-    }
   }
 
   /**
@@ -537,17 +461,6 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
   void checkIsUsable() {
     if (!isUsable) {
       Preconditions.illegalState("Deleted blip is not usable: " + this);
-    }
-  }
-
-  /**
-   * Checks that this blip is safe to access and is not a tombstone.
-   */
-  @VisibleForTesting
-  void checkIsUsableAndNotDeleted() {
-    checkIsUsable();
-    if (manifestBlip.isDeleted()) {
-      Preconditions.illegalState("Deleted blip is not usable except to access replies: " + this);
     }
   }
 
@@ -679,18 +592,6 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
   private void triggerOnReplyAdded(WaveletBasedConversationThread reply) {
     for (Listener l : listeners) {
       l.onReplyAdded(reply);
-    }
-  }
-
-  private void triggerOnContentDeleted() {
-    for (Listener l : listeners) {
-      l.onContentDeleted();
-    }
-  }
-
-  private void triggerOnContentUndeleted() {
-    for (Listener l : listeners) {
-      l.onContentUndeleted();
     }
   }
 

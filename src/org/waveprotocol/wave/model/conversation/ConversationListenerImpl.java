@@ -40,14 +40,6 @@ public class ConversationListenerImpl implements ObservableConversation.Listener
   }
 
   @Override
-  public void onBlipContentDeleted(ObservableConversationBlip blip) {
-  }
-
-  @Override
-  public void onBlipContentUndeleted(ObservableConversationBlip blip) {
-  }
-
-  @Override
   public void onBlipDeleted(ObservableConversationBlip blip) {
   }
 

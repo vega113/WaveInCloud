@@ -22,13 +22,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.waveprotocol.wave.model.testing.ExtraAsserts.assertStructureEquivalent;
 
-
 import org.waveprotocol.wave.model.conversation.Conversation.Anchor;
 import org.waveprotocol.wave.model.conversation.testing.BlipTestUtils;
 import org.waveprotocol.wave.model.document.MutableDocument;
+import org.waveprotocol.wave.model.document.MutableDocument.Action;
 import org.waveprotocol.wave.model.document.ObservableDocument;
 import org.waveprotocol.wave.model.document.ObservableMutableDocument;
-import org.waveprotocol.wave.model.document.MutableDocument.Action;
 import org.waveprotocol.wave.model.document.util.DefaultDocumentEventRouter;
 import org.waveprotocol.wave.model.document.util.DocHelper;
 import org.waveprotocol.wave.model.document.util.Point;
@@ -110,13 +109,13 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
 
   @Override
   protected void assertBlipValid(ConversationBlip blip) {
-    ((WaveletBasedConversationBlip)blip).checkIsUsableAndNotDeleted();
+    ((WaveletBasedConversationBlip)blip).checkIsUsable();
   }
 
   @Override
   protected void assertBlipInvalid(ConversationBlip blip) {
     try {
-      ((WaveletBasedConversationBlip)blip).checkIsUsableAndNotDeleted();
+      ((WaveletBasedConversationBlip)blip).checkIsUsable();
       fail("Expected blip to be invalid");
     } catch (IllegalStateException expected) {
     }
@@ -139,13 +138,6 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
   //
   // Initialization
   //
-
-  @Override
-  protected void undeleteBlip(ConversationBlip blip) {
-    WaveletBasedConversationBlip blipToRestore = (WaveletBasedConversationBlip) blip;
-    assert blipToRestore.getManifestBlip().isDeleted();
-    blipToRestore.getManifestBlip().setDeleted(false);
-  }
 
   /**
    * Tests that an empty wavelet is recognised as having no conversation
@@ -368,26 +360,6 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
     assertMirrorConversationEquivalent();
   }
 
-
-  public void testDeleteBlipLeavesNonInlineReplyUpdatesManifest() {
-    WaveletBasedConversationBlip blip = target.getRootThread().appendBlip();
-    WaveletBasedConversationThread reply = blip.appendReplyThread();
-    WaveletBasedConversationBlip replyBlip = reply.appendBlip();
-
-    blip.delete();
-    // The first blip remains in the manifest as deleted, but its content
-    // is gone. The reply thread and blip are untouched.
-    assertManifestXml("<blip deleted=\"true\" id=\"" + blip.getId() + "\">" +
-        "<thread id=\"" + reply.getId() + "\">" +
-        "<blip id=\"" + replyBlip.getId() + "\"></blip>" +
-        "</thread>" +
-        "</blip>");
-
-    assertStructureEquivalent(XmlStringBuilder.createEmpty(), blip.getContent());
-    assertStructureEquivalent(Blips.INITIAL_CONTENT, replyBlip.getContent());
-    assertMirrorConversationEquivalent();
-  }
-
   // Bug 2220263.
   public void testDeleteLastBlipInThreadRemovesThread() {
     ConversationBlip rootBlip = target.getRootThread().appendBlip();
@@ -401,23 +373,6 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
     assertManifestXml("<blip id=\"" + rootBlip.getId() + "\">" +
         "<thread id=\"" + topThread.getId() + "\">" +
         "<blip id=\"" + topBlip.getId() + "\"></blip>" +
-        "</thread>" +
-        "</blip>");
-  }
-
-  public void testDeleteLastThreadInDeletedBlipRemovesBlip() {
-    ConversationBlip rootBlip = target.getRootThread().appendBlip();
-    ConversationThread topThread = rootBlip.appendReplyThread();
-
-    ConversationBlip topBlip = topThread.appendBlip();
-    ConversationBlip secondBlip = topThread.appendBlip();
-    ConversationThread replyThread = topBlip.appendReplyThread();
-    topBlip.delete();
-    replyThread.appendBlip().delete();
-
-    assertManifestXml("<blip id=\"" + rootBlip.getId() + "\">" +
-        "<thread id=\"" + topThread.getId() + "\">" +
-        "<blip id=\"" + secondBlip.getId() + "\"></blip>" +
         "</thread>" +
         "</blip>");
   }
@@ -544,17 +499,6 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
     assertEquals(Arrays.asList(first, third), getBlipList(thread));
   }
 
-  /**
-   * Tests that empty, deleted blips are not ignored.
-   */
-  public void testCreateWithEmptyDeletedBlipNotIgnored() {
-    WaveletBasedConversationBlip first = target.getRootThread().appendBlip();
-    target.getManifest().getRootThread().getBlip(0).setDeleted(true);
-
-    assertBlipValidButDeleted(first);
-    assertMirrorConversationEquivalent();
-  }
-
   // Bug 2268864.
   public void testObsoleteThreadThenRestoreRemoveBlipDoesntDie() {
     WaveletBasedConversationBlip first = target.getRootThread().appendBlip();
@@ -655,8 +599,6 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
     WaveletBasedConversationThread t2 = first.appendReplyThread();
     WaveletBasedConversationBlip t2b = t2.appendBlip();
 
-    // Tombstone parent blip.
-    first.delete();
     // Locally delete t1, remotely delete t2.
     t1b.delete();
 
@@ -672,78 +614,15 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
     verify(convListener).onThreadDeleted(t2);
     assertBlipInvalid(t2b);
     assertThreadInvalid(t2);
-    assertBlipValidButDeleted(first);
+    assertBlipValid(first);
     assertNotNull(target.getRootThread().getFirstBlip());
 
-    // The manifest now has an empty deleted blip.
-    assertTrue(first.getManifestBlip().isDeleted());
+    // The manifest now has an empty blip.
     assertEquals(0, first.getManifestBlip().numReplies());
 
     // Still there after next write.
     WaveletBasedConversationBlip second = target.getRootThread().appendBlip();
-    assertBlipValidButDeleted(first);
-    assertTrue(first.isDeleted());
-    verify(convListener).onBlipAdded(second);
-    verifyNoMoreInteractions(blipListener, threadListener, convListener);
-  }
-
-  public void testLocalDeleteChildRemoteTombstoneParentLeavesDeletedBlip() {
-    WaveletBasedConversationBlip first = target.getRootThread().appendBlip();
-    WaveletBasedConversationThread replyThread = first.appendReplyThread();
-    WaveletBasedConversationBlip replyBlip = replyThread.appendBlip();
-
-    // Locally delete the reply, while the remote side tombstones the
-    // parent.
-    replyBlip.delete();
-    first.addListener(blipListener);
-    target.addListener(convListener);
-    remoteSetBlipDeleted(first);
-
-    // Expect first blip content deleted event and the blip to be
-    // marked deleted.
-    verify(blipListener).onContentDeleted();
-    verify(convListener).onBlipContentDeleted(first);
-    assertBlipValidButDeleted(first);
-
-    // The manifest now has an empty deleted first blip.
-    assertTrue(target.getRootThread().getManifestThread().getBlip(0).isDeleted());
-
-    // Still there after the next write.
-    WaveletBasedConversationBlip second = target.getRootThread().appendBlip();
-    assertBlipValidButDeleted(first);
-    verify(convListener).onBlipAdded(second);
-    verifyNoMoreInteractions(blipListener, convListener);
-  }
-
-  public void testLocalTombstoneParentRemoteDeleteChildLeavesDeletedBlip() {
-    WaveletBasedConversationBlip parentBlip = target.getRootThread().appendBlip();
-    WaveletBasedConversationThread replyThread = parentBlip.appendReplyThread();
-    WaveletBasedConversationBlip replyBlip = replyThread.appendBlip();
-
-    // Locally tombstone parent while the remote side deletes the reply
-    parentBlip.delete();
-    replyBlip.addListener(blipListener);
-    replyThread.addListener(threadListener);
-    target.addListener(convListener);
-    remoteRemoveBlip(replyBlip);
-    remoteRemoveThread(replyThread);
-
-    // Expect reply thread & blip deleted events and it to be invalid, and the
-    // parent blip to remain valid.
-    verify(blipListener).onDeleted();
-    verify(threadListener).onDeleted();
-    verify(convListener).onBlipDeleted(replyBlip);
-    verify(convListener).onThreadDeleted(replyThread);
-    assertBlipInvalid(replyBlip);
-    assertThreadInvalid(replyThread);
-    assertBlipValidButDeleted(parentBlip);
-
-    // The manifest now has an empty deleted first blip.
-    assertTrue(target.getRootThread().getManifestThread().getBlip(0).isDeleted());
-
-    // Still there after the next write.
-    WaveletBasedConversationBlip second = target.getRootThread().appendBlip();
-    assertBlipValidButDeleted(parentBlip);
+    assertBlipValid(first);
     verify(convListener).onBlipAdded(second);
     verifyNoMoreInteractions(blipListener, threadListener, convListener);
   }
@@ -797,14 +676,6 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
   }
 
   /**
-   * Marks a blip as deleted in the manifest, as though a remote client had done
-   * so.
-   */
-  private void remoteSetBlipDeleted(WaveletBasedConversationBlip blip) {
-    blip.getManifestBlip().setDeleted(true);
-  }
-
-  /**
    * Removes a thread from the manifest, as though a remote client had done so.
    */
   private void remoteRemoveThread(WaveletBasedConversationThread thread) {
@@ -825,11 +696,6 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
         assertStructureEquivalent(exp.wrap("conversation"), doc);
       }
     });
-  }
-
-  private void assertBlipValidButDeleted(ConversationBlip blip) {
-    ((WaveletBasedConversationBlip)blip).checkIsUsable();
-    assertTrue(blip.isDeleted());
   }
 
   /**
@@ -864,16 +730,12 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
       ConversationBlip actual) {
     assertEquals("Mismatched id in constructed conversation blip",
         expected.getId(), actual.getId());
-    assertEquals("Mismatched tombstone in constructed conversation blip",
-        expected.isDeleted(), actual.isDeleted());
-    if (!expected.isDeleted()) {
-      assertEquals("Mismatched author in constructed conversation blip",
-          expected.getAuthorId(), actual.getAuthorId());
-      assertEquals("Mismatched timestamp in constructed conversation blip",
-          expected.getLastModifiedTime(), actual.getLastModifiedTime());
-      assertEquals("Mismatched contributors in constructed conversation blip",
-          expected.getContributorIds(), actual.getContributorIds());
-    }
+    assertEquals("Mismatched author in constructed conversation blip",
+        expected.getAuthorId(), actual.getAuthorId());
+    assertEquals("Mismatched timestamp in constructed conversation blip",
+        expected.getLastModifiedTime(), actual.getLastModifiedTime());
+    assertEquals("Mismatched contributors in constructed conversation blip",
+        expected.getContributorIds(), actual.getContributorIds());
     Iterator<? extends ConversationThread> expectedThreads =
       expected.getReplyThreads().iterator();
     Iterator<? extends ConversationThread> actualThreads = actual.getReplyThreads().iterator();

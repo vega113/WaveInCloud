@@ -68,24 +68,6 @@ public interface ObservableConversation extends Conversation,
     void onBlipAdded(ObservableConversationBlip blip);
 
     /**
-     * Notifies this listener that a blip was logically deleted, but remains as
-     * a parent to replies. The blip is usable only as an accessor to its
-     * replies; no content or replies may be added to the blip.
-     *
-     * @param blip the deleted blip
-     */
-    void onBlipContentDeleted(ObservableConversationBlip blip);
-
-    /**
-     * Notifies this listener that a blip content deletion was reversed. The
-     * blip is once-again usable.
-     *
-     * @param blip the undeleted blip
-     * @see #onBlipContentDeleted(ObservableConversationBlip)
-     */
-    void onBlipContentUndeleted(ObservableConversationBlip blip);
-
-    /**
      * Notifies this listener that a blip was removed. The only valid methods on
      * the blip are those which query its state, not modify it.
      *

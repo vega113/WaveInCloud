@@ -831,7 +831,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
     userPrefs = GadgetUserPrefs.create();
     blipSubmitter = new Submitter(BLIP_SUBMIT_TIMEOUT_MS, new Submitter.SubmitTask() {
       @Override public void doSubmit() {
-        blip.submit();
+        // TODO: send a playback frame signal.
         log("Blip submitted.");
       }
     });

@@ -39,7 +39,7 @@ import org.waveprotocol.wave.model.wave.Wavelet;
  * Test the thread state monitor class to ensure proper counting of total, read
  * and unread blips in the root thread as well as ensuring that counts are
  * properly aggregated when nested threads are present.
- * 
+ *
  * @author Michael MacFadden
  */
 public class ThreadReadStateMonitorTest extends TestCase {
@@ -148,7 +148,7 @@ public class ThreadReadStateMonitorTest extends TestCase {
     ConversationThread t3 = t2b2.appendReplyThread();
     t3.appendBlip();
 
-    t2b2.deleteRecursive();
+    t2b2.delete();
 
     assertEquals(2, monitor.getTotalCount(t1));
     assertEquals(1, monitor.getTotalCount(t2));
@@ -229,7 +229,7 @@ public class ThreadReadStateMonitorTest extends TestCase {
 
     supplementedWave.markAsRead(t3b1);
     supplementedWave.markAsRead(t1b2);
-    t2b2.deleteRecursive();
+    t2b2.delete();
 
     assertEquals(1, monitor.getReadCount(t1));
     assertEquals(1, monitor.getUnreadCount(t1));

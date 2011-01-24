@@ -118,7 +118,7 @@ public class ContextResolver {
    */
   private static void addBlipToEventMessages(EventMessageBundle eventMessageBundle,
       ConversationBlip blip, Wavelet wavelet, EventDataConverter eventDataConverter) {
-    if (blip != null && !blip.isDeleted() && !eventMessageBundle.hasBlipId(blip.getId())) {
+    if (blip != null && !eventMessageBundle.hasBlipId(blip.getId())) {
       eventMessageBundle.addBlip(
           blip.getId(), eventDataConverter.toBlipData(blip, wavelet, eventMessageBundle));
     }

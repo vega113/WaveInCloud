@@ -22,9 +22,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Maps;
 import com.google.wave.api.InvalidRequestException;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationRequest;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.event.Event;
 import com.google.wave.api.event.OperationErrorEvent;
@@ -224,21 +224,5 @@ public class OperationContextImplTest extends TestCase {
         operationContext.getBlip(conversation, tempBlipId), blip);
     assertEquals("Expected blip when its non temporary id is given",
         operationContext.getBlip(conversation, blipId), blip);
-  }
-
-  public void testGetDeletedBlipThrowsException() throws Exception {
-    ConversationBlip blip = mock(ConversationBlip.class);
-    when(blip.isDeleted()).thenReturn(true);
-
-    String fakeBlipId = "fake_blip_id";
-    Conversation conversation = mock(Conversation.class);
-    when(conversation.getBlip(fakeBlipId)).thenReturn(blip);
-
-    try {
-      operationContext.getBlip(conversation, fakeBlipId);
-      fail("Expected InvalidRequestException when querying for a non-existing blip");
-    } catch (InvalidRequestException e) {
-      // expected
-    }
   }
 }

@@ -18,7 +18,6 @@
 package org.waveprotocol.wave.model.supplement;
 
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
-import org.waveprotocol.wave.model.conversation.ConversationListenerImpl;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
@@ -169,19 +168,6 @@ public final class LiveSupplementedWaveImpl implements ObservableSupplementedWav
     }
   };
 
-  private final ObservableConversation.Listener conversationListener =
-      new ConversationListenerImpl() {
-        @Override
-        public void onBlipContentDeleted(ObservableConversationBlip blip) {
-          triggerOnMaybeBlipReadChanged(blip);
-        }
-
-        @Override
-        public void onBlipContentUndeleted(ObservableConversationBlip blip) {
-          triggerOnMaybeBlipReadChanged(blip);
-        }
-      };
-
   public LiveSupplementedWaveImpl(ObservablePrimitiveSupplement supplement,
       ObservableWaveView wave, ParticipantId viewer, DefaultFollow followPolicy,
       ObservableConversationView view) {
@@ -193,7 +179,6 @@ public final class LiveSupplementedWaveImpl implements ObservableSupplementedWav
     ObservableConversationView.Listener viewListener = new ObservableConversationView.Listener() {
       @Override
       public void onConversationAdded(ObservableConversation conversation) {
-        conversation.addListener(conversationListener);
         // TODO(user): Once bug 2820511 is fixed, stop listening to the wavelet.
         LiveSupplementedWaveImpl.this.wave.getWavelet(WaveletId.deserialise(conversation.getId()))
             .addListener(waveletListener);
@@ -201,7 +186,6 @@ public final class LiveSupplementedWaveImpl implements ObservableSupplementedWav
 
       @Override
       public void onConversationRemoved(ObservableConversation conversation) {
-        conversation.removeListener(conversationListener);
         // TODO(user): Once bug 2820511 is fixed, stop listening to the wavelet.
         ((WaveletBasedConversation) conversation).getWavelet().removeListener(waveletListener);
       }

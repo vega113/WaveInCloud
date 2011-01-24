@@ -253,7 +253,7 @@ public class SupplementedWaveImpl implements SupplementedWave {
 
   @Override
   public boolean isUnread(ConversationBlip blip) {
-    return !blip.isDeleted() && isUnread(blip.hackGetRaw());
+    return isUnread(blip.hackGetRaw());
   }
 
   @Override

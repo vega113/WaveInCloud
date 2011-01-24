@@ -40,7 +40,7 @@ import java.util.Set;
  * Monitors the conversation for unread blips and efficiently maintains a count
  * of them.
  */
-public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.ListenerImpl 
+public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.ListenerImpl
     implements BlipReadStateMonitor, ObservableConversation.Listener,
     ObservableConversationView.Listener {
 
@@ -68,7 +68,7 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
   /**
    * @return a new BlipReadStateMonitor
    */
-  public static BlipReadStateMonitorImpl create(WaveId waveId, 
+  public static BlipReadStateMonitorImpl create(WaveId waveId,
       ObservableSupplementedWave supplementedWave, ObservableConversationView conversationView) {
     BlipReadStateMonitorImpl monitor = new BlipReadStateMonitorImpl(waveId,
         supplementedWave, conversationView);
@@ -169,12 +169,6 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
     handleBlipAdded(blip);
   }
 
-  @Override
-  public void onBlipContentUndeleted(ObservableConversationBlip blip) {
-    logChange("content undeleted", blip);
-    handleBlipAdded(blip);
-  }
-
   private void handleBlipAdded(ObservableConversationBlip blip) {
     // Add this blip.
     updateOrInsertReadUnread(blip);
@@ -183,12 +177,6 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
     for (ObservableConversationThread replyThread : blip.getAllReplyThreads()) {
       handleThreadAdded(replyThread);
     }
-  }
-
-  @Override
-  public void onBlipContentDeleted(ObservableConversationBlip blip) {
-    logChange("content deleted", blip);
-    handleBlipRemoved(blip);
   }
 
   @Override

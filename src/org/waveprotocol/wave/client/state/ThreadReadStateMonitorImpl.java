@@ -316,12 +316,12 @@ public final class ThreadReadStateMonitorImpl extends ObservableSupplementedWave
   private final ObservableSupplementedWave supplementedWave;
   private final ObservableConversationView conversationView;
 
-  /** Whether this monitor is ready, set to true in {@link #triggerOnReady}. */
+  /** Whether this monitor is ready, set to true in {@link #init()}. */
   private boolean isReady = false;
 
   /**
    * Threads which have been {@link #monitor}ed before being ready. Set to null
-   * in {@link #triggerOnReady}.
+   * in {@link #init()}.
    */
   private IdentitySet<ConversationThread> threadsToNotifyWhenReady =
       CollectionUtils.createIdentitySet();
@@ -329,7 +329,7 @@ public final class ThreadReadStateMonitorImpl extends ObservableSupplementedWave
   /**
    * Creates and initializes a ThreadReadStateMonitorImpl.
    *
-   * @param manager the WaveViewManager to monitor thread read state of
+   * @param conversationView the wave to monitor thread read state of
    */
   public static ThreadReadStateMonitorImpl create(ObservableSupplementedWave supplementedWave,
       ObservableConversationView conversationView) {
@@ -411,7 +411,7 @@ public final class ThreadReadStateMonitorImpl extends ObservableSupplementedWave
     Preconditions.checkState(isReady, "ThreadReadStateMonitor queried before ready");
     return getOrCreateMonitoredThreadState(thread).getUnreadCount();
   }
-  
+
   @Override
   public int getTotalCount(ConversationThread thread) {
     return getReadCount(thread) + getUnreadCount(thread);
@@ -474,11 +474,6 @@ public final class ThreadReadStateMonitorImpl extends ObservableSupplementedWave
     handleBlipAdded(blip);
   }
 
-  @Override
-  public void onBlipContentUndeleted(ObservableConversationBlip blip) {
-    handleBlipAdded(blip);
-  }
-
   private void handleBlipAdded(ObservableConversationBlip blip) {
     // Check that this isn't a repeated event.
     if (!knownBlips.handleBlipAdded(blip)) {
@@ -504,11 +499,6 @@ public final class ThreadReadStateMonitorImpl extends ObservableSupplementedWave
     }
 
     countDownEvent();
-  }
-
-  @Override
-  public void onBlipContentDeleted(ObservableConversationBlip blip) {
-    handleBlipRemoved(blip);
   }
 
   @Override

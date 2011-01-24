@@ -148,16 +148,6 @@ public final class WaveletBasedConversation implements ObservableConversation {
     }
 
     @Override
-    public void onContentDeleted() {
-      triggerOnBlipContentDeleted(blip);
-    }
-
-    @Override
-    public void onContentUndeleted() {
-      triggerOnBlipContentUndeleted(blip);
-    }
-
-    @Override
     public void onDeleted() {
       blip.removeListener(this);
       triggerOnBlipDeleted(blip);
@@ -551,18 +541,6 @@ public final class WaveletBasedConversation implements ObservableConversation {
   private void triggerOnBlipAdded(ObservableConversationBlip blip) {
     for (Listener l : listeners) {
       l.onBlipAdded(blip);
-    }
-  }
-
-  private void triggerOnBlipContentDeleted(ObservableConversationBlip blip) {
-    for (Listener l : listeners) {
-      l.onBlipContentDeleted(blip);
-    }
-  }
-
-  private void triggerOnBlipContentUndeleted(ObservableConversationBlip blip) {
-    for (Listener l : listeners) {
-      l.onBlipContentUndeleted(blip);
     }
   }
 

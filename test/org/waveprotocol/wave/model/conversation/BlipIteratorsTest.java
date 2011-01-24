@@ -17,10 +17,9 @@
 
 package org.waveprotocol.wave.model.conversation;
 
-import org.waveprotocol.wave.model.conversation.testing.BlipTestUtils;
-
 import junit.framework.TestCase;
 
+import org.waveprotocol.wave.model.conversation.testing.BlipTestUtils;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.util.CollectionUtils;
@@ -43,7 +42,6 @@ public class BlipIteratorsTest extends TestCase {
   private ConversationBlip b1t1b2;
   private ConversationBlip b1t2b1;
   private ConversationBlip b2_d;
-  private ConversationBlip b2t1b1;
   private ConversationBlip b3;
   private ConversationBlip b3t1b1;
 
@@ -65,13 +63,13 @@ public class BlipIteratorsTest extends TestCase {
   public void testBlipsBreadthFirst() {
     List<ConversationBlip> actual = CollectionUtils.newArrayList(
         BlipIterators.breadthFirst(conversation));
-    assertEquals(Arrays.asList(b1, b3, b1t1b1, b1t1b2, b1t2b1, b2t1b1, b3t1b1), actual);
+    assertEquals(Arrays.asList(b1, b3, b1t1b1, b1t1b2, b1t2b1, b3t1b1), actual);
   }
 
   public void testAllBlipsBreadthFirst() {
     List<ConversationBlip> actual = CollectionUtils.newArrayList(
         BlipIterators.allBreadthFirst(conversation));
-    assertEquals(Arrays.asList(b1, b2_d, b3, b1t1b1, b1t1b2, b1t2b1, b2t1b1, b3t1b1), actual);
+    assertEquals(Arrays.asList(b1, b3, b1t1b1, b1t1b2, b1t2b1, b3t1b1), actual);
   }
 
   private Conversation buildConversation() {
@@ -89,7 +87,7 @@ public class BlipIteratorsTest extends TestCase {
 
     b2_d = conv.getRootThread().appendBlip();
     ConversationThread b2t1 = b2_d.appendReplyThread();
-    b2t1b1 = b2t1.appendBlip();
+    ConversationBlip b2t1b1 = b2t1.appendBlip();
     b2_d.delete();
 
     b3 = conv.getRootThread().appendBlip();

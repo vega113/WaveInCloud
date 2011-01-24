@@ -39,16 +39,6 @@ interface ObservableManifestBlip extends ManifestBlip,
      * Called when a reply is removed from the blip.
      */
     void onReplyRemoved(ObservableManifestThread thread);
-
-    /**
-     * Called when the blip becomes deleted.
-     */
-    void onDeleted();
-
-    /**
-     * Called when the blip becomes un-deleted.
-     */
-    void onUndeleted();
   }
 
   /**
