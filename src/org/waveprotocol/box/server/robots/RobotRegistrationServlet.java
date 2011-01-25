@@ -143,10 +143,11 @@ public class RobotRegistrationServlet extends HttpServlet {
     }
 
     String robotLocation;
-    if (uri.getPort() != -1) {
-      robotLocation = "http://" + uri.getHost() + ":" + uri.getPort() + uri.getPath();
+    String scheme = uri.getScheme();
+    if (scheme == null || !(scheme.equals("http") || scheme.equals("https"))) {
+      robotLocation = "http://" + uri.toString();
     } else {
-      robotLocation = "http://" + uri.getHost() + uri.getPath();
+      robotLocation = uri.toString();
     }
 
     if (robotLocation.endsWith("/")) {
