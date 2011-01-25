@@ -602,6 +602,30 @@ public class WaveService {
     }
     return newWavelet;
   }
+  
+  /**
+   * Requests SearchResult for a query.
+   * 
+   * @param query the query to execute.
+   * @param index the index from which to return results.
+   * @param numresults the number of results to return.
+   * @param rpcServerUrl the active gateway.
+   * 
+   * @throws IOException if remote server returns error.
+   */
+  public SearchResult search(String query, Integer index, Integer numResults, String rpcServerUrl)
+      throws IOException {
+    OperationQueue opQueue = new OperationQueue();
+    opQueue.search(query, index, numResults);
+    JsonRpcResponse response = makeRpc(opQueue, rpcServerUrl).get(1);
+    if (response.isError()) {
+      throw new IOException(response.getErrorMessage());
+    }
+    opQueue.clear();
+    SearchResult searchResult =
+        (SearchResult) response.getData().get(ParamsProperty.SEARCH_RESULTS);
+    return searchResult;
+  }
 
   /**
    * Fetches a wavelet using the active API.

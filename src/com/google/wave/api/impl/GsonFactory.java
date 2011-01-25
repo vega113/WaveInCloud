@@ -15,6 +15,7 @@
 
 package com.google.wave.api.impl;
 
+import com.google.common.collect.Lists;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -30,6 +31,7 @@ import com.google.wave.api.NonJsonSerializable;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.Range;
 import com.google.wave.api.BlipThread;
+import com.google.wave.api.SearchResult;
 
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -107,7 +109,9 @@ public class GsonFactory {
         .registerTypeAdapter(JsonRpcResponse.class, new JsonRpcResponseGsonAdaptor())
         .registerTypeAdapter(Annotation.class, new AnnotationInstanceCreator())
         .registerTypeAdapter(Range.class, new RangeInstanceCreator())
-        .registerTypeAdapter(BlipThread.class, new ThreadInstanceCreator());
+        .registerTypeAdapter(BlipThread.class, new ThreadInstanceCreator())
+        .registerTypeAdapter(SearchResult.class, new SearchResultInstanceCreator())
+        .registerTypeAdapter(SearchResult.Digest.class, new SearchResultDigestInstanceCreator());
 
     // Register custom type adapters.
     for (Entry<Type, Object> entry : customTypeAdapters.entrySet()) {
@@ -161,6 +165,27 @@ public class GsonFactory {
     @Override
     public BlipThread createInstance(Type type) {
       return new BlipThread(null, -1, null, null);
+    }
+  }
+  
+  /**
+   * An instance creator that creates an empty {@link SearchResult}.
+   */
+  private static class SearchResultInstanceCreator implements InstanceCreator<SearchResult> {
+    @Override
+    public SearchResult createInstance(Type type) {
+      return new SearchResult("");
+    }
+  }
+  
+  /**
+   * An instance creator that creates an empty {@link SearchResult.Digest}.
+   */
+  private static class SearchResultDigestInstanceCreator implements InstanceCreator<SearchResult.Digest> {
+    @Override
+    public SearchResult.Digest createInstance(Type type) {
+      List<String> participants = Lists.newLinkedList();
+      return new SearchResult.Digest("", "", "", participants, -1, -1, -1);
     }
   }
 }

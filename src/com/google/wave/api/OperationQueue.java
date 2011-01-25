@@ -212,6 +212,20 @@ public class OperationQueue implements Serializable {
     }
     return newWavelet;
   }
+  
+  /**
+   * Appends search operation for specified query.
+   * 
+   * @param query the query to execute.
+   * @param index the index from which to return results.
+   * @param numresults the number of results to return.
+   */
+  public void search(String query, Integer index, Integer numresults) {
+    Parameter queryParam = Parameter.of(ParamsProperty.QUERY, query);
+    Parameter indexParam = Parameter.of(ParamsProperty.INDEX, index);
+    Parameter numresultsParam = Parameter.of(ParamsProperty.NUM_RESULTS, numresults);
+    appendOperation(OperationType.ROBOT_SEARCH, queryParam, indexParam, numresultsParam);
+  }
 
   /**
    * Sets a key-value pair on the data document of a wavelet.

@@ -52,8 +52,8 @@ import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServlet;
@@ -275,6 +275,23 @@ public abstract class AbstractRobot extends HttpServlet implements EventHandler 
   public Wavelet newWave(String domain, Set<String> participants, String msg, String proxyForId,
       String rpcServerUrl) throws IOException, InvalidIdException {
     return waveService.newWave(domain, participants, msg, proxyForId, rpcServerUrl);
+  }
+  
+  
+  /**
+   * Requests SearchResult for a query.
+   * 
+   * @param query the query to execute.
+   * @param index the index from which to return results.
+   * @param numresults the number of results to return.
+   * @param rpcServerUrl the active gateway.
+   * 
+   * @throws IOException if remote server returns error.
+   */
+  public SearchResult search(String query, Integer index, Integer numResults, String rpcServerUrl)
+      throws IOException {
+    SearchResult searchResult = waveService.search(query, index, numResults, rpcServerUrl);
+    return searchResult;
   }
 
   /**
