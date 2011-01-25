@@ -3,7 +3,6 @@
 <!-- Those comments beginning with the words "comment" or "Uncomment" have
      special meaning to the PRESUBMIT.py script. -->
 <!-- comment out the next line to build all client types -->
-<set-property name="client.type" value="default"/>
 
 <set-property name="loglevel" value="none"/>
 <set-property name="compiler.emulatedStack" value="false"/>

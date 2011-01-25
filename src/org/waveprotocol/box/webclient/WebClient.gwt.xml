@@ -29,7 +29,5 @@
   <entry-point class='org.waveprotocol.box.webclient.client.WebClient'/>
 
   <set-configuration-property name="CssResource.obfuscationPrefix" value="SWC" />
-  <!-- TODO: Remove the ClientTypes package -->
-  <set-property name="client.type" value="default"/>
 
 </module>
