@@ -33,6 +33,7 @@ import com.google.gwt.user.client.Window.Location;
 
 import org.waveprotocol.wave.client.gadget.GadgetXmlUtil;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -169,11 +170,11 @@ public class GadgetNonEditorGwtTest extends GWTTestCase {
         clientInstanceId, userPrefs, name, securityToken, new FakeLocale());
     int gadgetInstanceId = -12345;
     String url = gadget.buildIframeUrl(gadgetInstanceId, metadata.getIframeUrl(VIEW_NAME));
-    String expectedValue = "//0" + GADGET_SERVER + "/gadgets" +
-        "/ifr?url=http://test.com/gadget.xml&view=canvas&nocache=1&mid=" + gadgetInstanceId +
-        "&lang=wizard&country=OZ&parent=" + hrefEscaped + "&wave=1&waveId=" +
-        URL.encode(waveId.serialise()) + "#rpctoken=" + gadget.getRpcToken() + "&st=" +
-        securityToken + "&up_pref1=value1&up_pref2=value2";
+    String expectedValue = "//0" + GADGET_SERVER + "/gadgets"
+            + "/ifr?url=http://test.com/gadget.xml&view=canvas&nocache=1&mid=" + gadgetInstanceId
+            + "&lang=wizard&country=OZ&parent=" + hrefEscaped + "&wave=1&waveId="
+            + URL.encode(ModernIdSerialiser.INSTANCE.serialiseWaveId(waveId)) + "#rpctoken="
+            + gadget.getRpcToken() + "&st=" + securityToken + "&up_pref1=value1&up_pref2=value2";
     assertEquals(expectedValue, url);
   }
 

@@ -55,12 +55,13 @@ import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.document.util.Point;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.supplement.ObservableSupplementedWave;
 import org.waveprotocol.wave.model.util.CollectionUtils;
-import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
 import org.waveprotocol.wave.model.util.ReadableStringSet;
 import org.waveprotocol.wave.model.util.StringMap;
+import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collection;
@@ -543,7 +544,8 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
     // working wihout this workaround.
     builder.append("&parent=" + URL.encode(href));
     builder.append("&wave=" + WAVE_API_VERSION);
-    builder.append("&waveId=" + URL.encodeComponent(waveletName.waveId.serialise()));
+    builder.append("&waveId=" + URL.encodeComponent(
+        ModernIdSerialiser.INSTANCE.serialiseWaveId(waveletName.waveId)));
     fragment = updateGadgetUriFragment(fragment);
     if (!fragment.isEmpty()) {
       builder.append("#" + fragment);
@@ -946,9 +948,8 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
    * @return instance ID for the gadget.
    */
   private int getInstanceId() {
-    String waveId = waveletName.waveId.serialise();
-    String waveletId = waveletName.waveletId.serialise();
-    String instanceDescriptor = waveId + waveletId + loginName + source;
+    String name = ModernIdSerialiser.INSTANCE.serialiseWaveletName(waveletName);
+    String instanceDescriptor = name + loginName + source;
     int hash = instanceDescriptor.hashCode();
     return (hash < 0) ? ~hash : hash;
   }
@@ -1481,9 +1482,8 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
    * @return a unique gadget ID.
    */
   private String generateGadgetId() {
-    String waveId = waveletName.waveId.serialise();
-    String waveletId = waveletName.waveletId.serialise();
-    String instanceDescriptor = waveId + waveletId + getAuthor() + source;
+    String name = ModernIdSerialiser.INSTANCE.serialiseWaveletName(waveletName);
+    String instanceDescriptor = name + getAuthor() + source;
     String prefix = Integer.toHexString(instanceDescriptor.hashCode());
     String time = Integer.toHexString(new Date().hashCode());
     String version = Long.toHexString(blip.getLastModifiedVersion());
