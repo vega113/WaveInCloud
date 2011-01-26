@@ -34,7 +34,6 @@ import org.mockito.MockitoAnnotations;
 import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.LocalWaveletContainer.Factory;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
 import org.waveprotocol.wave.federation.WaveletFederationProvider;
@@ -53,6 +52,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
+import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 /**
  * @author josephg@gmail.com (Joseph Gentle)

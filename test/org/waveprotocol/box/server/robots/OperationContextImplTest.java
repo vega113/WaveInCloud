@@ -34,7 +34,6 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.conversation.Conversation;
@@ -49,6 +48,7 @@ import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
+import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 import java.util.Map;
 

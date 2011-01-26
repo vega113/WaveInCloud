@@ -21,8 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
-import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -31,6 +29,8 @@ import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionFactoryImpl;
+import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 /**
  * Utility methods for {@code ProtocolAppliedWaveletDelta}s.

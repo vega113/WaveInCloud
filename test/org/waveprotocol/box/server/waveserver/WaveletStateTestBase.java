@@ -27,8 +27,6 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 import org.waveprotocol.box.common.DeltaSequence;
-import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -40,8 +38,10 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.testing.DeltaTestUtil;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
+import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 import java.util.Arrays;
 import java.util.Collection;

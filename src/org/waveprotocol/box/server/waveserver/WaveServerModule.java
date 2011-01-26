@@ -26,8 +26,6 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import org.waveprotocol.box.server.CoreSettings;
-import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.crypto.CachedCertPathValidator;
 import org.waveprotocol.wave.crypto.CertPathStore;
 import org.waveprotocol.wave.crypto.DefaultCacheImpl;
@@ -42,6 +40,8 @@ import org.waveprotocol.wave.crypto.WaveSignatureVerifier;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionFactoryImpl;
+import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;

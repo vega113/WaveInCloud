@@ -35,10 +35,8 @@ import com.google.wave.api.robot.Capability;
 import com.google.wave.api.robot.RobotName;
 
 import org.waveprotocol.box.common.DeltaSequence;
-import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.robots.RobotsTestBase;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
@@ -58,6 +56,7 @@ import org.waveprotocol.wave.model.schema.SchemaCollection;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
@@ -67,6 +66,7 @@ import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
+import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 import java.util.List;
 import java.util.Map;

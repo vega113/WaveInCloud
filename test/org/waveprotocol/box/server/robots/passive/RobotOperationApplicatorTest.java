@@ -44,7 +44,6 @@ import org.waveprotocol.box.server.robots.OperationServiceRegistry;
 import org.waveprotocol.box.server.robots.RobotCapabilities;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
@@ -58,6 +57,7 @@ import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 import java.util.Collections;
 import java.util.List;

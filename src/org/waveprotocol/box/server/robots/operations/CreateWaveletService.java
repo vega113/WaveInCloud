@@ -28,7 +28,6 @@ import com.google.wave.api.impl.WaveletData;
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.RobotWaveletData;
 import org.waveprotocol.box.server.robots.util.OperationUtil;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
@@ -45,6 +44,7 @@ import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
+import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 import java.util.List;
 

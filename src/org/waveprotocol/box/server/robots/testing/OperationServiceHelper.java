@@ -22,12 +22,10 @@ import static org.mockito.Mockito.mock;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.data.converter.v22.EventDataConverterV22;
 
-import org.waveprotocol.box.server.common.HashedVersionFactoryImpl;
 import org.waveprotocol.box.server.robots.OperationContextImpl;
 import org.waveprotocol.box.server.robots.RobotWaveletData;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
@@ -39,6 +37,7 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.testing.BasicFactories;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.data.DocumentFactory;
@@ -48,6 +47,7 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
+import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 /**
  * Helper for testing {@link OperationService}. Puts a single empty

@@ -21,12 +21,13 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.box.common.comms.WaveClientRpc.WaveletSnapshot;
 import org.waveprotocol.box.server.util.TestDataUtil;
-import org.waveprotocol.box.server.util.URLEncoderDecoderBasedPercentEncoderDecoder;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.version.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.model.wave.data.WaveletData;
+import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 /**
  * Tests for {@link SnapshotSerializer}
