@@ -544,7 +544,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
     // working wihout this workaround.
     builder.append("&parent=" + URL.encode(href));
     builder.append("&wave=" + WAVE_API_VERSION);
-    builder.append("&waveId=" + URL.encodeComponent(
+    builder.append("&waveId=" + URL.encodeQueryString(
         ModernIdSerialiser.INSTANCE.serialiseWaveId(waveletName.waveId)));
     fragment = updateGadgetUriFragment(fragment);
     if (!fragment.isEmpty()) {
@@ -557,9 +557,9 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
         public void apply(String key, String value) {
           if (value != null) {
             builder.append("&up_");
-            builder.append(URL.encodeComponent(key));
+            builder.append(URL.encodeQueryString(key));
             builder.append('=');
-            builder.append(URL.encodeComponent(value));
+            builder.append(URL.encodeQueryString(value));
           }
         }
       });

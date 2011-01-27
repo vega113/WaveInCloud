@@ -170,11 +170,13 @@ public class GadgetNonEditorGwtTest extends GWTTestCase {
         clientInstanceId, userPrefs, name, securityToken, new FakeLocale());
     int gadgetInstanceId = -12345;
     String url = gadget.buildIframeUrl(gadgetInstanceId, metadata.getIframeUrl(VIEW_NAME));
-    String expectedValue = "//0" + GADGET_SERVER + "/gadgets"
+    String expectedValue =
+        "//0" + GADGET_SERVER + "/gadgets"
             + "/ifr?url=http://test.com/gadget.xml&view=canvas&nocache=1&mid=" + gadgetInstanceId
             + "&lang=wizard&country=OZ&parent=" + hrefEscaped + "&wave=1&waveId="
-            + URL.encode(ModernIdSerialiser.INSTANCE.serialiseWaveId(waveId)) + "#rpctoken="
-            + gadget.getRpcToken() + "&st=" + securityToken + "&up_pref1=value1&up_pref2=value2";
+            + URL.encodeQueryString(ModernIdSerialiser.INSTANCE.serialiseWaveId(waveId))
+            + "#rpctoken=" + gadget.getRpcToken() + "&st=" + securityToken
+            + "&up_pref1=value1&up_pref2=value2";
     assertEquals(expectedValue, url);
   }
 
