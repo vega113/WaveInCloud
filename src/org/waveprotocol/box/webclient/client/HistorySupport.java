@@ -22,9 +22,10 @@ import com.google.gwt.user.client.History;
 
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.util.Log;
-import org.waveprotocol.wave.model.id.InvalidIdException;
 import org.waveprotocol.wave.model.id.ModernIdSerialiser;
+import org.waveprotocol.wave.model.waveref.InvalidWaveRefException;
 import org.waveprotocol.wave.model.waveref.WaveRef;
+import org.waveprotocol.wave.util.escapers.GwtWaverefEncoder;
 
 import javax.annotation.Nullable;
 
@@ -61,14 +62,14 @@ public class HistorySupport {
   @Nullable
   static WaveRef waveRefFromHistoryToken(String encodedToken) {
     try {
-      return WaveRef.of(ModernIdSerialiser.INSTANCE.deserialiseWaveId(encodedToken));
-    } catch (InvalidIdException e) {
+      return GwtWaverefEncoder.decodeWaveRefFromPath(encodedToken);
+    } catch (InvalidWaveRefException e) {
       return null;
     }
   }
 
   static String historyTokenFromWaveref(WaveRef ref) {
-    return ModernIdSerialiser.INSTANCE.serialiseWaveId(ref.getWaveId());
+    return GwtWaverefEncoder.encodeToUriPathSegment(ref);
   }
 
   private HistorySupport() {
