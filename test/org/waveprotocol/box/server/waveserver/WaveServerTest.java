@@ -52,7 +52,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
-import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
 
 /**
  * @author josephg@gmail.com (Joseph Gentle)
@@ -113,7 +113,7 @@ public class WaveServerTest extends TestCase {
     waveServer.initialize();
 
     IdURIEncoderDecoder uriCodec =
-        new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+        new IdURIEncoderDecoder(new JavaUrlCodec());
     versionZeroFactory = new HashedVersionZeroFactoryImpl(uriCodec);
   }
 

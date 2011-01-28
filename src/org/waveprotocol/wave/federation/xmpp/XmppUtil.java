@@ -23,7 +23,7 @@ import com.google.protobuf.ByteString;
 import org.dom4j.Element;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
-import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -43,7 +43,7 @@ public class XmppUtil {
   private static final Random random = new SecureRandom();
 
   public static final IdURIEncoderDecoder waveletNameCodec =
-      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+      new IdURIEncoderDecoder(new JavaUrlCodec());
 
   // If non-null, this fake unique ID will be returned from generateUniqueId()
   // rather than a random base64 string.

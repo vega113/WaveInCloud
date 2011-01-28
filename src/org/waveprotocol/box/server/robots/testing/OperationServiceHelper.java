@@ -47,7 +47,7 @@ import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
-import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
 
 /**
  * Helper for testing {@link OperationService}. Puts a single empty
@@ -58,7 +58,7 @@ import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderD
 public class OperationServiceHelper {
 
   private static final IdURIEncoderDecoder URI_CODEC =
-      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+      new IdURIEncoderDecoder(new JavaUrlCodec());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
   private static final DocumentFactory<? extends DocumentOperationSink> DOCUMENT_FACTORY =
       BasicFactories.observablePluggableMutableDocumentFactory();

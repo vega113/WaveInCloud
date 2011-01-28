@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package org.waveprotocol.box.server.util;
+package org.waveprotocol.wave.util.escapers.jvm;
 
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.id.URIEncoderDecoder;
-import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
 
 /**
- * Tests {@link URLEncoderDecoderBasedPercentEncoderDecoder}.
+ * Tests {@link JavaUrlCodec}.
  *
  *
  */
-public class URLEncoderDecoderBasedPercentEncoderDecoderTest extends TestCase {
+public class JavaUrlCodecTest extends TestCase {
   private static final String NOT_ESCAPED =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:@!$&'()*+,;=-._~";
 
@@ -41,7 +40,7 @@ public class URLEncoderDecoderBasedPercentEncoderDecoderTest extends TestCase {
   private static final String ENCODED_STRING = "a1%3F%23@z%E6%B0%B4%F0%9D%84%9E";
 
   private final URIEncoderDecoder encoder =
-      new URIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+      new URIEncoderDecoder(new JavaUrlCodec());
 
   public void testEncodingNotEscaped() throws URIEncoderDecoder.EncodingException {
     TestCase.assertEquals(NOT_ESCAPED, encoder.encode(NOT_ESCAPED));

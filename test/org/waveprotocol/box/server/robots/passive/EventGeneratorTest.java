@@ -66,7 +66,7 @@ import org.waveprotocol.wave.model.wave.data.impl.EmptyWaveletSnapshot;
 import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
-import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
 
 import java.util.List;
 import java.util.Map;
@@ -89,7 +89,7 @@ public class EventGeneratorTest extends RobotsTestBase {
   private final static RobotName ROBOT_NAME = RobotName.fromAddress(ROBOT.getAddress());
   private final static EventDataConverter CONVERTER = new EventDataConverterV22();
   private static final IdURIEncoderDecoder URI_CODEC =
-      new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+      new IdURIEncoderDecoder(new JavaUrlCodec());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
   private static final DocumentFactory<?> DOCUMENT_FACTORY =
       ObservablePluggableMutableDocument.createFactory(SchemaCollection.empty());

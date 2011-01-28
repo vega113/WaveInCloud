@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.util.escapers;
+package org.waveprotocol.wave.util.escapers.jvm;
 
 import org.waveprotocol.wave.model.id.URIEncoderDecoder;
 
@@ -28,8 +28,7 @@ import java.net.URLEncoder;
  *
  *
  */
-public class URLEncoderDecoderBasedPercentEncoderDecoder
-    implements URIEncoderDecoder.PercentEncoderDecoder {
+public class JavaUrlCodec implements URIEncoderDecoder.PercentEncoderDecoder {
   @Override
   public String decode(String encodedValue) throws URIEncoderDecoder.EncodingException {
     try {

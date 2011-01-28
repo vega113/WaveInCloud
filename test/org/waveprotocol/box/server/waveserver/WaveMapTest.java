@@ -44,7 +44,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
-import org.waveprotocol.wave.util.escapers.URLEncoderDecoderBasedPercentEncoderDecoder;
+import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -96,7 +96,7 @@ public class WaveMapTest extends TestCase {
         waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
 
     IdURIEncoderDecoder uriCodec =
-        new IdURIEncoderDecoder(new URLEncoderDecoderBasedPercentEncoderDecoder());
+        new IdURIEncoderDecoder(new JavaUrlCodec());
     versionZeroFactory = new HashedVersionZeroFactoryImpl(uriCodec);
   }
 
