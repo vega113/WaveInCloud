@@ -25,9 +25,9 @@ import static org.waveprotocol.wave.model.testing.ExtraAsserts.assertStructureEq
 import org.waveprotocol.wave.model.conversation.Conversation.Anchor;
 import org.waveprotocol.wave.model.conversation.testing.BlipTestUtils;
 import org.waveprotocol.wave.model.document.MutableDocument;
-import org.waveprotocol.wave.model.document.MutableDocument.Action;
 import org.waveprotocol.wave.model.document.ObservableDocument;
 import org.waveprotocol.wave.model.document.ObservableMutableDocument;
+import org.waveprotocol.wave.model.document.MutableDocument.Action;
 import org.waveprotocol.wave.model.document.util.DefaultDocumentEventRouter;
 import org.waveprotocol.wave.model.document.util.DocHelper;
 import org.waveprotocol.wave.model.document.util.Point;
@@ -227,7 +227,7 @@ public class WaveletBasedConversationTest extends ConversationTestBase {
     ConversationBlip firstBlip = getFirstBlip(conversation2);
     Anchor anchor = conversation2.createAnchor(firstBlip);
     target.setAnchor(anchor);
-    assertEquals(conversation2.getWavelet().getId().serialise(),
+    assertEquals(WaveletBasedConversation.idFor(conversation2.getWavelet().getId()),
         getManifestAttribute(manifestDoc, "anchorWavelet"));
     assertEquals(firstBlip.getId(), getManifestAttribute(manifestDoc, "anchorBlip"));
   }

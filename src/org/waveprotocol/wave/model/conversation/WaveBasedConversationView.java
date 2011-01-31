@@ -25,6 +25,8 @@ import org.waveprotocol.wave.model.document.util.DocEventRouter;
 import org.waveprotocol.wave.model.id.IdConstants;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.IdUtil;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
+import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
@@ -117,10 +119,17 @@ public class WaveBasedConversationView implements ObservableConversationView, Wa
    */
   public static WaveBasedConversationView create(ObservableWaveView waveView,
       IdGenerator idGenerator) {
-    String id = waveView.getWaveId().serialise();
+    String id = idFor(waveView.getWaveId());
     WaveBasedConversationView convView = new WaveBasedConversationView(id, waveView, idGenerator);
     waveView.addListener(convView);
     return convView;
+  }
+
+  /**
+   * Computes the conversation view id for a wave.
+   */
+  public static String idFor(WaveId wave) {
+    return ModernIdSerialiser.INSTANCE.serialiseWaveId(wave);
   }
 
   private WaveBasedConversationView(
@@ -148,7 +157,7 @@ public class WaveBasedConversationView implements ObservableConversationView, Wa
 
   @Override
   public WaveletBasedConversation getConversation(String conversationId) {
-    return getConversation(WaveletId.deserialise(conversationId));
+    return getConversation(WaveletBasedConversation.widFor(conversationId));
   }
 
   @Override

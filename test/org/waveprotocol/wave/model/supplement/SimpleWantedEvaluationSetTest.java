@@ -18,9 +18,10 @@
 package org.waveprotocol.wave.model.supplement;
 
 import com.google.common.collect.ImmutableSet;
-import org.waveprotocol.wave.model.id.WaveletId;
 
 import junit.framework.TestCase;
+
+import org.waveprotocol.wave.model.id.WaveletId;
 
 /**
  * Tests for {@link SimpleWantedEvaluationSet}
@@ -36,7 +37,7 @@ public class SimpleWantedEvaluationSetTest extends TestCase {
   private static final String ADDER = "badhorse@evilleagueofevil.com";
 
   static {
-    TEST_ID = WaveletId.deserialise("google.com!wavelet1");
+    TEST_ID = WaveletId.of("google.com", "wavelet1");
     EVALUATION_1 =
       new SimpleWantedEvaluation(TEST_ID, ADDER, true, 0.2f, 1000, "agent", false, "");
     EVALUATION_2 =

@@ -244,6 +244,20 @@ public final class WaveletBasedConversation implements ObservableConversation {
   }
 
   /**
+   * Computes the conversation id for a wavelet.
+   */
+  public static String idFor(WaveletId wavelet) {
+    return WaveletIdSerializer.INSTANCE.toString(wavelet);
+  }
+
+  /**
+   * Computes a wavelet id for a conversation.
+   */
+  public static WaveletId widFor(String conversation) {
+    return WaveletIdSerializer.INSTANCE.fromString(conversation);
+  }
+
+  /**
    * Builds a conversation model.
    *
    * @param view view containing this conversation
@@ -320,7 +334,7 @@ public final class WaveletBasedConversation implements ObservableConversation {
 
       WaveletBasedConversation conv = (WaveletBasedConversation) newAnchor.getConversation();
       String blipId = newAnchor.getBlip().getId();
-      manifest.setAnchor(new AnchorData(conv.getWaveletId().serialise(), blipId));
+      manifest.setAnchor(new AnchorData(idFor(conv.getWaveletId()), blipId));
     } else {
       manifest.setAnchor(new AnchorData(null, null));
     }
@@ -376,7 +390,7 @@ public final class WaveletBasedConversation implements ObservableConversation {
 
   @Override
   public String getId() {
-    return getWaveletId().serialise();
+    return idFor(getWaveletId());
   }
 
   @Override
@@ -441,7 +455,7 @@ public final class WaveletBasedConversation implements ObservableConversation {
   private WaveletId getAnchorWaveletId() {
     // may be null
     String anchorWaveletId = manifest.getAnchor().getConversationId();
-    return WaveletIdSerializer.INSTANCE.fromString(anchorWaveletId);
+    return widFor(anchorWaveletId);
   }
 
   private String getAnchorBlipId() {
@@ -468,7 +482,7 @@ public final class WaveletBasedConversation implements ObservableConversation {
    * Deserialises a wavelet id if it's not null, else returns null;
    */
   private WaveletId maybeMakeWaveletId(String idString) {
-    return WaveletIdSerializer.INSTANCE.fromString(idString);
+    return widFor(idString);
   }
 
   /**

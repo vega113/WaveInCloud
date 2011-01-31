@@ -26,6 +26,7 @@ import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.supplement.ObservableSupplementedWave;
 import org.waveprotocol.wave.model.util.CollectionUtils;
@@ -345,8 +346,7 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
     // countEntries() is O(n), don't recount every time.
     int readCount = getReadCount();
     int unreadCount = getUnreadCount();
-    LOG.trace().log(waveId.serialise(), ": notifying read/unread change ",
-        readCount, "/", unreadCount);
+    LOG.trace().log(waveId, ": notifying read/unread change ", readCount, "/", unreadCount);
     for (Listener listener : listeners) {
       listener.onReadStateChanged(readCount, unreadCount);
     }
@@ -365,7 +365,7 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
    */
   private String getBlipLogDescription(ConversationBlip blip) {
     if (!blipLogDescriptions.has(blip)) {
-      blipLogDescriptions.put(blip, waveId.serialise() + "/"
+      blipLogDescriptions.put(blip, ModernIdSerialiser.INSTANCE.serialiseWaveId(waveId) + "/"
           + blip.getConversation().getId() + "/" + blip.getId());
     }
     return blipLogDescriptions.get(blip);

@@ -110,14 +110,14 @@ public class SupplementedWaveImpl implements SupplementedWave {
     public Iterable<WaveletId> getWavelets() {
       List<WaveletId> ids = new ArrayList<WaveletId>();
       for (Conversation c : view.getConversations()) {
-        ids.add(WaveletId.deserialise(c.getId()));
+        ids.add(WaveletBasedConversation.widFor(c.getId()));
       }
       return ids;
     }
 
     @Override
     public HashedVersion getSignature(WaveletId id) {
-      Conversation c = view.getConversation(id.serialise());
+      Conversation c = view.getConversation(WaveletBasedConversation.idFor(id));
       return (null != c) ?
           ((WaveletBasedConversation) c).getWavelet().getHashedVersion()
           : HashedVersion.unsigned(0);
@@ -125,7 +125,7 @@ public class SupplementedWaveImpl implements SupplementedWave {
 
     @Override
     public long getVersion(WaveletId id) {
-      Conversation c = view.getConversation(id.serialise());
+      Conversation c = view.getConversation(WaveletBasedConversation.idFor(id));
       return c != null ?
           // TODO(user): Once bug 2820511 is fixed, get rid of the cast.
           ((WaveletBasedConversation) c).getWavelet().getVersion()
@@ -134,7 +134,7 @@ public class SupplementedWaveImpl implements SupplementedWave {
 
     @Override
     public Map<String, Long> getBlipVersions(WaveletId id) {
-      Conversation c = view.getConversation(id.serialise());
+      Conversation c = view.getConversation(WaveletBasedConversation.idFor(id));
       Map<String, Long> blipVersions = new HashMap<String, Long>();
       for (ConversationBlip blip : BlipIterators.breadthFirst(c)) {
         blipVersions.put(blip.getId(), blip.getLastModifiedVersion());
@@ -240,8 +240,7 @@ public class SupplementedWaveImpl implements SupplementedWave {
   public ThreadState getThreadState(ConversationThread thread) {
     Conversation c = thread.getConversation();
     String id = c.getId();
-    return supplement.getThreadState(WaveletId.deserialise(id),
-        thread.getId());
+    return supplement.getThreadState(WaveletBasedConversation.widFor(id), thread.getId());
   }
 
   @Override
@@ -273,8 +272,8 @@ public class SupplementedWaveImpl implements SupplementedWave {
 
   @Override
   public void setThreadState(ConversationThread thread, ThreadState state) {
-    supplement.setThreadState(WaveletId.deserialise(thread.getConversation().getId()),
-        thread.getId(), state);
+    supplement.setThreadState(WaveletBasedConversation.widFor(
+        thread.getConversation().getId()), thread.getId(), state);
   }
 
   @Override

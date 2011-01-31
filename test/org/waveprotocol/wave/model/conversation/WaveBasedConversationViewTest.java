@@ -73,8 +73,7 @@ public class WaveBasedConversationViewTest extends ConversationViewTestBase {
   }
 
   public void testNonExistentConversationIsNull() {
-    assertNull(waveBasedConversationView
-        .getConversation(WaveletId.deserialise("foo.com!conv+bar")));
+    assertNull(waveBasedConversationView.getConversation(WaveletId.of("foo.com", "conv+bar")));
   }
 
   public void testManifestErasureFiresConversationRemoved() {

@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.id.IdUtil;
-import org.waveprotocol.wave.model.id.LegacyIdSerialiser;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.StringMap;
@@ -70,8 +70,7 @@ public final class WaveDocuments<BlipDocument extends DocumentOperationSink>
   public DocumentOperationSink create(
       final WaveletId waveletId, final String blipId, final DocInitialization content) {
 
-    // This one needs to use the legacy serializer to match Conversation.getId()
-    String waveletIdStr = LegacyIdSerialiser.INSTANCE.serialiseWaveletId(waveletId);
+    String waveletIdStr = ModernIdSerialiser.INSTANCE.serialiseWaveletId(waveletId);
     if (IdUtil.isBlipId(blipId)) {
       BlipDocument document = blipDocFactory.create(waveletId, blipId, content);
       StringMap<BlipDocument> convDocuments = getConversationDocuments(waveletIdStr);

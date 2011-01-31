@@ -19,12 +19,13 @@ package org.waveprotocol.box.server.robots.operations;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.google.wave.api.ApiIdSerializer;
 import com.google.wave.api.BlipData;
 import com.google.wave.api.Element;
 import com.google.wave.api.InvalidRequestException;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.OperationType;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.ApiView;
 import com.google.wave.api.event.WaveletBlipCreatedEvent;
 
@@ -35,11 +36,13 @@ import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
+import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.document.Doc;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.Point;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
+import org.waveprotocol.wave.model.id.InvalidIdException;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
@@ -73,7 +76,17 @@ public class BlipOperationServices implements OperationService {
     ObservableConversationView conversationView = context.openConversation(operation, participant);
 
     String waveletId = OperationUtil.getRequiredParameter(operation, ParamsProperty.WAVELET_ID);
-    ObservableConversation conversation = conversationView.getConversation(waveletId);
+    String conversationId;
+
+    try {
+      // TODO(anorth): Remove this round-trip when the API instead talks about
+      // opaque conversation ids, and doesn't use legacy id serialization.
+      conversationId = WaveletBasedConversation.idFor(
+          ApiIdSerializer.instance().deserialiseWaveletId(waveletId));
+    } catch (InvalidIdException e) {
+      throw new InvalidRequestException("Invalid conversation id", operation, e);
+    }
+    ObservableConversation conversation = conversationView.getConversation(conversationId);
 
     OperationType type = OperationUtil.getOperationType(operation);
     switch (type) {
@@ -251,7 +264,7 @@ public class BlipOperationServices implements OperationService {
 
     // Create builder from xml content.
     XmlStringBuilder markupBuilder = XmlStringBuilder.createFromXmlString(content);
-    
+
     // Append the new markup to the blip doc.
     Document doc = convBlip.getContent();
     LineContainers.appendLine(doc, markupBuilder);
@@ -259,7 +272,7 @@ public class BlipOperationServices implements OperationService {
     // Report success.
     context.constructResponse(operation, Maps.<ParamsProperty, Object> newHashMap());
   }
-  
+
   /**
    * Implementation for the {@link OperationType#DOCUMENT_INSERT_INLINE_BLIP}
    * method. It inserts an inline blip at the location specified in the

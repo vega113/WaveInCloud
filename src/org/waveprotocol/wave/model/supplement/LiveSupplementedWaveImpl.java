@@ -24,6 +24,7 @@ import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.supplement.SupplementedWaveImpl.DefaultFollow;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
@@ -135,8 +136,8 @@ public final class LiveSupplementedWaveImpl implements ObservableSupplementedWav
         @Override
         public void onThreadStateChanged(WaveletId waveletId, String threadId,
             ThreadState oldState, ThreadState newState) {
-          ObservableConversation conversation =
-              conversationView.getConversation(waveletId.serialise());
+          ObservableConversation conversation = conversationView.getConversation(
+              ModernIdSerialiser.INSTANCE.serialiseWaveletId(waveletId));
           if (conversation != null) {
             ObservableConversationThread thread = conversation.getThread(threadId);
             if (thread != null) {
@@ -180,8 +181,9 @@ public final class LiveSupplementedWaveImpl implements ObservableSupplementedWav
       @Override
       public void onConversationAdded(ObservableConversation conversation) {
         // TODO(user): Once bug 2820511 is fixed, stop listening to the wavelet.
-        LiveSupplementedWaveImpl.this.wave.getWavelet(WaveletId.deserialise(conversation.getId()))
-            .addListener(waveletListener);
+        LiveSupplementedWaveImpl.this.wave.getWavelet(
+            WaveletBasedConversation.widFor(conversation.getId())).addListener(
+                waveletListener);
       }
 
       @Override
@@ -279,7 +281,8 @@ public final class LiveSupplementedWaveImpl implements ObservableSupplementedWav
   //
 
   private ObservableConversationBlip getBlip(WaveletId wid, String bid) {
-    ObservableConversation c = conversationView.getConversation(wid.serialise());
+    String conversationId = WaveletBasedConversation.idFor(wid);
+    ObservableConversation c = conversationView.getConversation(conversationId);
     return c != null ? c.getBlip(bid) : null;
   }
 

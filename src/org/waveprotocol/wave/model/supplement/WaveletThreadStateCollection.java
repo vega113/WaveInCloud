@@ -17,14 +17,13 @@
 
 package org.waveprotocol.wave.model.supplement;
 
-import org.waveprotocol.wave.model.supplement.ObservablePrimitiveSupplement.Listener;
-
+import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.document.ObservableMutableDocument;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.util.DocHelper;
 import org.waveprotocol.wave.model.document.util.DocumentEventRouter;
 import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.id.WaveletIdSerializer;
+import org.waveprotocol.wave.model.supplement.ObservablePrimitiveSupplement.Listener;
 import org.waveprotocol.wave.model.util.ElementListener;
 import org.waveprotocol.wave.model.util.Preconditions;
 
@@ -83,7 +82,7 @@ final class WaveletThreadStateCollection<E> implements ElementListener<E> {
 
   private WaveletId valueOf(E element) {
     String waveletIdStr = getDocument().getAttribute(element, WaveletBasedSupplement.ID_ATTR);
-    return WaveletIdSerializer.INSTANCE.fromString(waveletIdStr);
+    return WaveletBasedConversation.widFor(waveletIdStr);
   }
 
   @Override
@@ -129,7 +128,7 @@ final class WaveletThreadStateCollection<E> implements ElementListener<E> {
   }
 
   private void createEntry(WaveletId waveletId) {
-    String waveletIdStr = WaveletIdSerializer.INSTANCE.toString(waveletId);
+    String waveletIdStr = WaveletBasedConversation.idFor(waveletId);
     ObservableMutableDocument<? super E, E, ?> doc = getDocument();
     E container =
         doc.createChildElement(doc.getDocumentElement(), WaveletBasedSupplement.CONVERSATION_TAG,
