@@ -494,7 +494,7 @@
     <jar destfile="${dist.dir}\proto-gwt.jar" basedir="${src.proto.gwt.dir}"/>
   </target>
 
-  <target name="dist-libraries" depends="compile, dist-proto, dist-pst">
+  <target name="dist-libraries" depends="compile, dist-proto, dist-pst" description="Builds the distribution libraries">
     <subant target="dist" inheritall="true">
       <fileset dir="${src.dir}" includes="*/**/build.xml"/>
     </subant>

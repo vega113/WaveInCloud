@@ -23,7 +23,7 @@ syntax = "proto2";
 
 package search;
 
-option java_package = "org.waveprotocol.wave.search";
+option java_package = "org.waveprotocol.box.search";
 option java_outer_classname = "SearchProto";
 
 
