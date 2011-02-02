@@ -17,7 +17,6 @@
   <inherits name='org.waveprotocol.wave.model.Model'/>
   <inherits name="org.waveprotocol.wave.model.account.Account"/>
   <inherits name='org.waveprotocol.wave.model.conversation.Conversation'/>
-  <inherits name='org.waveprotocol.wave.search.SearchProto'/>
 
   <inherits name="org.waveprotocol.box.common.Common"/>
   <inherits name='org.waveprotocol.box.common.comms.WaveClientRpc'/>
