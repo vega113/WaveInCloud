@@ -22,6 +22,7 @@ import com.google.protobuf.Message;
 import com.dyuproject.protostuff.json.ReflectionNumericJSON;
 
 import org.waveprotocol.box.common.comms.WaveClientRpc;
+import org.waveprotocol.box.search.SearchProto;
 import org.waveprotocol.wave.federation.Proto;
 
 /**
@@ -60,6 +61,8 @@ public class ProtoSerializer extends ReflectionNumericJSON {
     Proto.ProtocolWaveletOperation.MutateDocument.class,
     Rpc.CancelRpc.class,
     Rpc.RpcFinished.class,
+    SearchProto.SearchResponse.class,
+    SearchProto.SearchResponse.Digest.class,
   };
 
   public ProtoSerializer() {

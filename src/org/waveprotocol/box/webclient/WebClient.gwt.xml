@@ -17,12 +17,14 @@
   <inherits name='org.waveprotocol.wave.model.Model'/>
   <inherits name="org.waveprotocol.wave.model.account.Account"/>
   <inherits name='org.waveprotocol.wave.model.conversation.Conversation'/>
+  <inherits name='org.waveprotocol.wave.search.SearchProto'/>
 
   <inherits name="org.waveprotocol.box.common.Common"/>
   <inherits name='org.waveprotocol.box.common.comms.WaveClientRpc'/>
   <inherits name='org.waveprotocol.box.webclient.common.communication.Communication'/>
   <inherits name='org.waveprotocol.box.webclient.util.Util'/>
   <inherits name='org.waveprotocol.box.webclient.waveclient.common.Common'/>
+  <inherits name='org.waveprotocol.box.webclient.search.Search'/>
   <inherits name='org.waveprotocol.box.webclient.widget.error.Error'/>
 
   <!-- Specify the app entry point class.                         -->

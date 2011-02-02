@@ -65,6 +65,7 @@
 
   <target name="compile" depends="init" description="Compiles Java files from protocol buffers">
     <protoc proto="${src.dir}/org/waveprotocol/box/common/comms/waveclient-rpc.proto" />
+    <protoc proto="${src.dir}/org/waveprotocol/box/search/search.proto"/>
     <protoc proto="${src.dir}/org/waveprotocol/box/server/persistence/protos/account-store.proto" />
     <protoc proto="${src.dir}/org/waveprotocol/box/server/persistence/protos/delta-store.proto" />
     <protoc proto="${src.dir}/org/waveprotocol/box/server/rpc/rpc.proto" />
@@ -76,6 +77,7 @@
   <target name="compile_json" depends="init"
       description="Compiles Javascript files from protocol buffers">
     <protostuff proto="org/waveprotocol/box/common/comms/waveclient-rpc.proto"/>
+    <protostuff proto="org/waveprotocol/box/search/search.proto"/>
     <protostuff proto="org/waveprotocol/wave/concurrencycontrol/clientserver.proto"/>
     <protostuff proto="org/waveprotocol/wave/federation/federation.protodevel"/>
   </target>
