@@ -21,14 +21,19 @@
   padding: 4px 10px 4px 4px; /* 4px padding, but a bit extra on the RHS. */
   border-bottom: 1px solid #eee;
   cursor: pointer;
+  color: grey;
 }
 
 .digest:hover {
   background-color: #eee;
 }
 
+.digest.selected {
+  background-color: #789e35;
+  color: white;  
+}
+
 .inner {
-  color: gray;
   line-height: 16px;
   height: 32px;  /* Exactly 2 lines of text. */
   overflow: hidden;
@@ -53,7 +58,11 @@
 
 .unread {
   font-weight: bold;
-  color: black;
+  color: black;  
+}
+
+.selected .unread {
+  color: white;
 }
 
 .info {
@@ -71,4 +80,3 @@
   -moz-border-radius: 8px;
   -webkit-border-radius: 8px; 
 }
-

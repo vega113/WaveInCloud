@@ -25,6 +25,7 @@ import org.waveprotocol.wave.client.StageThree;
 import org.waveprotocol.wave.client.StageTwo;
 import org.waveprotocol.wave.client.StageZero;
 import org.waveprotocol.wave.client.Stages;
+import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
@@ -47,6 +48,7 @@ public class StagesProvider extends Stages {
   private final WaveRef waveRef;
   private final RemoteViewServiceMultiplexer channel;
   private final IdGenerator idGenerator;
+  private final ProfileManager profiles;
   private final boolean isNewWave;
 
   private StageOne one;
@@ -64,12 +66,14 @@ public class StagesProvider extends Stages {
    * @param idGenerator
    */
   public StagesProvider(Element wavePanelElement, LogicalPanel rootPanel, WaveRef waveRef,
-      RemoteViewServiceMultiplexer channel, IdGenerator idGenerator, boolean isNewWave) {
+      RemoteViewServiceMultiplexer channel, IdGenerator idGenerator, ProfileManager profiles,
+      boolean isNewWave) {
     this.wavePanelElement = wavePanelElement;
     this.rootPanel = rootPanel;
     this.waveRef = waveRef;
     this.channel = channel;
     this.idGenerator = idGenerator;
+    this.profiles = profiles;
     this.isNewWave = isNewWave;
   }
 
@@ -91,7 +95,7 @@ public class StagesProvider extends Stages {
   @Override
   protected AsyncHolder<StageTwo> createStageTwoLoader(StageOne one) {
     return new StageTwoProvider(this.one = one, waveRef.getWaveId(), channel, isNewWave,
-        idGenerator);
+        idGenerator, profiles);
   }
 
   @Override

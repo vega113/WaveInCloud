@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-
 package org.waveprotocol.box.webclient.search;
 
 import org.waveprotocol.box.webclient.search.SearchService.Callback;
@@ -26,6 +25,11 @@ import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 import java.util.List;
 
 /**
+ * A simple implementation of the search model, using a search service.
+ * <p>
+ * This search keeps a list that corresponds to the total search result size.
+ * Segments of that list are filled in as necessary.
+ *
  * @author hearnden@google.com (David Hearnden)
  */
 public final class SimpleSearch implements Search {
@@ -68,10 +72,10 @@ public final class SimpleSearch implements Search {
       }
 
       @Override
-      public void onSuccess(List<Digest> snapshots) {
+      public void onSuccess(int total, List<? extends Digest> snapshots) {
         if (outstanding == this) {
           outstanding = null;
-          handleSuccess(snapshots);
+          handleSuccess(total, 0, snapshots);
         }
       }
     };
@@ -109,7 +113,7 @@ public final class SimpleSearch implements Search {
   /**
    * Copies the digest snapshots into this search result's state.
    */
-  private void handleSuccess(List<Digest> digests) {
+  private void handleSuccess(int total, int from, List<? extends Digest> digests) {
     int min = Math.min(this.digests.size(), digests.size());
     for (int i = 0; i < min; i++) {
       this.digests.set(i, digests.get(i));

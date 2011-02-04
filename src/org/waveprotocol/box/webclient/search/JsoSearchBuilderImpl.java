@@ -106,9 +106,9 @@ public final class JsoSearchBuilderImpl implements SearchBuilder {
           callback.onFailure("Search service did not return json");
         } else {
           SearchResponse searchResponse = SearchResponse.parse(response.getText());
-          List<org.waveprotocol.box.webclient.search.Digest> digestSnapshots =
+          List<DigestSnapshot> digestSnapshots =
               SearchBuilderUtils.deserializeSearchResponse(searchResponse);
-          callback.onSuccess(digestSnapshots);
+          callback.onSuccess(searchResponse.getTotalResults(), digestSnapshots);
         }
       }
 
@@ -131,9 +131,9 @@ public final class JsoSearchBuilderImpl implements SearchBuilder {
      * Constructs a list of {@link org.waveprotocol.box.webclient.search.Digest}
      * from {@link SearchResponse}.
      */
-    private static List<org.waveprotocol.box.webclient.search.Digest> deserializeSearchResponse(
+    private static List<DigestSnapshot> deserializeSearchResponse(
         SearchResponse searchResponse) {
-      List<org.waveprotocol.box.webclient.search.Digest> digestSnapshots =
+      List<DigestSnapshot> digestSnapshots =
           CollectionUtils.newArrayList();
       int i = 0;
       for (SearchResponse.Digest digest : searchResponse.getDigestsList()) {

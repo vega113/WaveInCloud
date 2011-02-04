@@ -20,7 +20,9 @@
 
   <inherits name="org.waveprotocol.box.common.Common"/>
   <inherits name='org.waveprotocol.box.common.comms.WaveClientRpc'/>
+  <inherits name='org.waveprotocol.box.search.SearchProto'/>
   <inherits name='org.waveprotocol.box.webclient.common.communication.Communication'/>
+  <inherits name='org.waveprotocol.box.webclient.search.Search'/>
   <inherits name='org.waveprotocol.box.webclient.util.Util'/>
   <inherits name='org.waveprotocol.box.webclient.waveclient.common.Common'/>
   <inherits name='org.waveprotocol.box.webclient.search.Search'/>

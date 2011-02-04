@@ -1,0 +1,18 @@
+/*
+ * CSS for search area.
+ *
+ * Author: hearnden@google.com (David Hearnden)
+ */
+@eval searchHeight org.waveprotocol.box.webclient.search.SearchPanelWidget.CssConstants.SEARCH_HEIGHT;
+
+.self {
+  height: searchHeight;
+  background-color: blue;
+}
+
+input.query {
+  height: 24px;  /* Webkit default. Make other browsers look as pretty as Webkit. */
+  margin: 13px;  /* 2x13 + 24 = 50px, which is searchHeight. */
+  padding: 2px;  /* GWT default.  Here as a reminder.  */
+  /* Remember that inputs have inset borders and padding which don't contribute to total height. */
+}

@@ -42,12 +42,20 @@ import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveUpdatedEvent;
 import org.waveprotocol.box.webclient.client.wavelist.WaveListPanel;
+import org.waveprotocol.box.webclient.search.RemoteSearchService;
+import org.waveprotocol.box.webclient.search.Search;
+import org.waveprotocol.box.webclient.search.SearchPanelRenderer;
+import org.waveprotocol.box.webclient.search.SearchPanelWidget;
+import org.waveprotocol.box.webclient.search.SearchPresenter;
+import org.waveprotocol.box.webclient.search.SimpleSearch;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.waveclient.common.ClientIdGenerator;
 import org.waveprotocol.box.webclient.waveclient.common.WaveViewServiceImpl;
 import org.waveprotocol.box.webclient.waveclient.common.WebClientBackend;
 import org.waveprotocol.box.webclient.waveclient.common.WebClientUtils;
 import org.waveprotocol.box.webclient.widget.error.ErrorIndicatorPresenter;
+import org.waveprotocol.wave.client.account.ProfileManager;
+import org.waveprotocol.wave.client.account.impl.ProfileManagerImpl;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtml;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.common.util.AsyncHolder.Accessor;
@@ -78,6 +86,10 @@ public class WebClient implements EntryPoint {
 
   private static final Binder BINDER = GWT.create(Binder.class);
 
+  static Log LOG = Log.get(WebClient.class);
+
+  private final ProfileManager profiles = new ProfileManagerImpl();
+
   @UiField
   SplitLayoutPanel splitPanel;
 
@@ -87,13 +99,14 @@ public class WebClient implements EntryPoint {
   @UiField
   ImplPanel contentPanel;
 
+//  @UiField(provided = true)
+  SearchPanelWidget searchPanel = new SearchPanelWidget(new SearchPanelRenderer(profiles));
+
   @UiField
   WaveListPanel listPanel;
 
   @UiField
   DebugMessagePanel logPanel;
-
-  static Log LOG = Log.get(WebClient.class);
 
   private WebClientBackend backend = null;
 
@@ -120,39 +133,6 @@ public class WebClient implements EntryPoint {
   public void onModuleLoad() {
 
     ErrorHandler.install();
-
-    // Set up UI
-    DockLayoutPanel self = BINDER.createAndBindUi(this);
-    RootPanel.get("app").add(self);
-    // DockLayoutPanel forcibly conflicts with sensible layout control, and
-    // sticks inline styles on elements without permission. They must be
-    // cleared.
-    self.getElement().getStyle().clearPosition();
-    splitPanel.setWidgetMinSize(listPanel, 200);
-
-    if (LogLevel.showDebug()) {
-      logPanel.enable();
-    } else {
-      logPanel.removeFromParent();
-    }
-
-    if (ClientFlags.get().enableWavePanelHarness()) {
-      // For handling the opening of wave using the new wave panel
-      ClientEvents.get().addWaveSelectionEventHandler(
-          new WaveSelectionEventHandler() {
-            @Override
-            public void onSelection(WaveRef waveRef) {
-              openWave(waveRef, false);
-            }
-          });
-      waveView = null;
-    } else {
-      waveView = new WaveView();
-      contentPanel.add(waveView);
-
-      // DockLayoutPanel manually set position relative. We need to clear it.
-      waveView.getElement().getStyle().clearPosition();
-    }
 
     ClientEvents.get().addWaveCreationEventHandler(
         new WaveCreationEventHandler() {
@@ -191,8 +171,65 @@ public class WebClient implements EntryPoint {
       idGenerator = ClientIdGenerator.create();
       loginToServer();
     }
+
+    setupUi();
+
     History.fireCurrentHistoryState();
     LOG.info("SimpleWebClient.onModuleLoad() done");
+  }
+
+  private void setupUi() {
+    // Set up UI
+    DockLayoutPanel self = BINDER.createAndBindUi(this);
+    RootPanel.get("app").add(self);
+    // DockLayoutPanel forcibly conflicts with sensible layout control, and
+    // sticks inline styles on elements without permission. They must be
+    // cleared.
+    self.getElement().getStyle().clearPosition();
+    splitPanel.setWidgetMinSize(listPanel, 200);
+//    splitPanel.setWidgetMinSize(searchPanel, 300);
+    splitPanel.setWidgetMinSize(contentPanel, 450);
+
+    if (LogLevel.showDebug()) {
+      logPanel.enable();
+    } else {
+      logPanel.removeFromParent();
+    }
+
+    // Search panel.
+    setupSearchPanel();
+
+    // Wave panel.
+    if (ClientFlags.get().enableWavePanelHarness()) {
+      // For handling the opening of wave using the new wave panel
+      ClientEvents.get().addWaveSelectionEventHandler(
+          new WaveSelectionEventHandler() {
+            @Override
+            public void onSelection(WaveRef waveRef) {
+              openWave(waveRef, false);
+            }
+          });
+      waveView = null;
+    } else {
+      waveView = new WaveView();
+      contentPanel.add(waveView);
+
+      // DockLayoutPanel manually set position relative. We need to clear it.
+      waveView.getElement().getStyle().clearPosition();
+    }
+  }
+
+  private void setupSearchPanel() {
+    // On wave selection, fire an event.
+    SearchPresenter.WaveSelectionHandler selectHandler =
+        new SearchPresenter.WaveSelectionHandler() {
+          @Override
+          public void onWaveSelected(WaveId id) {
+            ClientEvents.get().fireEvent(new WaveSelectionEvent(WaveRef.of(id)));
+          }
+        };
+    Search search = new SimpleSearch(RemoteSearchService.create());
+    SearchPresenter searchUi = SearchPresenter.create(search, searchPanel, selectHandler);
   }
 
   private void configureConnectionIndicator() {
@@ -302,7 +339,7 @@ public class WebClient implements EntryPoint {
     }
 
     wave = new StagesProvider(contentPanel.getElement().appendChild(Document.get().createDivElement()),
-        contentPanel, waveRef, channel, idGenerator, isNewWave);
+        contentPanel, waveRef, channel, idGenerator, profiles, isNewWave);
     wave.load(null);
     String encodedToken = History.getToken();
     if (encodedToken != null && !encodedToken.isEmpty()) {

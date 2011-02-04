@@ -43,6 +43,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.util.logging.Log;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -92,9 +93,9 @@ public final class SearchServlet extends HttpServlet {
      * @param searchResult the search results with digests.
      * @return SearchResponse
      */
-    public static SearchResponse serializeSearchResult(SearchResult searchResult) {
+    public static SearchResponse serializeSearchResult(SearchResult searchResult, int total) {
       Builder searchBuilder = SearchResponse.newBuilder();
-      searchBuilder.setQuery(searchResult.getQuery()).setNumResults(searchResult.getNumResults());
+      searchBuilder.setQuery(searchResult.getQuery()).setTotalResults(total);
       for (SearchResult.Digest searchResultDigest : searchResult.getDigests()) {
         SearchResponse.Digest digest = serializeDigest(searchResultDigest);
         searchBuilder.addDigests(digest);
@@ -114,13 +115,15 @@ public final class SearchServlet extends HttpServlet {
       digestBuilder.setTitle(searchResultDigest.getTitle());
       digestBuilder.setUnreadCount(searchResultDigest.getUnreadCount());
       digestBuilder.setWaveId(searchResultDigest.getWaveId());
-      String author =
-          searchResultDigest.getParticipants().size() > 0 ? searchResultDigest.getParticipants()
-              .get(0) : "nobody@example.com";
-      digestBuilder.setAuthor(author);
-
-      for (String participant : searchResultDigest.getParticipants()) {
-        digestBuilder.addParticipants(participant);
+      List<String> participants = searchResultDigest.getParticipants();
+      if (participants.isEmpty()) {
+        // This shouldn't be possible.
+        digestBuilder.setAuthor("nobody@example.com");
+      } else {
+        digestBuilder.setAuthor(participants.get(0));
+        for (int i = 1; i < participants.size(); i++) {
+          digestBuilder.addParticipants(participants.get(i));
+        }
       }
       SearchResponse.Digest digest = digestBuilder.build();
       return digest;
@@ -175,11 +178,13 @@ public final class SearchServlet extends HttpServlet {
     String opId = operationRequest.getId();
     OperationUtil.executeOperation(operationRequest, operationRegistry, context, user);
     JsonRpcResponse jsonRpcResponse = context.getResponses().get(opId);
-    SearchResult searhResult =
+    SearchResult searchResult =
         (SearchResult) jsonRpcResponse.getData().get(ParamsProperty.SEARCH_RESULTS);
 
-    SearchResponse searchResponse = SearchResponseUtils.serializeSearchResult(searhResult);
-    return searchResponse;
+    // Currently, the Data API does not return the total size of the search result.
+    // So we have to fake it.
+    int totalGuess = searchRequest.getIndex() + searchResult.getNumResults();
+    return SearchResponseUtils.serializeSearchResult(searchResult, totalGuess);
   }
 
   /**

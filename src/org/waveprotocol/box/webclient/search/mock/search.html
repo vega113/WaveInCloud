@@ -31,8 +31,8 @@ function clone() {
   for (var i = 0; i < 15; i++) {
     frame.appendChild(digest.cloneNode(true));
   }
+  digest.className += ' selected';
 }
-
 </script>
 </head>
 <body onload='clone()'>

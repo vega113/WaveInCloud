@@ -23,6 +23,7 @@ import com.google.gwt.user.client.Command;
 
 import org.waveprotocol.wave.client.StageOne;
 import org.waveprotocol.wave.client.StageTwo;
+import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
 import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
@@ -47,6 +48,8 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
   private final boolean isNewWave;
   // TODO: Remove this after WebClientBackend is deleted.
   private final IdGenerator idGenerator;
+  // shared across other client components
+  private final ProfileManager profiles;
 
   /**
    * Continuation to progress to the next stage. This will disappear with the
@@ -60,7 +63,7 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
    * @param idGenerator
    */
   public StageTwoProvider(StageOne stageOne, WaveId waveId, RemoteViewServiceMultiplexer channel,
-      boolean isNewWave, IdGenerator idGenerator) {
+      boolean isNewWave, IdGenerator idGenerator, ProfileManager profiles) {
     super(stageOne);
     Preconditions.checkArgument(stageOne != null);
     Preconditions.checkArgument(waveId != null);
@@ -68,6 +71,7 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
     this.channel = channel;
     this.isNewWave = isNewWave;
     this.idGenerator = idGenerator;
+    this.profiles = profiles;
   }
 
   @Override
@@ -88,6 +92,11 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
   @Override
   protected ParticipantId createSignedInUser() {
     return ParticipantId.ofUnsafe(Session.get().getAddress());
+  }
+
+  @Override
+  protected ProfileManager createProfileManager() {
+    return profiles;
   }
 
   @Override

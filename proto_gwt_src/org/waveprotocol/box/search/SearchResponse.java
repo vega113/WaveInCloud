@@ -420,7 +420,7 @@ public class SearchResponse extends JavaScriptObject  {
             buf.push("\"2\":" + _2);
         var _3 = obj["3"];
         if(_3 != null && _3.length != 0) {
-            var b = [], fn = @org.waveprotocol.wave.search.SearchResponse.Digest::stringify(Lorg/waveprotocol/wave/search/SearchResponse$Digest;);
+            var b = [], fn = @org.waveprotocol.box.search.SearchResponse.Digest::stringify(Lorg/waveprotocol/box/search/SearchResponse$Digest;);
             for(var i=0,l=_3.length; i<l; i++)
                 b.push(fn(_3[i]));
             buf.push("\"3\":[" + b.join(",") + "]");
@@ -458,22 +458,22 @@ public class SearchResponse extends JavaScriptObject  {
         return this["1"] != null;
     }-*/;
 
-    // numResults
+    // totalResults
 
-    public final native int getNumResults() /*-{
+    public final native int getTotalResults() /*-{
         return this["2"] || 0;
     }-*/;
 
-    public final native SearchResponse setNumResults(int numResults) /*-{
-        this["2"] = numResults;
+    public final native SearchResponse setTotalResults(int totalResults) /*-{
+        this["2"] = totalResults;
         return this;
     }-*/;
 
-    public final native void clearNumResults() /*-{
+    public final native void clearTotalResults() /*-{
         delete this["2"];
     }-*/;
 
-    public final native boolean hasNumResults() /*-{
+    public final native boolean hasTotalResults() /*-{
         return this["2"] != null;
     }-*/;
 

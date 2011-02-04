@@ -24,7 +24,7 @@ import java.util.List;
 
 /**
  * Interface that exposes search services to the client.
- * 
+ *
  *  @author hearnden@google.com (David Hearnden)
  *  @author vega113@gmail.com (Yuri Z.)
  */
@@ -36,9 +36,12 @@ public interface SearchService {
     /**
      * Notifies this callback of a successful search response.
      *
+     * @param total total number of results in the search (this is greater or
+     *        equal to the size of {@code snapshots}, since not necessarily all
+     *        results are returned)
      * @param snapshots some digest snapshots
      */
-    void onSuccess(List<Digest> snapshots);
+    void onSuccess(int total, List<? extends Digest> snapshots);
   }
 
   /**
@@ -108,11 +111,13 @@ public interface SearchService {
   }
 
   /**
-   * 
+   * Performs a search.
+   *
    * @param query the query to execute.
    * @param index the index from which to return results.
-   * @param @param numResults the number of results to return.
-   * @param the callback through which the search query results are returned.
+   * @param numResults the maximum number of results to return.
+   * @param callback callback through which the search query results are
+   *        returned.
    */
   void search(String query, int index, int numResults, Callback callback);
 }

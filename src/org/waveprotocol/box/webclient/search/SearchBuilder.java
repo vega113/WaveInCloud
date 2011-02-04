@@ -28,11 +28,11 @@ public interface SearchBuilder {
 
   /**
    * Initializes the {@link SearchBuilder} for a new search.
-   * 
+   *
    * @return the {@link SearchBuilder} to allow chaining.
    */
   SearchBuilder newSearch();
-  
+
   /**
    * @param query the query to execute.
    */
@@ -44,7 +44,7 @@ public interface SearchBuilder {
   SearchBuilder setIndex(int index);
 
   /**
-   * @param numResults the number of results to return.
+   * @param numResults the maximum number of results to return.
    */
   SearchBuilder setNumResults(int numResults);
 

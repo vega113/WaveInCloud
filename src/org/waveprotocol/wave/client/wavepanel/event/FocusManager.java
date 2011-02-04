@@ -19,6 +19,7 @@ package org.waveprotocol.wave.client.wavepanel.event;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyEvent;
@@ -265,8 +266,16 @@ public final class FocusManager implements Focusable, KeySignalHandler {
     }
 
     private void dispatch(KeyEvent<?> event) {
+      // Only respond to key events on the body element. Otherwise, the key
+      // event was probably targeted to some editable input element, and that
+      // should own the events.
+      NativeEvent realEvent = event.getNativeEvent();
+      Element target = realEvent.getEventTarget().cast();
+      if (!"body".equals(target.getTagName().toLowerCase())) {
+        return;
+      }
       // Test that the event is meaningful (and stop bubbling if it is not).
-      SignalEvent signal = SignalEventImpl.create(event.getNativeEvent().<Event>cast(), true);
+      SignalEvent signal = SignalEventImpl.create(realEvent.<Event>cast(), true);
       if (signal != null) {
         KeyCombo key = EventWrapper.getKeyCombo(signal);
         if (globalHandler.onKeySignal(key)) {

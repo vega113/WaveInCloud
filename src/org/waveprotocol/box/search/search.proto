@@ -56,14 +56,13 @@ message SearchResponse {
 	// The wave author.
 	required string author = 8;
   }
-  
+
   // The search query.
   required string query = 1;
-  // The actual number of results returned.
-  required int32 numResults = 2;
-  // A list of digests per each wave in search result.
+  // The total number of results to the query (not necessarily all returned).
+  required int32 totalResults = 2;
+  // A list of digests, representing the segment [index, index + result_count] 
+  // from the query parameters.
   repeated Digest digests = 3;
 }
-
-
 

@@ -1025,12 +1025,12 @@ public final class SearchProto {
     public boolean hasQuery() { return hasQuery; }
     public java.lang.String getQuery() { return query_; }
     
-    // required int32 numResults = 2;
-    public static final int NUMRESULTS_FIELD_NUMBER = 2;
-    private boolean hasNumResults;
-    private int numResults_ = 0;
-    public boolean hasNumResults() { return hasNumResults; }
-    public int getNumResults() { return numResults_; }
+    // required int32 totalResults = 2;
+    public static final int TOTALRESULTS_FIELD_NUMBER = 2;
+    private boolean hasTotalResults;
+    private int totalResults_ = 0;
+    public boolean hasTotalResults() { return hasTotalResults; }
+    public int getTotalResults() { return totalResults_; }
     
     // repeated .search.SearchResponse.Digest digests = 3;
     public static final int DIGESTS_FIELD_NUMBER = 3;
@@ -1048,7 +1048,7 @@ public final class SearchProto {
     }
     public final boolean isInitialized() {
       if (!hasQuery) return false;
-      if (!hasNumResults) return false;
+      if (!hasTotalResults) return false;
       for (org.waveprotocol.box.search.SearchProto.SearchResponse.Digest element : getDigestsList()) {
         if (!element.isInitialized()) return false;
       }
@@ -1061,8 +1061,8 @@ public final class SearchProto {
       if (hasQuery()) {
         output.writeString(1, getQuery());
       }
-      if (hasNumResults()) {
-        output.writeInt32(2, getNumResults());
+      if (hasTotalResults()) {
+        output.writeInt32(2, getTotalResults());
       }
       for (org.waveprotocol.box.search.SearchProto.SearchResponse.Digest element : getDigestsList()) {
         output.writeMessage(3, element);
@@ -1080,9 +1080,9 @@ public final class SearchProto {
         size += com.google.protobuf.CodedOutputStream
           .computeStringSize(1, getQuery());
       }
-      if (hasNumResults()) {
+      if (hasTotalResults()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, getNumResults());
+          .computeInt32Size(2, getTotalResults());
       }
       for (org.waveprotocol.box.search.SearchProto.SearchResponse.Digest element : getDigestsList()) {
         size += com.google.protobuf.CodedOutputStream
@@ -1253,8 +1253,8 @@ public final class SearchProto {
         if (other.hasQuery()) {
           setQuery(other.getQuery());
         }
-        if (other.hasNumResults()) {
-          setNumResults(other.getNumResults());
+        if (other.hasTotalResults()) {
+          setTotalResults(other.getTotalResults());
         }
         if (!other.digests_.isEmpty()) {
           if (result.digests_.isEmpty()) {
@@ -1292,7 +1292,7 @@ public final class SearchProto {
               break;
             }
             case 16: {
-              setNumResults(input.readInt32());
+              setTotalResults(input.readInt32());
               break;
             }
             case 26: {
@@ -1327,21 +1327,21 @@ public final class SearchProto {
         return this;
       }
       
-      // required int32 numResults = 2;
-      public boolean hasNumResults() {
-        return result.hasNumResults();
+      // required int32 totalResults = 2;
+      public boolean hasTotalResults() {
+        return result.hasTotalResults();
       }
-      public int getNumResults() {
-        return result.getNumResults();
+      public int getTotalResults() {
+        return result.getTotalResults();
       }
-      public Builder setNumResults(int value) {
-        result.hasNumResults = true;
-        result.numResults_ = value;
+      public Builder setTotalResults(int value) {
+        result.hasTotalResults = true;
+        result.totalResults_ = value;
         return this;
       }
-      public Builder clearNumResults() {
-        result.hasNumResults = false;
-        result.numResults_ = 0;
+      public Builder clearTotalResults() {
+        result.hasTotalResults = false;
+        result.totalResults_ = 0;
         return this;
       }
       
@@ -1434,15 +1434,15 @@ public final class SearchProto {
     java.lang.String[] descriptorData = {
       "\n(org/waveprotocol/box/search/search.pro" +
       "to\022\006search\"A\n\rSearchRequest\022\r\n\005query\030\001 \002" +
-      "(\t\022\r\n\005index\030\002 \002(\005\022\022\n\nnumResults\030\003 \002(\005\"\202\002" +
-      "\n\016SearchResponse\022\r\n\005query\030\001 \002(\t\022\022\n\nnumRe" +
-      "sults\030\002 \002(\005\022.\n\007digests\030\003 \003(\0132\035.search.Se" +
-      "archResponse.Digest\032\234\001\n\006Digest\022\r\n\005title\030" +
-      "\001 \002(\t\022\017\n\007snippet\030\002 \002(\t\022\016\n\006waveId\030\003 \002(\t\022\024" +
-      "\n\014lastModified\030\004 \002(\003\022\023\n\013unreadCount\030\005 \002(" +
-      "\005\022\021\n\tblipCount\030\006 \002(\005\022\024\n\014participants\030\007 \003" +
-      "(\t\022\016\n\006author\030\010 \002(\tB*\n\033org.waveprotocol.b",
-      "ox.searchB\013SearchProto"
+      "(\t\022\r\n\005index\030\002 \002(\005\022\022\n\nnumResults\030\003 \002(\005\"\204\002" +
+      "\n\016SearchResponse\022\r\n\005query\030\001 \002(\t\022\024\n\014total" +
+      "Results\030\002 \002(\005\022.\n\007digests\030\003 \003(\0132\035.search." +
+      "SearchResponse.Digest\032\234\001\n\006Digest\022\r\n\005titl" +
+      "e\030\001 \002(\t\022\017\n\007snippet\030\002 \002(\t\022\016\n\006waveId\030\003 \002(\t" +
+      "\022\024\n\014lastModified\030\004 \002(\003\022\023\n\013unreadCount\030\005 " +
+      "\002(\005\022\021\n\tblipCount\030\006 \002(\005\022\024\n\014participants\030\007" +
+      " \003(\t\022\016\n\006author\030\010 \002(\tB*\n\033org.waveprotocol",
+      ".box.searchB\013SearchProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -1462,7 +1462,7 @@ public final class SearchProto {
           internal_static_search_SearchResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_search_SearchResponse_descriptor,
-              new java.lang.String[] { "Query", "NumResults", "Digests", },
+              new java.lang.String[] { "Query", "TotalResults", "Digests", },
               org.waveprotocol.box.search.SearchProto.SearchResponse.class,
               org.waveprotocol.box.search.SearchProto.SearchResponse.Builder.class);
           internal_static_search_SearchResponse_Digest_descriptor =
