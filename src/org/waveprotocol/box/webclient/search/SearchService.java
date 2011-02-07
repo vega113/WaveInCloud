@@ -111,6 +111,12 @@ public interface SearchService {
   }
 
   /**
+   * Symbolic constant to indicate that the total size of the search result is
+   * unknown.
+   */
+  int UNKNOWN_SIZE = -1;
+
+  /**
    * Performs a search.
    *
    * @param query the query to execute.

@@ -208,36 +208,50 @@ public class WaveMap implements SearchProvider {
   @Override
   public Collection<WaveViewData> search(ParticipantId user, String query, int startAt,
       int numResults) {
-    LOG.info("Search query '" + query + "' from user: " + user);
+    int endAt = startAt + numResults - 1;
+    LOG.info(
+        "Search query '" + query + "' from user: " + user + " [" + startAt + ", " + endAt + "]");
     if (!query.equals("in:inbox") && !query.equals("with:me")) {
       throw new AssertionError("Only queries for the inbox work");
     }
-    Map<WaveId, WaveViewData> results = Maps.newHashMap();
+    // Must use a map with stable ordering, since indices are meaningful.
+    Map<WaveId, WaveViewData> results = Maps.newLinkedHashMap();
     int resultIndex = 0;
     for (Map.Entry<WaveId, Wave> entry : waves.entrySet()) {
       WaveId waveId = entry.getKey();
       Wave wave = entry.getValue();
+      WaveViewData view = null;  // Copy of the wave built up for search hits.
       for (WaveletContainer c : wave) {
         try {
           if (c.hasParticipant(user)) {
-            if (resultIndex >= startAt && resultIndex < (startAt + numResults)) {
-              WaveViewData view = results.get(waveId);
-              if (view == null) {
-                view = WaveViewDataImpl.create(waveId);
-                results.put(waveId, view);
-              }
+            if (view != null) {
+              // Just keep adding all the relevant wavelets in this wave.
               view.addWavelet(c.copyWaveletData());
+              continue;
             }
-            resultIndex++;
-            if (resultIndex > startAt + numResults) {
-              return results.values();
+
+            // This wave is in this user's index.
+            if (startAt <= resultIndex && resultIndex <= endAt) {
+              // ... and it is in the search range, so put it in the results.
+              view = WaveViewDataImpl.create(waveId);
+              view.addWavelet(c.copyWaveletData());
+              results.put(waveId, view);
+              resultIndex++;
+            } else {
+              // ... but not in the search range, so move on to the next wave.
+              resultIndex++;
+              break;
             }
           }
         } catch (WaveletStateException e) {
           LOG.info("Failed to access wavelet " + c.getWaveletName(), e);
         }
       }
+      if (resultIndex > endAt) {
+        break;
+      }
     }
+    LOG.info("Search response to '" + query + "': " + results.size() + " results");
     return results.values();
   }
 

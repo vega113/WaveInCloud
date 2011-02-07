@@ -41,14 +41,18 @@ import org.waveprotocol.wave.model.conversation.TitleHelper;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.id.IdUtil;
+import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
+import org.waveprotocol.wave.model.wave.data.WaveletData;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -65,6 +69,7 @@ public class SearchService implements OperationService {
    */
   private static final int DEFAULT_NUMBER_SEARCH_RESULTS = 10;
   private static final int DIGEST_SNIPPET_LENGTH = 30;
+  private static final int PARTICIPANTS_SNIPPET_LENGTH = 5;
   private static final String EMPTY_WAVELET_TITLE = "";
 
   private final SearchProvider searchProvider;
@@ -123,7 +128,11 @@ public class SearchService implements OperationService {
     String waveId = ApiIdSerializer.instance().serialiseWaveId(waveletData.getWaveId());
     List<String> participants = CollectionUtils.newArrayList();
     for (ParticipantId p : waveletData.getParticipants()) {
-      participants.add(p.getAddress());
+      if (participants.size() < PARTICIPANTS_SNIPPET_LENGTH) {
+        participants.add(p.getAddress());
+      } else {
+        break;
+      }
     }
     // TODO(josephg): Set unread count once user data wavelets are in.
     int unreadCount = 0;
@@ -137,32 +146,74 @@ public class SearchService implements OperationService {
           unreadCount, blipCount);
   }
 
+  /** @return a digest for an empty wave. */
+  private Digest emptyDigest(WaveViewData wave) {
+    String title = ModernIdSerialiser.INSTANCE.serialiseWaveId(wave.getWaveId());
+    String id = ApiIdSerializer.instance().serialiseWaveId(wave.getWaveId());
+    return new Digest(title, "(empty)", id, Collections.<String> emptyList(), -1L, 0, 0);
+  }
+
+  /** @return a digest for an unrecognised type of wave. */
+  private Digest unknownDigest(WaveViewData wave) {
+    String title = ModernIdSerialiser.INSTANCE.serialiseWaveId(wave.getWaveId());
+    String id = ApiIdSerializer.instance().serialiseWaveId(wave.getWaveId());
+    long lmt = -1L;
+    int docs = 0;
+    List<String> participants = new ArrayList<String>();
+    for (WaveletData data : wave.getWavelets()) {
+      lmt = Math.max(lmt, data.getLastModifiedTime());
+      docs += data.getDocumentIds().size();
+
+      for (ParticipantId p : data.getParticipants()) {
+        if (participants.size() < PARTICIPANTS_SNIPPET_LENGTH) {
+          participants.add(p.getAddress());
+        } else {
+          break;
+        }
+      }
+    }
+    return new Digest(title, "(unknown)", id, participants, lmt, 0, docs);
+  }
+
+  // Note that this search implementation is only of prototype quality.
   private SearchResult search(
       ParticipantId participant, String query, int startAt, int numResults) {
     Collection<WaveViewData> results =
         searchProvider.search(participant, query, startAt, numResults);
 
+    // Generate exactly one digest per wave. This includes conversational and
+    // non-conversational waves. The position-based API for search prevents the
+    // luxury of extra filtering here. Filtering can only be done in the
+    // searchProvider. All waves returned by the search provider must be
+    // included in the search result.
     SearchResult result = new SearchResult(query);
-    for (WaveViewData wave : results) {
+    outer: for (WaveViewData wave : results) {
+      // Empty waves get an empty digest, waves with root conversations get a
+      // digest from that, waves with a conversational wavelet get a digest from
+      // the first such wavelet, then remaining waves get an unknown digest.
+      //
+      // This is not the ideal solution. In particular, a digest should be built
+      // from all the conversations in a user's view of the wave, not just one.
+      // See bug: http://code.google.com/p/wave-protocol/issues/detail?id=123
+      //
       for (ObservableWaveletData waveletData : wave.getWavelets()) {
-        if (!IdUtil.isConversationalId(waveletData.getWaveletId())) {
-          // Wavelet isn't a conversation wave. It might be metadata or
-          // something.
-          // Skip it.
-          continue;
-        }
-
-        Digest digest = generateDigestFromWavelet(waveletData);
-
-        // TODO(josephg): This is not the behaviour. When multiple wavelets are returned
-        // in a single wave, the search service should only generate & return one digest.
-        // See bug: http://code.google.com/p/wave-protocol/issues/detail?id=123
-        if (digest != null) {
-          result.addDigest(digest);
+        if (IdUtil.isConversationRootWaveletId(waveletData.getWaveletId())) {
+          result.addDigest(generateDigestFromWavelet(waveletData));
+          continue outer;
         }
       }
+      for (ObservableWaveletData waveletData : wave.getWavelets()) {
+        if (IdUtil.isConversationalId(waveletData.getWaveletId())) {
+          result.addDigest(generateDigestFromWavelet(waveletData));
+          continue outer;
+        }
+      }
+      // The wave matched the search, but it is unknown how to present it.
+      boolean empty = !wave.getWavelets().iterator().hasNext();
+      result.addDigest(empty ? emptyDigest(wave) : unknownDigest(wave));
     }
 
+    assert result.getDigests().size() == results.size();
     return result;
   }
 }

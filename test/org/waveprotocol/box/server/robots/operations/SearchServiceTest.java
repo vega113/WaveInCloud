@@ -75,6 +75,7 @@ import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -180,15 +181,16 @@ public class SearchServiceTest extends TestCase {
     assertEquals(digest.getBlipCount(), 0);
   }
 
-  public void testWaveletWithNoConversationNotIncludedInResults() throws Exception {
+  // Note: this is really just testing that the SearchService does not over-step
+  // its role and do additional filtering beyond that done by the search
+  // provider. If the search provider starts filtering empty waves, then this
+  // test is not exactly reproducing expected behavior.
+  public void testResultsAreWhatTheSearchProviderSaysIncludingEmptyWaves() throws Exception {
     TestingWaveletData data =
       new TestingWaveletData(WAVE_ID, CONVERSATION_WAVELET_ID, PARTICIPANT, false);
+    final Collection<WaveViewData> providerResults = Arrays.asList(data.copyViewData());
 
-    Digest digest = service.generateDigestFromWavelet(data.copyWaveletData());
-    assertNull(digest);
-
-    when(searchProvider.search(USER, "in:inbox", 0, 10)).thenReturn(
-        Arrays.asList(data.copyViewData()));
+    when(searchProvider.search(USER, "in:inbox", 0, 10)).thenReturn(providerResults);
     service.execute(operation, context, USER);
 
     verify(context).constructResponse(
@@ -202,8 +204,8 @@ public class SearchServiceTest extends TestCase {
             Object resultsObj = map.get(ParamsProperty.SEARCH_RESULTS);
             SearchResult results = (SearchResult) resultsObj;
 
-            assertEquals(0, results.getNumResults());
-            assertEquals(0, results.getDigests().size());
+            assertEquals(providerResults.size(), results.getNumResults());
+            assertEquals(providerResults.size(), results.getDigests().size());
 
             return true;
           }

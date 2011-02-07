@@ -39,6 +39,7 @@ import org.waveprotocol.box.server.robots.OperationServiceRegistry;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.robots.util.OperationUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
+import org.waveprotocol.box.webclient.search.SearchService;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.util.logging.Log;
 
@@ -173,7 +174,9 @@ public final class SearchServlet extends HttpServlet {
     OperationContextImpl context =
         new OperationContextImpl(waveletProvider,
             converterManager.getEventDataConverter(ProtocolVersion.DEFAULT), conversationUtil);
-    LOG.info("Performing query: " + searchRequest.getQuery());
+    LOG.info(
+        "Performing query: " + searchRequest.getQuery() + " [" + searchRequest.getIndex() + ", "
+            + (searchRequest.getIndex() + searchRequest.getNumResults()) + "]");
     OperationRequest operationRequest = opQueue.getPendingOperations().get(0);
     String opId = operationRequest.getId();
     OperationUtil.executeOperation(operationRequest, operationRegistry, context, user);
@@ -181,9 +184,19 @@ public final class SearchServlet extends HttpServlet {
     SearchResult searchResult =
         (SearchResult) jsonRpcResponse.getData().get(ParamsProperty.SEARCH_RESULTS);
 
-    // Currently, the Data API does not return the total size of the search result.
-    // So we have to fake it.
-    int totalGuess = searchRequest.getIndex() + searchResult.getNumResults();
+    // The Data API does not return the total size of the search result, even
+    // though the searcher knows it. The only approximate knowledge that can be
+    // gleaned from the Data API is whether there are more search results beyond
+    // those returned. If the searcher returns as many (or more) results as
+    // requested, then assume that more results exist, but the total is unknown.
+    // Otherwise, the total has been reached.
+    int totalGuess;
+    if (searchResult.getNumResults() >= searchRequest.getNumResults()) {
+      totalGuess = SearchService.UNKNOWN_SIZE;
+    } else {
+      totalGuess = searchRequest.getIndex() + searchResult.getNumResults();
+    }
+    LOG.info("Results: " + searchResult.getNumResults() + ", total: " + totalGuess);
     return SearchResponseUtils.serializeSearchResult(searchResult, totalGuess);
   }
 
