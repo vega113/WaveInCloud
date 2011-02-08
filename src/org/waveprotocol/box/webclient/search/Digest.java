@@ -27,6 +27,7 @@ import java.util.List;
  * @author hearnden@google.com (David Hearnden)
  */
 public interface Digest {
+
   /** @return the wave represented by this digest. */
   WaveId getWaveId();
 

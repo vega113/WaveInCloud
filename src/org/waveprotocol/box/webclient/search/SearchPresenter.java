@@ -20,6 +20,7 @@ import org.waveprotocol.box.webclient.client.ClientEvents;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.box.webclient.search.Search.State;
 import org.waveprotocol.wave.client.scheduler.Scheduler.IncrementalTask;
+import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
 import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
 import org.waveprotocol.wave.client.scheduler.TimerService;
 import org.waveprotocol.wave.client.widget.toolbar.GroupingToolbar;
@@ -30,8 +31,6 @@ import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.IdentityMap;
 
-import java.util.List;
-
 /**
  * Presents a search model into a search view.
  * <p>
@@ -41,7 +40,7 @@ import java.util.List;
  * @author hearnden@google.com (David Hearnden)
  */
 public final class SearchPresenter
-    implements Search.Listener, SearchPanelView.Listener, SearchView.Listener, IncrementalTask {
+    implements Search.Listener, SearchPanelView.Listener, SearchView.Listener {
 
   /**
    * Handles digest selection actions.
@@ -53,17 +52,40 @@ public final class SearchPresenter
   /** How often to repeat the search query. */
   private final static int POLLING_INTERVAL_MS = 10000; // 10s
   private final static String DEFAULT_SEARCH = "in:inbox";
+  private final static int DEFAULT_PAGE_SIZE = 20;
 
   // External references
   private final TimerService scheduler;
   private final Search search;
   private final SearchPanelView searchUi;
+  private final WaveSelectionHandler selectionHandler;
 
   // Internal state
   private final IdentityMap<DigestView, Digest> digestUis = CollectionUtils.createIdentityMap();
-  private final WaveSelectionHandler selectionHandler;
+  private final IncrementalTask searchUpdater = new IncrementalTask() {
+    @Override
+    public boolean execute() {
+      doSearch();
+      return true;
+    }
+  };
+
+  private final Task renderer = new Task() {
+    @Override
+    public void execute() {
+      if (search.getState() == State.READY) {
+        render();
+      } else {
+        // Try again later.
+        scheduler.schedule(this);
+      }
+    }
+  };
+
   /** Current search query. */
-  private String query = DEFAULT_SEARCH;
+  private String queryText = DEFAULT_SEARCH;
+  /** Number of results to query for. */
+  private int querySize = DEFAULT_PAGE_SIZE;
   /** Current selected digest. */
   private DigestView selected;
 
@@ -85,7 +107,7 @@ public final class SearchPresenter
   public static SearchPresenter create(
       Search model, SearchPanelView view, WaveSelectionHandler selectionHandler) {
     SearchPresenter presenter = new SearchPresenter(
-        SchedulerInstance.getMediumPriorityTimer(), model, view, selectionHandler);
+        SchedulerInstance.getHighPriorityTimer(), model, view, selectionHandler);
     presenter.init();
     return presenter;
   }
@@ -102,14 +124,15 @@ public final class SearchPresenter
     searchUi.getSearch().init(this);
 
     // Fire a polling search.
-    scheduler.scheduleRepeating(this, 0, POLLING_INTERVAL_MS);
+    scheduler.scheduleRepeating(searchUpdater, 0, POLLING_INTERVAL_MS);
   }
 
   /**
    * Releases resources and detaches listeners.
    */
   public void destroy() {
-    scheduler.cancel(this);
+    scheduler.cancel(searchUpdater);
+    scheduler.cancel(renderer);
     searchUi.getSearch().reset();
     searchUi.reset();
     search.removeListener(this);
@@ -126,6 +149,13 @@ public final class SearchPresenter
           @Override
           public void onClicked() {
             ClientEvents.get().fireEvent(WaveCreationEvent.CREATE_NEW_WAVE);
+
+            // HACK(hearnden): To mimic live search, fire a search poll
+            // reasonably soon (500ms) after creating a wave. This will be unnecessary
+            // with a real live search implementation. The delay is to give
+            // enough time for the wave state to propagate to the server.
+            int delay = 500;
+            scheduler.scheduleRepeating(searchUpdater, delay, POLLING_INTERVAL_MS);
           }
         });
     // Fake group with empty button - to force the separator be displayed.
@@ -137,33 +167,63 @@ public final class SearchPresenter
    * Initializes the search box.
    */
   private void initSearchBox() {
-    searchUi.getSearch().setQuery(query);
+    searchUi.getSearch().setQuery(queryText);
   }
 
   /**
    * Executes the current search.
    */
   private void doSearch() {
-    search.find(query);
+    search.find(queryText, querySize);
   }
 
   /**
    * Renders the current state of the search result into the panel.
    */
   private void render() {
+    renderTitle();
+    renderDigests();
+    renderShowMore();
+  }
+
+  /**
+   * Renders the paging information into the title bar.
+   */
+  private void renderTitle() {
+    int resultStart = 0;
+    int resultEnd = querySize;
+    String totalStr;
+    if (search.getTotal() != Search.UNKNOWN_SIZE) {
+      resultEnd = Math.min(resultEnd, search.getTotal());
+      totalStr = String.valueOf(search.getTotal());
+    } else {
+      totalStr = "unknown";
+    }
+    searchUi.setTitleText(queryText + " (0-" + resultEnd + " of " + totalStr + ")");
+  }
+
+  private void renderDigests() {
     // Preserve selection on re-rendering.
     WaveId toSelect = selected != null ? digestUis.get(selected).getWaveId() : null;
     searchUi.clearDigests();
     digestUis.clear();
     setSelected(null);
-    for (int i = 0, size = search.getTotal(); i < size; i++) {
+    for (int i = 0, size = search.getMinimumTotal(); i < size; i++) {
       Digest digest = search.getDigest(i);
+      if (digest == null) {
+        continue;
+      }
       DigestView digestUi = searchUi.insertBefore(null, digest);
       digestUis.put(digestUi, digest);
       if (digest.getWaveId().equals(toSelect)) {
         setSelected(digestUi);
       }
     }
+  }
+
+  private void renderShowMore() {
+    searchUi.setShowMoreVisible(
+        search.getTotal() == Search.UNKNOWN_SIZE || querySize < search.getTotal());
   }
 
   //
@@ -195,19 +255,16 @@ public final class SearchPresenter
 
   @Override
   public void onQueryEntered() {
-    query = searchUi.getSearch().getQuery();
+    queryText = searchUi.getSearch().getQuery();
+    querySize = DEFAULT_PAGE_SIZE;
+    searchUi.setTitleText("Searching...");
     doSearch();
   }
 
-  //
-  // Periodic poll.
-  //
-
   @Override
-  public boolean execute() {
+  public void onShowMoreClicked() {
+    querySize += DEFAULT_PAGE_SIZE;
     doSearch();
-    // Keep running until destroyed.
-    return true;
   }
 
   //
@@ -216,23 +273,43 @@ public final class SearchPresenter
 
   @Override
   public void onStateChanged() {
+    //
+    // If the state switches to searching, then do nothing. A manual title-bar
+    // update is performed in onQueryEntered(), and the title-bar should not be
+    // updated when a polling search fires.
+    //
+    // If the state switches to ready, then just update the title. Do not
+    // necessarily re-render, since that is only necessary if a change occurred,
+    // which would have fired one of the other methods below.
+    //
     if (search.getState() == State.READY) {
-      render();
+      renderTitle();
     }
   }
 
   @Override
   public void onDigestAdded(int index, Digest digest) {
-    render();
+    renderLater();
   }
 
   @Override
   public void onDigestRemoved(int index, Digest digest) {
-    render();
+    renderLater();
   }
 
   @Override
-  public void onDigestsReady(List<Integer> indices) {
-    render();
+  public void onDigestReady(int index, Digest digest) {
+    renderLater();
+  }
+
+  @Override
+  public void onTotalChanged(int total) {
+    renderLater();
+  }
+
+  private void renderLater() {
+    if (!scheduler.isScheduled(renderer)) {
+      scheduler.schedule(renderer);
+    }
   }
 }

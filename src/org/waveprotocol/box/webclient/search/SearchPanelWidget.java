@@ -18,6 +18,7 @@ package org.waveprotocol.box.webclient.search;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.CssResource;
@@ -28,10 +29,10 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.Widget;
 
 import org.waveprotocol.box.webclient.util.Pool;
 import org.waveprotocol.box.webclient.util.ToppingUpPool;
+import org.waveprotocol.box.webclient.widget.frame.FramedPanel;
 import org.waveprotocol.wave.client.common.util.LinkedSequence;
 import org.waveprotocol.wave.client.uibuilder.BuilderHelper;
 import org.waveprotocol.wave.client.widget.common.ImplPanel;
@@ -65,6 +66,8 @@ public class SearchPanelWidget extends Composite implements SearchPanelView {
     String toolbar();
 
     String list();
+
+    String showMore();
   }
 
   /**
@@ -86,17 +89,20 @@ public class SearchPanelWidget extends Composite implements SearchPanelView {
   @UiField(provided = true)
   static Css css = SearchPanelResourceLoader.getPanel().css();
 
-  interface Binder extends UiBinder<Widget, SearchPanelWidget> {
+  interface Binder extends UiBinder<FramedPanel, SearchPanelWidget> {
   }
 
   private final static Binder BINDER = GWT.create(Binder.class);
 
+  private final FramedPanel frame;
   @UiField
   SearchWidget search;
   @UiField
   ToplevelToolbarWidget toolbar;
   @UiField
   Element list;
+  @UiField
+  Element showMore;
   @UiField
   ImplPanel self;
   private final LinkedSequence<DigestDomImpl> digests = LinkedSequence.create();
@@ -112,7 +118,7 @@ public class SearchPanelWidget extends Composite implements SearchPanelView {
   private Listener listener;
 
   public SearchPanelWidget(SearchPanelRenderer renderer) {
-    initWidget(BINDER.createAndBindUi(this));
+    initWidget(frame = BINDER.createAndBindUi(this));
     this.renderer = renderer;
   }
 
@@ -139,6 +145,11 @@ public class SearchPanelWidget extends Composite implements SearchPanelView {
   }
 
   @Override
+  public void setTitleText(String text) {
+    frame.setTitleText(text);
+  }
+
+  @Override
   public SearchWidget getSearch() {
     return search;
   }
@@ -162,10 +173,11 @@ public class SearchPanelWidget extends Composite implements SearchPanelView {
     DigestDomImpl digestUi = digestPool.get();
     renderer.render(digest, digestUi);
 
-    DigestDomImpl refElement = narrow(ref);
+    DigestDomImpl refDomImpl = narrow(ref);
+    Element refElement = refDomImpl != null ? refDomImpl.getElement() : showMore;
     byId.put(digestUi.getId(), digestUi);
-    digests.insertBefore(refElement, digestUi);
-    list.insertBefore(digestUi.getElement(), elementOf(refElement));
+    digests.insertBefore(refDomImpl, digestUi);
+    list.insertBefore(digestUi.getElement(), refElement);
 
     return digestUi;
   }
@@ -178,6 +190,17 @@ public class SearchPanelWidget extends Composite implements SearchPanelView {
     assert digests.isEmpty();
   }
 
+  @Override
+  public void setShowMoreVisible(boolean visible) {
+    // In order to keep the padding effect, the button always need to be present
+    // in order to affect layout.  Just make it invisible and non-clickable.
+    if (visible) {
+      showMore.getStyle().clearVisibility();
+    } else {
+      showMore.getStyle().setVisibility(Visibility.HIDDEN);
+    }
+  }
+
   @UiHandler("self")
   void handleClick(ClickEvent e) {
     Element target = e.getNativeEvent().getEventTarget().cast();
@@ -187,6 +210,8 @@ public class SearchPanelWidget extends Composite implements SearchPanelView {
         handleClick(byId.get(target.getAttribute(DigestDomImpl.DIGEST_ID_ATTRIBUTE)));
         e.stopPropagation();
         return;
+      } else if (showMore.equals(target)) {
+        handleShowMoreClicked();
       }
       target = target.getParentElement();
     }
@@ -204,11 +229,13 @@ public class SearchPanelWidget extends Composite implements SearchPanelView {
     }
   }
 
-  private static DigestDomImpl narrow(DigestView digestUi) {
-    return (DigestDomImpl) digestUi;
+  private void handleShowMoreClicked() {
+    if (listener != null) {
+      listener.onShowMoreClicked();
+    }
   }
 
-  private static Element elementOf(DigestDomImpl digestEl) {
-    return digestEl != null ? digestEl.getElement() : null;
+  private static DigestDomImpl narrow(DigestView digestUi) {
+    return (DigestDomImpl) digestUi;
   }
 }

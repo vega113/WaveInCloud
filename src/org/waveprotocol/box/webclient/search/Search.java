@@ -18,8 +18,6 @@ package org.waveprotocol.box.webclient.search;
 
 import org.waveprotocol.wave.model.wave.SourcesEvents;
 
-import java.util.List;
-
 /**
  * An ordered collection of asynchronously-loaded digests.
  * <p>
@@ -55,10 +53,10 @@ public interface Search extends SourcesEvents<Search.Listener> {
     //
 
     /**
-     * Notifies this listener of positions in the search where data is now
+     * Notifies this listener of a position in the search where data is now
      * available.
      */
-    void onDigestsReady(List<Integer> indices);
+    void onDigestReady(int index, Digest digest);
 
     /**
      * Notifies this listener that a new entry has been inserted into the results.
@@ -69,6 +67,11 @@ public interface Search extends SourcesEvents<Search.Listener> {
      * Notifies this listener that a digest has been removed from the results.
      */
     void onDigestRemoved(int index, Digest digest);
+
+    /**
+     * Notifies this listener that the size of the search has changed.
+     */
+    void onTotalChanged(int total);
   }
 
   enum State {
@@ -83,6 +86,12 @@ public interface Search extends SourcesEvents<Search.Listener> {
   }
 
   /**
+   * Symbolic constant to indicate that the total size of the search result is
+   * unknown.
+   */
+  int UNKNOWN_SIZE = -1;
+
+  /**
    * @return the current search state.
    */
   State getState();
@@ -92,8 +101,9 @@ public interface Search extends SourcesEvents<Search.Listener> {
    * and then {@link State#READY} once some results are ready.
    *
    * @param query search query
+   * @param size maximum number of results to return
    */
-  void find(String query);
+  void find(String query, int size);
 
   /**
    * Stops the current search if there is one.
@@ -101,9 +111,16 @@ public interface Search extends SourcesEvents<Search.Listener> {
   void cancel();
 
   /**
-   * @return the total number of results in this search.
+   * @return the total number of results in this search, or {@link #UNKNOWN_SIZE}.
    */
   int getTotal();
+
+  // Temporary hack to make up for Data API deficiencies.
+  /**
+   * @return a minimum known size of the search result.
+   */
+  int getMinimumTotal();
+
 
   /**
    * @return the digest at position {@code index} in the search result. This may

@@ -41,13 +41,13 @@ import org.waveprotocol.box.webclient.client.events.WaveIndexUpdatedEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveUpdatedEvent;
-import org.waveprotocol.box.webclient.client.wavelist.WaveListPanel;
 import org.waveprotocol.box.webclient.search.RemoteSearchService;
 import org.waveprotocol.box.webclient.search.Search;
 import org.waveprotocol.box.webclient.search.SearchPanelRenderer;
 import org.waveprotocol.box.webclient.search.SearchPanelWidget;
 import org.waveprotocol.box.webclient.search.SearchPresenter;
 import org.waveprotocol.box.webclient.search.SimpleSearch;
+import org.waveprotocol.box.webclient.search.WaveStore;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.box.webclient.waveclient.common.ClientIdGenerator;
 import org.waveprotocol.box.webclient.waveclient.common.WaveViewServiceImpl;
@@ -99,11 +99,8 @@ public class WebClient implements EntryPoint {
   @UiField
   ImplPanel contentPanel;
 
-//  @UiField(provided = true)
+  @UiField(provided = true)
   SearchPanelWidget searchPanel = new SearchPanelWidget(new SearchPanelRenderer(profiles));
-
-  @UiField
-  WaveListPanel listPanel;
 
   @UiField
   DebugMessagePanel logPanel;
@@ -115,6 +112,8 @@ public class WebClient implements EntryPoint {
 
   /** The old wave panel */
   private WaveView waveView = null;
+
+  private final WaveStore waveStore = new SimpleWaveStore();
 
   /**
    * Create a remote websocket to talk to the server-side FedOne service.
@@ -186,8 +185,7 @@ public class WebClient implements EntryPoint {
     // sticks inline styles on elements without permission. They must be
     // cleared.
     self.getElement().getStyle().clearPosition();
-    splitPanel.setWidgetMinSize(listPanel, 200);
-//    splitPanel.setWidgetMinSize(searchPanel, 300);
+    splitPanel.setWidgetMinSize(searchPanel, 300);
     splitPanel.setWidgetMinSize(contentPanel, 450);
 
     if (LogLevel.showDebug()) {
@@ -228,7 +226,7 @@ public class WebClient implements EntryPoint {
             ClientEvents.get().fireEvent(new WaveSelectionEvent(WaveRef.of(id)));
           }
         };
-    Search search = new SimpleSearch(RemoteSearchService.create());
+    Search search = SimpleSearch.create(RemoteSearchService.create(), waveStore);
     SearchPresenter searchUi = SearchPresenter.create(search, searchPanel, selectHandler);
   }
 
@@ -338,8 +336,10 @@ public class WebClient implements EntryPoint {
       wave = null;
     }
 
-    wave = new StagesProvider(contentPanel.getElement().appendChild(Document.get().createDivElement()),
-        contentPanel, waveRef, channel, idGenerator, profiles, isNewWave);
+    Element holder = contentPanel.getElement().appendChild(Document.get().createDivElement());
+    final StagesProvider wave = new StagesProvider(holder,
+        contentPanel, waveRef, channel, idGenerator, profiles, waveStore, isNewWave);
+    this.wave = wave;
     wave.load(null);
     String encodedToken = History.getToken();
     if (encodedToken != null && !encodedToken.isEmpty()) {

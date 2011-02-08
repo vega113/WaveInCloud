@@ -43,6 +43,8 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
  */
 public interface StageThree {
 
+  StageTwo getStageTwo();
+
   Actions getEditActions();
 
   /**
@@ -85,6 +87,11 @@ public interface StageThree {
 
     /** Notifies this provider that the stage has been loaded. */
     protected void onStageLoaded() {
+    }
+
+    @Override
+    public final StageTwo getStageTwo() {
+      return stageTwo;
     }
 
     @Override

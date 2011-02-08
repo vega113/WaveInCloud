@@ -20,6 +20,8 @@ package org.waveprotocol.box.webclient.client;
 
 import com.google.gwt.dom.client.Element;
 
+import org.waveprotocol.box.webclient.search.WaveContext;
+import org.waveprotocol.box.webclient.search.WaveStore;
 import org.waveprotocol.wave.client.StageOne;
 import org.waveprotocol.wave.client.StageThree;
 import org.waveprotocol.wave.client.StageTwo;
@@ -27,6 +29,7 @@ import org.waveprotocol.wave.client.StageZero;
 import org.waveprotocol.wave.client.Stages;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
+import org.waveprotocol.wave.client.common.util.AsyncHolder.Accessor;
 import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
@@ -43,17 +46,27 @@ import org.waveprotocol.wave.model.waveref.WaveRef;
  */
 public class StagesProvider extends Stages {
 
+  private final static AsyncHolder<Object> HALT = new AsyncHolder<Object>() {
+    @Override
+    public void call(Accessor<Object> accessor) {
+      // Never ready, so never notify the accessor.
+    }
+  };
+
   private final Element wavePanelElement;
   private final LogicalPanel rootPanel;
   private final WaveRef waveRef;
   private final RemoteViewServiceMultiplexer channel;
   private final IdGenerator idGenerator;
   private final ProfileManager profiles;
+  private final WaveStore waveStore;
   private final boolean isNewWave;
 
+  private boolean closed;
   private StageOne one;
   private StageTwo two;
   private StageThree three;
+  private WaveContext wave;
 
   /**
    * @param wavePanelElement The dom element to become the wave panel
@@ -67,19 +80,25 @@ public class StagesProvider extends Stages {
    */
   public StagesProvider(Element wavePanelElement, LogicalPanel rootPanel, WaveRef waveRef,
       RemoteViewServiceMultiplexer channel, IdGenerator idGenerator, ProfileManager profiles,
-      boolean isNewWave) {
+      WaveStore store, boolean isNewWave) {
     this.wavePanelElement = wavePanelElement;
     this.rootPanel = rootPanel;
     this.waveRef = waveRef;
     this.channel = channel;
     this.idGenerator = idGenerator;
     this.profiles = profiles;
+    this.waveStore = store;
     this.isNewWave = isNewWave;
   }
 
   @Override
+  protected AsyncHolder<StageZero> createStageZeroLoader() {
+    return haltIfClosed(super.createStageZeroLoader());
+  }
+
+  @Override
   protected AsyncHolder<StageOne> createStageOneLoader(StageZero zero) {
-    return new StageOne.DefaultProvider(zero) {
+    return haltIfClosed(new StageOne.DefaultProvider(zero) {
       @Override
       protected Element createWaveHolder() {
         return wavePanelElement;
@@ -89,36 +108,46 @@ public class StagesProvider extends Stages {
       protected LogicalPanel createWaveContainer() {
         return rootPanel;
       }
-    };
+    });
   }
 
   @Override
   protected AsyncHolder<StageTwo> createStageTwoLoader(StageOne one) {
-    return new StageTwoProvider(this.one = one, waveRef.getWaveId(), channel, isNewWave,
-        idGenerator, profiles);
+    return haltIfClosed(new StageTwoProvider(
+        this.one = one, waveRef.getWaveId(), channel, isNewWave, idGenerator, profiles));
   }
 
   @Override
   protected AsyncHolder<StageThree> createStageThreeLoader(final StageTwo two) {
-    return new StageThree.DefaultProvider(this.two = two) {
-
+    return haltIfClosed(new StageThree.DefaultProvider(this.two = two) {
       @Override
       protected void create(final Accessor<StageThree> whenReady) {
         // Prepend an init wave flow onto the stage continuation.
         super.create(new Accessor<StageThree>() {
           @Override
           public void use(StageThree x) {
-            StagesProvider.this.three = x;
-            if (isNewWave) {
-              initNewWave(x);
-            } else {
-              handleExistingWave(x);
-            }
-            whenReady.use(x);
+            onStageThreeLoaded(x, whenReady);
           }
         });
       }
-    };
+    });
+  }
+
+  private void onStageThreeLoaded(StageThree x, Accessor<StageThree> whenReady) {
+    if (closed) {
+      // Stop the loading process.
+      return;
+    }
+    three = x;
+    if (isNewWave) {
+      initNewWave(x);
+    } else {
+      handleExistingWave(x);
+    }
+    wave = new WaveContext(
+        two.getWave(), two.getConversations(), two.getSupplement(), two.getReadMonitor());
+    waveStore.add(wave);
+    whenReady.use(x);
   }
 
   private void initNewWave(StageThree three) {
@@ -153,6 +182,10 @@ public class StagesProvider extends Stages {
   }
 
   public void destroy() {
+    if (wave != null) {
+      waveStore.remove(wave);
+      wave = null;
+    }
     if (three != null) {
       three.getEditActions().stopEditing();
       three = null;
@@ -165,5 +198,15 @@ public class StagesProvider extends Stages {
       one.getWavePanel().destroy();
       one = null;
     }
+    closed = true;
+  }
+
+  /**
+   * @return a halting provider if this stage is closed. Otherwise, returns the
+   *         given provider.
+   */
+  @SuppressWarnings("unchecked") // HALT is safe as a holder for any type
+  private <T> AsyncHolder<T> haltIfClosed(AsyncHolder<T> provider) {
+    return closed ? (AsyncHolder<T>) HALT : provider;
   }
 }

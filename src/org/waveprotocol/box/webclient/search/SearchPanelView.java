@@ -28,7 +28,15 @@ public interface SearchPanelView {
    * Receives gesture UI events.
    */
   interface Listener {
+    /**
+     * Notifies this listener that a digest has been clicked.
+     */
     void onClicked(DigestView digestUi);
+
+    /**
+     * Notifies this listener that the more-results button has been clicked.
+     */
+    void onShowMoreClicked();
   }
 
   /** Binds this view to a listener to handle UI gestures. */
@@ -36,6 +44,9 @@ public interface SearchPanelView {
 
   /** Releases this view from its listener. */
   void reset();
+
+  /** Sets the title bar text. */
+  void setTitleText(String text);
 
   /** @return the search area. */
   SearchView getSearch();
@@ -54,4 +65,9 @@ public interface SearchPanelView {
 
   /** Removes all digest views. */
   void clearDigests();
+
+  /**
+   * Sets whether the show-more button is visible.
+   */
+  void setShowMoreVisible(boolean visible);
 }

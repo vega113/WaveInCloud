@@ -10,10 +10,14 @@
     xmlns:t="urn:import:org.waveprotocol.wave.client.widget.toolbar">
   <ui:with field="css" type="org.waveprotocol.box.webclient.search.SearchPanelWidget.Css"/>
   <f:FramedPanel>
-  <w:ImplPanel ui:field='self' styleName='{css.self}'>
-    <s:SearchWidget ui:field='search' addStyleNames='{css.search}'/>
-    <t:ToplevelToolbarWidget ui:field='toolbar' addStyleNames='{css.toolbar}'/>
-    <div ui:field='list' class='{css.list}'/>
-  </w:ImplPanel>
+    <w:ImplPanel ui:field='self' styleName='{css.self}'>
+      <s:SearchWidget ui:field='search' addStyleNames='{css.search}'/>
+      <t:ToplevelToolbarWidget ui:field='toolbar' addStyleNames='{css.toolbar}'/>
+      <div ui:field='list' class='{css.list}'>
+        <div ui:field='showMore' class='{css.showMore}' style='visibility:hidden'>
+          Show more results
+        </div>
+      </div>
+    </w:ImplPanel>
   </f:FramedPanel>
 </ui:UiBinder>

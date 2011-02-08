@@ -18,6 +18,7 @@
 package org.waveprotocol.box.webclient.search;
 
 import org.waveprotocol.wave.model.id.WaveId;
+import org.waveprotocol.wave.model.util.ValueUtils;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.List;
@@ -25,8 +26,8 @@ import java.util.List;
 /**
  * Interface that exposes search services to the client.
  *
- *  @author hearnden@google.com (David Hearnden)
- *  @author vega113@gmail.com (Yuri Z.)
+ * @author hearnden@google.com (David Hearnden)
+ * @author vega113@gmail.com (Yuri Z.)
  */
 public interface SearchService {
 
@@ -41,7 +42,7 @@ public interface SearchService {
      *        results are returned)
      * @param snapshots some digest snapshots
      */
-    void onSuccess(int total, List<? extends Digest> snapshots);
+    void onSuccess(int total, List<DigestSnapshot> snapshots);
   }
 
   /**
@@ -107,6 +108,37 @@ public interface SearchService {
     @Override
     public int getBlipCount() {
       return blipCount;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + waveId.hashCode();
+      result = prime * result + ((author == null) ? 0 : author.hashCode());
+      result = prime * result + participants.hashCode();
+      result = prime * result + title.hashCode();
+      result = prime * result + snippet.hashCode();
+      result = prime * result + blipCount;
+      result = prime * result + unreadCount;
+      result = prime * result + (int) (lastModified);
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) return true;
+      if (obj == null) return false;
+      if (getClass() != obj.getClass()) return false;
+      DigestSnapshot other = (DigestSnapshot) obj;
+      return waveId.equals(other.waveId) //
+          && ValueUtils.equal(author, other.author) //
+          && participants.equals(other.participants) //
+          && title.equals(other.title) //
+          && snippet.equals(other.snippet) //
+          && blipCount == other.blipCount //
+          && unreadCount == other.unreadCount //
+          && lastModified == other.lastModified;
     }
   }
 

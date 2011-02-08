@@ -14,12 +14,9 @@
  * the License.
  *
  */
-package org.waveprotocol.wave.client.render;
+package org.waveprotocol.wave.model.conversation;
 
-import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.Conversation.Anchor;
-import org.waveprotocol.wave.model.conversation.ConversationBlip;
-import org.waveprotocol.wave.model.conversation.ConversationView;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.IdentityMap;
 
@@ -27,12 +24,8 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Exposes the structure in a conversation view.
- *
- * Note: this structure is intended to be exposed by the conversation model
- * itself, but is currently unimplemented. This class simply fills in the parts
- * of that missing piece that are needed for rendering.
- *
+ * Exposes the structure in a conversation view. This structure is not live; it
+ * does not remain synchronized with the conversation structure as it changes.
  */
 public final class ConversationStructure {
 
@@ -118,11 +111,16 @@ public final class ConversationStructure {
     return unanchored;
   }
 
+  /** @return the main conversation in this wave. */
   public Conversation getMainConversation() {
     return mainConversation;
   }
 
-  private static Conversation getMainConversation(ConversationView view) {
+  /**
+   * Finds the main conversation in a wave. The main conversation is defined as
+   * the root if there is one, or the first unanchored conversation otherwise.
+   */
+  public static Conversation getMainConversation(ConversationView view) {
     Conversation root = view.getRoot();
     if (root == null) {
       for (Conversation curr : view.getConversations()) {

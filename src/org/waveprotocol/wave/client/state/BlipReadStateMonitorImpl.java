@@ -26,20 +26,19 @@ import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
 import org.waveprotocol.wave.model.conversation.ObservableConversationView;
-import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.supplement.ObservableSupplementedWave;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
-import org.waveprotocol.wave.model.util.IdentityMap;
 import org.waveprotocol.wave.model.util.IdentitySet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Set;
 
 /**
- * Monitors the conversation for unread blips and efficiently maintains a count
- * of them.
+ * Eagerly monitors the read/unread state of all blips in all conversations in a
+ * wave, broadcasting events when the number of read and/or unread blips
+ * changes.
  */
 public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.ListenerImpl
     implements BlipReadStateMonitor, ObservableConversation.Listener,
@@ -52,19 +51,17 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
    * entries (albeit very cheaply).
    */
   private static final DomLogger LOG = new DomLogger("blip-read-state");
-  static {
-    LOG.enableModuleBuffer(true);
-  }
 
   private final IdentitySet<ConversationBlip> readBlips = CollectionUtils.createIdentitySet();
   private final IdentitySet<ConversationBlip> unreadBlips = CollectionUtils.createIdentitySet();
-  private final IdentityMap<ConversationBlip, String> blipLogDescriptions =
-      CollectionUtils.createIdentityMap();
+  // IdentitySet has no O(1) size() method, so sizes must be maintained
+  // manually.
+  private int read;
+  private int unread;
   private final CopyOnWriteSet<BlipReadStateMonitor.Listener> listeners = CopyOnWriteSet.create();
   private final ObservableSupplementedWave supplementedWave;
   private final ObservableConversationView conversationView;
   private final WaveId waveId;
-  private boolean haveCountedBlips = false;
 
   /**
    * @return a new BlipReadStateMonitor
@@ -88,6 +85,9 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
   }
 
   private void init() {
+    // Count the existing blips.  This will also set haveCountedBlips to true
+    countBlips();
+
     // Listen to existing conversations.
     for (ObservableConversation conversation : conversationView.getConversations()) {
       conversation.addListener(this);
@@ -96,13 +96,6 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
     // Listen for new conversations and supplement events.
     supplementedWave.addListener(this);
     conversationView.addListener(this);
-
-    // Count the existing blips.  This will also set haveCountedBlips to true
-    // and therefore isReady() to return true.
-    countBlips();
-
-    // Notify listeners of any read/unread state events they might have missed.
-    notifyListeners();
   }
 
   //
@@ -137,17 +130,14 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
 
   @Override
   public int getReadCount() {
-    return readBlips.countEntries();
+    assert read == readBlips.countEntries();
+    return read;
   }
 
   @Override
   public int getUnreadCount() {
-    return unreadBlips.countEntries();
-  }
-
-  @Override
-  public boolean isReady() {
-    return haveCountedBlips;
+    assert unread == unreadBlips.countEntries();
+    return unread;
   }
 
   @Override
@@ -267,19 +257,21 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
    */
   private void countBlips() {
     readBlips.clear();
+    read = 0;
     unreadBlips.clear();
+    unread = 0;
 
     for (Conversation conversation : conversationView.getConversations()) {
       for (ConversationBlip blip : BlipIterators.breadthFirst(conversation)) {
         if (supplementedWave.isUnread(blip)) {
           unreadBlips.add(blip);
+          unread++;
         } else {
           readBlips.add(blip);
+          read++;
         }
       }
     }
-
-    haveCountedBlips = true;
   }
 
   /**
@@ -291,19 +283,23 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
     if (isUnread(blip)) {
       if (readBlips.contains(blip)) {
         readBlips.remove(blip);
+        read--;
         changed = true;
       }
       if (!unreadBlips.contains(blip)) {
         unreadBlips.add(blip);
+        unread++;
         changed = true;
       }
     } else {
       if (unreadBlips.contains(blip)) {
         unreadBlips.remove(blip);
+        unread--;
         changed = true;
       }
       if (!readBlips.contains(blip)) {
         readBlips.add(blip);
+        read++;
         changed = true;
       }
     }
@@ -321,10 +317,12 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
     boolean changed = false;
     if (readBlips.contains(blip)) {
       readBlips.remove(blip);
+      read--;
       changed = true;
     }
     if (unreadBlips.contains(blip)) {
       unreadBlips.remove(blip);
+      unread--;
       changed = true;
     }
     if (changed) {
@@ -343,12 +341,9 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
    * Notifies listeners of a change.
    */
   private void notifyListeners() {
-    // countEntries() is O(n), don't recount every time.
-    int readCount = getReadCount();
-    int unreadCount = getUnreadCount();
-    LOG.trace().log(waveId, ": notifying read/unread change ", readCount, "/", unreadCount);
+    LOG.trace().log(waveId, ": notifying read/unread change ", read, "/", unread);
     for (Listener listener : listeners) {
-      listener.onReadStateChanged(readCount, unreadCount);
+      listener.onReadStateChanged();
     }
   }
 
@@ -356,19 +351,7 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
    * Log some action with the blip information and read/unread state.
    */
   private void logChange(String action, ConversationBlip blip) {
-    LOG.trace().log(getBlipLogDescription(blip), ": ", action, " now ",
-        getReadCount(), "/", getUnreadCount());
-  }
-
-  /**
-   * Gets the log description for a blip and caches the result.
-   */
-  private String getBlipLogDescription(ConversationBlip blip) {
-    if (!blipLogDescriptions.has(blip)) {
-      blipLogDescriptions.put(blip, ModernIdSerialiser.INSTANCE.serialiseWaveId(waveId) + "/"
-          + blip.getConversation().getId() + "/" + blip.getId());
-    }
-    return blipLogDescriptions.get(blip);
+    LOG.trace().log(blip, ": ", action, " now ", getReadCount(), "/", getUnreadCount());
   }
 
   @Override public void onBlipContributorAdded(ObservableConversationBlip blip,

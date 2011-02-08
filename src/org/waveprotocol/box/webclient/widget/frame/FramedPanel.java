@@ -123,6 +123,9 @@ public class FramedPanel extends Composite implements HasWidgets {
   /** Element to which contents are to be attached. */
   @UiField
   Element contentContainer;
+  /** Element containing the title-bar text. */
+  @UiField
+  Element title;
   /** The widget in this frame, if there is one. */
   private Widget contents;
 
@@ -140,6 +143,13 @@ public class FramedPanel extends Composite implements HasWidgets {
     FramedPanel frame = new FramedPanel();
     frame.add(w);
     return frame;
+  }
+
+  /**
+   * Sets the text in the title bar.
+   */
+  public void setTitleText(String text) {
+    title.setInnerText(text);
   }
 
   @Override

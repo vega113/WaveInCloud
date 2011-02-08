@@ -7,7 +7,7 @@
     <div class='{css.frame}'>
       <div class='{css.north}'/>
       <div class='{css.northEast}'/>
-      <div class='{css.north}'/>
+      <div class='{css.north}' ui:field='title'/>
       <div class='{css.east}'/>
       <div class='{css.southEast}'/>
       <div class='{css.south}'/>

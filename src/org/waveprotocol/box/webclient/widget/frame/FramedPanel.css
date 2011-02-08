@@ -9,7 +9,15 @@
     top: 0;
     right: value('chromeNorthEast.getWidth', 'px');
     left: value('chromeNorthWest.getWidth', 'px');
-  }
+    /*
+     * Title-bar styles.
+     */
+    height: value('chromeNorth.getHeight', 'px');
+    line-height: value('chromeNorth.getHeight', 'px');
+    color: white;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
 
   @sprite .northEast {
     gwt-image: 'chromeNorthEast';

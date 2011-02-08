@@ -26,26 +26,20 @@ public interface BlipReadStateMonitor {
    */
   interface Listener {
     /**
-     * Called when the read/unread count changes.  This event will also fire
-     * when the monitor becomes ready, with the initial read/unread count.
+     * Called when the read/unread count changes.
      */
-    void onReadStateChanged(int readCount, int unreadCount);
+    void onReadStateChanged();
   }
 
   /**
-   * @return The current read blip count, or 0 if the monitor isn't ready.
+   * @return The current read blip count.
    */
   int getReadCount();
 
   /**
-   * @return The current unread blip count, or 0 if the monitor isn't ready.
+   * @return The current unread blip count.
    */
   int getUnreadCount();
-
-  /**
-   * @return Whether the read/unread state is ready to be queried.
-   */
-  boolean isReady();
 
   /**
    * Adds a listener to change events.

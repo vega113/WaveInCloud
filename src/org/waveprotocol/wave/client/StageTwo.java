@@ -37,6 +37,8 @@ import org.waveprotocol.wave.client.editor.content.misc.StyleAnnotationHandler;
 import org.waveprotocol.wave.client.gadget.Gadget;
 import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
 import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
+import org.waveprotocol.wave.client.state.BlipReadStateMonitor;
+import org.waveprotocol.wave.client.state.BlipReadStateMonitorImpl;
 import org.waveprotocol.wave.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.state.ThreadReadStateMonitorImpl;
 import org.waveprotocol.wave.client.util.ClientFlags;
@@ -104,6 +106,7 @@ import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.impl.ObservablePluggableMutableDocument;
 import org.waveprotocol.wave.model.wave.data.impl.WaveletDataImpl;
+import org.waveprotocol.wave.model.wave.opbased.ObservableWaveView;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 import org.waveprotocol.wave.model.wave.opbased.WaveViewImpl;
 import org.waveprotocol.wave.model.wave.opbased.WaveViewImpl.WaveletConfigurator;
@@ -125,8 +128,14 @@ public interface StageTwo {
   /** @return the (live) conversations in the wave. */
   ObservableConversationView getConversations();
 
+  /** @return the core wave. */
+  ObservableWaveView getWave();
+
   /** @return the signed-in user's (live) supplementary data in the wave. */
   ObservableSupplementedWave getSupplement();
+
+  /** @return live blip read/unread information. */
+  BlipReadStateMonitor getReadMonitor();
 
   /** @return the registry of document objects used for conversational blips. */
   WaveDocuments<? extends InteractiveDocument> getDocumentRegistry();
@@ -192,6 +201,7 @@ public interface StageTwo {
     private ProfileManager profileManager;
     private ObservableConversationView conversations;
     private ObservableSupplementedWave supplement;
+    private BlipReadStateMonitor readMonitor;
 
     // State Monitors
     private ThreadReadStateMonitor threadReadStateMonitor;
@@ -311,7 +321,8 @@ public interface StageTwo {
       return connector == null ? connector = createConnector() : connector;
     }
 
-    protected final WaveViewImpl<OpBasedWavelet> getWave() {
+    @Override
+    public final WaveViewImpl<OpBasedWavelet> getWave() {
       return wave == null ? wave = createWave() : wave;
     }
 
@@ -327,6 +338,11 @@ public interface StageTwo {
     @Override
     public final ObservableSupplementedWave getSupplement() {
       return supplement == null ? supplement = createSupplement() : supplement;
+    }
+
+    @Override
+    public final BlipReadStateMonitor getReadMonitor() {
+      return readMonitor == null ? readMonitor = createReadMonitor() : readMonitor;
     }
 
     @Override
@@ -429,6 +445,12 @@ public interface StageTwo {
       ObservablePrimitiveSupplement supplement = WaveletBasedSupplement.create(udw);
       return new LiveSupplementedWaveImpl(
           supplement, getWave(), getSignedInUser(), DefaultFollow.ALWAYS, getConversations());
+    }
+
+    /** @return a supplement to the supplement, to get exact read/unread counts. */
+    protected BlipReadStateMonitor createReadMonitor() {
+      return BlipReadStateMonitorImpl.create(
+          getWave().getWaveId(), getSupplement(), getConversations());
     }
 
     /** @return the registry of documents in the wave. Subclasses may override. */
