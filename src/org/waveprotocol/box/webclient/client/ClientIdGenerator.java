@@ -15,9 +15,8 @@
  *
  */
 
-package org.waveprotocol.box.webclient.waveclient.common;
+package org.waveprotocol.box.webclient.client;
 
-import org.waveprotocol.box.webclient.client.Session;
 import org.waveprotocol.wave.model.id.IdGeneratorImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 

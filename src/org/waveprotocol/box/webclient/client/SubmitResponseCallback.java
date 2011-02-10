@@ -14,13 +14,14 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.box.webclient.client.events;
+package org.waveprotocol.box.webclient.client;
 
-import com.google.gwt.event.shared.EventHandler;
+import org.waveprotocol.box.common.comms.ProtocolSubmitResponse;
 
-import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.wave.Blip;
+/**
+ * @author arb@google.com (Anthony Baxter)
+ */
+public interface SubmitResponseCallback {
 
-public abstract class WaveletBlipEventHandler implements EventHandler {
-  public abstract void onBlipAdded(WaveletId waveletid, Blip blip);
+  public void run(ProtocolSubmitResponse response);
 }

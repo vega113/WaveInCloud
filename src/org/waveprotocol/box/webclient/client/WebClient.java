@@ -33,14 +33,11 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
-import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEventHandler;
-import org.waveprotocol.box.webclient.client.events.WaveIndexUpdatedEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
-import org.waveprotocol.box.webclient.client.events.WaveUpdatedEvent;
 import org.waveprotocol.box.webclient.search.RemoteSearchService;
 import org.waveprotocol.box.webclient.search.Search;
 import org.waveprotocol.box.webclient.search.SearchPanelRenderer;
@@ -49,10 +46,6 @@ import org.waveprotocol.box.webclient.search.SearchPresenter;
 import org.waveprotocol.box.webclient.search.SimpleSearch;
 import org.waveprotocol.box.webclient.search.WaveStore;
 import org.waveprotocol.box.webclient.util.Log;
-import org.waveprotocol.box.webclient.waveclient.common.ClientIdGenerator;
-import org.waveprotocol.box.webclient.waveclient.common.WaveViewServiceImpl;
-import org.waveprotocol.box.webclient.waveclient.common.WebClientBackend;
-import org.waveprotocol.box.webclient.waveclient.common.WebClientUtils;
 import org.waveprotocol.box.webclient.widget.error.ErrorIndicatorPresenter;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.account.impl.ProfileManagerImpl;
@@ -60,13 +53,7 @@ import org.waveprotocol.wave.client.common.safehtml.SafeHtml;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.common.util.AsyncHolder.Accessor;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
-import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.widget.common.ImplPanel;
-import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
-import org.waveprotocol.wave.concurrencycontrol.common.ChannelException;
-import org.waveprotocol.wave.concurrencycontrol.wave.CcBasedWavelet;
-import org.waveprotocol.wave.model.conversation.ObservableConversation;
-import org.waveprotocol.wave.model.id.IdFilters;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -105,13 +92,8 @@ public class WebClient implements EntryPoint {
   @UiField
   DebugMessagePanel logPanel;
 
-  private WebClientBackend backend = null;
-
   /** The wave panel, if a wave is open. */
   private StagesProvider wave;
-
-  /** The old wave panel */
-  private WaveView waveView = null;
 
   private final WaveStore waveStore = new SimpleWaveStore();
 
@@ -143,22 +125,11 @@ public class WebClient implements EntryPoint {
               throw new RuntimeException("Spaghetti attack.  Create occured before login");
             }
 
-            if (ClientFlags.get().enableWavePanelHarness()) {
-              WaveId newWaveId = idGenerator.newWaveId();
-              openWave(WaveRef.of(newWaveId), true);
-            } else {
-              WaveId newWaveId = idGenerator.newWaveId();
-              ClientEvents.get().fireEvent(new WaveSelectionEvent(WaveRef.of(newWaveId)));
-              ObservableConversation convo = waveView.getConversationView().createRoot();
-              CcBasedWavelet rootWavelet = waveView.getCcStackManager().view.getRoot();
-              rootWavelet.addParticipant(loggedInUser);
-              LOG.info("created conversation: " + convo);
-              convo.getRootThread().appendBlip();
-            }
+            openWave(WaveRef.of(idGenerator.newWaveId()), true);
           }
         });
 
-    configureConnectionIndicator();
+    setupConnectionIndicator();
 
     HistorySupport.init();
 
@@ -194,27 +165,8 @@ public class WebClient implements EntryPoint {
       logPanel.removeFromParent();
     }
 
-    // Search panel.
     setupSearchPanel();
-
-    // Wave panel.
-    if (ClientFlags.get().enableWavePanelHarness()) {
-      // For handling the opening of wave using the new wave panel
-      ClientEvents.get().addWaveSelectionEventHandler(
-          new WaveSelectionEventHandler() {
-            @Override
-            public void onSelection(WaveRef waveRef) {
-              openWave(waveRef, false);
-            }
-          });
-      waveView = null;
-    } else {
-      waveView = new WaveView();
-      contentPanel.add(waveView);
-
-      // DockLayoutPanel manually set position relative. We need to clear it.
-      waveView.getElement().getStyle().clearPosition();
-    }
+    setupWavePanel();
   }
 
   private void setupSearchPanel() {
@@ -230,7 +182,17 @@ public class WebClient implements EntryPoint {
     SearchPresenter searchUi = SearchPresenter.create(search, searchPanel, selectHandler);
   }
 
-  private void configureConnectionIndicator() {
+  private void setupWavePanel() {
+    // Handles opening waves.
+    ClientEvents.get().addWaveSelectionEventHandler(new WaveSelectionEventHandler() {
+      @Override
+      public void onSelection(WaveRef waveRef) {
+        openWave(waveRef, false);
+      }
+    });
+  }
+
+  private void setupConnectionIndicator() {
     ClientEvents.get().addNetworkStatusEventHandler(new NetworkStatusEventHandler() {
       @Override
       public void onNetworkStatus(NetworkStatusEvent event) {
@@ -268,58 +230,7 @@ public class WebClient implements EntryPoint {
    */
   private void loginToServer() {
     assert loggedInUser != null;
-    backend = new WebClientBackend(loggedInUser, websocket);
     channel = new RemoteViewServiceMultiplexer(websocket, loggedInUser.getAddress());
-
-    websocket.attachLegacy(backend);
-    if (!ClientFlags.get().enableWavePanelHarness()) {
-      waveView.setLegacy(backend, idGenerator);
-    }
-
-    ClientEvents.get().addNetworkStatusEventHandler(new NetworkStatusEventHandler() {
-      @Override
-      public void onNetworkStatus(NetworkStatusEvent event) {
-        if (event.getStatus() == ConnectionStatus.CONNECTED) {
-          openIndexWave();
-        }
-      }
-    });
-  }
-
-  private void openIndexWave() {
-    SimpleCcDocumentFactory docFactory = new SimpleCcDocumentFactory();
-    final WaveViewServiceImpl indexWave = (WaveViewServiceImpl) backend.getIndexWave(docFactory);
-    indexWave.viewOpen(IdFilters.ALL_IDS, null,
-        new WaveViewService.OpenCallback() {
-
-          @Override
-          public void onException(ChannelException e) {
-            LOG.severe("ChannelException opening index wave", e);
-          }
-
-          @Override
-          public void onFailure(String reason) {
-            LOG.info("Failure for index wave " + reason);
-          }
-
-          @Override
-          public void onSuccess(String response) {
-            LOG.info("Success for index wave subscription");
-          }
-
-          @Override
-          public void onUpdate(WaveViewService.WaveViewServiceUpdate update) {
-            LOG.info("IndexWave update received hasDeltas="
-                + update.hasDeltas() + "  hasWaveletSnapshot="
-                + update.hasWaveletSnapshot());
-            ClientEvents.get().fireEvent(
-                new WaveUpdatedEvent(indexWave, update.getChannelId(),
-                    update.getWaveletId()));
-            ClientEvents.get().fireEvent(
-                new WaveIndexUpdatedEvent(
-                    WebClientUtils.getIndexEntries(indexWave)));
-          }
-        });
   }
 
   /**

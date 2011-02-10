@@ -1,18 +1,18 @@
 /**
  * Copyright 2010 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  */
 
 package org.waveprotocol.box.webclient.client;
@@ -28,14 +28,10 @@ import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEventHandler;
-import org.waveprotocol.box.webclient.client.events.WaveIndexUpdatedEvent;
-import org.waveprotocol.box.webclient.client.events.WaveIndexUpdatedEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveOpenEvent;
 import org.waveprotocol.box.webclient.client.events.WaveOpenEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
-import org.waveprotocol.box.webclient.client.events.WaveUpdatedEvent;
-import org.waveprotocol.box.webclient.client.events.WaveUpdatedEventHandler;
 
 public class ClientEvents {
   private static final ClientEvents INSTANCE = GWT.create(ClientEvents.class);
@@ -65,20 +61,10 @@ public class ClientEvents {
       WaveOpenEventHandler handler) {
     return handlerManager.addHandler(WaveOpenEvent.TYPE, handler);
   }
-  
+
   public HandlerRegistration addWaveSelectionEventHandler(
       WaveSelectionEventHandler handler) {
     return handlerManager.addHandler(WaveSelectionEvent.TYPE, handler);
-  }
-
-  public HandlerRegistration addWaveIndexUpdatedEventHandler(
-      WaveIndexUpdatedEventHandler handler) {
-    return handlerManager.addHandler(WaveIndexUpdatedEvent.TYPE, handler);
-  }
-
-  public HandlerRegistration addWaveUpdatedEventHandler(
-      WaveUpdatedEventHandler handler) {
-    return handlerManager.addHandler(WaveUpdatedEvent.TYPE, handler);
   }
 
   public void fireEvent(GwtEvent<?> event) {

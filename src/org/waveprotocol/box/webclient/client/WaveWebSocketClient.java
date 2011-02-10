@@ -36,8 +36,6 @@ import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.box.webclient.util.Log;
-import org.waveprotocol.box.webclient.waveclient.common.SubmitResponseCallback;
-import org.waveprotocol.box.webclient.waveclient.common.WebClientBackend;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 
 import java.util.HashMap;
@@ -66,7 +64,6 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   }
 
   private ConnectState connected = ConnectState.DISCONNECTED;
-  private WebClientBackend legacy;
   private WaveWebSocketCallback callback;
   private int sequenceNo;
 
@@ -86,15 +83,6 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   public WaveWebSocketClient(boolean useSocketIO, String urlBase) {
     submitRequestCallbacks = new HashMap<Integer, SubmitResponseCallback>();
     socket = WaveSocketFactory.create(useSocketIO, urlBase, this);
-  }
-
-  /**
-   * Attaches the legacy wave handling object, notifying it of incoming updates.
-   */
-  public void attachLegacy(WebClientBackend legacy) {
-    Preconditions.checkState(this.legacy == null);
-    Preconditions.checkArgument(legacy != null);
-    this.legacy = legacy;
   }
 
   /**
@@ -153,9 +141,6 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
       ProtocolWaveletUpdate payloadMessage = ProtocolWaveletUpdate.parse(payload);
       if (callback != null) {
         callback.onWaveletUpdate(payloadMessage);
-      }
-      if (legacy != null) {
-        legacy.receiveWaveletUpdate(payloadMessage);
       }
     } else if (messageType.equals("ProtocolSubmitResponse")) {
       ProtocolSubmitResponse payloadMessage = ProtocolSubmitResponse.parse(payload);

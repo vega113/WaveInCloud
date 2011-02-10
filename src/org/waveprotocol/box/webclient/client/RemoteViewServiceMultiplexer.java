@@ -20,7 +20,6 @@ package org.waveprotocol.box.webclient.client;
 import org.waveprotocol.box.common.comms.ProtocolOpenRequest;
 import org.waveprotocol.box.common.comms.ProtocolSubmitRequest;
 import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
-import org.waveprotocol.box.webclient.waveclient.common.SubmitResponseCallback;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.InvalidIdException;
 import org.waveprotocol.wave.model.id.ModernIdSerialiser;

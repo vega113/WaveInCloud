@@ -26,7 +26,7 @@ import org.waveprotocol.wave.model.wave.SourcesEvents;
  * a fresh, new search result. A search result may evolve in three ways:
  * <ul>
  * <li>a digest entry become populated (
- * {@link Search.Listener#onDigestsReady});</li>
+ * {@link Search.Listener#onDigestReady});</li>
  * <li>a new digest entry is inserted into the result, increasing its size (
  * {@link Search.Listener#onDigestAdded}); and</li>
  * <li>a digest entry is removed from the result, decreasing its size (

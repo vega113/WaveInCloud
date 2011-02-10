@@ -18,7 +18,6 @@ package org.waveprotocol.box.webclient.client.events;
 
 import com.google.gwt.event.shared.EventHandler;
 
-import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.waveref.WaveRef;
 
 public abstract class WaveOpenEventHandler implements EventHandler {

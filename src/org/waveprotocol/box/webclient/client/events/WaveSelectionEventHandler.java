@@ -18,6 +18,7 @@
 package org.waveprotocol.box.webclient.client.events;
 
 import com.google.gwt.event.shared.EventHandler;
+
 import org.waveprotocol.wave.model.waveref.WaveRef;
 
 public abstract class WaveSelectionEventHandler implements EventHandler {
