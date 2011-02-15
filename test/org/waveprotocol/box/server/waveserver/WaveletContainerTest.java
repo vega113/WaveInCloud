@@ -22,11 +22,13 @@ import static org.mockito.Mockito.mock;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
@@ -55,6 +57,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * Tests for local and remote wavelet containers.
@@ -66,6 +69,7 @@ public class WaveletContainerTest extends TestCase {
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new JavaUrlCodec());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
+  private static final Executor PERSIST_EXECUTOR = MoreExecutors.sameThreadExecutor();
 
   private static final String localDomain = "example.com";
   private static final WaveletName localWaveletName = WaveletName.of(
@@ -115,11 +119,14 @@ public class WaveletContainerTest extends TestCase {
   public void setUp() throws Exception {
     super.setUp();
     WaveletNotificationSubscriber notifiee = mock(WaveletNotificationSubscriber.class);
-    WaveletState localWaveletState = new MemoryWaveletState(localWaveletName);
+    DeltaStore deltaStore = new MemoryDeltaStore();
+    WaveletState localWaveletState =
+        DeltaStoreBasedWaveletState.create(deltaStore.open(localWaveletName), PERSIST_EXECUTOR);
     localWavelet = new LocalWaveletContainerImpl(localWaveletName, notifiee,
         Futures.immediateFuture(localWaveletState));
     localWavelet.awaitLoad();
-    WaveletState remoteWaveletState = new MemoryWaveletState(remoteWaveletName);
+    WaveletState remoteWaveletState =
+        DeltaStoreBasedWaveletState.create(deltaStore.open(remoteWaveletName), PERSIST_EXECUTOR);
     remoteWavelet = new RemoteWaveletContainerImpl(remoteWaveletName, notifiee,
         Futures.immediateFuture(remoteWaveletState));
     remoteWavelet.awaitLoad();

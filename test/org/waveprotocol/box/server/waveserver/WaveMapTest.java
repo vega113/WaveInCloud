@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import junit.framework.TestCase;
 
@@ -30,6 +31,7 @@ import org.mockito.MockitoAnnotations;
 import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
@@ -48,6 +50,7 @@ import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.Executor;
 
 /**
  * @author josephg@gmail.com (Joseph Gentle)
@@ -80,18 +83,26 @@ public class WaveMapTest extends TestCase {
   protected void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
 
+    final DeltaStore deltaStore = new MemoryDeltaStore();
+    final Executor persistExecutor = MoreExecutors.sameThreadExecutor();
     LocalWaveletContainer.Factory localWaveletContainerFactory =
         new LocalWaveletContainer.Factory() {
           @Override
           public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
               WaveletName waveletName) {
-            WaveletState waveletState = new MemoryWaveletState(waveletName);
+            WaveletState waveletState;
+            try {
+              waveletState = DeltaStoreBasedWaveletState.create(deltaStore.open(waveletName),
+                  persistExecutor);
+            } catch (PersistenceException e) {
+              throw new RuntimeException(e);
+            }
             return new LocalWaveletContainerImpl(waveletName, notifiee,
                 Futures.immediateFuture(waveletState));
           }
         };
 
-    waveletStore = mock(DeltaAndSnapshotStore.class);// new DeltaStoreBasedSnapshotStore(new MemoryDeltaStore());
+    waveletStore = mock(DeltaAndSnapshotStore.class);
     waveMap = new WaveMap(
         waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
 

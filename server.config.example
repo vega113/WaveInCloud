@@ -37,7 +37,9 @@ account_store_type = memory
 account_store_directory = _accounts
 
 # Currently supported delta store types: memory, file
-# Note: file system support is not complete. Your server will crash.
+# Note: file system support is experimental. Your server may crash. And the file format is
+# not stable and shouldn't be relied upon for long-term storage yet; upcoming changes will
+# require you to blow away your data.
 delta_store_type = memory
 
 # The location where deltas are stored on disk. This should be changed.

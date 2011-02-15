@@ -19,11 +19,13 @@ package org.waveprotocol.box.server.waveserver;
 import static org.mockito.Mockito.mock;
 
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
@@ -38,6 +40,8 @@ import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionFactoryImpl;
 import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
 
+import java.util.concurrent.Executor;
+
 
 /**
  * Tests for LocalWaveletContainerImpl.
@@ -49,6 +53,7 @@ public class LocalWaveletContainerImplTest extends TestCase {
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new JavaUrlCodec());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
+  private static final Executor PERSIST_EXECUTOR = MoreExecutors.sameThreadExecutor();
 
   private static final WaveletName WAVELET_NAME = WaveletName.of("a", "a", "b", "b");
   private static final ProtocolSignature SIGNATURE = ProtocolSignature.newBuilder()
@@ -78,7 +83,9 @@ public class LocalWaveletContainerImplTest extends TestCase {
             ProtocolDocumentOperation.newBuilder().build())).build();
 
     WaveletNotificationSubscriber notifiee = mock(WaveletNotificationSubscriber.class);
-    WaveletState waveletState = new MemoryWaveletState(WAVELET_NAME);
+    DeltaStore deltaStore = new MemoryDeltaStore();
+    WaveletState waveletState = DeltaStoreBasedWaveletState.create(deltaStore.open(WAVELET_NAME),
+        PERSIST_EXECUTOR);
     wavelet = new LocalWaveletContainerImpl(WAVELET_NAME, notifiee,
         Futures.immediateFuture(waveletState));
     wavelet.awaitLoad();

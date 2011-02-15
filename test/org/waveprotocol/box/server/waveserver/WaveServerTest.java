@@ -23,7 +23,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import junit.framework.TestCase;
@@ -53,6 +52,9 @@ import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * @author josephg@gmail.com (Joseph Gentle)
@@ -94,18 +96,18 @@ public class WaveServerTest extends TestCase {
         .thenReturn(ImmutableList.<ProtocolSignature>of());
 
     certificateManager = new CertificateManagerImpl(true, localSigner, null, null);
-
+    final DeltaStore deltaStore = new MemoryDeltaStore();
+    final Executor executor = Executors.newSingleThreadExecutor();
     Factory localWaveletContainerFactory = new LocalWaveletContainer.Factory() {
       @Override
       public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
           WaveletName waveletName) {
-        WaveletState waveletState = new MemoryWaveletState(waveletName);
         return new LocalWaveletContainerImpl(waveletName, notifiee,
-            Futures.immediateFuture(waveletState));
+            WaveServerModule.loadWaveletState(executor, deltaStore, waveletName));
       }
     };
 
-    waveletStore = new DeltaStoreBasedSnapshotStore(new MemoryDeltaStore());
+    waveletStore = new DeltaStoreBasedSnapshotStore(deltaStore);
     waveMap = new WaveMap(
         waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
     waveServer = new WaveServerImpl(
