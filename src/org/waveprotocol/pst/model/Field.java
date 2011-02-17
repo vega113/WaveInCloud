@@ -18,8 +18,7 @@
 package org.waveprotocol.pst.model;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
-
-import org.waveprotocol.pst.protobuf.Extensions;
+import org.waveprotocol.protobuf.Extensions;
 
 /**
  * Wraps a {@link FieldDescriptor} with methods suitable for stringtemplate.
@@ -50,7 +49,7 @@ public final class Field {
    * @return the type of the field as the Java type
    */
   public String getJavaType() {
-    return type.getJavaType();
+    return type.getJavaType(isInt52());
   }
 
   /**
@@ -67,7 +66,7 @@ public final class Field {
    * @return the type of the field as the Java type
    */
   public String getCapJavaType() {
-    return type.getCapJavaType();
+    return type.getCapJavaType(isInt52());
   }
 
   /**
@@ -84,7 +83,7 @@ public final class Field {
    * @return the type of the field as a boxed Java type
    */
   public String getBoxedJavaType() {
-    return type.getBoxedJavaType();
+    return type.getBoxedJavaType(isInt52());
   }
 
   /**
@@ -105,13 +104,13 @@ public final class Field {
 
   /**
    * Gets the type of this field.
-   * 
+   *
    * @return the type of this field.
    */
   public Type getType() {
     return type;
   }
-  
+
   /**
    * Returns the name of the field as uncapitalizedCamelCase, for example
    * <ul>
@@ -192,16 +191,16 @@ public final class Field {
   }
 
   /**
-   * Gets whether the field is of type int53. This means that although the
-   * field's native type is int64, only 53 bits of information are used.
+   * Gets whether the field is of type int52. This means that although the
+   * field's native type is int64, only 52 bits of information are used.
    *
-   * @return whether the field is a 53-bit integer
+   * @return whether the field is a 52-bit integer
    */
-  public boolean isInt53() {
-    return field.getOptions().hasExtension(Extensions.int53) && 
-        field.getOptions().getExtension(Extensions.int53);
+  public boolean isInt52() {
+    return field.getOptions().hasExtension(Extensions.int52)
+        && field.getOptions().getExtension(Extensions.int52);
   }
-  
+
   //
   // These map directly to the .proto definitions (except for isPrimitive, but that's pretty
   // self explanatory).
@@ -255,7 +254,7 @@ public final class Field {
   public boolean isBlob() {
     return type.isBlob();
   }
-  
+
   /**
    * @return whether the field type is a Java primitive and not repeated
    */

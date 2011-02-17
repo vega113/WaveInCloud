@@ -69,7 +69,8 @@ public final class PstMain {
       }
     }
 
-    Pst pst = new Pst(cl.getOutputDir(), fd, cl.getStyler(), templates, cl.shouldSavePreStyled());
+    Pst pst = new Pst(cl.getOutputDir(), fd, cl.getStyler(), templates, cl.shouldSavePreStyled(),
+        cl.shouldUseInt52());
     try {
       pst.run();
     } catch (PstException e) {

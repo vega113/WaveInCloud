@@ -27,6 +27,8 @@ syntax = "proto2";
 
 package federation;
 
+import "org/waveprotocol/protobuf/extensions.proto";
+
 option java_package = "org.waveprotocol.wave.federation";
 option java_outer_classname = "Proto";
 
@@ -71,7 +73,7 @@ message ProtocolWaveletDelta {
  * Describes a wavelet version and the wavelet's history hash at that version.
  */
 message ProtocolHashedVersion {
-  required int64 version = 1;
+  required int64 version = 1 [(int52) = true];
   required bytes history_hash = 2;
 }
 
@@ -187,7 +189,7 @@ message ProtocolAppliedWaveletDelta {
   required ProtocolSignedDelta signed_original_delta = 1;
   optional ProtocolHashedVersion hashed_version_applied_at = 2;
   required int32 operations_applied = 3;
-  required int64 application_timestamp = 4;
+  required int64 application_timestamp = 4 [(int52) = true];
 }
 
 /**

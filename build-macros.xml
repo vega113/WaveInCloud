@@ -42,6 +42,7 @@
       <java failonerror="true" fork="true" classname="org.waveprotocol.pst.PstMain">
         <classpath>
           <path refid="libpath"/>
+          <path location="${build.proto.dir}"/>
           <fileset dir="${lib.codegen}">
             <include name="*/*.jar"/>
           </fileset>

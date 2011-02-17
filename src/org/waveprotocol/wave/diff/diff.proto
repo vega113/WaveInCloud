@@ -25,6 +25,7 @@ syntax = "proto2";
 import "org/waveprotocol/box/server/rpc/rpc.proto";
 import "org/waveprotocol/wave/concurrencycontrol/clientserver.proto";
 import "org/waveprotocol/wave/federation/federation.protodevel";
+import "org/waveprotocol/protobuf/extensions.proto";
 
 package diff;
 
@@ -82,10 +83,10 @@ message WaveletDiffSnapshot {
   //// Metadata ////
   // Current version and modification timestamp of the wavelet.
   required federation.ProtocolHashedVersion version = 4;
-  required int64 lastModifiedTime = 5;
+  required int64 lastModifiedTime = 5 [(int52) = true];
   // Participant and time of creation for the wavelet.
   required string creator = 6;
-  required int64 creationTime = 7;
+  required int64 creationTime = 7 [(int52) = true];
 }
 
 /* A document and associated metadata. */
@@ -93,10 +94,10 @@ message DocumentDiffSnapshot {
   // Id of the document.
   required string documentId = 1;
   // Operation that transforms an empty document the last-read document state.
-  required federation.ProtocolDocumentOperation state = 2;
+  optional federation.ProtocolDocumentOperation state = 2;
 
   // Operation that transforms the last-read document state to the current state.
-  required federation.ProtocolDocumentOperation diff = 21;
+  optional federation.ProtocolDocumentOperation diff = 21;
 
   //// Metadata ////
   // Participant who submitted the first operation to the document.
@@ -108,6 +109,6 @@ message DocumentDiffSnapshot {
   // Removed participants who have submitted operations to the document.
   repeated string removedContributor = 23;
   // Wavelet version and timestamp when the document was last modified.
-  required int64 lastModifiedVersion = 5;
-  required int64 lastModifiedTime = 6;
+  required int64 lastModifiedVersion = 5 [(int52) = true];
+  required int64 lastModifiedTime = 6 [(int52) = true];
 }

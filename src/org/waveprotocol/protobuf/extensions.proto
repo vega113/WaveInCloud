@@ -19,12 +19,16 @@ syntax = "proto2";
  
 import "google/protobuf/descriptor.proto";
 
-option java_package = "org.waveprotocol.pst.protobuf";
+option java_package = "org.waveprotocol.protobuf";
 option java_outer_classname = "Extensions";
 
 extend google.protobuf.FieldOptions {
+  // Annotates an int64, noting that only the lower 52 bits are important.
+  // This allows languages without 64-bit primitives (like JavaScript) to use
+  // other primtive types instead.
+  //
   // Annotation ids are apparently meant to be globally unique.  Not sure why,
   // given that proto names and field ids do not have to be globally unique.
   // If it becomes an issue, get a unique number from the number distributor.
-  optional bool int53 = 50000 [default = false];
+  optional bool int52 = 50000 [default = false];
 }

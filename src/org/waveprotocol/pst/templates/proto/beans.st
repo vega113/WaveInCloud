@@ -79,6 +79,8 @@ $if (f.repeated)$
       return toPojoEnum$f.javaType$(proto.$f.getter$(n));
     $elseif (f.blob)$
       return new Blob(new String(Codec.encode(proto.$f.getter$(n).toByteArray())));
+    $elseif (f.int52)$
+      return Int52.int64to52(proto.$f.getter$(n));
     $else$
       return proto.$f.getter$(n);
     $endif$
@@ -167,7 +169,9 @@ $else$
         protoBuilder.$f.setter$(toProtoEnum$f.javaType$(value));
       $elseif (f.blob)$
         protoBuilder.$f.setter$(ByteString.copyFrom(Codec.decode(value.getData().toCharArray())));
-      $else$  
+      $elseif (f.int52)$
+        protoBuilder.$f.setter$(Int52.int52to64(value));
+      $else$
         protoBuilder.$f.setter$(value);
       $endif$
     }

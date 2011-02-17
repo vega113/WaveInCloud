@@ -26,8 +26,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.waveprotocol.pst.style.Styler;
 import org.waveprotocol.pst.style.PstStyler;
+import org.waveprotocol.pst.style.Styler;
 
 import java.io.File;
 import java.util.Map;
@@ -72,10 +72,15 @@ public final class PstCommandLine {
         "Available options: " + STYLERS.keySet());
     options.addOption("i", "save_pre_styled", false, "Save the intermediate pre-styled files");
     options.addOption("j", "save_java", false, "Save the protoc-generated Java file, if any");
-    options.addOption("I", "proto_path", true, "Extra path to search for proto extensions. " +
-        "This needs to be specified if the target file is a .proto file with any of the PST-" +
-        "specific extensions (e.g. int53), in which case the path should include both PST source " +
-        "base and the protoc source base; i.e., /PATH/TO/PST/src:/PATH/TO/PROTOC/src");
+    options.addOption("I", "proto_path", true, "Extra path to search for proto extensions. "
+        + "This needs to be specified if the target file is a .proto file with any of the PST-"
+        + "specific extensions, in which case the path should include both PST source "
+        + "base and the protoc source base; i.e., /PATH/TO/PST/src:/PATH/TO/PROTOC/src");
+    options.addOption("t", "int52", true,
+        "Specifies if pst should store 64-bit integers should be serialized to"
+            + "doubles which will use 52-bit precision. It's useful "
+            + "when data is meant to be serialized/deserialized in JavaScript, since it doesn't "
+            + "support 64-bit integers (default: false).");
     return options;
   }
 
@@ -134,5 +139,9 @@ public final class PstCommandLine {
 
   public boolean shouldSaveJava() {
     return cl.hasOption('j');
+  }
+
+  public boolean shouldUseInt52() {
+    return cl.hasOption('t') && "true".equals(cl.getOptionValue('t'));
   }
 }

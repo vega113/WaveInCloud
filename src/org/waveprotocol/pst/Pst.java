@@ -32,6 +32,7 @@ import org.waveprotocol.pst.style.Styler;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
@@ -87,6 +88,7 @@ public final class Pst {
   private final Styler styler;
   private final Iterable<File> templates;
   private final boolean saveBackups;
+  private final boolean useInt52;
 
   /**
    * @param outputDir the base directory to write the generated files
@@ -95,14 +97,16 @@ public final class Pst {
    * @param styler the code styler to post-process generated code with
    * @param templates the collection of string templates to use
    * @param saveBackups whether to save intermediate generated files
+   * @param useInt52 whether we use doubles to serialize 64-bit integers
    */
   public Pst(File outputDir, FileDescriptor fd, Styler styler, Iterable<File> templates,
-      boolean saveBackups) {
+      boolean saveBackups, boolean useInt52) {
     this.outputDir = checkNotNull(outputDir, "outputDir cannot be null");
     this.fd = checkNotNull(fd, "fd cannot be null");
     this.styler = checkNotNull(styler, "styler cannot be null");
     this.templates = checkNotNull(templates, "templates cannot be null");
     this.saveBackups = saveBackups;
+    this.useInt52 = useInt52;
   }
 
   /**
@@ -112,9 +116,7 @@ public final class Pst {
     List<PstException.TemplateException> exceptions = Lists.newArrayList();
     for (File template : templates) {
       try {
-        File propertiesFile = new File(template.getParentFile().getPath() + File.separator + "properties");
-        MessageProperties properties = propertiesFile.exists() ?
-            MessageProperties.createFromFile(propertiesFile) : MessageProperties.createEmpty();
+        MessageProperties properties = createProperties(template);
         String groupName = stripSuffix(".st", template.getName());
         String templateName = properties.hasTemplateName() ?
             properties.getTemplateName() : "";
@@ -170,4 +172,15 @@ public final class Pst {
     }
     styler.style(output, saveBackups);
   }
+
+  private MessageProperties createProperties(File template)
+      throws FileNotFoundException, IOException {
+    File propertiesFile =
+        new File(template.getParentFile().getPath() + File.separator + "properties");
+    MessageProperties properties = propertiesFile.exists()
+        ? MessageProperties.createFromFile(propertiesFile) : MessageProperties.createEmpty();
+    properties.setUseInt52(useInt52);
+    return properties;
+  }
+
 }

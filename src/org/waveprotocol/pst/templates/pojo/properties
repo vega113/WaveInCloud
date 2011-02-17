@@ -1,3 +1,2 @@
 template.name = Impl
 package.suffix = impl
-int52Type = long

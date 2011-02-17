@@ -26,6 +26,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import org.waveprotocol.wave.communication.proto.Codec;
+import org.waveprotocol.wave.communication.proto.Int52;
 import org.waveprotocol.wave.communication.gson.GsonException;
 import org.waveprotocol.wave.communication.gson.GsonSerializable;
 import org.waveprotocol.wave.communication.gson.GsonUtil;

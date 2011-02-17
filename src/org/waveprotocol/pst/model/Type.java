@@ -28,6 +28,7 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
  */
 public final class Type {
 
+  private static final String INT52_TYPE = "double";
   private final FieldDescriptor field;
   private final String templateName;
   private final MessageProperties extraProperties;
@@ -52,7 +53,7 @@ public final class Type {
    *
    * @return the type of the field as the Java type
    */
-  public String getJavaType() {
+  public String getJavaType(boolean hasInt52Ext) {
     switch (field.getJavaType()) {
       case BOOLEAN:
         return "boolean";
@@ -67,7 +68,7 @@ public final class Type {
       case INT:
         return "int";
       case LONG:
-        return "long";
+        return hasInt52Ext && extraProperties.getUseInt52() ? INT52_TYPE : "long";
       case MESSAGE:
         return getMessage().getJavaType();
       case STRING:
@@ -90,8 +91,8 @@ public final class Type {
    *
    * @return the type of the field as the Java type
    */
-  public String getCapJavaType() {
-    return Util.capitalize(getJavaType());
+  public String getCapJavaType(boolean hasInt52Ext) {
+    return Util.capitalize(getJavaType(hasInt52Ext));
   }
 
   /**
@@ -107,7 +108,7 @@ public final class Type {
    *
    * @return the type of the field as a boxed Java type
    */
-  public String getBoxedJavaType() {
+  public String getBoxedJavaType(boolean hasInt52Ext) {
     switch (field.getJavaType()) {
       case BOOLEAN:
         return "Boolean";
@@ -118,9 +119,9 @@ public final class Type {
       case INT:
         return "Integer";
       case LONG:
-        return "Long";
+        return hasInt52Ext ? Util.capitalize(INT52_TYPE) : "Long";
       default:
-        return getJavaType();
+        return getJavaType(hasInt52Ext);
     }
   }
 
@@ -159,7 +160,7 @@ public final class Type {
    */
   public Message getMessage() {
     if (messageType == null) {
-      messageType = adapt(field.getMessageType()); 
+      messageType = adapt(field.getMessageType());
     }
     return messageType;
   }
@@ -200,7 +201,7 @@ public final class Type {
         return false;
     }
   }
-  
+
   private Message adapt(Descriptor d) {
     return new Message(d, templateName, extraProperties);
   }

@@ -35,6 +35,7 @@ public final class MessageProperties {
   private static final String TEMPLATE_NAME = "template.name";
 
   private final Properties properties;
+  private boolean useInt52;
 
   private MessageProperties(Properties properties) {
     this.properties = properties;
@@ -91,5 +92,19 @@ public final class MessageProperties {
    */
   public boolean hasTemplateName() {
     return getTemplateName() != null;
+  }
+
+  /**
+   * Sets the global int52 type property
+   */
+  public void setUseInt52(boolean useInt52) {
+    this.useInt52 = useInt52;
+  }
+
+  /**
+   * @return the int52 type or null if it isn't specified.
+   */
+  public boolean getUseInt52() {
+    return useInt52;
   }
 }

@@ -16,15 +16,10 @@
  */
 package org.waveprotocol.pst.model;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 
-import org.apache.commons.httpclient.methods.GetMethod;
-
-import java.util.Deque;
 import java.util.List;
 
 /**
@@ -42,7 +37,7 @@ public final class ProtoEnum {
 
   private String fullName;
   private String fullJavaType;
-  
+
   public ProtoEnum(EnumDescriptor descriptor, String templateName, MessageProperties extra) {
     this.descriptor = descriptor;
     this.templateName = templateName;
@@ -106,7 +101,7 @@ public final class ProtoEnum {
     }
     return fullJavaType;
   }
-  
+
   /**
    * Returns the qualified type of the protobuf enum, for example:
    * <ul>
@@ -135,7 +130,7 @@ public final class ProtoEnum {
     }
     return enums;
   }
-  
+
   private Message getContainingMessage() {
     return new Message(descriptor.getContainingType(), templateName, extra);
   }

@@ -1974,14 +1974,14 @@ public final class Diff {
     public boolean hasDocumentId() { return hasDocumentId; }
     public java.lang.String getDocumentId() { return documentId_; }
     
-    // required .federation.ProtocolDocumentOperation state = 2;
+    // optional .federation.ProtocolDocumentOperation state = 2;
     public static final int STATE_FIELD_NUMBER = 2;
     private boolean hasState;
     private org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation state_;
     public boolean hasState() { return hasState; }
     public org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation getState() { return state_; }
     
-    // required .federation.ProtocolDocumentOperation diff = 21;
+    // optional .federation.ProtocolDocumentOperation diff = 21;
     public static final int DIFF_FIELD_NUMBER = 21;
     private boolean hasDiff;
     private org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation diff_;
@@ -2051,13 +2051,15 @@ public final class Diff {
     }
     public final boolean isInitialized() {
       if (!hasDocumentId) return false;
-      if (!hasState) return false;
-      if (!hasDiff) return false;
       if (!hasAuthor) return false;
       if (!hasLastModifiedVersion) return false;
       if (!hasLastModifiedTime) return false;
-      if (!getState().isInitialized()) return false;
-      if (!getDiff().isInitialized()) return false;
+      if (hasState()) {
+        if (!getState().isInitialized()) return false;
+      }
+      if (hasDiff()) {
+        if (!getDiff().isInitialized()) return false;
+      }
       return true;
     }
     
@@ -2454,7 +2456,7 @@ public final class Diff {
         return this;
       }
       
-      // required .federation.ProtocolDocumentOperation state = 2;
+      // optional .federation.ProtocolDocumentOperation state = 2;
       public boolean hasState() {
         return result.hasState();
       }
@@ -2491,7 +2493,7 @@ public final class Diff {
         return this;
       }
       
-      // required .federation.ProtocolDocumentOperation diff = 21;
+      // optional .federation.ProtocolDocumentOperation diff = 21;
       public boolean hasDiff() {
         return result.hasDiff();
       }
@@ -2977,31 +2979,33 @@ public final class Diff {
       "pc.proto\032;org/waveprotocol/wave/concurre" +
       "ncycontrol/clientserver.proto\0326org/wavep" +
       "rotocol/wave/federation/federation.proto" +
-      "devel\"\\\n\020FetchDiffRequest\022\016\n\006waveId\030\001 \002(" +
-      "\t\0228\n\014knownWavelet\030\002 \003(\0132\".concurrencycon" +
-      "trol.WaveletVersion\"\314\001\n\021FetchDiffRespons" +
-      "e\0222\n\006status\030\001 \002(\0132\".concurrencycontrol.R" +
-      "esponseStatus\0224\n\007wavelet\030\002 \003(\0132#.diff.Fe",
-      "tchDiffResponse.WaveletDiff\032M\n\013WaveletDi" +
-      "ff\022\021\n\twaveletId\030\001 \002(\t\022+\n\010snapshot\030\002 \001(\0132" +
-      "\031.diff.WaveletDiffSnapshot\"\226\002\n\023WaveletDi" +
-      "ffSnapshot\022\021\n\twaveletId\030\001 \002(\t\022\023\n\013partici" +
-      "pant\030\002 \003(\t\022\030\n\020addedParticipant\030\025 \003(\t\022\032\n\022" +
-      "removedParticipant\030\026 \003(\t\022,\n\010document\030\003 \003" +
-      "(\0132\032.diff.DocumentDiffSnapshot\0222\n\007versio" +
-      "n\030\004 \002(\0132!.federation.ProtocolHashedVersi" +
-      "on\022\030\n\020lastModifiedTime\030\005 \002(\003\022\017\n\007creator\030" +
-      "\006 \002(\t\022\024\n\014creationTime\030\007 \002(\003\"\247\002\n\024Document",
-      "DiffSnapshot\022\022\n\ndocumentId\030\001 \002(\t\0224\n\005stat" +
-      "e\030\002 \002(\0132%.federation.ProtocolDocumentOpe" +
-      "ration\0223\n\004diff\030\025 \002(\0132%.federation.Protoc" +
-      "olDocumentOperation\022\016\n\006author\030\003 \002(\t\022\023\n\013c" +
-      "ontributor\030\004 \003(\t\022\030\n\020addedContributor\030\026 \003" +
-      "(\t\022\032\n\022removedContributor\030\027 \003(\t\022\033\n\023lastMo" +
-      "difiedVersion\030\005 \002(\003\022\030\n\020lastModifiedTime\030" +
-      "\006 \002(\0032L\n\020FetchDiffService\0228\n\005Fetch\022\026.dif" +
-      "f.FetchDiffRequest\032\027.diff.FetchDiffRespo" +
-      "nseB\"\n\032org.waveprotocol.wave.diffB\004Diff"
+      "devel\032*org/waveprotocol/protobuf/extensi" +
+      "ons.proto\"\\\n\020FetchDiffRequest\022\016\n\006waveId\030" +
+      "\001 \002(\t\0228\n\014knownWavelet\030\002 \003(\0132\".concurrenc" +
+      "ycontrol.WaveletVersion\"\314\001\n\021FetchDiffRes" +
+      "ponse\0222\n\006status\030\001 \002(\0132\".concurrencycontr",
+      "ol.ResponseStatus\0224\n\007wavelet\030\002 \003(\0132#.dif" +
+      "f.FetchDiffResponse.WaveletDiff\032M\n\013Wavel" +
+      "etDiff\022\021\n\twaveletId\030\001 \002(\t\022+\n\010snapshot\030\002 " +
+      "\001(\0132\031.diff.WaveletDiffSnapshot\"\242\002\n\023Wavel" +
+      "etDiffSnapshot\022\021\n\twaveletId\030\001 \002(\t\022\023\n\013par" +
+      "ticipant\030\002 \003(\t\022\030\n\020addedParticipant\030\025 \003(\t" +
+      "\022\032\n\022removedParticipant\030\026 \003(\t\022,\n\010document" +
+      "\030\003 \003(\0132\032.diff.DocumentDiffSnapshot\0222\n\007ve" +
+      "rsion\030\004 \002(\0132!.federation.ProtocolHashedV" +
+      "ersion\022\036\n\020lastModifiedTime\030\005 \002(\003B\004\200\265\030\001\022\017",
+      "\n\007creator\030\006 \002(\t\022\032\n\014creationTime\030\007 \002(\003B\004\200" +
+      "\265\030\001\"\263\002\n\024DocumentDiffSnapshot\022\022\n\ndocument" +
+      "Id\030\001 \002(\t\0224\n\005state\030\002 \001(\0132%.federation.Pro" +
+      "tocolDocumentOperation\0223\n\004diff\030\025 \001(\0132%.f" +
+      "ederation.ProtocolDocumentOperation\022\016\n\006a" +
+      "uthor\030\003 \002(\t\022\023\n\013contributor\030\004 \003(\t\022\030\n\020adde" +
+      "dContributor\030\026 \003(\t\022\032\n\022removedContributor" +
+      "\030\027 \003(\t\022!\n\023lastModifiedVersion\030\005 \002(\003B\004\200\265\030" +
+      "\001\022\036\n\020lastModifiedTime\030\006 \002(\003B\004\200\265\030\0012L\n\020Fet" +
+      "chDiffService\0228\n\005Fetch\022\026.diff.FetchDiffR",
+      "equest\032\027.diff.FetchDiffResponseB\"\n\032org.w" +
+      "aveprotocol.wave.diffB\004Diff"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3048,7 +3052,14 @@ public final class Diff {
               new java.lang.String[] { "DocumentId", "State", "Diff", "Author", "Contributor", "AddedContributor", "RemovedContributor", "LastModifiedVersion", "LastModifiedTime", },
               org.waveprotocol.wave.diff.Diff.DocumentDiffSnapshot.class,
               org.waveprotocol.wave.diff.Diff.DocumentDiffSnapshot.Builder.class);
-          return null;
+          com.google.protobuf.ExtensionRegistry registry =
+            com.google.protobuf.ExtensionRegistry.newInstance();
+          registerAllExtensions(registry);
+          org.waveprotocol.box.server.rpc.Rpc.registerAllExtensions(registry);
+          org.waveprotocol.wave.concurrencycontrol.ClientServer.registerAllExtensions(registry);
+          org.waveprotocol.wave.federation.Proto.registerAllExtensions(registry);
+          org.waveprotocol.protobuf.Extensions.registerAllExtensions(registry);
+          return registry;
         }
       };
     com.google.protobuf.Descriptors.FileDescriptor
@@ -3057,6 +3068,7 @@ public final class Diff {
           org.waveprotocol.box.server.rpc.Rpc.getDescriptor(),
           org.waveprotocol.wave.concurrencycontrol.ClientServer.getDescriptor(),
           org.waveprotocol.wave.federation.Proto.getDescriptor(),
+          org.waveprotocol.protobuf.Extensions.getDescriptor(),
         }, assigner);
   }
   

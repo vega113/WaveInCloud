@@ -6981,73 +6981,74 @@ public final class Proto {
   static {
     java.lang.String[] descriptorData = {
       "\n6org/waveprotocol/wave/federation/feder" +
-      "ation.protodevel\022\nfederation\"\260\001\n\024Protoco" +
-      "lWaveletDelta\0229\n\016hashed_version\030\001 \002(\0132!." +
-      "federation.ProtocolHashedVersion\022\016\n\006auth" +
-      "or\030\002 \002(\t\0227\n\toperation\030\003 \003(\0132$.federation" +
-      ".ProtocolWaveletOperation\022\024\n\014address_pat" +
-      "h\030\004 \003(\t\">\n\025ProtocolHashedVersion\022\017\n\007vers" +
-      "ion\030\001 \002(\003\022\024\n\014history_hash\030\002 \002(\014\"\226\002\n\030Prot" +
-      "ocolWaveletOperation\022\027\n\017add_participant\030" +
-      "\001 \001(\t\022\032\n\022remove_participant\030\002 \001(\t\022L\n\017mut",
-      "ate_document\030\003 \001(\01323.federation.Protocol" +
-      "WaveletOperation.MutateDocument\022\r\n\005no_op" +
-      "\030\004 \001(\010\032h\n\016MutateDocument\022\023\n\013document_id\030" +
-      "\001 \002(\t\022A\n\022document_operation\030\002 \002(\0132%.fede" +
-      "ration.ProtocolDocumentOperation\"\345\n\n\031Pro" +
-      "tocolDocumentOperation\022B\n\tcomponent\030\001 \003(" +
-      "\0132/.federation.ProtocolDocumentOperation" +
-      ".Component\032\203\n\n\tComponent\022_\n\023annotation_b" +
-      "oundary\030\001 \001(\0132B.federation.ProtocolDocum" +
-      "entOperation.Component.AnnotationBoundar",
-      "y\022\022\n\ncharacters\030\002 \001(\t\022S\n\relement_start\030\003" +
-      " \001(\0132<.federation.ProtocolDocumentOperat" +
-      "ion.Component.ElementStart\022\023\n\013element_en" +
-      "d\030\004 \001(\010\022\031\n\021retain_item_count\030\005 \001(\005\022\031\n\021de" +
-      "lete_characters\030\006 \001(\t\022Z\n\024delete_element_" +
-      "start\030\007 \001(\0132<.federation.ProtocolDocumen" +
-      "tOperation.Component.ElementStart\022\032\n\022del" +
-      "ete_element_end\030\010 \001(\010\022]\n\022replace_attribu" +
-      "tes\030\t \001(\0132A.federation.ProtocolDocumentO" +
-      "peration.Component.ReplaceAttributes\022[\n\021",
-      "update_attributes\030\n \001(\0132@.federation.Pro" +
-      "tocolDocumentOperation.Component.UpdateA" +
-      "ttributes\032*\n\014KeyValuePair\022\013\n\003key\030\001 \002(\t\022\r" +
-      "\n\005value\030\002 \002(\t\032C\n\016KeyValueUpdate\022\013\n\003key\030\001" +
-      " \002(\t\022\021\n\told_value\030\002 \001(\t\022\021\n\tnew_value\030\003 \001" +
-      "(\t\032m\n\014ElementStart\022\014\n\004type\030\001 \002(\t\022O\n\tattr" +
-      "ibute\030\002 \003(\0132<.federation.ProtocolDocumen" +
-      "tOperation.Component.KeyValuePair\032\314\001\n\021Re" +
-      "placeAttributes\022\r\n\005empty\030\001 \001(\010\022S\n\rold_at" +
-      "tribute\030\002 \003(\0132<.federation.ProtocolDocum",
-      "entOperation.Component.KeyValuePair\022S\n\rn" +
-      "ew_attribute\030\003 \003(\0132<.federation.Protocol" +
-      "DocumentOperation.Component.KeyValuePair" +
-      "\032{\n\020UpdateAttributes\022\r\n\005empty\030\001 \001(\010\022X\n\020a" +
-      "ttribute_update\030\002 \003(\0132>.federation.Proto" +
-      "colDocumentOperation.Component.KeyValueU" +
-      "pdate\032\200\001\n\022AnnotationBoundary\022\r\n\005empty\030\001 " +
-      "\001(\010\022\013\n\003end\030\002 \003(\t\022N\n\006change\030\003 \003(\0132>.feder" +
-      "ation.ProtocolDocumentOperation.Componen" +
-      "t.KeyValueUpdate\"\336\001\n\033ProtocolAppliedWave",
-      "letDelta\022>\n\025signed_original_delta\030\001 \002(\0132" +
-      "\037.federation.ProtocolSignedDelta\022D\n\031hash" +
-      "ed_version_applied_at\030\002 \001(\0132!.federation" +
-      ".ProtocolHashedVersion\022\032\n\022operations_app" +
-      "lied\030\003 \002(\005\022\035\n\025application_timestamp\030\004 \002(" +
-      "\003\"V\n\023ProtocolSignedDelta\022\r\n\005delta\030\001 \002(\014\022" +
-      "0\n\tsignature\030\002 \003(\0132\035.federation.Protocol" +
-      "Signature\"\262\001\n\021ProtocolSignature\022\027\n\017signa" +
-      "ture_bytes\030\001 \002(\014\022\021\n\tsigner_id\030\002 \002(\014\022M\n\023s" +
-      "ignature_algorithm\030\003 \002(\01620.federation.Pr",
-      "otocolSignature.SignatureAlgorithm\"\"\n\022Si" +
-      "gnatureAlgorithm\022\014\n\010SHA1_RSA\020\001\"\250\001\n\022Proto" +
-      "colSignerInfo\022D\n\016hash_algorithm\030\001 \002(\0162,." +
-      "federation.ProtocolSignerInfo.HashAlgori" +
-      "thm\022\016\n\006domain\030\002 \002(\t\022\023\n\013certificate\030\003 \003(\014" +
-      "\"\'\n\rHashAlgorithm\022\n\n\006SHA256\020\001\022\n\n\006SHA512\020" +
-      "\002B)\n org.waveprotocol.wave.federationB\005P" +
-      "roto"
+      "ation.protodevel\022\nfederation\032*org/wavepr" +
+      "otocol/protobuf/extensions.proto\"\260\001\n\024Pro" +
+      "tocolWaveletDelta\0229\n\016hashed_version\030\001 \002(" +
+      "\0132!.federation.ProtocolHashedVersion\022\016\n\006" +
+      "author\030\002 \002(\t\0227\n\toperation\030\003 \003(\0132$.federa" +
+      "tion.ProtocolWaveletOperation\022\024\n\014address" +
+      "_path\030\004 \003(\t\"D\n\025ProtocolHashedVersion\022\025\n\007" +
+      "version\030\001 \002(\003B\004\200\265\030\001\022\024\n\014history_hash\030\002 \002(" +
+      "\014\"\226\002\n\030ProtocolWaveletOperation\022\027\n\017add_pa",
+      "rticipant\030\001 \001(\t\022\032\n\022remove_participant\030\002 " +
+      "\001(\t\022L\n\017mutate_document\030\003 \001(\01323.federatio" +
+      "n.ProtocolWaveletOperation.MutateDocumen" +
+      "t\022\r\n\005no_op\030\004 \001(\010\032h\n\016MutateDocument\022\023\n\013do" +
+      "cument_id\030\001 \002(\t\022A\n\022document_operation\030\002 " +
+      "\002(\0132%.federation.ProtocolDocumentOperati" +
+      "on\"\345\n\n\031ProtocolDocumentOperation\022B\n\tcomp" +
+      "onent\030\001 \003(\0132/.federation.ProtocolDocumen" +
+      "tOperation.Component\032\203\n\n\tComponent\022_\n\023an" +
+      "notation_boundary\030\001 \001(\0132B.federation.Pro",
+      "tocolDocumentOperation.Component.Annotat" +
+      "ionBoundary\022\022\n\ncharacters\030\002 \001(\t\022S\n\releme" +
+      "nt_start\030\003 \001(\0132<.federation.ProtocolDocu" +
+      "mentOperation.Component.ElementStart\022\023\n\013" +
+      "element_end\030\004 \001(\010\022\031\n\021retain_item_count\030\005" +
+      " \001(\005\022\031\n\021delete_characters\030\006 \001(\t\022Z\n\024delet" +
+      "e_element_start\030\007 \001(\0132<.federation.Proto" +
+      "colDocumentOperation.Component.ElementSt" +
+      "art\022\032\n\022delete_element_end\030\010 \001(\010\022]\n\022repla" +
+      "ce_attributes\030\t \001(\0132A.federation.Protoco",
+      "lDocumentOperation.Component.ReplaceAttr" +
+      "ibutes\022[\n\021update_attributes\030\n \001(\0132@.fede" +
+      "ration.ProtocolDocumentOperation.Compone" +
+      "nt.UpdateAttributes\032*\n\014KeyValuePair\022\013\n\003k" +
+      "ey\030\001 \002(\t\022\r\n\005value\030\002 \002(\t\032C\n\016KeyValueUpdat" +
+      "e\022\013\n\003key\030\001 \002(\t\022\021\n\told_value\030\002 \001(\t\022\021\n\tnew" +
+      "_value\030\003 \001(\t\032m\n\014ElementStart\022\014\n\004type\030\001 \002" +
+      "(\t\022O\n\tattribute\030\002 \003(\0132<.federation.Proto" +
+      "colDocumentOperation.Component.KeyValueP" +
+      "air\032\314\001\n\021ReplaceAttributes\022\r\n\005empty\030\001 \001(\010",
+      "\022S\n\rold_attribute\030\002 \003(\0132<.federation.Pro" +
+      "tocolDocumentOperation.Component.KeyValu" +
+      "ePair\022S\n\rnew_attribute\030\003 \003(\0132<.federatio" +
+      "n.ProtocolDocumentOperation.Component.Ke" +
+      "yValuePair\032{\n\020UpdateAttributes\022\r\n\005empty\030" +
+      "\001 \001(\010\022X\n\020attribute_update\030\002 \003(\0132>.federa" +
+      "tion.ProtocolDocumentOperation.Component" +
+      ".KeyValueUpdate\032\200\001\n\022AnnotationBoundary\022\r" +
+      "\n\005empty\030\001 \001(\010\022\013\n\003end\030\002 \003(\t\022N\n\006change\030\003 \003" +
+      "(\0132>.federation.ProtocolDocumentOperatio",
+      "n.Component.KeyValueUpdate\"\344\001\n\033ProtocolA" +
+      "ppliedWaveletDelta\022>\n\025signed_original_de" +
+      "lta\030\001 \002(\0132\037.federation.ProtocolSignedDel" +
+      "ta\022D\n\031hashed_version_applied_at\030\002 \001(\0132!." +
+      "federation.ProtocolHashedVersion\022\032\n\022oper" +
+      "ations_applied\030\003 \002(\005\022#\n\025application_time" +
+      "stamp\030\004 \002(\003B\004\200\265\030\001\"V\n\023ProtocolSignedDelta" +
+      "\022\r\n\005delta\030\001 \002(\014\0220\n\tsignature\030\002 \003(\0132\035.fed" +
+      "eration.ProtocolSignature\"\262\001\n\021ProtocolSi" +
+      "gnature\022\027\n\017signature_bytes\030\001 \002(\014\022\021\n\tsign",
+      "er_id\030\002 \002(\014\022M\n\023signature_algorithm\030\003 \002(\016" +
+      "20.federation.ProtocolSignature.Signatur" +
+      "eAlgorithm\"\"\n\022SignatureAlgorithm\022\014\n\010SHA1" +
+      "_RSA\020\001\"\250\001\n\022ProtocolSignerInfo\022D\n\016hash_al" +
+      "gorithm\030\001 \002(\0162,.federation.ProtocolSigne" +
+      "rInfo.HashAlgorithm\022\016\n\006domain\030\002 \002(\t\022\023\n\013c" +
+      "ertificate\030\003 \003(\014\"\'\n\rHashAlgorithm\022\n\n\006SHA" +
+      "256\020\001\022\n\n\006SHA512\020\002B)\n org.waveprotocol.wa" +
+      "ve.federationB\005Proto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -7182,12 +7183,17 @@ public final class Proto {
               new java.lang.String[] { "HashAlgorithm", "Domain", "Certificate", },
               org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.class,
               org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo.Builder.class);
-          return null;
+          com.google.protobuf.ExtensionRegistry registry =
+            com.google.protobuf.ExtensionRegistry.newInstance();
+          registerAllExtensions(registry);
+          org.waveprotocol.protobuf.Extensions.registerAllExtensions(registry);
+          return registry;
         }
       };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+          org.waveprotocol.protobuf.Extensions.getDescriptor(),
         }, assigner);
   }
   

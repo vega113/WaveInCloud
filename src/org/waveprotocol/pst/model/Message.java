@@ -89,7 +89,7 @@ public final class Message {
    * example:
    * <ul>
    * <li>org.waveprotocol.pst.examples.Example1.Person = <ul>
-   *     <li>"org.waveprotocol.pst.examples.Person" 
+   *     <li>"org.waveprotocol.pst.examples.Person"
    *          (for template name "Message" and package suffix "dto")</li></ul>
    * </li>
    * </ul>
@@ -102,14 +102,14 @@ public final class Message {
     }
     return fullName;
   }
-  
+
   /**
    * Returns the full name of the Java type of this message, for example:
    * <ul>
    * <li>org.waveprotocol.pst.examples.Example1.Person = <ul>
-   *     <li>"org.waveprotocol.pst.examples.dto.PersonMessage" 
+   *     <li>"org.waveprotocol.pst.examples.dto.PersonMessage"
    *          (for template name "Message" and package suffix "dto")</li>
-   *     <li>"org.waveprotocol.pst.examples.impl.PersonImpl" 
+   *     <li>"org.waveprotocol.pst.examples.impl.PersonImpl"
    *          (for template name "Impl" and package suffix "impl")</li></ul>
    * </li>
    * </ul>
@@ -140,10 +140,10 @@ public final class Message {
     } else {
       prefix = covariant ? getPackage() : getPackageBase();
     }
-    
-    return prefix + "." + (covariant ? getJavaType() : getName());  
+
+    return prefix + "." + (covariant ? getJavaType() : getName());
   }
-  
+
   /**
    * Returns the package of the Java messageas the base plus the suffix
    * components of the package, for example given org.waveprotocol.pst.examples.Example1.Person:
@@ -198,7 +198,7 @@ public final class Message {
   public String getFilename() {
     return descriptor.getFile().getName();
   }
-  
+
   /**
    * Returns the qualified type of the protobuf message, for example:
    * <ul>
@@ -262,25 +262,25 @@ public final class Message {
 
   /**
    * Collects messages referred to by a message and its nested messages.
-   * 
+   *
    * @return {@code referenced}
    */
   private static Collection<Descriptor> collectMessages(
       Descriptor message, Collection<Descriptor> referenced) {
     for (FieldDescriptor fd : message.getFields()) {
       if (fd.getJavaType() == JavaType.MESSAGE) {
-        referenced.add(fd.getMessageType());      
+        referenced.add(fd.getMessageType());
       }
     }
     for (Descriptor nd : message.getNestedTypes()) {
       collectMessages(nd, referenced);
     }
     return referenced;
-  }  
-  
+  }
+
   /**
    * Collects enums referred to by a message and its nested messages.
-   * 
+   *
    * @return {@code referenced}
    */
   private static Collection<EnumDescriptor> collectEnums(
@@ -295,7 +295,7 @@ public final class Message {
     }
     return referenced;
   }
-  
+
   /**
    * @return the nested messages of the message
    */
@@ -330,11 +330,11 @@ public final class Message {
   public boolean isInner() {
     return descriptor.getContainingType() != null;
   }
-  
+
   private Message adapt(Descriptor d) {
     return new Message(d, templateName, extraProperties);
   }
-  
+
   private ProtoEnum adapt(EnumDescriptor d) {
     return new ProtoEnum(d, templateName, extraProperties);
   }

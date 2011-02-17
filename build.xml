@@ -100,6 +100,7 @@
       <srcfiles dir="${src.proto.gwt.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
+
   <target name="compile-proto" depends="init, compile-proto-dep"
       unless="skip.compile-proto" description="Compiles protocol buffers">
     <buildjava destdir="${build.proto.dir}">
@@ -151,12 +152,13 @@
       <srcfiles dir="${src.dir}" includes="org/waveprotocol/pst/**"/>
     </uptodate>
   </target>
-  <target name="compile-pst" depends="init, compile-pst-dep"
+  <target name="compile-pst" depends="init, compile-pst-dep, compile-proto"
       unless="skip.compile-pst" description="Compiles the PST tool">
     <buildjava destdir="${build.src.dir}">
       <src path="${src.dir}/org/waveprotocol/pst"/>
       <classpath>
         <path refid="libpath"/>
+        <path location="${build.proto.dir}/"/>
       </classpath>
     </buildjava>
     <touch file="${dep}/compile-pst"/>
