@@ -164,8 +164,10 @@ public class GadgetMetadata {
     // put "//" in front of "http://" see:
     // https://issues.apache.org/jira/browse/SHINDIG-1460?page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel&focusedCommentId=12928110#action_12928110
     // This work around may no longer be needed on the next version of shindig
-    iframeUrl = iframeUrl.replaceFirst("^//http[s]?://", "//");
-
+    // Added null check on iframeUrl.Issue #166:Client shiny on broken gadget.
+    if(iframeUrl != null) {
+      iframeUrl = iframeUrl.replaceFirst("^//http[s]?://", "//");
+    }
     url = getJsonStringValue(gadget, "url");
     moduleId = getJsonStringValue(gadget, "moduleId");
     title = getJsonStringValue(gadget, "title");
@@ -178,8 +180,10 @@ public class GadgetMetadata {
     height = getJsonLongValue(gadget, "height");
     width = getJsonLongValue(gadget, "width");
     scrolling = getJsonBooleanValue(gadget, "scrolling");
-    userPrefs.parseDefaultValues(gadget.get("userPrefs").isObject());
-
+    // Added null check on gadget.get("userPrefs").Issue #166:Client shiny on broken gadget.
+    if(gadget.get("userPrefs") != null) {
+      userPrefs.parseDefaultValues(gadget.get("userPrefs").isObject());
+    }
     JSONObject gadgetViews = getJsonObjectValue(gadget, "views");
     if (gadgetViews != null) {
       View lastView = null;
