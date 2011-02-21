@@ -21,7 +21,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 
 import junit.framework.TestCase;
@@ -228,8 +227,8 @@ public class XmppFederationHostForDomainTest extends TestCase {
    * @param updateCallback result callback
    */
   private void update(WaveletFederationListener.WaveletUpdateCallback updateCallback) {
-    fedHost.waveletUpdate(WAVELET_NAME, Lists.newArrayList(DELTA_BYTESTRING), null,
-        updateCallback);
+    fedHost.waveletUpdate(WAVELET_NAME, Collections.<ByteString>singletonList(DELTA_BYTESTRING),
+        null, updateCallback);
   }
 
   /**
