@@ -48,6 +48,7 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
@@ -60,6 +61,9 @@ import java.util.concurrent.Executors;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class WaveServerTest extends TestCase {
+  private static final HashedVersionFactory V0_HASH_FACTORY =
+      new HashedVersionZeroFactoryImpl(new IdURIEncoderDecoder(new JavaUrlCodec()));
+
   private static final String DOMAIN = "example.com";
   private static final WaveId WAVE_ID = WaveId.of(DOMAIN, "abc123");
   private static final WaveletId WAVELET_ID = WaveletId.of(DOMAIN, "conv+root");
@@ -69,7 +73,7 @@ public class WaveServerTest extends TestCase {
   private static final ParticipantId USER2 = ParticipantId.ofUnsafe("user2@" + DOMAIN);
 
   private static final WaveletOperationContext CONTEXT =
-    new WaveletOperationContext(USER1, 1234567890, 1);
+      new WaveletOperationContext(USER1, 1234567890, 1);
 
   private static WaveletOperation addParticipantToWavelet(ParticipantId user) {
     return new AddParticipant(CONTEXT, user);
@@ -84,7 +88,6 @@ public class WaveServerTest extends TestCase {
   private DeltaAndSnapshotStore waveletStore;
   private WaveMap waveMap;
   private WaveServerImpl waveServer;
-  private HashedVersionZeroFactoryImpl versionZeroFactory;
 
   @Override
   protected void setUp() throws Exception {
@@ -113,10 +116,6 @@ public class WaveServerTest extends TestCase {
     waveServer = new WaveServerImpl(
         MoreExecutors.sameThreadExecutor(), certificateManager, federationRemote, waveMap);
     waveServer.initialize();
-
-    IdURIEncoderDecoder uriCodec =
-        new IdURIEncoderDecoder(new JavaUrlCodec());
-    versionZeroFactory = new HashedVersionZeroFactoryImpl(uriCodec);
   }
 
   public void testWaveIdsList() throws WaveServerException {
@@ -139,7 +138,7 @@ public class WaveServerTest extends TestCase {
 
   private void submitDeltaToNewWavelet(WaveletName name, ParticipantId user,
       WaveletOperation... ops) {
-    HashedVersion version = versionZeroFactory.createVersionZero(name);
+    HashedVersion version = V0_HASH_FACTORY.createVersionZero(name);
 
     WaveletDelta delta = new WaveletDelta(user, version, ImmutableList.copyOf(ops));
 

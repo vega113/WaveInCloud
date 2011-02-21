@@ -18,6 +18,7 @@
 package org.waveprotocol.box.server.waveserver;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -43,6 +44,7 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
@@ -57,6 +59,9 @@ import java.util.concurrent.Executor;
  * @author soren@google.com (Soren Lassen)
  */
 public class WaveMapTest extends TestCase {
+  private static final HashedVersionFactory V0_HASH_FACTORY =
+      new HashedVersionZeroFactoryImpl(new IdURIEncoderDecoder(new JavaUrlCodec()));
+
   private static final String DOMAIN = "example.com";
   private static final WaveId WAVE_ID = WaveId.of(DOMAIN, "abc123");
   private static final WaveletId WAVELET_ID = WaveletId.of(DOMAIN, "conv+root");
@@ -66,7 +71,7 @@ public class WaveMapTest extends TestCase {
   private static final ParticipantId USER2 = ParticipantId.ofUnsafe("user2@" + DOMAIN);
 
   private static final WaveletOperationContext CONTEXT =
-    new WaveletOperationContext(USER1, 1234567890, 1);
+      new WaveletOperationContext(USER1, 1234567890, 1);
 
   private static WaveletOperation addParticipantToWavelet(ParticipantId user) {
     return new AddParticipant(CONTEXT, user);
@@ -77,7 +82,6 @@ public class WaveMapTest extends TestCase {
 
   private DeltaAndSnapshotStore waveletStore;
   private WaveMap waveMap;
-  private HashedVersionZeroFactoryImpl versionZeroFactory;
 
   @Override
   protected void setUp() throws Exception {
@@ -105,10 +109,6 @@ public class WaveMapTest extends TestCase {
     waveletStore = mock(DeltaAndSnapshotStore.class);
     waveMap = new WaveMap(
         waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
-
-    IdURIEncoderDecoder uriCodec =
-        new IdURIEncoderDecoder(new JavaUrlCodec());
-    versionZeroFactory = new HashedVersionZeroFactoryImpl(uriCodec);
   }
 
   public void testWaveMapStartsEmpty() throws WaveServerException {
@@ -116,13 +116,13 @@ public class WaveMapTest extends TestCase {
   }
 
   public void testWavesStartWithNoWavelets() throws WaveletStateException, PersistenceException {
-    Mockito.when(waveletStore.lookup(WAVE_ID)).thenReturn(ImmutableSet.<WaveletId>of());
+    when(waveletStore.lookup(WAVE_ID)).thenReturn(ImmutableSet.<WaveletId>of());
     assertNull(waveMap.getLocalWavelet(WAVELET_NAME));
     assertNull(waveMap.getRemoteWavelet(WAVELET_NAME));
   }
 
   public void testWaveAvailableAfterLoad() throws PersistenceException, WaveServerException {
-    Mockito.when(waveletStore.getWaveIdIterator()).thenReturn(eitr(WAVE_ID));
+    when(waveletStore.getWaveIdIterator()).thenReturn(eitr(WAVE_ID));
     waveMap.loadAllWavelets();
 
     ExceptionalIterator<WaveId, WaveServerException> waves = waveMap.getWaveIds();
@@ -131,15 +131,15 @@ public class WaveMapTest extends TestCase {
   }
 
   public void testWaveletAvailableAfterLoad() throws WaveletStateException, PersistenceException {
-    Mockito.when(waveletStore.getWaveIdIterator()).thenReturn(eitr(WAVE_ID));
-    Mockito.when(waveletStore.lookup(WAVE_ID)).thenReturn(ImmutableSet.<WaveletId>of(WAVELET_ID));
+    when(waveletStore.getWaveIdIterator()).thenReturn(eitr(WAVE_ID));
+    when(waveletStore.lookup(WAVE_ID)).thenReturn(ImmutableSet.<WaveletId>of(WAVELET_ID));
     waveMap.loadAllWavelets();
 
     assertNotNull(waveMap.getLocalWavelet(WAVELET_NAME));
   }
 
   public void testGetOrCreateCreatesWavelets() throws WaveletStateException, PersistenceException {
-    Mockito.when(waveletStore.lookup(WAVE_ID)).thenReturn(ImmutableSet.<WaveletId>of());
+    when(waveletStore.lookup(WAVE_ID)).thenReturn(ImmutableSet.<WaveletId>of());
     LocalWaveletContainer wavelet = waveMap.getOrCreateLocalWavelet(WAVELET_NAME);
     assertSame(wavelet, waveMap.getLocalWavelet(WAVELET_NAME));
   }
@@ -212,7 +212,7 @@ public class WaveMapTest extends TestCase {
 
   private void submitDeltaToNewWavelet(WaveletName name, ParticipantId user,
       WaveletOperation... ops) throws Exception {
-    HashedVersion version = versionZeroFactory.createVersionZero(name);
+    HashedVersion version = V0_HASH_FACTORY.createVersionZero(name);
     WaveletDelta delta = new WaveletDelta(user, version, Arrays.asList(ops));
     ProtocolWaveletDelta protoDelta = CoreWaveletOperationSerializer.serialize(delta);
 
