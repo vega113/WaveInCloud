@@ -17,6 +17,7 @@ package com.google.wave.api;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -323,6 +324,14 @@ public class AbstractRobotTest extends TestCase {
     } catch (IllegalArgumentException e) {
       // Expected.
     }
+  }
+  
+  public void testInitRobot() throws Exception {
+    AbstractRobot robot = new MockRobot();
+    AbstractRobot spyRobot = spy(robot);
+    spyRobot.initRobot();
+    verify(spyRobot).computeCapabilityMap();
+    verify(spyRobot).computeHash();
   }
 
   private HttpServletRequest makeMockRequest(String path, BufferedReader reader)

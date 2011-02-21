@@ -122,13 +122,13 @@ public abstract class AbstractRobot extends HttpServlet implements EventHandler 
   private static final Gson SERIALIZER = new GsonFactory().create();
 
   /** A map of this robot's capabilities. */
-  private final Map<String, Capability> capabilityMap;
+  private Map<String, Capability> capabilityMap;
 
   /** A version number that is computed from this robot's capabilities. */
-  private final String version;
+  private String version;
 
   /** A utility class to make Wave service calls. */
-  private final WaveService waveService;
+  private WaveService waveService;
 
   /** The token used to verify author during the registration process. */
   private String verificationToken;
@@ -142,6 +142,14 @@ public abstract class AbstractRobot extends HttpServlet implements EventHandler 
    * Constructor.
    */
   protected AbstractRobot() {
+    initRobot();
+  }
+  
+  /**
+   * Initializes the robot. Call it if required to re-compute robot's
+   * capabilities. Re-invoke {@link #setupOAuth} if needed.
+   */
+  protected void initRobot() {
     capabilityMap = computeCapabilityMap();
     version = computeHash();
     waveService = new WaveService(version);
