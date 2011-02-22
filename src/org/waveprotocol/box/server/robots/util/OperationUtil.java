@@ -17,11 +17,13 @@
 
 package org.waveprotocol.box.server.robots.util;
 
+import com.google.common.base.Strings;
 import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.OperationType;
 import com.google.wave.api.ProtocolVersion;
 import com.google.wave.api.JsonRpcConstant.ParamsProperty;
+import com.google.wave.api.robot.RobotName;
 
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.robots.OperationContext;
@@ -34,6 +36,7 @@ import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListe
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
+import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.util.logging.Log;
 
@@ -150,8 +153,10 @@ public class OperationUtil {
    * Executes an {@link OperationRequest}. If the operation throws an
    * {@link InvalidRequestException} this exception will be used to construct an
    * error response in the {@link OperationContext}.
-   *
-   * @param operation the operation to be executed.
+   * 
+   * @param operation the operation to be executed. If the operation contains
+   *        {@link ParamsProperty.PROXYING_FOR} - then it will be taken in
+   *        account.
    * @param operationRegistry the registry containing the operations that can be
    *        performed.
    * @param context the context in which the operation is to be executed.
@@ -162,7 +167,8 @@ public class OperationUtil {
     try {
       OperationService service =
           operationRegistry.getServiceFor(OperationUtil.getOperationType(operation));
-      service.execute(operation, context, author);
+      ParticipantId proxyParticipant = OperationUtil.computeParticipant(operation, author);
+      service.execute(operation, context, proxyParticipant);
     } catch (InvalidRequestException e) {
       LOG.warning("Operation " + operation + " failed to execute", e);
       context.constructErrorResponse(operation, e.getMessage());
@@ -187,6 +193,60 @@ public class OperationUtil {
         ProtocolWaveletDelta protocolDelta = CoreWaveletOperationSerializer.serialize(delta);
         waveletProvider.submitRequest(waveletName, protocolDelta, requestListener);
       }
+    }
+  }
+  
+  
+  /**
+   * Appends proxyFor to the participant address.
+   * 
+   * @param proxyFor the proxyFor.
+   * @param participant the participant to apply the proxyFor.
+   * @return new participant instance in the format
+   *         somebody+proxyFor@example.com. If proxyFor is null then just
+   *         returns unmodified participant.
+   * @throws InvalidParticipantAddress if participant address and/or proxy are
+   *         invalid.
+   */
+  public static ParticipantId toProxyParticipant(ParticipantId participant, String proxyFor)
+      throws InvalidParticipantAddress {
+    if (!Strings.isNullOrEmpty(proxyFor)) {
+      RobotName robotName = RobotName.fromAddress(participant.getAddress());
+      robotName.setProxyFor(proxyFor);
+      String robotAddress = robotName.toParticipantAddress();
+      if (!RobotName.isWellFormedAddress(robotAddress)) {
+        throw new InvalidParticipantAddress(robotAddress,
+            "is not a valid robot name, the proxy is likely to be wrong");
+      }
+      return ParticipantId.of(robotName.toParticipantAddress());
+    } else {
+      return participant;
+    }
+  }
+
+  /**
+   * Computes participant ID using optional {@link ParamsProperty.PROXYING_FOR}
+   * parameter.
+   * 
+   * @param operation the operation to be executed.
+   * @param participant the base participant id.
+   * @return new participant instance in the format
+   *         somebody+proxyFor@example.com. If proxyFor is null then just
+   *         returns unmodified participant.
+   * @throws InvalidRequestException if participant address and/or proxyFor are
+   *         invalid.
+   */
+  public static ParticipantId computeParticipant(OperationRequest operation,
+      ParticipantId participant) throws InvalidRequestException {
+    String proxyAddress =
+        OperationUtil.getOptionalParameter(operation, ParamsProperty.PROXYING_FOR);
+    try {
+      return toProxyParticipant(participant, proxyAddress);
+    } catch (InvalidParticipantAddress e) {
+      throw new InvalidRequestException(
+          participant.getAddress()
+              + (proxyAddress != null ? "+" + proxyAddress : ""
+                  + " is not a valid participant address"), operation);
     }
   }
 }

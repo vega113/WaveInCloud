@@ -28,8 +28,6 @@ import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.OperationType;
 import com.google.wave.api.ProtocolVersion;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
-import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.data.converter.EventDataConverter;
 import com.google.wave.api.data.converter.EventDataConverterManager;
 import com.google.wave.api.event.EventType;
@@ -54,7 +52,6 @@ import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
-import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
@@ -127,32 +124,5 @@ public class RobotOperationApplicatorTest extends TestCase {
     verify(operationRegistry).getServiceFor(any(OperationType.class));
     verify(waveletProvider).submitRequest(eq(WAVELET_NAME), any(ProtocolWaveletDelta.class),
         any(WaveletProvider.SubmitRequestListener.class));
-  }
-
-  public void testGetOperationAuthor() throws Exception {
-    // Type of operation doesn't matter
-    OperationRequest operation = new OperationRequest("wavelet.create", "op1");
-    ParticipantId author = applicator.getOperationAuthor(operation, ACCOUNT);
-    assertEquals(author, ROBOT_PARTICIPANT);
-
-    String proxy = "proxy";
-    operation = new OperationRequest(
-        "wavelet.create", "op1", Parameter.of(ParamsProperty.PROXYING_FOR, proxy));
-    ParticipantId proxyAuthor = applicator.getOperationAuthor(operation, ACCOUNT);
-
-    ParticipantId proxyParticipant = ParticipantId.of("robot+" + proxy + "@example.com");
-    assertEquals(proxyAuthor, proxyParticipant);
-  }
-
-  public void testGetOperationAuthorThrowsException() {
-    // Type of operation doesn't matter
-    OperationRequest operation = new OperationRequest(
-        "wavelet.create", "op1", Parameter.of(ParamsProperty.PROXYING_FOR, "invalid#$%^"));
-    try {
-      applicator.getOperationAuthor(operation, ACCOUNT);
-      fail("Expected InvalidParticpantAddress since proxy in malformed");
-    } catch (InvalidParticipantAddress e) {
-      // Expected
-    }
   }
 }

@@ -20,6 +20,7 @@ package org.waveprotocol.box.server.robots.util;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -180,5 +181,40 @@ public class OperationUtilTest extends RobotsTestBase {
 
     verify(waveletProvider).submitRequest(
         eq(WAVELET_NAME), any(ProtocolWaveletDelta.class), eq(requestListener));
+  }
+  
+  public void testToProxyParticipant() throws Exception {
+    ParticipantId participant = ParticipantId.of("foo@example.com");
+    ParticipantId proxyParticipant = ParticipantId.of("foo+proxyFor@example.com");
+    assertEquals(proxyParticipant, OperationUtil.toProxyParticipant(participant, "proxyFor"));
+    // If participant is already a proxy - return without a change.
+    assertEquals(proxyParticipant, OperationUtil.toProxyParticipant(proxyParticipant, "proxyFor"));
+  }
+  
+  public void testComputeParticipantWithInvalidProxyFor() throws Exception {
+    String invalidProxyFor = "~@#+^+";
+    String participantAddress = "foo@bar.com";
+    OperationRequest operation = mock(OperationRequest.class);
+    when(operation.getParameter(ParamsProperty.PROXYING_FOR)).thenReturn(invalidProxyFor);
+    try {
+      OperationUtil.computeParticipant(operation, ParticipantId.of(participantAddress));
+      fail("InvalidRequestException should be thrown.");
+    } catch (InvalidRequestException e) {
+      // Pass.
+    }
+    verify(operation).getParameter(ParamsProperty.PROXYING_FOR);
+  }
+  
+  public void testComputeParticipantWithValidProxyFor() throws Exception {
+    String validProxyFor = "foo";
+    String participantAddress = "foo@bar.com";
+    OperationRequest operation = mock(OperationRequest.class);
+    when(operation.getParameter(ParamsProperty.PROXYING_FOR)).thenReturn(validProxyFor);
+    try {
+      OperationUtil.computeParticipant(operation, ParticipantId.of(participantAddress));
+    } catch (InvalidRequestException e) {
+      fail("Exception is thrown for a valid address.");
+    }
+    verify(operation).getParameter(ParamsProperty.PROXYING_FOR);
   }
 }

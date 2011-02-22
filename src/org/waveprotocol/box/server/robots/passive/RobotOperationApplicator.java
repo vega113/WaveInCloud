@@ -17,16 +17,11 @@
 
 package org.waveprotocol.box.server.robots.passive;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.ProtocolVersion;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.data.converter.EventDataConverterManager;
 import com.google.wave.api.event.EventType;
 import com.google.wave.api.event.OperationErrorEvent;
-import com.google.wave.api.robot.RobotName;
-
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.OperationContextImpl;
@@ -39,8 +34,6 @@ import org.waveprotocol.box.server.robots.util.LoggingRequestListener;
 import org.waveprotocol.box.server.robots.util.OperationUtil;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
-import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.util.logging.Log;
 
@@ -120,15 +113,7 @@ public class RobotOperationApplicator {
     for (OperationRequest operation : operations) {
       // Get the operation of the author taking into account the proxying for
       // field.
-      ParticipantId author;
-      try {
-        author = getOperationAuthor(operation, account);
-      } catch (InvalidParticipantAddress e) {
-        LOG.warning("Error has occurred when constructing the author for an operation", e);
-        context.constructErrorResponse(operation, e.getMessage());
-        continue;
-      }
-      OperationUtil.executeOperation(operation, operationRegistry, context, author);
+      OperationUtil.executeOperation(operation, operationRegistry, context, account.getId());
     }
   }
 
@@ -148,37 +133,5 @@ public class RobotOperationApplicator {
     // make it possible though.
     boolean notifyOnError =
         account.getCapabilities().getCapabilitiesMap().containsKey(EventType.OPERATION_ERROR);
-  }
-
-  /**
-   * Returns a {@link ParticipantId} for which the given operation is to be
-   * performed. It takes into account the possibility that this operation is
-   * being proxied for another user on behalf of the robot.
-   *
-   * @param operation the operation to be performed
-   * @param account the account of the robot wanting to perform the action
-   * @throws InvalidParticipantAddress if the participant id can not be
-   *         constructed
-   */
-  @VisibleForTesting
-  ParticipantId getOperationAuthor(OperationRequest operation, RobotAccountData account)
-      throws InvalidParticipantAddress {
-    // NOTE(ljvderijk): Operations with proxying for set will likely fail due to
-    // operations being applied for unknown participants. API's seem to send add
-    // participant operations for them, check if proxying works once those
-    // operations are implemented.
-    // Python API defines proxying for in Event, Java does not. Seems not to be
-    // handled properly, they need to be updated.
-    String proxy = (String) operation.getParameter(ParamsProperty.PROXYING_FOR);
-    RobotName robotName = RobotName.fromAddress(account.getId().getAddress());
-    if (!Strings.isNullOrEmpty(proxy)) {
-      robotName.setProxyFor(proxy);
-      String robotAddress = robotName.toParticipantAddress();
-      if (!RobotName.isWellFormedAddress(robotAddress)) {
-        throw new InvalidParticipantAddress(
-            robotAddress, "is not a valid robot name, the proxy is likely to be wrong");
-      }
-    }
-    return ParticipantId.of(robotName.toParticipantAddress());
   }
 }
