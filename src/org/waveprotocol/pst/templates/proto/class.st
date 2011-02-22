@@ -57,7 +57,7 @@ public $if(m.inner)$static$endif$ final class $m.javaType$
 
   private void invalidateAll() {
     proto = null;
-    protoBuilder = null;
+    protoBuilder = $m.protoType$.newBuilder();
   }
 
   @Override
