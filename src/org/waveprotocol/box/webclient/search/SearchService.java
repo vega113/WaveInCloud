@@ -114,14 +114,14 @@ public interface SearchService {
     public int hashCode() {
       final int prime = 31;
       int result = 1;
-      result = prime * result + waveId.hashCode();
       result = prime * result + ((author == null) ? 0 : author.hashCode());
-      result = prime * result + participants.hashCode();
-      result = prime * result + title.hashCode();
-      result = prime * result + snippet.hashCode();
       result = prime * result + blipCount;
+      result = prime * result + (int) lastModified;
+      result = prime * result + participants.hashCode();
+      result = prime * result + ((snippet == null) ? 0 : snippet.hashCode());
+      result = prime * result + ((title == null) ? 0 : title.hashCode());
       result = prime * result + unreadCount;
-      result = prime * result + (int) (lastModified);
+      result = prime * result + waveId.hashCode();
       return result;
     }
 
@@ -134,8 +134,8 @@ public interface SearchService {
       return waveId.equals(other.waveId) //
           && ValueUtils.equal(author, other.author) //
           && participants.equals(other.participants) //
-          && title.equals(other.title) //
-          && snippet.equals(other.snippet) //
+          && ValueUtils.equal(title, other.title) //
+          && ValueUtils.equal(snippet, other.snippet) //
           && blipCount == other.blipCount //
           && unreadCount == other.unreadCount //
           && lastModified == other.lastModified;
