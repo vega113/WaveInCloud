@@ -19,11 +19,13 @@ package org.waveprotocol.wave.client.common.util;
 
 import java.util.AbstractQueue;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * An efficent implementation of queue for use in GWT.
- * It take advantage of the effiency of JSO map to make it fast.
+ * Its efficiency is due to using JSO maps.
  *
+ * Against the advice of AbstractQueue, this class accepts null.
  */
 public class FastQueue<T> extends AbstractQueue<T>{
   private final IntMapJsoView<T> contents = IntMapJsoView.create();
@@ -76,6 +78,16 @@ public class FastQueue<T> extends AbstractQueue<T>{
     return currentGetIndex < currentPutIndex ? contents.get(currentGetIndex) : null;
   }
 
+  // This implementation of queue cannot use the inherited remove() method because a
+  // null element will be misinterpreted as the queue being empty.
+  @Override
+  public T remove() {
+    if (isEmpty()) {
+      throw new NoSuchElementException();
+    }
+    return poll();
+  }
+
   /**
    * Move the index forward until it hit the next non empty index or the end.
    */
@@ -91,7 +103,7 @@ public class FastQueue<T> extends AbstractQueue<T>{
   @Override
   public T poll() {
     T ret = peek();
-    if (ret != null) {
+    if (!isEmpty()) {
       removeEntry(currentGetIndex);
       currentGetIndex++;
     }
