@@ -28,19 +28,19 @@ import java.util.List;
  */
 public interface Digest {
 
-  /** @return the wave represented by this digest. */
+  /** @return the wave represented by this digest. Never null. */
   WaveId getWaveId();
 
-  /** @return the identity of the wave's author. */
+  /** @return the identity of the wave's author. May be null. */
   ParticipantId getAuthor();
 
-  /** @return the identities of some other participants on this wave. */
+  /** @return the identities of some other participants on this wave. Never null. */
   List<ParticipantId> getParticipantsSnippet();
 
-  /** @return the title of this wave. */
+  /** @return the title of this wave. May be null. */
   String getTitle();
 
-  /** @return a snippet for this wave. */
+  /** @return a snippet for this wave. May be null. */
   String getSnippet();
 
   /** @return the number of messages in this wave. */
