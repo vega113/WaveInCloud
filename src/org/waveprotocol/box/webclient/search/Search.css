@@ -10,8 +10,16 @@
   background-color: blue;
 }
 
+@if (org.waveprotocol.wave.client.common.util.QuirksConstants.SUPPORTS_SEARCH_INPUT) {
+ input.query {
+   -webkit-appearance: textfield;  /* Tell Mac not to use the Mac search widget. */
+   font-size: 13px;  /* Tell Mac not to use its own preference for font size. */
+ }
+}
+
 input.query {
-  height: 24px;  /* Webkit default. Make other browsers look as pretty as Webkit. */
+  height: 24px;  /* Webkit default. Make other browsers look consistent with Webkit. */
+  width: 250px;  /* TODO: make this a percentage of the container. */
   margin: 13px;  /* 2x13 + 24 = 50px, which is searchHeight. */
   padding: 2px;  /* GWT default.  Here as a reminder.  */
   /* Remember that inputs have inset borders and padding which don't contribute to total height. */

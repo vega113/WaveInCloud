@@ -28,6 +28,8 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.TextBox;
 
+import org.waveprotocol.wave.client.common.util.QuirksConstants;
+
 /**
  * Widget implementation of the search area.
  *
@@ -65,6 +67,11 @@ public class SearchWidget extends Composite implements SearchView, ChangeHandler
    */
   public SearchWidget() {
     initWidget(BINDER.createAndBindUi(this));
+    if (QuirksConstants.SUPPORTS_SEARCH_INPUT) {
+      query.getElement().setAttribute("type", "search");
+      query.getElement().setAttribute("results", "10");
+      query.getElement().setAttribute("autosave", "QUERY_AUTO_SAVE");
+    }
     query.addChangeHandler(this);
   }
 

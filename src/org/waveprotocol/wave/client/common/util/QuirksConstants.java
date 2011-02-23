@@ -370,7 +370,15 @@ public final class QuirksConstants {
    */
   public static final boolean PLAINTEXT_PASTE_DOES_NOT_EMIT_PASTE_EVENT =
     UserAgent.isSafari();
-
+  
+  /**
+   * True if the browser supports input type 'search'.
+   *
+   * Tested:
+   * Chrome 9.0, Chrome 4.0
+   */
+  public static final boolean SUPPORTS_SEARCH_INPUT =
+    UserAgent.isWebkit();
 
   /**
    * True if the browser sanitizes pasted content to contenteditable to
