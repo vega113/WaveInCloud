@@ -495,8 +495,10 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
         .applyTo(toolbar.addClickButton(), new ToolbarClickButton.Listener() {
           @Override public void onClicked() {
             String url = Window.prompt("Gadget URL", YES_NO_MAYBE_GADGET);
-            XmlStringBuilder xml = GadgetXmlUtil.constructXml(url, "", user.getAddress());
-            LineContainers.appendLine(editor.getDocument(), xml);
+            if (url != null && !url.isEmpty()) {
+              XmlStringBuilder xml = GadgetXmlUtil.constructXml(url, "", user.getAddress());
+              LineContainers.appendLine(editor.getDocument(), xml);
+            }
           }
         });
   }
