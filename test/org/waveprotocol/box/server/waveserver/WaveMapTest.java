@@ -21,13 +21,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.gwt.thirdparty.guava.common.collect.Lists;
 
 import junit.framework.TestCase;
 
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
@@ -36,6 +37,7 @@ import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
+import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -47,11 +49,13 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.concurrent.Executor;
 
 /**
@@ -72,6 +76,96 @@ public class WaveMapTest extends TestCase {
 
   private static final WaveletOperationContext CONTEXT =
       new WaveletOperationContext(USER1, 1234567890, 1);
+  
+
+  /** Sorts search result in ascending order by LMT. */
+  static final Comparator<WaveViewData> ASCENDING_DATE_COMPARATOR =
+      new Comparator<WaveViewData>() {
+        @Override
+        public int compare(WaveViewData arg0, WaveViewData arg1) {
+          long lmt0 = computeLmt(arg0);
+          long lmt1 = computeLmt(arg1);
+          return Long.signum(lmt0 - lmt1);
+        }
+
+        private long computeLmt(WaveViewData arg0) {
+          long lmt = -1;
+          for (ObservableWaveletData wavelet : arg0.getWavelets()) {
+            // Skip non conversational wavelets.
+            if (!IdUtil.isConversationalId(wavelet.getWaveletId())) {
+              continue;
+            }
+            lmt = lmt < wavelet.getLastModifiedTime() ? wavelet.getLastModifiedTime() : lmt;
+          }
+          return lmt;
+        }
+      };
+
+  /** Sorts search result in descending order by LMT. */
+  static final Comparator<WaveViewData> DESCENDING_DATE_COMPARATOR =
+      new Comparator<WaveViewData>() {
+        @Override
+        public int compare(WaveViewData arg0, WaveViewData arg1) {
+          return -ASCENDING_DATE_COMPARATOR.compare(arg0, arg1);
+        }
+      };
+      
+  /** Sorts search result in ascending order by creation time. */
+  static final Comparator<WaveViewData> ASC_CREATED_COMPARATOR = new Comparator<WaveViewData>() {
+    @Override
+    public int compare(WaveViewData arg0, WaveViewData arg1) {
+      long time0 = computeCreatedTime(arg0);
+      long time1 = computeCreatedTime(arg1);
+      return Long.signum(time0 - time1);
+    }
+
+    private long computeCreatedTime(WaveViewData arg0) {
+      long creationTime = -1;
+      for (ObservableWaveletData wavelet : arg0.getWavelets()) {
+        creationTime =
+            creationTime < wavelet.getCreationTime() ? wavelet.getCreationTime() : creationTime;
+      }
+      return creationTime;
+    }
+  };
+  
+  
+  /** Sorts search result in descending order by creation time. */
+  static final Comparator<WaveViewData> DESC_CREATED_COMPARATOR = new Comparator<WaveViewData>() {
+    @Override
+    public int compare(WaveViewData arg0, WaveViewData arg1) {
+      return -ASC_CREATED_COMPARATOR.compare(arg0, arg1);
+    }
+  };
+  
+  /** Sorts search result in ascending order by author. */
+  static final Comparator<WaveViewData> ASC_CREATOR_COMPARATOR = new Comparator<WaveViewData>() {
+    @Override
+    public int compare(WaveViewData arg0, WaveViewData arg1) {
+      ParticipantId author0 = computeAuthor(arg0);
+      ParticipantId author1 = computeAuthor(arg1);
+      return author0.compareTo(author1);
+    }
+
+    private ParticipantId computeAuthor(WaveViewData wave) {
+      ParticipantId author = null;
+      for (ObservableWaveletData wavelet : wave.getWavelets()) {
+        if (IdUtil.isConversationRootWaveletId(wavelet.getWaveletId())) {
+          author = wavelet.getCreator();
+        }
+      }
+      assert author != null : "Cannot find author for the wave: " + wave.getWaveId().serialise();
+      return author;
+    }
+  };
+  
+  /** Sorts search result in descending order by author. */
+  static final Comparator<WaveViewData> DESC_CREATOR_COMPARATOR = new Comparator<WaveViewData>() {
+    @Override
+    public int compare(WaveViewData arg0, WaveViewData arg1) {
+      return -ASC_CREATOR_COMPARATOR.compare(arg0, arg1);
+    }
+  };
 
   private static WaveletOperation addParticipantToWavelet(ParticipantId user) {
     return new AddParticipant(CONTEXT, user);
@@ -202,6 +296,131 @@ public class WaveMapTest extends TestCase {
       assertEquals(1, saw_wave[i]);
     }
   }
+  
+  public void testSearchOrderByAscWorks() throws Exception {
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(i)), WAVELET_ID);
+      submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
+    }
+    Collection<WaveViewData> results = waveMap.search(USER1, "in:inbox orderby:dateasc", 0, 10);
+    Ordering<WaveViewData> ascOrdering = Ordering.from(ASCENDING_DATE_COMPARATOR);
+    assertTrue(ascOrdering.isOrdered(results));
+  }
+  
+  public void testSearchOrderByDescWorks() throws Exception {
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(i)), WAVELET_ID);
+      submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
+    }
+    Collection<WaveViewData> results = waveMap.search(USER1, "in:inbox orderby:datedesc", 0, 10);
+    Ordering<WaveViewData> descOrdering = Ordering.from(DESCENDING_DATE_COMPARATOR);
+    assertTrue(descOrdering.isOrdered(results));
+  }
+  
+  public void testSearchOrderByCreatedAscWorks() throws Exception {
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(i)), WAVELET_ID);
+      submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
+    }
+    Collection<WaveViewData> results = waveMap.search(USER1, "in:inbox orderby:createdasc", 0, 10);
+    Ordering<WaveViewData> ascOrdering = Ordering.from(ASC_CREATED_COMPARATOR);
+    assertTrue(ascOrdering.isOrdered(results));
+  }
+  
+  public void testSearchOrderByCreatedDescWorks() throws Exception {
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(i)), WAVELET_ID);
+      submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
+    }
+    Collection<WaveViewData> results = waveMap.search(USER1, "in:inbox orderby:createddesc", 0, 10);
+    Ordering<WaveViewData> descOrdering = Ordering.from(DESC_CREATED_COMPARATOR);
+    assertTrue(descOrdering.isOrdered(results));
+  }
+  
+  public void testSearchOrderByAuthorAscWithCompundingWorks() throws Exception {
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(i)), WAVELET_ID);
+      // Add USER2 to two waves.
+      if (i == 1 || i == 2) {
+        WaveletOperation op1 = addParticipantToWavelet(USER1);
+        WaveletOperation op2 = addParticipantToWavelet(USER2);
+        submitDeltaToNewWavelet(name, USER1, op1, op2);
+      } else {
+        submitDeltaToNewWavelet(name, USER2, addParticipantToWavelet(USER2));
+      }
+    }
+    Collection<WaveViewData> resultsAsc =
+        waveMap.search(USER2, "in:inbox orderby:creatorasc orderby:createddesc", 0, 10);
+    assertEquals(10, resultsAsc.size());
+    Ordering<WaveViewData> ascAuthorOrdering = Ordering.from(ASC_CREATOR_COMPARATOR);
+    assertTrue(ascAuthorOrdering.isOrdered(resultsAsc));
+    Ordering<WaveViewData> descCreatedOrdering = Ordering.from(DESC_CREATED_COMPARATOR);
+    // The whole list should not be ordered by creation time.
+    assertFalse(descCreatedOrdering.isOrdered(resultsAsc));
+    // Each sublist should be ordered by creation time.
+    assertTrue(descCreatedOrdering.isOrdered(Lists.newArrayList(resultsAsc).subList(0, 2)));
+    assertTrue(descCreatedOrdering.isOrdered(Lists.newArrayList(resultsAsc).subList(2, 10)));
+  }
+  
+  public void testSearchOrderByAuthorDescWorks() throws Exception {
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(i)), WAVELET_ID);
+      // Add USER2 to two waves.
+      if (i == 1 || i == 2) {
+        WaveletOperation op1 = addParticipantToWavelet(USER1);
+        WaveletOperation op2 = addParticipantToWavelet(USER2);
+        submitDeltaToNewWavelet(name, USER1, op1, op2);
+      } else {
+        submitDeltaToNewWavelet(name, USER2, addParticipantToWavelet(USER2));
+      }
+    }
+    Collection<WaveViewData> resultsAsc =
+        waveMap.search(USER2, "in:inbox orderby:creatordesc", 0, 10);
+    assertEquals(10, resultsAsc.size());
+    Ordering<WaveViewData> descAuthorOrdering = Ordering.from(DESC_CREATOR_COMPARATOR);
+    assertTrue(descAuthorOrdering.isOrdered(resultsAsc));
+  }
+  
+  public void testSearchFilterByWithWorks() throws Exception {
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(i)), WAVELET_ID);
+      // Add USER2 to two waves.
+      if (i == 1 || i == 2) {
+        WaveletOperation op1 = addParticipantToWavelet(USER1);
+        WaveletOperation op2 = addParticipantToWavelet(USER2);
+        submitDeltaToNewWavelet(name, USER1, op1, op2);
+      } else {
+        submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
+      }
+    }
+    Collection<WaveViewData> results =
+        waveMap.search(USER1, "in:inbox with:" + USER2.getAddress(), 0, 10);
+    assertEquals(2, results.size());
+    results = waveMap.search(USER1, "in:inbox with:" + USER1.getAddress(), 0, 10);
+    assertEquals(10, results.size());
+  }
+  
+  /**
+   * If query contains invalid search param - it should return empty result.
+   */
+  public void testInvalidWithSearchParam() throws Exception {
+    WaveletName name = WaveletName.of(WAVE_ID, WAVELET_ID);
+    submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
+    Collection<WaveViewData> results =
+        waveMap.search(USER1, "in:inbox with@^^^@:" + USER1.getAddress(), 0, 10);
+    assertEquals(0, results.size());
+  }
+  
+  public void testInvalidOrderByParam() throws Exception {
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(i)), WAVELET_ID);
+      submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
+    }
+    Collection<WaveViewData> results =
+        waveMap.search(USER1, "in:inbox orderby:createddescCCC", 0, 10);
+    assertEquals(0, results.size());
+  }
+
 
   private ExceptionalIterator<WaveId, PersistenceException> eitr(WaveId... waves) {
     return ExceptionalIterator.FromIterator.<WaveId, PersistenceException>create(
@@ -224,4 +443,5 @@ public class WaveMapTest extends TestCase {
     LocalWaveletContainer wavelet = waveMap.getOrCreateLocalWavelet(name);
     wavelet.submitRequest(name, signedProtoDelta);
   }
+  
 }

@@ -19,6 +19,7 @@ package org.waveprotocol.box.webclient.search;
 import org.waveprotocol.wave.client.state.BlipReadStateMonitor;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationStructure;
+import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
@@ -148,6 +149,10 @@ public final class WaveBasedDigest
       return;
     }
     for (Wavelet wavelet : wave.getWave().getWavelets()) {
+      if (!IdUtil.isConversationalId(wavelet.getId())) {
+        // Skip non conversational wavelets.
+        continue;
+      }
       lastModified = Math.max(lastModified, wavelet.getLastModifiedTime());
     }
   }

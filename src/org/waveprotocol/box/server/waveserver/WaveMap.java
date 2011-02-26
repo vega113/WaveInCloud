@@ -22,25 +22,37 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.inject.Inject;
 
 import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
+import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
 import org.waveprotocol.wave.util.logging.Log;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
@@ -52,8 +64,292 @@ import java.util.concurrent.Executors;
  * @author soren@google.com (Soren Lassen)
  */
 public class WaveMap implements SearchProvider {
+  
+  /**
+   * Helper class that allows to add basic sort and filter functionality to the
+   * search.
+   * 
+   * @author vega113@gmail.com (Yuri Z.)
+   */
+  private static class QueryHelper {
+    
+    @SuppressWarnings("serial")
+    class InvalidQueryException extends Exception {
+
+      public InvalidQueryException(String msg) {
+        super(msg);
+      }
+    }
+    
+    /**
+     * Unknown participantId used by {@link ASC_CREATOR_COMPARATOR} in case wave
+     * creator cannot be found.
+     */
+    static final ParticipantId UNKNOWN_CREATOR = ParticipantId.ofUnsafe("unknown@example.com");
+
+    /** Sorts search result in ascending order by LMT. */
+    static final Comparator<WaveViewData> ASC_LMT_COMPARATOR = new Comparator<WaveViewData>() {
+      @Override
+      public int compare(WaveViewData arg0, WaveViewData arg1) {
+        long lmt0 = computeLmt(arg0);
+        long lmt1 = computeLmt(arg1);
+        return Long.signum(lmt0 - lmt1);
+      }
+
+      private long computeLmt(WaveViewData wave) {
+        long lmt = -1;
+        for (ObservableWaveletData wavelet : wave.getWavelets()) {
+          // Skip non conversational wavelets.
+          if (!IdUtil.isConversationalId(wavelet.getWaveletId())) {
+            continue;
+          }
+          lmt = lmt < wavelet.getLastModifiedTime() ? wavelet.getLastModifiedTime() : lmt;
+        }
+        return lmt;
+      }
+    };
+
+    /** Sorts search result in descending order by LMT. */
+    static final Comparator<WaveViewData> DESC_LMT_COMPARATOR = new Comparator<WaveViewData>() {
+      @Override
+      public int compare(WaveViewData arg0, WaveViewData arg1) {
+        return -ASC_LMT_COMPARATOR.compare(arg0, arg1);
+      }
+    };
+
+    /** Sorts search result in ascending order by creation time. */
+    static final Comparator<WaveViewData> ASC_CREATED_COMPARATOR = new Comparator<WaveViewData>() {
+      @Override
+      public int compare(WaveViewData arg0, WaveViewData arg1) {
+        long time0 = computeCreatedTime(arg0);
+        long time1 = computeCreatedTime(arg1);
+        return Long.signum(time0 - time1);
+      }
+
+      private long computeCreatedTime(WaveViewData wave) {
+        long creationTime = -1;
+        for (ObservableWaveletData wavelet : wave.getWavelets()) {
+          creationTime =
+              creationTime < wavelet.getCreationTime() ? wavelet.getCreationTime() : creationTime;
+        }
+        return creationTime;
+      }
+    };
+
+    /** Sorts search result in descending order by creation time. */
+    static final Comparator<WaveViewData> DESC_CREATED_COMPARATOR = new Comparator<WaveViewData>() {
+      @Override
+      public int compare(WaveViewData arg0, WaveViewData arg1) {
+        return -ASC_CREATED_COMPARATOR.compare(arg0, arg1);
+      }
+    };
+
+    /** Sorts search result in ascending order by creator */
+    static final Comparator<WaveViewData> ASC_CREATOR_COMPARATOR = new Comparator<WaveViewData>() {
+      @Override
+      public int compare(WaveViewData arg0, WaveViewData arg1) {
+        ParticipantId creator0 = computeCreator(arg0);
+        ParticipantId creator1 = computeCreator(arg1);
+        return creator0.compareTo(creator1);
+      }
+
+      private ParticipantId computeCreator(WaveViewData wave) {
+        for (ObservableWaveletData wavelet : wave.getWavelets()) {
+          if (IdUtil.isConversationRootWaveletId(wavelet.getWaveletId())) {
+            return wavelet.getCreator();
+          }
+        }
+        // If not found creator - compare with UNKNOWN_CREATOR;
+        return UNKNOWN_CREATOR;
+      }
+    };
+
+    /** Sorts search result in descending order by creator */
+    static final Comparator<WaveViewData> DESC_CREATOR_COMPARATOR = new Comparator<WaveViewData>() {
+      @Override
+      public int compare(WaveViewData arg0, WaveViewData arg1) {
+        return -ASC_CREATOR_COMPARATOR.compare(arg0, arg1);
+      }
+    };
+
+    /** Sorts search result by WaveId. */
+    static final Comparator<WaveViewData> ID_COMPARATOR = new Comparator<WaveViewData>() {
+      @Override
+      public int compare(WaveViewData arg0, WaveViewData arg1) {
+        return arg0.getWaveId().compareTo(arg1.getWaveId());
+      }
+    };
+
+    /**
+     * Orders using {@link ASCENDING_DATE_COMPARATOR}.
+     */
+    static final Ordering<WaveViewData> ASC_LMT_ORDERING = Ordering
+        .from(QueryHelper.ASC_LMT_COMPARATOR);
+
+    /**
+     * Orders using {@link DESCENDING_DATE_COMPARATOR}.
+     */
+    static final Ordering<WaveViewData> DESC_LMT_ORDERING = Ordering
+        .from(QueryHelper.DESC_LMT_COMPARATOR);
+
+    /**
+     * Orders using {@link ASC_CREATED_COMPARATOR}.
+     */
+    static final Ordering<WaveViewData> ASC_CREATED_ORDERING = Ordering
+        .from(QueryHelper.ASC_CREATED_COMPARATOR);
+
+    /**
+     * Orders using {@link DESC_CREATED_COMPARATOR}.
+     */
+    static final Ordering<WaveViewData> DESC_CREATED_ORDERING = Ordering
+        .from(QueryHelper.DESC_CREATED_COMPARATOR);
+
+    /**
+     * Orders using {@link ASC_CREATOR_COMPARATOR}.
+     */
+    static final Ordering<WaveViewData> ASC_CREATOR_ORDERING = Ordering
+        .from(QueryHelper.ASC_CREATOR_COMPARATOR);
+
+    /**
+     * Orders using {@link DESC_CREATOR_COMPARATOR}.
+     */
+    static final Ordering<WaveViewData> DESC_CREATOR_ORDERING = Ordering
+        .from(QueryHelper.DESC_CREATOR_COMPARATOR);
+
+    /** Default ordering is by LMT descending. */
+    static final Ordering<WaveViewData> DEFAULT_ORDERING = DESC_LMT_ORDERING;
+    
+    /** Valid search query types. */
+    enum TokenQueryType {
+      IN("in"),
+      ORDERBY("orderby"),
+      WITH("with");
+      
+      final String token;
+      
+      TokenQueryType(String token) {
+        this.token = token;
+      }
+      
+      String getToken() {
+        return token;
+      }
+      
+      private static final Map<String, TokenQueryType> reverseLookupMap = 
+        new HashMap<String, TokenQueryType>();
+      static {
+        for (TokenQueryType type : TokenQueryType.values()) {
+          reverseLookupMap.put(type.getToken(), type);
+        }
+      }
+      
+      static TokenQueryType fromToken(String token) {
+        TokenQueryType qyeryToken = reverseLookupMap.get(token);
+        if (qyeryToken == null) {
+          throw new IllegalArgumentException("Illegal query param: " + token);
+        }
+        return reverseLookupMap.get(token);
+      }
+      
+      static boolean hasToken(String token) {
+        return reverseLookupMap.keySet().contains(token);
+      }
+    }
+    
+    /** Registered order by parameter types and corresponding orderings. */
+    enum OrderByValueType {
+      DATEASC("dateasc", ASC_LMT_ORDERING),
+      DATEDESC("datedesc", DESC_LMT_ORDERING),
+      CREATEDASC("createdasc", ASC_CREATED_ORDERING),
+      CREATEDDESC("createddesc", DESC_CREATED_ORDERING),
+      CREATORASC("creatorasc", ASC_CREATOR_ORDERING),
+      CREATORDESC("creatordesc", DESC_CREATOR_ORDERING);
+      
+      final String value;
+      final Ordering<WaveViewData> ordering;
+      
+      OrderByValueType(String value, Ordering<WaveViewData> ordering) {
+        this.value = value;
+        this.ordering = ordering;
+      }
+      
+      String getToken() {
+        return value;
+      }
+      
+      Ordering<WaveViewData> getOrdering() {
+        return ordering;
+      }
+      
+      private static final Map<String, OrderByValueType> reverseLookupMap = 
+        new HashMap<String, OrderByValueType>();
+      
+      static {
+        for (OrderByValueType type : OrderByValueType.values()) {
+          reverseLookupMap.put(type.getToken(), type);
+        }
+      }
+      
+      static OrderByValueType fromToken(String token) {
+        OrderByValueType orderByValue = reverseLookupMap.get(token);
+        if (orderByValue == null) {
+          throw new IllegalArgumentException("Illegal 'orderby' value: " + token);
+        }
+        return reverseLookupMap.get(token);
+      }
+    }
+    
+    private QueryHelper() {
+      
+    }
+    
+    /** Static factory method. */
+    static QueryHelper newQueryHelper() {
+      return new QueryHelper();
+    }
+    
+    /**
+     * Parses the search query.
+     * 
+     * @param query the query.
+     * @return the result map with query tokens. Never returns null.
+     * @throws InvalidQueryException if the query contains invalid params.
+     */
+    Map<TokenQueryType, Set<String>> parseQuery(String query) throws InvalidQueryException {
+      Preconditions.checkArgument(query != null);
+      String[] tokens = query.split(" ");
+      Map<TokenQueryType, Set<String>> tokensMap = Maps.newEnumMap(TokenQueryType.class);
+      for (String token : tokens) {
+        String[] pair = token.split(":");
+        String tokenValue = pair[1];
+        if (pair.length != 2 || !TokenQueryType.hasToken(pair[0])) {
+          String msg = "Invalid query param: " + token;
+          throw new InvalidQueryException(msg);
+        }
+        TokenQueryType tokenType = TokenQueryType.fromToken(pair[0]);
+        // Verify the orderby param.
+        if (tokenType.equals(TokenQueryType.ORDERBY)) {
+          try {
+            OrderByValueType.fromToken(tokenValue);
+          } catch (IllegalArgumentException e) {
+            String msg = "Invalid orderby query value: " + tokenValue;
+            throw new InvalidQueryException(msg);
+          }
+        }
+        Set<String> valuesPerToken = tokensMap.get(tokenType);
+        if (valuesPerToken == null) {
+          valuesPerToken = Sets.newLinkedHashSet();
+          tokensMap.put(tokenType, valuesPerToken);
+        }
+        valuesPerToken.add(tokenValue);
+      }
+      return tokensMap;
+    }
+  }
 
   private static final Log LOG = Log.get(WaveMap.class);
+  
+  private final QueryHelper queryHelper = QueryHelper.newQueryHelper();
 
   /**
    * The wavelets in a wave.
@@ -208,51 +504,124 @@ public class WaveMap implements SearchProvider {
   @Override
   public Collection<WaveViewData> search(ParticipantId user, String query, int startAt,
       int numResults) {
-    int endAt = startAt + numResults - 1;
-    LOG.info(
-        "Search query '" + query + "' from user: " + user + " [" + startAt + ", " + endAt + "]");
-    if (!query.equals("in:inbox") && !query.equals("with:me")) {
-      throw new AssertionError("Only queries for the inbox work");
+    LOG.fine("Search query '" + query + "' from user: " + user + " [" + startAt + ", "
+        + (startAt + numResults - 1) + "]");
+    if (!query.contains("in:inbox")) {
+      LOG.warning("Only queries for the inbox work");
+      return Collections.emptyList();
+    }
+    
+    Map<QueryHelper.TokenQueryType, Set<String>> queryParams = null;
+    try {
+      queryParams = queryHelper.parseQuery(query);
+    } catch (QueryHelper.InvalidQueryException e1) {
+      // Invalid query param - stop and return empty search results.
+      LOG.warning("Invalid Query. " + e1.getMessage());
+      return Collections.emptyList();
+    }
+    List<ParticipantId> withParticipantIds = null;
+    try {
+      // Build and validate.
+      withParticipantIds = buildValidateWithParticipantIds(queryParams);
+    } catch (InvalidParticipantAddress e) {
+      // Invalid address - stop and return empty search results.
+      LOG.warning("Invalid participantId: " + e.getAddress() + " in query: " + query);
+      return Collections.emptyList();
     }
     // Must use a map with stable ordering, since indices are meaningful.
     Map<WaveId, WaveViewData> results = Maps.newLinkedHashMap();
-    int resultIndex = 0;
     for (Map.Entry<WaveId, Wave> entry : waves.entrySet()) {
       WaveId waveId = entry.getKey();
       Wave wave = entry.getValue();
       WaveViewData view = null;  // Copy of the wave built up for search hits.
       for (WaveletContainer c : wave) {
         try {
-          if (c.hasParticipant(user)) {
-            if (view != null) {
-              // Just keep adding all the relevant wavelets in this wave.
-              view.addWavelet(c.copyWaveletData());
-              continue;
-            }
-
-            // This wave is in this user's index.
-            if (startAt <= resultIndex && resultIndex <= endAt) {
-              // ... and it is in the search range, so put it in the results.
-              view = WaveViewDataImpl.create(waveId);
-              view.addWavelet(c.copyWaveletData());
-              results.put(waveId, view);
-              resultIndex++;
-            } else {
-              // ... but not in the search range, so move on to the next wave.
-              resultIndex++;
-              break;
-            }
+          // Only filtering by participants is implemented for now.
+          if (!c.hasParticipant(user) || !matches(c, withParticipantIds)) {
+            continue;
           }
+          if (view == null) {
+            view = WaveViewDataImpl.create(waveId);
+            results.put(waveId, view);
+          }
+          // Just keep adding all the relevant wavelets in this wave.
+          view.addWavelet(c.copyWaveletData());
         } catch (WaveletStateException e) {
-          LOG.info("Failed to access wavelet " + c.getWaveletName(), e);
+          LOG.warning("Failed to access wavelet " + c.getWaveletName(), e);
         }
       }
-      if (resultIndex > endAt) {
-        break;
+    }
+    Collection<WaveViewData> searchResults = results.values();
+    List<WaveViewData> searchResultslist = CollectionUtils.newLinkedList(searchResults);
+    int searchResultSize = searchResultslist.size();
+    // Check if we have enough results to return.
+    if (searchResultSize < startAt) {
+      searchResultslist = Collections.emptyList();
+    } else {
+      int endAt = Math.min(startAt + numResults, searchResultSize);
+      searchResultslist =
+          computeSorter(queryParams).sortedCopy(searchResultslist).subList(startAt, endAt);
+    }
+    LOG.info("Search response to '" + query + "': " + searchResultslist.size() + " results");
+    return searchResultslist;
+  }
+
+  /**
+   * Computes ordering for the search results. If none are specified - then
+   * returns the default ordering. The resulting ordering is always compounded
+   * with ordering by wave id for stability.
+   */
+  private Ordering<WaveViewData> computeSorter(
+      Map<QueryHelper.TokenQueryType, Set<String>> queryParams) {
+    Ordering<WaveViewData> ordering = null;
+    Set<String> orderBySet = queryParams.get(QueryHelper.TokenQueryType.ORDERBY);
+    if (orderBySet != null) {
+      for (String orderBy : orderBySet) {
+        QueryHelper.OrderByValueType orderingType = QueryHelper.OrderByValueType.fromToken(orderBy);
+        if (ordering == null) {
+          // Primary ordering.
+          ordering = orderingType.getOrdering();
+        } else {
+          // All other ordering are compounded to the primary one.
+          ordering = ordering.compound(orderingType.getOrdering());
+        }
+      }
+    } else {
+      ordering = QueryHelper.DEFAULT_ORDERING;
+    }
+    // For stability order also by wave id.
+    ordering = ordering.compound(QueryHelper.ID_COMPARATOR);
+    return ordering;
+  }
+
+  /** Builds a list of participants to serve as 'with' filter for the query. */
+  private List<ParticipantId> buildValidateWithParticipantIds (
+      Map<QueryHelper.TokenQueryType, Set<String>> queryParams) throws InvalidParticipantAddress {
+    Set<String> withSet = queryParams.get(QueryHelper.TokenQueryType.WITH);
+    List<ParticipantId> withParticipants = null;
+    if (withSet != null) {
+      withParticipants = Lists.newArrayListWithCapacity(withSet.size());
+      for (String with : withSet) {
+        ParticipantId otherUser = ParticipantId.of(with);
+        withParticipants.add(otherUser);
+      }
+    } else{
+      withParticipants = Collections.emptyList();
+    }
+    return withParticipants;
+  }
+
+  /** Verifies whether the wavelet matches the filter criteria */
+  private boolean matches(WaveletContainer c, List<ParticipantId> withList)
+      throws WaveletStateException {
+    for (ParticipantId otherUser : withList) {
+      // Each call takes and releases the WaveletContainer lock.
+      if (!c.hasParticipant(otherUser)) {
+        // Skipping filtered wavelet.
+        return false;
       }
     }
-    LOG.info("Search response to '" + query + "': " + results.size() + " results");
-    return results.values();
+    return true;
   }
 
   public ExceptionalIterator<WaveId, WaveServerException> getWaveIds() {
