@@ -210,7 +210,14 @@ public class SearchService implements OperationService {
       }
       // The wave matched the search, but it is unknown how to present it.
       boolean empty = !wave.getWavelets().iterator().hasNext();
-      result.addDigest(empty ? emptyDigest(wave) : unknownDigest(wave));
+      if (empty) {
+        result.addDigest(emptyDigest(wave));
+      } else {
+        // One of the reasons for not having conversational wavelet - user
+        // trying to access a wave directly by a URL, without being participant.
+        // Even if there's other reason, still no point to create digest for
+        // such a wave since it will be empty.
+      }
     }
 
     assert result.getDigests().size() == results.size();

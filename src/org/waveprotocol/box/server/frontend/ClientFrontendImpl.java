@@ -51,6 +51,7 @@ import org.waveprotocol.wave.util.logging.Log;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -92,6 +93,10 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
 
     synchronized void setCurrentVersion(HashedVersion version) {
       this.currentVersion = version;
+    }
+
+    private boolean hasParticipant(ParticipantId participant) {
+      return participants.contains(participant);
     }
   }
 
@@ -177,7 +182,7 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
           userManager.subscribe(waveId, waveletIdFilter, channelId, openListener);
       LOG.info("Subscribed " + loggedInUser + " to " + waveId + " channel " + channelId);
 
-      Set<WaveletId> waveletIds = visibleWaveletsFor(subscription);
+      Set<WaveletId> waveletIds = visibleWaveletsFor(subscription, loggedInUser);
       for (WaveletId waveletId : waveletIds) {
         WaveletName waveletName = WaveletName.of(waveId, waveletId);
         // The WaveletName by which the waveletProvider knows the relevant deltas
@@ -243,7 +248,6 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         openListener.onUpdate(dummyWaveletName, null, DeltaSequence.empty(), null, null,
             channelId);
       }
-
       LOG.info("sending marker for " + dummyWaveletName);
       openListener.onUpdate(dummyWaveletName, null, DeltaSequence.empty(), null, true, null);
     }
@@ -461,11 +465,14 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
     return perWavelet.get(name.waveId).get(name.waveletId);
   }
 
-  private Set<WaveletId> visibleWaveletsFor(WaveViewSubscription subscription) {
+  private Set<WaveletId> visibleWaveletsFor(WaveViewSubscription subscription,
+      ParticipantId loggedInUser) {
     Set<WaveletId> visible = Sets.newHashSet();
-    for (WaveletId w : perWavelet.get(subscription.getWaveId()).keySet()) {
-      if (subscription.includes(w)) {
-        visible.add(w);
+    Set<Entry<WaveletId, PerWavelet>> entrySet = 
+      perWavelet.get(subscription.getWaveId()).entrySet();
+    for (Entry<WaveletId, PerWavelet> entry : entrySet ) {
+      if (subscription.includes(entry.getKey()) && entry.getValue().hasParticipant(loggedInUser)) {
+        visible.add(entry.getKey());
       }
     }
     return visible;
