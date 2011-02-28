@@ -174,7 +174,7 @@ public final class SearchServlet extends HttpServlet {
     OperationContextImpl context =
         new OperationContextImpl(waveletProvider,
             converterManager.getEventDataConverter(ProtocolVersion.DEFAULT), conversationUtil);
-    LOG.info(
+    LOG.fine(
         "Performing query: " + searchRequest.getQuery() + " [" + searchRequest.getIndex() + ", "
             + (searchRequest.getIndex() + searchRequest.getNumResults()) + "]");
     OperationRequest operationRequest = opQueue.getPendingOperations().get(0);
@@ -196,7 +196,7 @@ public final class SearchServlet extends HttpServlet {
     } else {
       totalGuess = searchRequest.getIndex() + searchResult.getNumResults();
     }
-    LOG.info("Results: " + searchResult.getNumResults() + ", total: " + totalGuess);
+    LOG.fine("Results: " + searchResult.getNumResults() + ", total: " + totalGuess);
     return SearchResponseUtils.serializeSearchResult(searchResult, totalGuess);
   }
 

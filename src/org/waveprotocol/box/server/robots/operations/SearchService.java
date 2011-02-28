@@ -42,8 +42,14 @@ import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.ModernIdSerialiser;
+import org.waveprotocol.wave.model.id.WaveletId;
+import org.waveprotocol.wave.model.supplement.PrimitiveSupplement;
+import org.waveprotocol.wave.model.supplement.PrimitiveSupplementImpl;
+import org.waveprotocol.wave.model.supplement.SupplementedWave;
+import org.waveprotocol.wave.model.supplement.SupplementedWaveImpl;
+import org.waveprotocol.wave.model.supplement.SupplementedWaveImpl.DefaultFollow;
+import org.waveprotocol.wave.model.supplement.WaveletBasedSupplement;
 import org.waveprotocol.wave.model.util.CollectionUtils;
-import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
@@ -63,6 +69,7 @@ import java.util.Map;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class SearchService implements OperationService {
+
   /**
    * The number of search results to return if not defined in the request.
    * Defined in the spec.
@@ -97,25 +104,25 @@ public class SearchService implements OperationService {
     context.constructResponse(operation, data);
   }
 
+  /**
+   * Produces a digest for a set of conversations. Never returns null.
+   *
+   * @param conversations the conversation.
+   * @param supplement the supplement that allows to easily perform various
+   *        queries on user related state of the wavelet.
+   * @param rawWaveletData the waveletData from which the digest is generated.
+   *        This wavelet is a copy.
+   * @return the server representation of the digest for the query.
+   */
   @VisibleForTesting
-  SearchResult.Digest generateDigestFromWavelet(ObservableWaveletData waveletData) {
-    // Attaching an OpBasedWavelet to a data object makes it an owner.
-    // This means that copies must be made.
-    ObservableWavelet wavelet = OpBasedWavelet.createReadOnly(waveletData);
-    if (!WaveletBasedConversation.waveletHasConversation(wavelet)) {
-      // Wavelet doesn't actually have a conversation model inside. Skip it.
-      return null;
+  Digest generateDigest(ObservableConversationView conversations, SupplementedWave supplement,
+      WaveletData rawWaveletData) {
+    ObservableConversation rootConversation = conversations.getRoot();
+    ObservableConversationBlip firstBlip = null;
+    if (rootConversation != null && rootConversation.getRootThread() != null
+        && rootConversation.getRootThread().getFirstBlip() != null) {
+      firstBlip = rootConversation.getRootThread().getFirstBlip();
     }
-
-    ObservableConversationView conversation = conversationUtil.buildConversation(wavelet);
-    ObservableConversation rootConversation = conversation.getRoot();
-    if (rootConversation == null) {
-      // Once again, there's no conversation here. Don't return it in the results.
-      return null;
-    }
-
-    ObservableConversationBlip firstBlip = rootConversation.getRootThread().getFirstBlip();
-
     String title;
     if (firstBlip != null) {
       Document firstBlipContents = firstBlip.getContent();
@@ -124,26 +131,26 @@ public class SearchService implements OperationService {
       title = EMPTY_WAVELET_TITLE;
     }
 
-    String snippet = Snippets.renderSnippet(waveletData, DIGEST_SNIPPET_LENGTH);
-    String waveId = ApiIdSerializer.instance().serialiseWaveId(waveletData.getWaveId());
+    String snippet = Snippets.renderSnippet(rawWaveletData, DIGEST_SNIPPET_LENGTH);
+    String waveId = ApiIdSerializer.instance().serialiseWaveId(rawWaveletData.getWaveId());
     List<String> participants = CollectionUtils.newArrayList();
-    for (ParticipantId p : waveletData.getParticipants()) {
+    for (ParticipantId p : rawWaveletData.getParticipants()) {
       if (participants.size() < PARTICIPANTS_SNIPPET_LENGTH) {
         participants.add(p.getAddress());
       } else {
         break;
       }
     }
-    // TODO(josephg): Set unread count once user data wavelets are in.
     int unreadCount = 0;
-
     int blipCount = 0;
     for (ConversationBlip blip : BlipIterators.breadthFirst(rootConversation)) {
+      if (supplement.isUnread(blip)) {
+        unreadCount++;
+      }
       blipCount++;
     }
-
-    return new Digest(title, snippet, waveId, participants, waveletData.getLastModifiedTime(),
-          unreadCount, blipCount);
+    return new Digest(title, snippet, waveId, participants, rawWaveletData.getLastModifiedTime(),
+        unreadCount, blipCount);
   }
 
   /** @return a digest for an empty wave. */
@@ -187,40 +194,75 @@ public class SearchService implements OperationService {
     // searchProvider. All waves returned by the search provider must be
     // included in the search result.
     SearchResult result = new SearchResult(query);
-    outer: for (WaveViewData wave : results) {
-      // Empty waves get an empty digest, waves with root conversations get a
-      // digest from that, waves with a conversational wavelet get a digest from
-      // the first such wavelet, then remaining waves get an unknown digest.
-      //
-      // This is not the ideal solution. In particular, a digest should be built
-      // from all the conversations in a user's view of the wave, not just one.
-      // See bug: http://code.google.com/p/wave-protocol/issues/detail?id=123
-      //
+    for (WaveViewData wave : results) {
+      // Note: the indexing infrastructure only supports single-conversation
+      // waves, and requires raw wavelet access for snippeting.
+      ObservableWaveletData root = null;
+      ObservableWaveletData other = null;
+      ObservableWaveletData udw = null;
       for (ObservableWaveletData waveletData : wave.getWavelets()) {
-        if (IdUtil.isConversationRootWaveletId(waveletData.getWaveletId())) {
-          result.addDigest(generateDigestFromWavelet(waveletData));
-          continue outer;
+        WaveletId waveletId = waveletData.getWaveletId();
+        if (IdUtil.isConversationRootWaveletId(waveletId)) {
+          root = waveletData;
+        } else if (IdUtil.isConversationalId(waveletId)) {
+          other = waveletData;
+        } else if (IdUtil.isUserDataWavelet(waveletId)) {
+          // assume this is the user data wavelet for the right user.
+          udw = waveletData;
         }
       }
-      for (ObservableWaveletData waveletData : wave.getWavelets()) {
-        if (IdUtil.isConversationalId(waveletData.getWaveletId())) {
-          result.addDigest(generateDigestFromWavelet(waveletData));
-          continue outer;
+
+      ObservableWaveletData convWavelet = root != null ? root : other;
+      SupplementedWave supplement = null;
+      ObservableConversationView conversations = null;
+      if (convWavelet != null) {
+        OpBasedWavelet wavelet = OpBasedWavelet.createReadOnly(convWavelet);
+        if (WaveletBasedConversation.waveletHasConversation(wavelet)) {
+          conversations = conversationUtil.buildConversation(wavelet);
+          supplement = buildSupplement(participant, conversations, udw);
         }
       }
-      // The wave matched the search, but it is unknown how to present it.
-      boolean empty = !wave.getWavelets().iterator().hasNext();
-      if (empty) {
-        result.addDigest(emptyDigest(wave));
+      if (conversations != null) {
+        // This is a conversational wave. Produce a conversational digest.
+        result.addDigest(generateDigest(conversations, supplement, convWavelet));
       } else {
-        // One of the reasons for not having conversational wavelet - user
-        // trying to access a wave directly by a URL, without being participant.
-        // Even if there's other reason, still no point to create digest for
-        // such a wave since it will be empty.
+        // It is unknown how to present this wave.
+        result.addDigest(generateEmptyorUnknownDigest(wave));
       }
     }
 
     assert result.getDigests().size() == results.size();
     return result;
+  }
+
+  /**
+   * Generates an empty digest in case the wave is empty, or an unknown digest
+   * otherwise.
+   *
+   * @param wave the wave.
+   * @return the generated digest.
+   */
+  Digest generateEmptyorUnknownDigest(WaveViewData wave) {
+    boolean empty = !wave.getWavelets().iterator().hasNext();
+    Digest digest = empty ? emptyDigest(wave) : unknownDigest(wave);
+    return digest;
+  }
+
+  /**
+   * Builds the supplement model from a wave. Never returns null.
+   *
+   * @param viewer the participant for which the supplement is constructed.
+   * @param conversations conversations in the wave
+   * @param udw the user data wavelet for the logged user.
+   * @return the wave supplement.
+   */
+  @VisibleForTesting
+  SupplementedWave buildSupplement(
+      ParticipantId viewer, ObservableConversationView conversations, ObservableWaveletData udw) {
+    // Use mock state if there is no UDW.
+    PrimitiveSupplement udwState =
+        udw != null ? WaveletBasedSupplement.create(OpBasedWavelet.createReadOnly(udw))
+            : new PrimitiveSupplementImpl();
+    return SupplementedWaveImpl.create(udwState, conversations, viewer, DefaultFollow.ALWAYS);
   }
 }

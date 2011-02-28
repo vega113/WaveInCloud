@@ -19,6 +19,7 @@ package org.waveprotocol.box.server.robots.operations;
 
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,6 +51,7 @@ import org.waveprotocol.box.server.waveserver.SearchProvider;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationView;
+import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 import org.waveprotocol.wave.model.conversation.TitleHelper;
 import org.waveprotocol.wave.model.conversation.WaveBasedConversationView;
 import org.waveprotocol.wave.model.conversation.WaveletBasedConversation;
@@ -61,9 +63,11 @@ import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.operation.SilentOperationSink;
 import org.waveprotocol.wave.model.operation.wave.BasicWaveletOperationContextFactory;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
+import org.waveprotocol.wave.model.supplement.SupplementedWave;
 import org.waveprotocol.wave.model.testing.BasicFactories;
 import org.waveprotocol.wave.model.testing.FakeIdGenerator;
 import org.waveprotocol.wave.model.version.HashedVersion;
+import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.ParticipationHelper;
 import org.waveprotocol.wave.model.wave.ReadOnlyWaveView;
@@ -76,6 +80,7 @@ import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -94,6 +99,9 @@ public class SearchServiceTest extends TestCase {
   @Mock private SearchProvider searchProvider;
   @Mock private OperationRequest operation;
   @Mock private OperationContext context;
+  @Mock private IdGenerator idGenerator;
+  
+  private ConversationUtil conversationUtil;
 
   /**
    * Builds a wavelet and provides direct access to the various layers of
@@ -101,6 +109,7 @@ public class SearchServiceTest extends TestCase {
    */
   private static class TestingWaveletData {
     private final ObservableWaveletData waveletData;
+    private final ObservableWaveletData userWaveletData;
     private final Conversation conversation;
     private final WaveViewData waveViewData;
 
@@ -109,6 +118,11 @@ public class SearchServiceTest extends TestCase {
       waveletData =
           new WaveletDataImpl(waveletId, author, 1234567890, 0, HashedVersion.unsigned(0), 0,
               waveId, BasicFactories.observablePluggableMutableDocumentFactory());
+      userWaveletData =
+          new WaveletDataImpl(WaveletId.of("example.com", "user+foo@example.com"), author,
+              1234567890, 0, HashedVersion.unsigned(0), 0,
+            waveId, BasicFactories.observablePluggableMutableDocumentFactory());
+      
       OpBasedWavelet wavelet =
         new OpBasedWavelet(waveId, waveletData, new BasicWaveletOperationContextFactory(author),
             ParticipationHelper.IGNORANT,
@@ -116,7 +130,7 @@ public class SearchServiceTest extends TestCase {
             SilentOperationSink.VOID);
       ReadOnlyWaveView waveView = new ReadOnlyWaveView(waveId);
       waveView.addWavelet(wavelet);
-
+      
       if (isConversational) {
         ConversationView conversationView = WaveBasedConversationView.create(waveView, FakeIdGenerator.create());
         WaveletBasedConversation.makeWaveletConversational(wavelet);
@@ -127,7 +141,7 @@ public class SearchServiceTest extends TestCase {
         conversation = null;
       }
 
-      waveViewData = WaveViewDataImpl.create(waveId, ImmutableList.of(waveletData));
+      waveViewData = WaveViewDataImpl.create(waveId, ImmutableList.of(waveletData, userWaveletData));
     }
 
     public void appendBlipWithText(String text) {
@@ -136,22 +150,24 @@ public class SearchServiceTest extends TestCase {
       TitleHelper.maybeFindAndSetImplicitTitle(blip.getContent());
     }
 
-    public ObservableWaveletData copyWaveletData() {
-      // This data object already has an op-based owner on top.  Must copy it.
-      return WaveletDataUtil.copyWavelet(waveletData);
+    public List<ObservableWaveletData> copyWaveletData() {
+      // This data object already has an op-based owner on top. Must copy it.
+      return ImmutableList.of(WaveletDataUtil.copyWavelet(waveletData),
+          WaveletDataUtil.copyWavelet(userWaveletData));
     }
 
     public WaveViewData copyViewData() {
-      return WaveViewDataImpl.create(waveViewData.getWaveId(), ImmutableList.of(copyWaveletData()));
+      return WaveViewDataImpl.create(waveViewData.getWaveId(),copyWaveletData());
     }
   }
 
   @Override
   protected void setUp() {
     MockitoAnnotations.initMocks(this);
-
+    
+    conversationUtil = new ConversationUtil(idGenerator);
     when(operation.getParameter(ParamsProperty.QUERY)).thenReturn("in:inbox");
-    IdGenerator idGenerator = mock(IdGenerator.class);
+   
     service = new SearchService(searchProvider, new ConversationUtil(idGenerator));
   }
 
@@ -161,7 +177,7 @@ public class SearchServiceTest extends TestCase {
 
     data.conversation.addParticipant(OTHER_PARTICIPANT);
     data.appendBlipWithText("title");
-
+    
     when(searchProvider.search(USER, "in:inbox", 0, 10)).thenReturn(
         Arrays.asList(data.copyViewData()));
     service.execute(operation, context, USER);
@@ -169,14 +185,21 @@ public class SearchServiceTest extends TestCase {
     verify(context).constructResponse(
         eq(operation),
         argThat(matchesSearchResult("in:inbox", WAVE_ID, "title", PARTICIPANT, ImmutableSet.of(
-            PARTICIPANT, OTHER_PARTICIPANT), 0, 1)));
+            PARTICIPANT, OTHER_PARTICIPANT), 1, 1)));
   }
 
   public void testWaveletWithNoBlipsResultsInEmptyTitleAndNoBlips() {
     TestingWaveletData data =
         new TestingWaveletData(WAVE_ID, CONVERSATION_WAVELET_ID, PARTICIPANT, true);
+    ObservableWaveletData observableWaveletData = data.copyWaveletData().get(0);
+    ObservableWavelet wavelet = OpBasedWavelet.createReadOnly(observableWaveletData);
+    ObservableConversationView conversation = conversationUtil.buildConversation(wavelet);
 
-    Digest digest = service.generateDigestFromWavelet(data.copyWaveletData());
+    SupplementedWave supplement = mock(SupplementedWave.class);
+    when(supplement.isUnread(any(ConversationBlip.class))).thenReturn(true);
+    
+    Digest digest = service.generateDigest(conversation, supplement, observableWaveletData);
+
     assertEquals("", digest.getTitle());
     assertEquals(digest.getBlipCount(), 0);
   }
