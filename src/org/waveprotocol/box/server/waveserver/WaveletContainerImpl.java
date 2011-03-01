@@ -496,6 +496,12 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       releaseReadLock();
     }
   }
+  
+  @Override
+  public ParticipantId getCreator() {
+    ReadableWaveletData snapshot = waveletState.getSnapshot();
+    return snapshot != null ? snapshot.getCreator() : null;
+  }
 
   @Override
   public boolean isEmpty() throws WaveletStateException {

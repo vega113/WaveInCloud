@@ -54,8 +54,10 @@ public interface ReadableWaveletData {
   Set<String> getDocumentIds();
 
   /**
-   * Gets the participant that created this wavelet.
-   *
+   * Gets the participant that created this wavelet. The creator is immutable.
+   * This method is safe to call even in the presence of concurrent calls
+   * modifying the same {@link ReadableWaveletData} instance.
+   * 
    * @return the wavelet's creator.
    */
   ParticipantId getCreator();

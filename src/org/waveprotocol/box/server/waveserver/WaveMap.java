@@ -223,7 +223,8 @@ public class WaveMap implements SearchProvider {
     enum TokenQueryType {
       IN("in"),
       ORDERBY("orderby"),
-      WITH("with");
+      WITH("with"),
+      CREATOR("creator");
       
       final String token;
       
@@ -344,6 +345,60 @@ public class WaveMap implements SearchProvider {
         valuesPerToken.add(tokenValue);
       }
       return tokensMap;
+    }
+    
+    /**
+     * Builds a list of participants to serve as the filter for the query.
+     * 
+     * @param queryParams the query params.
+     * @param queryType the filter for the query , i.e. 'with'.
+     * @return the participants list for the filter.
+     * @throws InvalidParticipantAddress if participant id passed to the query is invalid.
+     */
+    static List<ParticipantId> buildValidatedParticipantIds(
+        Map<QueryHelper.TokenQueryType, Set<String>> queryParams,
+        QueryHelper.TokenQueryType queryType) throws InvalidParticipantAddress {
+      Set<String> tokenSet = queryParams.get(queryType);
+      List<ParticipantId> participants = null;
+      if (tokenSet != null) {
+        participants = Lists.newArrayListWithCapacity(tokenSet.size());
+        for (String token : tokenSet) {
+          ParticipantId otherUser = ParticipantId.of(token);
+          participants.add(otherUser);
+        }
+      } else {
+        participants = Collections.emptyList();
+      }
+      return participants;
+    }
+    
+    /**
+     * Computes ordering for the search results. If none are specified - then
+     * returns the default ordering. The resulting ordering is always compounded
+     * with ordering by wave id for stability.
+     */
+    static Ordering<WaveViewData> computeSorter(
+        Map<QueryHelper.TokenQueryType, Set<String>> queryParams) {
+      Ordering<WaveViewData> ordering = null;
+      Set<String> orderBySet = queryParams.get(QueryHelper.TokenQueryType.ORDERBY);
+      if (orderBySet != null) {
+        for (String orderBy : orderBySet) {
+          QueryHelper.OrderByValueType orderingType =
+              QueryHelper.OrderByValueType.fromToken(orderBy);
+          if (ordering == null) {
+            // Primary ordering.
+            ordering = orderingType.getOrdering();
+          } else {
+            // All other ordering are compounded to the primary one.
+            ordering = ordering.compound(orderingType.getOrdering());
+          }
+        }
+      } else {
+        ordering = QueryHelper.DEFAULT_ORDERING;
+      }
+      // For stability order also by wave id.
+      ordering = ordering.compound(QueryHelper.ID_COMPARATOR);
+      return ordering;
     }
   }
 
@@ -520,9 +575,13 @@ public class WaveMap implements SearchProvider {
       return Collections.emptyList();
     }
     List<ParticipantId> withParticipantIds = null;
+    List<ParticipantId> creatorParticipantIds = null;
     try {
       // Build and validate.
-      withParticipantIds = buildValidateWithParticipantIds(queryParams);
+      withParticipantIds =
+          QueryHelper.buildValidatedParticipantIds(queryParams, QueryHelper.TokenQueryType.WITH);
+      creatorParticipantIds =
+        QueryHelper.buildValidatedParticipantIds(queryParams, QueryHelper.TokenQueryType.CREATOR);
     } catch (InvalidParticipantAddress e) {
       // Invalid address - stop and return empty search results.
       LOG.warning("Invalid participantId: " + e.getAddress() + " in query: " + query);
@@ -537,7 +596,7 @@ public class WaveMap implements SearchProvider {
       for (WaveletContainer c : wave) {
         try {
           // Only filtering by participants is implemented for now.
-          if (!c.hasParticipant(user) || !matches(c, withParticipantIds)) {
+          if (!c.hasParticipant(user) || !matches(c, withParticipantIds, creatorParticipantIds)) {
             continue;
           }
           if (view == null) {
@@ -560,64 +619,28 @@ public class WaveMap implements SearchProvider {
     } else {
       int endAt = Math.min(startAt + numResults, searchResultSize);
       searchResultslist =
-          computeSorter(queryParams).sortedCopy(searchResultslist).subList(startAt, endAt);
+          QueryHelper.computeSorter(queryParams).sortedCopy(searchResultslist)
+              .subList(startAt, endAt);
     }
     LOG.info("Search response to '" + query + "': " + searchResultslist.size() + " results");
     return searchResultslist;
   }
 
-  /**
-   * Computes ordering for the search results. If none are specified - then
-   * returns the default ordering. The resulting ordering is always compounded
-   * with ordering by wave id for stability.
-   */
-  private Ordering<WaveViewData> computeSorter(
-      Map<QueryHelper.TokenQueryType, Set<String>> queryParams) {
-    Ordering<WaveViewData> ordering = null;
-    Set<String> orderBySet = queryParams.get(QueryHelper.TokenQueryType.ORDERBY);
-    if (orderBySet != null) {
-      for (String orderBy : orderBySet) {
-        QueryHelper.OrderByValueType orderingType = QueryHelper.OrderByValueType.fromToken(orderBy);
-        if (ordering == null) {
-          // Primary ordering.
-          ordering = orderingType.getOrdering();
-        } else {
-          // All other ordering are compounded to the primary one.
-          ordering = ordering.compound(orderingType.getOrdering());
-        }
-      }
-    } else {
-      ordering = QueryHelper.DEFAULT_ORDERING;
-    }
-    // For stability order also by wave id.
-    ordering = ordering.compound(QueryHelper.ID_COMPARATOR);
-    return ordering;
-  }
-
-  /** Builds a list of participants to serve as 'with' filter for the query. */
-  private List<ParticipantId> buildValidateWithParticipantIds (
-      Map<QueryHelper.TokenQueryType, Set<String>> queryParams) throws InvalidParticipantAddress {
-    Set<String> withSet = queryParams.get(QueryHelper.TokenQueryType.WITH);
-    List<ParticipantId> withParticipants = null;
-    if (withSet != null) {
-      withParticipants = Lists.newArrayListWithCapacity(withSet.size());
-      for (String with : withSet) {
-        ParticipantId otherUser = ParticipantId.of(with);
-        withParticipants.add(otherUser);
-      }
-    } else{
-      withParticipants = Collections.emptyList();
-    }
-    return withParticipants;
-  }
-
   /** Verifies whether the wavelet matches the filter criteria */
-  private boolean matches(WaveletContainer c, List<ParticipantId> withList)
-      throws WaveletStateException {
+  private static boolean matches(WaveletContainer c, List<ParticipantId> withList,
+      List<ParticipantId> creatorList) throws WaveletStateException {
+    // First filter by creator
+    for (ParticipantId creator : creatorList) {
+      if (!creator.equals(c.getCreator())) {
+        // Skip.
+        return false;
+      }
+    }
+    // Now filter by 'with'.
     for (ParticipantId otherUser : withList) {
       // Each call takes and releases the WaveletContainer lock.
       if (!c.hasParticipant(otherUser)) {
-        // Skipping filtered wavelet.
+        // Skip.
         return false;
       }
     }

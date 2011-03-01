@@ -105,12 +105,22 @@ interface WaveletContainer {
   HashedVersion getLastCommittedVersion() throws WaveletStateException;
 
   /**
-   * @return true if the participant id is a curent participant of the wavelet
+   * @return true if the participant id is a current participant of the wavelet.
+   *          Each invocation acquires and releases the lock.
    */
   boolean hasParticipant(ParticipantId participant) throws WaveletStateException;
+  
+  /**
+   * @return the wavelet creator. This method doesn't acquire
+   *         {@link WaveletContainer} lock since wavelet creator cannot change
+   *         after wavelet creation and therefore it is save to concurrently
+   *         read this property without lock.
+   */
+  ParticipantId getCreator();
 
   /**
    * @return true if the wavelet is at version zero, i.e., has no delta history
    */
   boolean isEmpty() throws WaveletStateException;
+
 }
