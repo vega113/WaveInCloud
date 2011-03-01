@@ -22,7 +22,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.conversation.Blips;
@@ -109,26 +108,6 @@ public final class SupplementedWaveImplTest extends TestCase {
         versions.put(id, versions.get(id) + 1);
       }
     }
-
-    /** Increments the version of a blip. */
-    public void touch(WaveletId id, String blipId) {
-      Map<String, Long> waveletBlipVersions = blipVersions.get(id);
-      if (waveletBlipVersions != null) {
-        if (waveletBlipVersions.containsKey(blipId)) {
-          waveletBlipVersions.put(blipId, waveletBlipVersions.get(blipId) + 1);
-        }
-      }
-    }
-
-    /** Ensures that the viewing account is a direct participant. */
-    public void join() {
-      isExplicitParticipant = true;
-    }
-
-    /** Ensures that the viewing account is not a direct participant. */
-    public void leave() {
-      isExplicitParticipant = false;
-    }
   }
 
   private static final SchemaCollection schemas = new SchemaCollection();
@@ -195,7 +174,7 @@ public final class SupplementedWaveImplTest extends TestCase {
    * Sets up the test supplement with a real wave model behind it.
    */
   private WaveletBasedConversation setUpWithWaveModel() {
-    FakeConversationView view = FakeConversationView.builder(schemas).build();
+    FakeConversationView view = FakeConversationView.builder().with(schemas).build();
     WaveletBasedConversation conversation = view.createRoot();
     ParticipantId viewer = new ParticipantId("nobody@nowhere.com");
     supplement = SupplementedWaveImpl.create(substrate, view, viewer, DefaultFollow.ALWAYS);
@@ -262,8 +241,8 @@ public final class SupplementedWaveImplTest extends TestCase {
     int waveletVersion = (int) w.getVersion();
     assertEquals(waveletVersion, blipReadVersion);
 
-    // Increase wavelet version
-    w.createBlip("b+fake");
+    // Do something to increase wavelet version without increasing blip last-modified version.
+    t.appendBlip();
     assert w.getVersion() > waveletVersion : "test wave model did not increase version";
 
     // Test that marking blip as read again has no effect.

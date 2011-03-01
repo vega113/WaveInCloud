@@ -19,7 +19,6 @@ package org.waveprotocol.wave.model.supplement;
 
 import static org.waveprotocol.wave.model.supplement.SupplementedWaveImpl.DefaultFollow.ALWAYS;
 
-
 import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.conversation.testing.FakeConversationView;
@@ -79,7 +78,7 @@ public final class WaveletBasedSupplementTest extends TestCase {
    * This is a regression test for bug 2459305.
    */
   public void testCopySnapshotDoesNotCauseWrites() {
-    FakeConversationView view = FakeConversationView.builder(schemas).build();
+    FakeConversationView view = FakeConversationView.builder().with(schemas).build();
     Wavelet udw = view.getWaveView().createUserData();
     PrimitiveSupplement substrate = WaveletBasedSupplement.create(udw);
     ParticipantId viewer = new ParticipantId("nobody@google.com");

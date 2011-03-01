@@ -104,17 +104,6 @@ public final class FakeConversationView implements ObservableConversationView {
     return new Builder();
   }
 
-  /**
-   * Creates a new conversation view builder.
-   *
-   * @deprecated Use {@link #builder()} and {@link Builder#with(SchemaProvider)}
-   *             instead.
-   */
-  @Deprecated
-  public static Builder builder(SchemaProvider schemas) {
-    return builder().with(schemas);
-  }
-
   /** The backing conversation view. */
   private final WaveBasedConversationView view;
 

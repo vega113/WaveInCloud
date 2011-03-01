@@ -115,6 +115,7 @@
       <junit fork="yes" forkmode="@{forkmode}" printsummary="yes" 
           showoutput="no" haltonfailure="no" failureProperty="test.failed">
         <jvmarg value="-Xmx512M"/>
+        <jvmarg value="-ea"/>
         <!-- Emma arguments -->
         <jvmarg value="-Demma.coverage.out.file=${coverage.dir}/coverage.emma" />
         <jvmarg value="-Demma.coverage.out.merge=true" />

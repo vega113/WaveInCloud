@@ -59,7 +59,7 @@ public class DiffControllerTest extends TestCase {
     ConversationBlip root = conv.getRootThread().appendBlip();
 
     MockDoc fresh = mock(MockDoc.class);
-    when(fresh.isCompleteDiff()).thenReturn(true);
+    when(fresh.isCompleteDiff()).thenReturn(true, false);
     when(documents.get(root)).thenReturn(fresh);
     target.install();
 
@@ -87,7 +87,7 @@ public class DiffControllerTest extends TestCase {
 
     // Instrument first.
     MockDoc doc = mock(MockDoc.class);
-    when(doc.isCompleteDiff()).thenReturn(true);
+    when(doc.isCompleteDiff()).thenReturn(true, false);
     when(documents.get(any(ConversationBlip.class))).thenReturn(doc);
 
     conv.getRootThread().appendBlip();
@@ -101,7 +101,7 @@ public class DiffControllerTest extends TestCase {
     ObservableConversationBlip root = conv.getRootThread().appendBlip();
 
     MockDoc doc = mock(MockDoc.class);
-    when(doc.isCompleteDiff()).thenReturn(true);
+    when(doc.isCompleteDiff()).thenReturn(true, false);
     when(documents.get(root)).thenReturn(doc);
     target.install();
 
