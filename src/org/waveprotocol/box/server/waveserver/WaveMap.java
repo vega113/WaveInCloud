@@ -19,6 +19,7 @@ package org.waveprotocol.box.server.waveserver;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -37,7 +38,6 @@ import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.id.WaveletName;
-import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
@@ -610,20 +610,21 @@ public class WaveMap implements SearchProvider {
         }
       }
     }
-    Collection<WaveViewData> searchResults = results.values();
-    List<WaveViewData> searchResultslist = CollectionUtils.newLinkedList(searchResults);
-    int searchResultSize = searchResultslist.size();
+    List<WaveViewData> searchResultslist = null;
+    int searchResultSize =  results.values().size();
     // Check if we have enough results to return.
     if (searchResultSize < startAt) {
       searchResultslist = Collections.emptyList();
     } else {
       int endAt = Math.min(startAt + numResults, searchResultSize);
       searchResultslist =
-          QueryHelper.computeSorter(queryParams).sortedCopy(searchResultslist)
+          QueryHelper.computeSorter(queryParams).sortedCopy(results.values())
               .subList(startAt, endAt);
     }
     LOG.info("Search response to '" + query + "': " + searchResultslist.size() + " results");
-    return searchResultslist;
+    // Memory management wise it's dangerous to return a sublist of a much
+    // longer list, therefore, we return a 'defensive' copy.
+    return ImmutableList.copyOf(searchResultslist);
   }
 
   /** Verifies whether the wavelet matches the filter criteria */

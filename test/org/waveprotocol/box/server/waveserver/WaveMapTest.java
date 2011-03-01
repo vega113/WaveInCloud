@@ -420,6 +420,29 @@ public class WaveMapTest extends TestCase {
         waveMap.search(USER1, "in:inbox orderby:createddescCCC", 0, 10);
     assertEquals(0, results.size());
   }
+  
+  public void testSearchFilterByCreatorWorks() throws Exception {
+    for (int i = 0; i < 10; i++) {
+      WaveletName name = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(i)), WAVELET_ID);
+      // Add USER2 to two waves as creator.
+      if (i == 1 || i == 2) {
+        WaveletOperation op1 = addParticipantToWavelet(USER1);
+        WaveletOperation op2 = addParticipantToWavelet(USER2);
+        submitDeltaToNewWavelet(name, USER2, op1, op2);
+      } else {
+        submitDeltaToNewWavelet(name, USER1, addParticipantToWavelet(USER1));
+      }
+    }
+    Collection<WaveViewData> results =
+        waveMap.search(USER1, "in:inbox creator:" + USER2.getAddress(), 0, 10);
+    assertEquals(2, results.size());
+    results = waveMap.search(USER1, "in:inbox creator:" + USER1.getAddress(), 0, 10);
+    assertEquals(8, results.size());
+    results =
+        waveMap.search(USER1,
+            "in:inbox creator:" + USER1.getAddress() + " creator:" + USER2.getAddress(), 0, 10);
+    assertEquals(0, results.size());
+  }
 
 
   private ExceptionalIterator<WaveId, PersistenceException> eitr(WaveId... waves) {
