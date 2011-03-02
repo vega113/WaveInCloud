@@ -18,13 +18,14 @@
 package org.waveprotocol.wave.client.account;
 
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.SourcesEvents;
 
 /**
  * Manages profiles for participants.
  *
  * @author kalman@google.com (Benjamin Kalman)
  */
-public interface ProfileManager {
+public interface ProfileManager extends SourcesEvents<ProfileListener> {
 
   /**
    * Gets the profile for a participant.
@@ -42,14 +43,4 @@ public interface ProfileManager {
    * @return true if the participant should be ignored, false if not
    */
   boolean shouldIgnore(ParticipantId participantId);
-
-  /**
-   * Listens to changes to a participant's profile.
-   */
-  void addListener(ParticipantId participantId, ProfileListener listener);
-
-  /**
-   * Stops listening to changes to a participant's profile.
-   */
-  void removeListener(ParticipantId participantId, ProfileListener listener);
 }

@@ -28,7 +28,6 @@ import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationView;
 import org.waveprotocol.wave.model.util.CollectionUtils;
-import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
 import org.waveprotocol.wave.model.util.ReadableStringSet.Proc;
 import org.waveprotocol.wave.model.util.StringMap;
 import org.waveprotocol.wave.model.util.StringSet;
@@ -89,17 +88,11 @@ class LiveProfileRenderer implements ProfileListener {
     this.conversation = conv;
     this.viewProvider = viewProvider;
     this.shallowBlipRenderer = shallowBlipRenderer;
+    profileManager.addListener(this);
   }
 
-  public void reset() {
-    blipContributorToUpdate.each(
-      new ProcV<StringSet>() {
-        @Override
-        public void apply(String key, StringSet value) {
-          profileManager.removeListener(new ParticipantId(key), LiveProfileRenderer.this);
-        }
-      });
-    blipContributorToUpdate.clear();
+  public void destroy() {
+    profileManager.removeListener(this);
   }
 
   public void setUpParticipantsUpdate(ConversationView convView) {
@@ -143,7 +136,6 @@ class LiveProfileRenderer implements ProfileListener {
   private void addProfileToMonitor(String blipId, ParticipantId id) {
     StringSet contributorSet = blipContributorToUpdate.get(id.getAddress());
     if (contributorSet == null) {
-      profileManager.addListener(id, this);
       contributorSet = CollectionUtils.createStringSet();
       blipContributorToUpdate.put(id.getAddress(), contributorSet);
     }
@@ -160,7 +152,6 @@ class LiveProfileRenderer implements ProfileListener {
       contributorSet.remove(blipId);
 
       if (contributorSet.isEmpty()) {
-        profileManager.removeListener(id, this);
         blipContributorToUpdate.remove(id.getAddress());
       }
     }
@@ -168,21 +159,23 @@ class LiveProfileRenderer implements ProfileListener {
 
   @Override
   public void onProfileUpdated(final Profile profile) {
-    String address = profile.getAddress();
-    blipContributorToUpdate.get(address).each(new Proc() {
-      @Override
-      public void apply(String blipId) {
-        if (blipId.equals(PARTICIPANT_FAKE_BLIP_ID)) {
-          ParticipantView participantUi =
-              viewProvider.getParticipantView(conversation, profile.getParticipantId());
-          if (participantUi != null) {
-            render(profile, participantUi);
+    StringSet blipsToUpdate = blipContributorToUpdate.get(profile.getAddress());
+    if (blipsToUpdate != null) {
+      blipsToUpdate.each(new Proc() {
+        @Override
+        public void apply(String blipId) {
+          if (blipId.equals(PARTICIPANT_FAKE_BLIP_ID)) {
+            ParticipantView participantUi =
+                viewProvider.getParticipantView(conversation, profile.getParticipantId());
+            if (participantUi != null) {
+              render(profile, participantUi);
+            }
+          } else {
+            scheduleUpdateForBlip(blipId);
           }
-        } else {
-          scheduleUpdateForBlip(blipId);
         }
-      }
-    });
+      });
+    }
   }
 
   private void scheduleUpdateForBlip(String blipId) {

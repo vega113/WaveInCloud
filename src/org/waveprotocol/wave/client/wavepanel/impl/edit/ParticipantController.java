@@ -117,9 +117,7 @@ public final class ParticipantController {
     // Summon a popup view from a participant, and attach profile-popup logic to
     // it.
     final ProfilePopupView profileView = participantView.showParticipation();
-    boolean destroyOnHide = true;
-    final ProfilePopupPresenter profileUi =
-        ProfilePopupPresenter.create(profile, profileView, profiles, destroyOnHide);
+    ProfilePopupPresenter profileUi = ProfilePopupPresenter.create(profile, profileView, profiles);
     profileUi.addControl(EscapeUtils.fromSafeConstant("Remove"), new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {

@@ -33,31 +33,25 @@ public final class ProfilePopupPresenter implements ProfileListener, ProfilePopu
   private final Profile model;
   private final ProfilePopupView view;
   private final ProfileManager events;
-  private final boolean destructOnHide;
 
-  private ProfilePopupPresenter(
-      Profile model, ProfilePopupView view, ProfileManager events, boolean destructOnHide) {
+  private ProfilePopupPresenter(Profile model, ProfilePopupView view, ProfileManager events) {
     this.model = model;
     this.view = view;
     this.events = events;
-    this.destructOnHide = destructOnHide;
   }
 
   /**
-   * Creates a profile popup presenter.
+   * Creates a profile popup presenter. This presenter destroys itself and
+   * detaches from the view as soon as the popup hides.
    *
    * @param model profile to present
    * @param view view in which to present
    * @param events source of profile events
-   * @param destructOnHide if true, this presenter destroys itself and detaches
-   *        from the view as soon as the popup hides; if false, this presenter
-   *        remains permanently in control of the view
    * @return a new presenter.
    */
   public static ProfilePopupPresenter create(
-      Profile model, ProfilePopupView view, ProfileManager events, boolean destructOnHide) {
-    ProfilePopupPresenter profileUi =
-        new ProfilePopupPresenter(model, view, events, destructOnHide);
+      Profile model, ProfilePopupView view, ProfileManager events) {
+    ProfilePopupPresenter profileUi = new ProfilePopupPresenter(model, view, events);
     profileUi.init();
     return profileUi;
   }
@@ -96,7 +90,7 @@ public final class ProfilePopupPresenter implements ProfileListener, ProfilePopu
 
   @Override
   public void onShow() {
-    events.addListener(model.getParticipantId(), this);
+    events.addListener(this);
   }
 
   @Override
@@ -108,9 +102,7 @@ public final class ProfilePopupPresenter implements ProfileListener, ProfilePopu
 
   @Override
   public void onHide() {
-    events.removeListener(model.getParticipantId(), this);
-    if (destructOnHide) {
-      destroy();
-    }
+    events.removeListener(this);
+    destroy();
   }
 }

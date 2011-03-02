@@ -60,7 +60,7 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
     /**
      * @param conv
      */
-    public ConversationUpdater(ObservableConversation conv, ProfileManager profileManager,
+    ConversationUpdater(ObservableConversation conv, ProfileManager profileManager,
         ThreadReadStateMonitor readMonitor) {
       this.conv = conv;
       this.profileUpdateMonitor =
@@ -68,16 +68,16 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
       this.readMonitor = readMonitor;
     }
 
-    public void init() {
+    void init() {
       conv.addListener((ObservableConversation.AnchorListener) this);
       conv.addListener((ObservableConversation.Listener) this);
       profileUpdateMonitor.setUpParticipantsUpdate(convView);
     }
 
-    public void reset() {
+    void destroy() {
       conv.removeListener((ObservableConversation.AnchorListener) this);
       conv.removeListener((ObservableConversation.Listener) this);
-      profileUpdateMonitor.reset();
+      profileUpdateMonitor.destroy();
     }
 
     @Override
@@ -297,11 +297,11 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
    * Destroys this renderer, releasing its resources. It is no longer usable
    * after a call to this method.
    */
-  public void reset() {
+  public void destroy() {
     conversationUpdaters.each(new ProcV<Conversation, ConversationUpdater>() {
       @Override
       public void apply(Conversation key, ConversationUpdater value) {
-        value.reset();
+        value.destroy();
       }
     });
     supplementRenderer.destroy();
@@ -328,7 +328,7 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
     ConversationUpdater updater = conversationUpdaters.get(c);
     if (updater != null) {
       conversationUpdaters.remove(c);
-      updater.reset();
+      updater.destroy();
     }
   }
 

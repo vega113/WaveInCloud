@@ -49,12 +49,12 @@ public final class ProfileManagerImpl implements ProfileManager {
   }
 
   @Override
-  public void addListener(ParticipantId profile, ProfileListener listener) {
+  public void addListener(ProfileListener listener) {
     // Vacuous profiles do not change, so no events will ever be broadcast.
   }
 
   @Override
-  public void removeListener(ParticipantId profile, ProfileListener listener) {
+  public void removeListener(ProfileListener listener) {
     // Nothing to remove.  See addListener().
   }
 }
