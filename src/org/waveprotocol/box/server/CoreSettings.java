@@ -29,6 +29,7 @@ public class CoreSettings {
   public static final String WAVE_SERVER_DOMAIN = "wave_server_domain";
   public static final String HTTP_FRONTEND_PUBLIC_ADDRESS = "http_frontend_public_address";
   public static final String HTTP_FRONTEND_ADDRESSES = "http_frontend_addresses";
+  public static final String RESOURCE_BASES = "resource_bases";
   public static final String WAVESERVER_DISABLE_VERIFICATION = "waveserver_disable_verification";
   public static final String WAVESERVER_DISABLE_SIGNER_VERIFICATION =
       "waveserver_disable_signer_verification";
@@ -57,6 +58,10 @@ public class CoreSettings {
       description = "A comman seperated list of address on which to listen for connections."
           + " Each address is a host or ip and port seperated by a colon.")
   private static List<String> httpFrontEndAddresses;
+
+  @Setting(name = RESOURCE_BASES, defaultValue = "./war",
+      description = "The server's resource base directory list.")
+  private static List<String> resourceBases;
 
   @Setting(name = WAVESERVER_DISABLE_VERIFICATION)
   private static boolean waveserverDisableVerification;

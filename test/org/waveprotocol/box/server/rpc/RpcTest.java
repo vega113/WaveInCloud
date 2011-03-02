@@ -63,9 +63,9 @@ public class RpcTest extends TestCase {
      * NOTE: Specifying port zero (0) causes the OS to select a random port.
      * This allows the test to run without clashing with any potentially in-use port.
      */
-    server = new ServerRpcProvider(
-        new InetSocketAddress[] {new InetSocketAddress("localhost", 0)},
-        0, sessionManager, null);
+    server =
+        new ServerRpcProvider(new InetSocketAddress[] {new InetSocketAddress("localhost", 0)}, 0,
+            new String[] {"./war"}, sessionManager, null);
     server.startWebSocketServer();
   }
 
