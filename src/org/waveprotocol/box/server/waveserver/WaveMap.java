@@ -34,7 +34,6 @@ import com.google.inject.Inject;
 
 import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.persistence.PersistenceException;
-import org.waveprotocol.box.server.robots.operations.SearchHelper;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -602,16 +601,13 @@ public class WaveMap implements SearchProvider {
           }
           if (view == null) {
             view = WaveViewDataImpl.create(waveId);
+            results.put(waveId, view);
           }
           // Just keep adding all the relevant wavelets in this wave.
           view.addWavelet(c.copyWaveletData());
         } catch (WaveletStateException e) {
           LOG.warning("Failed to access wavelet " + c.getWaveletName(), e);
         }
-      }
-      // Filter out waves without conversational root wavelet from search result.
-      if (SearchHelper.hasConversationalRootWavelet(view)) {
-        results.put(waveId, view);
       }
     }
     List<WaveViewData> searchResultslist = null;
