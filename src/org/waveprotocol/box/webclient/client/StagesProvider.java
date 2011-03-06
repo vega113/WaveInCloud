@@ -175,7 +175,7 @@ public class StagesProvider extends Stages {
       // Find conversation
       Conversation conversation;
       if (waveRef.hasWaveletId()) {
-        String id =  waveRef.getWaveletId().serialise();
+        String id = ModernIdSerialiser.INSTANCE.serialiseWaveletId(waveRef.getWaveletId());
         conversation = wave.getConversation(id);
       } else {
         // Unspecified wavelet means root.
