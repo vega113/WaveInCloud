@@ -18,7 +18,7 @@ package org.waveprotocol.wave.client.wavepanel.view.impl;
 
 import com.google.gwt.dom.client.Element;
 
-import org.waveprotocol.wave.client.scroll.TargetScroller;
+import org.waveprotocol.wave.client.scroll.ScrollPanel;
 import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 
@@ -39,7 +39,7 @@ public final class TopConversationViewImpl<I> // \u2620
    * @param <I> intrinsic thread implementation
    */
   public interface Helper<I> extends AbstractConversationViewImpl.Helper<I> {
-    TargetScroller<? super View> getScroller(I impl);
+    ScrollPanel<? super View> getScroller(I impl);
     void setToolbar(I impl, Element e);
   }
 
@@ -53,7 +53,7 @@ public final class TopConversationViewImpl<I> // \u2620
   }
 
   @Override
-  public TargetScroller<? super View> getScroller() {
+  public ScrollPanel<? super View> getScroller() {
     return helper.getScroller(impl);
   }
 

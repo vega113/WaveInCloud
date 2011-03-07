@@ -29,7 +29,9 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Display;
 
 import org.waveprotocol.wave.client.common.util.UserAgent;
-import org.waveprotocol.wave.client.scroll.TargetScroller;
+import org.waveprotocol.wave.client.scroll.DomScrollPanel;
+import org.waveprotocol.wave.client.scroll.Extent;
+import org.waveprotocol.wave.client.scroll.ScrollPanel;
 import org.waveprotocol.wave.client.wavepanel.view.AnchorView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipLinkPopupView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
@@ -399,14 +401,32 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
 
   private final TopConversationViewImpl.Helper<TopConversationDomImpl> convHelper =
       new TopConversationViewImpl.Helper<TopConversationDomImpl>() {
+        private ScrollPanel<Element> createDomScroller(TopConversationDomImpl impl) {
+          return DomScrollPanel.create(impl.getThreadContainer());
+        }
 
         @Override
-        public TargetScroller<? super View> getScroller(TopConversationDomImpl impl) {
-          final TargetScroller<? super Element> scrollImpl = impl.getScroller();
-          return new TargetScroller<View>() {
+        public ScrollPanel<? super View> getScroller(TopConversationDomImpl impl) {
+          final ScrollPanel<Element> domScroller = createDomScroller(impl);
+          return new ScrollPanel<View>() {
             @Override
-            public void moveTo(View target) {
-              scrollImpl.moveTo(elementOf(target));
+            public Extent extentOf(View ui) {
+              return domScroller.extentOf(elementOf(ui));
+            }
+
+            @Override
+            public Extent getContent() {
+              return domScroller.getContent();
+            }
+
+            @Override
+            public Extent getViewport() {
+              return domScroller.getViewport();
+            }
+
+            @Override
+            public void moveTo(double location) {
+              domScroller.moveTo(location);
             }
           };
         }
@@ -684,7 +704,7 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
 
   private TopConversationViewImpl<TopConversationDomImpl> asTopConversationUnchecked(Element e) {
     return e != null ? new TopConversationViewImpl<TopConversationDomImpl>(
-        convHelper, ScrollableConversationDomImpl.of(e)) : null;
+        convHelper, TopConversationDomImpl.of(e)) : null;
   }
 
   private InlineConversationViewImpl<InlineConversationDomImpl> asInlineConversationUnchecked(

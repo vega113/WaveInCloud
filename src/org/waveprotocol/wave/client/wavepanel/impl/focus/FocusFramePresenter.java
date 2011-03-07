@@ -20,13 +20,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.client.common.util.KeyCombo;
-import org.waveprotocol.wave.client.scroll.TargetScroller;
-import org.waveprotocol.wave.client.wavepanel.WavePanel;
+import org.waveprotocol.wave.client.scroll.SmartScroller;
 import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.FocusFrameView;
-import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
-import org.waveprotocol.wave.client.wavepanel.view.View;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 import org.waveprotocol.wave.model.util.ValueUtils;
 import org.waveprotocol.wave.model.wave.SourcesEvents;
@@ -35,8 +32,8 @@ import org.waveprotocol.wave.model.wave.SourcesEvents;
  * Presents the focus frame, and exposes an API for controlling it.
  *
  */
-public final class FocusFramePresenter implements SourcesEvents<FocusFramePresenter.Listener>,
-    WavePanelImpl.LifecycleListener {
+public final class FocusFramePresenter
+    implements SourcesEvents<FocusFramePresenter.Listener>, WavePanelImpl.LifecycleListener {
 
   public interface Listener {
     void onFocusMoved(BlipView oldUi, BlipView newUi);
@@ -61,16 +58,11 @@ public final class FocusFramePresenter implements SourcesEvents<FocusFramePresen
   /** Listeners. */
   private final CopyOnWriteSet<Listener> listeners = CopyOnWriteSet.create();
 
-  /** Panel in which this feature is installed. */
-  private final WavePanel panel;
+  /** Scroller. */
+  private final SmartScroller<? super BlipView> scroller;
 
   /** Order generator, optionally installed. */
   private FocusOrder order;
-
-  // Wave lifecycle state.
-
-  /** Scroller. */
-  private TargetScroller<? super View> scroller;
 
   /** Blip that currently has the focus frame. May be {@code null}. */
   private BlipView blip;
@@ -79,9 +71,10 @@ public final class FocusFramePresenter implements SourcesEvents<FocusFramePresen
    * Creates a focus-frame presenter.
    */
   @VisibleForTesting
-  FocusFramePresenter(FocusFrameView view, WavePanel panel, ViewTraverser traverser) {
+  FocusFramePresenter(
+      FocusFrameView view, SmartScroller<? super BlipView> scroller, ViewTraverser traverser) {
     this.view = view;
-    this.panel = panel;
+    this.scroller = scroller;
     this.traverser = traverser;
   }
 
@@ -91,18 +84,10 @@ public final class FocusFramePresenter implements SourcesEvents<FocusFramePresen
 
   @Override
   public void onInit() {
-    // The wave panel contents may be empty if there are no conversations. If
-    // there are no conversations in view, then the focus frame is not usable
-    // (all public methods will throw IllegalStateException).
-    TopConversationView main = panel.getContents();
-    if (main != null) {
-      scroller = main.getScroller();
-    }
   }
 
   @Override
   public void onReset() {
-    scroller = null;
     blip = null;
   }
 

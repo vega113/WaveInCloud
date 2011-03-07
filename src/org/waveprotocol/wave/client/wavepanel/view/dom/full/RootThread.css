@@ -4,4 +4,6 @@
  * author: hearnden@google.com (David Hearnden)
  */
 .thread {
+  /* Expand content box to include margins and floats in contents. */
+  overflow: hidden; 
 }

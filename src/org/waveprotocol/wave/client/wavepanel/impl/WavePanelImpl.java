@@ -21,7 +21,6 @@ import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.common.util.KeyCombo;
 import org.waveprotocol.wave.client.common.util.LogicalPanel;
-import org.waveprotocol.wave.client.scroll.TargetScroller;
 import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.event.EventDispatcherPanel;
 import org.waveprotocol.wave.client.wavepanel.event.EventHandlerRegistry;
@@ -29,7 +28,6 @@ import org.waveprotocol.wave.client.wavepanel.event.Focusable;
 import org.waveprotocol.wave.client.wavepanel.event.KeySignalRouter;
 import org.waveprotocol.wave.client.wavepanel.view.FrameView;
 import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
-import org.waveprotocol.wave.client.wavepanel.view.View;
 import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 
@@ -62,8 +60,6 @@ public final class WavePanelImpl implements WavePanel, Focusable {
   /** Main conversation shown in this panel. */
   private TopConversationView main;
 
-  /** The target scroller used to scroll a view into the viewport. */
-  private TargetScroller<? super View> scroller;
 
   private WavePanelImpl(
       DomAsViewProvider views, EventDispatcherPanel panel) {
@@ -101,19 +97,6 @@ public final class WavePanelImpl implements WavePanel, Focusable {
   public void destroy() {
     panel.removeFromParent();
   }
-
-  /** @return the scroller for bringing views in the root thread into view. */
-  public TargetScroller<? super View> getScroller() {
-    Preconditions.checkState(frame != null);
-    // Java's type inference is so bad that even (p ? x : x) fails to compile,
-    // because the compiler treats the two x captures as not substitutable.
-    // Therefore, this method can not be implemented with a ternary.
-    if (scroller == null) {
-      scroller = getContents().getScroller();
-    }
-    return scroller;
-  }
-
 
   @Override
   public DomAsViewProvider getViewProvider() {
@@ -180,7 +163,6 @@ public final class WavePanelImpl implements WavePanel, Focusable {
     frame.remove();
     frame = null;
     main = null;
-    scroller = null;
     fireOnReset();
   }
 

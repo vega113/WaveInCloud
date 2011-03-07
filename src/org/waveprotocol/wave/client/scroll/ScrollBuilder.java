@@ -1,5 +1,5 @@
 /**
- * Copyright 2010 Google Inc.
+ * Copyright 2011 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,25 @@
  */
 package org.waveprotocol.wave.client.scroll;
 
+import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
+import org.waveprotocol.wave.client.wavepanel.view.View;
 
 /**
- * A target-based scroller.
+ * Installs the scrolling feature.
  *
- * @param <M> scroll target, which can be measured by a measurer.
+ * @author hearnden@google.com (David Hearnden)
  */
-public interface TargetScroller<M> {
+public final class ScrollBuilder {
+
+  private ScrollBuilder() {
+  }
 
   /**
-   * Moves the viewport to include {@code target}.
-   *
-   * @param target target to move to.
+   * Installs the scrolling feature.
    */
-  void moveTo(M target);
+  public static SmartScroller<? super View> install(WavePanelImpl panel) {
+    ProxyScrollPanel scroller = ProxyScrollPanel.create(panel);
+    ScrollHandler.install(panel, scroller);
+    return SmartScroller.create(scroller);
+  }
 }

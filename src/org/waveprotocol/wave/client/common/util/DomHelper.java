@@ -629,7 +629,19 @@ public class DomHelper {
     return -1;
   }-*/;
 
-
+  /**
+   * The last child of element this element. If there is no such element, this
+   * returns null.
+   */
+  // GWT forgot to add Element.getLastChildElement(), to be symmetric with
+  // Element.getFirstChildElement().
+  public static native Element getLastChildElement(Element elem) /*-{
+    var child = elem.lastChild;
+    while (child && child.nodeType != 1)
+      child = child.previousSibling;
+    return child;
+  }-*/;  
+  
   /**
    * Gets a list of descendants of e that match the given class name.
    *

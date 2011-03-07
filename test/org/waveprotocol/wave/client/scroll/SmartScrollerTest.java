@@ -21,12 +21,10 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
 import junit.framework.TestCase;
 
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.waveprotocol.wave.client.scroll.TargetScroller.Extent;
 
 /**
  * Tests for {@link SmartScroller}.
@@ -45,10 +43,7 @@ public final class SmartScrollerTest extends TestCase {
   private final static String target = "b";
 
   @Mock
-  private PositionalScroller mockPanel;
-
-  @Mock
-  private SmartScroller.Measurer<String> mockMeasurer;
+  private ScrollPanel<String> mockPanel;
 
   /** Target under test. */
   private SmartScroller<String> scroller;
@@ -56,21 +51,21 @@ public final class SmartScrollerTest extends TestCase {
   @Override
   protected void setUp() {
     MockitoAnnotations.initMocks(this);
-
-    scroller = new SmartScroller<String>(mockPanel, mockMeasurer);
+    scroller = new SmartScroller<String>(mockPanel);
   }
 
   private void prepare() {
     when(mockPanel.getViewport()).thenReturn(Extent.of(100, 200));
-    when(mockMeasurer.extentOf(source)).thenReturn(Extent.of(130, 140));
+    when(mockPanel.extentOf(source)).thenReturn(Extent.of(130, 140));
     scroller.moveTo(source);
-    reset(mockPanel);
+    reset((Object) mockPanel);
     when(mockPanel.getViewport()).thenReturn(Extent.of(100, 200));
+    when(mockPanel.extentOf(source)).thenReturn(Extent.of(130, 140));
   }
 
   public void testInitialViewport() {
     when(mockPanel.getViewport()).thenReturn(Extent.of(100, 200));
-    when(mockMeasurer.extentOf(source)).thenReturn(Extent.of(130, 140));
+    when(mockPanel.extentOf(source)).thenReturn(Extent.of(130, 140));
     scroller.moveTo(source);
     verify(mockPanel).moveTo(100);
   }
@@ -78,7 +73,7 @@ public final class SmartScrollerTest extends TestCase {
   public void testTransitionToVisibleTargetDoesNotMoveViewport() {
     prepare();
 
-    when(mockMeasurer.extentOf(target)).thenReturn(Extent.of(160, 170));
+    when(mockPanel.extentOf(target)).thenReturn(Extent.of(160, 170));
     scroller.moveTo(target);
     verify(mockPanel).moveTo(100);
   }
@@ -86,12 +81,12 @@ public final class SmartScrollerTest extends TestCase {
   public void testTransitionToMassiveTargetPutsTopAtTop() {
     prepare();
 
-    when(mockMeasurer.extentOf(target)).thenReturn(Extent.of(400, 800));
+    when(mockPanel.extentOf(target)).thenReturn(Extent.of(400, 800));
     scroller.moveTo(target);
     verify(mockPanel).moveTo(400);
 
     when(mockPanel.getViewport()).thenReturn(Extent.of(400, 500));
-    when(mockMeasurer.extentOf(target)).thenReturn(Extent.of(-800, -400));
+    when(mockPanel.extentOf(target)).thenReturn(Extent.of(-800, -400));
     scroller.moveTo(target);
     verify(mockPanel).moveTo(-800);
   }
@@ -100,7 +95,7 @@ public final class SmartScrollerTest extends TestCase {
     prepare();
 
     // Eyeline is at 30.
-    when(mockMeasurer.extentOf(target)).thenReturn(Extent.of(300, 320));
+    when(mockPanel.extentOf(target)).thenReturn(Extent.of(300, 320));
     scroller.moveTo(target);
     verify(mockPanel).moveTo(270);
   }
@@ -109,7 +104,7 @@ public final class SmartScrollerTest extends TestCase {
     prepare();
 
     // Eyeline is at 30.
-    when(mockMeasurer.extentOf(target)).thenReturn(Extent.of(180, 220));
+    when(mockPanel.extentOf(target)).thenReturn(Extent.of(180, 220));
     scroller.moveTo(target);
     verify(mockPanel).moveTo(150);
   }
@@ -118,12 +113,12 @@ public final class SmartScrollerTest extends TestCase {
     prepare();
 
     when(mockPanel.getViewport()).thenReturn(Extent.of(-100, 0));
-    when(mockMeasurer.extentOf(target)).thenReturn(Extent.of(300, 320));
+    when(mockPanel.extentOf(target)).thenReturn(Extent.of(300, 320));
     scroller.moveTo(target);
     verify(mockPanel).moveTo(220);
 
     when(mockPanel.getViewport()).thenReturn(Extent.of(220, 320));
-    when(mockMeasurer.extentOf(target)).thenReturn(Extent.of(0, 20));
+    when(mockPanel.extentOf(target)).thenReturn(Extent.of(0, 20));
     scroller.moveTo(target);
     verify(mockPanel).moveTo(0);
   }
@@ -132,9 +127,9 @@ public final class SmartScrollerTest extends TestCase {
     prepare();
 
     // Old target shifts from [130,140] to [170,180]
-    when(mockMeasurer.extentOf(source)).thenReturn(Extent.of(170, 180));
+    when(mockPanel.extentOf(source)).thenReturn(Extent.of(170, 180));
     // Verify that scroller picks up new source location.
-    when(mockMeasurer.extentOf(target)).thenReturn(Extent.of(70, 80));
+    when(mockPanel.extentOf(target)).thenReturn(Extent.of(70, 80));
     scroller.moveTo(target);
     verify(mockPanel).moveTo(0);
   }

@@ -116,7 +116,7 @@
       <!-- GWT history support. -->
       <iframe src="javascript:''" id="__gwt_historyFrame" style="position:absolute;width:0;height:0;border:0" />
       <gxp:eval expr='topBar'/>
-      <div id="app" style="position:fixed; top:33px; right:0px; bottom:0px; left:0px;" />
+      <div id="app" style="position:absolute; top:33px; right:0px; bottom:0px; left:0px;" />
       <noscript>
         <div style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
           Your web browser must have JavaScript enabled

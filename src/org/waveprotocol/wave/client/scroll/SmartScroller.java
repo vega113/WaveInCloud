@@ -17,9 +17,6 @@
 package org.waveprotocol.wave.client.scroll;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.gwt.dom.client.Element;
-
-import org.waveprotocol.wave.client.common.util.MeasurerInstance;
 
 /**
  * A target-based scroller that tries to be smart by making aesthetically
@@ -97,35 +94,31 @@ public final class SmartScroller<M> implements TargetScroller<M> {
     abstract double move(Extent from, Extent target, Extent viewport);
   }
 
-  private final PositionalScroller panel;
-  private final Measurer<? super M> measurer;
+  private final ScrollPanel<? super M> scroller;
 
   /** Last element brought in to view. Used for smart scrolling. */
   private M previousTarget;
 
   @VisibleForTesting
-  SmartScroller(PositionalScroller panel, Measurer<? super M> measurer) {
-    this.panel = panel;
-    this.measurer = measurer;
+  SmartScroller(ScrollPanel<? super M> scroller) {
+    this.scroller = scroller;
   }
 
   /**
-   * Creates a scroller for a DOM element. It is assumed that the given element
-   * has appropriate CSS constraints that make it scrollable.
+   * Creates a smart scroller for a scroll panel.
    */
-  public static SmartScroller<Element> create(Element e) {
-    ScrollPanel panel = new ScrollPanel(e, MeasurerInstance.get());
-    return new SmartScroller<Element>(panel, panel);
+  public static <M> SmartScroller<M> create(ScrollPanel<? super M> panel) {
+    return new SmartScroller<M>(panel);
   }
 
   @Override
   public void moveTo(M target) {
     ScrollStrategy style = ScrollStrategy.SMART;
 
-    Extent from = previousTarget != null ? measurer.extentOf(previousTarget) : null;
-    Extent to = measurer.extentOf(target);
-    Extent viewport = panel.getViewport();
-    panel.moveTo(style.move(from, to, viewport));
+    Extent from = previousTarget != null ? scroller.extentOf(previousTarget) : null;
+    Extent to = scroller.extentOf(target);
+    Extent viewport = scroller.getViewport();
+    scroller.moveTo(style.move(from, to, viewport));
 
     previousTarget = target;
   }

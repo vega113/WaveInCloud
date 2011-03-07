@@ -18,7 +18,7 @@ package org.waveprotocol.wave.client.wavepanel.view.fake;
 
 import com.google.gwt.dom.client.Element;
 
-import org.waveprotocol.wave.client.scroll.TargetScroller;
+import org.waveprotocol.wave.client.scroll.ScrollPanel;
 import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 
@@ -34,7 +34,7 @@ public final class FakeTopConversationView extends FakeConversationView
   }
 
   @Override
-  public TargetScroller<? super View> getScroller() {
+  public ScrollPanel<? super View> getScroller() {
     throw new UnsupportedOperationException("not yet faked");
   }
 

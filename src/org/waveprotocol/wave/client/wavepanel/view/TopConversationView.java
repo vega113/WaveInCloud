@@ -18,14 +18,14 @@ package org.waveprotocol.wave.client.wavepanel.view;
 
 import com.google.gwt.dom.client.Element;
 
-import org.waveprotocol.wave.client.scroll.TargetScroller;
+import org.waveprotocol.wave.client.scroll.ScrollPanel;
 
 /**
  * View of the main conversation in a wave.
  *
  */
 public interface TopConversationView extends ConversationView {
-  TargetScroller<? super View> getScroller();
+  ScrollPanel<? super View> getScroller();
 
   void setToolbar(Element toolbar);
 }

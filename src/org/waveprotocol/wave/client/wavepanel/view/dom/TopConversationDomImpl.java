@@ -18,14 +18,13 @@ package org.waveprotocol.wave.client.wavepanel.view.dom;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
-import org.waveprotocol.wave.client.scroll.TargetScroller;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.TopConversationViewBuilder.Components;
 
 /**
  * Dom impl of a conversation view.
  *
  */
-public abstract class TopConversationDomImpl implements DomView {
+public final class TopConversationDomImpl implements DomView {
 
   /** The DOM element of this view. */
   private final Element self;
@@ -44,6 +43,10 @@ public abstract class TopConversationDomImpl implements DomView {
   TopConversationDomImpl(Element e, String id) {
     this.self = e;
     this.id = id;
+  }
+
+  public static TopConversationDomImpl of(Element e) {
+    return new TopConversationDomImpl(e, e.getId());
   }
 
   //
@@ -81,12 +84,6 @@ public abstract class TopConversationDomImpl implements DomView {
   public Element getParticipants() {
     return self.getFirstChildElement();
   }
-
-  /**
-   * @return The target scroller used to scroll a element inside the root thread
-   *         into the viewport.
-   */
-  public abstract TargetScroller<? super Element> getScroller();
 
   public Element getThread() {
     return getThreadContainer().getFirstChildElement();

@@ -21,12 +21,15 @@ import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.common.util.LogicalPanel;
+import org.waveprotocol.wave.client.scroll.ScrollBuilder;
+import org.waveprotocol.wave.client.scroll.SmartScroller;
 import org.waveprotocol.wave.client.wavepanel.event.FocusManager;
 import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.impl.collapse.CollapseBuilder;
 import org.waveprotocol.wave.client.wavepanel.impl.collapse.CollapsePresenter;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFrameBuilder;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
+import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.FullStructure;
 import org.waveprotocol.wave.client.wavepanel.view.dom.UpgradeableDomAsViewProvider;
 
@@ -145,7 +148,8 @@ public interface StageOne {
 
     /** @return the focus feature. Subclasses may override. */
     protected FocusFramePresenter createFocusPresenter() {
-      return FocusFrameBuilder.createAndInstallIn(getWavePanel());
+      SmartScroller<? super BlipView> scroller = ScrollBuilder.install(getWavePanel());
+      return FocusFrameBuilder.createAndInstallIn(getWavePanel(), scroller);
     }
 
     /** @return the collapse feature. Subclasses may override. */

@@ -16,38 +16,28 @@
  */
 package org.waveprotocol.wave.client.scroll;
 
-import com.google.gwt.dom.client.Element;
-
-import org.waveprotocol.wave.client.common.util.Measurer;
-import org.waveprotocol.wave.client.scroll.TargetScroller.Extent;
 
 /**
- * Reveals the scrolling capabilities of a DOM element.
+ * Reveals the scrolling capabilities of a view container.
  *
+ * @param <T> type of views within this container
  */
-public final class ScrollPanel implements TargetScroller.Measurer<Element>, PositionalScroller {
-  private final Element element;
-  private final Measurer measurer;
+public interface ScrollPanel<T> {
+  /**
+   * Moves the viewport so that {@code location} is at the viewport top.
+   *
+   * @param location content-space location to appear at the top of the
+   *        viewport.
+   */
+  void moveTo(double location);
 
-  ScrollPanel(Element element, Measurer measurer) {
-    this.element = element;
-    this.measurer = measurer;
-  }
+  /** @return the viewport extent of this scroller. */
+  Extent getViewport();
 
-  @Override
-  public Extent getViewport() {
-    int top = element.getScrollTop();
-    return Extent.of(top, top + measurer.height(element));
-  }
+  /** @return the content extent of this scroller. */
+  Extent getContent();
 
-  @Override
-  public Extent extentOf(Element target) {
-    int top = element.getScrollTop();
-    return Extent.of(measurer.top(element, target) + top, measurer.bottom(element, target) + top);
-  }
+  /** @return the extent of a view within this panel. */
+  Extent extentOf(T view);
 
-  @Override
-  public void moveTo(double location) {
-    element.setScrollTop((int) location);
-  }
 }

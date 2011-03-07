@@ -21,10 +21,10 @@ import org.waveprotocol.wave.client.wavepanel.view.AnchorView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMenuItemView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
+import org.waveprotocol.wave.client.wavepanel.view.ContinuationIndicatorView;
 import org.waveprotocol.wave.client.wavepanel.view.ConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.FrameView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineConversationView;
-import org.waveprotocol.wave.client.wavepanel.view.ContinuationIndicatorView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.ParticipantView;
 import org.waveprotocol.wave.client.wavepanel.view.ParticipantsView;
@@ -48,7 +48,7 @@ public interface DomAsViewProvider {
 
   /** @return {@code source} exposed as an inline thread. */
   InlineThreadView asInlineThread(Element source);
-  
+
   /** @return {@code source} exposed as an inline thread indicator. */
   ContinuationIndicatorView asContinuationIndicator(Element source);
 
@@ -57,7 +57,7 @@ public interface DomAsViewProvider {
 
   /** @return {@code source} exposed as a root thread. */
   RootThreadView asRootThread(Element source);
-  
+
   /** @return {@code source} exposed as a reply box. */
   ReplyBoxView asReplyBox(Element source);
 
