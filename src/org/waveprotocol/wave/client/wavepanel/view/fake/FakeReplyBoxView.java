@@ -26,11 +26,11 @@ public class FakeReplyBoxView implements ReplyBoxView {
   private final FakeRootThreadView threadView;
   private boolean enabled;
   private String avatarImageUrl;
-  
-  public FakeReplyBoxView(FakeRootThreadView threadView) {
+
+  FakeReplyBoxView(FakeRootThreadView threadView) {
     this.threadView = threadView;
   }
-  
+
   @Override
   public Type getType() {
     return Type.REPLY_BOX;
@@ -55,7 +55,7 @@ public class FakeReplyBoxView implements ReplyBoxView {
   public void disable() {
     this.enabled = false;
   }
-  
+
   protected boolean isEnabled() {
     return this.enabled;
   }
@@ -64,7 +64,7 @@ public class FakeReplyBoxView implements ReplyBoxView {
   public void setAvatarImageUrl(String imageUrl) {
     this.avatarImageUrl = imageUrl;
   }
-  
+
   protected String getAvatarImageUrl() {
     return this.avatarImageUrl;
   }

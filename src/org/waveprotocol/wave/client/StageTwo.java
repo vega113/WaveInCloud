@@ -65,8 +65,8 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProviderImpl;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.DomRenderer;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.WavePanelResourceLoader;
-import org.waveprotocol.wave.client.wavepanel.view.dom.full.WaveRenderer;
 import org.waveprotocol.wave.common.logging.LoggerBundle;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexer;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexerImpl;
@@ -210,7 +210,7 @@ public interface StageTwo {
 
     private ViewIdMapper viewIdMapper;
     private ShallowBlipRenderer blipDetailer;
-    private WaveRenderer renderer;
+    private DomRenderer renderer;
     private BlipQueueRenderer queueRenderer;
     private ModelAsViewProvider modelAsView;
     private DiffController diffController;
@@ -278,7 +278,7 @@ public interface StageTwo {
       return blipDetailer == null ? blipDetailer = createBlipDetailer() : blipDetailer;
     }
 
-    protected final WaveRenderer getRenderer() {
+    protected final DomRenderer getRenderer() {
       return renderer == null ? renderer = createRenderer() : renderer;
     }
 
@@ -558,13 +558,11 @@ public interface StageTwo {
           .use(Gadget.install(getProfileManager(), getSupplement(), getSignedInUser()))
           .build();
 
-      LiveConversationViewRenderer live = new LiveConversationViewRenderer(getBlipDetailer(),
-          getModelAsViewProvider(),
-          replyManager,
-          getConversations(),
-          getSupplement(),
-          getProfileManager(),
-          getThreadReadStateMonitor());
+      LiveConversationViewRenderer live =
+          LiveConversationViewRenderer.create(SchedulerInstance.getLowPriorityTimer(),
+              getConversations(), getModelAsViewProvider(), getBlipDetailer(), replyManager,
+              getThreadReadStateMonitor(), getProfileManager(), getSupplement());
+      live.init();
 
       BlipPager pager = BlipPager.create(
           getDocumentRegistry(), doodads, domAsView, getModelAsViewProvider(), getBlipDetailer(),
@@ -580,7 +578,7 @@ public interface StageTwo {
       return BlipQueueRenderer.create(pagingHandler);
     }
 
-    protected WaveRenderer createRenderer() {
+    protected DomRenderer createRenderer() {
       return FullDomWaveRendererImpl.create(getConversations(), getProfileManager(),
           getBlipDetailer(), getViewIdMapper(), getBlipQueue(), getThreadReadStateMonitor());
     }

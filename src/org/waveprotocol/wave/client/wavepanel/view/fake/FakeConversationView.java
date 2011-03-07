@@ -17,6 +17,7 @@
 package org.waveprotocol.wave.client.wavepanel.view.fake;
 
 import org.waveprotocol.wave.client.wavepanel.view.ConversationView;
+import org.waveprotocol.wave.client.wavepanel.view.ParticipantsView;
 
 /**
  * Fake, pojo implementation of a conversation view.
@@ -25,13 +26,19 @@ import org.waveprotocol.wave.client.wavepanel.view.ConversationView;
 public abstract class FakeConversationView implements ConversationView {
   protected final FakeRootThreadView thread;
 
-  public FakeConversationView() {
-    this.thread = new FakeRootThreadView(this);
+  FakeConversationView(FakeRootThreadView thread) {
+    this.thread = thread;
+    thread.setContainer(this);
   }
 
   @Override
   public FakeRootThreadView getRootThread() {
     return thread;
+  }
+
+  @Override
+  public ParticipantsView getParticipants() {
+    throw new UnsupportedOperationException("not yet faked");
   }
 
   void remove(FakeRootThreadView thread) {

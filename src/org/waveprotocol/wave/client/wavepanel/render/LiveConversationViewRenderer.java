@@ -18,6 +18,7 @@ package org.waveprotocol.wave.client.wavepanel.render;
 import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.client.account.ProfileManager;
+import org.waveprotocol.wave.client.scheduler.TimerService;
 import org.waveprotocol.wave.client.state.ThreadReadStateMonitor;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
@@ -42,60 +43,79 @@ import org.waveprotocol.wave.model.util.IdentityMap;
 import org.waveprotocol.wave.model.util.IdentityMap.ProcV;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
-import java.util.Iterator;
-
 /**
  * Renderer the conversation update.
  *
  */
-public class LiveConversationViewRenderer implements ObservableConversationView.Listener,
-    PagingHandler {
+public class LiveConversationViewRenderer
+    implements ObservableConversationView.Listener, PagingHandler {
 
-  private class ConversationUpdater implements ObservableConversation.Listener,
+  private class LiveConversationRenderer implements ObservableConversation.Listener,
       ObservableConversation.AnchorListener, PagingHandler {
-    private final ObservableConversation conv;
-    private final LiveProfileRenderer profileUpdateMonitor;
-    private final ThreadReadStateMonitor readMonitor;
+    private final ObservableConversation conversation;
+    private final LiveProfileRenderer profileRenderer;
 
-    /**
-     * @param conv
-     */
-    ConversationUpdater(ObservableConversation conv, ProfileManager profileManager,
-        ThreadReadStateMonitor readMonitor) {
-      this.conv = conv;
-      this.profileUpdateMonitor =
-          new LiveProfileRenderer(conv, profileManager, viewProvider, shallowBlipRenderer);
-      this.readMonitor = readMonitor;
+    LiveConversationRenderer(
+        ObservableConversation conversation, LiveProfileRenderer profileRenderer) {
+      this.conversation = conversation;
+      this.profileRenderer = profileRenderer;
     }
 
-    void init() {
-      conv.addListener((ObservableConversation.AnchorListener) this);
-      conv.addListener((ObservableConversation.Listener) this);
-      profileUpdateMonitor.setUpParticipantsUpdate(convView);
+    private LiveConversationRenderer init() {
+      profileRenderer.init();
+      // Note: blip contributions are only monitored once a blip is paged in.
+      for (ParticipantId participant : conversation.getParticipantIds()) {
+        profileRenderer.monitorParticipation(conversation, participant);
+      }
+      conversation.addListener((ObservableConversation.AnchorListener) this);
+      conversation.addListener((ObservableConversation.Listener) this);
+      return this;
     }
 
-    void destroy() {
-      conv.removeListener((ObservableConversation.AnchorListener) this);
-      conv.removeListener((ObservableConversation.Listener) this);
-      profileUpdateMonitor.destroy();
+    public void destroy() {
+      conversation.removeListener((ObservableConversation.AnchorListener) this);
+      conversation.removeListener((ObservableConversation.Listener) this);
+      profileRenderer.destroy();
+    }
+
+    @Override
+    public void onParticipantAdded(ParticipantId participant) {
+      ParticipantsView participantUi = views.getParticipantsView(conversation);
+      // Note: this does not insert the participant in the correct order.
+      participantUi.appendParticipant(conversation, participant);
+      profileRenderer.monitorParticipation(conversation, participant);
+    }
+
+    @Override
+    public void onParticipantRemoved(ParticipantId participant) {
+      ParticipantView participantUi = views.getParticipantView(conversation, participant);
+      if (participantUi != null) {
+        participantUi.remove();
+      }
+      profileRenderer.unmonitorParticipation(conversation, participant);
     }
 
     @Override
     public void onThreadAdded(ObservableConversationThread thread) {
       ObservableConversationBlip parentBlip = thread.getParentBlip();
-      BlipView blipView = viewProvider.getBlipView(parentBlip);
+      BlipView blipView = views.getBlipView(parentBlip);
 
       if (blipView != null) {
-        ConversationThread next = findSuccessor(thread, parentBlip.getAllReplyThreads());
-        replyHandler.presentBefore(blipView, next, thread);
+        ConversationThread next = findBefore(thread, parentBlip.getAllReplyThreads());
+        replyHandler.presentAfter(blipView, next, thread);
       } else {
         throw new IllegalStateException("blipView not present");
       }
     }
 
     @Override
+    public void onInlineThreadAdded(ObservableConversationThread thread, int location) {
+      // inline threads are ignored for now.
+    }
+
+    @Override
     public void onThreadDeleted(ObservableConversationThread thread) {
-      InlineThreadView threadView = viewProvider.getInlineThreadView(thread);
+      InlineThreadView threadView = views.getInlineThreadView(thread);
       if (threadView != null) {
         threadView.remove();
       }
@@ -106,14 +126,11 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
       ConversationThread parentThread = blip.getThread();
       ThreadView threadView = viewOf(parentThread);
       if (threadView != null) {
-        // XXX(user): this is incorrect for compound additions, which are
-        // processed first to last in document order, so needs to be changed to
-        // predecessor-based insertion.
-        ConversationBlip ref = findSuccessor(blip, parentThread.getBlips());
+        ConversationBlip ref = findBefore(blip, parentThread.getBlips());
         BlipView refView = viewOf(ref);
 
         // Render the new blip.
-        threadView.insertBlipBefore(refView, blip);
+        threadView.insertBlipAfter(refView, blip);
         bubbleBlipCountUpdate(blip);
       } else {
         throw new IllegalStateException("threadView not present");
@@ -122,12 +139,14 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
 
     @Override
     public void onBlipDeleted(ObservableConversationBlip blip) {
-      BlipView blipView = viewProvider.getBlipView(blip);
+      BlipView blipView = views.getBlipView(blip);
       if (blipView != null) {
         // TODO(user): Hide parent thread if it becomes empty.
         blipView.remove();
       }
-      stopListeningToBlip(blip);
+      for (ParticipantId contributor : blip.getContributorIds()) {
+        profileRenderer.unmonitorContribution(blip, contributor);
+      }
       bubbleBlipCountUpdate(blip);
     }
 
@@ -141,86 +160,43 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
       }
     }
 
-    /**
-     * @param <T>
-     * @param cur The object to look for.
-     * @param itr The list of iterable to find the object.
-     *
-     * @return the object that is after the current object in the list of
-     *         iterable.
-     */
-    private <T> T findSuccessor(T cur, Iterable<? extends T> itr) {
-      for (Iterator<? extends T> i = itr.iterator(); i.hasNext(); i.next()) {
-        if (i.next() == cur) {
-          return i.hasNext() ? i.next() : null;
-        }
-      }
-      return null;
+    @Override
+    public void onBlipContributorAdded(ObservableConversationBlip blip, ParticipantId contributor) {
+      profileRenderer.monitorContribution(blip, contributor);
     }
 
     @Override
-    public void onBlipContributorAdded(ObservableConversationBlip blip, ParticipantId c) {
-      profileUpdateMonitor.addContributorToMonitor(blip, c);
+    public void onBlipContributorRemoved(
+        ObservableConversationBlip blip, ParticipantId contributor) {
+      profileRenderer.unmonitorContribution(blip, contributor);
     }
-
-    @Override
-    public void onBlipContributorRemoved(ObservableConversationBlip blip, ParticipantId c) {
-      profileUpdateMonitor.removeContributorToMonitor(blip, c);
-    }
-
 
     @Override
     public void onBlipSumbitted(ObservableConversationBlip blip) {
     }
 
     @Override
-    public void onBlipTimestampChanged(ObservableConversationBlip blip, long oldTimestamp,
-        long newTimestamp) {
-      BlipView blipUi = viewProvider.getBlipView(blip);
+    public void onBlipTimestampChanged(
+        ObservableConversationBlip blip, long oldTimestamp, long newTimestamp) {
+      BlipView blipUi = views.getBlipView(blip);
       BlipMetaView metaUi = blipUi != null ? blipUi.getMeta() : null;
       if (metaUi != null) {
-        shallowBlipRenderer.renderTime(blip, metaUi);
+        blipRenderer.renderTime(blip, metaUi);
       }
-    }
-
-    @Override
-    public void onInlineThreadAdded(ObservableConversationThread thread, int location) {
-      // inline threads are ignored for now.
-    }
-
-    @Override
-    public void onParticipantAdded(ParticipantId participant) {
-      ParticipantsView participantUi = viewProvider.getParticipantsView(conv);
-      participantUi.appendParticipant(conv, participant);
-      profileUpdateMonitor.addParticipantToMonitor(participant);
-    }
-
-    @Override
-    public void onParticipantRemoved(ParticipantId participant) {
-      ParticipantView participantUi = viewProvider.getParticipantView(conv, participant);
-      if (participantUi != null) {
-        participantUi.remove();
-      }
-      profileUpdateMonitor.removeParticipantToMonitor(participant);
     }
 
     @Override
     public void pageIn(ConversationBlip blip) {
       // listen to the contributors on the blip
       for (ParticipantId contributor : blip.getContributorIds()) {
-        profileUpdateMonitor.addContributorToMonitor(blip, contributor);
+        profileRenderer.monitorContribution(blip, contributor);
       }
     }
 
     @Override
     public void pageOut(ConversationBlip blip) {
-      stopListeningToBlip(blip);
-    }
-
-    private void stopListeningToBlip(ConversationBlip blip) {
-      // stop listen to the contributors on the blip
       for (ParticipantId contributor : blip.getContributorIds()) {
-        profileUpdateMonitor.removeContributorToMonitor(blip, contributor);
+        profileRenderer.unmonitorContribution(blip, contributor);
       }
     }
 
@@ -232,7 +208,7 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
       // conversation-view-move mechanism.
       if (oldAnchor != null) {
         // Remove old view.
-        ConversationView oldUi = viewOf(conv);
+        ConversationView oldUi = viewOf(conversation);
         if (oldUi != null) {
           oldUi.remove();
         }
@@ -241,56 +217,77 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
         // Insert new view.
         BlipView containerUi = viewOf(newAnchor.getBlip());
         if (containerUi != null) {
-          ConversationView convUi = containerUi.insertConversationBefore(null, conv);
+          ConversationView convUi = containerUi.insertConversationBefore(null, conversation);
         }
       }
     }
+
+    /**
+     * Finds the predecessor of an item in an iterable. This method runs in
+     * linear time.
+     */
+    private <T> T findBefore(T o, Iterable<? extends T> xs) {
+      T last = null;
+      for (T x : xs) {
+        if (x.equals(o)) {
+          return last;
+        }
+        last = x;
+      }
+      throw new IllegalArgumentException("Item " + o + " not found in " + xs);
+    }
   }
 
-  private final ShallowBlipRenderer shallowBlipRenderer;
-  private final ModelAsViewProvider viewProvider;
-  private final ObservableConversationView convView;
+  private final TimerService timer;
+  private final ObservableConversationView wave;
+  private final ModelAsViewProvider views;
+  private final ShallowBlipRenderer blipRenderer;
   private final ReplyManager replyHandler;
-  private final UpdaterFactory updaterFactory;
+  private final ThreadReadStateMonitor readMonitor;
+  private final ProfileManager profiles;
   private final LiveSupplementRenderer supplementRenderer;
-
-  private final IdentityMap<Conversation, ConversationUpdater> conversationUpdaters =
+  private final IdentityMap<Conversation, LiveConversationRenderer> conversationRenderers =
       CollectionUtils.createIdentityMap();
 
-  interface UpdaterFactory {
-    ConversationUpdater create(ObservableConversation c);
+  LiveConversationViewRenderer(TimerService timer, ObservableConversationView wave,
+      ModelAsViewProvider views, ShallowBlipRenderer blipRenderer, ReplyManager replyHandler,
+      ThreadReadStateMonitor readMonitor, ProfileManager profiles,
+      LiveSupplementRenderer supplementRenderer) {
+    this.timer = timer;
+    this.wave = wave;
+    this.views = views;
+    this.blipRenderer = blipRenderer;
+    this.replyHandler = replyHandler;
+    this.readMonitor = readMonitor;
+    this.profiles = profiles;
+    this.supplementRenderer = supplementRenderer;
   }
 
   /**
+   * Creates a live renderer for a wave. The renderer will start incremental
+   * updates of an existing rendering once it is {@link #init initialized}.
    */
-  public LiveConversationViewRenderer(ShallowBlipRenderer shallowBlipRenderer,
-      ModelAsViewProvider viewProvider,
-      ReplyManager replyHandler,
-      ObservableConversationView convView,
-      ObservableSupplementedWave supplement,
-      final ProfileManager profileManager,
-      final ThreadReadStateMonitor readMonitor) {
-    this.shallowBlipRenderer = shallowBlipRenderer;
-    this.viewProvider = viewProvider;
-    this.replyHandler = replyHandler;
-    this.convView = convView;
+  public static LiveConversationViewRenderer create(TimerService timer,
+      ObservableConversationView wave, ModelAsViewProvider views, ShallowBlipRenderer blipRenderer,
+      ReplyManager replyHandler, ThreadReadStateMonitor readMonitor, ProfileManager profiles,
+      ObservableSupplementedWave supplement) {
+    LiveSupplementRenderer supplementRenderer =
+        LiveSupplementRenderer.create(supplement, views, readMonitor);
+    return new LiveConversationViewRenderer(
+        timer, wave, views, blipRenderer, replyHandler, readMonitor, profiles, supplementRenderer);
+  }
 
-    // TODO(hearnden/reuben): DI this with a public static factory method, not a
-    // public constructor. Or, make the profile monitor cross-conversation, so
-    // that participantManager does not need to be passed around.
-    this.updaterFactory = new UpdaterFactory() {
-      @Override
-      public ConversationUpdater create(ObservableConversation c) {
-        return new ConversationUpdater(c, profileManager, readMonitor);
-      }
-    };
-    this.supplementRenderer = LiveSupplementRenderer.create(supplement, viewProvider, readMonitor);
-
-    // Attach to existing conversations, then keep it live.
-    for (ObservableConversation conv : convView.getConversations()) {
+  /**
+   * Observes the conversations to which this renderer is bound, updating their
+   * renderings as the conversation changes.
+   */
+  public void init() {
+    supplementRenderer.init();
+    for (ObservableConversation conv : wave.getConversations()) {
       observe(conv);
     }
-    convView.addListener(this);
+
+    wave.addListener(this);
   }
 
   /**
@@ -298,9 +295,10 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
    * after a call to this method.
    */
   public void destroy() {
-    conversationUpdaters.each(new ProcV<Conversation, ConversationUpdater>() {
+    wave.removeListener(this);
+    conversationRenderers.each(new ProcV<Conversation, LiveConversationRenderer>() {
       @Override
-      public void apply(Conversation key, ConversationUpdater value) {
+      public void apply(Conversation _, LiveConversationRenderer value) {
         value.destroy();
       }
     });
@@ -310,55 +308,57 @@ public class LiveConversationViewRenderer implements ObservableConversationView.
   /**
    * Observes a conversation, updating its view as it changes.
    *
-   * @param c conversation to observe
+   * @param conversation conversation to observe
    */
-  private void observe(ObservableConversation c) {
-    ConversationUpdater updater = updaterFactory.create(c);
-    updater.init();
-    conversationUpdaters.put(c, updater);
+  private void observe(ObservableConversation conversation) {
+    LiveProfileRenderer profileRenderer =
+        LiveProfileRenderer.create(timer, profiles, views, blipRenderer);
+    LiveConversationRenderer renderer = new LiveConversationRenderer(conversation, profileRenderer);
+    renderer.init();
+    conversationRenderers.put(conversation, renderer);
   }
 
   /**
    * Stops observing a conversation, releasing any resources that were used to
    * observe it.
    *
-   * @param c conversation to stop observing
+   * @param conversation conversation to stop observing
    */
-  private void unobserve(ObservableConversation c) {
-    ConversationUpdater updater = conversationUpdaters.get(c);
-    if (updater != null) {
-      conversationUpdaters.remove(c);
-      updater.destroy();
+  private void unobserve(ObservableConversation conversation) {
+    LiveConversationRenderer renderer = conversationRenderers.get(conversation);
+    if (renderer != null) {
+      conversationRenderers.remove(conversation);
+      renderer.destroy();
     }
   }
 
   private ThreadView viewOf(ConversationThread thread) {
     return thread == null ? null // \u2620
         : (thread.getConversation().getRootThread() == thread) // \u2620
-            ? viewProvider.getRootThreadView(thread) // \u2620
-            : viewProvider.getInlineThreadView(thread);
+            ? views.getRootThreadView(thread) // \u2620
+            : views.getInlineThreadView(thread);
   }
 
   private BlipView viewOf(ConversationBlip ref) {
-    return ref == null ? null : viewProvider.getBlipView(ref);
+    return ref == null ? null : views.getBlipView(ref);
   }
 
   private ConversationView viewOf(Conversation ref) {
-    return ref == null ? null : viewProvider.getConversationView(ref);
+    return ref == null ? null : views.getConversationView(ref);
   }
 
   @Override
   public void pageIn(ConversationBlip blip) {
-    ConversationUpdater waveletListener = conversationUpdaters.get(blip.getConversation());
-    Preconditions.checkState(waveletListener != null);
-    waveletListener.pageIn(blip);
+    LiveConversationRenderer renderer = conversationRenderers.get(blip.getConversation());
+    Preconditions.checkState(renderer != null);
+    renderer.pageIn(blip);
   }
 
   @Override
   public void pageOut(ConversationBlip blip) {
-    ConversationUpdater waveletListener = conversationUpdaters.get(blip.getConversation());
-    Preconditions.checkState(waveletListener != null);
-    waveletListener.pageOut(blip);
+    LiveConversationRenderer renderer = conversationRenderers.get(blip.getConversation());
+    Preconditions.checkState(renderer != null);
+    renderer.pageOut(blip);
   }
 
   //

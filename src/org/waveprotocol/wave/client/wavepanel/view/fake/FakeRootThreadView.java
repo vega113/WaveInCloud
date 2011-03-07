@@ -16,8 +16,9 @@
  */
 package org.waveprotocol.wave.client.wavepanel.view.fake;
 
-import org.waveprotocol.wave.client.wavepanel.view.ReplyBoxView;
+import org.waveprotocol.wave.client.common.util.LinkedSequence;
 import org.waveprotocol.wave.client.wavepanel.view.ConversationView;
+import org.waveprotocol.wave.client.wavepanel.view.ReplyBoxView;
 import org.waveprotocol.wave.client.wavepanel.view.RootThreadView;
 
 /**
@@ -25,13 +26,16 @@ import org.waveprotocol.wave.client.wavepanel.view.RootThreadView;
  */
 public final class FakeRootThreadView extends FakeThreadView implements RootThreadView {
 
-  private final FakeConversationView convContainer;
   private final FakeReplyBoxView replyIndicator;
+  private FakeConversationView container;
 
-  public FakeRootThreadView(FakeConversationView container) {
-    super();
-    this.convContainer = container;
+  FakeRootThreadView(FakeRenderer renderer, LinkedSequence<FakeBlipView> blips) {
+    super(renderer, blips);
     this.replyIndicator = new FakeReplyBoxView(this);
+  }
+
+  void setContainer(FakeConversationView convContainer) {
+    this.container = convContainer;
   }
 
   @Override
@@ -41,12 +45,12 @@ public final class FakeRootThreadView extends FakeThreadView implements RootThre
 
   @Override
   public ConversationView getParent() {
-    return convContainer;
+    return container;
   }
 
   @Override
   public void remove() {
-    convContainer.remove(this);
+    container.remove(this);
   }
 
   @Override

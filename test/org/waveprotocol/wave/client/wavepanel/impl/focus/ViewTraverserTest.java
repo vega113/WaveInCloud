@@ -29,8 +29,13 @@ import org.waveprotocol.wave.client.wavepanel.view.fake.FakeAnchor;
 import org.waveprotocol.wave.client.wavepanel.view.fake.FakeBlipView;
 import org.waveprotocol.wave.client.wavepanel.view.fake.FakeConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.fake.FakeInlineThreadView;
+import org.waveprotocol.wave.client.wavepanel.view.fake.FakeRenderer;
 import org.waveprotocol.wave.client.wavepanel.view.fake.FakeThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.fake.FakeTopConversationView;
+import org.waveprotocol.wave.model.conversation.Conversation;
+import org.waveprotocol.wave.model.conversation.ConversationBlip;
+import org.waveprotocol.wave.model.conversation.ConversationThread;
+import org.waveprotocol.wave.model.conversation.ObservableConversationView;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -47,7 +52,7 @@ public class ViewTraverserTest extends TestCase {
    * Knows how to populate the structure of, and verify the travesral order of,
    * threads in a blip.
    */
-  static class BlipBuilder {
+  class BlipBuilder {
     private final ThreadBuilder[] anchored;
     private final ThreadBuilder[] unanchored;
     private final ConversationBuilder[] privates;
@@ -59,21 +64,26 @@ public class ViewTraverserTest extends TestCase {
       this.privates = privates;
     }
 
-    void populate(FakeBlipView blip) {
-      BlipMetaView meta = blip.getMeta();
+    void populate(ConversationBlip blip, FakeBlipView blipUi) {
       for (ThreadBuilder threadBuilder : unanchored) {
-        threadBuilder.populate(blip.insertDefaultAnchorBefore(null, null).getThread());
+        ConversationThread thread = blip.appendReplyThread();
+        threadBuilder.populate(thread, blipUi.insertDefaultAnchorBefore(null, thread).getThread());
       }
       for (ThreadBuilder threadBuilder : anchored) {
-        FakeAnchor anchor = blip.insertDefaultAnchorBefore(null, null);
-        FakeInlineThreadView thread = anchor.getThread();
-        threadBuilder.populate(thread);
-        anchor.detach(thread);
-        blip.getMeta().createInlineAnchorBefore(null).attach(thread);
+        ConversationThread thread = blip.appendInlineReplyThread(blip.getContent().size() - 1);
+        FakeAnchor anchor = blipUi.insertDefaultAnchorBefore(null, thread);
+        FakeInlineThreadView threadUi = anchor.getThread();
+        threadBuilder.populate(thread, threadUi);
+        anchor.detach(threadUi);
+        blipUi.getMeta().createInlineAnchorBefore(null, thread).attach(threadUi);
       }
       for (ConversationBuilder conversationBuilder : privates) {
-        conversationBuilder.populate(blip.insertConversationBefore(null, null));
-      }
+        Conversation conversation = wave.createConversation();
+        conversation.setAnchor(blip.getConversation().createAnchor(blip));
+        assert conversation.hasAnchor();
+        conversationBuilder.populate(
+            conversation, blipUi.insertConversationBefore(null, conversation));
+     }
     }
 
     void verify(Queue<BlipView> blips, BlipView blip) {
@@ -124,16 +134,18 @@ public class ViewTraverserTest extends TestCase {
    * Knows how to populate the structure of, and verify the travesral order of,
    * blips in a thread.
    */
-  static class ThreadBuilder {
+  class ThreadBuilder {
     private final BlipBuilder[] blipBuilders;
 
     ThreadBuilder(BlipBuilder... blipBuilders) {
       this.blipBuilders = blipBuilders;
     }
 
-    void populate(FakeThreadView thread) {
+    void populate(ConversationThread thread, FakeThreadView threadUi) {
       for (BlipBuilder blipBuilder : blipBuilders) {
-        blipBuilder.populate(thread.insertBlipBefore(null, null));
+        ConversationBlip blip = thread.appendBlip();
+        blip.getContent().insertText(blip.getContent().size() - 1, "Blip " + blipCount++);
+        blipBuilder.populate(blip, threadUi.insertBlipBefore(null, blip));
       }
     }
 
@@ -152,15 +164,15 @@ public class ViewTraverserTest extends TestCase {
    * Knows how to populate the structure of, and verify the travesral order of,
    * an inline conversation.
    */
-  static class ConversationBuilder {
+  class ConversationBuilder {
     private final ThreadBuilder rootBuilder;
 
     ConversationBuilder(ThreadBuilder rootBuilder) {
       this.rootBuilder = rootBuilder;
     }
 
-    void populate(FakeConversationView conversation) {
-      rootBuilder.populate(conversation.getRootThread());
+    void populate(Conversation conversation, FakeConversationView conversationUi) {
+      rootBuilder.populate(conversation.getRootThread(), conversationUi.getRootThread());
     }
 
     void verify(Queue<BlipView> blips, ConversationView conversation) {
@@ -172,9 +184,12 @@ public class ViewTraverserTest extends TestCase {
   private ViewTraverser traverser;
 
   /** View to build and traverse. */
+  private FakeRenderer renderer;
+  private ObservableConversationView wave;
   private FakeTopConversationView c;
+  private int blipCount;
 
-  private static ConversationBuilder createSimpleSample() {
+  private ConversationBuilder createSimpleSample() {
     return conversation(
         thread(
             leafBlip(),
@@ -195,7 +210,7 @@ public class ViewTraverserTest extends TestCase {
     );
   }
 
-  private static ConversationBuilder createEmptyThreadSample() {
+  private ConversationBuilder createEmptyThreadSample() {
     return conversation(
         thread(
             leafBlip(),
@@ -218,7 +233,7 @@ public class ViewTraverserTest extends TestCase {
     );
   }
 
-  private static ConversationBuilder createComplexSample() {
+  private ConversationBuilder createComplexSample() {
     return conversation(
         thread(
             leafBlip(),
@@ -309,74 +324,77 @@ public class ViewTraverserTest extends TestCase {
     );
   }
 
-  static BlipBuilder leafBlip() {
+  BlipBuilder leafBlip() {
     return blip(anchored(), unanchored(), privates());
   }
 
-  static ThreadBuilder [] anchored(ThreadBuilder ... threads) {
+  ThreadBuilder [] anchored(ThreadBuilder ... threads) {
     return threads;
   }
 
-  static ThreadBuilder [] unanchored(ThreadBuilder ... threads) {
+  ThreadBuilder [] unanchored(ThreadBuilder ... threads) {
     return threads;
   }
 
-  static ConversationBuilder [] privates(ConversationBuilder ... threads) {
-    return threads;
+  ConversationBuilder [] privates(ConversationBuilder ... convos) {
+    return convos;
   }
 
-  static BlipBuilder blip(ThreadBuilder[] anchored, ThreadBuilder[] unanchored,
+  BlipBuilder blip(ThreadBuilder[] anchored, ThreadBuilder[] unanchored,
       ConversationBuilder ... privates) {
     return new BlipBuilder(anchored, unanchored, privates);
   }
 
-  static ThreadBuilder thread(BlipBuilder ... blips) {
+  ThreadBuilder thread(BlipBuilder ... blips) {
     return new ThreadBuilder(blips);
   }
 
-  static ConversationBuilder conversation(ThreadBuilder root) {
+  ConversationBuilder conversation(ThreadBuilder root) {
     return new ConversationBuilder(root);
   }
 
   @Override
   protected void setUp() {
     traverser = new ViewTraverser();
-    c = new FakeTopConversationView();
+    wave = org.waveprotocol.wave.model.conversation.testing.FakeConversationView.builder().build();
+    Conversation main = wave.createRoot();
+    renderer = FakeRenderer.create(wave);
+    c = (FakeTopConversationView) renderer.render(main);
   }
 
   public void testSimpleForward() {
     ConversationBuilder sample = createSimpleSample();
-    sample.populate(c);
+    sample.populate(wave.getRoot(), c);
     sample.verify(getOrderViaForward(c), c);
   }
 
   public void testSimpleReverse() {
     ConversationBuilder sample = createSimpleSample();
-    sample.populate(c);
+    sample.populate(wave.getRoot(), c);
     sample.verify(getOrderViaReverse(c), c);
   }
 
   public void testSomeEmptyForward() {
     ConversationBuilder sample = createEmptyThreadSample();
-    sample.populate(c);
+    sample.populate(wave.getRoot(), c);
     sample.verify(getOrderViaForward(c), c);
   }
 
   public void testSomeEmptyReverse() {
     ConversationBuilder sample = createEmptyThreadSample();
-    sample.populate(c);
+    sample.populate(wave.getRoot(), c);
     sample.verify(getOrderViaReverse(c), c);
   }
 
   public void testComplexForward() {
     ConversationBuilder sample = createComplexSample();
-    sample.populate(c);
+    sample.populate(wave.getRoot(), c);
     sample.verify(getOrderViaForward(c), c);
   }
 
   public void testReverseTraversalOrder() {
     ConversationBuilder sample = createComplexSample();
-    sample.populate(c);
+    sample.populate(wave.getRoot(), c);
     sample.verify(getOrderViaReverse(c), c);
   }
 

@@ -18,178 +18,178 @@ package org.waveprotocol.wave.client.wavepanel.render;
 import org.waveprotocol.wave.client.account.Profile;
 import org.waveprotocol.wave.client.account.ProfileListener;
 import org.waveprotocol.wave.client.account.ProfileManager;
-import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
-import org.waveprotocol.wave.client.scheduler.SerialQueueProcessor;
+import org.waveprotocol.wave.client.scheduler.QueueProcessor;
+import org.waveprotocol.wave.client.scheduler.TimerService;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.ParticipantView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
-import org.waveprotocol.wave.model.conversation.ConversationView;
 import org.waveprotocol.wave.model.util.CollectionUtils;
-import org.waveprotocol.wave.model.util.ReadableStringSet.Proc;
+import org.waveprotocol.wave.model.util.IdentitySet;
+import org.waveprotocol.wave.model.util.ReadableIdentitySet.Proc;
 import org.waveprotocol.wave.model.util.StringMap;
-import org.waveprotocol.wave.model.util.StringSet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
- * Listens to profiles update and update the avatars images for a Conversation.
+ * Listens to profiles update and update the avatar images for blip contributors
+ * and conversation participants.
  *
  */
-class LiveProfileRenderer implements ProfileListener {
-  /**
-   * A sentinel value used to indicate that the participants panel needs to be updated as well.
-   * This is used to specific the participants panel update in the same data structure.
-   * Technically it is a valid blip id, but it is unlikely to appears in real
-   * life.
-   */
-  private final static String PARTICIPANT_FAKE_BLIP_ID = "!@\u2620#!#!@#";
-  private final ProfileManager profileManager;
-
-  private final ModelAsViewProvider viewProvider;
-
-  private final Conversation conversation;
-
-  private final ShallowBlipRenderer shallowBlipRenderer;
+final class LiveProfileRenderer implements ProfileListener {
+  private final ProfileManager profiles;
+  private final ModelAsViewProvider views;
 
   /**
-   * A map of participant address to a collection of blipId +
-   * PARTICIPANT_FAKE_BLIP_ID. They represents of blips to update for a profile
-   * update. If a blipId of PARTICIPANT_FAKE_BLIP_ID is in the set, the
-   * participants should be updated as well.
-   * The keySet of the blipContributorToUpdate is all the profile we are listening to.
+   * A map of participant ids to the blips in which that participant is a
+   * contributor. This renderer re-renders the entire contributor area of each
+   * such blip when profile updates for those participants occur.
    */
-  private final StringMap<StringSet> blipContributorToUpdate =
+  private final StringMap<IdentitySet<ConversationBlip>> contributions =
       CollectionUtils.createStringMap();
 
   /**
-   * The set of blips in contributor updater waiting to be executed.
+   * A map of participant ids to the conversations on which they are a
+   * participant. This renderer re-renders the participant part of those
+   * conversations when profile updates for those participants occur.
    */
-  private final StringSet blipsWaitingToBeUpdated = CollectionUtils.createStringSet();
+  private final StringMap<IdentitySet<Conversation>> participations =
+      CollectionUtils.createStringMap();
 
-  private final SerialQueueProcessor<String> contributorUpdater =
-      new SerialQueueProcessor<String>(SchedulerInstance.getLowPriorityTimer()) {
-        @Override
-        public void process(String blipId) {
-          blipsWaitingToBeUpdated.remove(blipId);
-          ConversationBlip blip = conversation.getBlip(blipId);
-          BlipView blipUi = blip != null ? viewProvider.getBlipView(blip) : null;
-          BlipMetaView metaUi = blipUi != null ? blipUi.getMeta() : null;
-          if (metaUi != null) {
-            shallowBlipRenderer.renderContributors(blip, metaUi);
+  /**
+   * Task that re-renders the contributors of blips.
+   */
+  // Since profile updates are expected to happen in large batches, and the
+  // number of blips affected by a profile update may be large, re-rendering the
+  // contributors is done as an incremental task.
+  private final QueueProcessor<ConversationBlip> contributorUpdater;
+
+  LiveProfileRenderer(ProfileManager profiles, ModelAsViewProvider views,
+      QueueProcessor<ConversationBlip> contributorUpdater) {
+    this.profiles = profiles;
+    this.views = views;
+    this.contributorUpdater = contributorUpdater;
+  }
+
+  public static LiveProfileRenderer create(TimerService timer, ProfileManager profiles,
+      final ModelAsViewProvider views, final ShallowBlipRenderer blipRenderer) {
+    QueueProcessor<ConversationBlip> contributorUpdater =
+        new QueueProcessor<ConversationBlip>(timer) {
+          @Override
+          public void process(ConversationBlip blip) {
+            BlipView blipUi = blip != null ? views.getBlipView(blip) : null;
+            BlipMetaView metaUi = blipUi != null ? blipUi.getMeta() : null;
+            if (metaUi != null) {
+              blipRenderer.renderContributors(blip, metaUi);
+            }
           }
-        }
-      };
-
-  LiveProfileRenderer(Conversation conv, ProfileManager profileManager,
-      ModelAsViewProvider viewProvider, ShallowBlipRenderer shallowBlipRenderer) {
-    this.profileManager = profileManager;
-    this.conversation = conv;
-    this.viewProvider = viewProvider;
-    this.shallowBlipRenderer = shallowBlipRenderer;
-    profileManager.addListener(this);
+        };
+    return new LiveProfileRenderer(profiles, views, contributorUpdater);
   }
 
-  public void destroy() {
-    profileManager.removeListener(this);
+  /**
+   * Initializes this live renderer.
+   */
+  void init() {
+    profiles.addListener(this);
   }
 
-  public void setUpParticipantsUpdate(ConversationView convView) {
-    for (Conversation conv : convView.getConversations()) {
-      for (ParticipantId id : conv.getParticipantIds()) {
-        addParticipantToMonitor(id);
+  /**
+   * Destroys this renderer, releasing its resources.
+   */
+  void destroy() {
+    profiles.removeListener(this);
+    contributorUpdater.cancel();
+  }
+
+  /**
+   * Starts propagating updates of participant {@code p}'s profile to the
+   * participant rendering of the conversation {@code c}.
+   */
+  public void monitorParticipation(Conversation c, ParticipantId p) {
+    IdentitySet<Conversation> conversations = participations.get(p.getAddress());
+    if (conversations == null) {
+      conversations = CollectionUtils.createIdentitySet();
+      participations.put(p.getAddress(), conversations);
+    }
+    conversations.add(c);
+  }
+
+  /**
+   * Stops propagating updates of participant {@code p}'s profile to the
+   * participant rendering in conversation {@code c}.
+   */
+  public void unmonitorParticipation(Conversation c, ParticipantId p) {
+    IdentitySet<Conversation> conversations = participations.get(p.getAddress());
+    if (conversations != null) {
+      conversations.remove(c);
+      if (conversations.isEmpty()) {
+        participations.remove(p.getAddress());
       }
     }
   }
 
-  public void addParticipantToMonitor(ParticipantId id) {
-    addProfileToMonitor(PARTICIPANT_FAKE_BLIP_ID, id);
-  }
-
-  public void removeParticipantToMonitor(ParticipantId id) {
-    removeProfileToMonitor(PARTICIPANT_FAKE_BLIP_ID, id);
+  /**
+   * Starts propagating updates of contributor {@code c}'s profile to the
+   * contributor rendering of blip {@code b}.
+   */
+  public void monitorContribution(ConversationBlip b, ParticipantId c) {
+    IdentitySet<ConversationBlip> blips = contributions.get(c.getAddress());
+    if (blips == null) {
+      blips = CollectionUtils.createIdentitySet();
+      contributions.put(c.getAddress(), blips);
+    }
+    blips.add(b);
   }
 
   /**
-   * Adds a contributor to monitor for a particular blip.
-   *
-   * @param blip
-   * @param id
+   * Stops propagating updates of contributor {@code c}'s profile to the
+   * contributor rendering of blip {@code b}.
    */
-  public void addContributorToMonitor(ConversationBlip blip, ParticipantId id) {
-    String blipId = blip.getId();
-    addProfileToMonitor(blipId, id);
-  }
-
-  /**
-   * Removes a contributor to monitor for a particular blip.
-   *
-   * @param blip
-   * @param id
-   */
-  public void removeContributorToMonitor(ConversationBlip blip, ParticipantId id) {
-    String blipId = blip.getId();
-    removeProfileToMonitor(blipId, id);
-  }
-
-  private void addProfileToMonitor(String blipId, ParticipantId id) {
-    StringSet contributorSet = blipContributorToUpdate.get(id.getAddress());
-    if (contributorSet == null) {
-      contributorSet = CollectionUtils.createStringSet();
-      blipContributorToUpdate.put(id.getAddress(), contributorSet);
-    }
-
-    if (!blipId.equals(PARTICIPANT_FAKE_BLIP_ID)) {
-      scheduleUpdateForBlip(blipId);
-    }
-    contributorSet.add(blipId);
-  }
-
-  private void removeProfileToMonitor(String blipId, ParticipantId id) {
-    StringSet contributorSet = blipContributorToUpdate.get(id.getAddress());
-    if (contributorSet != null) {
-      contributorSet.remove(blipId);
-
-      if (contributorSet.isEmpty()) {
-        blipContributorToUpdate.remove(id.getAddress());
+  public void unmonitorContribution(ConversationBlip b, ParticipantId c) {
+    IdentitySet<ConversationBlip> blips = contributions.get(c.getAddress());
+    if (blips != null) {
+      blips.remove(b);
+      if (blips.isEmpty()) {
+        contributions.remove(c.getAddress());
       }
     }
   }
 
   @Override
   public void onProfileUpdated(final Profile profile) {
-    StringSet blipsToUpdate = blipContributorToUpdate.get(profile.getAddress());
-    if (blipsToUpdate != null) {
-      blipsToUpdate.each(new Proc() {
+    // Update contributors later.
+    IdentitySet<ConversationBlip> blips = contributions.get(profile.getAddress());
+    if (blips != null) {
+      blips.each(new Proc<ConversationBlip>() {
         @Override
-        public void apply(String blipId) {
-          if (blipId.equals(PARTICIPANT_FAKE_BLIP_ID)) {
-            ParticipantView participantUi =
-                viewProvider.getParticipantView(conversation, profile.getParticipantId());
-            if (participantUi != null) {
-              render(profile, participantUi);
-            }
-          } else {
-            scheduleUpdateForBlip(blipId);
+        public void apply(ConversationBlip blip) {
+          // It's not worth worrying about duplicates. This will only happen on
+          // multi-contributor blips when there are profile updates of multiple
+          // contributors in rapid succession. We're already re-rendering the
+          // entire contributor area of every blip per individual contributor
+          // update anyway, so filtering duplicate blips here is not a worthy
+          // optimization.
+          contributorUpdater.add(blip);
+        }
+      });
+    }
+
+    // Update participants now.
+    IdentitySet<Conversation> conversations = participations.get(profile.getAddress());
+    if (conversations != null) {
+      conversations.each(new Proc<Conversation>() {
+        @Override
+        public void apply(Conversation conversation) {
+          ParticipantView participantUi =
+              views.getParticipantView(conversation, profile.getParticipantId());
+          if (participantUi != null) {
+            participantUi.setAvatar(profile.getImageUrl());
+            participantUi.setName(profile.getFullName());
           }
         }
       });
     }
-  }
-
-  private void scheduleUpdateForBlip(String blipId) {
-    if (!blipsWaitingToBeUpdated.contains(blipId)) {
-      blipsWaitingToBeUpdated.add(blipId);
-      contributorUpdater.add(blipId);
-    }
-  }
-
-  /**
-   * Renders a profile into a participant view.
-   */
-  private void render(Profile profile, ParticipantView participantUi) {
-    participantUi.setAvatar(profile.getImageUrl());
-    participantUi.setName(profile.getFullName());
   }
 }

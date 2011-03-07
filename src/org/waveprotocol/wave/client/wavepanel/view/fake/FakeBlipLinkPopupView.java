@@ -31,7 +31,7 @@ public final class FakeBlipLinkPopupView implements BlipLinkPopupView {
 
   private String blipLinkInfo;
 
-  public FakeBlipLinkPopupView(FakeBlipView fakeBlipView) {
+  FakeBlipLinkPopupView(FakeBlipView fakeBlipView) {
   }
 
   @Override

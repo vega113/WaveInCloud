@@ -33,7 +33,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
  * @see ConversationRenderer for an alternative (SAX) style of producing a
  *      rendering.
  */
-public final class ReductionBasedRenderer<R> {
+public final class ReductionBasedRenderer<R> implements WaveRenderer<R> {
 
   /** Nesting structure of conversations. */
   private final ConversationStructure structure;
@@ -48,7 +48,8 @@ public final class ReductionBasedRenderer<R> {
   }
 
   /** @return a renderer of {@code wave}, using {@code builders}. */
-  public static <R> ReductionBasedRenderer<R> of(RenderingRules<R> builders, ConversationView wave) {
+  public static <R> ReductionBasedRenderer<R> of(
+      RenderingRules<R> builders, ConversationView wave) {
     return new ReductionBasedRenderer<R>(builders, ConversationStructure.of(wave));
   }
 
@@ -57,17 +58,17 @@ public final class ReductionBasedRenderer<R> {
     return of(builders, wave).render(wave);
   }
 
-  /** @return the (deep) rendering of {@code wave}. */
+  @Override
   public R render(ConversationView wave) {
     IdentityMap<Conversation, R> conversations = CollectionUtils.createIdentityMap();
     Conversation c = structure.getMainConversation();
     if (c != null) {
       conversations.put(c, render(c));
     }
-	return builders.render(wave, conversations);
+    return builders.render(wave, conversations);
   }
 
-  /** @return the (deep) rendering of {@code conversation}. */
+  @Override
   public R render(Conversation conversation) {
     StringMap<R> participants = CollectionUtils.createStringMap();
     for (ParticipantId participant : conversation.getParticipantIds()) {
@@ -78,7 +79,7 @@ public final class ReductionBasedRenderer<R> {
         renderInner(conversation.getRootThread()));
   }
 
-  /** @return the (deep) rendering of {@code participant}. */
+  @Override
   public R render(Conversation conversation, ParticipantId participant) {
     return builders.render(conversation, participant);
   }
@@ -95,12 +96,12 @@ public final class ReductionBasedRenderer<R> {
     return builders.render(thread, nonNull(blips));
   }
 
-  /** @return the (deep) rendering of {@code thread}. */
+  @Override
   public R render(ConversationThread thread) {
     return builders.render(thread, renderInner(thread));
   }
 
-  /** @return the (deep) rendering of {@code blip}. */
+  @Override
   public R render(ConversationBlip blip) {
     // Threads.
     IdentityMap<ConversationThread, R> threadRs = null;

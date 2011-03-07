@@ -23,24 +23,27 @@ import org.waveprotocol.wave.client.wavepanel.view.InlineThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 
 /**
- * Fake, pojo implementation of a blip meta view.
+ * Fake, pojo implementation of a thread anchor.
  *
  */
 public final class FakeAnchor implements AnchorView {
 
-  private final FakeBlipView blip;
-  private final FakeBlipMetaView meta;
+  private FakeBlipView blip;
+  private FakeBlipMetaView meta;
 
   private FakeInlineThreadView attached;
 
-  public FakeAnchor(FakeBlipView container) {
-    blip = container;
-    meta = null;
+  FakeAnchor() {
   }
 
-  public FakeAnchor(FakeBlipMetaView container) {
-    blip = null;
-    meta = container;
+  void setContainer(FakeBlipView container) {
+    Preconditions.checkState(blip == null && meta == null);
+    this.blip = container;
+  }
+
+  void setContainer(FakeBlipMetaView container) {
+    Preconditions.checkState(blip == null && meta == null);
+    this.meta = container;
   }
 
   @Override

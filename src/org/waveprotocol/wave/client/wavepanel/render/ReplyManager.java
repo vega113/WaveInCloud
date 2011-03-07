@@ -75,13 +75,13 @@ public class ReplyManager implements InlineAnchorLiveRenderer.AnchorHandler {
     }
   }
 
-  public InlineThreadView presentBefore(BlipView blipUi, ConversationThread ref,
+  public InlineThreadView presentAfter(BlipView blipUi, ConversationThread ref,
       ConversationThread thread) {
     AnchorView refDefault = ref != null ? views.getDefaultAnchor(ref) : null;
     Preconditions.checkArgument(ref == null || refDefault != null, "ref is not rendered");
 
     // Render thread in default anchor (and move to inline if there is one).
-    AnchorView defaultUi = blipUi.insertDefaultAnchorBefore(refDefault, thread);
+    AnchorView defaultUi = blipUi.insertDefaultAnchorAfter(refDefault, thread);
     InlineThreadView threadUi = defaultUi.getThread();
     AnchorView inlineUi = views.getInlineAnchor(thread);
     if (inlineUi != null) {

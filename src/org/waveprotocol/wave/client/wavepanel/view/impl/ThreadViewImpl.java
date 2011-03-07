@@ -44,6 +44,8 @@ abstract class ThreadViewImpl<
 
     BlipView insertBlipBefore(I thread, View ref, ConversationBlip blip);
 
+    BlipView insertBlipAfter(I thread, View ref, ConversationBlip blip);
+
     BlipView getBlipBefore(I thread, View ref);
 
     BlipView getBlipAfter(I thread, View ref);
@@ -51,7 +53,7 @@ abstract class ThreadViewImpl<
     View getThreadParent(I thread);
 
     void removeThread(I thread);
-    
+
     ThreadReplyIndicatorView getIndicator( I thread );
   }
 
@@ -77,6 +79,11 @@ abstract class ThreadViewImpl<
   @Override
   public BlipView insertBlipBefore(View ref, ConversationBlip blip) {
     return helper.insertBlipBefore(impl, ref, blip);
+  }
+
+  @Override
+  public BlipView insertBlipAfter(View ref, ConversationBlip blip) {
+    return helper.insertBlipAfter(impl, ref, blip);
   }
 
   @Override

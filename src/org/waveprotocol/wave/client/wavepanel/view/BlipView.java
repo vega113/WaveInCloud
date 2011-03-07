@@ -33,6 +33,7 @@ public interface BlipView extends View, IntrinsicBlipView {
   BlipMetaView getMeta();
 
   AnchorView insertDefaultAnchorBefore(AnchorView ref, ConversationThread t);
+  AnchorView insertDefaultAnchorAfter(AnchorView ref, ConversationThread t);
 
   AnchorView getDefaultAnchorBefore(AnchorView ref);
   AnchorView getDefaultAnchorAfter(AnchorView ref);

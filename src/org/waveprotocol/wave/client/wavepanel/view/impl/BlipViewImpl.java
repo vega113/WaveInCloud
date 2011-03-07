@@ -59,6 +59,7 @@ public final class BlipViewImpl<I extends IntrinsicBlipView> // \u2620
     AnchorView getDefaultAnchorAfter(I impl, AnchorView ref);
 
     AnchorView insertDefaultAnchorBefore(I impl, AnchorView ref, ConversationThread t);
+    AnchorView insertDefaultAnchorAfter(I impl, AnchorView ref, ConversationThread t);
 
     InlineConversationView getConversationBefore(I impl, InlineConversationView ref);
 
@@ -106,6 +107,11 @@ public final class BlipViewImpl<I extends IntrinsicBlipView> // \u2620
   @Override
   public AnchorView insertDefaultAnchorBefore(AnchorView ref, ConversationThread t) {
     return helper.insertDefaultAnchorBefore(impl, ref, t);
+  }
+
+  @Override
+  public AnchorView insertDefaultAnchorAfter(AnchorView ref, ConversationThread t) {
+    return helper.insertDefaultAnchorAfter(impl, ref, t);
   }
 
   @Override

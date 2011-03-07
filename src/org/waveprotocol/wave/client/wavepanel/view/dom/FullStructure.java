@@ -16,6 +16,7 @@
 package org.waveprotocol.wave.client.wavepanel.view.dom;
 
 import static org.waveprotocol.wave.client.uibuilder.BuilderHelper.KIND_ATTRIBUTE;
+import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.attachAfter;
 import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.attachBefore;
 import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.getAfter;
 import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.getBefore;
@@ -49,7 +50,7 @@ import org.waveprotocol.wave.client.wavepanel.view.View;
 import org.waveprotocol.wave.client.wavepanel.view.View.Type;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipLinkPopupWidget;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.FocusFrame;
-import org.waveprotocol.wave.client.wavepanel.view.dom.full.WaveRenderer;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.DomRenderer;
 import org.waveprotocol.wave.client.wavepanel.view.impl.AbstractConversationViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.AbstractStructuredView;
 import org.waveprotocol.wave.client.wavepanel.view.impl.AnchorViewImpl;
@@ -197,6 +198,14 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
         }
 
         @Override
+        public AnchorView insertDefaultAnchorAfter(
+            BlipViewDomImpl impl, AnchorView ref, ConversationThread t) {
+          Element anchorDom = getRenderer().render(t);
+          attachAfter(impl.getDefaultAnchors(), elementOf(ref), anchorDom);
+          return asAnchorUnchecked(anchorDom);
+        }
+
+        @Override
         public InlineConversationView getConversationBefore(
             BlipViewDomImpl impl, InlineConversationView ref) {
           return asInlineConversation(getBefore(impl.getConversations(), elementOf(ref)));
@@ -254,6 +263,14 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
         }
 
         @Override
+        public BlipView insertBlipAfter(
+            RootThreadDomImpl thread, View ref, ConversationBlip blip) {
+          Element t = getRenderer().render(blip);
+          thread.getBlipContainer().insertAfter(t, elementOf(ref));
+          return asBlip(t);
+        }
+
+        @Override
         public void removeThread(RootThreadDomImpl thread) {
           thread.remove();
         }
@@ -303,6 +320,14 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
             InlineThreadDomImpl thread, View ref, ConversationBlip blip) {
           Element t = getRenderer().render(blip);
           thread.getBlipContainer().insertBefore(t, elementOf(ref));
+          return asBlip(t);
+        }
+
+        @Override
+        public BlipView insertBlipAfter(
+            InlineThreadDomImpl thread, View ref, ConversationBlip blip) {
+          Element t = getRenderer().render(blip);
+          thread.getBlipContainer().insertAfter(t, elementOf(ref));
           return asBlip(t);
         }
 
@@ -502,9 +527,9 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
 
   /**
    * Renderer for creating new parts of the DOM. Initially unset, then set once
-   * in {@link #setRenderer(WaveRenderer)}.
+   * in {@link #setRenderer(DomRenderer)}.
    */
-  private WaveRenderer renderer;
+  private DomRenderer renderer;
 
   /**
    * Creates a view provider/manager/handler/oracle.
@@ -513,14 +538,14 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
   }
 
   @Override
-  public void setRenderer(WaveRenderer renderer) {
+  public void setRenderer(DomRenderer renderer) {
     Preconditions.checkArgument(renderer != null);
     Preconditions.checkState(this.renderer == null);
     this.renderer = renderer;
   }
 
   /** @return the renderer for creating new sections of the DOM. */
-  private WaveRenderer getRenderer() {
+  private DomRenderer getRenderer() {
     Preconditions.checkState(renderer != null, "Renderer not ready");
     return renderer;
   }

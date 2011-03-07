@@ -66,12 +66,6 @@ public class BlipIteratorsTest extends TestCase {
     assertEquals(Arrays.asList(b1, b3, b1t1b1, b1t1b2, b1t2b1, b3t1b1), actual);
   }
 
-  public void testAllBlipsBreadthFirst() {
-    List<ConversationBlip> actual = CollectionUtils.newArrayList(
-        BlipIterators.allBreadthFirst(conversation));
-    assertEquals(Arrays.asList(b1, b3, b1t1b1, b1t1b2, b1t2b1, b3t1b1), actual);
-  }
-
   private Conversation buildConversation() {
     IdGenerator idGenerator = FakeIdGenerator.create();
     ObservableWaveView waveView = ConversationTestUtils.createWaveView(idGenerator);

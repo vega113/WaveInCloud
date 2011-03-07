@@ -19,7 +19,6 @@ package org.waveprotocol.wave.client.wavepanel.view.fake;
 import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.scroll.TargetScroller;
-import org.waveprotocol.wave.client.wavepanel.view.ParticipantsView;
 import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 
@@ -30,13 +29,8 @@ import org.waveprotocol.wave.client.wavepanel.view.View;
 public final class FakeTopConversationView extends FakeConversationView
     implements TopConversationView {
 
-  public FakeTopConversationView() {
-    super();
-  }
-
-  @Override
-  public ParticipantsView getParticipants() {
-    throw new UnsupportedOperationException("not yet faked");
+  FakeTopConversationView(FakeRootThreadView thread) {
+    super(thread);
   }
 
   @Override

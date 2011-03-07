@@ -29,10 +29,18 @@ public interface ThreadView extends View, IntrinsicThreadView {
   /**
    * Renders a blip into this thread.
    *
-   * @param ref view of a thread item (either a blip or a conversation)
+   * @param ref reference view before which to render {@code blip}
    * @param blip blip to render
    */
   BlipView insertBlipBefore(View ref, ConversationBlip blip);
+
+  /**
+   * Renders a blip into this thread.
+   *
+   * @param ref reference view after which to render {@code blip}
+   * @param blip blip to render
+   */
+  BlipView insertBlipAfter(View ref, ConversationBlip blip);
 
   /**
    * @return the blip before {@code ref}, or the first blip if {@code ref} is
@@ -41,6 +49,6 @@ public interface ThreadView extends View, IntrinsicThreadView {
   BlipView getBlipBefore(View ref);
 
   BlipView getBlipAfter(View ref);
-  
+
   ThreadReplyIndicatorView getReplyIndicator();
 }

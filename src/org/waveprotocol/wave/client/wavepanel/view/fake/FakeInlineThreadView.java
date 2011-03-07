@@ -18,6 +18,7 @@ package org.waveprotocol.wave.client.wavepanel.view.fake;
 
 import com.google.common.base.Preconditions;
 
+import org.waveprotocol.wave.client.common.util.LinkedSequence;
 import org.waveprotocol.wave.client.wavepanel.view.ContinuationIndicatorView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
@@ -32,7 +33,8 @@ public final class FakeInlineThreadView extends FakeThreadView implements Inline
   private FakeAnchor container;
   private boolean collapsed;
 
-  public FakeInlineThreadView() {
+  FakeInlineThreadView(FakeRenderer renderer, LinkedSequence<FakeBlipView> blips) {
+    super(renderer, blips);
     this.continuationIndicator = new FakeContinuationIndicatorView(this);
   }
 
@@ -48,7 +50,7 @@ public final class FakeInlineThreadView extends FakeThreadView implements Inline
 
   @Override
   public void remove() {
-    container.remove();
+    container.detach(this);
   }
 
   void detach() {

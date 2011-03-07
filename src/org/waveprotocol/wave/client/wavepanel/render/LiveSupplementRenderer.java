@@ -28,7 +28,7 @@ import org.waveprotocol.wave.model.util.ReadableIdentitySet.Proc;
 
 /**
  * Listens to supplement updates and update the read state of blips.
- * 
+ *
  */
 public final class LiveSupplementRenderer extends ObservableSupplementedWave.ListenerImpl implements
     ThreadReadStateMonitor.Listener {
@@ -46,12 +46,14 @@ public final class LiveSupplementRenderer extends ObservableSupplementedWave.Lis
 
   public static LiveSupplementRenderer create(ObservableSupplementedWave supplement,
       ModelAsViewProvider views, ThreadReadStateMonitor readMonitor) {
-    LiveSupplementRenderer renderer = new LiveSupplementRenderer(supplement, views, readMonitor);
-    supplement.addListener(renderer);
-    return renderer;
+    return new LiveSupplementRenderer(supplement, views, readMonitor);
   }
 
-  public void destroy() {
+  void init() {
+    supplement.addListener(this);
+  }
+
+  void destroy() {
     supplement.removeListener(this);
   }
 

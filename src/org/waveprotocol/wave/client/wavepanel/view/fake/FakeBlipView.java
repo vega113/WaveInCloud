@@ -23,6 +23,7 @@ import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.ThreadView;
+import org.waveprotocol.wave.client.wavepanel.view.View;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
 
@@ -32,12 +33,29 @@ import org.waveprotocol.wave.model.conversation.ConversationThread;
  */
 public final class FakeBlipView implements BlipView {
 
-  private final FakeThreadView container;
-  private final LinkedSequence<AnchorView> anchors = LinkedSequence.create();
-  private final LinkedSequence<InlineConversationView> nested = LinkedSequence.create();
-  private final FakeBlipMetaView meta = new FakeBlipMetaView(this);
+  private final FakeRenderer renderer;
+  private final LinkedSequence<FakeAnchor> anchors;
+  private final LinkedSequence<FakeInlineConversationView> convos;
+  private final FakeBlipMetaView meta;
 
-  FakeBlipView(FakeThreadView container) {
+  private FakeThreadView container;
+
+  FakeBlipView(FakeRenderer renderer, LinkedSequence<FakeAnchor> anchors,
+      LinkedSequence<FakeInlineConversationView> convos) {
+    this.meta = new FakeBlipMetaView(renderer, this);
+    this.renderer = renderer;
+    this.anchors = anchors;
+    this.convos = convos;
+
+    for (FakeAnchor anchor : anchors) {
+      anchor.setContainer(this);
+    }
+    for (FakeInlineConversationView convo : convos) {
+      convo.setContainer(this);
+    }
+  }
+
+  void setContainer(FakeThreadView container) {
     this.container = container;
   }
 
@@ -67,42 +85,56 @@ public final class FakeBlipView implements BlipView {
   }
 
   @Override
-  public AnchorView getDefaultAnchorAfter(AnchorView ref) {
-    return anchors.getNext(ref);
+  public FakeAnchor getDefaultAnchorAfter(AnchorView ref) {
+    return anchors.getNext(asAnchorUi(ref));
   }
 
   @Override
-  public AnchorView getDefaultAnchorBefore(AnchorView ref) {
-    return anchors.getPrevious(ref);
+  public FakeAnchor getDefaultAnchorBefore(AnchorView ref) {
+    return anchors.getPrevious(asAnchorUi(ref));
   }
 
   @Override
   public FakeAnchor insertDefaultAnchorBefore(AnchorView ref, ConversationThread t) {
-    FakeAnchor anchor = new FakeAnchor(this);
-    anchor.attach(new FakeInlineThreadView());
-    anchors.insertBefore(ref, anchor);
+    FakeAnchor anchor = (FakeAnchor) renderer.render(t);
+    anchor.setContainer(this);
+    anchors.insertBefore(asAnchorUi(ref), anchor);
+    return anchor;
+  }
+
+  @Override
+  public FakeAnchor insertDefaultAnchorAfter(AnchorView ref, ConversationThread t) {
+    FakeAnchor anchor = (FakeAnchor) renderer.render(t);
+    anchor.setContainer(this);
+    anchors.insertAfter(asAnchorUi(ref), anchor);
     return anchor;
   }
 
   @Override
   public InlineConversationView getConversationBefore(InlineConversationView ref) {
-    return nested.getPrevious(ref);
+    return convos.getPrevious(asConvUi(ref));
   }
 
   @Override
   public InlineConversationView getConversationAfter(InlineConversationView ref) {
-    return nested.getNext(ref);
+    return convos.getNext(asConvUi(ref));
   }
 
   @Override
-  public FakeInlineConversationView insertConversationBefore(InlineConversationView ref,
-      Conversation conv) {
-    FakeInlineConversationView convUi = new FakeInlineConversationView(this);
-    nested.insertBefore(ref, convUi);
+  public FakeInlineConversationView insertConversationBefore(
+      InlineConversationView ref, Conversation conv) {
+    FakeInlineConversationView convUi = (FakeInlineConversationView) renderer.render(conv);
+    convUi.setContainer(this);
+    convos.insertBefore(asConvUi(ref), convUi);
     return convUi;
   }
 
-  void removeChild(AnchorView x) {
+  @Override
+  public BlipLinkPopupView createLinkPopup() {
+    return new FakeBlipLinkPopupView(this);
+  }
+
+  void removeChild(FakeAnchor x) {
     anchors.remove(x);
   }
 
@@ -110,13 +142,19 @@ public final class FakeBlipView implements BlipView {
     throw new UnsupportedOperationException("Fakes do not support dynamic metas");
   }
 
-  @Override
-  public String toString() {
-    return "Blip " + (anchors.isEmpty() ? "" : " " + anchors.toString());
+  private FakeAnchor asAnchorUi(View ref) {
+    return (FakeAnchor) ref;
+  }
+
+  private FakeInlineConversationView asConvUi(View ref) {
+    return (FakeInlineConversationView) ref;
   }
 
   @Override
-  public BlipLinkPopupView createLinkPopup() {
-    return new FakeBlipLinkPopupView(this);
+  public String toString() {
+    return "Blip [" + //
+      "meta: " + meta + //
+      (anchors.isEmpty() ? "" : ", default-anchors: " + anchors.toString()) + //
+      "]";
   }
 }

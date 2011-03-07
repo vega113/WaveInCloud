@@ -21,10 +21,10 @@ import org.waveprotocol.wave.client.wavepanel.view.InlineThreadView;
  */
 public final class FakeContinuationIndicatorView implements ContinuationIndicatorView {
 
-  private FakeInlineThreadView parent;
+  private final FakeInlineThreadView parent;
   private boolean enabled;
 
-  public FakeContinuationIndicatorView(FakeInlineThreadView parent) {
+  FakeContinuationIndicatorView(FakeInlineThreadView parent) {
     this.parent = parent;
   }
 

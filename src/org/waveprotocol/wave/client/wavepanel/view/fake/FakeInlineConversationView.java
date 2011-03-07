@@ -17,19 +17,21 @@
 package org.waveprotocol.wave.client.wavepanel.view.fake;
 
 import org.waveprotocol.wave.client.wavepanel.view.InlineConversationView;
-import org.waveprotocol.wave.client.wavepanel.view.ParticipantsView;
 
 /**
  * Fake, pojo implementation of a thread view.
  */
-public final class FakeInlineConversationView extends FakeConversationView implements
-    InlineConversationView {
+public final class FakeInlineConversationView extends FakeConversationView
+    implements InlineConversationView {
 
-  private final FakeBlipView container;
+  private FakeBlipView container;
   private boolean collapsed;
 
-  public FakeInlineConversationView(FakeBlipView container) {
-    super();
+  FakeInlineConversationView(FakeRootThreadView thread) {
+    super(thread);
+  }
+
+  void setContainer(FakeBlipView container) {
     this.container = container;
   }
 
@@ -46,11 +48,6 @@ public final class FakeInlineConversationView extends FakeConversationView imple
   @Override
   public void remove() {
     container.remove();
-  }
-
-  @Override
-  public ParticipantsView getParticipants() {
-    throw new UnsupportedOperationException("Participant fakes not implemented");
   }
 
   // Uninteresting below.

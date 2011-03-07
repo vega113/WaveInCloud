@@ -16,12 +16,12 @@
 package org.waveprotocol.wave.client.wavepanel.view.dom;
 
 import org.waveprotocol.wave.client.wavepanel.view.View;
-import org.waveprotocol.wave.client.wavepanel.view.dom.full.WaveRenderer;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.DomRenderer;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 
 /**
  * A view provider that providers views with reduced capabilities, until the
- * provider is {@link #setRenderer(WaveRenderer) upgraded}. After being
+ * provider is {@link #setRenderer(DomRenderer) upgraded}. After being
  * upgraded, all provided views (including those provided prior to upgrade) have
  * full capabilities.
  * <p>
@@ -39,5 +39,5 @@ public interface UpgradeableDomAsViewProvider extends DomAsViewProvider {
    *
    * @param renderer renderer to use for rendering model objects
    */
-  void setRenderer(WaveRenderer renderer);
+  void setRenderer(DomRenderer renderer);
 }

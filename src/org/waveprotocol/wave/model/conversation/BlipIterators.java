@@ -112,26 +112,6 @@ public final class BlipIterators {
     };
   }
 
-  /**
-   * A breadth-first iterator over blips in a conversation, including deleted blips.
-   */
-  public static Iterable<ConversationBlip> allBreadthFirst(Conversation conversation) {
-    return allBreadthFirst(conversation.getRootThread());
-  }
-
-  /**
-   * A breadth-first iterator over all descendant blips of a thread, including
-   * deleted blips.
-   */
-  public static Iterable<ConversationBlip> allBreadthFirst(final ConversationThread thread) {
-    return new Iterable<ConversationBlip>() {
-      @Override
-      public Iterator<ConversationBlip> iterator() {
-        return new BlipIterator(thread, ALL);
-      }
-    };
-  }
-
   private BlipIterators() {
   }
 }

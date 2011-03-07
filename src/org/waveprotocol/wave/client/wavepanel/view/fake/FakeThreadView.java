@@ -17,7 +17,6 @@
 package org.waveprotocol.wave.client.wavepanel.view.fake;
 
 import org.waveprotocol.wave.client.common.util.LinkedSequence;
-import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.ThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
@@ -28,9 +27,16 @@ import org.waveprotocol.wave.model.conversation.ConversationBlip;
  */
 public abstract class FakeThreadView implements ThreadView {
 
-  private final LinkedSequence<BlipView> blips = LinkedSequence.create();
+  private final FakeRenderer renderer;
+  private final LinkedSequence<FakeBlipView> blips;
 
-  protected FakeThreadView() {
+  FakeThreadView(FakeRenderer renderer, LinkedSequence<FakeBlipView> blips) {
+    this.renderer = renderer;
+    this.blips = blips;
+
+    for (FakeBlipView blip : blips) {
+      blip.setContainer(this);
+    }
   }
 
   @Override
@@ -38,13 +44,13 @@ public abstract class FakeThreadView implements ThreadView {
     return "fakeId";
   }
 
-  private BlipView asBlip(View ref) {
+  private FakeBlipView asBlip(View ref) {
     if (ref == null) {
       return null;
     } else {
       switch (ref.getType()) {
         case BLIP:
-          return (BlipView) ref;
+          return (FakeBlipView) ref;
         default:
           throw new RuntimeException("unknown child: " + ref);
       }
@@ -52,19 +58,28 @@ public abstract class FakeThreadView implements ThreadView {
   }
 
   @Override
-  public BlipView getBlipAfter(View ref) {
+  public FakeBlipView getBlipAfter(View ref) {
     return blips.getNext(asBlip(ref));
   }
 
   @Override
-  public BlipView getBlipBefore(View ref) {
+  public FakeBlipView getBlipBefore(View ref) {
     return blips.getPrevious(asBlip(ref));
   }
 
   @Override
   public FakeBlipView insertBlipBefore(View ref, ConversationBlip model) {
-    FakeBlipView blip = new FakeBlipView(this);
+    FakeBlipView blip = (FakeBlipView) renderer.render(model);
+    blip.setContainer(this);
     blips.insertBefore(asBlip(ref), blip);
+    return blip;
+  }
+
+  @Override
+  public FakeBlipView insertBlipAfter(View ref, ConversationBlip model) {
+    FakeBlipView blip = (FakeBlipView) renderer.render(model);
+    blip.setContainer(this);
+    blips.insertAfter(asBlip(ref), blip);
     return blip;
   }
 

@@ -21,6 +21,7 @@ import org.waveprotocol.wave.client.wavepanel.view.AnchorView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.FocusFrameView;
+import org.waveprotocol.wave.model.conversation.ConversationThread;
 
 import java.util.Set;
 
@@ -30,10 +31,13 @@ import java.util.Set;
  */
 public final class FakeBlipMetaView implements BlipMetaView {
 
+  private final FakeRenderer renderer;
   private final FakeBlipView container;
   private final LinkedSequence<AnchorView> anchors = LinkedSequence.create();
+  private FakeDocumentView content;
 
-  FakeBlipMetaView(FakeBlipView container) {
+  FakeBlipMetaView(FakeRenderer renderer, FakeBlipView container) {
+    this.renderer = renderer;
     this.container = container;
   }
 
@@ -67,14 +71,19 @@ public final class FakeBlipMetaView implements BlipMetaView {
     container.removeChild(this);
   }
 
-  public FakeAnchor createInlineAnchorBefore(AnchorView ref) {
-    FakeAnchor anchor = new FakeAnchor(this);
+  public FakeAnchor createInlineAnchorBefore(AnchorView ref, ConversationThread thread) {
+    FakeAnchor anchor = renderer.createInlineAnchor(thread);
+    anchor.setContainer(this);
     insertInlineAnchorBefore(ref, anchor);
     return anchor;
   }
 
   void removeChild(FakeInlineThreadView thread) {
     // Ignore
+  }
+
+  public void setContent(FakeDocumentView content) {
+    this.content = content;
   }
 
   //
@@ -123,6 +132,9 @@ public final class FakeBlipMetaView implements BlipMetaView {
 
   @Override
   public String toString() {
-    return "Meta " + (anchors.isEmpty() ? "" : " " + anchors.toString());
+    return "Meta [" //
+        + "content: " + content //
+        + (anchors.isEmpty() ? "" : ", anchors: " + anchors.toString()) //
+        + "]";
   }
 }
