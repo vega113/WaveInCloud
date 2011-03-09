@@ -105,7 +105,7 @@ public final class SimpleDiffDoc implements DiffSink {
 
   @VisibleForTesting
   boolean isCompleteState() {
-    return state.size() > 0 && diff == null || diff.isEmpty();
+    return state.size() > 0 && (diff == null || diff.isEmpty());
   }
 
   /**
