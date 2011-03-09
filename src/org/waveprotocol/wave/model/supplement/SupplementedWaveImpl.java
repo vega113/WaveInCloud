@@ -244,15 +244,10 @@ public class SupplementedWaveImpl implements SupplementedWave {
   }
 
   @Override
-  @Deprecated
-  public boolean isUnread(Blip blip) {
-    return supplement.isBlipUnread(blip.getWavelet().getId(), blip.getId(), blip
-            .getLastModifiedVersion().intValue());
-  }
-
-  @Override
   public boolean isUnread(ConversationBlip blip) {
-    return isUnread(blip.hackGetRaw());
+    Blip raw = blip.hackGetRaw();
+    return supplement.isBlipUnread(raw.getWavelet().getId(), raw.getId(), raw
+            .getLastModifiedVersion().intValue());
   }
 
   @Override
@@ -294,25 +289,20 @@ public class SupplementedWaveImpl implements SupplementedWave {
   }
 
   @Override
-  @Deprecated
-  public void markAsRead(Blip blip) {
+  public void markAsRead(ConversationBlip b) {
     // Because we use the current wavelet version to mark a blip as read, and
     // because the wavelet version can change independently of that blip, the
     // mark-blip-as-read action is not idempotent. Therefore, to minimise
     // chatter, we do it only for unread blips.
-    if (isUnread(blip)) {
-      Wavelet wavelet = blip.getWavelet();
-      supplement.markBlipAsRead(wavelet.getId(), blip.getId(),
+    if (isUnread(b)) {
+      Blip raw = b.hackGetRaw();
+      Wavelet wavelet = raw.getWavelet();
+      supplement.markBlipAsRead(wavelet.getId(), raw.getId(),
           // It is possible that during a VersionUpdateOperatin, the blip version is updated
           // before the wavelet version is updated, hence the max.
           // TODO(user, zdwang) to remove this once the wave model does correct event boundaries.
-          (int) Math.max(blip.getLastModifiedVersion(), wavelet.getVersion()));
+          (int) Math.max(raw.getLastModifiedVersion(), wavelet.getVersion()));
     }
-  }
-
-  @Override
-  public void markAsRead(ConversationBlip b) {
-    markAsRead(b.hackGetRaw());
   }
 
   @Override

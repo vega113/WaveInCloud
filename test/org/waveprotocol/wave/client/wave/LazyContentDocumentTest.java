@@ -1,5 +1,19 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
-
+/**
+ * Copyright 2011 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package org.waveprotocol.wave.client.wave;
 
 import junit.framework.TestCase;
@@ -114,9 +128,9 @@ public class LazyContentDocumentTest extends TestCase {
 
   public void testDiffClearingHasNoEffectWhileDisabled() {
     startWithStateAndDiff();
-    document.disableDiffClearing();
+    document.startDiffRetention();
     document.clearDiffs();
-    document.enableDiffClearing();
+    document.stopDiffRetention();
     assertFalse(state.isCompleteDiff());
     assertFalse(state.isCompleteState());
     assertTrue(OpComparators.equalDocuments(state.asOperation(), Y));
@@ -130,38 +144,30 @@ public class LazyContentDocumentTest extends TestCase {
     } catch (IllegalStateException expected) {
     }
     try {
-      document.enableDiffClearing();
+      document.stopDiffRetention();
       fail("Left retention while not suppressed");
     } catch (IllegalStateException expected) {
     }
 
-    document.disableDiffClearing();
+    document.startDiffRetention();
     try {
-      document.disableDiffClearing();
+      document.startDiffRetention();
       fail("Entered nested retention scope");
     } catch (IllegalStateException expected) {
     }
-    try {
-      document.startDiffSuppression();
-      fail("Entered suppression while retained");
-    } catch (IllegalStateException expected) {
-    }
-    try {
-      document.startDiffSuppression();
-      fail("Entered suppression while retained");
-    } catch (IllegalStateException expected) {
-    }
-    document.enableDiffClearing();
 
     document.startDiffSuppression();
+    document.stopDiffSuppression();
+    document.stopDiffRetention();
 
+    document.startDiffSuppression();
     try {
       document.startDiffSuppression();
       fail("Entered nested suppression scope");
     } catch (IllegalStateException expected) {
     }
-    document.disableDiffClearing();
-    document.enableDiffClearing();
+    document.startDiffRetention();
+    document.stopDiffRetention();
     document.stopDiffSuppression();
   }
 }

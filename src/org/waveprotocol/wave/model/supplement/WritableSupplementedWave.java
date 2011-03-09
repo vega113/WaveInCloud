@@ -19,7 +19,6 @@ package org.waveprotocol.wave.model.supplement;
 
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
-import org.waveprotocol.wave.model.wave.Blip;
 import org.waveprotocol.wave.model.wave.Wavelet;
 
 /**
@@ -35,15 +34,6 @@ public interface WritableSupplementedWave {
    * @param state   new state for the thread
    */
   void setThreadState(ConversationThread thread, ThreadState state);
-
-  /**
-   * Marks a blip as having been read.
-   *
-   * @param b  blip to mark as read
-   * @deprecated Use {@link #markAsRead(ConversationBlip)}
-   */
-  @Deprecated
-  void markAsRead(Blip b);
 
   /**
    * Marks a blip as having been read.

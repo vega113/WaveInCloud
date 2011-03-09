@@ -22,7 +22,6 @@ import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.wave.DocumentRegistry;
 import org.waveprotocol.wave.client.wave.InteractiveDocument;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.EditSession;
-import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.model.conversation.BlipMappers;
@@ -43,7 +42,7 @@ import org.waveprotocol.wave.model.util.Predicate;
  *
  */
 public final class DiffController extends ConversationListenerImpl implements EditSession.Listener,
-    FocusFramePresenter.Listener, ObservableConversationView.Listener {
+    ObservableConversationView.Listener {
   private final ObservableConversationView wave;
   private final ObservableSupplementedWave supplement;
   private final DocumentRegistry<? extends InteractiveDocument> documents;
@@ -117,13 +116,6 @@ public final class DiffController extends ConversationListenerImpl implements Ed
   }
 
   /**
-   * Upgrades diff control to interace with the focus feature.
-   */
-  public void upgrade(FocusFramePresenter focus) {
-    focus.addListener(this);
-  }
-
-  /**
    * Upgrades diff control to interact with the editing feature.
    */
   public void upgrade(EditSession edit) {
@@ -141,16 +133,6 @@ public final class DiffController extends ConversationListenerImpl implements Ed
       fullyUnread.add(blip);
       doc.startDiffSuppression();
       assert !doc.isCompleteDiff();
-    }
-  }
-
-  @Override
-  public void onFocusMoved(BlipView oldUi, BlipView newUi) {
-    if (oldUi != null) {
-      ConversationBlip oldBlip = models.getBlip(oldUi);
-      if (oldBlip != null) {
-        documents.get(oldBlip).clearDiffs();
-      }
     }
   }
 

@@ -177,7 +177,7 @@ public final class LazyContentDocument extends MutableDocumentProxy<Doc.N, Doc.E
   //
 
   private boolean diffsSuppressed;
-  private boolean clearEnabled;
+  private boolean diffsRetained;
 
   @Override
   public boolean isCompleteDiff() {
@@ -190,8 +190,7 @@ public final class LazyContentDocument extends MutableDocumentProxy<Doc.N, Doc.E
 
   @Override
   public void startDiffSuppression() {
-    Preconditions.checkState(
-        !diffsSuppressed && !clearEnabled, "bad diff scope: ", diffsSuppressed, clearEnabled);
+    Preconditions.checkState(!diffsSuppressed, "bad diff scope: ", diffsSuppressed, diffsRetained);
     diffsSuppressed = true;
     assert !shouldShowDiffs();
     getTarget().clearDiffs();
@@ -200,20 +199,20 @@ public final class LazyContentDocument extends MutableDocumentProxy<Doc.N, Doc.E
 
   @Override
   public void stopDiffSuppression() {
-    Preconditions.checkState(diffsSuppressed, "bad diff scope: ", diffsSuppressed, clearEnabled);
+    Preconditions.checkState(diffsSuppressed, "bad diff scope: ", diffsSuppressed, diffsRetained);
     diffsSuppressed = false;
   }
 
   @Override
-  public void disableDiffClearing() {
-    Preconditions.checkState(!clearEnabled, "bad diff scope: ", diffsSuppressed, clearEnabled);
-    clearEnabled = true;
+  public void startDiffRetention() {
+    Preconditions.checkState(!diffsRetained, "bad diff scope: ", diffsSuppressed, diffsRetained);
+    diffsRetained = true;
   }
 
   @Override
-  public void enableDiffClearing() {
-    Preconditions.checkState(clearEnabled, "bad diff scope: ", diffsSuppressed, clearEnabled);
-    clearEnabled = false;
+  public void stopDiffRetention() {
+    Preconditions.checkState(diffsRetained, "bad diff scope: ", diffsSuppressed, diffsRetained);
+    diffsRetained = false;
   }
 
   @Override
@@ -221,7 +220,7 @@ public final class LazyContentDocument extends MutableDocumentProxy<Doc.N, Doc.E
     if (diffsSuppressed) {
       // Clearing diffs is unnecessary.
     } else {
-      if (clearEnabled) {
+      if (diffsRetained) {
         // Clearing diffs is undesirable.
       } else {
         getTarget().clearDiffs();

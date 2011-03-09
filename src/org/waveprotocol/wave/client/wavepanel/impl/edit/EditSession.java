@@ -145,10 +145,8 @@ public final class EditSession
 
   /**
    * Stops editing if there is currently an edit session.
-   *
-   * @return true if there was an edit session, false otherwise.
    */
-  private boolean endSession() {
+  private void endSession() {
     if (editing != null) {
       container.doOrphan(editor.getWidget());
       editor.blur();
@@ -164,9 +162,6 @@ public final class EditSession
       editor = null;
       editing = null;
       fireOnSessionEnd(oldEditor, oldEditing);
-      return true;
-    } else {
-      return false;
     }
   }
 
@@ -176,8 +171,9 @@ public final class EditSession
 
   @Override
   public void onFocusMoved(BlipView oldUi, BlipView newUi) {
-    boolean wasEditing = endSession();
-    if (wasEditing && newUi != null) {
+    boolean isEditing = editing != null;
+    endSession();
+    if (isEditing && newUi != null) {
       startEditing(newUi);
     }
   }

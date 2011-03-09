@@ -22,7 +22,6 @@ import org.waveprotocol.wave.model.conversation.ConversationThread;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.util.ReadableStringMap;
 import org.waveprotocol.wave.model.version.HashedVersion;
-import org.waveprotocol.wave.model.wave.Blip;
 import org.waveprotocol.wave.model.wave.Wavelet;
 
 import java.util.Set;
@@ -40,14 +39,6 @@ public interface ReadableSupplementedWave {
    * @return the state of the thread.
    */
   ThreadState getThreadState(ConversationThread thread);
-
-  /**
-   * Tests whether a blip is unread.
-   *
-   * @return true if the blip is unread at the given version.
-   */
-  @Deprecated()
-  boolean isUnread(Blip blip);
 
   /**
    * Tests whether a blip is unread.

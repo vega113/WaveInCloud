@@ -130,6 +130,10 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
               // This code must be kept in sync with the default install()
               // method, but excluding the connect() call.
 
+              // Install diff control before rendering, because logical diff state may
+              // need to be adjusted due to arbitrary UI policies.
+              getDiffController().install();
+
               // Ensure the wave is rendered.
               stageOne.getDomAsViewProvider().setRenderer(getRenderer());
               ensureRendered();

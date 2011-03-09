@@ -42,7 +42,7 @@ public interface IdentityMap<K, V> {
    * A procedure that accepts a key and the corresponding item from the map and
    * does something with them.
    *
-   * @see IdentityMap#each(IdentityMap.Each)
+   * @see IdentityMap#each(IdentityMap.ProcV)
    * @param <K> IdentityMap's key type
    * @param <V> IdentityMap's value type
    */

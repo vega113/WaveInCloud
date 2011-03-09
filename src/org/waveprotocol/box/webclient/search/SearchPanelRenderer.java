@@ -43,7 +43,9 @@ public final class SearchPanelRenderer {
    */
   public void render(Digest digest, DigestView digestUi) {
     Collection<Profile> avatars = CollectionUtils.createQueue();
-    avatars.add(profiles.getProfile(digest.getAuthor()));
+    if (digest.getAuthor() != null) {
+      avatars.add(profiles.getProfile(digest.getAuthor()));
+    }
     for (ParticipantId other : digest.getParticipantsSnippet()) {
       if (avatars.size() < MAX_AVATARS) {
         avatars.add(profiles.getProfile(other));

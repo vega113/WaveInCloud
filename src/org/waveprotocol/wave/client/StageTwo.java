@@ -44,6 +44,8 @@ import org.waveprotocol.wave.client.state.ThreadReadStateMonitorImpl;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.wave.InteractiveDocument;
 import org.waveprotocol.wave.client.wave.LazyContentDocument;
+import org.waveprotocol.wave.client.wave.LocalSupplementedWave;
+import org.waveprotocol.wave.client.wave.LocalSupplementedWaveImpl;
 import org.waveprotocol.wave.client.wave.RegistriesHolder;
 import org.waveprotocol.wave.client.wave.SimpleDiffDoc;
 import org.waveprotocol.wave.client.wave.WaveDocuments;
@@ -132,7 +134,7 @@ public interface StageTwo {
   ObservableWaveView getWave();
 
   /** @return the signed-in user's (live) supplementary data in the wave. */
-  ObservableSupplementedWave getSupplement();
+  LocalSupplementedWave getSupplement();
 
   /** @return live blip read/unread information. */
   BlipReadStateMonitor getReadMonitor();
@@ -200,7 +202,7 @@ public interface StageTwo {
 
     private ProfileManager profileManager;
     private ObservableConversationView conversations;
-    private ObservableSupplementedWave supplement;
+    private LocalSupplementedWave supplement;
     private BlipReadStateMonitor readMonitor;
 
     // State Monitors
@@ -336,7 +338,7 @@ public interface StageTwo {
     }
 
     @Override
-    public final ObservableSupplementedWave getSupplement() {
+    public final LocalSupplementedWave getSupplement() {
       return supplement == null ? supplement = createSupplement() : supplement;
     }
 
@@ -437,14 +439,15 @@ public interface StageTwo {
     }
 
     /** @return the user supplement of the wave. Subclasses may override. */
-    protected ObservableSupplementedWave createSupplement() {
+    protected LocalSupplementedWave createSupplement() {
       Wavelet udw = getWave().getUserData();
       if (udw == null) {
          udw = getWave().createUserData();
       }
-      ObservablePrimitiveSupplement supplement = WaveletBasedSupplement.create(udw);
-      return new LiveSupplementedWaveImpl(
-          supplement, getWave(), getSignedInUser(), DefaultFollow.ALWAYS, getConversations());
+      ObservablePrimitiveSupplement state = WaveletBasedSupplement.create(udw);
+      ObservableSupplementedWave live = new LiveSupplementedWaveImpl(
+          state, getWave(), getSignedInUser(), DefaultFollow.ALWAYS, getConversations());
+      return LocalSupplementedWaveImpl.create(getWave(), live);
     }
 
     /** @return a supplement to the supplement, to get exact read/unread counts. */
@@ -668,8 +671,6 @@ public interface StageTwo {
       // Eagerly install some features.
       Reader.install(getSupplement(), stageOne.getFocusFrame(), getModelAsViewProvider(),
           getDocumentRegistry());
-
-      getDiffController().upgrade(stageOne.getFocusFrame());
     }
   }
 }

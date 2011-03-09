@@ -117,8 +117,12 @@ public final class WaveBasedDigest
     Conversation main = ConversationStructure.getMainConversation(wave.getConversations());
     List<Conversation> conversations = CollectionUtils.newLinkedList();
     conversations.addAll(wave.getConversations().getConversations());
-    conversations.remove(main);
-    conversations.add(0, main);
+    // Waves are not forced to have conversations in them, so it is legitimate
+    // for main to be null.
+    if (main != null) {
+      conversations.remove(main);
+      conversations.add(0, main);
+    }
 
     // Collect the author and participants in the same list, then partition
     // afterwards.

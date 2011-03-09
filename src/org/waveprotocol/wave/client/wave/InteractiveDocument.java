@@ -52,38 +52,40 @@ public interface InteractiveDocument {
   void stopRendering();
 
   /**
-   * Enters a diff-disabling scope. Diffs are cleared, and diffs are not shown
-   * until {@link #stopDiffSuppression() exited}. This scope can not be entered
-   * while diff clearing is disabled (i.e., within a diff retention scope).
+   * Enters a suppression scope. Diffs are cleared, and diffs are not shown
+   * until {@link #stopDiffSuppression() exited}. This scope may be entered
+   * while in a retention scope.
+   * <p>
+   * More concretely, a suppression scope corresponds to an editing session.
    *
-   * @throws IllegalStateException if currently in either a diff-suppression or
-   *         diff-retention scope.
+   * @throws IllegalStateException if currently in a suppression scope.
    */
   void startDiffSuppression();
 
   /**
-   * Leaves the diff-suppression scope.
+   * Leaves the suppression scope.
    *
-   * @throws IllegalStateException if not in a diff-suppression scope.
+   * @throws IllegalStateException if not in a suppression scope.
    */
   void stopDiffSuppression();
 
   /**
-   * Enters a diff-retention scope. Calls to {@link #clearDiffs} will have no
-   * effect until {@link #enableDiffClearing() exited}. A diff-retention scope
-   * may be entered within a diff-suppressed scope.
+   * Enters a retention scope. Calls to {@link #clearDiffs} will have no
+   * effect until {@link #stopDiffRetention() exited}.
+   * <p>
+   * More concretely, a retention scope corresponds to a reading session.
    *
    * @throws IllegalStateException if currently in a retention scope.
    */
-  void disableDiffClearing();
+  void startDiffRetention();
 
   /**
-   * Leaves the diff-retention scope, undoing the effect of the last call to
-   * {@link #disableDiffClearing}.
+   * Leaves the retention scope, undoing the effect of the last call to
+   * {@link #startDiffRetention}.
    *
-   * @throws IllegalStateException if not in a diff-retention scope.
+   * @throws IllegalStateException if not in a retention scope.
    */
-  void enableDiffClearing();
+  void stopDiffRetention();
 
   /** Collapses any diff state. */
   void clearDiffs();

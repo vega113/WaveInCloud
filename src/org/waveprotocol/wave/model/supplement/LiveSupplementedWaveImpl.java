@@ -17,8 +17,6 @@
 
 package org.waveprotocol.wave.model.supplement;
 
-import org.waveprotocol.wave.model.conversation.ConversationBlip;
-import org.waveprotocol.wave.model.conversation.ConversationThread;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversationThread;
@@ -28,8 +26,6 @@ import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletId;
 import org.waveprotocol.wave.model.supplement.SupplementedWaveImpl.DefaultFollow;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
-import org.waveprotocol.wave.model.util.ReadableStringMap;
-import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.Blip;
 import org.waveprotocol.wave.model.wave.ObservableWavelet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -38,16 +34,12 @@ import org.waveprotocol.wave.model.wave.WaveletListener;
 import org.waveprotocol.wave.model.wave.opbased.ObservableWaveView;
 import org.waveprotocol.wave.model.wave.opbased.WaveletListenerImpl;
 
-import java.util.Set;
-
 /**
  * Extension of {@link SupplementedWaveImpl} that is also observable.
  *
  */
-public final class LiveSupplementedWaveImpl implements ObservableSupplementedWave {
-
-  /** Supplement implementation. */
-  private final SupplementedWave target;
+public final class LiveSupplementedWaveImpl extends SupplementedWaveWrapper<SupplementedWave>
+    implements ObservableSupplementedWave {
 
   /** Wave view, used to broadcast events in semantic types. */
   private final ObservableWaveView wave;
@@ -172,7 +164,7 @@ public final class LiveSupplementedWaveImpl implements ObservableSupplementedWav
   public LiveSupplementedWaveImpl(ObservablePrimitiveSupplement supplement,
       ObservableWaveView wave, ParticipantId viewer, DefaultFollow followPolicy,
       ObservableConversationView view) {
-    this.target = SupplementedWaveImpl.create(supplement, view, viewer, followPolicy);
+    super(SupplementedWaveImpl.create(supplement, view, viewer, followPolicy));
     this.wave = wave;
     this.conversationView = view;
     supplement.addListener(primitiveListener);
@@ -291,192 +283,5 @@ public final class LiveSupplementedWaveImpl implements ObservableSupplementedWav
     if (blip != null) {
       triggerOnMaybeBlipReadChanged(blip);
     }
-  }
-
-  //
-  // Forward SupplementedWave methods to target.
-  //
-
-  @Override
-  public Set<Integer> getFolders() {
-    return target.getFolders();
-  }
-
-  @Override
-  public void archive() {
-    target.archive();
-  }
-
-  @Override
-  public void see() {
-    target.see();
-  }
-
-  @Override
-  public void see(Wavelet wavelet) {
-    target.see(wavelet);
-  }
-
-  @Override
-  public void inbox() {
-    target.inbox();
-  }
-
-  @Override
-  public boolean isInbox() {
-    return target.isInbox();
-  }
-
-  @Override
-  public boolean isParticipantsUnread(Wavelet wavelet) {
-    return target.isParticipantsUnread(wavelet);
-  }
-
-  @Override
-  public boolean isTagsUnread(Wavelet wavelet) {
-    return target.isTagsUnread(wavelet);
-  }
-
-  @Override
-  public ThreadState getThreadState(ConversationThread thread) {
-    return target.getThreadState(thread);
-  }
-
-  @Override
-  public void setThreadState(ConversationThread thread, ThreadState state) {
-    target.setThreadState(thread, state);
-  }
-
-  @Override
-  @Deprecated
-  public boolean isUnread(Blip blip) {
-    return target.isUnread(blip);
-  }
-
-  @Override
-  public boolean isUnread(ConversationBlip blip) {
-    return isUnread(blip.hackGetRaw());
-  }
-
-  @Override
-  public boolean haveParticipantsEverBeenRead(Wavelet wavelet) {
-    return target.haveParticipantsEverBeenRead(wavelet);
-  }
-
-  @Override
-  public void markAsRead() {
-    target.markAsRead();
-  }
-
-  @Override
-  public void markAsRead(ConversationBlip blip) {
-    target.markAsRead(blip);
-  }
-
-  @Override
-  @Deprecated
-  public void markAsRead(Blip blip) {
-    target.markAsRead(blip);
-  }
-
-  @Override
-  public void markAsUnread() {
-    target.markAsUnread();
-  }
-
-  @Override
-  public void markParticipantAsRead(Wavelet wavelet) {
-    target.markParticipantAsRead(wavelet);
-  }
-
-  @Override
-  public void markTagsAsRead(Wavelet wavelet) {
-    target.markTagsAsRead(wavelet);
-  }
-
-  @Override
-  public void moveToFolder(int folderId) {
-    target.moveToFolder(folderId);
-  }
-
-  @Override
-  public void mute() {
-    target.mute();
-  }
-
-  @Override
-  public void follow() {
-    target.follow();
-  }
-
-  @Override
-  public void unfollow() {
-    target.unfollow();
-  }
-
-  @Override
-  public boolean isArchived() {
-    return target.isArchived();
-  }
-
-  @Override
-  public boolean isFollowed() {
-    // TODO(user): implement properly.
-    return !isMute();
-  }
-
-  @Override
-  public boolean isTrashed() {
-    return target.isTrashed();
-  }
-
-  @Override
-  public boolean isMute() {
-    return target.isMute();
-  }
-
-  @Override
-  public WantedEvaluationSet getWantedEvaluationSet(Wavelet wavelet) {
-    return target.getWantedEvaluationSet(wavelet);
-  }
-
-  @Override
-  public void addWantedEvaluation(WantedEvaluation evaluation) {
-    target.addWantedEvaluation(evaluation);
-  }
-
-  @Override
-  public HashedVersion getSeenVersion(WaveletId id) {
-    return target.getSeenVersion(id);
-  }
-
-  @Override
-  public boolean hasBeenSeen() {
-    return target.hasBeenSeen();
-  }
-
-  @Override
-  public boolean hasPendingNotification() {
-    return target.hasPendingNotification();
-  }
-
-  @Override
-  public void markAsNotified() {
-    target.markAsNotified();
-  }
-
-  @Override
-  public ReadableStringMap<String> getGadgetState(String gadgetId) {
-    return target.getGadgetState(gadgetId);
-  }
-
-  @Override
-  public String getGadgetStateValue(String gadgetId, String key) {
-    return target.getGadgetStateValue(gadgetId, key);
-  }
-
-  @Override
-  public void setGadgetState(String gadgetId, String key, String value) {
-    target.setGadgetState(gadgetId, key, value);
   }
 }
