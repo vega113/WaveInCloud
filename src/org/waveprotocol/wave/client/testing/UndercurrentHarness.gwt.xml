@@ -1,4 +1,13 @@
-<module rename-to="waveharness"><inherits name="com.google.gwt.user.User" /><inherits name="org.waveprotocol.wave.client.Client" /><inherits name="org.waveprotocol.wave.client.wave.Wave" /><inherits name="org.waveprotocol.wave.client.util.ClientFlagsTesting" /><inherits name="org.waveprotocol.wave.common.bootstrap.FlagConstants" /><inherits name="org.waveprotocol.wave.model.conversation.Conversation" /><inherits name="org.waveprotocol.wave.model.conversation.Testing" /><inherits name="org.waveprotocol.wave.model.util.Util" /><entry-point class="org.waveprotocol.wave.client.testing.UndercurrentHarness" /> <source path=""/>
+<module rename-to="waveharness">
+  <inherits name="com.google.gwt.user.User" />
+  <inherits name="org.waveprotocol.wave.client.Client" />
+  <inherits name="org.waveprotocol.wave.common.bootstrap.FlagConstants" />
+  <inherits name="org.waveprotocol.wave.model.conversation.Conversation" />
+  <inherits name="org.waveprotocol.wave.model.conversation.Testing" />
+  <inherits name="org.waveprotocol.wave.model.util.Util" />
+
+  <entry-point class="org.waveprotocol.wave.client.testing.UndercurrentHarness" />
+  <source path=""/>
 
 <!-- Those comments beginning with the words "comment" or "Uncomment" have
      special meaning to the PRESUBMIT.py script. -->

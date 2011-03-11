@@ -30,14 +30,14 @@ import org.waveprotocol.wave.client.wavepanel.view.View.Type;
  * element.
  *
  */
-public class SimpleConversationViewBuilder extends TopConversationViewBuilder {
+public class FlowConversationViewBuilder extends TopConversationViewBuilder {
   private final Css css;
   private final String id;
   private final UiBuilder rootThread;
   private final UiBuilder participants;
 
   @VisibleForTesting
-  SimpleConversationViewBuilder(Css css, String id, UiBuilder rootThread, UiBuilder participants) {
+  FlowConversationViewBuilder(Css css, String id, UiBuilder rootThread, UiBuilder participants) {
     this.css = css;
     this.id = id;
     this.rootThread = rootThread;
@@ -51,9 +51,9 @@ public class SimpleConversationViewBuilder extends TopConversationViewBuilder {
    * @param threadUi UI for the thread
    * @param participantsUi UI for the participants
    */
-  public static SimpleConversationViewBuilder createRoot(
+  public static FlowConversationViewBuilder createRoot(
       String id, UiBuilder threadUi, UiBuilder participantsUi) {
-    return new SimpleConversationViewBuilder(
+    return new FlowConversationViewBuilder(
         WavePanelResourceLoader.getConversation().css(), id, threadUi, participantsUi);
   }
 

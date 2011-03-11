@@ -39,7 +39,6 @@ import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.ContinuationIndicatorView;
 import org.waveprotocol.wave.client.wavepanel.view.ConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.FocusFrameView;
-import org.waveprotocol.wave.client.wavepanel.view.FrameView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.ParticipantView;
@@ -47,12 +46,11 @@ import org.waveprotocol.wave.client.wavepanel.view.ParticipantsView;
 import org.waveprotocol.wave.client.wavepanel.view.ReplyBoxView;
 import org.waveprotocol.wave.client.wavepanel.view.RootThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.ThreadView;
-import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 import org.waveprotocol.wave.client.wavepanel.view.View.Type;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipLinkPopupWidget;
-import org.waveprotocol.wave.client.wavepanel.view.dom.full.FocusFrame;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.DomRenderer;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.FocusFrame;
 import org.waveprotocol.wave.client.wavepanel.view.impl.AbstractConversationViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.AbstractStructuredView;
 import org.waveprotocol.wave.client.wavepanel.view.impl.AnchorViewImpl;
@@ -60,7 +58,6 @@ import org.waveprotocol.wave.client.wavepanel.view.impl.BlipMenuItemViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.BlipMetaViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.BlipViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.ContinuationIndicatorViewImpl;
-import org.waveprotocol.wave.client.wavepanel.view.impl.FrameViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.InlineConversationViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.InlineThreadViewImpl;
 import org.waveprotocol.wave.client.wavepanel.view.impl.ParticipantViewImpl;
@@ -101,8 +98,7 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
         Type.ROOT_CONVERSATION,
         Type.INLINE_CONVERSATION,
         Type.PARTICIPANT,
-        Type.PARTICIPANTS,
-        Type.FRAME}) {
+        Type.PARTICIPANTS}) {
       kinds.add(kind(type));
     }
     KNOWN_KINDS = kinds;
@@ -525,26 +521,6 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
         }
       };
 
-  // Typedef to bind the generics.
-  interface WaveFrameHelper extends FrameViewImpl.Helper< // \u2620
-      FrameDomImpl, // \u2620
-      TopConversationViewImpl<TopConversationDomImpl>> {
-  }
-
-  private final WaveFrameHelper frameHelper = new WaveFrameHelper() {
-
-    @Override
-    public TopConversationViewImpl<TopConversationDomImpl> getContents(FrameDomImpl impl) {
-      Element contents = impl.getContentContainer().getFirstChildElement();
-      return asTopConversation(contents);
-    }
-
-    @Override
-    public void remove(FrameDomImpl impl) {
-      impl.remove();
-    }
-  };
-
   /**
    * Renderer for creating new parts of the DOM. Initially unset, then set once
    * in {@link #setRenderer(DomRenderer)}.
@@ -713,11 +689,6 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
         inlineConvHelper, InlineConversationDomImpl.of(e)) : null;
   }
 
-  private FrameViewImpl<
-      FrameDomImpl, TopConversationViewImpl<TopConversationDomImpl>> asFrameUnchecked(Element e) {
-    return e != null ? FrameViewImpl.create(frameHelper, FrameDomImpl.of(e)) : null;
-  }
-
   @Override
   public RootThreadViewImpl<RootThreadDomImpl> asRootThread(Element e) {
     Preconditions.checkArgument(e == null || typeOf(e) == Type.ROOT_THREAD);
@@ -805,12 +776,6 @@ public final class FullStructure implements UpgradeableDomAsViewProvider {
           throw new IllegalArgumentException("Element has a non-conversation type: " + type);
       }
     }
-  }
-
-  @Override
-  public FrameView<? extends TopConversationView> asFrame(Element e) {
-    Preconditions.checkArgument(e == null || typeOf(e) == Type.FRAME);
-    return asFrameUnchecked(e);
   }
 
   @Override

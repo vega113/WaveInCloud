@@ -23,7 +23,6 @@ import org.waveprotocol.wave.client.wavepanel.view.BlipMetaView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.ContinuationIndicatorView;
 import org.waveprotocol.wave.client.wavepanel.view.ConversationView;
-import org.waveprotocol.wave.client.wavepanel.view.FrameView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.InlineThreadView;
 import org.waveprotocol.wave.client.wavepanel.view.ParticipantView;
@@ -81,9 +80,6 @@ public interface DomAsViewProvider {
 
   /** @return {@code source} exposed as a conversation view. */
   ConversationView asConversation(Element e);
-
-  /** @return {@code e} exposed as a conversation-containing frame. */
-  FrameView<? extends TopConversationView> asFrame(Element e);
 
   // etc.
 }

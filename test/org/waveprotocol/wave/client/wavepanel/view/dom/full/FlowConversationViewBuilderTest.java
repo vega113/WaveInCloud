@@ -25,16 +25,12 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.full.TopConversationViewB
 /**
  */
 
-public class SimpleConversationViewBuilderTest extends TestCase {
+public class FlowConversationViewBuilderTest extends TestCase {
+  private TopConversationViewBuilder.Css css;
 
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-  }
-
-  @Override
-  protected void tearDown() throws Exception {
-    super.tearDown();
+  protected void setUp() {
+    css = UiBuilderTestHelper.mockCss(TopConversationViewBuilder.Css.class);
   }
 
   public void testAllComponentsPresent() throws Exception {
@@ -42,9 +38,8 @@ public class SimpleConversationViewBuilderTest extends TestCase {
     UiBuilder rootThread = UiBuilder.Constant.of(EscapeUtils.fromSafeConstant("<root></root>"));
     UiBuilder participants =
         UiBuilder.Constant.of(EscapeUtils.fromSafeConstant("<participants></participants>"));
-    SimpleConversationViewBuilder builder = new SimpleConversationViewBuilder(
-        UiBuilderTestHelper.mockCss(TopConversationViewBuilder.Css.class), id, rootThread,
-        participants);
+    FlowConversationViewBuilder builder =
+        new FlowConversationViewBuilder(css, id, rootThread, participants);
 
     UiBuilderTestHelper.verifyHtml(builder, id, Components.values());
   }

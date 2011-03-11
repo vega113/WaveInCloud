@@ -18,7 +18,8 @@ package org.waveprotocol.wave.client.wavepanel.view.dom.full;
 import org.waveprotocol.wave.client.uibuilder.UiBuilder;
 
 /**
- * A utility class that contains the ViewFactory for a default client and the mobile client.
+ * A utility class that contains the ViewFactory for a default client and the
+ * mobile client.
  *
  */
 public final class ViewFactories {
@@ -28,43 +29,35 @@ public final class ViewFactories {
 
   private static abstract class BaseFactory implements ViewFactory {
     @Override
-    public final InlineConversationViewBuilder createInlineConversationView(String id,
-        UiBuilder threadUi, UiBuilder participantsUi) {
+    public final InlineConversationViewBuilder createInlineConversationView(
+        String id, UiBuilder threadUi, UiBuilder participantsUi) {
       return InlineConversationViewBuilder.create(id, participantsUi, threadUi);
     }
   }
 
   /**
-   * A ViewFactory that creates views for the desktop client.  It has a
-   * chrome frame and a scrollbar for the top conversation.
+   * A ViewFactory that creates views suitable for embedding in normal flow,
+   * with no fixed height.
    */
-  public static final ViewFactory DEFAULT = new BaseFactory() {
-    @Override
-    public UiBuilder createFrame(String id, UiBuilder contents) {
-      return PrettyFrameBuilder.create(id, contents);
-    }
+  public static final ViewFactory FLOW = new BaseFactory() {
 
     @Override
-    public TopConversationViewBuilder createTopConversationView(String id, UiBuilder threadUi,
-        UiBuilder participantsUi) {
-      return ScrollableConversationViewBuilder.createRoot(id, threadUi, participantsUi);
+    public TopConversationViewBuilder createTopConversationView(
+        String id, UiBuilder threadUi, UiBuilder participantsUi) {
+      return FlowConversationViewBuilder.createRoot(id, threadUi, participantsUi);
     }
   };
 
   /**
-   * A ViewFactory that creates views for the mobile client.  It has a
-   * no chrome frame and no scroll.
+   * A ViewFactory that creates views suitable for embedding in a fixed-height
+   * context.
    */
-  public static final ViewFactory MOBILE = new BaseFactory() {
-    @Override
-    public UiBuilder createFrame(String id, UiBuilder contents) {
-      return SimpleFrameBuilder.create(id, contents);
-    }
+  public static final ViewFactory FIXED = new BaseFactory() {
 
     @Override
-    public TopConversationViewBuilder createTopConversationView(String id, UiBuilder threadUi,
-        UiBuilder participantsUi) {
-      return SimpleConversationViewBuilder.createRoot(id, threadUi, participantsUi);
+    public TopConversationViewBuilder createTopConversationView(
+        String id, UiBuilder threadUi, UiBuilder participantsUi) {
+      return FixedConversationViewBuilder.createRoot(id, threadUi, participantsUi);
     }
   };
 }

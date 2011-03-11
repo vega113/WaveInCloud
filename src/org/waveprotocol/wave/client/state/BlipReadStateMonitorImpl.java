@@ -16,7 +16,6 @@
 package org.waveprotocol.wave.client.state;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 
 import org.waveprotocol.wave.client.debug.logger.DomLogger;
 import org.waveprotocol.wave.model.conversation.BlipIterators;
@@ -33,7 +32,8 @@ import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 import org.waveprotocol.wave.model.util.IdentitySet;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
-import java.util.Set;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Eagerly monitors the read/unread state of all blips in all conversations in a
@@ -102,26 +102,26 @@ public final class BlipReadStateMonitorImpl extends ObservableSupplementedWave.L
   // Debugging (for DebugMenu).
   //
 
-  public Set<String> debugGetReadBlips() {
-    final ImmutableSet.Builder<String> readBlipsBuilder = ImmutableSet.builder();
+  public Collection<String> debugGetReadBlips() {
+    final List<String> result = CollectionUtils.newArrayList();
     readBlips.each(new IdentitySet.Proc<ConversationBlip>() {
       @Override
       public void apply(ConversationBlip blip) {
-        readBlipsBuilder.add(blip.getId());
+        result.add(blip.getId());
       }
     });
-    return readBlipsBuilder.build();
+    return result;
   }
 
-  public Set<String> debugGetUnreadBlips() {
-    final ImmutableSet.Builder<String> unreadBlipsBuilder = ImmutableSet.builder();
+  public Collection<String> debugGetUnreadBlips() {
+    final List<String> result = CollectionUtils.newArrayList();
     unreadBlips.each(new IdentitySet.Proc<ConversationBlip>() {
       @Override
       public void apply(ConversationBlip blip) {
-        unreadBlipsBuilder.add(blip.getId());
+        result.add(blip.getId());
       }
     });
-    return unreadBlipsBuilder.build();
+    return result;
   }
 
   //

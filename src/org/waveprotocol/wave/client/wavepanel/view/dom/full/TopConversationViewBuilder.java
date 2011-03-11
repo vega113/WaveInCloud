@@ -46,7 +46,8 @@ public abstract class TopConversationViewBuilder implements UiBuilder {
 
   /** CSS for this widget. */
   public interface Css extends CssResource {
-    String scrollThread();
+    String fixedSelf();
+    String fixedThread();
     String toolbar();
   }
 

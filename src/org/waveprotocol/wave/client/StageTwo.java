@@ -68,6 +68,8 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProviderImpl;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.DomRenderer;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.ViewFactories;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.ViewFactory;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.WavePanelResourceLoader;
 import org.waveprotocol.wave.common.logging.LoggerBundle;
 import org.waveprotocol.wave.concurrencycontrol.channel.OperationChannelMultiplexer;
@@ -581,9 +583,14 @@ public interface StageTwo {
       return BlipQueueRenderer.create(pagingHandler);
     }
 
+    protected ViewFactory createViewFactories() {
+      return ViewFactories.FIXED;
+    }
+
     protected DomRenderer createRenderer() {
       return FullDomWaveRendererImpl.create(getConversations(), getProfileManager(),
-          getBlipDetailer(), getViewIdMapper(), getBlipQueue(), getThreadReadStateMonitor());
+          getBlipDetailer(), getViewIdMapper(), getBlipQueue(), getThreadReadStateMonitor(),
+          createViewFactories());
     }
 
     protected DiffController createDiffController() {

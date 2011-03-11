@@ -25,12 +25,12 @@ import org.waveprotocol.wave.client.wavepanel.view.dom.full.RootThreadViewBuilde
 /**
  */
 
-public class ScrollableConversationViewBuilderTest extends TestCase {
-  private ScrollableConversationViewBuilder.Css css;
+public class FixedConversationViewBuilderTest extends TestCase {
+  private TopConversationViewBuilder.Css css;
 
   @Override
   protected void setUp() {
-    css = UiBuilderTestHelper.mockCss(ScrollableConversationViewBuilder.Css.class);
+    css = UiBuilderTestHelper.mockCss(TopConversationViewBuilder.Css.class);
   }
 
   public void testAllComponentsPresent() throws Exception {
@@ -38,8 +38,8 @@ public class ScrollableConversationViewBuilderTest extends TestCase {
     UiBuilder rootThread = UiBuilder.Constant.of(EscapeUtils.fromSafeConstant("<root></root>"));
     UiBuilder participants =
         UiBuilder.Constant.of(EscapeUtils.fromSafeConstant("<participants></participants>"));
-    ScrollableConversationViewBuilder builder =
-        new ScrollableConversationViewBuilder(css, id, rootThread, participants);
+    FixedConversationViewBuilder builder =
+        new FixedConversationViewBuilder(css, id, rootThread, participants);
 
     UiBuilderTestHelper.verifyHtml(builder, id, Components.values());
   }

@@ -55,6 +55,7 @@ import java.util.List;
  *
  */
 public final class FullDomRenderer implements RenderingRules<UiBuilder> {
+
   public interface DocRefRenderer {
     UiBuilder render(ConversationBlip blip,
         IdentityMap<ConversationThread, UiBuilder> replies);
@@ -101,12 +102,8 @@ public final class FullDomRenderer implements RenderingRules<UiBuilder> {
   public UiBuilder render(ConversationView wave,
       IdentityMap<Conversation, UiBuilder> conversations) {
     // return the first conversation in the view.
-    // TODO(user): select the 'best' conversation.
-    UiBuilder contents = conversations.isEmpty()
-      ? UiBuilder.Constant.of(EscapeUtils.fromSafeConstant("No conversations in this wave."))
-      : getFirstConversation(conversations);
-    String id = viewIdMapper.frameOf(wave);
-    return viewFactory.createFrame(id, contents);
+    // TODO(hearnden): select the 'best' conversation.
+    return conversations.isEmpty() ? null : getFirstConversation(conversations);
   }
 
   public UiBuilder getFirstConversation(IdentityMap<Conversation, UiBuilder> conversations) {

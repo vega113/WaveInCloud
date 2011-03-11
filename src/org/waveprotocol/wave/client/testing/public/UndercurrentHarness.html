@@ -23,7 +23,8 @@
          * Chrome and Firefox.  e.g., 'sans-serif' on Firefox is a nicer mystery font, because it is
          * wider, but Chrome binds 'sans-serif' to 'arial'.
          */
-        font-family: arial; 
+        font-family: arial;
+        font-size: small;
       }
 
       /* Fixed-width and horizontally centered, in a way that works on IE. */
@@ -32,10 +33,11 @@
         left: 50%;
         right: 50%;
         top: 4em;  /* Enough space for the header. */
-        bottom: 0;
+        bottom: 4em;
         /* Expand out of the center line, aiming for 66 character blip widths. */
-        margin-left: -350px;
-        margin-right: -350px;
+        margin-left: -250px;
+        margin-right: -250px;
+        border: 1px solid lightGray;
       }
 
       #info {
@@ -44,7 +46,7 @@
         right: 20px;
         top: 20px;
         padding: 0.2em;
-        width: 30em;
+        width: 10em;
         border: 1px solid black;
         background-color: lightGray;
       }

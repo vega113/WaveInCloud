@@ -56,7 +56,6 @@ public final class TypeCodes {
     TYPES.put("rb", Type.REPLY_BOX);
     TYPES.put("n", Type.INLINE_CONVERSATION);
     TYPES.put("c", Type.ROOT_CONVERSATION);
-    TYPES.put("f", Type.FRAME);
     TYPES.put("w", Type.WAVE);
     TYPES.put("g", Type.TOGGLE);
     TYPES.put("s", Type.PARTICIPANTS);

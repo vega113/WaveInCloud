@@ -26,7 +26,6 @@ import org.waveprotocol.wave.client.wavepanel.event.EventDispatcherPanel;
 import org.waveprotocol.wave.client.wavepanel.event.EventHandlerRegistry;
 import org.waveprotocol.wave.client.wavepanel.event.Focusable;
 import org.waveprotocol.wave.client.wavepanel.event.KeySignalRouter;
-import org.waveprotocol.wave.client.wavepanel.view.FrameView;
 import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
@@ -52,10 +51,8 @@ public final class WavePanelImpl implements WavePanel, Focusable {
   // Fields referencing the wave rendering are dynamically inserted and removed.
   //
 
-  /** Frame inside the panel. */
-  private FrameView<? extends TopConversationView> frame;
-
-  // Cached references.
+  /** True between {@link #init} and {@link #reset}. */
+  private boolean initialized;
 
   /** Main conversation shown in this panel. */
   private TopConversationView main;
@@ -120,13 +117,13 @@ public final class WavePanelImpl implements WavePanel, Focusable {
 
   @Override
   public boolean hasContents() {
-    return frame != null;
+    return main != null;
   }
 
   @Override
   public TopConversationView getContents() {
-    Preconditions.checkState(frame != null);
-    return main == null ? main = frame.getContents() : main;
+    Preconditions.checkState(main != null);
+    return main;
   }
 
   //
@@ -150,20 +147,43 @@ public final class WavePanelImpl implements WavePanel, Focusable {
   // Lifecycle.
   //
 
-  public void init(Element frame) {
-    Preconditions.checkState(this.frame == null);
-    Preconditions.checkArgument(frame != null);
-    panel.getElement().appendChild(frame);
-    this.frame = views.asFrame(frame);
-    fireOnInit();
+  public void init(Element main) {
+    Preconditions.checkState(!initialized);
+
+    boolean fireEvent;  // true if onInit should be fired before exiting.
+    if (main != null) {
+      panel.getElement().appendChild(main);
+      this.main = views.asTopConversation(main);
+      fireEvent = true;
+    } else {
+      // Render empty message.
+      panel.getElement().setInnerHTML("No conversations in this wave.");
+      fireEvent = false;
+    }
+    initialized = true;
+
+    if (fireEvent) {
+      fireOnInit();
+    }
   }
 
   public void reset() {
-    Preconditions.checkState(frame != null);
-    frame.remove();
-    frame = null;
-    main = null;
-    fireOnReset();
+    Preconditions.checkState(initialized);
+
+    boolean fireEvent;  // true if onInit should be fired before exiting.
+    initialized = false;
+    if (main != null) {
+      main.remove();
+      main = null;
+      fireEvent = true;
+    } else {
+      panel.getElement().setInnerHTML("");
+      fireEvent = false;
+    }
+
+    if (fireEvent) {
+      fireOnReset();
+    }
   }
 
   @Override

@@ -6,7 +6,16 @@
 
 @eval threadTop org.waveprotocol.wave.client.wavepanel.view.dom.full.TopConversationViewBuilder.CssConstants.THREAD_TOP_CSS;
 
-.scrollThread {
+.fixedSelf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+}
+
+.fixedThread {
   /*
    * Allow scrolling.  Also, keep the scrollbar there permanently, so that content does not get
    * horizontally resized by the addition and removal of a scrollbar.

@@ -77,13 +77,23 @@ public interface WavePanel extends SourcesEvents<WavePanel.LifecycleListener> {
    */
   LogicalPanel getGwtPanel();
 
-  /** @return true if this panel has contents. */
+  /**
+   * This method is intended to be visible only to subpackages.
+   *
+   * @return true if this panel has contents. This will be true between, and
+   *         only between, {@link LifecycleListener#onInit} and
+   *         {LifecycleListener#onReset} events.
+   */
   boolean hasContents();
 
   /**
    * This method is intended to be visible only to subpackages.
    *
-   * @return the UI of the main conversation in this panel.
+   * @return the UI of the main conversation in this panel. Never returns null.
+   * @throws IllegalStateException if this panel has no contents. It is safe to
+   *         call this method between {@link LifecycleListener#onInit} and
+   *         {@link LifecycleListener#onReset}. If unsure, calls to this method
+   *         should be guarded with {@link #hasContents()}.
    */
   TopConversationView getContents();
 }

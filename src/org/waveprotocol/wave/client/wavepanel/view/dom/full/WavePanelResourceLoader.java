@@ -36,10 +36,10 @@ public final class WavePanelResourceLoader {
       GWT.create(ReplyBoxViewBuilder.Resources.class);
   private final static ContinuationIndicatorViewBuilder.Resources inlineContinuation =
     GWT.create(ContinuationIndicatorViewBuilder.Resources.class);
-  private final static ScrollableConversationViewBuilder.Resources conversation =
-      GWT.create(ScrollableConversationViewBuilder.Resources.class);
+  private final static TopConversationViewBuilder.Resources conversation =
+      GWT.create(TopConversationViewBuilder.Resources.class);
   private final static ParticipantsViewBuilder.Resources participants =
-      GWT.create(ParticipantsViewBuilder.Resources.class);
+    GWT.create(ParticipantsViewBuilder.Resources.class);
 
   static {
     // Inject all CSS synchronously. CSS must be injected synchronously, so that
@@ -72,16 +72,16 @@ public final class WavePanelResourceLoader {
   public static RootThreadViewBuilder.Resources getRootThread() {
     return rootThread;
   }
-  
+
   public static ReplyBoxViewBuilder.Resources getReplyBox() {
     return replyBox;
   }
-  
+
   public static ContinuationIndicatorViewBuilder.Resources getContinuationIndicator() {
     return inlineContinuation;
   }
 
-  public static ScrollableConversationViewBuilder.Resources getConversation() {
+  public static TopConversationViewBuilder.Resources getConversation() {
     return conversation;
   }
 

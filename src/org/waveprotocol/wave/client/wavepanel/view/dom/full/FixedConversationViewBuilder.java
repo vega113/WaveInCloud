@@ -30,7 +30,7 @@ import org.waveprotocol.wave.client.wavepanel.view.View.Type;
  * A TopConversationViewBuilder that has a scroll bar on the thread container.
  *
  */
-public final class ScrollableConversationViewBuilder extends TopConversationViewBuilder {
+public final class FixedConversationViewBuilder extends TopConversationViewBuilder {
 
   private final Css css;
   private final String id;
@@ -38,7 +38,7 @@ public final class ScrollableConversationViewBuilder extends TopConversationView
   private final UiBuilder participants;
 
   @VisibleForTesting
-  ScrollableConversationViewBuilder(
+  FixedConversationViewBuilder(
       Css css, String id, UiBuilder rootThread, UiBuilder participants) {
     this.css = css;
     this.id = id;
@@ -53,19 +53,19 @@ public final class ScrollableConversationViewBuilder extends TopConversationView
    * @param threadUi UI for the thread
    * @param participantsUi UI for the participants
    */
-  public static ScrollableConversationViewBuilder createRoot(
+  public static FixedConversationViewBuilder createRoot(
       String id, UiBuilder threadUi, UiBuilder participantsUi) {
-    return new ScrollableConversationViewBuilder(
+    return new FixedConversationViewBuilder(
         WavePanelResourceLoader.getConversation().css(), id, threadUi, participantsUi);
   }
 
   @Override
   public void outputHtml(SafeHtmlBuilder out) {
-    open(out, id, null, TypeCodes.kind(Type.ROOT_CONVERSATION));
+    open(out, id, css.fixedSelf(), TypeCodes.kind(Type.ROOT_CONVERSATION));
     participants.outputHtml(out);
     append(out, Components.TOOLBAR_CONTAINER.getDomId(id), css.toolbar(), null);
     // Scroll panel
-    open(out, Components.THREAD_CONTAINER.getDomId(id), css.scrollThread(), null);
+    open(out, Components.THREAD_CONTAINER.getDomId(id), css.fixedThread(), null);
     rootThread.outputHtml(out);
     close(out);
     close(out);

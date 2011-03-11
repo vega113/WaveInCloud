@@ -35,7 +35,6 @@ public final class ParticipantNameViewBuilder implements IntrinsicParticipantVie
   private final Css css;
   private final String id;
 
-  private String avatarUrl;
   private String name;
 
   @VisibleForTesting
@@ -55,7 +54,7 @@ public final class ParticipantNameViewBuilder implements IntrinsicParticipantVie
 
   @Override
   public void setAvatar(String avatarUrl) {
-    this.avatarUrl = avatarUrl;
+    // No avatar in this view.
   }
 
   @Override

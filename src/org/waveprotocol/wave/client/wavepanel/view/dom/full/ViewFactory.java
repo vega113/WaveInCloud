@@ -27,6 +27,4 @@ public interface ViewFactory {
 
   TopConversationViewBuilder createTopConversationView(String id, UiBuilder threadUi,
       UiBuilder participantsUi);
-
-  UiBuilder createFrame(String id, UiBuilder builder);
 }

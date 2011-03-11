@@ -37,7 +37,6 @@ public interface View {
    * View grammar:
    *
    * <pre>
-   *   Frame ::= Wave?
    *   Wave ::= Conversation*
    *   Conversation ::= Participants RootThread
    *   Participants ::= Participant* Add
@@ -49,7 +48,6 @@ public interface View {
    * </pre>
    */
   enum Type {
-    FRAME,
     WAVE,
     ROOT_CONVERSATION,
     INLINE_CONVERSATION,

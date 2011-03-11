@@ -31,7 +31,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
  */
 public interface WaveRenderer<T> {
 
-  /** Renders a wave. */
+  /** Renders a wave.  Returns null if there are no conversations to render. */
   T render(ConversationView wave);
 
   /** Renders a conversation. */

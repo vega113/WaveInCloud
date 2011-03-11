@@ -15,7 +15,6 @@
  */
 package org.waveprotocol.wave.client.wavepanel.render;
 
-import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 
 import org.waveprotocol.wave.client.account.ProfileManager;
@@ -29,7 +28,7 @@ import org.waveprotocol.wave.client.wavepanel.render.FullDomRenderer.DocRefRende
 import org.waveprotocol.wave.client.wavepanel.view.ViewIdMapper;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.DomRenderer;
-import org.waveprotocol.wave.client.wavepanel.view.dom.full.ViewFactories;
+import org.waveprotocol.wave.client.wavepanel.view.dom.full.ViewFactory;
 import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ConversationThread;
@@ -52,7 +51,7 @@ public final class FullDomWaveRendererImpl implements DomRenderer {
 
   public static DomRenderer create(ConversationView wave, ProfileManager profileManager,
       ShallowBlipRenderer shallowRenderer, ViewIdMapper idMapper, final BlipQueueRenderer pager,
-      ThreadReadStateMonitor readMonitor) {
+      ThreadReadStateMonitor readMonitor, ViewFactory views) {
     DocRefRenderer docRenderer = new DocRefRenderer() {
       @Override
       public UiBuilder render(
@@ -64,7 +63,7 @@ public final class FullDomWaveRendererImpl implements DomRenderer {
       }
     };
     RenderingRules<UiBuilder> rules = new FullDomRenderer(
-        shallowRenderer, docRenderer, profileManager, idMapper, ViewFactories.DEFAULT, readMonitor);
+        shallowRenderer, docRenderer, profileManager, idMapper, views, readMonitor);
     return new FullDomWaveRendererImpl(ReductionBasedRenderer.of(rules, wave));
   }
 
@@ -99,9 +98,12 @@ public final class FullDomWaveRendererImpl implements DomRenderer {
 
   /** Turns a UiBuilder rendering into a DOM element. */
   private Element parseHtml(UiBuilder ui) {
+    if (ui == null) {
+      return null;
+    }
     SafeHtmlBuilder html = new SafeHtmlBuilder();
     ui.outputHtml(html);
-    DivElement div = com.google.gwt.dom.client.Document.get().createDivElement();
+    Element div = com.google.gwt.dom.client.Document.get().createDivElement();
     div.setInnerHTML(html.toSafeHtml().asString());
     Element ret = div.getFirstChildElement();
     // Detach, in order that this element looks free-floating (required by some
