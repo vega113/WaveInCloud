@@ -29,7 +29,6 @@ import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.DocOp;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocOpCursor;
 import org.waveprotocol.wave.model.document.operation.impl.AnnotationBoundaryMapImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
@@ -117,15 +116,24 @@ public class WaveletOperationSerializer {
           public void retain(int itemCount) {
             output.addComponent(newComponentBuilder().setRetainItemCount(itemCount));
           }
+          
+          // HACK: Work around JSON escaping bug in protostuff, see bug
+          // http://code.google.com/p/wave-protocol/issues/detail?id=234.
+          // Delete this once that bug is closed.
+          private String escape(String s) {
+            return s.replace("\\", "\\\\").replace("\"", "\\u0022");
+          }
 
           @Override
           public void characters(String characters) {
-            output.addComponent(newComponentBuilder().setCharacters(characters));
+            output.addComponent(newComponentBuilder().setCharacters(
+                escape(characters)));
           }
 
           @Override
           public void deleteCharacters(String characters) {
-            output.addComponent(newComponentBuilder().setDeleteCharacters(characters));
+            output.addComponent(newComponentBuilder().setDeleteCharacters(
+                escape(characters)));
           }
 
           @Override
@@ -250,7 +258,7 @@ public class WaveletOperationSerializer {
 
     return output.build();
   }
-
+  
   /**
    * Deserializes a {@link ProtocolWaveletDelta} as a {@link TransformedWaveletDelta}
    *
@@ -409,5 +417,4 @@ public class WaveletOperationSerializer {
       throw new IllegalArgumentException("Invalid Base64 hash: " + b64Hash, e);
     }
   }
-
 }
