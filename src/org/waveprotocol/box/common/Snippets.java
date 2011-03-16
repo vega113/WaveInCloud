@@ -89,6 +89,9 @@ public final class Snippets {
 
         @Override
         public void elementStart(String type, Attributes attrs) {
+          if (type.equals(DocumentConstants.LINE)) {
+            resultBuilder.append(" ");
+          }
         }
 
         @Override

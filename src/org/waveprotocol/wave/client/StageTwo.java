@@ -32,6 +32,7 @@ import org.waveprotocol.wave.client.doodad.diff.DiffAnnotationHandler;
 import org.waveprotocol.wave.client.doodad.diff.DiffDeleteRenderer;
 import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler;
 import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler.LinkAttributeAugmenter;
+import org.waveprotocol.wave.client.doodad.title.TitleAnnotationHandler;
 import org.waveprotocol.wave.client.editor.content.Registries;
 import org.waveprotocol.wave.client.editor.content.misc.StyleAnnotationHandler;
 import org.waveprotocol.wave.client.gadget.Gadget;
@@ -621,6 +622,7 @@ public interface StageTwo {
           DiffAnnotationHandler.register(r.getAnnotationHandlerRegistry(), r.getPaintRegistry());
           DiffDeleteRenderer.register(r.getElementHandlerRegistry());
           StyleAnnotationHandler.register(r);
+          TitleAnnotationHandler.register(r);
           LinkAnnotationHandler.register(r, new LinkAttributeAugmenter() {
             @Override
             public Map<String, String> augment(Map<String, Object> annotations, boolean isEditing,
