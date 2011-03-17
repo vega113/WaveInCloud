@@ -80,7 +80,7 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
   }
 
   @Override
-  protected String createSessionId() {
+  public String createSessionId() {
     return Session.get().getIdSeed();
   }
 

@@ -32,6 +32,7 @@ import org.waveprotocol.wave.client.doodad.diff.DiffAnnotationHandler;
 import org.waveprotocol.wave.client.doodad.diff.DiffDeleteRenderer;
 import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler;
 import org.waveprotocol.wave.client.doodad.link.LinkAnnotationHandler.LinkAttributeAugmenter;
+import org.waveprotocol.wave.client.doodad.selection.SelectionAnnotationHandler;
 import org.waveprotocol.wave.client.doodad.title.TitleAnnotationHandler;
 import org.waveprotocol.wave.client.editor.content.Registries;
 import org.waveprotocol.wave.client.editor.content.misc.StyleAnnotationHandler;
@@ -160,13 +161,14 @@ public interface StageTwo {
    */
   BlipQueueRenderer getBlipQueue();
 
-  /** The controller of diff state. */
+  /** @return controller of diff state. */
   DiffController getDiffController();
 
-  /**
-   * @return the signed in user.
-   */
+  /** @return the signed in user. */
   ParticipantId getSignedInUser();
+
+  /** @return a unique string identifying this session. */
+  String getSessionId();
 
   /** @return stage one. */
   StageOne getStageOne();
@@ -271,7 +273,8 @@ public interface StageTwo {
       return stageOne;
     }
 
-    protected final String getSessionId() {
+    @Override
+    public final String getSessionId() {
       return sessionId == null ? sessionId = createSessionId() : sessionId;
     }
 
@@ -630,6 +633,7 @@ public interface StageTwo {
               return current;
             }
           });
+          SelectionAnnotationHandler.register(r, getSessionId(), getProfileManager());
         }
       });
     }

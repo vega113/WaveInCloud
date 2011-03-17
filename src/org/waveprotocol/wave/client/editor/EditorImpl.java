@@ -117,8 +117,8 @@ import org.waveprotocol.wave.model.document.AnnotationBehaviour.ContentType;
 import org.waveprotocol.wave.model.document.AnnotationBehaviour.CursorDirection;
 import org.waveprotocol.wave.model.document.ReadableDocument;
 import org.waveprotocol.wave.model.document.indexed.LocationMapper;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema;
 import org.waveprotocol.wave.model.document.operation.automaton.DocumentSchema.PermittedCharacters;
@@ -943,18 +943,19 @@ public class EditorImpl extends LogicalPanel.Impl implements
    */
   AnnotationResolver annotationResolver = new AnnotationResolver() {
     public String getAnnotation(String key) {
-      if (passiveSelectionHelper.getSelectionRange() == null) {
+      FocusedRange browserSelection = passiveSelectionHelper.getSelectionRange();
+      if (browserSelection == null) {
         EditorStaticDeps.logger.error().log(
             "No selection when resolving editor annotations.");
         return null; // safely consume for now...
-      } else {
-        // should only be called with collapsed selection.
-        assert passiveSelectionHelper.getSelectionRange().isCollapsed()
-            : "Selection should be collapsed when resolving caret annotations.";
+      } else if (!browserSelection.isCollapsed()) {
+        EditorStaticDeps.logger.error().log("Resolving selection annotations is only supported "
+            + "while the browser selection is collapsed");
+        return null;
       }
 
       // TODO(patcoleman): optimise by caching the selection?
-      int at = passiveSelectionHelper.getSelectionRange().getFocus();
+      int at = browserSelection.getFocus();
       boolean biasLeft = (currentSelectionBias != BiasDirection.RIGHT); // default to left
       return Annotations.getAlignedAnnotation(mutable(), at, key, biasLeft);
     }

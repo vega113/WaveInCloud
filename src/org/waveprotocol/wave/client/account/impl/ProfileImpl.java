@@ -34,13 +34,16 @@ import java.util.List;
  */
 public final class ProfileImpl implements Profile {
 
+  private final ProfileManagerImpl manager;
   private final ParticipantId id;
 
   // Lazily loaded values
   private String firstName;
   private String fullName;
+  private String imageUrl;
 
-  public ProfileImpl(ParticipantId id) {
+  public ProfileImpl(ProfileManagerImpl manager, ParticipantId id) {
+    this.manager = manager;
     this.id = id;
   }
 
@@ -72,7 +75,10 @@ public final class ProfileImpl implements Profile {
 
   @Override
   public String getImageUrl() {
-    return "static/images/unknown.jpg";
+    if (imageUrl == null) {
+      imageUrl = "static/images/unknown.jpg";
+    }
+    return imageUrl;
   }
 
   /**
@@ -96,7 +102,21 @@ public final class ProfileImpl implements Profile {
     fullName = Joiner.on(' ').join(names);
   }
 
-  private String capitalize(String s) {
+  private static String capitalize(String s) {
     return s.isEmpty() ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1);
+  }
+
+  /**
+   * Replaces this profile's fields.
+   * <p>
+   * Each non-null argument replaces this profile's corresponding field. Null
+   * arguments have no effect (i.e., they do not clear the existing field).
+   */
+  public void update(String firstName, String fullName, String imageUrl) {
+    this.firstName = firstName != null ? firstName : this.firstName;
+    this.fullName = fullName != null ? fullName : this.fullName;
+    this.imageUrl = imageUrl != null ? imageUrl : this.imageUrl;
+
+    manager.fireOnUpdated(this);
   }
 }

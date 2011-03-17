@@ -17,7 +17,10 @@ package org.waveprotocol.wave.client;
 
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
+import org.waveprotocol.wave.client.doodad.selection.SelectionExtractor;
 import org.waveprotocol.wave.client.editor.EditorStaticDeps;
+import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
+import org.waveprotocol.wave.client.scheduler.TimerService;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.wave.DocumentRegistry;
 import org.waveprotocol.wave.client.wave.InteractiveDocument;
@@ -119,7 +122,12 @@ public interface StageThree {
       WavePanelImpl panel = stageTwo.getStageOne().getWavePanel();
       ModelAsViewProvider views = stageTwo.getModelAsViewProvider();
       DocumentRegistry<? extends InteractiveDocument> documents = stageTwo.getDocumentRegistry();
-      return new EditSession(views, documents, panel.getGwtPanel());
+      String address = stageTwo.getSignedInUser().getAddress();
+      TimerService clock = SchedulerInstance.getLowPriorityTimer();
+      String sessionId = stageTwo.getSessionId();
+
+      SelectionExtractor selectionExtrator = new SelectionExtractor(clock, address, sessionId);
+      return new EditSession(views, documents, panel.getGwtPanel(), selectionExtrator);
     }
 
     protected void install() {

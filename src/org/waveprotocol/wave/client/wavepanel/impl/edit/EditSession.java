@@ -25,6 +25,7 @@ import org.waveprotocol.wave.client.common.util.KeySignalListener;
 import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.common.util.SignalEvent;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
+import org.waveprotocol.wave.client.doodad.selection.SelectionExtractor;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorSettings;
 import org.waveprotocol.wave.client.editor.Editors;
@@ -70,6 +71,7 @@ public final class EditSession
   private final DocumentRegistry<? extends InteractiveDocument> documents;
   private final LogicalPanel container;
   private final CopyOnWriteSet<Listener> listeners = CopyOnWriteSet.create();
+  private final SelectionExtractor selectionExtractor;
 
   /** The UI of the document being edited. */
   private BlipView editing;
@@ -77,10 +79,12 @@ public final class EditSession
   private Editor editor;
 
   public EditSession(ModelAsViewProvider views,
-      DocumentRegistry<? extends InteractiveDocument> documents, LogicalPanel container) {
+      DocumentRegistry<? extends InteractiveDocument> documents, LogicalPanel container,
+      SelectionExtractor selectionExtractor) {
     this.views = views;
     this.documents = documents;
     this.container = container;
+    this.selectionExtractor = selectionExtractor;
   }
 
   /**
@@ -140,6 +144,7 @@ public final class EditSession
     editor.setEditing(true);
     editor.focus(false);
     editing = blipUi;
+    selectionExtractor.start(editor);
     fireOnSessionStart(editor, blipUi);
   }
 
@@ -148,6 +153,7 @@ public final class EditSession
    */
   private void endSession() {
     if (editing != null) {
+      selectionExtractor.stop(editor);
       container.doOrphan(editor.getWidget());
       editor.blur();
       editor.setEditing(false);
@@ -217,4 +223,5 @@ public final class EditSession
       listener.onSessionEnd(editor, blipUi);
     }
   }
+
 }

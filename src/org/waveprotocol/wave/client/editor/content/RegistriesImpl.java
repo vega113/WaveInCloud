@@ -30,9 +30,6 @@ import org.waveprotocol.wave.model.document.util.AnnotationRegistry;
  * containing (doodads, handlers, annotation, paint ...) rather than N
  * hierarchies superimposed.
  *
- * This class is not final for testing purposes. If you inherit this class
- * zdwang/mtsui will kill you.
- *
  */
 public final class RegistriesImpl implements Registries {
   private final ElementHandlerRegistry elementHandlerRegistry;

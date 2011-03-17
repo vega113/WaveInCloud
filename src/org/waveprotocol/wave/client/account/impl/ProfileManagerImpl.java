@@ -20,6 +20,7 @@ package org.waveprotocol.wave.client.account.impl;
 import org.waveprotocol.wave.client.account.ProfileListener;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 import org.waveprotocol.wave.model.util.StringMap;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
@@ -31,12 +32,13 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
 public final class ProfileManagerImpl implements ProfileManager {
 
   private final StringMap<ProfileImpl> profiles = CollectionUtils.createStringMap();
+  private final CopyOnWriteSet<ProfileListener> listeners = CopyOnWriteSet.create();
 
   @Override
   public ProfileImpl getProfile(ParticipantId participantId) {
     ProfileImpl profile = profiles.get(participantId.getAddress());
     if (profile == null) {
-      profile = new ProfileImpl(participantId);
+      profile = new ProfileImpl(this, participantId);
       profiles.put(participantId.getAddress(), profile);
     }
 
@@ -50,11 +52,17 @@ public final class ProfileManagerImpl implements ProfileManager {
 
   @Override
   public void addListener(ProfileListener listener) {
-    // Vacuous profiles do not change, so no events will ever be broadcast.
+    listeners.add(listener);
   }
 
   @Override
   public void removeListener(ProfileListener listener) {
-    // Nothing to remove.  See addListener().
+    listeners.remove(listener);
+  }
+
+  void fireOnUpdated(ProfileImpl profile) {
+    for (ProfileListener listener : listeners) {
+      listener.onProfileUpdated(profile);
+    }
   }
 }

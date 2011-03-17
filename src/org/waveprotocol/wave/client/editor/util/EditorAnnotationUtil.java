@@ -18,7 +18,6 @@ package org.waveprotocol.wave.client.editor.util;
 
 import org.waveprotocol.wave.client.editor.EditorContext;
 import org.waveprotocol.wave.client.editor.content.misc.CaretAnnotations;
-
 import org.waveprotocol.wave.model.document.MutableAnnotationSet;
 import org.waveprotocol.wave.model.document.ReadableAnnotationSet;
 import org.waveprotocol.wave.model.document.util.Annotations;
@@ -100,7 +99,8 @@ public class EditorAnnotationUtil {
   public static String getAnnotationOverRangeIfFull(MutableAnnotationSet<String> doc,
       CaretAnnotations caret, String key, int start, int end) {
     if (start == end) {
-      // assume collapsed ranges are at the cursor
+      // Try to use the information about the cursor, even if it doesn't match
+      // where the selection is.
       return caret.getAnnotation(key);
     }
 
