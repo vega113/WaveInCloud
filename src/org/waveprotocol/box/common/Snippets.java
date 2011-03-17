@@ -123,7 +123,7 @@ public final class Snippets {
         }
       }));
     }
-    return resultBuilder.toString();
+    return resultBuilder.toString().trim();
   }
 
   /**
