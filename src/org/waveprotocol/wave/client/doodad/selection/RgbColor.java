@@ -43,7 +43,7 @@ final class RgbColor {
   @Override
   public int hashCode() {
     // Bitshifting is significantly faster on both Chrome and Firefox.
-    return (red << 16) | (blue << 8) | red;
+    return (red << 16) | (green << 8) | blue;
   }
 
   @Override
