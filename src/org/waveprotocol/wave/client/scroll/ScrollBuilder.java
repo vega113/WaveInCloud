@@ -32,7 +32,7 @@ public final class ScrollBuilder {
   /**
    * Installs the scrolling feature.
    */
-  public static SmartScroller<? super View> install(WavePanelImpl panel) {
+  public static SmartScroller<View> install(WavePanelImpl panel) {
     ProxyScrollPanel scroller = ProxyScrollPanel.create(panel);
     ScrollHandler.install(panel, scroller);
     return SmartScroller.create(scroller);
