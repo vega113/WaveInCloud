@@ -23,11 +23,13 @@ import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 
-import org.waveprotocol.box.common.comms.WaveViewSnapshot;
+import org.waveprotocol.box.common.comms.jso.WaveViewSnapshotJsoImpl;
 import org.waveprotocol.box.webclient.common.SnapshotSerializer;
 import org.waveprotocol.box.webclient.common.communication.callback.SimpleCallback;
 import org.waveprotocol.wave.client.debug.logger.DomLogger;
 import org.waveprotocol.wave.common.logging.LoggerBundle;
+import org.waveprotocol.wave.communication.gwt.JsonMessage;
+import org.waveprotocol.wave.communication.json.JsonException;
 import org.waveprotocol.wave.model.id.InvalidIdException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.operation.OperationException;
@@ -81,7 +83,7 @@ public final class SnapshotFetcher {
         } else {
           WaveViewData waveView;
           try {
-            WaveViewSnapshot snapshot = WaveViewSnapshot.parse(response.getText());
+            WaveViewSnapshotJsoImpl snapshot = JsonMessage.parse(response.getText());
             waveView = SnapshotSerializer.deserializeWave(snapshot, docFactory);
           } catch (OperationException e) {
             callback.onFailure(e);
@@ -90,6 +92,9 @@ public final class SnapshotFetcher {
             callback.onFailure(e);
             return;
           } catch (InvalidIdException e) {
+            callback.onFailure(e);
+            return;
+          } catch (JsonException e) {
             callback.onFailure(e);
             return;
           }

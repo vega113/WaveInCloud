@@ -1,3 +1,4 @@
-<module><inherits name="com.google.gwt.user.User" /><inherits name="org.waveprotocol.wave.client.util.ClientFlags" /><inherits name="org.waveprotocol.wave.communication.json.Json" /> <source path=""/>
-
+<module>
+  <inherits name="org.waveprotocol.wave.communication.json.Json" />
+  <source path=""/>
 </module>

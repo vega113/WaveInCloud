@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.communication.gwt;
+package org.waveprotocol.wave.communication.json;
 
 /**
  * Helper methods used to convert to and from a Long represented as a pair of

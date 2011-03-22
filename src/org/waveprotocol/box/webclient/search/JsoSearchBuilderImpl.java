@@ -27,10 +27,14 @@ import com.google.gwt.http.client.Response;
 import org.waveprotocol.box.search.SearchRequest;
 import org.waveprotocol.box.search.SearchResponse;
 import org.waveprotocol.box.search.SearchResponse.Digest;
+import org.waveprotocol.box.search.jso.SearchRequestJsoImpl;
+import org.waveprotocol.box.search.jso.SearchResponseJsoImpl;
 import org.waveprotocol.box.webclient.search.SearchService.Callback;
 import org.waveprotocol.box.webclient.search.SearchService.DigestSnapshot;
 import org.waveprotocol.wave.client.debug.logger.DomLogger;
 import org.waveprotocol.wave.common.logging.LoggerBundle;
+import org.waveprotocol.wave.communication.gwt.JsonMessage;
+import org.waveprotocol.wave.communication.json.JsonException;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -61,7 +65,7 @@ public final class JsoSearchBuilderImpl implements SearchBuilder {
 
   @Override
   public SearchBuilder newSearch() {
-    searchRequest = SearchRequest.create();
+    searchRequest = SearchRequestJsoImpl.create();
     return this;
   }
 
@@ -105,7 +109,13 @@ public final class JsoSearchBuilderImpl implements SearchBuilder {
         } else if (!response.getHeader("Content-Type").startsWith("application/json")) {
           callback.onFailure("Search service did not return json");
         } else {
-          SearchResponse searchResponse = SearchResponse.parse(response.getText());
+          SearchResponseJsoImpl searchResponse;
+          try {
+            searchResponse = JsonMessage.parse(response.getText());
+          } catch (JsonException e) {
+            callback.onFailure(e.getMessage());
+            return;
+          }
           List<DigestSnapshot> digestSnapshots =
               SearchBuilderUtils.deserializeSearchResponse(searchResponse);
           callback.onSuccess(searchResponse.getTotalResults(), digestSnapshots);
@@ -136,7 +146,7 @@ public final class JsoSearchBuilderImpl implements SearchBuilder {
       List<DigestSnapshot> digestSnapshots =
           CollectionUtils.newArrayList();
       int i = 0;
-      for (SearchResponse.Digest digest : searchResponse.getDigestsList()) {
+      for (SearchResponse.Digest digest : searchResponse.getDigests()) {
         DigestSnapshot digestSnapshot = deserializeDigest(digest);
         digestSnapshots.add(i, digestSnapshot);
         i++;
@@ -146,10 +156,8 @@ public final class JsoSearchBuilderImpl implements SearchBuilder {
 
     private static DigestSnapshot deserializeDigest(Digest digest) {
       List<ParticipantId> participantIds = CollectionUtils.newArrayList();
-      int i = 0;
-      for (String participant : digest.getParticipantsList()) {
-        participantIds.add(i, ParticipantId.ofUnsafe(participant));
-        i++;
+      for (String participant : digest.getParticipants()) {
+        participantIds.add(ParticipantId.ofUnsafe(participant));
       }
       DigestSnapshot digestSnapshot =
           new DigestSnapshot(digest.getTitle(), digest.getSnippet(), WaveId.deserialise(digest

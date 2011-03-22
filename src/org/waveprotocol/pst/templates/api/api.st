@@ -24,8 +24,8 @@ $m.referencedEnums: {t|
   import $t.fullJavaType$;
 }$
 
-import org.waveprotocol.pst.lib.Blob;
-import org.waveprotocol.wave.communication.json.ProtoEnums;
+import org.waveprotocol.wave.communication.Blob;
+import org.waveprotocol.wave.communication.ProtoEnums;
 
 import java.util.List;
 

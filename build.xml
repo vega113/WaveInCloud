@@ -67,6 +67,7 @@
 
   <target name="init" depends="init-logging">
     <mkdir dir="${build.proto.dir}"/>
+    <mkdir dir="${build.messages.dir}"/>
     <mkdir dir="${build.src.dir}"/>
     <mkdir dir="${build.test.dir}"/>
     <mkdir dir="${coverage.dir}"/>
@@ -95,9 +96,8 @@
   === -->
   <target name="compile-proto-dep">
     <uptodate targetfile="${dep}/compile-proto" property="skip.compile-proto">
-      <srcfiles dir="${lib.dir}" includes="**/*"/>
+      <srcfiles dir="${lib.dir}"/>
       <srcfiles dir="${src.proto.dir}" includes="**/*.java"/>
-      <srcfiles dir="${src.proto.gwt.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
 
@@ -105,7 +105,6 @@
       unless="skip.compile-proto" description="Compiles protocol buffers">
     <buildjava destdir="${build.proto.dir}">
       <src path="${src.proto.dir}"/>
-      <src path="${src.proto.gwt.dir}" />
       <classpath>
         <path refid="libpath"/>
       </classpath>
@@ -116,28 +115,27 @@
   <!-- === GXP targets === -->
   <target name="gen-gxp-dep">
     <uptodate targetfile="${dep}/gen-gxp" property="skip.gen-gxp">
-      <srcfiles dir="${lib.runtime}/gxp" includes="*"/>
+      <srcfiles dir="${lib.runtime}/gxp"/>
       <srcfiles dir="${src.dir}" includes="org/waveprotocol/box/server/gxp/*.gxp"/>
     </uptodate>
   </target>
   <!-- Generates the Java files from templates -->
   <target name="gen-gxp" description="Generates GXP files"
       depends="init, gen-gxp-dep" unless="skip.gen-gxp">
-    <gxpc srcdir="${src.dir}" srcpaths="${src.dir}" destdir="${gen.dir}"
+    <gxpc srcdir="${src.dir}" srcpaths="${src.dir}" destdir="${gen.dir}/gxp"
         target="org.waveprotocol.box.server.gxp" />
     <touch file="${dep}/gen-gxp"/>
   </target>
 
   <target name="compile-gxp-dep">
     <uptodate targetfile="${dep}/compile-gxp" property="skip.compile-gxp">
-      <srcfiles dir="${lib.dir}" includes="**/*"/>
-      <srcfiles dir="${gen.dir}" includes="**/*.java"/>
+      <srcfiles dir="${gen.dir}/gxp"/>
     </uptodate>
   </target>
   <target name="compile-gxp" depends="init, gen-gxp, compile-gxp-dep"
       unless="skip.compile-gxp" description="Compiles GXP classes">
     <buildjava destdir="${build.src.dir}">
-      <src path="${gen.dir}" />
+      <src path="${gen.dir}/gxp" />
       <classpath>
         <path refid="libpath"/>
       </classpath>
@@ -146,68 +144,92 @@
   </target>
 
   <!-- === PST targets === -->
-  <target name="compile-pst-dep">
-    <uptodate targetfile="${dep}/compile-pst" property="skip.compile-pst">
-      <srcfiles dir="${lib.dir}" includes="**/*"/>
-      <srcfiles dir="${src.dir}" includes="org/waveprotocol/pst/**"/>
+  <target name="dist-pst-dep">
+    <uptodate targetfile="${dep}/dist-pst" property="skip.dist-pst">
+      <srcfiles dir="${lib.dir}"/>
+      <srcfiles dir="${src.dir}" includes="org/waveprotocol/pst/**/*.java"/>
     </uptodate>
   </target>
-  <target name="compile-pst" depends="init, compile-pst-dep, compile-proto"
-      unless="skip.compile-pst" description="Compiles the PST tool">
-    <buildjava destdir="${build.src.dir}">
-      <src path="${src.dir}/org/waveprotocol/pst"/>
+  <target name="dist-pst" depends="init, dist-pst-dep, compile-proto"
+      unless="skip.dist-pst" description="Builds the PST tool">
+    <delete dir="${build.dir}/pst"/>
+    <mkdir dir="${build.dir}/pst"/>
+    <javac srcdir="${src.dir}" destdir="${build.dir}/pst" includes="org/waveprotocol/pst/**/*">
       <classpath>
         <path refid="libpath"/>
         <path location="${build.proto.dir}/"/>
       </classpath>
-    </buildjava>
-    <touch file="${dep}/compile-pst"/>
+    </javac>
+    <jar destfile="${dist.dir}/pst.jar" basedir="${build.dir}/pst"/>
+    <touch file="${dep}/dist-pst"/>
   </target>
-  <target name="dist-pst" depends="compile-pst" description="Builds the PST distribution">
-    <patternset id="srcs">
-      <include name="org/waveprotocol/pst/**"/>
-    </patternset>
-    <distlib libname="pst" srcpattern="srcs"/>
+
+  <target name="gen-messages-dep">
+    <uptodate targetfile="${dep}/gen-messages" property="skip.gen-messages">
+      <srcfiles dir="${src.dir}" includes="org/waveprotocol/pst/**/*.st"/>
+      <srcfiles dir="${lib.dir}"/>
+      <srcfiles dir="${dist.dir}" includes="pst.jar"/>
+      <srcfiles dir="${build.proto.dir}"/>
+    </uptodate>
+  </target>
+  <target name="gen-messages" depends="dist-pst, compile-proto, gen-messages-dep"
+      unless="skip.gen-messages"
+      description="Generates the DTO message source">
+    <delete dir="${gen.dir}/messages"/>
+    <mkdir dir="${gen.dir}/messages"/>
+    <pstmessage proto="${build.proto.dir}/org/waveprotocol/box/common/comms/WaveClientRpc.class"/>
+    <pstmessage proto="${build.proto.dir}/org/waveprotocol/box/search/SearchProto.class"/>
+    <pstmessage proto="${build.proto.dir}/org/waveprotocol/box/server/rpc/Rpc.class"/>
+    <pstmessage proto="${build.proto.dir}/org/waveprotocol/wave/federation/Proto.class"/>
+    <pstmessage proto="${build.proto.dir}/org/waveprotocol/wave/concurrencycontrol/ClientServer.class"/>
+    <pstmessage proto="${build.proto.dir}/org/waveprotocol/wave/diff/Diff.class"/>
+    <touch file="${dep}/gen-messages"/>
   </target>
 
   <target name="compile-messages-dep">
     <uptodate targetfile="${dep}/compile-messages" property="skip.compile-messages">
-      <srcfiles dir="${lib.dir}" includes="**/*"/>
-      <srcfiles dir="${src.proto.dir}" includes="**/*"/>
-      <srcfiles dir="${build.messages.dir}" includes="**/*.java"/>
+      <srcfiles dir="${gen.dir}/messages"/>
+      <srcfiles dir="${src.dir}" includes="org/waveprotocol/wave/communication/**"/>
     </uptodate>
   </target>
-  <target name="compile-messages" depends="compile-pst, compile-proto, compile-messages-dep"
-      unless="skip.compile-messages"
-      description="Generates and compiles the communication classes">
-    <pstmessage
-      proto="${build.proto.dir}/org/waveprotocol/box/common/comms/WaveClientRpc.class"/>
-    <pstmessage
-      proto="${build.proto.dir}/org/waveprotocol/wave/federation/Proto.class"/>
-    <pstmessage
-      proto="${build.proto.dir}/org/waveprotocol/wave/concurrencycontrol/ClientServer.class"/>
-    <pstmessage
-      proto="${build.proto.dir}/org/waveprotocol/wave/diff/Diff.class"/>
+  <target name="compile-messages" depends="gen-messages, compile-messages-dep"
+      unless="skip.compile-messages" description="Compiles the DTO messages">
+    <!--
+      The generated DTOs depend on code in wave/communication.  At this stage of
+      the build process, that code is still in source form, so it is exposed to
+      javac via sourcepath not classpath.  Since javac is too aggressive, and
+      gobbles up those files and compiles them too, a subsequent step has to
+      go and delete those overzealously compiled files, because they will be
+      compiled again later.
+    -->    
+    <javac srcdir="${gen.dir}/messages"
+           destdir="${build.messages.dir}"
+           sourcepath="${src.dir}">
+      <classpath>
+        <path refid="libpath"/>
+        <pathelement location="${build.proto.dir}"/>
+      </classpath>
+    </javac>
+    <delete dir="${build.messages.dir}/org/waveprotocol/wave/communication"/>
     <touch file="${dep}/compile-messages"/>
   </target>
 
   <!-- === Java targets === -->
   <target name="compile-dep">
     <uptodate targetfile="${dep}/compile" property="skip.compile">
-      <srcfiles dir="${lib.dir}" includes="**/*"/>
+      <srcfiles dir="${lib.dir}"/>
       <srcfiles dir="${src.dir}" includes="**/*.java"/>
       <srcfiles dir="${gen.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
-  <target name="compile" depends="compile-proto, compile-gxp, compile-dep"
+  <target name="compile" depends="compile-proto, compile-gxp, compile-messages, compile-dep"
       unless="skip.compile" description="Compiles all source">
-    <depend srcdir="${src.dir}" destdir="${build.src.dir}" closure="yes"/>
     <subant target="compile" inheritall="true">
       <property name="build.common.path" location="build-common.xml"/>
       <fileset dir="${src.dir}" includes="*/**/build.xml"/>
     </subant>
 
-    <!-- copy non binary resources in src tree to output classpath -->
+    <!-- copy non binary resources in src tree to output classpath. Why? -->
     <copy todir="${build.src.dir}">
       <fileset dir="${src.dir}">
         <include name="**/*.xml"/>
@@ -222,11 +244,6 @@
 
   <target name="compile-tests" depends="compile" 
       description="Compiles all unit tests">
-    <depend srcdir="${test.dir}" destdir="${build.test.dir}" closure="yes">
-      <classpath>
-        <pathelement location="${build.src.dir}"/>
-      </classpath>
-    </depend>
     <buildjava destdir="${build.test.dir}">
       <src path="${test.dir}" />
       <classpath>
@@ -301,34 +318,19 @@
   <target name="test-all" depends="compile-tests, test, test-gwt, test-large, test-mongodb"
       description="Run all tests, including GWT"/>
 
-  <!-- compiles pre-generated gwt proto sources; does NOT generate protos -->
-  <target name="compile-proto-gwt-dep">
-    <uptodate targetfile="${dep}/compile-proto-gwt" property="skip.compile-proto-gwt">
-      <srcfiles dir="${lib.dir}" includes="**/*"/>
-      <srcfiles dir="${src.proto.gwt.dir}" includes="**/*.java"/>
-    </uptodate>
-  </target>
-  <target name="compile-proto-gwt" depends="init, compile-proto-gwt-dep" unless="skip.compile-proto-gwt">
-    <buildjava destdir="${build.proto.dir}">
-      <src path="${src.proto.gwt.dir}" />
-      <classpath refid="libpath"/>
-    </buildjava>
-    <touch file="${dep}/compile-proto-gwt"/>
-  </target>
-
   <target name="compile-gwt-dep">
     <uptodate targetfile="${dep}/compile-gwt" property="skip.compile-gwt">
-      <srcfiles dir="${lib.dir}" includes="**/*"/>
-      <srcfiles dir="src" includes="**/*"/>
-      <srcfiles dir="${src.proto.gwt.dir}" includes="**/*"/>
+      <srcfiles dir="${lib.dir}"/>
+      <srcfiles dir="${src.dir}"/>
+      <srcfiles dir="${gen.dir}/messages"/>
     </uptodate>
   </target>
-  <target name="compile-gwt" depends="compile, compile-proto-gwt, compile-gwt-dep" 
+  <target name="compile-gwt" depends="compile, compile-gwt-dep" 
       description="GWT compile to production JavaScript" unless="skip.compile-gwt">    
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
       <classpath>
-        <pathelement location="${src.proto.gwt.dir}"/>
-        <pathelement location="src"/>
+        <pathelement location="${src.dir}"/>
+        <pathelement location="${gen.dir}/messages"/>
         <path refid="libpath"/>
         <path refid="test.libpath"/>
       </classpath>
@@ -348,18 +350,18 @@
 
   <target name="compile-gwt-dev-dep">
     <uptodate targetfile="${dep}/compile-gwt-dev" property="skip.compile-gwt-dev">
-      <srcfiles dir="${lib.dir}" includes="**/*"/>
-      <srcfiles dir="src" includes="**/*"/>
-      <srcfiles dir="${src.proto.gwt.dir}" includes="**/*"/>
+      <srcfiles dir="${lib.dir}"/>
+      <srcfiles dir="${src.dir}"/>
+      <srcfiles dir="${gen.dir}/messages"/>
     </uptodate>
   </target>
-  <target name="compile-gwt-dev" depends="compile, compile-proto-gwt, compile-gwt-dev-dep" 
+  <target name="compile-gwt-dev" depends="compile, compile-gwt-dev-dep" 
       description="GWT compile of a restricted set of permutations suitable for development." 
       unless="skip.compile-gwt-dev">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
       <classpath>
-        <pathelement location="${src.proto.gwt.dir}"/>
-        <pathelement location="src"/>
+        <pathelement location="${src.dir}"/>
+        <pathelement location="${gen.dir}/messages"/>
         <path refid="libpath"/>
         <path refid="test.libpath"/>
       </classpath>
@@ -378,12 +380,12 @@
     <touch file="${dep}/compile-gwt-dev"/>
   </target>
 
-  <target name="hosted-gwt" depends="compile,compile-proto-gwt" 
+  <target name="hosted-gwt" depends="compile" 
       description="Runs the hosted mode server, for debugging the GWT client in a JVM.">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
       <classpath>
-        <pathelement location="${src.proto.gwt.dir}"/>
         <pathelement location="${src.dir}"/>
+        <pathelement location="${gen.dir}/messages"/>
         <path refid="libpath"/>
       </classpath>
       <jvmarg value="-Xmx512M"/>
@@ -396,11 +398,10 @@
     </java>
   </target>
 
-  <target name="editor-hosted" depends="compile,compile-proto-gwt" description="Runs the editor harness through the GWT hosted mode server, for debugging in a JVM.">
+  <target name="editor-hosted" depends="compile" description="Runs the editor harness through the GWT hosted mode server, for debugging in a JVM.">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
       <classpath>
-        <pathelement location="proto_gwt_src"/>
-        <pathelement location="src"/>
+        <pathelement location="${src.dir}"/>
         <path refid="libpath"/>
       </classpath>
       <jvmarg value="-Xmx512M"/>
@@ -412,10 +413,9 @@
     </java>
   </target>
 
-  <target name="waveharness-hosted" depends="compile,compile-proto-gwt" description="Runs the wave panel harness through the GWT hosted mode server, for debugging in a JVM.">
+  <target name="waveharness-hosted" depends="compile" description="Runs the wave panel harness through the GWT hosted mode server, for debugging in a JVM.">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
       <classpath>
-        <pathelement location="${src.proto.gwt.dir}"/>
         <pathelement location="${src.dir}"/>
         <path refid="libpath"/>
       </classpath>
@@ -439,8 +439,9 @@
     <java failonerror="true" fork="true" classname="org.waveprotocol.box.server.ServerMain">
       <classpath>
         <path refid="libpath"/>
-        <path location="${build.proto.dir}"/>
         <path location="${build.src.dir}"/>
+        <path location="${build.proto.dir}"/>
+        <path location="${build.messages.dir}"/>
       </classpath>
       <jvmarg value="-Dorg.eclipse.jetty.util.log.DEBUG=true"/>
       <jvmarg value="-Djava.security.auth.login.config=jaas.config"/>
@@ -453,8 +454,9 @@
     <java failonerror="true" fork="true" classname="org.waveprotocol.box.server.ServerMain">
       <classpath>
         <path refid="libpath"/>
-        <path location="${build.proto.dir}"/>
         <path location="${build.src.dir}"/>
+        <path location="${build.proto.dir}"/>
+        <path location="${build.messages.dir}"/>
       </classpath>
       <jvmarg value="-Dorg.eclipse.jetty.util.log.DEBUG=true"/>
       <jvmarg value="-Djava.security.auth.login.config=jaas.config"/>
@@ -463,11 +465,10 @@
     </java>
   </target>
 
-
   <target name="stage-dep">
     <uptodate targetfile="${dep}/stage" property="skip.stage">
       <srcfiles dir="${lib.runtime}" includes="**/*.jar"/>
-      <srcfiles dir="${build.src.dir}" includes="**/*"/>
+      <srcfiles dir="${build.src.dir}"/>
     </uptodate>
   </target>
   <target name="stage" depends="compile, stage-dep" 
@@ -481,6 +482,7 @@
     <copy todir="${staging.dir}" preservelastmodified="true">
       <fileset dir="${build.src.dir}"/>
       <fileset dir="${build.proto.dir}"/>
+      <fileset dir="${build.messages.dir}"/>
     </copy>
     <touch file="${dep}/stage"/>
   </target>
@@ -491,9 +493,9 @@
   </target>
 
   <target name="dist-proto" depends="compile-proto" description="Builds the proto jar">
-    <jar destfile="${dist.dir}\proto.jar" basedir="${build.proto.dir}"/>
-    <jar destfile="${dist.dir}\proto-src.jar" basedir="${src.proto.dir}"/>
-    <jar destfile="${dist.dir}\proto-gwt.jar" basedir="${src.proto.gwt.dir}"/>
+    <jar destfile="${dist.dir}/proto.jar" basedir="${build.proto.dir}"/>
+    <jar destfile="${dist.dir}/proto-src.jar" basedir="${src.proto.dir}"/>
+    <jar destfile="${dist.dir}/proto-msg.jar" basedir="${gen.dir}/messages"/>
   </target>
 
   <target name="dist-libraries" depends="compile, dist-proto, dist-pst" description="Builds the distribution libraries">
@@ -535,7 +537,7 @@
   <target name="dist-server-dep">
     <!-- Note: this check is still very slow (~30secs) -->
     <uptodate targetfile="${dep}/dist-server" property="skip.dist-server">
-      <srcfiles dir="${staging.dir}" includes="**/*"/>
+      <srcfiles dir="${staging.dir}"/>
     </uptodate>
   </target>
   <target name="dist-server" depends="stage, dist-server-dep" description="Assembles the Wave in a Box server" unless="skip.dist-server">

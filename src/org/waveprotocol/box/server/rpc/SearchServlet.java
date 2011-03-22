@@ -21,12 +21,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.MessageLite;
-import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.JsonRpcResponse;
 import com.google.wave.api.OperationQueue;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.ProtocolVersion;
 import com.google.wave.api.SearchResult;
+import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.SearchResult.Digest;
 import com.google.wave.api.data.converter.EventDataConverterManager;
 
@@ -38,6 +38,7 @@ import org.waveprotocol.box.server.robots.OperationContextImpl;
 import org.waveprotocol.box.server.robots.OperationServiceRegistry;
 import org.waveprotocol.box.server.robots.util.ConversationUtil;
 import org.waveprotocol.box.server.robots.util.OperationUtil;
+import org.waveprotocol.box.server.rpc.ProtoSerializer.SerializationException;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.box.webclient.search.SearchService;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -213,7 +214,11 @@ public final class SearchServlet extends HttpServlet {
       // This is to make sure the fetched data is fresh - since the w3c spec
       // is rarely respected.
       resp.setHeader("Cache-Control", "no-store");
-      serializer.writeTo(resp.getWriter(), message);
+      try {
+        resp.getWriter().append(serializer.toJson(message).toString());
+      } catch (SerializationException e) {
+        throw new IOException(e);
+      }
     }
   }
 }

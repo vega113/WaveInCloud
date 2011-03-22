@@ -34,19 +34,19 @@ public class WebSocketChannelTest extends TestCase {
       long sequenceNumber;
 
       @Override
-      public void message(final long sequenceNo, final Message message) {
+      public void message(int sequenceNo, final Message message) {
         this.sequenceNumber = sequenceNo;
         this.savedMessage = message;
       }
 
       @Override
-      public void unknown(final long sequenceNo, final String messageType,
+      public void unknown(int sequenceNo, final String messageType,
           final UnknownFieldSet message) {
         fail("unknown");
       }
 
       @Override
-      public void unknown(final long sequenceNo, final String messageType, final String message) {
+      public void unknown(int sequenceNo, final String messageType, final String message) {
         fail("unknown");
       }
     }

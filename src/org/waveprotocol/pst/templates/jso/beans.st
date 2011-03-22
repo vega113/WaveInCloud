@@ -30,14 +30,14 @@ $if (f.repeated)$
     @Override
     public void addAll$f.capName$(List<? extends $f.messageType$> models) {
       for ($f.messageType$ model : models) {
-      	append$f.capName$(model);
+      	add$f.capName$(model);
       }
     }
   $else$
     @Override
     public void addAll$f.capName$(List<$f.boxedJavaType$> values) {
       for ($f.javaType$ value : values) {
-        append$f.capName$(value);
+        add$f.capName$(value);
       }
     }
   $endif$
@@ -47,13 +47,13 @@ $if (f.repeated)$
   public $f.javaType$ $f.getter$(int n) {
     initArray(this, key$f.capName$);
     $if (f.message)$
-      JsArray<$f.javaType$> array = (JsArray<$f.javaType$>) getPropertyAsObject(this, key$f.capName$);
+      JsArray<$f.javaType$> array = getPropertyAsObject(this, key$f.capName$).cast();
     $elseif (f.enum)$
-      JsArrayInteger array = (JsArrayInteger) getPropertyAsObject(this, key$f.capName$);
+      JsArrayInteger array = getPropertyAsObject(this, key$f.capName$).cast();
     $elseif (f.blob)$
-      JsArrayString array = (JsArrayString) getPropertyAsObject(this, key$f.capName$);
+      JsArrayString array = getPropertyAsObject(this, key$f.capName$).cast();
     $else$
-      JsArray$f.boxedJavaType$ array = (JsArray$f.boxedJavaType$) getPropertyAsObject(this, key$f.capName$);
+      JsArray$f.boxedJavaType$ array = getPropertyAsObject(this, key$f.capName$).cast();
     $endif$
     if (n < 0) throw new IllegalArgumentException("index " + n + " < 0");
     if (array.length() <= n) throw new IllegalArgumentException("index " + n + ">= array length " + array.length());
@@ -105,25 +105,25 @@ $if (f.repeated)$
   $if (f.message)$
     @Override
     @SuppressWarnings("unchecked")
-    public void append$f.capName$($f.messageType$ model) {
+    public void add$f.capName$($f.messageType$ model) {
       initArray(this, key$f.capName$);
       ((JsArray<$f.javaType$>) getPropertyAsObject(this, key$f.capName$)).push(($f.javaType$) model);
     }
   $elseif (f.enum)$
     @Override
-    public void append$f.capName$($f.javaType$ enumValue) {
+    public void add$f.capName$($f.javaType$ enumValue) {
       initArray(this, key$f.capName$);
       ((JsArrayInteger) getPropertyAsObject(this, key$f.capName$)).push(enumValue.getValue());
     }
   $elseif (f.blob)$
     @Override
-    public void append$f.capName$($f.javaType$ blob) {
+    public void add$f.capName$($f.javaType$ blob) {
       initArray(this, key$f.capName$);
       ((JsArrayString) getPropertyAsObject(this, key$f.capName$)).push(blob.getData());
     }
   $else$
     @Override
-    public void append$f.capName$($f.javaType$ value) {
+    public void add$f.capName$($f.javaType$ value) {
       initArray(this, key$f.capName$);
       ((JsArray$f.boxedJavaType$) getPropertyAsObject(this, key$f.capName$)).push(value);
     }

@@ -20,13 +20,19 @@
 
   <!-- 
   Compiles the sources referenced by the "srcs" patternset.
+
+  The model for these rules is that buildjava's source path includes the
+  entire universe of all source, but small fragements of it are compiled
+  one by one as specificed by a subproject's 'srcs' pattern.
   -->
   <target name="compile">
+    <echo message="Compiling ${libname}"/>
     <buildjava destdir="${build.src.dir}" srcpattern="srcs">
       <src path="${src.dir}"/>
       <classpath>
         <path refid="libpath"/>
         <path location="${build.proto.dir}"/>
+        <path location="${build.messages.dir}"/>
       </classpath>
     </buildjava>
   </target>
@@ -40,6 +46,7 @@
         <path refid="libpath"/>
         <path location="${build.src.dir}"/>
         <path location="${build.proto.dir}"/>
+        <path location="${build.messages.dir}"/>
       </classpath>
     </buildjava>
   </target>
@@ -52,4 +59,3 @@
   </target>
 
 </project>
-

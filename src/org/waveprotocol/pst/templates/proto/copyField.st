@@ -3,11 +3,11 @@ $if (f.repeated)$
   clear$f.capName$();
   $if (f.message)$
     for ($f.messageType$ field : $target$.$f.getter$()) {
-      append$f.capName$(new $f.javaType$(field));
+      add$f.capName$(new $f.javaType$(field));
     }
   $else$
     for ($f.javaType$ field : $target$.$f.getter$()) {
-      append$f.capName$(field);
+      add$f.capName$(field);
     }
   $endif$
 

@@ -26,6 +26,7 @@ import org.waveprotocol.box.common.comms.WaveClientRpc.WaveViewSnapshot;
 import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.common.SnapshotSerializer;
 import org.waveprotocol.box.server.frontend.CommittedWaveletSnapshot;
+import org.waveprotocol.box.server.rpc.ProtoSerializer.SerializationException;
 import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
 import org.waveprotocol.wave.model.id.ModernIdSerialiser;
@@ -112,7 +113,11 @@ public final class FetchServlet extends HttpServlet {
       // 'Cache-Control: must-revalidate, private' and an ETag with the wave[let]'s version.
       dest.setHeader("Cache-Control", "no-store");
 
-      serializer.writeTo(dest.getWriter(), message);
+      try {
+        dest.getWriter().append(serializer.toJson(message).toString());
+      } catch (SerializationException e) {
+        throw new IOException(e);
+      }
     }
   }
 

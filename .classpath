@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="src" path="proto_gwt_src"/>
-	<classpathentry kind="src" path="proto_src"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="src" path="proto_src"/>
+	<classpathentry kind="src" path="gen/messages"/>
+	<classpathentry kind="src" path="gen/gxp"/>
 
         <!-- Common libs listed first for preference in Eclipse auto-complete -->
 	<classpathentry kind="lib" path="third_party/runtime/guava/guava-r07.jar"/>
@@ -57,16 +57,6 @@
 	<classpathentry kind="lib" path="third_party/runtime/oauth/oauth-provider.jar" sourcepath="third_party/runtime/oauth/oauth-provider-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/protobuf-format-java/protobuf-format-java-1.1.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/protobuf/protobuf-java-2.3.0.jar" sourcepath="third_party/runtime/protobuf/protobuf-2.3.0-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-benchmark-1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-codegen-1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-compiler-1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-core-1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-json-1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-maven-plugin-1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-model-1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-model-json-1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-parser-1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/protostuff/protostuff-runtime-1.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/socketio/socketio-java.jar" sourcepath="third_party/runtime/socketio/socketio-java-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/websocket/websocket.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/whack/whack.jar"/>

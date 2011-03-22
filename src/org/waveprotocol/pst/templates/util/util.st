@@ -19,7 +19,7 @@ package $m.package$;
 
 import $m.package$.$m.name$.*;
 
-import org.waveprotocol.pst.lib.Blob;
+import org.waveprotocol.wave.communication.Blob;
 
 import java.util.Iterator;
 import java.util.List;

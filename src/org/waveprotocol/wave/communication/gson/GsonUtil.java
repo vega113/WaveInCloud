@@ -17,13 +17,15 @@
 
 package org.waveprotocol.wave.communication.gson;
 
-import org.waveprotocol.wave.communication.json.RawStringData;
-
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+
+import org.waveprotocol.wave.communication.json.JsonLongHelper;
+import org.waveprotocol.wave.communication.json.RawStringData;
 
 
 /**
@@ -126,7 +128,24 @@ public class GsonUtil {
     }
   }
 
-  /** Private constructor */
+  /**
+   * Faithfully serializes a 64-bit long value as a two-number array.
+   */
+  public static JsonArray toJson(long value) {
+    JsonArray arr = new JsonArray();
+    arr.add(new JsonPrimitive(JsonLongHelper.getLowWord(value)));
+    arr.add(new JsonPrimitive(JsonLongHelper.getHighWord(value)));
+    return arr;
+  }
+
+  /**
+   * Deserializes a two-number array from {@link #toJson(long)} into a long.
+   */
+  public static long fromJson(JsonElement e) {
+    JsonArray arr = e.getAsJsonArray();
+    return JsonLongHelper.toLong(arr.get(1).getAsInt(), arr.get(0).getAsInt());
+  }
+
   private GsonUtil() {
   }
 }

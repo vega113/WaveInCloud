@@ -20,11 +20,11 @@ package org.waveprotocol.box.server.rpc;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.UnknownFieldSet;
-import com.google.protobuf.Descriptors.MethodDescriptor;
 
 import com.sixfire.websocket.WebSocket;
 
@@ -37,7 +37,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Implementation of {@link ClientRpcChannel} based on a
@@ -47,8 +47,8 @@ public class WebSocketClientRpcChannel implements ClientRpcChannel {
   private static final Log LOG = Log.get(WebSocketClientRpcChannel.class);
 
   private final MessageExpectingChannel protoChannel;
-  private final AtomicLong lastSequenceNumber = new AtomicLong();
-  private final BiMap<Long, ClientRpcController> activeMethodMap = HashBiMap.create();
+  private final AtomicInteger lastSequenceNumber = new AtomicInteger();
+  private final BiMap<Integer, ClientRpcController> activeMethodMap = HashBiMap.create();
 
   /**
    * Set up a new WebSocketClientRpcChannel pointing at the given server
@@ -63,7 +63,7 @@ public class WebSocketClientRpcChannel implements ClientRpcChannel {
 
     ProtoCallback callback = new ProtoCallback() {
       @Override
-      public void message(long sequenceNo, Message message) {
+      public void message(int sequenceNo, Message message) {
         final ClientRpcController controller;
         synchronized (activeMethodMap) {
           controller = activeMethodMap.get(sequenceNo);
@@ -90,12 +90,12 @@ public class WebSocketClientRpcChannel implements ClientRpcChannel {
       }
 
       @Override
-      public void unknown(long sequenceNo, String messageType, UnknownFieldSet message) {
+      public void unknown(int sequenceNo, String messageType, UnknownFieldSet message) {
         unknown(sequenceNo, messageType);
       }
 
       @Override
-      public void unknown(long sequenceNo, String messageType, String message) {
+      public void unknown(int sequenceNo, String messageType, String message) {
         unknown(sequenceNo, messageType);
       }
     };
@@ -134,7 +134,7 @@ public class WebSocketClientRpcChannel implements ClientRpcChannel {
 
     // Generate a new sequence number, and configure the controller - notably,
     // this throws an IllegalStateException if it is *already* configured.
-    final long sequenceNo = lastSequenceNumber.incrementAndGet();
+    final int sequenceNo = lastSequenceNumber.incrementAndGet();
     final ClientRpcController.RpcState rpcStatus =
         new ClientRpcController.RpcState(this, method.getOptions()
             .getExtension(Rpc.isStreamingRpc), callback, new Runnable() {

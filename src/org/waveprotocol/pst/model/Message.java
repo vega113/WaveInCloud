@@ -225,7 +225,7 @@ public final class Message {
     if (fields == null) {
       ImmutableList.Builder<Field> builder = ImmutableList.builder();
       for (FieldDescriptor fd : descriptor.getFields()) {
-        builder.add(new Field(fd, new Type(fd, templateName, extraProperties)));
+        builder.add(new Field(fd, new Type(fd, templateName, extraProperties), extraProperties));
       }
       fields = builder.build();
     }

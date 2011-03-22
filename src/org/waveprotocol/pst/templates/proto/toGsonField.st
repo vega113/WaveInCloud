@@ -14,6 +14,8 @@ $endif$
         array.add(new JsonPrimitive($f.getter$(i).getValue()));
       $elseif (f.blob)$
         array.add(new JsonPrimitive($f.getter$(i).getData()));
+      $elseif (f.long)$
+        array.add(GsonUtil.toJson($f.getter$(i)));
       $else$
         array.add(new JsonPrimitive($f.getter$(i)));
       $endif$
@@ -30,6 +32,8 @@ $endif$
       $target$.add("$f.number$", new JsonPrimitive($f.getter$().getValue()));
     $elseif (f.blob)$
       $target$.add("$f.number$", new JsonPrimitive($f.getter$().getData()));
+    $elseif (f.long)$
+      $target$.add("$f.number$", GsonUtil.toJson($f.getter$()));
     $else$
       $target$.add("$f.number$", new JsonPrimitive($f.getter$()));
     $endif$

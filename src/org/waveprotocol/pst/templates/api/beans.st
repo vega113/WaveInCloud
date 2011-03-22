@@ -58,7 +58,7 @@ $if (f.repeated)$
   /**
    * Appends a value to $f.name$.
    */
-  void append$f.capName$($f.javaType$ value);
+  void add$f.capName$($f.javaType$ value);
 
   /**
    * Clears $f.name$.

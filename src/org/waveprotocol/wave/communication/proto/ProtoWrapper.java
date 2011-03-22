@@ -1,5 +1,5 @@
 /**
- * Copyright 2010 Google Inc.
+ * Copyright 2011 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,18 @@
  * limitations under the License.
  *
  */
+package org.waveprotocol.wave.communication.proto;
 
-package $m.package$;
-
-$imports(m=m)$
-
-import org.waveprotocol.wave.communication.Blob;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.google.protobuf.MessageLite;
 
 /**
- * Builder for $m.name$s.
+ * Something that wraps a protocol buffer.
  *
- * Do not edit.
- *
- * Generated from $m.filename$.
+ * @author hearnden@google.com (David Hearnden)
+ * @param <P> proto type
  */
-$class(m=m)$
+public interface ProtoWrapper<P extends MessageLite> {
+  void setPB(P proto);
+
+  P getPB();
+}

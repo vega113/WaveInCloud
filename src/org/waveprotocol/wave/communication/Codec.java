@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.wave.communication.proto;
+package org.waveprotocol.wave.communication;
 
 import com.google.common.base.Preconditions;
 
@@ -47,14 +47,14 @@ public final class Codec {
   /**
    * Encodes an arbitrary byte array as an array of characters.
    */
-  public static char[] encode(byte[] decoded) {
+  public static String encode(byte[] decoded) {
     char[] encoded = new char[decoded.length * 2];
     for (int i = 0; i < decoded.length; i++) {
       byte b = decoded[i];
       encoded[i * 2 + 0] = toDigit((b >> 4) & 0xF);
       encoded[i * 2 + 1] = toDigit((b >> 0) & 0xF);
     }
-    return encoded;
+    return new String(encoded);
   }
 
   /**
@@ -63,7 +63,8 @@ public final class Codec {
    * @throws IllegalArgumentException if {@code encoded} is not a valid
    *         encoding.
    */
-  public static byte[] decode(char[] encoded) {
+  public static byte[] decode(String s) {
+    char [] encoded = s.toCharArray();
     Preconditions.checkArgument(encoded.length % 2 == 0);
     byte[] decoded = new byte[encoded.length / 2];
     for (int i = 0; i < decoded.length; i++) {

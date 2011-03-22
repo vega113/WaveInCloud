@@ -23,7 +23,7 @@ $if (f.repeated)$
     @Override
     public void addAll$f.capName$(List<? extends $f.messageType$> messages) {
       for ($f.messageType$ message : messages) {
-      	append$f.capName$(message);
+      	add$f.capName$(message);
       }
     }
   $else$
@@ -61,12 +61,12 @@ $if (f.repeated)$
 
   $if (f.message)$
     @Override
-    public void append$f.capName$($f.messageType$ message) {
+    public void add$f.capName$($f.messageType$ message) {
       this.$f.name$.add(new $f.javaType$(message));
     }
   $else$
     @Override
-    public void append$f.capName$($f.javaType$ value) {
+    public void add$f.capName$($f.javaType$ value) {
       this.$f.name$.add(value);
     }
   $endif$

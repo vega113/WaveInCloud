@@ -24,11 +24,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.Service;
 import com.google.protobuf.UnknownFieldSet;
-import com.google.protobuf.Descriptors.MethodDescriptor;
 
 import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOServlet;
@@ -77,7 +77,6 @@ public class ServerRpcProvider {
 
   private final InetSocketAddress[] httpAddresses;
   private final Integer flashsocketPolicyPort;
-  private final Set<Connection> incomingConnections = Sets.newHashSet();
   private final ExecutorService threadPool;
   private final SessionManager sessionManager;
   private final org.eclipse.jetty.server.SessionManager jettySessionManager;
@@ -115,7 +114,7 @@ public class ServerRpcProvider {
     }
 
     @Override
-    protected void sendMessage(long sequenceNo, Message message) {
+    protected void sendMessage(int sequenceNo, Message message) {
       socketChannel.sendMessage(sequenceNo, message);
     }
 
@@ -135,7 +134,7 @@ public class ServerRpcProvider {
     }
 
     @Override
-    protected void sendMessage(long sequenceNo, Message message) {
+    protected void sendMessage(int sequenceNo, Message message) {
       socketChannel.sendMessage(sequenceNo, message);
     }
 
@@ -145,8 +144,8 @@ public class ServerRpcProvider {
   }
 
   abstract class Connection implements ProtoCallback {
-    private final Map<Long, ServerRpcController> activeRpcs =
-        new ConcurrentHashMap<Long, ServerRpcController>();
+    private final Map<Integer, ServerRpcController> activeRpcs =
+        new ConcurrentHashMap<Integer, ServerRpcController>();
 
     // The logged in user.
     // Note: Due to this bug:
@@ -172,7 +171,7 @@ public class ServerRpcProvider {
       channel.expectMessage(Rpc.CancelRpc.getDefaultInstance());
     }
 
-    protected abstract void sendMessage(long sequenceNo, Message message);
+    protected abstract void sendMessage(int sequenceNo, Message message);
 
     private ParticipantId authenticate(String token) {
       HttpSession session = sessionManager.getSessionFromToken(token);
@@ -181,7 +180,7 @@ public class ServerRpcProvider {
     }
 
     @Override
-    public void message(final long sequenceNo, Message message) {
+    public void message(final int sequenceNo, Message message) {
       if (message instanceof Rpc.CancelRpc) {
         final ServerRpcController controller = activeRpcs.get(sequenceNo);
         if (controller == null) {
@@ -251,14 +250,14 @@ public class ServerRpcProvider {
     }
 
     @Override
-    public void unknown(long sequenceNo, String messageType, UnknownFieldSet message) {
+    public void unknown(int sequenceNo, String messageType, UnknownFieldSet message) {
       throw new IllegalStateException(
           "Got unknown message (type: " + messageType + ", " + message + ") for sequence: "
               + sequenceNo);
     }
 
     @Override
-    public void unknown(long sequenceNo, String messageType, String message) {
+    public void unknown(int sequenceNo, String messageType, String message) {
       throw new IllegalStateException(
           "Got unknown message (type: " + messageType + ", " + message + ") for sequence: "
               + sequenceNo);

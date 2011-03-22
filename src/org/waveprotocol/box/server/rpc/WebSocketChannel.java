@@ -17,50 +17,66 @@
 
 package org.waveprotocol.box.server.rpc;
 
-import com.google.common.collect.Maps;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.protobuf.Message;
 
+import org.waveprotocol.box.server.rpc.ProtoSerializer.SerializationException;
+import org.waveprotocol.wave.communication.gson.GsonException;
+import org.waveprotocol.wave.communication.gson.GsonSerializable;
 import org.waveprotocol.wave.util.logging.Log;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * A channel abstraction for websocket, for sending and receiving strings.
  */
 public abstract class WebSocketChannel extends MessageExpectingChannel {
   private static final Log LOG = Log.get(WebSocketChannel.class);
-  private static final int VERSION = 1;
 
   /**
-   * A simple message wrapper that bundles a json string with a version,
-   * sequence number, and type information.
+   * Envelope for delivering arbitrary messages. Each envelope has a sequence
+   * number and a message.
+   * <p>
+   * Note that this message can not be described by a protobuf, because it
+   * contains an arbitrary protobuf, which breaks the protobuf typing rules.
    */
-  @SuppressWarnings("unused")
   private static class MessageWrapper {
-    public int version;
-    public long sequenceNumber;
-    public String messageType;
-    public String messageJson;
+    private final static JsonParser parser = new JsonParser();
 
-    /** No-args constructor for {@link Gson#fromJson(String,Class)}. */
-    public MessageWrapper() { }
+    final int sequenceNumber;
+    final String messageType;
+    final JsonElement message;
 
-    public MessageWrapper(int version, long sequenceNumber, String messageType,
-        String messageJson) {
-      this.version = version;
+    public MessageWrapper(int sequenceNumber, String messageType, JsonElement message) {
       this.sequenceNumber = sequenceNumber;
       this.messageType = messageType;
-      this.messageJson = messageJson;
+      this.message = message;
+    }
+
+    public static MessageWrapper deserialize(Gson gson, String data) {
+      JsonElement e = parser.parse(data);
+      JsonObject obj = e.getAsJsonObject();
+      String type = obj.get("messageType").getAsString();
+      int seqno = obj.get("sequenceNumber").getAsInt();
+      JsonElement message = obj.get("message");
+      return new MessageWrapper(seqno, type, message);
+    }
+
+    public static String serialize(String type,int seqno,  JsonElement message) {
+      JsonObject o = new JsonObject();
+      o.add("messageType", new JsonPrimitive(type));
+      o.add("sequenceNumber", new JsonPrimitive(seqno));
+      o.add("message", message);
+      return o.toString();
     }
   }
 
   private final ProtoCallback callback;
   private final Gson gson = new Gson();
-  private final Map<String, Class<? extends Message>> protosByName;
   private final ProtoSerializer serializer;
 
   /**
@@ -75,32 +91,33 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
     // The ProtoSerializer could really be singleton.
     // TODO: Figure out a way to inject a singleton instance using Guice
     this.serializer = new ProtoSerializer();
-    protosByName = Maps.newHashMap();
-    for (Class<? extends Message> class_ : ProtoSerializer.MODULE_CLASSES) {
-      protosByName.put(shortName(class_.getName()), class_);
-    }
-  }
-
-  private String shortName(final String className) {
-    String[] pieces = className.split("[\\.\\$]");
-    return pieces[pieces.length-1];
   }
 
   public void handleMessageString(String data) {
     LOG.fine("received JSON message " + data);
-    MessageWrapper wrapper = gson.fromJson(data, MessageWrapper.class);
-    Message m;
-    Class<? extends Message> protoClass = protosByName.get(wrapper.messageType);
+    Message message;
+
+    MessageWrapper wrapper = MessageWrapper.deserialize(gson, data);
+    
     try {
-      m = serializer
-          .parseFrom(new ByteArrayInputStream(wrapper.messageJson.getBytes()),
-              protoClass);
-    } catch (IOException e) {
+      message = serializer.fromJson(wrapper.message, wrapper.messageType);
+    } catch (SerializationException e) {
+      LOG.warning("message handling error", e);
       e.printStackTrace();
       return;
     }
-    LOG.fine("message was " + m.getDescriptorForType().getName());
-    callback.message(wrapper.sequenceNumber, m);
+    callback.message(wrapper.sequenceNumber, message);
+  }
+
+  static <T extends GsonSerializable> T load(JsonElement payload, T x, Gson gson) {
+    try {
+      x.fromGson(payload, gson, null);
+      return x;
+    } catch (GsonException e) {
+      LOG.warning("JSON load error", e);
+      e.printStackTrace();
+      return null;
+    }
   }
 
   /**
@@ -112,19 +129,18 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
   protected abstract void sendMessageString(String data) throws IOException;
 
   @Override
-  public void sendMessage(long sequenceNo, Message message) {
-    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+  public void sendMessage(int sequenceNo, Message message) {
+    JsonElement json;
     try {
-      serializer.writeTo(outputStream, message);
-    } catch (IOException e) {
-      e.printStackTrace();
+      json = serializer.toJson(message);
+    } catch (SerializationException e) {
+      LOG.warning("Failed to JSONify proto message", e);
+      return;
     }
-    String json = outputStream.toString();
-
-    MessageWrapper wrapper = new MessageWrapper(VERSION, sequenceNo,
-        message.getDescriptorForType().getName(), json);
+    String type = message.getDescriptorForType().getName();
+    String str = MessageWrapper.serialize(type, sequenceNo, json);
     try {
-      sendMessageString(gson.toJson(wrapper));
+      sendMessageString(str);
       LOG.fine("sent JSON message over websocket, sequence number " + sequenceNo
           + ", message " + message);
     } catch (IOException e) {
@@ -132,6 +148,7 @@ public abstract class WebSocketChannel extends MessageExpectingChannel {
       // so it can attempt retransmission.
       LOG.warning("Failed to transmit message on socket, sequence number " + sequenceNo
           + ", message " + message, e);
+      return;
     }
   }
 }

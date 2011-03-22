@@ -149,7 +149,7 @@ public class JsonHelper {
    * @return The value of the property.
    */
   public static final long getPropertyAsLong(JavaScriptObject object, String key) {
-    JsLong value = (JsLong) getPropertyAsObject(object, key);
+    JsLong value = getPropertyAsObject(object, key).cast();
     return value.toLong();
   }
 

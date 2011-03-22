@@ -142,6 +142,7 @@ public final class PstCommandLine {
   }
 
   public boolean shouldUseInt52() {
-    return cl.hasOption('t') && "true".equals(cl.getOptionValue('t'));
+    return !cl.hasOption('t') //
+        || (cl.hasOption('t') && "true".equals(cl.getOptionValue('t')));
   }
 }

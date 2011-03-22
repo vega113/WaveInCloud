@@ -19,18 +19,17 @@ package $m.package$;
 
 $imports(m=m)$
 
-import org.waveprotocol.pst.lib.Blob;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import org.waveprotocol.wave.communication.Blob;
+import org.waveprotocol.wave.communication.ProtoEnums;
 import org.waveprotocol.wave.communication.gson.GsonException;
 import org.waveprotocol.wave.communication.gson.GsonSerializable;
 import org.waveprotocol.wave.communication.gson.GsonUtil;
-import org.waveprotocol.wave.communication.json.ProtoEnums;
 import org.waveprotocol.wave.communication.json.RawStringData;
 
 /**

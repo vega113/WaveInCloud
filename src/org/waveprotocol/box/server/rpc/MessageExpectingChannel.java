@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  * Channel superclass to abstract expected-message mechanism.
  * 
- *
+ * Note: {@link #expectMessage} has no effect.
  */
 public abstract class MessageExpectingChannel {
   private final Map<String, Message> expectedMessages = Maps.newHashMap();
@@ -48,7 +48,7 @@ public abstract class MessageExpectingChannel {
    * @param sequenceNo
    * @param message
    */
-  public abstract void sendMessage(long sequenceNo, Message message);
+  public abstract void sendMessage(int sequenceNo, Message message);
 
   /**
    * Helper method around {{@link #sendMessage(long, Message)} which
@@ -59,7 +59,7 @@ public abstract class MessageExpectingChannel {
    * @param message
    * @param expectedResponsePrototype
    */
-  public void sendMessage(long sequenceNo, Message message, Message expectedResponsePrototype) {
+  public void sendMessage(int sequenceNo, Message message, Message expectedResponsePrototype) {
     expectMessage(expectedResponsePrototype);
     sendMessage(sequenceNo, message);
   }

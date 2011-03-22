@@ -17,12 +17,12 @@
 
 package org.waveprotocol.wave.communication.gwt;
 
-import org.waveprotocol.wave.communication.json.JsonException;
-import org.waveprotocol.wave.communication.json.RawStringData;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
+
+import org.waveprotocol.wave.communication.json.JsonException;
+import org.waveprotocol.wave.communication.json.RawStringData;
 
 /**
  * Implementation of a JSON message.
@@ -115,6 +115,11 @@ public class JsonMessage extends JavaScriptObject {
    */
   public final String toJson() {
     return serializer.serialize(this);
+  }
+
+
+  public static <T extends JsonMessage> T parse(String json) throws JsonException {
+    return createJsonMessage(json).<T>cast();
   }
 
   /**

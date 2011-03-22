@@ -12,13 +12,15 @@ if ($target$.has("$f.number$")) {
         $if (f.message)$
           $f.javaType$ payload = new $f.javaType$();
           GsonUtil.extractJsonObject(payload, array.get(i), gson, raw);
-          append$f.capName$(payload);
+          add$f.capName$(payload);
         $elseif (f.enum)$
-          append$f.capName$(ProtoEnums.valOf(array.get(i).getAsInt(), $f.javaType$.values()));
+          add$f.capName$(ProtoEnums.valOf(array.get(i).getAsInt(), $f.javaType$.values()));
         $elseif (f.blob)$
-          append$f.capName$(new Blob(array.get(i).getAsString()));
+          add$f.capName$(new Blob(array.get(i).getAsString()));
+        $elseif (f.long)$
+          add$f.capName$(GsonUtil.fromJson(array.get(i)));
         $else$
-          append$f.capName$(array.get(i).getAs$f.capJavaType$());
+          add$f.capName$(array.get(i).getAs$f.capJavaType$());
         $endif$
       }
     }
@@ -33,6 +35,8 @@ if ($target$.has("$f.number$")) {
         $f.setter$(ProtoEnums.valOf(elem.getAsInt(), $f.javaType$.values()));
       $elseif (f.blob)$
         $f.setter$(new Blob(elem.getAsString()));
+      $elseif (f.long)$
+        $f.setter$(GsonUtil.fromJson(elem));
       $else$
         $f.setter$(elem.getAs$f.capJavaType$());
       $endif$

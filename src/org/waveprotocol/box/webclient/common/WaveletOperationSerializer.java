@@ -17,14 +17,29 @@
 
 package org.waveprotocol.box.webclient.common;
 
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-
+import org.waveprotocol.wave.communication.Blob;
+import org.waveprotocol.wave.communication.Codec;
 import org.waveprotocol.wave.federation.ProtocolDocumentOperation;
+import org.waveprotocol.wave.federation.ProtocolDocumentOperation.Component;
+import org.waveprotocol.wave.federation.ProtocolDocumentOperation.Component.AnnotationBoundary;
+import org.waveprotocol.wave.federation.ProtocolDocumentOperation.Component.ElementStart;
+import org.waveprotocol.wave.federation.ProtocolDocumentOperation.Component.KeyValuePair;
+import org.waveprotocol.wave.federation.ProtocolDocumentOperation.Component.KeyValueUpdate;
+import org.waveprotocol.wave.federation.ProtocolDocumentOperation.Component.ReplaceAttributes;
+import org.waveprotocol.wave.federation.ProtocolDocumentOperation.Component.UpdateAttributes;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.ProtocolWaveletOperation;
+import org.waveprotocol.wave.federation.jso.ProtocolDocumentOperationJsoImpl;
+import org.waveprotocol.wave.federation.jso.ProtocolDocumentOperationJsoImpl.ComponentJsoImpl;
+import org.waveprotocol.wave.federation.jso.ProtocolDocumentOperationJsoImpl.ComponentJsoImpl.AnnotationBoundaryJsoImpl;
+import org.waveprotocol.wave.federation.jso.ProtocolDocumentOperationJsoImpl.ComponentJsoImpl.ElementStartJsoImpl;
+import org.waveprotocol.wave.federation.jso.ProtocolDocumentOperationJsoImpl.ComponentJsoImpl.KeyValuePairJsoImpl;
+import org.waveprotocol.wave.federation.jso.ProtocolDocumentOperationJsoImpl.ComponentJsoImpl.KeyValueUpdateJsoImpl;
+import org.waveprotocol.wave.federation.jso.ProtocolDocumentOperationJsoImpl.ComponentJsoImpl.ReplaceAttributesJsoImpl;
+import org.waveprotocol.wave.federation.jso.ProtocolDocumentOperationJsoImpl.ComponentJsoImpl.UpdateAttributesJsoImpl;
+import org.waveprotocol.wave.federation.jso.ProtocolHashedVersionJsoImpl;
+import org.waveprotocol.wave.federation.jso.ProtocolWaveletOperationJsoImpl;
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
@@ -37,7 +52,6 @@ import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.operation.wave.AddParticipant;
 import org.waveprotocol.wave.model.operation.wave.BlipContentOperation;
 import org.waveprotocol.wave.model.operation.wave.BlipOperation;
-import org.waveprotocol.wave.model.operation.wave.BlipOperationVisitor;
 import org.waveprotocol.wave.model.operation.wave.NoOp;
 import org.waveprotocol.wave.model.operation.wave.RemoveParticipant;
 import org.waveprotocol.wave.model.operation.wave.SubmitBlip;
@@ -45,18 +59,20 @@ import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletBlipOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperationContext;
-import org.waveprotocol.wave.model.util.Base64DecoderException;
-import org.waveprotocol.wave.model.util.CharBase64;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Utility class for serializing/deserializing wavelet operations (and their components) to/from
- * their protocol buffer representations (and their components).
+ * Utility class for serializing/deserializing wavelet operations (and their
+ * components) to/from their protocol buffer representations (and their
+ * components).
  */
 public class WaveletOperationSerializer {
   private WaveletOperationSerializer() {
@@ -69,198 +85,52 @@ public class WaveletOperationSerializer {
    * @return serialized protocol buffer wavelet operation
    */
   public static ProtocolWaveletOperation serialize(WaveletOperation waveletOp) {
-    ProtocolWaveletOperation.Builder protobufOp = ProtocolWaveletOperation.newBuilder();
+    ProtocolWaveletOperation protobufOp = ProtocolWaveletOperationJsoImpl.create();
 
     if (waveletOp instanceof NoOp) {
       protobufOp.setNoOp(true);
     } else if (waveletOp instanceof AddParticipant) {
-      protobufOp.setAddParticipant(
-          ((AddParticipant) waveletOp).getParticipantId().getAddress());
+      protobufOp.setAddParticipant(((AddParticipant) waveletOp).getParticipantId().getAddress());
     } else if (waveletOp instanceof RemoveParticipant) {
-      protobufOp.setRemoveParticipant(
-          ((RemoveParticipant) waveletOp).getParticipantId().getAddress());
+      protobufOp.setRemoveParticipant(((RemoveParticipant) waveletOp).getParticipantId()
+          .getAddress());
     } else if (waveletOp instanceof WaveletBlipOperation) {
-      ProtocolWaveletOperation.MutateDocument.Builder mutation =
-          ProtocolWaveletOperation.MutateDocument.newBuilder();
+      ProtocolWaveletOperation.MutateDocument mutation =
+          ProtocolWaveletOperationJsoImpl.MutateDocumentJsoImpl.create();
       mutation.setDocumentId(((WaveletBlipOperation) waveletOp).getBlipId());
-      mutation.setDocumentOperation(
-          serialize(((WaveletBlipOperation) waveletOp).getBlipOp()));
-      protobufOp.setMutateDocument(mutation.build());
+      mutation.setDocumentOperation(serialize(((WaveletBlipOperation) waveletOp).getBlipOp()));
+      protobufOp.setMutateDocument(mutation);
     } else {
       throw new IllegalArgumentException("Unsupported operation type: " + waveletOp);
     }
 
-    return protobufOp.build();
+    return protobufOp;
   }
 
 
   /**
    * Serialize a {@link DocOp} as a {@link ProtocolDocumentOperation}.
    *
-   * @param inputOp document operation to serialize
+   * @param blipOp document operation to serialize
    * @return serialized protocol buffer document operation
    */
-  public static ProtocolDocumentOperation serialize(BlipOperation inputOp) {
-    final ProtocolDocumentOperation.Builder output = ProtocolDocumentOperation.newBuilder();
+  public static ProtocolDocumentOperation serialize(BlipOperation blipOp) {
+    ProtocolDocumentOperation output;
 
-    inputOp.acceptVisitor(new BlipOperationVisitor() {
-      @Override
-      public void visitBlipContentOperation(BlipContentOperation op) {
-        DocOp mutationOp = op.getContentOp();
-        mutationOp.apply(new DocOpCursor() {
-          private ProtocolDocumentOperation.Component.Builder newComponentBuilder() {
-            return ProtocolDocumentOperation.Component.newBuilder();
-          }
-
-          @Override
-          public void retain(int itemCount) {
-            output.addComponent(newComponentBuilder().setRetainItemCount(itemCount));
-          }
-          
-          // HACK: Work around JSON escaping bug in protostuff, see bug
-          // http://code.google.com/p/wave-protocol/issues/detail?id=234.
-          // Delete this once that bug is closed.
-          private String escape(String s) {
-            return s.replace("\\", "\\\\").replace("\"", "\\u0022");
-          }
-
-          @Override
-          public void characters(String characters) {
-            output.addComponent(newComponentBuilder().setCharacters(
-                escape(characters)));
-          }
-
-          @Override
-          public void deleteCharacters(String characters) {
-            output.addComponent(newComponentBuilder().setDeleteCharacters(
-                escape(characters)));
-          }
-
-          @Override
-          public void elementStart(String type, Attributes attributes) {
-            ProtocolDocumentOperation.Component.ElementStart e = makeElementStart(type, attributes);
-            output.addComponent(newComponentBuilder().setElementStart(e));
-          }
-
-          @Override
-          public void deleteElementStart(String type, Attributes attributes) {
-            ProtocolDocumentOperation.Component.ElementStart e = makeElementStart(type, attributes);
-            output.addComponent(newComponentBuilder().setDeleteElementStart(e));
-          }
-
-          private ProtocolDocumentOperation.Component.ElementStart makeElementStart(
-              String type, Attributes attributes) {
-            ProtocolDocumentOperation.Component.ElementStart.Builder e =
-                ProtocolDocumentOperation.Component.ElementStart.newBuilder();
-
-            e.setType(type);
-
-            for (String name : attributes.keySet()) {
-              e.addAttribute(ProtocolDocumentOperation.Component.KeyValuePair.newBuilder()
-                  .setKey(name).setValue(attributes.get(name)));
-            }
-
-            return e.build();
-          }
-
-          @Override
-          public void elementEnd() {
-            output.addComponent(newComponentBuilder().setElementEnd(true));
-          }
-
-          @Override
-          public void deleteElementEnd() {
-            output.addComponent(newComponentBuilder().setDeleteElementEnd(true));
-          }
-
-          @Override
-          public void replaceAttributes(Attributes oldAttributes, Attributes newAttributes) {
-            ProtocolDocumentOperation.Component.ReplaceAttributes.Builder r =
-                ProtocolDocumentOperation.Component.ReplaceAttributes.newBuilder();
-
-            if (oldAttributes.isEmpty() && newAttributes.isEmpty()) {
-              r.setEmpty(true);
-            } else {
-              for (String name : oldAttributes.keySet()) {
-                r.addOldAttribute(ProtocolDocumentOperation.Component.KeyValuePair.newBuilder()
-                    .setKey(name).setValue(oldAttributes.get(name)));
-              }
-
-              for (String name : newAttributes.keySet()) {
-                r.addNewAttribute(ProtocolDocumentOperation.Component.KeyValuePair.newBuilder()
-                    .setKey(name).setValue(newAttributes.get(name)));
-              }
-            }
-
-            output.addComponent(newComponentBuilder().setReplaceAttributes(r.build()));
-          }
-
-          @Override
-          public void updateAttributes(AttributesUpdate attributes) {
-            ProtocolDocumentOperation.Component.UpdateAttributes.Builder u =
-                ProtocolDocumentOperation.Component.UpdateAttributes.newBuilder();
-
-            if (attributes.changeSize() == 0) {
-              u.setEmpty(true);
-            } else {
-              for (int i = 0; i < attributes.changeSize(); i++) {
-                u.addAttributeUpdate(makeKeyValueUpdate(
-                    attributes.getChangeKey(i), attributes.getOldValue(i),
-                    attributes.getNewValue(i)));
-              }
-            }
-
-            output.addComponent(newComponentBuilder().setUpdateAttributes(u.build()));
-          }
-
-          @Override
-          public void annotationBoundary(AnnotationBoundaryMap map) {
-            ProtocolDocumentOperation.Component.AnnotationBoundary.Builder a =
-                ProtocolDocumentOperation.Component.AnnotationBoundary.newBuilder();
-
-            if (map.endSize() == 0 && map.changeSize() == 0) {
-              a.setEmpty(true);
-            } else {
-              for (int i = 0; i < map.endSize(); i++) {
-                a.addEnd(map.getEndKey(i));
-              }
-              for (int i = 0; i < map.changeSize(); i++) {
-                a.addChange(makeKeyValueUpdate(
-                    map.getChangeKey(i), map.getOldValue(i), map.getNewValue(i)));
-              }
-            }
-
-            output.addComponent(newComponentBuilder().setAnnotationBoundary(a.build()));
-          }
-
-          private ProtocolDocumentOperation.Component.KeyValueUpdate makeKeyValueUpdate(
-              String key, String oldValue, String newValue) {
-            ProtocolDocumentOperation.Component.KeyValueUpdate.Builder kvu =
-                ProtocolDocumentOperation.Component.KeyValueUpdate.newBuilder();
-            kvu.setKey(key);
-            if (oldValue != null) {
-              kvu.setOldValue(oldValue);
-            }
-            if (newValue != null) {
-              kvu.setNewValue(newValue);
-            }
-
-            return kvu.build();
-          }
-        });
-      }
-
-      @Override
-      public void visitSubmitBlip(SubmitBlip op) {
-        // we don't support this operation here.
-      }
-    });
-
-    return output.build();
+    if (blipOp instanceof BlipContentOperation) {
+      output = serialize(((BlipContentOperation) blipOp).getContentOp());
+    } else if (blipOp instanceof SubmitBlip) {
+      // we don't support this operation here.
+      output = ProtocolDocumentOperationJsoImpl.create();
+    } else {
+      throw new IllegalArgumentException("Unsupported operation type: " + blipOp);
+    }
+    return output;
   }
-  
+
   /**
-   * Deserializes a {@link ProtocolWaveletDelta} as a {@link TransformedWaveletDelta}
+   * Deserializes a {@link ProtocolWaveletDelta} as a
+   * {@link TransformedWaveletDelta}
    *
    * @param protocolDelta protocol buffer wavelet delta to deserialize
    * @return deserialized wavelet delta and version
@@ -269,15 +139,11 @@ public class WaveletOperationSerializer {
       HashedVersion postVersion) {
     // TODO(anorth): include the application timestamp when it's plumbed
     // through correctly.
-    final WaveletOperationContext dummy = new WaveletOperationContext(null, 0L, 0L);
-    List<WaveletOperation> ops =
-        Lists.transform(protocolDelta.getOperationList(),
-            new Function<ProtocolWaveletOperation, WaveletOperation>() {
-              @Override
-              public WaveletOperation apply(ProtocolWaveletOperation op) {
-                return deserialize(op, dummy);
-              }
-            });
+    WaveletOperationContext dummy = new WaveletOperationContext(null, 0L, 0L);
+    List<WaveletOperation> ops = new ArrayList<WaveletOperation>();
+    for (ProtocolWaveletOperation protocolOp : protocolDelta.getOperation()) {
+      ops.add(deserialize(protocolOp, dummy));
+    }
     // This involves an unnecessary copy of the ops, but avoids repeating
     // error-prone context calculations.
     return TransformedWaveletDelta.cloneOperations(
@@ -285,7 +151,8 @@ public class WaveletOperationSerializer {
   }
 
   /**
-   * Deserialize a {@link ProtocolWaveletOperation} as a {@link WaveletOperation}.
+   * Deserialize a {@link ProtocolWaveletOperation} as a
+   * {@link WaveletOperation}.
    *
    * @param protobufOp protocol buffer wavelet operation to deserialize
    * @return deserialized wavelet operation
@@ -299,10 +166,9 @@ public class WaveletOperationSerializer {
     } else if (protobufOp.hasRemoveParticipant()) {
       return new RemoveParticipant(ctx, new ParticipantId(protobufOp.getRemoveParticipant()));
     } else if (protobufOp.hasMutateDocument()) {
-      return new WaveletBlipOperation(
-          protobufOp.getMutateDocument().getDocumentId(),
-          new BlipContentOperation(ctx,
-              deserialize(protobufOp.getMutateDocument().getDocumentOperation())));
+      return new WaveletBlipOperation(protobufOp.getMutateDocument().getDocumentId(),
+          new BlipContentOperation(ctx, deserialize(protobufOp.getMutateDocument()
+              .getDocumentOperation())));
     } else {
       throw new IllegalArgumentException("Unsupported operation: " + protobufOp);
     }
@@ -317,37 +183,31 @@ public class WaveletOperationSerializer {
   public static DocOp deserialize(ProtocolDocumentOperation op) {
     DocOpBuilder output = new DocOpBuilder();
 
-    for (ProtocolDocumentOperation.Component c : op.getComponentList()) {
+    for (ProtocolDocumentOperation.Component c : op.getComponent()) {
       if (c.hasAnnotationBoundary()) {
-        if (c.getAnnotationBoundary().getEmpty()) {
+        AnnotationBoundary boundary = c.getAnnotationBoundary();
+        if (boundary.getEmpty()) {
           output.annotationBoundary(AnnotationBoundaryMapImpl.EMPTY_MAP);
         } else {
-          String[] ends = new String[c.getAnnotationBoundary().getEndCount()];
-          String[] changeKeys = new String[c.getAnnotationBoundary().getChangeCount()];
-          String[] oldValues = new String[c.getAnnotationBoundary().getChangeCount()];
-          String[] newValues = new String[c.getAnnotationBoundary().getChangeCount()];
-          if (c.getAnnotationBoundary().getEndCount() > 0) {
-            c.getAnnotationBoundary().getEndList().toArray(ends);
-          }
-          for (int i = 0; i < changeKeys.length; i++) {
-            ProtocolDocumentOperation.Component.KeyValueUpdate kvu =
-                c.getAnnotationBoundary().getChange(i);
+          String[] ends = boundary.getEnd().toArray(new String[boundary.getEnd().size()]);
+          int changes = boundary.getChange().size();
+          String[] changeKeys = new String[changes];
+          String[] oldValues = new String[changes];
+          String[] newValues = new String[changes];
+          for (int i = 0; i < changes; i++) {
+            KeyValueUpdate kvu = boundary.getChange(i);
             changeKeys[i] = kvu.getKey();
             oldValues[i] = kvu.hasOldValue() ? kvu.getOldValue() : null;
             newValues[i] = kvu.hasNewValue() ? kvu.getNewValue() : null;
           }
-          output.annotationBoundary(
-              new AnnotationBoundaryMapImpl(ends, changeKeys, oldValues, newValues));
+          output.annotationBoundary(new AnnotationBoundaryMapImpl(ends, changeKeys, oldValues,
+              newValues));
         }
       } else if (c.hasCharacters()) {
         output.characters(c.getCharacters());
       } else if (c.hasElementStart()) {
-        Map<String, String> attributesMap = new HashMap<String, String>();
-        for (ProtocolDocumentOperation.Component.KeyValuePair pair :
-            c.getElementStart().getAttributeList()) {
-          attributesMap.put(pair.getKey(), pair.getValue());
-        }
-        output.elementStart(c.getElementStart().getType(), new AttributesImpl(attributesMap));
+        output.elementStart(c.getElementStart().getType(), new AttributesImpl(deserialize(c
+            .getElementStart().getAttribute())));
       } else if (c.hasElementEnd()) {
         output.elementEnd();
       } else if (c.hasRetainItemCount()) {
@@ -355,52 +215,51 @@ public class WaveletOperationSerializer {
       } else if (c.hasDeleteCharacters()) {
         output.deleteCharacters(c.getDeleteCharacters());
       } else if (c.hasDeleteElementStart()) {
-        Map<String, String> attributesMap = new HashMap<String, String>();
-        for (ProtocolDocumentOperation.Component.KeyValuePair pair :
-            c.getDeleteElementStart().getAttributeList()) {
-          attributesMap.put(pair.getKey(), pair.getValue());
-        }
-        output.deleteElementStart(c.getDeleteElementStart().getType(),
-            new AttributesImpl(attributesMap));
+        output.deleteElementStart(c.getDeleteElementStart().getType(), new AttributesImpl(
+            deserialize(c.getDeleteElementStart().getAttribute())));
       } else if (c.hasDeleteElementEnd()) {
         output.deleteElementEnd();
       } else if (c.hasReplaceAttributes()) {
-        if (c.getReplaceAttributes().getEmpty()) {
+        ReplaceAttributes r = c.getReplaceAttributes();
+        if (r.getEmpty()) {
           output.replaceAttributes(AttributesImpl.EMPTY_MAP, AttributesImpl.EMPTY_MAP);
         } else {
-          Map<String, String> oldAttributesMap = new HashMap<String, String>();
-          Map<String, String> newAttributesMap = new HashMap<String, String>();
-          for (ProtocolDocumentOperation.Component.KeyValuePair pair :
-              c.getReplaceAttributes().getOldAttributeList()) {
-            oldAttributesMap.put(pair.getKey(), pair.getValue());
-          }
-          for (ProtocolDocumentOperation.Component.KeyValuePair pair :
-              c.getReplaceAttributes().getNewAttributeList()) {
-            newAttributesMap.put(pair.getKey(), pair.getValue());
-          }
-          output.replaceAttributes(new AttributesImpl(oldAttributesMap),
-              new AttributesImpl(newAttributesMap));
+          output.replaceAttributes(new AttributesImpl(deserialize(r.getOldAttribute())),
+              new AttributesImpl(deserialize(r.getNewAttribute())));
         }
       } else if (c.hasUpdateAttributes()) {
-        if (c.getUpdateAttributes().getEmpty()) {
+        UpdateAttributes u = c.getUpdateAttributes();
+        if (u.getEmpty()) {
           output.updateAttributes(AttributesUpdateImpl.EMPTY_MAP);
         } else {
-          String[] triplets = new String[c.getUpdateAttributes().getAttributeUpdateCount() * 3];
-          for (int i = 0, j = 0; i < c.getUpdateAttributes().getAttributeUpdateCount(); i++) {
-            ProtocolDocumentOperation.Component.KeyValueUpdate kvu =
-                c.getUpdateAttributes().getAttributeUpdate(i);
-            triplets[j++] = kvu.getKey();
-            triplets[j++] = kvu.hasOldValue() ? kvu.getOldValue() : null;
-            triplets[j++] = kvu.hasNewValue() ? kvu.getNewValue() : null;
+          String[] triplets = new String[u.getAttributeUpdate().size() * 3];
+          int i = 0;
+          for (KeyValueUpdate kvu : u.getAttributeUpdate()) {
+            triplets[i++] = kvu.getKey();
+            triplets[i++] = kvu.hasOldValue() ? kvu.getOldValue() : null;
+            triplets[i++] = kvu.hasNewValue() ? kvu.getNewValue() : null;
           }
           output.updateAttributes(new AttributesUpdateImpl(triplets));
         }
       } else {
-        //throw new IllegalArgumentException("Unsupported operation component: " + c);
+        // throw new
+        // IllegalArgumentException("Unsupported operation component: " + c);
       }
     }
 
     return output.build();
+  }
+
+  private static Map<String, String> deserialize(Collection<? extends KeyValuePair> pairs) {
+    if (pairs.isEmpty()) {
+      return Collections.emptyMap();
+    } else {
+      Map<String, String> map = new HashMap<String, String>();
+      for (KeyValuePair pair : pairs) {
+        map.put(pair.getKey(), pair.getValue());
+      }
+      return map;
+    }
   }
 
   /**
@@ -408,13 +267,148 @@ public class WaveletOperationSerializer {
    * POJO.
    */
   public static HashedVersion deserialize(ProtocolHashedVersion hashedVersion) {
-    String b64Hash = hashedVersion.getHistoryHash();
-    byte[] historyHash;
-    try {
-      historyHash = CharBase64.decode(b64Hash);
-      return HashedVersion.of((long) hashedVersion.getVersion(), historyHash);
-    } catch (Base64DecoderException e) {
-      throw new IllegalArgumentException("Invalid Base64 hash: " + b64Hash, e);
-    }
+    byte[] hash = Codec.decode(hashedVersion.getHistoryHash().getData());
+    return HashedVersion.of((long) hashedVersion.getVersion(), hash);
+  }
+
+  /**
+   * Serializes a {@link DocOp} as a {@link ProtocolDocumentOperation}.
+   *
+   * @param inputOp document operation to serialize
+   * @return serialized protocol buffer document operation
+   */
+  public static ProtocolDocumentOperation serialize(DocOp inputOp) {
+    final ProtocolDocumentOperation output = ProtocolDocumentOperationJsoImpl.create();
+    inputOp.apply(new DocOpCursor() {
+
+      private Component addComponent() {
+        ComponentJsoImpl component = ComponentJsoImpl.create();
+        output.addComponent(component);
+        return component;
+      }
+
+      private KeyValuePair keyValuePair(String key, String value) {
+        KeyValuePair pair = KeyValuePairJsoImpl.create();
+        pair.setKey(key);
+        pair.setValue(value);
+        return pair;
+      }
+
+      private KeyValueUpdate keyValueUpdate(String key, String oldValue, String newValue) {
+        KeyValueUpdate kvu = KeyValueUpdateJsoImpl.create();
+        kvu.setKey(key);
+        if (oldValue != null) {
+          kvu.setOldValue(oldValue);
+        }
+        if (newValue != null) {
+          kvu.setNewValue(newValue);
+        }
+        return kvu;
+      }
+
+      @Override
+      public void retain(int itemCount) {
+        addComponent().setRetainItemCount(itemCount);
+      }
+
+      @Override
+      public void characters(String characters) {
+        addComponent().setCharacters(characters);
+      }
+
+      @Override
+      public void deleteCharacters(String characters) {
+        addComponent().setDeleteCharacters(characters);
+      }
+
+      @Override
+      public void elementStart(String type, Attributes attributes) {
+        addComponent().setElementStart(makeElementStart(type, attributes));
+      }
+
+      @Override
+      public void deleteElementStart(String type, Attributes attributes) {
+        addComponent().setDeleteElementStart(makeElementStart(type, attributes));
+      }
+
+      private ElementStart makeElementStart(String type, Attributes attributes) {
+        ElementStart e = ElementStartJsoImpl.create();
+        e.setType(type);
+        for (String name : attributes.keySet()) {
+          e.addAttribute(keyValuePair(name, attributes.get(name)));
+        }
+        return e;
+      }
+
+      @Override
+      public void elementEnd() {
+        addComponent().setElementEnd(true);
+      }
+
+      @Override
+      public void deleteElementEnd() {
+        addComponent().setDeleteElementEnd(true);
+      }
+
+      @Override
+      public void replaceAttributes(Attributes oldAttributes, Attributes newAttributes) {
+        ReplaceAttributes r = ReplaceAttributesJsoImpl.create();
+        if (oldAttributes.isEmpty() && newAttributes.isEmpty()) {
+          r.setEmpty(true);
+        } else {
+          for (String name : oldAttributes.keySet()) {
+            r.addOldAttribute(keyValuePair(name, oldAttributes.get(name)));
+          }
+
+          for (String name : newAttributes.keySet()) {
+            r.addNewAttribute(keyValuePair(name, newAttributes.get(name)));
+          }
+        }
+        addComponent().setReplaceAttributes(r);
+      }
+
+      @Override
+      public void updateAttributes(AttributesUpdate attributes) {
+        UpdateAttributes u = UpdateAttributesJsoImpl.create();
+        if (attributes.changeSize() == 0) {
+          u.setEmpty(true);
+        } else {
+          for (int i = 0; i < attributes.changeSize(); i++) {
+            u.addAttributeUpdate(keyValueUpdate(attributes.getChangeKey(i),
+                attributes.getOldValue(i), attributes.getNewValue(i)));
+          }
+        }
+        addComponent().setUpdateAttributes(u);
+      }
+
+      @Override
+      public void annotationBoundary(AnnotationBoundaryMap map) {
+        AnnotationBoundary a = AnnotationBoundaryJsoImpl.create();
+        if (map.endSize() == 0 && map.changeSize() == 0) {
+          a.setEmpty(true);
+        } else {
+          for (int i = 0; i < map.endSize(); i++) {
+            a.addEnd(map.getEndKey(i));
+          }
+          for (int i = 0; i < map.changeSize(); i++) {
+            a.addChange(
+                keyValueUpdate(map.getChangeKey(i), map.getOldValue(i), map.getNewValue(i)));
+          }
+        }
+        addComponent().setAnnotationBoundary(a);
+      }
+    });
+    return output;
+  }
+
+  /**
+   * Serializes a {@link HashedVersion} POJO to a {@link ProtocolHashedVersion}.
+   */
+  public static ProtocolHashedVersion serialize(HashedVersion hashedVersion) {
+    Blob b64Hash = new Blob(Codec.encode(hashedVersion.getHistoryHash()));
+    ProtocolHashedVersion version = ProtocolHashedVersionJsoImpl.create();
+    version.setVersion(hashedVersion.getVersion());
+    version.setHistoryHash(b64Hash);
+    return version;
   }
 }

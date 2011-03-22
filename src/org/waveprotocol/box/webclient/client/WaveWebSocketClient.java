@@ -17,29 +17,31 @@
 
 package org.waveprotocol.box.webclient.client;
 
+import static org.waveprotocol.wave.communication.gwt.JsonHelper.getPropertyAsInteger;
+import static org.waveprotocol.wave.communication.gwt.JsonHelper.getPropertyAsObject;
+import static org.waveprotocol.wave.communication.gwt.JsonHelper.getPropertyAsString;
+import static org.waveprotocol.wave.communication.gwt.JsonHelper.setPropertyAsInteger;
+import static org.waveprotocol.wave.communication.gwt.JsonHelper.setPropertyAsObject;
+import static org.waveprotocol.wave.communication.gwt.JsonHelper.setPropertyAsString;
+
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
-import com.google.gwt.json.client.JSONNumber;
-import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONParser;
-import com.google.gwt.json.client.JSONString;
-import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.Cookies;
 
-import org.waveprotocol.box.common.comms.ProtocolAuthenticate;
-import org.waveprotocol.box.common.comms.ProtocolOpenRequest;
-import org.waveprotocol.box.common.comms.ProtocolSubmitRequest;
-import org.waveprotocol.box.common.comms.ProtocolSubmitResponse;
-import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
+import org.waveprotocol.box.common.comms.jso.ProtocolAuthenticateJsoImpl;
+import org.waveprotocol.box.common.comms.jso.ProtocolOpenRequestJsoImpl;
+import org.waveprotocol.box.common.comms.jso.ProtocolSubmitRequestJsoImpl;
+import org.waveprotocol.box.common.comms.jso.ProtocolSubmitResponseJsoImpl;
+import org.waveprotocol.box.common.comms.jso.ProtocolWaveletUpdateJsoImpl;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent;
 import org.waveprotocol.box.webclient.client.events.NetworkStatusEvent.ConnectionStatus;
 import org.waveprotocol.box.webclient.util.Log;
+import org.waveprotocol.wave.communication.gwt.JsonMessage;
+import org.waveprotocol.wave.communication.json.JsonException;
 import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.util.IntMap;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Queue;
 
 
@@ -49,11 +51,45 @@ import java.util.Queue;
 public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   private static final Log LOG = Log.get(WaveWebSocketClient.class);
   private static final int RECONNECT_TIME_MS = 5000;
-  private static final int VERSION = 1;
   private static final String JETTY_SESSION_TOKEN_NAME = "JSESSIONID";
 
+  /**
+   * Envelope for delivering arbitrary messages. Each envelope has a sequence
+   * number and a message. The format must match the format used in the server's
+   * WebSocketChannel.
+   * <p>
+   * Note that this message can not be described by a protobuf, because it
+   * contains an arbitrary protobuf, which breaks the protobuf typing rules.
+   */
+  private static final class MessageWrapper extends JsonMessage {
+    static MessageWrapper create(int seqno, String type, JsonMessage message) {
+      MessageWrapper wrapper = JsonMessage.createJsonMessage().cast();
+      setPropertyAsInteger(wrapper, "sequenceNumber", seqno);
+      setPropertyAsString(wrapper, "messageType", type);
+      setPropertyAsObject(wrapper, "message", message);
+      return wrapper;
+    }
+
+    @SuppressWarnings("unused") // GWT requires an explicit protected ctor
+    protected MessageWrapper() {
+      super();
+    }
+
+    int getSequenceNumber() {
+      return getPropertyAsInteger(this, "sequenceNumber");
+    }
+
+    String getType() {
+      return getPropertyAsString(this, "messageType");
+    }
+
+    <T extends JsonMessage> T getPayload() {
+      return getPropertyAsObject(this, "message").<T>cast();
+    }
+  }
+
   private final WaveSocket socket;
-  private final Map<Integer, SubmitResponseCallback> submitRequestCallbacks;
+  private final IntMap<SubmitResponseCallback> submitRequestCallbacks;
 
   /**
    * Lifecycle of a socket is:
@@ -67,9 +103,10 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   private WaveWebSocketCallback callback;
   private int sequenceNo;
 
-  private final Queue<String> messages = CollectionUtils.createQueue();
+  private final Queue<JsonMessage> messages = CollectionUtils.createQueue();
 
   private final RepeatingCommand reconnectCommand = new RepeatingCommand() {
+    @Override
     public boolean execute() {
       if (connected == ConnectState.DISCONNECTED) {
         LOG.info("Attemping to reconnect");
@@ -81,7 +118,7 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   };
 
   public WaveWebSocketClient(boolean useSocketIO, String urlBase) {
-    submitRequestCallbacks = new HashMap<Integer, SubmitResponseCallback>();
+    submitRequestCallbacks = CollectionUtils.createIntMap();
     socket = WaveSocketFactory.create(useSocketIO, urlBase, this);
   }
 
@@ -112,7 +149,9 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
     // See: http://code.google.com/p/wave-protocol/issues/detail?id=119
     String token = Cookies.getCookie(JETTY_SESSION_TOKEN_NAME);
     if (token != null) {
-      sendMessage(ProtocolAuthenticate.create().setToken(token), null);
+      ProtocolAuthenticateJsoImpl auth = ProtocolAuthenticateJsoImpl.create();
+      auth.setToken(token);
+      send(MessageWrapper.create(sequenceNo++, "ProtocolAuthenticate", auth));
     }
 
     // Flush queued messages.
@@ -132,63 +171,44 @@ public class WaveWebSocketClient implements WaveSocket.WaveSocketCallback {
   @Override
   public void onMessage(final String message) {
     LOG.info("received JSON message " + message);
-    JSONValue json = JSONParser.parseStrict(message);
-    // TODO(arb): pull apart the wrapper, extract the message.
-    JSONObject wrapper = json.isObject();
-    String messageType = wrapper.get("messageType").isString().stringValue();
-    String payload = wrapper.get("messageJson").isString().stringValue();
-    if (messageType.equals("ProtocolWaveletUpdate")) {
-      ProtocolWaveletUpdate payloadMessage = ProtocolWaveletUpdate.parse(payload);
+    MessageWrapper wrapper;
+    try {
+      wrapper = MessageWrapper.parse(message);
+    } catch (JsonException e) {
+      LOG.severe("invalid JSON message " + message, e);
+      return;
+    }
+    String messageType = wrapper.getType();
+    if ("ProtocolWaveletUpdate".equals(messageType)) {
       if (callback != null) {
-        callback.onWaveletUpdate(payloadMessage);
+        callback.onWaveletUpdate(wrapper.<ProtocolWaveletUpdateJsoImpl>getPayload());
       }
-    } else if (messageType.equals("ProtocolSubmitResponse")) {
-      ProtocolSubmitResponse payloadMessage = ProtocolSubmitResponse.parse(payload);
-      SubmitResponseCallback submitCallback = submitRequestCallbacks.remove(
-          (int) wrapper.get("sequenceNumber").isNumber().doubleValue());
-      submitCallback.run(payloadMessage);
+    } else if ("ProtocolSubmitResponse".equals(messageType)) {
+      int seqno = wrapper.getSequenceNumber();
+      SubmitResponseCallback callback = submitRequestCallbacks.get(seqno);
+      if (callback != null) {
+        submitRequestCallbacks.remove(seqno);
+        callback.run(wrapper.<ProtocolSubmitResponseJsoImpl>getPayload());
+      }
     }
   }
 
-  /**
-   *
-   * @param message
-   * @param callback callback to invoke for response, or null for none.
-   */
-  public void sendMessage(JavaScriptObject message, SubmitResponseCallback callback) {
-    int seqNo = sequenceNo++;
-
-    JSONObject wrapper = new JSONObject();
-    wrapper.put("version", new JSONNumber(VERSION));
-    wrapper.put("sequenceNumber", new JSONNumber(seqNo));
-    final String protocolBufferName = ProtocolOpenRequest.getProtocolBufferName(message);
-    wrapper.put("messageType", new JSONString(protocolBufferName));
-    deleteMessageName(message);
-
-    if (protocolBufferName.equals("ProtocolOpenRequest")) {
-      wrapper.put("messageJson",
-          new JSONString(ProtocolOpenRequest.stringify((ProtocolOpenRequest) message)));
-    } else if (protocolBufferName.equals("ProtocolSubmitRequest")) {
-      wrapper.put("messageJson",
-          new JSONString(ProtocolSubmitRequest.stringify((ProtocolSubmitRequest) message)));
-      submitRequestCallbacks.put(seqNo, callback);
-    } else if (protocolBufferName.equals("ProtocolAuthenticate")) {
-      wrapper.put("messageJson",
-          new JSONString(ProtocolAuthenticate.stringify((ProtocolAuthenticate) message)));
-    }
-    send(wrapper.toString());
+  public void submit(ProtocolSubmitRequestJsoImpl message, SubmitResponseCallback callback) {
+    int submitId = sequenceNo++;
+    submitRequestCallbacks.put(submitId, callback);
+    send(MessageWrapper.create(submitId, "ProtocolSubmitRequest", message));
   }
 
-  // TODO(arb): filthy filthy hack. make this not necessary
-  private static native void deleteMessageName(JavaScriptObject message) /*-{
-    delete message._protoMessageName;
-  }-*/;
+  public void open(ProtocolOpenRequestJsoImpl message) {
+    send(MessageWrapper.create(sequenceNo++, "ProtocolOpenRequest", message));
+  }
 
-  private void send(String message) {
+  private void send(JsonMessage message) {
     switch (connected) {
       case CONNECTED:
-        LOG.info("Sending JSON data " + message);
-        socket.sendMessage(message);
+        String json = message.toJson();
+        LOG.info("Sending JSON data " + json);
+        socket.sendMessage(json);
         break;
       default:
         messages.add(message);

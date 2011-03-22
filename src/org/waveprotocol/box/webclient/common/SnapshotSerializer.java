@@ -20,6 +20,8 @@ package org.waveprotocol.box.webclient.common;
 import org.waveprotocol.box.common.comms.DocumentSnapshot;
 import org.waveprotocol.box.common.comms.WaveViewSnapshot;
 import org.waveprotocol.box.common.comms.WaveletSnapshot;
+import org.waveprotocol.box.common.comms.jso.DocumentSnapshotJsoImpl;
+import org.waveprotocol.box.common.comms.jso.WaveletSnapshotJsoImpl;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
@@ -69,7 +71,7 @@ public class SnapshotSerializer {
    */
   public static WaveletSnapshot serializeWavelet(ReadableWaveletData wavelet,
       HashedVersion hashedVersion) {
-    WaveletSnapshot.Builder builder = WaveletSnapshot.newBuilder();
+    WaveletSnapshot builder = WaveletSnapshotJsoImpl.create();
 
     builder.setWaveletId(ModernIdSerialiser.INSTANCE.serialiseWaveletId(wavelet.getWaveletId()));
     for (ParticipantId participant : wavelet.getParticipants()) {
@@ -80,12 +82,12 @@ public class SnapshotSerializer {
       builder.addDocument(serializeDocument(data));
     }
 
-    builder.setVersion(CoreWaveletOperationSerializer.serialize(hashedVersion));
+    builder.setVersion(WaveletOperationSerializer.serialize(hashedVersion));
     builder.setLastModifiedTime(wavelet.getLastModifiedTime());
     builder.setCreator(wavelet.getCreator().getAddress());
     builder.setCreationTime(wavelet.getCreationTime());
 
-    return builder.build();
+    return builder;
   }
 
   /**
@@ -106,22 +108,22 @@ public class SnapshotSerializer {
     ParticipantId author = ParticipantId.of(snapshot.getCreator());
     WaveletId waveletId =
         ModernIdSerialiser.INSTANCE.deserialiseWaveletId(snapshot.getWaveletId());
-    long creationTime = (long) snapshot.getCreationTime();
+    long creationTime = snapshot.getCreationTime();
 
     ObservableWaveletData wavelet = factory.create(new EmptyWaveletSnapshot(waveId, waveletId,
             author, WaveletOperationSerializer.deserialize(snapshot.getVersion()),
             creationTime));
 
-    for (String participant : snapshot.getParticipantIdList()) {
+    for (String participant : snapshot.getParticipantId()) {
       wavelet.addParticipant(ParticipantId.of(participant));
     }
 
-    for (DocumentSnapshot document : snapshot.getDocumentList()) {
+    for (DocumentSnapshot document : snapshot.getDocument()) {
       addDocumentSnapshotToWavelet(document, wavelet);
     }
 
     wavelet.setVersion((long) snapshot.getVersion().getVersion());
-    wavelet.setLastModifiedTime((long) snapshot.getLastModifiedTime());
+    wavelet.setLastModifiedTime(snapshot.getLastModifiedTime());
     // The creator and creation time are set when the empty wavelet template is
     // created above.
 
@@ -135,10 +137,10 @@ public class SnapshotSerializer {
    * @return A snapshot of the given document
    */
   public static DocumentSnapshot serializeDocument(ReadableBlipData document) {
-    DocumentSnapshot.Builder builder = DocumentSnapshot.newBuilder();
+    DocumentSnapshot builder = DocumentSnapshotJsoImpl.create();
 
     builder.setDocumentId(document.getId());
-    builder.setDocumentOperation(CoreWaveletOperationSerializer.serialize(
+    builder.setDocumentOperation(WaveletOperationSerializer.serialize(
         document.getContent().asOperation()));
 
     builder.setAuthor(document.getAuthor().getAddress());
@@ -148,7 +150,7 @@ public class SnapshotSerializer {
     builder.setLastModifiedVersion(document.getLastModifiedVersion());
     builder.setLastModifiedTime(document.getLastModifiedTime());
 
-    return builder.build();
+    return builder;
   }
 
   private static void addDocumentSnapshotToWavelet(
@@ -157,7 +159,7 @@ public class SnapshotSerializer {
     DocInitialization docInit = DocOpUtil.asInitialization(op);
 
     Collection<ParticipantId> contributors = CollectionUtils.newArrayList();
-    for (String p : snapshot.getContributorList()) {
+    for (String p : snapshot.getContributor()) {
       contributors.add(ParticipantId.of(p));
     }
     container.createDocument(
@@ -165,8 +167,8 @@ public class SnapshotSerializer {
         new ParticipantId(snapshot.getAuthor()),  // We trust the server's snapshot
         contributors,
         docInit,
-        (long) snapshot.getLastModifiedTime(),
-        (long) snapshot.getLastModifiedVersion());
+        snapshot.getLastModifiedTime(),
+        snapshot.getLastModifiedVersion());
   }
 
   /**
@@ -183,7 +185,7 @@ public class SnapshotSerializer {
       InvalidIdException {
     WaveId waveId = ModernIdSerialiser.INSTANCE.deserialiseWaveId(snapshot.getWaveId());
     Collection<ObservableWaveletData> wavelets = CollectionUtils.newArrayList();
-    for (WaveletSnapshot s : snapshot.getWaveletList()) {
+    for (WaveletSnapshot s : snapshot.getWavelet()) {
       wavelets.add(deserializeWavelet(s, waveId, docFactory));
     }
 

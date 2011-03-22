@@ -24,7 +24,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.protobuf.MessageLite;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.protobuf.Message;
 
 import junit.framework.TestCase;
 
@@ -45,7 +47,6 @@ import org.waveprotocol.wave.model.waveref.WaveRef;
 import org.waveprotocol.wave.util.escapers.jvm.JavaWaverefEncoder;
 
 import java.io.PrintWriter;
-import java.io.StringReader;
 import java.io.StringWriter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -140,7 +141,7 @@ public class FetchServletTest extends TestCase {
       // fetch servlet.
       StringWriter writer = new StringWriter();
       BlipData expectedDoc = wavelet.getDocument(docId);
-      protoSerializer.writeTo(writer, SnapshotSerializer.serializeDocument(expectedDoc));
+      writer.append("" + protoSerializer.toJson(SnapshotSerializer.serializeDocument(expectedDoc)));
       String expectedResult = writer.toString();
 
       WaveRef waveref = WaveRef.of(wavelet.getWaveId(), wavelet.getWaveletId(), docId);
@@ -168,7 +169,6 @@ public class FetchServletTest extends TestCase {
   }
 
   private String fetchWaveRef(WaveRef waveref) throws Exception {
-    WaveletData wavelet = waveletProvider.getHostedWavelet();
     HttpServletResponse response = mock(HttpServletResponse.class);
 
     StringWriter writer = new StringWriter();
@@ -182,9 +182,9 @@ public class FetchServletTest extends TestCase {
     return writer.toString();
   }
 
-  private <T extends MessageLite> T fetchWaverRefAndParse(WaveRef waveref, Class<T> klass) throws Exception {
+  private <T extends Message> T fetchWaverRefAndParse(WaveRef waveref, Class<T> klass) throws Exception {
     String message = fetchWaveRef(waveref);
-    StringReader reader = new StringReader(message);
-    return protoSerializer.parseFrom(reader, klass);
+    JsonElement json = new JsonParser().parse(message);
+    return protoSerializer.fromJson(json, klass);
   }
 }

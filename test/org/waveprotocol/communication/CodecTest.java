@@ -14,10 +14,10 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.communication.proto;
+package org.waveprotocol.communication;
 
-import static org.waveprotocol.wave.communication.proto.Codec.decode;
-import static org.waveprotocol.wave.communication.proto.Codec.encode;
+import static org.waveprotocol.wave.communication.Codec.decode;
+import static org.waveprotocol.wave.communication.Codec.encode;
 
 import junit.framework.TestCase;
 
@@ -53,7 +53,7 @@ public final class CodecTest extends TestCase {
 
   public void testDecodeOfBadStringFails() {
     try {
-      decode("Not hex".toCharArray());
+      decode("Not hex");
       fail();
     } catch (IllegalArgumentException expected) {
     }

@@ -31,6 +31,10 @@
       <include name="junit/*.jar"/>
       <include name="mockito/*.jar"/>
     </fileset>
+    <!-- PST -->
+    <fileset dir="${dist.dir}">
+      <include name="pst.jar"/>
+    </fileset>
   </path>
 
   <!-- Classpath for testing only -->

@@ -1,7 +1,10 @@
-// We have to use fully-qualified name of the GsonSerializable class here in order to make it
-// visible in case of nested classes.
 public $if(m.inner)$static$endif$ final class $m.javaType$
-    implements $m.name$, org.waveprotocol.wave.communication.gson.GsonSerializable {
+    implements $m.name$,
+    // Note: fully-qualified path is required for GsonSerializable and ProtoWrapper.
+    // An import of it is not resolved correctly from inner classes.
+    // This appears to be a javac bug.  The Eclipse compiler handles it fine.
+    org.waveprotocol.wave.communication.gson.GsonSerializable,
+    org.waveprotocol.wave.communication.proto.ProtoWrapper<$m.protoType$> {
 
   $m.nestedMessages: {nested|$class(m=nested)$}$
 
@@ -19,11 +22,13 @@ public $if(m.inner)$static$endif$ final class $m.javaType$
     copyFrom(message);
   }
 
+  @Override
   public $m.protoType$ getPB() {
     lazilySwitchToProto();
     return proto;
   }
 
+  @Override
   public void setPB($m.protoType$ proto) {
     this.proto = proto;
     this.protoBuilder = null;

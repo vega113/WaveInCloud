@@ -18,14 +18,13 @@ package org.waveprotocol.box.webclient.client;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.gwt.core.client.JsArray;
 
 import org.waveprotocol.box.common.comms.DocumentSnapshot;
-import org.waveprotocol.box.common.comms.ProtocolSubmitRequest;
 import org.waveprotocol.box.common.comms.ProtocolSubmitResponse;
 import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
 import org.waveprotocol.box.common.comms.WaveletSnapshot;
-import org.waveprotocol.box.webclient.common.CoreWaveletOperationSerializer;
+import org.waveprotocol.box.common.comms.jso.ProtocolSubmitRequestJsoImpl;
+import org.waveprotocol.box.common.comms.jso.ProtocolWaveletUpdateJsoImpl;
 import org.waveprotocol.box.webclient.common.WaveletOperationSerializer;
 import org.waveprotocol.box.webclient.util.Log;
 import org.waveprotocol.wave.client.common.util.ClientPercentEncoderDecoder;
@@ -33,6 +32,7 @@ import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
 import org.waveprotocol.wave.concurrencycontrol.common.ResponseCode;
 import org.waveprotocol.wave.federation.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.ProtocolWaveletDelta;
+import org.waveprotocol.wave.federation.jso.ProtocolWaveletDeltaJsoImpl;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
 import org.waveprotocol.wave.model.id.IdFilter;
@@ -104,14 +104,13 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
     @Override
     public boolean hasDeltas() {
-      return update.getAppliedDeltaArray() != null && update.getAppliedDeltaArray().length() > 0;
+      return update.getAppliedDeltaSize() > 0;
     }
 
     @Override
     public List<TransformedWaveletDelta> getDeltaList() {
       return deltas == null //
-          ? deltas = deserialize(update.getAppliedDeltaArray(), update.getResultingVersion())
-          : deltas;
+          ? deltas = deserialize(update.getAppliedDelta(), update.getResultingVersion()) : deltas;
     }
 
     @Override
@@ -126,7 +125,9 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
 
     @Override
     public boolean hasWaveletId() {
-      return update.hasWaveletName();
+      // The proto definition is incorrect, and is marked as a required field,
+      // so there is no generated hasWaveletName().
+      return update.getWaveletName() != null;
     }
 
     @Override
@@ -155,8 +156,8 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
    * libraries. This manager resolves those incompatibilities.
    */
   private static class VersionSignatureManager {
-    private static final HashedVersionFactory HASHER = new HashedVersionZeroFactoryImpl(
-        new IdURIEncoderDecoder(new ClientPercentEncoderDecoder()));
+    private static final HashedVersionFactory HASHER =
+        new HashedVersionZeroFactoryImpl(new IdURIEncoderDecoder(new ClientPercentEncoderDecoder()));
 
     /** Most recent signed versions. */
     private final Map<WaveletName, ProtocolHashedVersion> versions = CollectionUtils.newHashMap();
@@ -214,8 +215,8 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
    * @param mux underlying communication channel
    * @param docFactory document factory to use when deserializing snapshots
    */
-  public RemoteWaveViewService(
-      WaveId waveId, RemoteViewServiceMultiplexer mux, DocumentFactory<?> docFactory) {
+  public RemoteWaveViewService(WaveId waveId, RemoteViewServiceMultiplexer mux,
+      DocumentFactory<?> docFactory) {
     this.waveId = waveId;
     this.mux = mux;
     this.docFactory = docFactory;
@@ -230,7 +231,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
       final Map<WaveletId, List<HashedVersion>> knownWavelets, final OpenCallback callback) {
     LOG.info("viewOpen called on " + waveId + " with " + filter);
 
-    // Some legacy hack.  Important updates are sent to a "dummy+root" wavelet.
+    // Some legacy hack. Important updates are sent to a "dummy+root" wavelet.
     // TODO: remove this once Issue 125 is fixed.
     // http://code.google.com/p/wave-protocol/issues/detail?id=125
     Set<String> newPrefixes = new HashSet<String>(filter.getPrefixes());
@@ -244,7 +245,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   @Override
   public String viewSubmit(final WaveletName wavelet, WaveletDelta delta, String channelId,
       final SubmitCallback callback) {
-    ProtocolSubmitRequest submitRequest = ProtocolSubmitRequest.create();
+    ProtocolSubmitRequestJsoImpl submitRequest = ProtocolSubmitRequestJsoImpl.create();
     submitRequest.setWaveletName(serialize(wavelet));
     submitRequest.setDelta(serialize(wavelet, delta));
     submitRequest.setChannelId(channelId);
@@ -254,8 +255,8 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
       public void run(ProtocolSubmitResponse response) {
         HashedVersion resultVersion = HashedVersion.unsigned(0);
         if (response.hasHashedVersionAfterApplication()) {
-          resultVersion = WaveletOperationSerializer.deserialize(
-              response.getHashedVersionAfterApplication());
+          resultVersion =
+              WaveletOperationSerializer.deserialize(response.getHashedVersionAfterApplication());
           versions.updateHistory(wavelet, response.getHashedVersionAfterApplication());
         }
         callback.onSuccess(resultVersion, response.getOperationsApplied(), null, ResponseCode.OK);
@@ -286,19 +287,21 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   @Override
   public void onWaveletUpdate(ProtocolWaveletUpdate update) {
     if (shouldAccept(update)) {
-      // Update last-known-version map, so that outgoing deltas can be appropriately rewritten.
+      // Update last-known-version map, so that outgoing deltas can be
+      // appropriately rewritten.
       if (update.hasResultingVersion()) {
         versions.updateHistory(getTarget(update), update.getResultingVersion());
       }
 
-      // Adapt broken parts of the box server, to make them speak the proper wave protocol:
+      // Adapt broken parts of the box server, to make them speak the proper
+      // wave protocol:
       // 1. Channel id must be in its own message.
       // 2. Synthesize the open-finished marker that the box server leaves out.
       if (update.hasChannelId()
-          && (update.hasCommitNotice() || update.hasMarker() || update.hasSnapshot()
-              || update.getAppliedDeltaArray().length() > 0)) {
-        ProtocolWaveletUpdate fake =
-            ProtocolWaveletUpdate.create().setChannelId(update.getChannelId());
+          && (update.hasCommitNotice() || update.hasMarker() || update.hasSnapshot() || update
+              .getAppliedDeltaSize() > 0)) {
+        ProtocolWaveletUpdate fake = ProtocolWaveletUpdateJsoImpl.create();
+        fake.setChannelId(update.getChannelId());
         update.clearChannelId();
         callback.onUpdate(deserialize(fake));
         callback.onUpdate(deserialize(update));
@@ -329,7 +332,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   //
 
   private ProtocolWaveletDelta serialize(WaveletName wavelet, WaveletDelta delta) {
-    ProtocolWaveletDelta protocolDelta = ProtocolWaveletDelta.create();
+    ProtocolWaveletDeltaJsoImpl protocolDelta = ProtocolWaveletDeltaJsoImpl.create();
     for (WaveletOperation op : delta) {
       protocolDelta.addOperation(WaveletOperationSerializer.serialize(op));
     }
@@ -339,18 +342,16 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   }
 
   private static List<TransformedWaveletDelta> deserialize(
-      JsArray<ProtocolWaveletDelta> deltas, ProtocolHashedVersion end) {
+      List<? extends ProtocolWaveletDelta> deltas, ProtocolHashedVersion end) {
     if (deltas == null) {
       return null;
     } else {
       List<TransformedWaveletDelta> parsed = new ArrayList<TransformedWaveletDelta>();
-
-      for (int i = 0; i < deltas.length(); i++) {
+      for (int i = 0; i < deltas.size(); i++) {
         ProtocolHashedVersion thisEnd = //
-          i < deltas.length() - 1 ? deltas.get(i + 1).getHashedVersion() : end;
-          parsed.add(deserialize(deltas.get(i), thisEnd));
+            i < deltas.size() - 1 ? deltas.get(i + 1).getHashedVersion() : end;
+        parsed.add(deserialize(deltas.get(i), thisEnd));
       }
-
       return parsed;
     }
   }
@@ -369,33 +370,33 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
     }
     ParticipantId creator = ParticipantId.ofUnsafe(snapshot.getParticipantId(0));
     HashedVersion version = deserialize(snapshot.getVersion());
-    long lmt = (long) snapshot.getLastModifiedTime();
-    long ctime = (long) snapshot.getCreationTime();
+    long lmt = snapshot.getLastModifiedTime();
+    long ctime = snapshot.getCreationTime();
     long lmv = version.getVersion();
 
     WaveletDataImpl waveletData =
         new WaveletDataImpl(id, creator, ctime, lmv, version, lmt, waveId, docFactory);
-    for (String participant : snapshot.getParticipantIdList()) {
+    for (String participant : snapshot.getParticipantId()) {
       waveletData.addParticipant(new ParticipantId(participant));
     }
-    for (int i = 0; i < snapshot.getDocumentCount(); i++) {
-      DocumentSnapshot docSnapshot = snapshot.getDocument(i);
+    for (DocumentSnapshot docSnapshot : snapshot.getDocument()) {
       deserialize(waveletData, docSnapshot);
     }
     return waveletData;
   }
 
   private static void deserialize(WaveletDataImpl waveletData, DocumentSnapshot docSnapshot) {
-    DocInitialization content = DocOpUtil.asInitialization(
-        WaveletOperationSerializer.deserialize(docSnapshot.getDocumentOperation()));
+    DocInitialization content =
+        DocOpUtil.asInitialization(WaveletOperationSerializer.deserialize(docSnapshot
+            .getDocumentOperation()));
     String docId = docSnapshot.getDocumentId();
     ParticipantId author = ParticipantId.ofUnsafe(docSnapshot.getAuthor());
     List<ParticipantId> contributors = Lists.newArrayList();
-    for (String contributor : docSnapshot.getContributorList()) {
+    for (String contributor : docSnapshot.getContributor()) {
       contributors.add(ParticipantId.ofUnsafe(contributor));
     }
-    long lmt = (long) docSnapshot.getLastModifiedTime();
-    long lmv = (long) docSnapshot.getLastModifiedVersion();
+    long lmt = docSnapshot.getLastModifiedTime();
+    long lmv = docSnapshot.getLastModifiedVersion();
     waveletData.createDocument(docId, author, contributors, content, lmt, lmv);
   }
 
@@ -409,7 +410,7 @@ public final class RemoteWaveViewService implements WaveViewService, WaveWebSock
   }
 
   private static ProtocolHashedVersion serialize(HashedVersion version) {
-    return CoreWaveletOperationSerializer.serialize(version);
+    return WaveletOperationSerializer.serialize(version);
   }
 
   private static HashedVersion deserialize(ProtocolHashedVersion version) {

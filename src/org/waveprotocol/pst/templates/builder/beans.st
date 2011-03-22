@@ -12,7 +12,7 @@ $if (f.repeated)$
   $if (f.message)$
     public $m.javaType$ addAll$f.capName$(List<? extends $f.messageType$> messages) {
       for ($f.messageType$ message : messages) {
-      	append$f.capName$(message);
+      	add$f.capName$(message);
       }
       return this;
     }
@@ -36,12 +36,12 @@ $if (f.repeated)$
   $endif$
 
   $if (f.message)$
-    public $m.javaType$ append$f.capName$($f.messageType$ message) {
+    public $m.javaType$ add$f.capName$($f.messageType$ message) {
       this.$f.name$.add(message);
       return this;
     }
   $else$
-    public $m.javaType$ append$f.capName$($f.javaType$ value) {
+    public $m.javaType$ add$f.capName$($f.javaType$ value) {
       this.$f.name$.add(value);
       return this;
     }

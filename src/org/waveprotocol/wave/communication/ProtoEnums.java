@@ -15,7 +15,7 @@
  *
  */
 
-package org.waveprotocol.wave.communication.json;
+package org.waveprotocol.wave.communication;
 
 /**
  * Utility for converting from proto ints to compiler generated enums.

@@ -14,15 +14,15 @@
  * limitations under the License.
  *
  */
- 
+
 package org.waveprotocol.box.server.rpc;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.UnknownFieldSet;
 
 public interface ProtoCallback {
-  public void message(long sequenceNo, Message message);
-  public void unknown(long sequenceNo, String messageType, UnknownFieldSet message);
-  public void unknown(long sequenceNo, String messageType, String message);
+  public void message(int sequenceNo, Message message);
+  public void unknown(int sequenceNo, String messageType, UnknownFieldSet message);
+  public void unknown(int sequenceNo, String messageType, String message);
 }
 

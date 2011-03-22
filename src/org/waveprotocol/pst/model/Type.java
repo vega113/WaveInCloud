@@ -28,7 +28,6 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
  */
 public final class Type {
 
-  private static final String INT52_TYPE = "double";
   private final FieldDescriptor field;
   private final String templateName;
   private final MessageProperties extraProperties;
@@ -68,7 +67,7 @@ public final class Type {
       case INT:
         return "int";
       case LONG:
-        return hasInt52Ext && extraProperties.getUseInt52() ? INT52_TYPE : "long";
+        return hasInt52Ext && extraProperties.getUseInt52() ? "double" : "long";
       case MESSAGE:
         return getMessage().getJavaType();
       case STRING:
@@ -119,7 +118,7 @@ public final class Type {
       case INT:
         return "Integer";
       case LONG:
-        return hasInt52Ext ? Util.capitalize(INT52_TYPE) : "Long";
+        return hasInt52Ext && extraProperties.getUseInt52() ? "Double" : "Long";
       default:
         return getJavaType(hasInt52Ext);
     }

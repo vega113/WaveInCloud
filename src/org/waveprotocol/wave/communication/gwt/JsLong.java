@@ -19,6 +19,8 @@ package org.waveprotocol.wave.communication.gwt;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
+import org.waveprotocol.wave.communication.json.JsonLongHelper;
+
 
 /**
  * This code wraps around a long value so that it can be transmitted efficiently
@@ -49,17 +51,17 @@ public final class JsLong extends JavaScriptObject {
 
   private static native int getLowInt(JavaScriptObject obj) /*-{
     return obj[
-        @org.waveprotocol.wave.communication.gwt.JsonLongHelper::LOW_WORD_INDEX
+        @org.waveprotocol.wave.communication.json.JsonLongHelper::LOW_WORD_INDEX
         ];
   }-*/;
 
   private static native int getHighInt(JavaScriptObject obj) /*-{
     return obj[
-        @org.waveprotocol.wave.communication.gwt.JsonLongHelper::HIGH_WORD_INDEX
+        @org.waveprotocol.wave.communication.json.JsonLongHelper::HIGH_WORD_INDEX
         ];
   }-*/;
 
   private static native JsLong toJavaScriptObject(int highInt, int lowInt) /*-{
     return [lowInt, highInt];
-  }-*/;
+  }-*/; 
 }

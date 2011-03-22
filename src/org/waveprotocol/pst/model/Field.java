@@ -18,6 +18,7 @@
 package org.waveprotocol.pst.model;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
+
 import org.waveprotocol.protobuf.Extensions;
 
 /**
@@ -29,10 +30,12 @@ public final class Field {
 
   private final FieldDescriptor field;
   private final Type type;
+  private final MessageProperties properties;
 
-  public Field(FieldDescriptor field, Type type) {
+  public Field(FieldDescriptor field, Type type, MessageProperties properties) {
     this.field = field;
     this.type = type;
+    this.properties = properties;
   }
 
   /**
@@ -197,8 +200,19 @@ public final class Field {
    * @return whether the field is a 52-bit integer
    */
   public boolean isInt52() {
-    return field.getOptions().hasExtension(Extensions.int52)
+    return properties.getUseInt52() //
+        && field.getOptions().hasExtension(Extensions.int52)
         && field.getOptions().getExtension(Extensions.int52);
+  }
+
+  /**
+   * Gets whether the field is of type long (int64). This means that the field
+   * may use up to 64 bits of information.
+   *
+   * @return whether the field is a long (64-bit integer)
+   */
+  public boolean isLong() {
+    return field.getJavaType() == FieldDescriptor.JavaType.LONG && !isInt52();
   }
 
   //

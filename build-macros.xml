@@ -23,12 +23,12 @@
       <runpst proto="@{proto}"
         templates="${src.dir}/org/waveprotocol/pst/templates/api/api.st
                    ${src.dir}/org/waveprotocol/pst/templates/builder/builder.st
-                   ${src.dir}/org/waveprotocol/pst/templates/gson/gson.st
-                   ${src.dir}/org/waveprotocol/pst/templates/jso/jso.st
                    ${src.dir}/org/waveprotocol/pst/templates/pojo/pojo.st
-                   ${src.dir}/org/waveprotocol/pst/templates/proto/proto.st
-                   ${src.dir}/org/waveprotocol/pst/templates/util/util.st"
-        outputdir="${build.messages.dir}"/>
+                   ${src.dir}/org/waveprotocol/pst/templates/jso/jso.st
+                   ${src.dir}/org/waveprotocol/pst/templates/util/util.st
+                   ${src.dir}/org/waveprotocol/pst/templates/gson/gson.st
+                   ${src.dir}/org/waveprotocol/pst/templates/proto/proto.st"
+        outputdir="${gen.dir}/messages"/>
     </sequential>
   </macrodef>
 
@@ -42,11 +42,11 @@
       <java failonerror="true" fork="true" classname="org.waveprotocol.pst.PstMain">
         <classpath>
           <path refid="libpath"/>
+          <path location="${dist.dir}/pst.jar"/>
           <path location="${build.proto.dir}"/>
           <fileset dir="${lib.codegen}">
             <include name="*/*.jar"/>
           </fileset>
-          <pathelement location="${build.src.dir}"/>
         </classpath>
         <arg line="-d @{outputdir}"/>
         <arg line="-f @{proto}"/>
@@ -66,7 +66,8 @@
       <patternset id="default-src-pattern">
         <include name="**/*.java"/>
       </patternset>
-      <javac destdir="@{destdir}" debug="true" includeAntRuntime="false">
+      <javac destdir="@{destdir}" debug="true">
+        <exclude name="org/waveprotocol/pst/**"/>
         <patternset refid="@{srcpattern}"/>
         <!-- TODO(anorth): enable -Werror after fixing warnings. -->
         <compilerarg value="-Werror"/>
@@ -124,6 +125,7 @@
         <classpath>
           <path location="${coverage.dir}"/>
           <path location="${build.proto.dir}"/>
+          <path location="${build.messages.dir}"/>
           <path location="${build.src.dir}"/>
           <path location="${build.test.dir}"/>
           <path location="${src.dir}"/>

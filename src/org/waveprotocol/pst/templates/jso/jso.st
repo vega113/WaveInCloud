@@ -23,7 +23,8 @@ import static org.waveprotocol.wave.communication.gwt.JsonHelper.*;
 
 import com.google.gwt.core.client.*;
 
-import org.waveprotocol.pst.lib.Blob;
+import org.waveprotocol.wave.communication.Blob;
+import org.waveprotocol.wave.communication.ProtoEnums;
 
 import org.waveprotocol.wave.communication.gwt.*;
 import org.waveprotocol.wave.communication.json.*;

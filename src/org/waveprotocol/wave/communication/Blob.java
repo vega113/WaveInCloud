@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.waveprotocol.pst.lib;
+package org.waveprotocol.wave.communication;
 
 /**
  * An arbitrary blob of data, comparable with other blobs of data.

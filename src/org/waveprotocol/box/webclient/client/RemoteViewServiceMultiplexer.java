@@ -17,9 +17,9 @@
 
 package org.waveprotocol.box.webclient.client;
 
-import org.waveprotocol.box.common.comms.ProtocolOpenRequest;
-import org.waveprotocol.box.common.comms.ProtocolSubmitRequest;
 import org.waveprotocol.box.common.comms.ProtocolWaveletUpdate;
+import org.waveprotocol.box.common.comms.jso.ProtocolOpenRequestJsoImpl;
+import org.waveprotocol.box.common.comms.jso.ProtocolSubmitRequestJsoImpl;
 import org.waveprotocol.wave.model.id.IdFilter;
 import org.waveprotocol.wave.model.id.InvalidIdException;
 import org.waveprotocol.wave.model.id.ModernIdSerialiser;
@@ -118,7 +118,7 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
     streams.put(id, stream);
 
     // Request those updates.
-    ProtocolOpenRequest request = ProtocolOpenRequest.create();
+    ProtocolOpenRequestJsoImpl request = ProtocolOpenRequestJsoImpl.create();
     request.setWaveId(ModernIdSerialiser.INSTANCE.serialiseWaveId(id));
     request.setParticipantId(userId);
     for (String prefix : filter.getPrefixes()) {
@@ -130,7 +130,7 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
     for (WaveletId wid : filter.getIds()) {
       request.addWaveletIdPrefix(wid.getId());
     }
-    socket.sendMessage(request, null);
+    socket.open(request);
   }
 
   /**
@@ -154,9 +154,9 @@ public final class RemoteViewServiceMultiplexer implements WaveWebSocketCallback
    * @param request delta to submit
    * @param callback callback for submit response
    */
-  public void submit(ProtocolSubmitRequest request, SubmitResponseCallback callback) {
+  public void submit(ProtocolSubmitRequestJsoImpl request, SubmitResponseCallback callback) {
     request.getDelta().setAuthor(userId);
-    socket.sendMessage(request, callback);
+    socket.submit(request, callback);
   }
 
   public static WaveletName deserialize(String name) {

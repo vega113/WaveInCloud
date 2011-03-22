@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.waveprotocol.pst.lib.Blob;
+import org.waveprotocol.wave.communication.Blob;
 
 /**
  * Pojo implementation of $m.name$.
