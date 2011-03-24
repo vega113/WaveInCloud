@@ -17,7 +17,10 @@
 
 package org.waveprotocol.box.server.robots.operations;
 
+import com.google.common.collect.Lists;
+import com.google.inject.internal.Maps;
 import com.google.wave.api.Element;
+import com.google.wave.api.Gadget;
 import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.OperationRequest;
 import com.google.wave.api.OperationType;
@@ -25,12 +28,14 @@ import com.google.wave.api.Range;
 import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest.Parameter;
 import com.google.wave.api.data.ApiView;
+import com.google.wave.api.data.ApiView.ElementInfo;
 import com.google.wave.api.impl.DocumentModifyAction;
 import com.google.wave.api.impl.DocumentModifyAction.BundledAnnotation;
 import com.google.wave.api.impl.DocumentModifyAction.ModifyHow;
 
 import org.waveprotocol.box.server.robots.RobotsTestBase;
 import org.waveprotocol.box.server.robots.testing.OperationServiceHelper;
+import org.waveprotocol.wave.client.gadget.GadgetXmlUtil;
 import org.waveprotocol.wave.model.conversation.ObservableConversationBlip;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.util.LineContainers;
@@ -38,6 +43,7 @@ import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Unit tests for {@link DocumentModifyService}.
@@ -120,6 +126,39 @@ public class DocumentModifyServiceTest extends RobotsTestBase {
 
     assertNull("Expected this text not to be annotated",
         getRootBlip().getContent().getAnnotation(CONTENT_START_XML, ANNOTATION_KEY));
+  }
+  
+  public void testInsertGadget() throws Exception {
+    String gadgetUrl = "http://wave-api.appspot.com/public/gadgets/areyouin/gadget.xml";
+    List<Element> elementsIn = Lists.newArrayListWithCapacity(1);
+    Map<String,String> properties = Maps.newHashMap(); 
+    properties.put("url", gadgetUrl);
+    properties.put("author", ALEX.getAddress());
+    elementsIn.add(new Gadget(properties));
+
+    OperationRequest operation =
+      operationRequest(OperationType.DOCUMENT_MODIFY, rootBlipId,
+            Parameter.of(ParamsProperty.MODIFY_ACTION,
+                new DocumentModifyAction(ModifyHow.INSERT, NO_VALUES, NO_ANNOTATION_KEY,
+                    elementsIn, NO_BUNDLED_ANNOTATIONS, false)),
+            Parameter.of(ParamsProperty.INDEX, CONTENT_START_TEXT));
+
+    service.execute(operation, helper.getContext(), ALEX);
+    
+    Gadget gadget = null;
+    List<ElementInfo> elementsOut = getApiView().getElements();
+    int size = 0;
+    for (ElementInfo elementOut : elementsOut) {
+      if (!elementOut.element.isGadget()) {
+        continue;
+      } else {
+        size++;
+        gadget = (Gadget)elementOut.element;
+      }
+    }
+    assertEquals(1, size);
+    assertEquals(gadgetUrl, gadget.getUrl());
+    assertEquals(ALEX.getAddress(), gadget.getAuthor());
   }
 
   public void testDelete() throws Exception {

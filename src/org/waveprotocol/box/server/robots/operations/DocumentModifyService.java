@@ -18,6 +18,8 @@
 package org.waveprotocol.box.server.robots.operations;
 
 import com.google.common.base.Preconditions;
+import com.google.wave.api.Element;
+import com.google.wave.api.Gadget;
 import com.google.wave.api.InvalidRequestException;
 import com.google.wave.api.JsonRpcConstant.ParamsProperty;
 import com.google.wave.api.OperationRequest;
@@ -31,9 +33,12 @@ import com.google.wave.api.impl.DocumentModifyQuery;
 
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.util.OperationUtil;
+import org.waveprotocol.wave.client.gadget.GadgetXmlUtil;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.RangedAnnotation;
+import org.waveprotocol.wave.model.document.util.LineContainers;
+import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
@@ -102,7 +107,7 @@ public class DocumentModifyService implements OperationService {
    * @param operation the operation that specifies where the modifications need
    *        to be applied.
    * @param view the {@link ApiView} of the document that needs to be modified.
-   * @throws InvalidRequestException if more then one "where" parameter is
+   * @throws InvalidRequestException if more than one "where" parameter is
    *         specified.
    */
   private DocumentHitIterator getDocumentHitIterator(OperationRequest operation, ApiView view)
@@ -395,10 +400,21 @@ public class DocumentModifyService implements OperationService {
       }
       return toInsert.length();
     } else {
-      // TODO(ljvderijk): Inserting elements like gadgets.
-      throw new UnsupportedOperationException(
-          "Can't insert other elements then text at the moment");
+      Element element = modifyAction.getElement(valueIndex);
+      if (element != null) {
+        if (element.isGadget()) {
+          Gadget gadget = (Gadget) element;
+          XmlStringBuilder xml =
+              GadgetXmlUtil.constructXml(gadget.getUrl(), "", gadget.getAuthor());
+          LineContainers.appendLine(doc, xml);
+        } else {
+          // TODO(ljvderijk): Inserting other elements.
+          throw new UnsupportedOperationException(
+              "Can't insert other elements than text and gadgets at the moment");
+        }
+      }
       // should return 1 since elements have a length of 1 in the ApiView;
+      return 1;
     }
   }
 
