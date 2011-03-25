@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.MethodDescriptor;
@@ -38,9 +39,9 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.ResourceCollection;
+import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
 import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolAuthenticate;
@@ -74,6 +75,9 @@ import javax.servlet.http.HttpSession;
  */
 public class ServerRpcProvider {
   private static final Log LOG = Log.get(ServerRpcProvider.class);
+
+  // We can retrieve the injector from the context attributes via this attribute name
+  public static final String INJECTOR_ATTRIBUTE = Injector.class.getName();
 
   private final InetSocketAddress[] httpAddresses;
   private final Integer flashsocketPolicyPort;
@@ -300,7 +304,7 @@ public class ServerRpcProvider {
         .toArray(new String[0]), sessionManager, jettySessionManager);
   }
 
-  public void startWebSocketServer() {
+  public void startWebSocketServer(Injector injector) {
     httpServer = new Server();
 
     List<SelectChannelConnector> connectors = getSelectChannelConnectors(httpAddresses);
@@ -310,8 +314,11 @@ public class ServerRpcProvider {
     for (SelectChannelConnector connector : connectors) {
       httpServer.addConnector(connector);
     }
+    final WebAppContext context = new WebAppContext();
 
-    ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+    context.setParentLoaderPriority(true);
+    context.setAttribute(INJECTOR_ATTRIBUTE, injector);
+    
     if (jettySessionManager != null) {
       context.getSessionHandler().setSessionManager(jettySessionManager);
     }
@@ -361,14 +368,17 @@ public class ServerRpcProvider {
     context.addServlet(defaultServlet, "/static/*");
     context.addServlet(defaultServlet, "/webclient/*");
 
-    for (Pair<String, ServletHolder> servlet : servletRegistry) {
-      context.addServlet(servlet.getSecond(), servlet.getFirst());
-    }
-
     httpServer.setHandler(context);
 
     try {
       httpServer.start();
+      // We add servlets here to override the DefaultServlet automatic registered by WebAppContext
+      // in path "/" with our WaveClientServlet. Any other way to do this?
+      // Related question (unanswered) http://web.archiveorange.com/archive/v/d0LdlXf1kN0OXyPNyQZp
+      for (Pair<String, ServletHolder> servlet : servletRegistry) {
+        context.addServlet(servlet.getSecond(), servlet.getFirst());
+      }
+      
     } catch (Exception e) { // yes, .start() throws "Exception"
       LOG.severe("Fatal error starting http server.", e);
       return;

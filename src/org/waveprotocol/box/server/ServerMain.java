@@ -118,7 +118,7 @@ public class ServerMain {
     initializeFederation(injector);
 
     LOG.info("Starting server");
-    server.startWebSocketServer();
+    server.startWebSocketServer(injector);
   }
 
   private static Module buildFederationModule(Injector settingsInjector, boolean enableFederation)
