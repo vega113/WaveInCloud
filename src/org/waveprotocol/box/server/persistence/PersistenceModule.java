@@ -95,7 +95,7 @@ public class PersistenceModule extends AbstractModule {
   private void bindCertPathStore() {
     if (signerInfoStoreType.equalsIgnoreCase("memory")) {
       bind(CertPathStore.class).to(MemoryStore.class).in(Singleton.class);
-    } else if (accountStoreType.equalsIgnoreCase("file")) {
+    } else if (signerInfoStoreType.equalsIgnoreCase("file")) {
       bind(CertPathStore.class).to(FileSignerInfoStore.class).in(Singleton.class);
     } else if (signerInfoStoreType.equalsIgnoreCase("mongodb")) {
       MongoDbProvider mongoDbProvider = getMongoDbProvider();
