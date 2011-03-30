@@ -46,6 +46,7 @@ public class CoreSettings {
   public static final String USE_SOCKETIO = "use_socketio";
   public static final String GADGET_SERVER_HOSTNAME = "gadget_server_hostname";
   public static final String GADGET_SERVER_PORT = "gadget_server_port";
+  public static final String GADGET_SERVER_PATH = "gadget_server_path";
   
   @Setting(name = WAVE_SERVER_DOMAIN)
   private static String waveServerDomain;
@@ -129,4 +130,8 @@ public class CoreSettings {
   @Setting(name = GADGET_SERVER_PORT, description = "The port of the gadget server.",
       defaultValue = "80")
   private static int gadgetServerPort;
+  
+  @Setting(name = GADGET_SERVER_PATH, description = "The URL path of the gadget server.",
+      defaultValue = "/gadgets")
+  private static String gadgetServerPath;
 }

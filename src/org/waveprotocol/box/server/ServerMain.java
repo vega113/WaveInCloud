@@ -171,10 +171,13 @@ public class ServerMain {
 
     String gadgetServerHostname =injector.getInstance(Key.get(String.class,
         Names.named(CoreSettings.GADGET_SERVER_HOSTNAME)));
+    int gadgetServerPort =
+        injector.getInstance(Key.get(int.class, Names.named(CoreSettings.GADGET_SERVER_PORT)));
+    String gadgetServerPath =
+        injector.getInstance(Key.get(String.class, Names.named(CoreSettings.GADGET_SERVER_PATH)));
     ProxyServlet.Transparent proxyServlet =
-        new ProxyServlet.Transparent("/gadgets", "http", gadgetServerHostname, injector
-            .getInstance(Key.get(int.class, Names.named(CoreSettings.GADGET_SERVER_PORT))),
-            "/gadgets");
+        new ProxyServlet.Transparent("/gadgets", "http", gadgetServerHostname,gadgetServerPort,
+            gadgetServerPath);
     ServletHolder proxyServletHolder = server.addServlet("/gadgets/*", proxyServlet);
     proxyServletHolder.setInitParameter("HostHeader", gadgetServerHostname);
 
