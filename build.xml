@@ -544,7 +544,6 @@
     <jar destfile="${server.jar.out}">
       <fileset dir="${staging.dir}">
         <include name="META-INF/services/*" />
-        <include name="com/dyuproject/protostuff/**/*" />
         <include name="com/mongodb/**/*" />
         <include name="com/glines/socketio/**/*" />
         <include name="com/google/common/**/*" />
@@ -593,7 +592,6 @@
   <target name="dist-client-console" depends="stage" description="Assembles the Wave in a Box console client">
     <jar destfile="${consoleclient.jar.out}">
       <fileset dir="${staging.dir}">
-        <include name="com/dyuproject/protostuff/**/*" />
         <include name="com/google/common/**/*" />
         <include name="com/google/gson/**/*" />
         <include name="com/google/inject/**/*" />

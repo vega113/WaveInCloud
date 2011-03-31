@@ -35,29 +35,9 @@
     </sequential>
   </macrodef>
 
-  <macrodef name="protostuff"
-      description="Runs the protostuff protobuf JSON compiler">
-    <attribute name="proto" description="The protobuf source"/>
-    <sequential>
-      <java classname="com.dyuproject.protostuff.compiler.CompilerMain" fork="true" dir="${src.dir}">
-        <jvmarg value="-Dsource=@{proto}" />
-        <jvmarg value="-DoutputDir=${basedir}/proto_gwt_src" />
-        <jvmarg value="-Doutput=gwt_overlay" />
-        <jvmarg value="-Dencoding=UTF-8" />
-        <jvmarg value="-Doptions=numeric:true,generate_helper_methods:true" />
-        <classpath>
-          <fileset dir="" includes="third_party/runtime/protostuff/*.jar" />
-          <pathelement location="third_party/codegen/stringtemplate/stringtemplate-3.2.1.jar" />
-          <pathelement location="third_party/codegen/antlr/antlr-3.2.jar" />
-        </classpath>
-      </java>
-    </sequential>
-  </macrodef>
-
   <!-- Targets. -->
   <target name="init">
     <mkdir dir="proto_src" />
-    <mkdir dir="proto_gwt_src" />
   </target>
 
   <target name="all" depends="compile, compile_json" description="Compiles Java
@@ -73,13 +53,5 @@
     <protoc proto="${src.dir}/org/waveprotocol/wave/federation/federation.protodevel"/>
     <protoc proto="${src.dir}/org/waveprotocol/wave/federation/federation_error.protodevel" />
     <protoc proto="${src.dir}/org/waveprotocol/protobuf/extensions.proto" />
-  </target>
-
-  <target name="compile_json" depends="init"
-      description="Compiles Javascript files from protocol buffers">
-    <protostuff proto="org/waveprotocol/box/common/comms/waveclient-rpc.proto"/>
-    <protostuff proto="org/waveprotocol/box/search/search.proto"/>
-    <protostuff proto="org/waveprotocol/wave/concurrencycontrol/clientserver.proto"/>
-    <protostuff proto="org/waveprotocol/wave/federation/federation.protodevel"/>
   </target>
 </project>
