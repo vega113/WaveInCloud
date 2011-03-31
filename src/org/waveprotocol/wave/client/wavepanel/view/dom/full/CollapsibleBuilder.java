@@ -32,9 +32,9 @@ import com.google.gwt.resources.client.ImageResource;
 
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.common.util.UserAgent;
-import org.waveprotocol.wave.client.uibuilder.BuilderHelper.Component;
 import org.waveprotocol.wave.client.uibuilder.HtmlClosure;
 import org.waveprotocol.wave.client.uibuilder.UiBuilder;
+import org.waveprotocol.wave.client.uibuilder.BuilderHelper.Component;
 import org.waveprotocol.wave.client.wavepanel.view.View.Type;
 
 /**
@@ -77,6 +77,8 @@ public final class CollapsibleBuilder implements UiBuilder {
 
   /** CSS class names for this widget. */
   public interface Css extends CssResource {
+    String collapsible();
+
     String toggle();
 
     String arrow();
@@ -214,9 +216,9 @@ public final class CollapsibleBuilder implements UiBuilder {
         " " + TOTAL_BLIPS_ATTRIBUTE + "='" + totalBlipCount + "'" +
         " " + UNREAD_BLIPS_ATTRIBUTE + "='" + unreadBlipCount + "'";
 
-    openWith(output, id, null, kind, extra);
+    openWith(output, id, css.collapsible(), kind, extra);
     {
-      openSpan(output, Components.TOGGLE.getDomId(id), css.toggle() + readStateCss +
+      open(output, Components.TOGGLE.getDomId(id), css.toggle() + readStateCss +
           collapsedStateCss, TypeCodes.kind(Type.TOGGLE));
       {
         appendSpan(output, Components.ARROW.getDomId(id), css.arrow(), null);
@@ -231,14 +233,14 @@ public final class CollapsibleBuilder implements UiBuilder {
           output.appendEscaped("(" + unreadBlipCount + ")");
           closeSpan(output);
 
-          open(output, Components.DROP_CONTAINER.getDomId(id), css.dropContainer() +
+          openSpan(output, Components.DROP_CONTAINER.getDomId(id), css.dropContainer() +
               collapsedStateCss, null);
           appendSpan(output, null, css.drop(), null);
-          close(output);
+          closeSpan(output);
         }
         closeSpan(output);
       }
-      closeSpan(output);
+      close(output);
       openWith(output, Components.CHROME.getDomId(id), css.chrome() + collapsedStateCss, null,
           unselectable);
       {

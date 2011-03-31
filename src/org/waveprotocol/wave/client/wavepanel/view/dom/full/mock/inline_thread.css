@@ -4,7 +4,12 @@
  * author: hearnden@google.com (David Hearnden)
  */
 
+.anchor {
+  display: inline;
+}
+
 .thread {
+  display: inline;
 }
 
 .arrow {
@@ -98,5 +103,5 @@
   height: 12px;
   width: 18px;
   vertical-align: bottom;
-  margin-bottom: -1.52em; /* Magic height. */
+  margin-bottom: -16px; /* Magic height. */
 }

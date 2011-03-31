@@ -19,6 +19,9 @@ package org.waveprotocol.wave.client.wavepanel.impl.edit;
 import com.google.gwt.user.client.Window;
 
 import org.waveprotocol.wave.client.common.util.WaveRefConstants;
+import org.waveprotocol.wave.client.editor.content.ContentDocument;
+import org.waveprotocol.wave.client.wave.InteractiveDocument;
+import org.waveprotocol.wave.client.wave.WaveDocuments;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.BlipLinkPopupView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
@@ -41,14 +44,20 @@ import org.waveprotocol.wave.util.escapers.GwtWaverefEncoder;
  */
 public final class Actions {
   enum Action {
+    /** Starts an edit session on the focused blip. */
     EDIT_BLIP,
+    /** Creates a reply thread on the focused blip. */
     REPLY_TO_BLIP,
+    /** Continues the thread of the focused blip. */
     CONTINUE_THREAD,
+    /** Deletes the focused blip. */
     DELETE_BLIP,
+    /** Deletes the thread of the focused blip. */
     DELETE_THREAD,
   }
 
   private final ModelAsViewProvider views;
+  private final WaveDocuments<? extends InteractiveDocument> documents;
   private final BlipQueueRenderer blipQueue;
   private final FocusFramePresenter focus;
   private final EditSession edit;
@@ -57,13 +66,15 @@ public final class Actions {
    * Implements the wave panel's editing UI actions.
    *
    * @param views view provider
+   * @param documents collection of documents in the wave
    * @param blipQueue blip renderer
    * @param focus focus-frame feature
    * @param edit blip-content editing feature
    */
-  Actions(ModelAsViewProvider views, BlipQueueRenderer blipQueue, FocusFramePresenter focus,
-      EditSession edit) {
+  Actions(ModelAsViewProvider views, WaveDocuments<? extends InteractiveDocument> documents,
+      BlipQueueRenderer blipQueue, FocusFramePresenter focus, EditSession edit) {
     this.views = views;
+    this.documents = documents;
     this.blipQueue = blipQueue;
     this.focus = focus;
     this.edit = edit;
@@ -88,8 +99,14 @@ public final class Actions {
    */
   public void reply(BlipView blipUi) {
     ConversationBlip blip = views.getBlip(blipUi);
-    ConversationBlip reply =
-        blip.appendInlineReplyThread(blip.getContent().size() - 1).appendBlip();
+    ContentDocument doc = documents.get(blip).getDocument();
+    // Insert the reply at a good spot near the current selection, or use the
+    // end of the document as a fallback.
+    int location = DocumentUtil.getLocationNearSelection(doc);
+    if (location == -1) {
+      location = blip.getContent().size() - 1;
+    }
+    ConversationBlip reply = blip.appendInlineReplyThread(location).appendBlip();
     blipQueue.flush();
     focusAndEdit(views.getBlipView(reply));
   }
@@ -166,8 +183,8 @@ public final class Actions {
     try {
       waveletId = DualIdSerialiser.MODERN.deserialiseWaveletId(blip.getConversation().getId());
     } catch (InvalidIdException e) {
-      Window.alert("Unable to link to this blip, invalid conversation id "
-          + blip.getConversation().getId());
+      Window.alert(
+          "Unable to link to this blip, invalid conversation id " + blip.getConversation().getId());
       return;
     }
     WaveRef waveRef = WaveRef.of(waveId, waveletId, blip.getId());

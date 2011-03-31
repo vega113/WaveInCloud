@@ -21,9 +21,9 @@ import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.getA
 import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.getBefore;
 import static org.waveprotocol.wave.client.wavepanel.view.dom.DomViewHelper.load;
 import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.COLLAPSED_ATTRIBUTE;
+import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.COLLAPSED_VALUE;
 import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.TOTAL_BLIPS_ATTRIBUTE;
 import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.UNREAD_BLIPS_ATTRIBUTE;
-import static org.waveprotocol.wave.client.wavepanel.view.dom.full.CollapsibleBuilder.COLLAPSED_VALUE;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -54,6 +54,7 @@ final class CollapsibleDomImpl implements DomView {
   //
 
   private Element toggle;
+  private Element dropContainer;
   private Element chrome;
   private Element countTotal;
   private Element countUnread;
@@ -95,7 +96,7 @@ final class CollapsibleDomImpl implements DomView {
     }
     return read;
   }
-  
+
   public void setCollapsed(boolean collapsed) {
     if (collapsed) {
       self.setAttribute(COLLAPSED_ATTRIBUTE, COLLAPSED_VALUE);
@@ -113,57 +114,51 @@ final class CollapsibleDomImpl implements DomView {
     }
     updatedCssClassNames();
   }
-  
-  /** 
+
+  /**
    * Helper method to update the proper CSS class names on the toggle and
    * chrome elements after a state change.
    */
   private void updatedCssClassNames() {
     String readStateClass = " " + (isRead() ? CSS.read() : CSS.unread());
     String collapsedStateClass = " " + (isCollapsed() ? CSS.collapsed() : CSS.expanded());
-    
+
     getToggle().setClassName(CSS.toggle() + collapsedStateClass + readStateClass);
     getChrome().setClassName(CSS.chrome() + collapsedStateClass);
+    getDropContainer().setClassName(CSS.dropContainer() + collapsedStateClass);
   }
-  
+
 
   //
   // Structure exposed for external control.
   //
 
   private Element getToggle() {
-    if (toggle == null) {
-      toggle = load(id, Components.TOGGLE);
-    }
-    return toggle;
+    return toggle == null ? toggle = load(id, Components.TOGGLE) : toggle;
+  }
+
+  private Element getDropContainer() {
+    return dropContainer == null
+        ? dropContainer = load(id, Components.DROP_CONTAINER) : dropContainer;
   }
 
   public Element getChrome() {
-    if (chrome == null) {
-      chrome = load(id, Components.CHROME);
-    }
-    return chrome;
+    return chrome == null ? chrome = load(id, Components.CHROME) : chrome;
   }
-  
+
   public Element getCountTotal() {
-    if (countTotal == null) {
-      countTotal = load(id, Components.COUNT_TOTAL);
-    }
-    return countTotal;
+    return countTotal == null ? countTotal = load(id, Components.COUNT_TOTAL) : countTotal;
   }
-  
+
   public Element getCountUnread() {
-    if (countUnread == null) {
-      countUnread = load(id, Components.COUNT_UNREAD);
-    }
-    return countUnread;
+    return countUnread == null ? countUnread = load(id, Components.COUNT_UNREAD) : countUnread;
   }
-  
+
   public void setTotalBlipCount(int totalBlipCount) {
     self.setAttribute(TOTAL_BLIPS_ATTRIBUTE, "" + totalBlipCount);
     getCountTotal().setInnerText("" + totalBlipCount);
   }
-  
+
   public void setUnreadBlipCount(int unreadBlipCount) {
     self.setAttribute(UNREAD_BLIPS_ATTRIBUTE, "" + unreadBlipCount);
     Element unread = getCountUnread();

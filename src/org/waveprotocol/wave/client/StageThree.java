@@ -24,6 +24,7 @@ import org.waveprotocol.wave.client.scheduler.TimerService;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.wave.DocumentRegistry;
 import org.waveprotocol.wave.client.wave.InteractiveDocument;
+import org.waveprotocol.wave.client.wave.WaveDocuments;
 import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.Actions;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.EditActionsBuilder;
@@ -111,11 +112,13 @@ public interface StageThree {
       WavePanelImpl panel = stageOne.getWavePanel();
       FocusFramePresenter focus = stageOne.getFocusFrame();
       ModelAsViewProvider views = stageTwo.getModelAsViewProvider();
+      WaveDocuments<? extends InteractiveDocument> docs = stageTwo.getDocumentRegistry();
       BlipQueueRenderer blipQueue = stageTwo.getBlipQueue();
       ProfileManager profiles = stageTwo.getProfileManager();
       EditSession edit = getEditSession();
 
-      return EditActionsBuilder.createAndInstall(panel, views, profiles, edit, blipQueue, focus);
+      return EditActionsBuilder.createAndInstall(
+          panel, views, docs, profiles, edit, blipQueue, focus);
     }
 
     protected EditSession createEditSession() {

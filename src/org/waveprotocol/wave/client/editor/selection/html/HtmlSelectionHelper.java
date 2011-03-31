@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.client.editor.selection.html;
 
 import com.google.gwt.dom.client.Node;
+
 import org.waveprotocol.wave.model.document.util.FocusedPointRange;
 import org.waveprotocol.wave.model.document.util.PointRange;
 

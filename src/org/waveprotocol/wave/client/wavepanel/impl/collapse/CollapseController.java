@@ -17,6 +17,7 @@
 package org.waveprotocol.wave.client.wavepanel.impl.collapse;
 
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 
 import org.waveprotocol.wave.client.wavepanel.WavePanel;
@@ -56,6 +57,9 @@ public final class CollapseController implements WaveMouseDownHandler {
 
   @Override
   public boolean onMouseDown(MouseDownEvent event, Element source) {
+    if (event.getNativeButton() != NativeEvent.BUTTON_LEFT) {
+      return false;
+    }
     handleClick(panel.fromToggle(source));
     return false;
   }

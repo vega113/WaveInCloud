@@ -302,7 +302,7 @@ public class EditorImpl extends LogicalPanel.Impl implements
   /**
    * Attribute used to mark the editable document element.
    */
-  private static final String EDITABLE_DOC_MARKER = "editableDocMarker";
+  static final String EDITABLE_DOC_MARKER = "editableDocMarker";
 
   /**
    * Shorthand for the main div of the editor
@@ -321,6 +321,8 @@ public class EditorImpl extends LogicalPanel.Impl implements
   private NodeManager nodeManager;
 
   private CaretMovementHelper caretMoveHelper;
+
+  private HtmlSelectionHelper htmlSelectionHelper;
 
   /**
    * Always use this unless you know what you are doing
@@ -1607,14 +1609,16 @@ public class EditorImpl extends LogicalPanel.Impl implements
 
       nodeManager = content.getNodeManager();
 
-      passiveSelectionHelper = new PassiveSelectionHelper(EditorImpl.this, nodeManager,
-          content.getRenderedView(), content.getLocationMapper());
+      htmlSelectionHelper = new HtmlSelectionHelperImpl(getDocumentHtmlElement());
+      passiveSelectionHelper =
+          new PassiveSelectionHelper(htmlSelectionHelper, content.getNodeManager(),
+              content.getRenderedView(), content.getLocationMapper());
 
       suggestionsManager = new InteractiveSuggestionsManager(
           passiveSelectionHelper, settings.closeSuggestionsMenuDelayMs());
 
       aggressiveSelectionHelper =
-          new AggressiveSelectionHelper(EditorImpl.this, nodeManager, content.getRenderedView(),
+          new AggressiveSelectionHelper(htmlSelectionHelper, nodeManager, content.getRenderedView(),
               content.getLocationMapper(), content.getMutableDoc()) {
             @Override
             protected void flushForUnextractedText() {
@@ -1963,17 +1967,6 @@ public class EditorImpl extends LogicalPanel.Impl implements
   }
 
   /**
-   * Tests if the given selection is fully inside the given node.
-   * @param selection
-   * @param node
-   * @return true if the given selection is fully inside the given node.
-   */
-  private boolean isFullyInside(FocusedPointRange<Node> selection, Node node) {
-    return node.isOrHasChild(selection.getAnchor().getContainer())
-        && node.isOrHasChild(selection.getFocus().getContainer());
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
@@ -2031,60 +2024,24 @@ public class EditorImpl extends LogicalPanel.Impl implements
 
   // End selection saving code
 
-
-  /**
-   * @return Current selection inside Editor, or null if there is no selection
-   * fully inside editor
-   * {@inheritDoc}
-   */
+  // Note: This class implements HtmlSelectionHelper for historic reasons.
+  // Components that still use an editor object as their HtmlSelectionHelper
+  // impl can assume that that selection helper has the lifetime of the editor.
+  // However, the htmlSelectionHelper object, because it is constructed on a
+  // content document's doc element, only has the lifetime of an
+  // editor<->content association, and it gets replaced in setContent.
+  @Override
   public FocusedPointRange<Node> getHtmlSelection() {
     // NOTE(user): If content is null, we shoudln't be trying to get the
     // selection in the first place. However, we often don't know when an
     // editor is closed, such as from inside defered commands. i.e.
     // PasteExtractor, AnnotationPainter.
-    if (!hasDocument()) {
-      return null;
-    }
-
-    FocusedPointRange<Node> selection = NativeSelectionUtil.get();
-    // NOTE(user): We also need to check that the selection is not inside a
-    // child editor, if it is the selection with respect to this editor is null.
-    // TODO(user, danilatos): There is a more general problem of selection inside
-    // textboxes, i.e. search gadget that needs to be addressed.
-    if (selection == null || !isFullyInside(selection, getDocumentHtmlElement()) ||
-        isInChildEditor(selection)) {
-      return null;
-    }
-    return selection;
+    return hasDocument() ? htmlSelectionHelper.getHtmlSelection() : null;
   }
 
   @Override
   public PointRange<Node> getOrderedHtmlSelection() {
-    // TODO(danilatos): Optimise
-    if (getHtmlSelection() == null) {
-      return null;
-    }
-    return NativeSelectionUtil.getOrdered();
-  }
-
-  private boolean isInChildEditor(FocusedPointRange<Node> selection) {
-    return selection.isCollapsed() ? isInChildEditor(selection.getAnchor())
-        : isInChildEditor(selection.getAnchor()) || isInChildEditor(selection.getFocus());
-  }
-
-  private boolean isInChildEditor(Point<Node> point) {
-    // The editable doc is marked by an attribute EDITABLE_DOC_MARKER, if
-    // an element is found with that attribute, and is not the element of this
-    // editor's doc element, then it must be a child's doc element.
-    Node n = point.getContainer();
-    Element e = DomHelper.isTextNode(n) ? n.getParentElement() : (Element) n;
-    while (e != null && e != getDocumentHtmlElement()) {
-      if (e.hasAttribute(EDITABLE_DOC_MARKER)) {
-        return true;
-      }
-      e = e.getParentElement();
-    }
-    return false;
+    return htmlSelectionHelper.getOrderedHtmlSelection();
   }
 
   /**

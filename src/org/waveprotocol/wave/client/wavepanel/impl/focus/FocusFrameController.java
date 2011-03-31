@@ -17,6 +17,7 @@
 package org.waveprotocol.wave.client.wavepanel.impl.focus;
 
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 
 import org.waveprotocol.wave.client.common.util.KeyCombo;
@@ -63,6 +64,9 @@ public final class FocusFrameController implements WaveMouseDownHandler, KeySign
 
   @Override
   public boolean onMouseDown(MouseDownEvent event, Element source) {
+    if (event.getNativeButton() != NativeEvent.BUTTON_LEFT) {
+      return false;
+    }
     focus.focusWithoutScroll(panel.asBlip(source));
     // Cancel bubbling, so that other blips do not grab focus.
     return true;

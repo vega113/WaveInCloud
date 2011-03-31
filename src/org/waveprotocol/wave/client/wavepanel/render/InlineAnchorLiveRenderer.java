@@ -18,6 +18,7 @@ package org.waveprotocol.wave.client.wavepanel.render;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Display;
 
 import org.waveprotocol.wave.client.common.util.DomHelper;
 import org.waveprotocol.wave.client.common.util.LinkedPruningSequenceMap;
@@ -33,8 +34,8 @@ import org.waveprotocol.wave.client.editor.event.EditorEvent;
 import org.waveprotocol.wave.client.editor.selection.content.SelectionUtil;
 import org.waveprotocol.wave.client.uibuilder.BuilderHelper;
 import org.waveprotocol.wave.client.wavepanel.view.AnchorView;
-import org.waveprotocol.wave.client.wavepanel.view.View.Type;
 import org.waveprotocol.wave.client.wavepanel.view.ViewIdMapper;
+import org.waveprotocol.wave.client.wavepanel.view.View.Type;
 import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.TypeCodes;
 import org.waveprotocol.wave.model.conversation.Blips;
@@ -42,8 +43,8 @@ import org.waveprotocol.wave.model.conversation.Conversation;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.util.IdentitySet;
-import org.waveprotocol.wave.model.util.ReadableIdentitySet.Proc;
 import org.waveprotocol.wave.model.util.StringMap;
+import org.waveprotocol.wave.model.util.ReadableIdentitySet.Proc;
 import org.waveprotocol.wave.model.wave.Wavelet;
 
 /**
@@ -284,7 +285,10 @@ public final class InlineAnchorLiveRenderer extends RenderingMutationHandler {
 
   @Override
   public Element createDomImpl(Renderable element) {
+    // HTML does not allow block elements inside inline elements, so it has to
+    // be divs all the way, not spans.
     Element e = Document.get().createDivElement();
+    e.getStyle().setDisplay(Display.INLINE);
     // Do the things that the doodad API should be doing by default.
     DomHelper.setContentEditable(e, false, false);
     DomHelper.makeUnselectable(e);

@@ -10,6 +10,8 @@
 <style type="text/css">
 body {
   font-family: arial;
+  font-size: 13px;
+  line-height: 1.35;
 }
 </style>
 <script type="text/javascript">
@@ -136,9 +138,9 @@ function init() {
       </div>
       <div class='contentContainer'>
         <div class='document' contentEditable='true'>
-          <p><b>A wave is equal parts conversation and document.</b> People can communicate and work together with richly formatted text, photos, videos, maps, and more.</p>
-          <p><b>A wave is shared.</b><span id='anchor1'></span>Any participant can reply anywhere in the message, edit the content and add participants at any point in the process. Then playback lets anyone rewind the wave to see who said what and when.</p>
-          <p><b>A wave is live.</b> With live transmission as you type,<span id='anchor2'></span> participants on a wave can have faster conversations, see edits and interact with extensions in real-time.</p>
+          <div><b>A wave is equal parts conversation and document.</b> People can communicate and work together with richly formatted text, photos, videos, maps, and more.<br/></div>
+          <div><b>A wave is shared.</b><div class='anchor' id='anchor1'></div>Any participant can reply anywhere in the message, edit the content and add participants at any point in the process. Then playback lets anyone rewind the wave to see who said what and when.<br/></div>
+          <div><b>A wave is live.</b> With live transmission as you type,<div class='anchor' id='anchor2'></div> participants on a wave can have faster conversations, see edits and interact with extensions in real-time.<br/></div>
         </div>
       </div>
     </div>
@@ -148,7 +150,7 @@ function init() {
 </div>
 
 <!-- No whitespace inbetween spans (screws up Firefox.) -->
-  <span id='thread' class='thread' contentEditable='false'><span class='toggle' c='expanded' r='read' onmousedown='return false;' onclick='toggle(this); return false;'><span class='arrow read expanded'></span><span class='read count expanded'><span>124</span><div class='dropContainer expanded'><span class='drop'></span></div></span></span><div id='threadContents' class='chrome expanded'></div></span>
+  <div id='thread' class='thread' contentEditable='false'><span class='toggle' c='expanded' r='read' onmousedown='return false;' onclick='toggle(this); return false;'><span class='arrow read expanded'></span><span class='read count expanded'><span>124</span><div class='dropContainer expanded'><span class='drop'></span></div></span></span><div id='threadContents' class='chrome expanded'></div></div>
 
 <!--
   Inline-block solution for posterity,

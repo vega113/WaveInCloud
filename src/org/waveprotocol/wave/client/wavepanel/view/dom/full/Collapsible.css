@@ -4,12 +4,20 @@
  * author: hearnden@google.com (David Hearnden)
  */
 
+.collapsible {
+  display: inline;
+}
+
 .toggle {
+  display: inline-block;
   cursor: pointer;
   margin: 0 0.3em;
   white-space: nowrap;    /* Keeps bubble and arrow together. */
   font-size: 0.8em;
   vertical-align: 0.1em;  /* Keep center alignment with shrinking font. */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
 .expanded {
@@ -68,11 +76,8 @@
   border: 1px solid rgb(154,154,154);
 }
 
-.collapsed .dropContainer {
-  display: none;
-}
-
-.expanded .dropContainer {
+.expanded.dropContainer {
+  display: block;
   position: absolute;
   text-align: center;
   left: 0;
@@ -81,12 +86,31 @@
   line-height: 0;  /* Height comes only from image. */
 }
 
+/*
+ * The collapsed rule must come after the expanded rule for precedence, in order
+ * to handle correctly the case of multiply nested collapsibles, where both
+ * (.expanded .dropContainer) and (.collapsed .dropContainer) may match.
+ */ 
+.collapsed.dropContainer {
+  display: none;
+}
+
 @sprite .drop {
   gwt-image: 'callout';
   vertical-align: bottom;
-  margin-bottom: -14px; /* Magic height. */
   display: inline-block;
   background-color: #FFF;
+}
+
+/* Firefox gets it wrong. */
+@if user.agent gecko1_8 {
+  .drop {
+    margin-bottom: -15px; /* Magic height. */
+  }
+} @else {
+  .drop {
+    margin-bottom: -16px; /* Magic height. */
+  }
 }
 
 .chrome {
@@ -112,7 +136,6 @@
     zoom: 1;
   }
 }
-
 
 .chrome.collapsed  {
   display: none;
