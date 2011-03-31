@@ -130,7 +130,7 @@ public final class EditSession
    * @param blipUi blip to edit.
    */
   private void startNewSession(BlipView blipUi) {
-    assert editing == null && blipUi != null;
+    assert !isEditing() && blipUi != null;
 
     // Find the document.
     ContentDocument document = documents.get(views.getBlip(blipUi)).getDocument();
@@ -152,7 +152,7 @@ public final class EditSession
    * Stops editing if there is currently an edit session.
    */
   private void endSession() {
-    if (editing != null) {
+    if (isEditing()) {
       selectionExtractor.stop(editor);
       container.doOrphan(editor.getWidget());
       editor.blur();
@@ -171,15 +171,30 @@ public final class EditSession
     }
   }
 
+  /** @return true if there is an active edit session. */
+  public boolean isEditing() {
+    return editing != null;
+  }
+
+  /** @return the blip UI of the current edit session, or {@code null}. */
+  public BlipView getBlip() {
+    return editing;
+  }
+
+  /** @return the editor of the current edit session, or {@code null}. */
+  public Editor getEditor() {
+    return editor;
+  }
+
   //
   // Events.
   //
 
   @Override
   public void onFocusMoved(BlipView oldUi, BlipView newUi) {
-    boolean isEditing = editing != null;
+    boolean wasEditing = isEditing();
     endSession();
-    if (isEditing && newUi != null) {
+    if (wasEditing && newUi != null) {
       startEditing(newUi);
     }
   }

@@ -160,6 +160,12 @@
         <path location="${build.proto.dir}/"/>
       </classpath>
     </javac>
+    <copy todir="${build.dir}/pst">
+      <fileset dir="${src.dir}">
+        <include name="org/waveprotocol/pst/**/*.st"/>
+        <include name="org/waveprotocol/pst/**/properties"/>
+      </fileset>
+    </copy>
     <jar destfile="${dist.dir}/pst.jar" basedir="${build.dir}/pst"/>
     <touch file="${dep}/dist-pst"/>
   </target>

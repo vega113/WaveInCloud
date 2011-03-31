@@ -19,8 +19,8 @@ package org.waveprotocol.wave.model.document;
 
 import org.waveprotocol.wave.model.document.indexed.Locator;
 import org.waveprotocol.wave.model.document.operation.Attributes;
-import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.DocInitialization;
+import org.waveprotocol.wave.model.document.operation.DocOp;
 import org.waveprotocol.wave.model.document.operation.Nindo;
 import org.waveprotocol.wave.model.document.operation.Nindo.Builder;
 import org.waveprotocol.wave.model.document.operation.algorithm.AnnotationsNormalizer;
@@ -202,25 +202,13 @@ public class MutableDocumentImpl<N, E extends N, T extends N> implements Mutable
   @Override
   public E insertXml(Point<N> point, XmlStringBuilder xml) {
     Point.checkPoint(this, point, "MutableDocumentImpl.insertXml");
-
-    // TODO(danilatos): Get rid of inefficient insertXml method?
-
     try {
       begin();
-
       int where = doc.getLocation(point);
       Builder builder = at(where);
-
       appendXmlToBuilder(xml, builder);
-
       consume(builder);
-
-      Point<N> newPoint = doc.locate(where);
-      if (!newPoint.isInTextNode()) {
-        return doc.asElement(newPoint.getNodeAfter());
-      } else {
-        return null;
-      }
+      return Point.elementAfter(this, doc.locate(where));
     } finally {
       end();
     }

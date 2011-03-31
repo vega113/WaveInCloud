@@ -17,10 +17,12 @@
 
 package org.waveprotocol.wave.client.doodad.attachment.render;
 
+import org.waveprotocol.wave.client.doodad.attachment.ImageThumbnail;
 import org.waveprotocol.wave.client.doodad.attachment.SimpleAttachmentManager.Attachment;
 import org.waveprotocol.wave.client.editor.content.CMutableDocument;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.content.ContentNode;
+import org.waveprotocol.wave.client.editor.content.misc.Caption;
 import org.waveprotocol.wave.model.document.util.DocHelper;
 import org.waveprotocol.wave.model.document.util.Point;
 import org.waveprotocol.wave.model.document.util.Property;
@@ -73,14 +75,38 @@ public class ImageThumbnailWrapper {
   }
 
   /**
-   * Get the text of the image caption
-   *
-   * @return string
+   * Sets the attachment id of this doodad.
+   */
+  public void setAttachmentId(String id) {
+    element.getMutableDoc().setElementAttribute(element, ImageThumbnail.ATTACHMENT_ATTR, id);
+  }
+
+  /**
+   * Sets the caption text of this doodad.
+   */
+  public void setCaptionText(String text) {
+    CMutableDocument doc = element.getMutableDoc();
+    ContentElement caption = DocHelper.getElementWithTagName(doc, Caption.TAGNAME, element);
+    if (caption != null) {
+      doc.emptyElement(caption);
+      doc.insertText(Point.<ContentNode> end(caption), text);
+    }
+  }
+
+  /**
+   * Gets the text of the image caption
    */
   public String getCaptionText() {
     CMutableDocument doc = element.getMutableDoc();
     return DocHelper.getText(doc, doc, doc.getLocation(element),
         doc.getLocation(Point.end((ContentNode) element)));
+  }
+
+  /**
+   * Deletes this doodad from its document.
+   */
+  public void delete() {
+    element.getMutableDoc().deleteNode(element);
   }
 
   /**

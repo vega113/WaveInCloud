@@ -51,6 +51,10 @@ public interface StageThree {
 
   Actions getEditActions();
 
+  EditToolbar getEditToolbar();
+
+  EditSession getEditSession();
+
   /**
    * Default implementation of the stage three configuration. Each component is
    * defined by a factory method, any of which may be overridden in order to
@@ -67,6 +71,7 @@ public interface StageThree {
 
     private Actions actions;
     private EditSession edit;
+    private EditToolbar toolbar;
 
     public DefaultProvider(StageTwo stageTwo) {
       this.stageTwo = stageTwo;
@@ -103,8 +108,14 @@ public interface StageThree {
       return actions == null ? actions = createEditActions() : actions;
     }
 
-    protected final EditSession getEditSession() {
+    @Override
+    public final EditSession getEditSession() {
       return edit == null ? edit = createEditSession() : edit;
+    }
+
+    @Override
+    public final EditToolbar getEditToolbar() {
+      return toolbar == null ? toolbar = createEditToolbar() : toolbar;
     }
 
     protected Actions createEditActions() {
@@ -133,6 +144,11 @@ public interface StageThree {
       return new EditSession(views, documents, panel.getGwtPanel(), selectionExtrator);
     }
 
+    protected EditToolbar createEditToolbar() {
+      return EditToolbar.create(getStageTwo().getStageOne().getWavePanel(), getEditSession(),
+          getStageTwo().getSignedInUser());
+    }
+
     protected void install() {
       EditorStaticDeps.setPopupProvider(PopupFactory.getProvider());
       EditorStaticDeps.setPopupChromeProvider(PopupChromeFactory.getProvider());
@@ -143,7 +159,7 @@ public interface StageThree {
       Actions actions = getEditActions();
       EditSession edit = getEditSession();
       MenuController.install(actions, panel);
-      EditToolbar.install(panel, edit, user);
+      getEditToolbar().install();
       ReplyIndicatorController.install(actions, edit, panel);
       stageTwo.getDiffController().upgrade(edit);
     }

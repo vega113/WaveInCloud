@@ -68,6 +68,13 @@ import java.util.Iterator;
  */
 public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
 
+  /**
+   * Handler for click buttons added with {@link EditToolbar#addClickButton}.
+   */
+  public interface ClickHandler {
+    void onClicked(EditorContext context);
+  }
+
   /** The default gadget URL used in the insert-gadget prompt */
   private static final String YES_NO_MAYBE_GADGET =
       "http://wave-api.appspot.com/public/gadgets/areyouin/gadget.xml";
@@ -299,16 +306,18 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
 
   private final EditorToolbarResources.Css css;
   private final WavePanel panel;
+  private final EditSession edit;
   private final ToplevelToolbarWidget toolbarUi;
   private final ParticipantId user;
 
   private final ButtonUpdater updater;
   private EditorContext editor;
 
-  private EditToolbar(EditorToolbarResources.Css css, WavePanel panel,
+  private EditToolbar(EditorToolbarResources.Css css, WavePanel panel, EditSession edit,
       ToplevelToolbarWidget toolbarUi, ButtonUpdater updater, ParticipantId user) {
     this.css = css;
     this.panel = panel;
+    this.edit = edit;
     this.toolbarUi = toolbarUi;
     this.updater = updater;
     this.user = user;
@@ -317,17 +326,15 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
   /**
    * Attaches editor behaviour to a toolbar, adding all the edit buttons.
    */
-  public static void install(WavePanel panel, EditSession edit, ParticipantId user) {
+  public static EditToolbar create(WavePanel panel, EditSession edit, ParticipantId user) {
     ToplevelToolbarWidget toolbarUi = new ToplevelToolbarWidget();
     EditorToolbarResources.Css css = EditorToolbarResources.Loader.res.css();
     TimerService timer = SchedulerInstance.getMediumPriorityTimer();
     ButtonUpdater updater = new ButtonUpdater(timer);
-    EditToolbar toolbar = new EditToolbar(css, panel, toolbarUi, updater, user);
-    edit.addListener(toolbar);
-    toolbar.install();
+    return new EditToolbar(css, panel, edit, toolbarUi, updater, user);
   }
 
-  private void install() {
+  public void install() {
     ToolbarView group = toolbarUi.addGroup();
     createBoldButton(group);
     createItalicButton(group);
@@ -362,6 +369,15 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
     group = toolbarUi.addGroup();
     createInsertGadgetButton(group, user);
 
+    if (edit.isEditing()) {
+      onSessionStart(edit.getEditor(), edit.getBlip());
+    }
+    edit.addListener(this);
+  }
+
+  public void destroy() {
+    edit.removeListener(this);
+    toolbarUi.removeFromParent();
   }
 
   private void createBoldButton(ToolbarView toolbar) {
@@ -640,6 +656,22 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
     return controller;
   }
 
+  /**
+   * Adds a button to this toolbar.
+   */
+  public void addClickButton(String icon, final ClickHandler handler) {
+    ToolbarClickButton.Listener uiHandler =  new ToolbarClickButton.Listener() {
+      @Override
+      public void onClicked() {
+        handler.onClicked(editor);
+      }
+    };
+    new ToolbarButtonViewBuilder().setIcon(icon).applyTo(toolbarUi.addClickButton(), uiHandler);
+  }
+
+  //
+  // Event handling.
+  //
 
   /**
    * Attaches an editor to the toolbar.
@@ -684,7 +716,7 @@ public class EditToolbar implements EditorUpdateListener, EditSession.Listener {
     }
   }
 
-  private <E> E[] asArray(E... elements) {
+  private static <E> E[] asArray(E... elements) {
     return elements;
   }
 }

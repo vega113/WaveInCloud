@@ -366,7 +366,7 @@ public class ContentElement extends ContentNode implements Doc.E, HasHandlers, H
    * @param name
    * @param value
    */
-  public void setAttribute(String name, String value) {
+  void setAttribute(String name, String value) {
     assert value != null : "Do not set an attribute to null, use removeAttribute instead";
     String old = attributes.get(name);
     attributes.put(name, value);
