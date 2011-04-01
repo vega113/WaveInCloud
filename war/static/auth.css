@@ -110,3 +110,9 @@ body {
 	font-size: smaller;
 }
 
+.icon {
+  float: left;
+  margin-right: 5px;
+  width: 28px;
+}
+
