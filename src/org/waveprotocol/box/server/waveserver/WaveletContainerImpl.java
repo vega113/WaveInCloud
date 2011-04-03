@@ -39,6 +39,7 @@ import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.ParticipantIdUtil;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.util.logging.Log;
@@ -90,6 +91,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
   private final ReentrantReadWriteLock.WriteLock writeLock;
   private final WaveletName waveletName;
   private final WaveletNotificationSubscriber notifiee;
+  private final ParticipantId sharedDomainParticipantId;
   /** Is counted down when initial loading from storage completes. */
   private final CountDownLatch loadLatch = new CountDownLatch(1);
   /** Is set at most once, before loadLatch is counted down. */
@@ -98,16 +100,19 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   /**
    * Constructs an empty WaveletContainer for a wavelet.
-   * waveletData is not set until a delta has been applied.
-   *
-   * @param notifiee subscriber to notify of wavelet updates and commits
-   * @param waveletState the wavelet's delta history and current state
+   * WaveletData is not set until a delta has been applied.
+   * 
+   * @param notifiee the subscriber to notify of wavelet updates and commits.
+   * @param waveletState the wavelet's delta history and current state.
+   * @param waveDomain the wave server domain.
    */
   public WaveletContainerImpl(WaveletName waveletName, WaveletNotificationSubscriber notifiee,
-      final ListenableFuture<? extends WaveletState> waveletStateFuture) {
+      final ListenableFuture<? extends WaveletState> waveletStateFuture, String waveDomain) {
     this.waveletName = waveletName;
     this.notifiee = notifiee;
-
+    this.sharedDomainParticipantId =
+        waveDomain != null ? ParticipantIdUtil.makeUnsafeSharedDomainParticipantId(waveDomain)
+            : null;
     ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     this.readLock = readWriteLock.readLock();
     this.writeLock = readWriteLock.writeLock();
@@ -258,7 +263,10 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       // TODO(soren): determine if off-domain participants should be denied access if empty
       ReadableWaveletData snapshot = waveletState.getSnapshot();
       return participantId != null
-          && (snapshot == null || snapshot.getParticipants().contains(participantId));
+          && (snapshot == null
+              || snapshot.getParticipants().contains(participantId)
+              || (sharedDomainParticipantId != null
+                  && snapshot.getParticipants().contains(sharedDomainParticipantId)));
     } finally {
       releaseReadLock();
     }

@@ -89,7 +89,7 @@ public class OperationServiceHelper {
         SilentOperationSink.Executor.<WaveletOperation, WaveletData>build(waveletData);
     OpBasedWavelet wavelet =
         new OpBasedWavelet(waveletData.getWaveId(), waveletData, CONTEXT_FACTORY,
-            ParticipationHelper.IGNORANT, executor, SilentOperationSink.VOID);
+            ParticipationHelper.DEFAULT, executor, SilentOperationSink.VOID);
 
     // Make a conversation with an empty root blip
     WaveletBasedConversation.makeWaveletConversational(wavelet);

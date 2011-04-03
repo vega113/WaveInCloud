@@ -125,7 +125,7 @@ public class SearchServiceTest extends TestCase {
       
       OpBasedWavelet wavelet =
         new OpBasedWavelet(waveId, waveletData, new BasicWaveletOperationContextFactory(author),
-            ParticipationHelper.IGNORANT,
+            ParticipationHelper.DEFAULT,
             SilentOperationSink.Executor.<WaveletOperation, WaveletData>build(waveletData),
             SilentOperationSink.VOID);
       ReadOnlyWaveView waveView = new ReadOnlyWaveView(waveId);

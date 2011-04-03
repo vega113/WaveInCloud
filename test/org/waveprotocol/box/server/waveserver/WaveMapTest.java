@@ -49,6 +49,7 @@ import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.version.HashedVersionZeroFactoryImpl;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.ParticipantIdUtil;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.util.escapers.jvm.JavaUrlCodec;
@@ -187,7 +188,7 @@ public class WaveMapTest extends TestCase {
         new LocalWaveletContainer.Factory() {
           @Override
           public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
-              WaveletName waveletName) {
+              WaveletName waveletName, String domain) {
             WaveletState waveletState;
             try {
               waveletState = DeltaStoreBasedWaveletState.create(deltaStore.open(waveletName),
@@ -196,13 +197,14 @@ public class WaveMapTest extends TestCase {
               throw new RuntimeException(e);
             }
             return new LocalWaveletContainerImpl(waveletName, notifiee,
-                Futures.immediateFuture(waveletState));
+                Futures.immediateFuture(waveletState), DOMAIN);
           }
         };
 
     waveletStore = mock(DeltaAndSnapshotStore.class);
-    waveMap = new WaveMap(
-        waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
+    waveMap =
+        new WaveMap(waveletStore, notifiee, localWaveletContainerFactory,
+            remoteWaveletContainerFactory, "example.com");
   }
 
   public void testWaveMapStartsEmpty() throws WaveServerException {
@@ -258,6 +260,34 @@ public class WaveMapTest extends TestCase {
 
     Collection<WaveViewData> results = waveMap.search(USER2, "in:inbox", 0, 20);
     assertEquals(0, results.size());
+  }
+  
+  public void testSearchWaveReturnsWaveWithImplicitParticipant() throws Exception {
+    ParticipantId sharedDomainParticipantId =
+        ParticipantIdUtil.makeUnsafeSharedDomainParticipantId(DOMAIN);
+    WaveletName waveletName =
+      WaveletName.of(WaveId.of(DOMAIN, String.valueOf(1)), WAVELET_ID);
+    // Implicit participant in this wave.
+    submitDeltaToNewWavelet(waveletName, USER1,
+        addParticipantToWavelet(sharedDomainParticipantId));
+    waveletName = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(2)), WAVELET_ID);
+    // Explicit participant in this wave.
+    submitDeltaToNewWavelet(waveletName, USER1, addParticipantToWavelet(USER2));
+
+    Collection<WaveViewData> results = waveMap.search(USER2, "", 0, 20);
+    // Should return both waves.
+    assertEquals(2, results.size());
+  }
+
+  public void testSearchAllDoesNotReturnWaveWithoutSharedDomainUser() throws Exception {
+    WaveletName waveletName =
+      WaveletName.of(WaveId.of(DOMAIN, String.valueOf(1)), WAVELET_ID);
+    submitDeltaToNewWavelet(waveletName, USER1, addParticipantToWavelet(USER1));
+    waveletName = WaveletName.of(WaveId.of(DOMAIN, String.valueOf(2)), WAVELET_ID);
+    submitDeltaToNewWavelet(waveletName, USER1, addParticipantToWavelet(USER2));
+    
+    Collection<WaveViewData> results = waveMap.search(USER2, "", 0, 20);
+    assertEquals(1, results.size());
   }
 
   public void testSearchLimitEnforced() throws Exception {

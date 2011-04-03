@@ -77,8 +77,8 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl implements LocalWav
   }
 
   public LocalWaveletContainerImpl(WaveletName waveletName, WaveletNotificationSubscriber notifiee,
-      ListenableFuture<? extends WaveletState> waveletStateFuture) {
-    super(waveletName, notifiee, waveletStateFuture);
+      ListenableFuture<? extends WaveletState> waveletStateFuture, String waveDomain) {
+    super(waveletName, notifiee, waveletStateFuture, waveDomain);
   }
 
   @Override

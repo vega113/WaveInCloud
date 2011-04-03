@@ -35,10 +35,10 @@ import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.box.server.waveserver.LocalWaveletContainer.Factory;
 import org.waveprotocol.box.server.waveserver.WaveletProvider.SubmitRequestListener;
-import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -104,17 +104,19 @@ public class WaveServerTest extends TestCase {
     Factory localWaveletContainerFactory = new LocalWaveletContainer.Factory() {
       @Override
       public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
-          WaveletName waveletName) {
+          WaveletName waveletName, String waveDomain) {
         return new LocalWaveletContainerImpl(waveletName, notifiee,
-            WaveServerModule.loadWaveletState(executor, deltaStore, waveletName));
+            WaveServerModule.loadWaveletState(executor, deltaStore, waveletName), waveDomain);
       }
     };
 
     waveletStore = new DeltaStoreBasedSnapshotStore(deltaStore);
-    waveMap = new WaveMap(
-        waveletStore, notifiee, localWaveletContainerFactory, remoteWaveletContainerFactory);
-    waveServer = new WaveServerImpl(
-        MoreExecutors.sameThreadExecutor(), certificateManager, federationRemote, waveMap);
+    waveMap =
+        new WaveMap(waveletStore, notifiee, localWaveletContainerFactory,
+            remoteWaveletContainerFactory, "example.com");
+    waveServer =
+        new WaveServerImpl(MoreExecutors.sameThreadExecutor(), certificateManager,
+            federationRemote, waveMap);
     waveServer.initialize();
   }
 

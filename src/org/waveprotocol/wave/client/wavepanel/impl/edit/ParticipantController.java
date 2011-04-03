@@ -95,7 +95,7 @@ public final class ParticipantController {
       return;
     }
     try {
-      p = ParticipantId.of(address);
+      p = ParticipantId.of(address.trim());
     } catch (InvalidParticipantAddress e) {
       Window.alert("Invalid address");
       return;

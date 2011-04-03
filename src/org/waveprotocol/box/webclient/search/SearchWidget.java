@@ -57,7 +57,7 @@ public class SearchWidget extends Composite implements SearchView, ChangeHandler
 
   private final static Binder BINDER = GWT.create(Binder.class);
 
-  private final static String DEFAULT_QUERY = "in:inbox";
+  private final static String DEFAULT_QUERY = "";
 
   @UiField
   TextBox query;

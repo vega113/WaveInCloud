@@ -83,7 +83,7 @@ public final class WaveletOperationalizer {
     return new OpBasedWavelet(waveId,
         data,
         opContextFactory,
-        ParticipationHelper.IGNORANT,
+        ParticipationHelper.DEFAULT,
         target.getExecutorSink(),
         target.getOutputSink());
   }

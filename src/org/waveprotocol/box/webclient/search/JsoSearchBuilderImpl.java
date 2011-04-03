@@ -92,7 +92,6 @@ public final class JsoSearchBuilderImpl implements SearchBuilder {
     Preconditions.checkArgument(searchRequest != null,
         "call SearchBuilder.newSearch method to construct a new query");
     Preconditions.checkArgument(searchRequest.getQuery() != null, "new query should be set");
-    Preconditions.checkArgument(!searchRequest.getQuery().isEmpty(), "query cannot be empty");
 
     String url = getUrl(searchRequest);
     LOG.trace().log("Performing a search query: [Query: ", searchRequest.getQuery(), ", Index: ",

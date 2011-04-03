@@ -88,18 +88,22 @@ public final class ProfileImpl implements Profile {
   private void buildNames() {
     List<String> names = CollectionUtils.newArrayList();
     String nameWithoutDomain = id.getAddress().split("@")[0];
-    // Include empty names from fragment, so split with a -ve.
-    for (String fragment : nameWithoutDomain.split("[._]", -1)) {
-      if (!fragment.isEmpty()) {
-        names.add(capitalize(fragment));
+    if (nameWithoutDomain != null && !nameWithoutDomain.isEmpty()) {
+      // Include empty names from fragment, so split with a -ve.
+      for (String fragment : nameWithoutDomain.split("[._]", -1)) {
+        if (!fragment.isEmpty()) {
+          names.add(capitalize(fragment));
+        }
       }
+      // ParticipantId normalization implies names can not be empty.
+      assert !names.isEmpty();
+      firstName = names.get(0);
+      fullName = Joiner.on(' ').join(names);
+    } else {
+      // Name can be empty in case of shared domain participant which has the the form:
+      // @example.com.
+      fullName = id.getAddress();
     }
-    // ParticipantId normalization, and empty name inclusion, implies names can
-    // not be empty.
-    assert !names.isEmpty();
-
-    firstName = names.get(0);
-    fullName = Joiner.on(' ').join(names);
   }
 
   private static String capitalize(String s) {

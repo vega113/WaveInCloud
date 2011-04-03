@@ -31,8 +31,10 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import org.waveprotocol.box.common.ExceptionalIterator;
+import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.robots.operations.SearchHelper;
 import org.waveprotocol.wave.model.id.IdUtil;
@@ -65,15 +67,15 @@ import java.util.concurrent.Executors;
  * @author soren@google.com (Soren Lassen)
  */
 public class WaveMap implements SearchProvider {
-  
+
   /**
    * Helper class that allows to add basic sort and filter functionality to the
    * search.
-   * 
+   *
    * @author vega113@gmail.com (Yuri Z.)
    */
   private static class QueryHelper {
-    
+
     @SuppressWarnings("serial")
     class InvalidQueryException extends Exception {
 
@@ -81,7 +83,7 @@ public class WaveMap implements SearchProvider {
         super(msg);
       }
     }
-    
+
     /**
      * Unknown participantId used by {@link ASC_CREATOR_COMPARATOR} in case wave
      * creator cannot be found.
@@ -219,32 +221,32 @@ public class WaveMap implements SearchProvider {
 
     /** Default ordering is by LMT descending. */
     static final Ordering<WaveViewData> DEFAULT_ORDERING = DESC_LMT_ORDERING;
-    
+
     /** Valid search query types. */
     enum TokenQueryType {
       IN("in"),
       ORDERBY("orderby"),
       WITH("with"),
       CREATOR("creator");
-      
+
       final String token;
-      
+
       TokenQueryType(String token) {
         this.token = token;
       }
-      
+
       String getToken() {
         return token;
       }
-      
-      private static final Map<String, TokenQueryType> reverseLookupMap = 
+
+      private static final Map<String, TokenQueryType> reverseLookupMap =
         new HashMap<String, TokenQueryType>();
       static {
         for (TokenQueryType type : TokenQueryType.values()) {
           reverseLookupMap.put(type.getToken(), type);
         }
       }
-      
+
       static TokenQueryType fromToken(String token) {
         TokenQueryType qyeryToken = reverseLookupMap.get(token);
         if (qyeryToken == null) {
@@ -252,12 +254,12 @@ public class WaveMap implements SearchProvider {
         }
         return reverseLookupMap.get(token);
       }
-      
+
       static boolean hasToken(String token) {
         return reverseLookupMap.keySet().contains(token);
       }
     }
-    
+
     /** Registered order by parameter types and corresponding orderings. */
     enum OrderByValueType {
       DATEASC("dateasc", ASC_LMT_ORDERING),
@@ -266,32 +268,32 @@ public class WaveMap implements SearchProvider {
       CREATEDDESC("createddesc", DESC_CREATED_ORDERING),
       CREATORASC("creatorasc", ASC_CREATOR_ORDERING),
       CREATORDESC("creatordesc", DESC_CREATOR_ORDERING);
-      
+
       final String value;
       final Ordering<WaveViewData> ordering;
-      
+
       OrderByValueType(String value, Ordering<WaveViewData> ordering) {
         this.value = value;
         this.ordering = ordering;
       }
-      
+
       String getToken() {
         return value;
       }
-      
+
       Ordering<WaveViewData> getOrdering() {
         return ordering;
       }
-      
-      private static final Map<String, OrderByValueType> reverseLookupMap = 
+
+      private static final Map<String, OrderByValueType> reverseLookupMap =
         new HashMap<String, OrderByValueType>();
-      
+
       static {
         for (OrderByValueType type : OrderByValueType.values()) {
           reverseLookupMap.put(type.getToken(), type);
         }
       }
-      
+
       static OrderByValueType fromToken(String token) {
         OrderByValueType orderByValue = reverseLookupMap.get(token);
         if (orderByValue == null) {
@@ -302,32 +304,37 @@ public class WaveMap implements SearchProvider {
     }
     
     private QueryHelper() {
-      
+
     }
-    
+
     /** Static factory method. */
     static QueryHelper newQueryHelper() {
       return new QueryHelper();
     }
-    
+
     /**
      * Parses the search query.
-     * 
+     *
      * @param query the query.
      * @return the result map with query tokens. Never returns null.
      * @throws InvalidQueryException if the query contains invalid params.
      */
     Map<TokenQueryType, Set<String>> parseQuery(String query) throws InvalidQueryException {
       Preconditions.checkArgument(query != null);
-      String[] tokens = query.split(" ");
+      query = query.trim();
+      // If query is empty - return.
+      if (query.isEmpty()) {
+        return Collections.emptyMap();
+      }
+      String[] tokens = query.split("\\s+");
       Map<TokenQueryType, Set<String>> tokensMap = Maps.newEnumMap(TokenQueryType.class);
       for (String token : tokens) {
         String[] pair = token.split(":");
-        String tokenValue = pair[1];
         if (pair.length != 2 || !TokenQueryType.hasToken(pair[0])) {
           String msg = "Invalid query param: " + token;
           throw new InvalidQueryException(msg);
         }
+        String tokenValue = pair[1];
         TokenQueryType tokenType = TokenQueryType.fromToken(pair[0]);
         // Verify the orderby param.
         if (tokenType.equals(TokenQueryType.ORDERBY)) {
@@ -350,7 +357,7 @@ public class WaveMap implements SearchProvider {
     
     /**
      * Builds a list of participants to serve as the filter for the query.
-     * 
+     *
      * @param queryParams the query params.
      * @param queryType the filter for the query , i.e. 'with'.
      * @return the participants list for the filter.
@@ -372,7 +379,7 @@ public class WaveMap implements SearchProvider {
       }
       return participants;
     }
-    
+
     /**
      * Computes ordering for the search results. If none are specified - then
      * returns the default ordering. The resulting ordering is always compounded
@@ -404,7 +411,7 @@ public class WaveMap implements SearchProvider {
   }
 
   private static final Log LOG = Log.get(WaveMap.class);
-  
+
   private final QueryHelper queryHelper = QueryHelper.newQueryHelper();
 
   /**
@@ -414,13 +421,16 @@ public class WaveMap implements SearchProvider {
     private class WaveletCreator<T extends WaveletContainer> implements Function<WaveletId, T> {
       private final WaveletContainer.Factory<T> factory;
 
-      public WaveletCreator(WaveletContainer.Factory<T> factory) {
+      private final String waveDomain;
+
+      public WaveletCreator(WaveletContainer.Factory<T> factory, String waveDomain) {
         this.factory = factory;
+        this.waveDomain = waveDomain;
       }
 
       @Override
       public T apply(WaveletId waveletId) {
-        return factory.create(notifiee, WaveletName.of(waveId, waveletId));
+        return factory.create(notifiee, WaveletName.of(waveId, waveletId), waveDomain);
       }
     }
 
@@ -438,14 +448,15 @@ public class WaveMap implements SearchProvider {
     public Wave(WaveId waveId,
         ListenableFuture<ImmutableSet<WaveletId>> lookedupWavelets,
         WaveletNotificationSubscriber notifiee, LocalWaveletContainer.Factory localFactory,
-        RemoteWaveletContainer.Factory remoteFactory) {
+        RemoteWaveletContainer.Factory remoteFactory,
+        String waveDomain) {
       this.waveId = waveId;
       this.lookedupWavelets = lookedupWavelets;
       this.notifiee = notifiee;
       this.localWavelets = new MapMaker().makeComputingMap(
-          new WaveletCreator<LocalWaveletContainer>(localFactory));
+          new WaveletCreator<LocalWaveletContainer>(localFactory, waveDomain));
       this.remoteWavelets = new MapMaker().makeComputingMap(
-          new WaveletCreator<RemoteWaveletContainer>(remoteFactory));
+          new WaveletCreator<RemoteWaveletContainer>(remoteFactory, waveDomain));
     }
 
     @Override
@@ -523,7 +534,8 @@ public class WaveMap implements SearchProvider {
   public WaveMap(final DeltaAndSnapshotStore waveletStore,
       final WaveletNotificationSubscriber notifiee,
       final LocalWaveletContainer.Factory localFactory,
-      final RemoteWaveletContainer.Factory remoteFactory) {
+      final RemoteWaveletContainer.Factory remoteFactory,
+      @Named(CoreSettings.WAVE_SERVER_DOMAIN) final String waveDomain) {
     // NOTE(anorth): DeltaAndSnapshotStore is more specific than necessary, but
     // helps Guice out.
     // TODO(soren): inject a proper executor (with a pool of configurable size)
@@ -535,7 +547,8 @@ public class WaveMap implements SearchProvider {
           public Wave apply(WaveId waveId) {
             ListenableFuture<ImmutableSet<WaveletId>> lookedupWavelets =
                 lookupWavelets(waveId, waveletStore, lookupExecutor);
-            return new Wave(waveId, lookedupWavelets, notifiee, localFactory, remoteFactory);
+            return new Wave(waveId, lookedupWavelets, notifiee, localFactory, remoteFactory,
+                waveDomain);
           }
         });
   }
@@ -562,11 +575,6 @@ public class WaveMap implements SearchProvider {
       int numResults) {
     LOG.fine("Search query '" + query + "' from user: " + user + " [" + startAt + ", "
         + (startAt + numResults - 1) + "]");
-    if (!query.contains("in:inbox")) {
-      LOG.warning("Only queries for the inbox work");
-      return Collections.emptyList();
-    }
-    
     Map<QueryHelper.TokenQueryType, Set<String>> queryParams = null;
     try {
       queryParams = queryHelper.parseQuery(query);
@@ -582,12 +590,15 @@ public class WaveMap implements SearchProvider {
       withParticipantIds =
           QueryHelper.buildValidatedParticipantIds(queryParams, QueryHelper.TokenQueryType.WITH);
       creatorParticipantIds =
-        QueryHelper.buildValidatedParticipantIds(queryParams, QueryHelper.TokenQueryType.CREATOR);
+          QueryHelper.buildValidatedParticipantIds(queryParams, QueryHelper.TokenQueryType.CREATOR);
     } catch (InvalidParticipantAddress e) {
       // Invalid address - stop and return empty search results.
       LOG.warning("Invalid participantId: " + e.getAddress() + " in query: " + query);
       return Collections.emptyList();
     }
+    // Maybe should be changed in case other folders in addition to 'inbox' are added.
+    boolean isAllQuery =
+        !queryParams.containsKey(QueryHelper.TokenQueryType.IN);
     // Must use a map with stable ordering, since indices are meaningful.
     Map<WaveId, WaveViewData> results = Maps.newLinkedHashMap();
     for (Map.Entry<WaveId, Wave> entry : waves.entrySet()) {
@@ -595,9 +606,12 @@ public class WaveMap implements SearchProvider {
       Wave wave = entry.getValue();
       WaveViewData view = null;  // Copy of the wave built up for search hits.
       for (WaveletContainer c : wave) {
+        // TODO (Yuri Z.) This loop collects all the wavelets that match the
+        // query, so the view is determined by the query. Instead we should
+        // look at the user's wave view and determine if the view matches the query.
         try {
           // Only filtering by participants is implemented for now.
-          if (!c.hasParticipant(user) || !matches(c, withParticipantIds, creatorParticipantIds)) {
+          if (!matches(c, user, withParticipantIds, creatorParticipantIds, isAllQuery)) {
             continue;
           }
           if (view == null) {
@@ -625,25 +639,47 @@ public class WaveMap implements SearchProvider {
           QueryHelper.computeSorter(queryParams).sortedCopy(results.values())
               .subList(startAt, endAt);
     }
-    LOG.info("Search response to '" + query + "': " + searchResultslist.size() + " results");
+    LOG.info("Search response to '" + query + "': " + searchResultslist.size() + " results, user: "
+        + user);
     // Memory management wise it's dangerous to return a sublist of a much
     // longer list, therefore, we return a 'defensive' copy.
     return ImmutableList.copyOf(searchResultslist);
   }
 
-  /** Verifies whether the wavelet matches the filter criteria */
-  private static boolean matches(WaveletContainer c, List<ParticipantId> withList,
-      List<ParticipantId> creatorList) throws WaveletStateException {
-    // First filter by creator
+  /**
+   * Verifies whether the wavelet matches the filter criteria
+   *
+   * @param c the wavelet container
+   * @param user the logged in user.
+   * @param withList the list of participants to be used in 'with' filter.
+   * @param creatorList the list of participants to be used in 'creator' filter.
+   * @param isAllQuery true if the search results should include shared for this domain waves.
+   */
+  private boolean matches(WaveletContainer c, ParticipantId user, List<ParticipantId> withList,
+      List<ParticipantId> creatorList, boolean isAllQuery) throws WaveletStateException {
+    // Filter by creator. This is the fastest check because c.getCreator doesn't
+    // take the WaveletContainer lock, so we perform it first.
     for (ParticipantId creator : creatorList) {
       if (!creator.equals(c.getCreator())) {
         // Skip.
         return false;
       }
     }
-    // Now filter by 'with'.
+    // The wavelet should have logged in user as participant for 'in:inbox' query.
+    if (!isAllQuery && !c.hasParticipant(user)) {
+      return false;
+    }
+    // Or if it is an 'all' query - then either logged in user or shared domain
+    // participant should be present in the wave.
+    if (isAllQuery && !c.checkAccessPermission(user)) {
+      return false;
+    }
+    // If not returned 'false' above - then logged in user is either
+    // explicit or implicit participant and therefore has access permission.
+    
+    // Now filter by 'with'. Since each c.hasParticipant call takes and releases
+    // the WaveletContainer lock, we perform this check in the last turn.
     for (ParticipantId otherUser : withList) {
-      // Each call takes and releases the WaveletContainer lock.
       if (!c.hasParticipant(otherUser)) {
         // Skip.
         return false;

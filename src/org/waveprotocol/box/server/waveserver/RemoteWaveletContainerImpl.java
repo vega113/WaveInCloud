@@ -28,25 +28,23 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.jivesoftware.util.Base64;
-import org.waveprotocol.box.common.DeltaSequence;
 import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.waveserver.CertificateManager.SignerInfoPrefetchResultListener;
 import org.waveprotocol.wave.crypto.SignatureException;
 import org.waveprotocol.wave.crypto.UnknownSignerException;
+import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.FederationErrors;
 import org.waveprotocol.wave.federation.FederationException;
-import org.waveprotocol.wave.federation.WaveletFederationProvider;
-import org.waveprotocol.wave.federation.FederationErrorProto.FederationError;
 import org.waveprotocol.wave.federation.Proto.ProtocolAppliedWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolHashedVersion;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignerInfo;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
+import org.waveprotocol.wave.federation.WaveletFederationProvider;
 import org.waveprotocol.wave.federation.WaveletFederationProvider.HistoryResponseListener;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.operation.OperationException;
-import org.waveprotocol.wave.model.operation.wave.TransformedWaveletDelta;
 import org.waveprotocol.wave.model.operation.wave.WaveletDelta;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.util.logging.Log;
@@ -77,7 +75,10 @@ class RemoteWaveletContainerImpl extends WaveletContainerImpl implements RemoteW
    */
   public RemoteWaveletContainerImpl(WaveletName waveletName, WaveletNotificationSubscriber notifiee,
       ListenableFuture<? extends WaveletState> waveletStateFuture) {
-    super(waveletName, notifiee, waveletStateFuture);
+    // We pass here null for waveDomain because you have to be explicit
+    // participant on remote wavelet to have access permission.
+    // TODO (Yuri Z.): check if the assumption above is correct.
+    super(waveletName, notifiee, waveletStateFuture, null);
   }
 
   @Override

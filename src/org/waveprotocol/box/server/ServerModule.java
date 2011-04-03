@@ -89,7 +89,8 @@ public class ServerModule extends AbstractModule {
   @Provides
   @Singleton
   @Inject
-  public IdGenerator provideIdGenerator(@Named(CoreSettings.WAVE_SERVER_DOMAIN) String domain, Seed seed) {
+  public IdGenerator provideIdGenerator(@Named(CoreSettings.WAVE_SERVER_DOMAIN) String domain,
+      Seed seed) {
     return new IdGeneratorImpl(domain, seed);
   }
 

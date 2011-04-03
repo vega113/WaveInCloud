@@ -45,6 +45,7 @@ import org.waveprotocol.wave.model.operation.wave.WaveletOperation;
 import org.waveprotocol.wave.model.version.HashedVersion;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.wave.ParticipantIdUtil;
 import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.util.logging.Log;
 
@@ -72,6 +73,8 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   private static final Log LOG = Log.get(ClientFrontendImpl.class);
 
   private final static AtomicInteger channel_counter = new AtomicInteger(0);
+  
+  private ParticipantId sharedDomainParticipant = null;
 
   /** Information we hold in memory for each wavelet, including index wavelets. */
   private static class PerWavelet {
@@ -104,15 +107,17 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   private final Map<WaveId, Map< WaveletId, PerWavelet>> perWavelet;
   private final WaveletProvider waveletProvider;
 
-
   /**
    * Creates a client frontend and subscribes it to the wave bus.
    *
    * @throws WaveServerException if the server fails during initialisation
    */
   public static ClientFrontendImpl create(HashedVersionFactory hashedVersionFactory,
-      WaveletProvider waveletProvider, WaveBus wavebus) throws WaveServerException {
-    ClientFrontendImpl impl = new ClientFrontendImpl(hashedVersionFactory, waveletProvider);
+      WaveletProvider waveletProvider, WaveBus wavebus, String waveDomain)
+      throws WaveServerException {
+    
+    ClientFrontendImpl impl =
+        new ClientFrontendImpl(hashedVersionFactory, waveletProvider, waveDomain);
 
     // Initialize index here until a separate index system exists.
     impl.initialiseAllWaves();
@@ -120,10 +125,20 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
     return impl;
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param hashedVersionFactory
+   * @param waveletProvider
+   * @param waveDomain the server wave domain. It is assumed that the wave domain is valid.
+   */
   @VisibleForTesting
   ClientFrontendImpl(final HashedVersionFactory hashedVersionFactory,
-      WaveletProvider waveletProvider) {
+      WaveletProvider waveletProvider, String waveDomain) {
     this.waveletProvider = waveletProvider;
+    // It is OK since the passed in wave domain is validated.
+    sharedDomainParticipant =
+        ParticipantIdUtil.makeUnsafeSharedDomainParticipantId(waveDomain);
 
     final MapMaker mapMaker = new MapMaker();
     perWavelet = mapMaker.makeComputingMap(new Function<WaveId, Map<WaveletId, PerWavelet>>() {
@@ -468,10 +483,12 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
   private Set<WaveletId> visibleWaveletsFor(WaveViewSubscription subscription,
       ParticipantId loggedInUser) {
     Set<WaveletId> visible = Sets.newHashSet();
-    Set<Entry<WaveletId, PerWavelet>> entrySet = 
-      perWavelet.get(subscription.getWaveId()).entrySet();
-    for (Entry<WaveletId, PerWavelet> entry : entrySet ) {
-      if (subscription.includes(entry.getKey()) && entry.getValue().hasParticipant(loggedInUser)) {
+    Set<Entry<WaveletId, PerWavelet>> entrySet =
+        perWavelet.get(subscription.getWaveId()).entrySet();
+    for (Entry<WaveletId, PerWavelet> entry : entrySet) {
+      if (subscription.includes(entry.getKey())
+          && (entry.getValue().hasParticipant(loggedInUser) || entry.getValue().hasParticipant(
+              sharedDomainParticipant))) {
         visible.add(entry.getKey());
       }
     }

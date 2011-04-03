@@ -59,6 +59,7 @@ import org.waveprotocol.wave.federation.FederationTransport;
 import org.waveprotocol.wave.federation.noop.NoOpFederationModule;
 import org.waveprotocol.wave.federation.xmpp.XmppFederationModule;
 import org.waveprotocol.wave.model.version.HashedVersionFactory;
+import org.waveprotocol.wave.model.wave.ParticipantIdUtil;
 import org.waveprotocol.wave.util.logging.Log;
 import org.waveprotocol.wave.util.settings.SettingsBinder;
 
@@ -110,11 +111,17 @@ public class ServerMain {
 
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
     WaveBus waveBus = injector.getInstance(WaveBus.class);
+    
+    String domain =
+      injector.getInstance(Key.get(String.class, Names.named(CoreSettings.WAVE_SERVER_DOMAIN)));
+    if (!ParticipantIdUtil.isDomainAddress(ParticipantIdUtil.makeDomainAddress(domain))) {
+      throw new WaveServerException("Invalid wave domain: " + domain);
+    }
 
-    initializeServer(injector);
+    initializeServer(injector, domain);
     initializeServlets(injector, server);
     initializeRobots(injector, waveBus);
-    initializeFrontend(injector, server, waveBus);
+    initializeFrontend(injector, server, waveBus, domain);
     initializeFederation(injector);
 
     LOG.info("Starting server");
@@ -132,12 +139,11 @@ public class ServerMain {
     return federationModule;
   }
 
-  private static void initializeServer(Injector injector) throws PersistenceException,
-      WaveServerException {
+  private static void initializeServer(Injector injector, String waveDomain)
+      throws PersistenceException, WaveServerException {
     AccountStore accountStore = injector.getInstance(AccountStore.class);
     accountStore.initializeAccountStore();
-    AccountStoreHolder.init(accountStore,
-        injector.getInstance(Key.get(String.class, Names.named(CoreSettings.WAVE_SERVER_DOMAIN))));
+    AccountStoreHolder.init(accountStore, waveDomain);
 
     // Initialize the SignerInfoStore.
     CertPathStore certPathStore = injector.getInstance(CertPathStore.class);
@@ -190,10 +196,12 @@ public class ServerMain {
   }
 
   private static void initializeFrontend(Injector injector, ServerRpcProvider server,
-      WaveBus waveBus) throws WaveServerException {
+      WaveBus waveBus, String waveDomain) throws WaveServerException {
     HashedVersionFactory hashFactory = injector.getInstance(HashedVersionFactory.class);
+   
     WaveletProvider provider = injector.getInstance(WaveletProvider.class);
-    ClientFrontend frontend = ClientFrontendImpl.create(hashFactory, provider, waveBus);
+    ClientFrontend frontend =
+        ClientFrontendImpl.create(hashFactory, provider, waveBus, waveDomain);
 
     ProtocolWaveClientRpc.Interface rpcImpl = WaveClientRpcImpl.create(frontend, false);
     server.registerService(ProtocolWaveClientRpc.newReflectiveService(rpcImpl));

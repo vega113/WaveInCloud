@@ -46,6 +46,21 @@ public interface ParticipationHelper {
     };
 
   /**
+   * Grants access to all control.
+   */
+  static final ParticipationHelper AUTO = new ParticipationHelper() {
+      @Override
+      public ParticipantId getAuthoriser(ParticipantId editor, Set<ParticipantId> candidates) {
+        return editor;
+      }
+    };
+
+  /**
+   * The default participation control.
+   */
+  static final ParticipationHelper DEFAULT = AUTO;
+
+  /**
    * Selects a participant who will be willing to authorise that the given
    * editor should be able to make changes.
    *

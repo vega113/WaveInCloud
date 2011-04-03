@@ -425,7 +425,7 @@ public class EventGenerator {
         new OpBasedWavelet(snapshot.getWaveId(), snapshot,
             // This doesn't thrown an exception, the sinks will
             new BasicWaveletOperationContextFactory(null),
-            ParticipationHelper.IGNORANT, SilentOperationSink.VOID, SilentOperationSink.VOID);
+            ParticipationHelper.DEFAULT, SilentOperationSink.VOID, SilentOperationSink.VOID);
 
     ObservableConversation conversation = getRootConversation(wavelet);
 

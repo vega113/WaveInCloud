@@ -28,10 +28,10 @@ import org.waveprotocol.box.server.common.CoreWaveletOperationSerializer;
 import org.waveprotocol.box.server.persistence.memory.MemoryDeltaStore;
 import org.waveprotocol.wave.federation.Proto.ProtocolDocumentOperation;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignature;
+import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.federation.Proto.ProtocolSignedDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletDelta;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation;
-import org.waveprotocol.wave.federation.Proto.ProtocolSignature.SignatureAlgorithm;
 import org.waveprotocol.wave.federation.Proto.ProtocolWaveletOperation.MutateDocument;
 import org.waveprotocol.wave.model.id.IdURIEncoderDecoder;
 import org.waveprotocol.wave.model.id.WaveletName;
@@ -87,7 +87,7 @@ public class LocalWaveletContainerImplTest extends TestCase {
     WaveletState waveletState = DeltaStoreBasedWaveletState.create(deltaStore.open(WAVELET_NAME),
         PERSIST_EXECUTOR);
     wavelet = new LocalWaveletContainerImpl(WAVELET_NAME, notifiee,
-        Futures.immediateFuture(waveletState));
+        Futures.immediateFuture(waveletState), null);
     wavelet.awaitLoad();
   }
 

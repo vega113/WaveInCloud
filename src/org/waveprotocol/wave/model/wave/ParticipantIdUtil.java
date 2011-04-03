@@ -82,8 +82,21 @@ public final class ParticipantIdUtil {
   }
 
   public static String makeDomainAddress(String domain) {
-    Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, domain), "Invalid domain: %s", domain);
+    Preconditions.checkArgument(WaveIdentifiers.isValidDomain(0, domain), "Invalid domain: %s",
+        domain);
     return ParticipantId.DOMAIN_PREFIX + domain;
+  }
+  
+  /**
+   * Makes the shared domain participant id.
+   * 
+   * @param domain the wave domain. The wave domain should be validated by
+   *        {@link #isDomainAddress(String)} before calling this method. Failure
+   *        to pass a validated wave domain may result in a run time exception.
+   * @return the shared domain participant id of the form: "@example.com".
+   */
+  public static ParticipantId makeUnsafeSharedDomainParticipantId(String domain) {
+    return ParticipantId.ofUnsafe(makeDomainAddress(domain));
   }
 
 }

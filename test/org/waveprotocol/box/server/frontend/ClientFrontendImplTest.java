@@ -123,7 +123,8 @@ public class ClientFrontendImplTest extends TestCase {
     when(waveletProvider.getWaveletIds(any(WaveId.class))).thenReturn(ImmutableSet.<WaveletId>of());
 
     WaveBus waveBus = mock(WaveBus.class);
-    this.clientFrontend = new ClientFrontendImpl(HASH_FACTORY, waveletProvider);
+    this.clientFrontend =
+        new ClientFrontendImpl(HASH_FACTORY, waveletProvider, "@example.com");
   }
 
   public void testCannotOpenWavesWhenNotLoggedIn() throws Exception {

@@ -129,7 +129,7 @@ public class RobotWaveletData {
         new BasicWaveletOperationContextFactory(opAuthor);
     OpBasedWavelet w =
         new OpBasedWavelet(perAuthorWavelet.getWaveId(), perAuthorWavelet, contextFactory,
-            ParticipationHelper.IGNORANT, executor, output);
+            ParticipationHelper.DEFAULT, executor, output);
 
     // Store the new sink and wavelet
     sinkMap.put(opAuthor, output);

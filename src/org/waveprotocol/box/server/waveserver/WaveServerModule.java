@@ -112,9 +112,9 @@ public class WaveServerModule extends AbstractModule {
     return new LocalWaveletContainer.Factory() {
       @Override
       public LocalWaveletContainer create(WaveletNotificationSubscriber notifiee,
-          WaveletName waveletName) {
-        return new LocalWaveletContainerImpl(waveletName, notifiee,
-            loadWaveletState(waveletLoadExecutor, deltaStore, waveletName));
+          WaveletName waveletName, String waveDomain) {
+        return new LocalWaveletContainerImpl(waveletName, notifiee, loadWaveletState(
+            waveletLoadExecutor, deltaStore, waveletName), waveDomain);
       }
     };
   }
@@ -126,7 +126,7 @@ public class WaveServerModule extends AbstractModule {
     return new RemoteWaveletContainer.Factory() {
       @Override
       public RemoteWaveletContainer create(WaveletNotificationSubscriber notifiee,
-          WaveletName waveletName) {
+          WaveletName waveletName, String waveDomain) {
         return new RemoteWaveletContainerImpl(waveletName, notifiee,
             loadWaveletState(waveletLoadExecutor, deltaStore, waveletName));
       }

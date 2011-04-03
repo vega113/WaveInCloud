@@ -144,7 +144,7 @@ public class EventGeneratorTest extends RobotsTestBase {
     output = new CapturingOperationSink<WaveletOperation>();
     wavelet =
         new OpBasedWavelet(waveletData.getWaveId(), waveletData, CONTEXT_FACTORY,
-            ParticipationHelper.IGNORANT, executor, output);
+            ParticipationHelper.DEFAULT, executor, output);
 
     // Make a conversation and clear the sink
     WaveletBasedConversation.makeWaveletConversational(wavelet);

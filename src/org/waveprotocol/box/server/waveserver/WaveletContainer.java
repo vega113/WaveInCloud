@@ -42,7 +42,7 @@ interface WaveletContainer {
     /**
      * @return a new wavelet container with the given wavelet name
      */
-    T create(WaveletNotificationSubscriber notifiee, WaveletName waveletName);
+    T create(WaveletNotificationSubscriber notifiee, WaveletName waveletName, String waveDomain);
   }
 
   /** Returns the name of the wavelet. */
@@ -91,7 +91,8 @@ interface WaveletContainer {
    * @throws WaveletStateException if the wavelet is in a state unsuitable for
    *         checking permissions.
    * @return true if the participant is a participant on the wavelet or if the
-   *         wavelet is empty.
+   *         wavelet is empty or if a shared domain participant is participant
+   *         on the wavelet.
    */
   boolean checkAccessPermission(ParticipantId participantId) throws WaveletStateException;
 

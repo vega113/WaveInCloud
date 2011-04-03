@@ -123,7 +123,7 @@ public class WaveletContainerTest extends TestCase {
     WaveletState localWaveletState =
         DeltaStoreBasedWaveletState.create(deltaStore.open(localWaveletName), PERSIST_EXECUTOR);
     localWavelet = new LocalWaveletContainerImpl(localWaveletName, notifiee,
-        Futures.immediateFuture(localWaveletState));
+        Futures.immediateFuture(localWaveletState), localDomain);
     localWavelet.awaitLoad();
     WaveletState remoteWaveletState =
         DeltaStoreBasedWaveletState.create(deltaStore.open(remoteWaveletName), PERSIST_EXECUTOR);
