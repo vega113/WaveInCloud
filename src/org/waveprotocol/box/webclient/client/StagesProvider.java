@@ -187,7 +187,7 @@ public class StagesProvider extends Stages {
         if (blip != null) {
           BlipView blipUi = views.getBlipView(blip);
           if (blipUi != null) {
-            three.getEditActions().focus(blipUi);
+            two.getStageOne().getFocusFrame().focus(blipUi);
           }
         }
       }

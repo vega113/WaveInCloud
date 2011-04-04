@@ -16,33 +16,15 @@
  */
 package org.waveprotocol.wave.client.wavepanel.impl.edit;
 
-import com.google.gwt.user.client.Window;
-
-import org.waveprotocol.wave.client.common.util.WaveRefConstants;
-import org.waveprotocol.wave.client.editor.content.ContentDocument;
-import org.waveprotocol.wave.client.wave.InteractiveDocument;
-import org.waveprotocol.wave.client.wave.WaveDocuments;
-import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
-import org.waveprotocol.wave.client.wavepanel.view.BlipLinkPopupView;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.ThreadView;
-import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
-import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
-import org.waveprotocol.wave.model.conversation.ConversationBlip;
-import org.waveprotocol.wave.model.conversation.ConversationThread;
-import org.waveprotocol.wave.model.id.DualIdSerialiser;
-import org.waveprotocol.wave.model.id.InvalidIdException;
-import org.waveprotocol.wave.model.id.WaveId;
-import org.waveprotocol.wave.model.id.WaveletId;
-import org.waveprotocol.wave.model.waveref.WaveRef;
-import org.waveprotocol.wave.util.escapers.GwtWaverefEncoder;
 
 /**
  * Defines the UI actions that can be performed as part of the editing feature.
  * This includes editing, replying, and deleting blips in a conversation.
  *
  */
-public final class Actions {
+public interface Actions {
   enum Action {
     /** Starts an edit session on the focused blip. */
     EDIT_BLIP,
@@ -56,194 +38,38 @@ public final class Actions {
     DELETE_THREAD,
   }
 
-  private final ModelAsViewProvider views;
-  private final WaveDocuments<? extends InteractiveDocument> documents;
-  private final BlipQueueRenderer blipQueue;
-  private final FocusFramePresenter focus;
-  private final EditSession edit;
-
-  /**
-   * Implements the wave panel's editing UI actions.
-   *
-   * @param views view provider
-   * @param documents collection of documents in the wave
-   * @param blipQueue blip renderer
-   * @param focus focus-frame feature
-   * @param edit blip-content editing feature
-   */
-  Actions(ModelAsViewProvider views, WaveDocuments<? extends InteractiveDocument> documents,
-      BlipQueueRenderer blipQueue, FocusFramePresenter focus, EditSession edit) {
-    this.views = views;
-    this.documents = documents;
-    this.blipQueue = blipQueue;
-    this.focus = focus;
-    this.edit = edit;
-  }
-
   /**
    * Starts editing a blip.
    */
-  public void startEditing(BlipView blipUi) {
-    focusAndEdit(blipUi);
-  }
+  void startEditing(BlipView blipUi);
 
   /**
    * Stops editing a blip.
    */
-  public void stopEditing() {
-    edit.stopEditing();
-  }
+  void stopEditing();
 
   /**
    * Replies to a blip.
    */
-  public void reply(BlipView blipUi) {
-    ConversationBlip blip = views.getBlip(blipUi);
-    ContentDocument doc = documents.get(blip).getDocument();
-    // Insert the reply at a good spot near the current selection, or use the
-    // end of the document as a fallback.
-    int location = DocumentUtil.getLocationNearSelection(doc);
-    if (location == -1) {
-      location = blip.getContent().size() - 1;
-    }
-    ConversationBlip reply = blip.appendInlineReplyThread(location).appendBlip();
-    blipQueue.flush();
-    focusAndEdit(views.getBlipView(reply));
-  }
+  void reply(BlipView blipUi);
 
   /**
    * Adds a continuation to a thread.
    */
-  public void addContinuation(ThreadView threadUi) {
-    ConversationThread thread = views.getThread(threadUi);
-    ConversationBlip continuation = thread.appendBlip();
-    blipQueue.flush();
-    focusAndEdit(views.getBlipView(continuation));
-  }
+  void addContinuation(ThreadView threadUi);
 
   /**
    * Deletes a blip.
    */
-  public void delete(BlipView blipUi) {
-    // If focus is on the blip that is being deleted, move focus somewhere else.
-    // If focus is on a blip inside the blip being deleted, don't worry about it
-    // (checking could get too expensive).
-    if (blipUi.equals(focus.getFocusedBlip())) {
-      // Move to next blip in thread if there is one, otherwise previous blip in
-      // thread, otherwise previous blip in traversal order.
-      ThreadView parentUi = blipUi.getParent();
-      BlipView nextUi = parentUi.getBlipAfter(blipUi);
-      if (nextUi == null) {
-        nextUi = parentUi.getBlipBefore(blipUi);
-      }
-      if (nextUi != null) {
-        focus.focus(nextUi);
-      } else {
-        focus.moveUp();
-      }
-    }
-
-    views.getBlip(blipUi).delete();
-  }
+  void delete(BlipView blipUi);
 
   /**
    * Deletes a thread.
    */
-  public void delete(ThreadView threadUi) {
-    views.getThread(threadUi).delete();
-  }
-
-  /**
-   * Moves focus to a blip, and starts editing it.
-   */
-  private void focusAndEdit(BlipView blipUi) {
-    edit.stopEditing();
-    focus.focus(blipUi);
-    edit.startEditing(blipUi);
-  }
-
-  /**
-   * Focus on a blip.
-   */
-  public void focus(BlipView blipUi) {
-    focus.focus(blipUi);
-  }
+  void delete(ThreadView threadUi);
 
   /**
    * Pops up a link info for the blip.
-   *
-   * @param blipUi Ui view for the blip
    */
-  public void popupLink(BlipView blipUi) {
-    ConversationBlip blip = views.getBlip(blipUi);
-    // TODO(Yuri Z.) Change to use the conversation model when the Conversation
-    // exposes a reference to its ConversationView.
-    WaveId waveId = blip.hackGetRaw().getWavelet().getWaveId();
-    WaveletId waveletId;
-    try {
-      waveletId = DualIdSerialiser.MODERN.deserialiseWaveletId(blip.getConversation().getId());
-    } catch (InvalidIdException e) {
-      Window.alert(
-          "Unable to link to this blip, invalid conversation id " + blip.getConversation().getId());
-      return;
-    }
-    WaveRef waveRef = WaveRef.of(waveId, waveletId, blip.getId());
-    final String waveRefStringValue =
-        WaveRefConstants.WAVE_URI_PREFIX + GwtWaverefEncoder.encodeToUriPathSegment(waveRef);
-    BlipLinkPopupView blipLinkPopupView = blipUi.createLinkPopup();
-    blipLinkPopupView.setLinkInfo(waveRefStringValue);
-    blipLinkPopupView.show();
-  }
-
-  //
-  // All the same actions as above, but bound to the context of the focus frame.
-  //
-
-  void startEditing() {
-    BlipView blipUi = getBlipContext();
-    if (blipUi != null) {
-      startEditing(blipUi);
-    }
-  }
-
-  void reply() {
-    BlipView blipUi = getBlipContext();
-    if (blipUi != null) {
-      reply(blipUi);
-    }
-  }
-
-  void addContinuation() {
-    ThreadView threadUi = getThreadContext();
-    if (threadUi != null) {
-      addContinuation(threadUi);
-    }
-  }
-
-  void deleteBlip() {
-    BlipView blipUi = getBlipContext();
-    if (blipUi != null) {
-      delete(blipUi);
-    }
-  }
-
-  void deleteThread() {
-    ThreadView threadUi = getThreadContext();
-    if (threadUi != null) {
-      delete(threadUi);
-    }
-  }
-
-  BlipView getBlipContext() {
-    return focus.getFocusedBlip();
-  }
-
-  ThreadView getThreadContext() {
-    return parentOf(getBlipContext());
-  }
-
-  private static ThreadView parentOf(BlipView blip) {
-    return blip != null ? blip.getParent() : null;
-  }
-
+  void popupLink(BlipView blipUi);
 }

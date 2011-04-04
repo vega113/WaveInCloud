@@ -17,12 +17,13 @@
 package org.waveprotocol.wave.client.wavepanel.impl.edit;
 
 import org.waveprotocol.wave.client.common.util.KeyCombo;
+import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.event.KeySignalHandler;
 import org.waveprotocol.wave.client.wavepanel.event.KeySignalRouter;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.Actions.Action;
+import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 
 import java.util.EnumMap;
-import java.util.Map;
 
 /**
  * Defines the UI actions that can be performed as part of the editing feature.
@@ -32,10 +33,8 @@ import java.util.Map;
 public final class EditController implements KeySignalHandler {
 
   /** Action performer. */
-  private final Actions actions;
-
-  private final EnumMap<KeyCombo, Action> keyBindings =
-      new EnumMap<KeyCombo, Action>(KeyCombo.class);
+  private final FocusedActions actions;
+  private final EnumMap<KeyCombo, Action> keyBindings;
 
   private static final EnumMap<KeyCombo, Action> DEFAULT_BINDINGS =
       new EnumMap<KeyCombo, Action>(KeyCombo.class);
@@ -49,19 +48,21 @@ public final class EditController implements KeySignalHandler {
     DEFAULT_BINDINGS.put(KeyCombo.DELETE, Action.DELETE_BLIP);
   }
 
-  EditController(Actions actions) {
+  EditController(FocusedActions actions, EnumMap<KeyCombo, Action> keyBindings) {
     this.actions = actions;
+    this.keyBindings = keyBindings;
   }
 
-  public static EditController create(Actions actions, KeySignalRouter router) {
-    EditController controller = new EditController(actions);
-    controller.install(DEFAULT_BINDINGS, router);
-    return controller;
+  /**
+   * Creates and installs the edit control feature.
+   */
+  public static void install(FocusFramePresenter focus, Actions actions, WavePanel panel) {
+    new EditController(new FocusedActions(focus, actions), DEFAULT_BINDINGS).install(
+        panel.getKeyRouter());
   }
 
-  private void install(Map<KeyCombo, Action> keyBindings, KeySignalRouter router) {
-    this.keyBindings.putAll(keyBindings);
-    router.register(keyBindings.keySet(), this);
+  private void install(KeySignalRouter keys) {
+    keys.register(keyBindings.keySet(), this);
   }
 
   @Override

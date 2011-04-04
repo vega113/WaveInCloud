@@ -35,6 +35,7 @@ import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.wave.DocumentRegistry;
 import org.waveprotocol.wave.client.wave.InteractiveDocument;
 import org.waveprotocol.wave.client.wavepanel.WavePanel;
+import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.IntrinsicBlipMetaView.MenuOption;
@@ -78,22 +79,30 @@ public final class EditSession
   /** Editor control. */
   private Editor editor;
 
-  public EditSession(ModelAsViewProvider views,
-      DocumentRegistry<? extends InteractiveDocument> documents, LogicalPanel container,
-      SelectionExtractor selectionExtractor) {
+  EditSession(ModelAsViewProvider views, DocumentRegistry<? extends InteractiveDocument> documents,
+      LogicalPanel container, SelectionExtractor selectionExtractor) {
     this.views = views;
     this.documents = documents;
     this.container = container;
     this.selectionExtractor = selectionExtractor;
   }
 
-  /**
-   * Warms up the editor code (e.g., internal statics) by creating and throwing
-   * away an editor, in order to reduce the latency of starting the first edit
-   * session.
-   */
-  void warmUp() {
+  public static EditSession install(ModelAsViewProvider views,
+      DocumentRegistry<? extends InteractiveDocument> documents,
+      SelectionExtractor selectionExtractor, FocusFramePresenter focus, WavePanelImpl panel) {
+    EditSession edit = new EditSession(views, documents, panel.getGwtPanel(), selectionExtractor);
+    focus.addListener(edit);
+    if (panel.hasContents()) {
+      edit.onInit();
+    }
+    panel.addListener(focus);
+
+    // Warms up the editor code (e.g., internal statics) by creating and throwing
+    // away an editor, in order to reduce the latency of starting the first edit
+    // session.
     Editors.create();
+
+    return edit;
   }
 
   @Override

@@ -49,7 +49,7 @@ public final class ParticipantController {
   private final ModelAsViewProvider models;
   private final ProfileManager profiles;
 
-  private ParticipantController(
+  ParticipantController(
       DomAsViewProvider views, ModelAsViewProvider models, ProfileManager profiles) {
     this.views = views;
     this.models = models;
@@ -58,11 +58,8 @@ public final class ParticipantController {
 
   /**
    * Builds and installs the participant control feature.
-   *
-   * @param panel wave panel to hold the feature
    */
-  public static void install(
-      WavePanel panel, ModelAsViewProvider models, ProfileManager profiles) {
+  public static void install(WavePanel panel, ModelAsViewProvider models, ProfileManager profiles) {
     ParticipantController controller =
         new ParticipantController(panel.getViewProvider(), models, profiles);
     controller.install(panel.getHandlers());

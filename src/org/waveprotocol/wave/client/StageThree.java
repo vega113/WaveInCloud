@@ -27,8 +27,10 @@ import org.waveprotocol.wave.client.wave.InteractiveDocument;
 import org.waveprotocol.wave.client.wave.WaveDocuments;
 import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.Actions;
-import org.waveprotocol.wave.client.wavepanel.impl.edit.EditActionsBuilder;
+import org.waveprotocol.wave.client.wavepanel.impl.edit.ActionsImpl;
+import org.waveprotocol.wave.client.wavepanel.impl.edit.EditController;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.EditSession;
+import org.waveprotocol.wave.client.wavepanel.impl.edit.ParticipantController;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.impl.indicator.ReplyIndicatorController;
 import org.waveprotocol.wave.client.wavepanel.impl.menu.MenuController;
@@ -125,23 +127,22 @@ public interface StageThree {
       ModelAsViewProvider views = stageTwo.getModelAsViewProvider();
       WaveDocuments<? extends InteractiveDocument> docs = stageTwo.getDocumentRegistry();
       BlipQueueRenderer blipQueue = stageTwo.getBlipQueue();
-      ProfileManager profiles = stageTwo.getProfileManager();
       EditSession edit = getEditSession();
-
-      return EditActionsBuilder.createAndInstall(
-          panel, views, docs, profiles, edit, blipQueue, focus);
+      return ActionsImpl.create(views, docs, blipQueue, focus, edit);
     }
 
     protected EditSession createEditSession() {
-      WavePanelImpl panel = stageTwo.getStageOne().getWavePanel();
+      StageOne stageOne = stageTwo.getStageOne();
+      WavePanelImpl panel = stageOne.getWavePanel();
+      FocusFramePresenter focus = stageOne.getFocusFrame();
       ModelAsViewProvider views = stageTwo.getModelAsViewProvider();
       DocumentRegistry<? extends InteractiveDocument> documents = stageTwo.getDocumentRegistry();
       String address = stageTwo.getSignedInUser().getAddress();
       TimerService clock = SchedulerInstance.getLowPriorityTimer();
       String sessionId = stageTwo.getSessionId();
 
-      SelectionExtractor selectionExtrator = new SelectionExtractor(clock, address, sessionId);
-      return new EditSession(views, documents, panel.getGwtPanel(), selectionExtrator);
+      SelectionExtractor selectionExtractor = new SelectionExtractor(clock, address, sessionId);
+      return EditSession.install(views, documents, selectionExtractor, focus, panel);
     }
 
     protected EditToolbar createEditToolbar() {
@@ -155,12 +156,18 @@ public interface StageThree {
 
       // Eagerly install some features.
       WavePanelImpl panel = stageTwo.getStageOne().getWavePanel();
+      FocusFramePresenter focus = stageTwo.getStageOne().getFocusFrame();
       ParticipantId user = stageTwo.getSignedInUser();
+      ModelAsViewProvider models = stageTwo.getModelAsViewProvider();
+      ProfileManager profiles = stageTwo.getProfileManager();
+
       Actions actions = getEditActions();
       EditSession edit = getEditSession();
       MenuController.install(actions, panel);
       getEditToolbar().install();
       ReplyIndicatorController.install(actions, edit, panel);
+      EditController.install(focus, actions, panel);
+      ParticipantController.install(panel, models, profiles);
       stageTwo.getDiffController().upgrade(edit);
     }
   }

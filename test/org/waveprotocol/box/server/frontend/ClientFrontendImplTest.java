@@ -123,8 +123,7 @@ public class ClientFrontendImplTest extends TestCase {
     when(waveletProvider.getWaveletIds(any(WaveId.class))).thenReturn(ImmutableSet.<WaveletId>of());
 
     WaveBus waveBus = mock(WaveBus.class);
-    this.clientFrontend =
-        new ClientFrontendImpl(HASH_FACTORY, waveletProvider, "@example.com");
+    clientFrontend = new ClientFrontendImpl(HASH_FACTORY, waveletProvider, "example.com");
   }
 
   public void testCannotOpenWavesWhenNotLoggedIn() throws Exception {
@@ -239,7 +238,7 @@ public class ClientFrontendImplTest extends TestCase {
     verify(submitListener).onFailure(anyString());
     verify(submitListener, never()).onSuccess(anyInt(), (HashedVersion) any(), anyLong());
   }
-  
+
   // FIXME (Yuri Z.) Make this test work. The issue is - the participants set
   // for the wavelet is empty, so the size of wavelets is 0 and
   // isDeltasStartingAt(0) is failing. It wasn't a problem before fix to issue
