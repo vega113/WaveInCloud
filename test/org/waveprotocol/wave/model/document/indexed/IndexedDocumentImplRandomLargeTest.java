@@ -58,7 +58,7 @@ public class IndexedDocumentImplRandomLargeTest extends TestCase {
 
   static final int NUM_INITIAL_MUTATIONS = 10;
   static final int NUM_REVERSED_MUTATIONS_PER_RUN = 20;
-  static final int NUM_RUNS = 1500;
+  static final int NUM_RUNS = 300; // NOTE: increase if you test changes to IndexedDocument
   static final RandomDocOpGenerator.Parameters[] PARAM_SETS = {
     // Default parameters.
     new RandomDocOpGenerator.Parameters(),

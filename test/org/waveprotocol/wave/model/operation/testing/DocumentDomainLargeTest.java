@@ -22,16 +22,22 @@ import junit.framework.TestCase;
 
 import org.waveprotocol.wave.model.document.bootstrap.BootstrapDocument;
 import org.waveprotocol.wave.model.document.operation.DocOp;
+import org.waveprotocol.wave.model.document.util.DocOpScrub;
 import org.waveprotocol.wave.model.operation.testing.DomainRandomTester.FailureException;
 import org.waveprotocol.wave.model.operation.testing.DomainRandomTester.Log;
 
 
 public class DocumentDomainLargeTest extends TestCase {
 
-  private final int NUM_ITERATIONS = 100;
+  private final int NUM_ITERATIONS = 50; // NOTE: increase if you test changes to doc ops
   DomainRandomTester<BootstrapDocument, DocOp> t;
 
   boolean expectFailure = false;
+
+  @Override
+  public void setUp() {
+    DocOpScrub.setShouldScrubByDefault(false);
+  }
 
   public void testDataOpEquivalence() {
     createTester();

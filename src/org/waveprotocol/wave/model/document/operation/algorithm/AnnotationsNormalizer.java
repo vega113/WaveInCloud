@@ -17,15 +17,16 @@
 
 package org.waveprotocol.wave.model.document.operation.algorithm;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.waveprotocol.wave.model.document.operation.AnnotationBoundaryMap;
 import org.waveprotocol.wave.model.document.operation.Attributes;
 import org.waveprotocol.wave.model.document.operation.AttributesUpdate;
 import org.waveprotocol.wave.model.document.operation.EvaluatingDocOpCursor;
+import org.waveprotocol.wave.model.util.ValueUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * A normalizer for annotations.
@@ -162,28 +163,6 @@ public final class AnnotationsNormalizer<T> implements EvaluatingDocOpCursor<T> 
   public void endAnnotation(String key) {
     annotationChanges.put(key, null);
   }
-//
-//
-//  public void startAnnotation(String key, String oldValue, String newValue) {
-//    if (ValueUtils.equal(oldValue, newValue)) {
-//      if (!annotationChanges.containsKey(key)) {
-//        ignores.add(key);
-//      }
-//    } else {
-//      if (ignores.contains(key)) {
-//        ignores.remove(key);
-//      }
-//      annotationChanges.put(key, new AnnotationChangeValues(oldValue, newValue));
-//    }
-//  }
-//
-//  public void endAnnotation(String key) {
-//    if (ignores.contains(key)) {
-//      ignores.remove(key);
-//    } else {
-//      annotationChanges.put(key, null);
-//    }
-//  }
 
   private void flushAnnotations() {
     final List<AnnotationChange> changes = new ArrayList<AnnotationChange>();
@@ -198,8 +177,9 @@ public final class AnnotationsNormalizer<T> implements EvaluatingDocOpCursor<T> 
           ends.add(key);
         }
       } else {
-        if (previousValues == null || !(areEqual(values.oldValue, previousValues.oldValue)
-            && areEqual(values.newValue, previousValues.newValue))) {
+        if (previousValues == null
+            || !ValueUtils.equal(values.oldValue, previousValues.oldValue)
+            || !ValueUtils.equal(values.newValue, previousValues.newValue)) {
           annotationTracker.put(key, values);
           changes.add(new AnnotationChange(key, values.oldValue, values.newValue));
         }
@@ -241,10 +221,6 @@ public final class AnnotationsNormalizer<T> implements EvaluatingDocOpCursor<T> 
       });
     }
     annotationChanges.clear();
-  }
-
-  private static boolean areEqual(Object o1, Object o2) {
-    return (o1 == null) ? o2 == null : o1.equals(o2);
   }
 
 }

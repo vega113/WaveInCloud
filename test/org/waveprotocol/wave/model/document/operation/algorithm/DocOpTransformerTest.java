@@ -28,8 +28,8 @@ import org.waveprotocol.wave.model.document.operation.impl.AttributesImpl;
 import org.waveprotocol.wave.model.document.operation.impl.AttributesUpdateImpl;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpBuilder;
 import org.waveprotocol.wave.model.document.operation.impl.DocOpUtil;
-import org.waveprotocol.wave.model.operation.TransformException;
 import org.waveprotocol.wave.model.operation.OperationPair;
+import org.waveprotocol.wave.model.operation.TransformException;
 import org.waveprotocol.wave.model.testing.DocOpCreator;
 
 /**
