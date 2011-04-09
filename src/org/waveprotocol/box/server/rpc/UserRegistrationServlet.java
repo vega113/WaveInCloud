@@ -93,7 +93,7 @@ public final class UserRegistrationServlet extends HttpServlet {
     try {
       // First, some cleanup on the parameters.
       if (username == null) {
-        return "Username portion of address cannot be less than 2 characters";
+        return "Username portion of address cannot be empty";
       }
       username = username.trim().toLowerCase();
       if (username.contains(ParticipantId.DOMAIN_PREFIX)) {
@@ -101,8 +101,8 @@ public final class UserRegistrationServlet extends HttpServlet {
       } else {
         id = ParticipantId.of(username + ParticipantId.DOMAIN_PREFIX + domain);
       }
-      if (id.getAddress().indexOf("@") < 2) {
-        return "Username portion of address cannot be less than 2 characters";
+      if (id.getAddress().indexOf("@") < 1) {
+        return "Username portion of address cannot be empty";
       }
       String[] usernameSplit = id.getAddress().split("@");
       if (usernameSplit.length != 2 || !usernameSplit[0].matches("[\\w\\.]+")) {
