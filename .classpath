@@ -5,11 +5,7 @@
 	<classpathentry kind="src" path="proto_src"/>
 	<classpathentry kind="src" path="gen/messages"/>
 	<classpathentry kind="src" path="gen/gxp"/>
-
-        <!-- Common libs listed first for preference in Eclipse auto-complete -->
 	<classpathentry kind="lib" path="third_party/runtime/guava/guava-r07.jar"/>
-
-        <!-- Everything else, alphabetical order -->
 	<classpathentry kind="lib" path="third_party/codegen/antlr/antlr-3.2.jar"/>
 	<classpathentry kind="lib" path="third_party/codegen/gwt/gwt-dev.jar"/>
 	<classpathentry kind="lib" path="third_party/codegen/gwt/gwt-user.jar"/>
@@ -26,8 +22,9 @@
 	<classpathentry kind="lib" path="third_party/runtime/commons_logging/commons-logging-1.1.1.jar" sourcepath="third_party/runtime/commons_logging/commons-logging-1.1.1-sources.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/dom4j/dom4j-1.6.1.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/gson/gson-1.4.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/guice/guice-assistedinject-snapshot.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/guice/guice-snapshot.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/guice/guice-3.0.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/guice/guice-assistedinject-3.0.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/guice/guice-servlet-3.0.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/guice/javax.inject.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/gxp/gxp-0.2.4-beta.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/jackson/jackson-core-asl-1.5.2.jar"/>
@@ -74,7 +71,6 @@
 	<classpathentry kind="lib" path="third_party/test/junit/junit.jar"/>
 	<classpathentry kind="lib" path="third_party/test/junit/src.jar"/>
 	<classpathentry kind="lib" path="third_party/test/mockito/mockito-all-1.8.2.jar"/>
-
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
