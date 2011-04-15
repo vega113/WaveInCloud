@@ -17,6 +17,7 @@
 
 package org.waveprotocol.box.server;
 
+import com.google.gwt.logging.server.RemoteLoggingServiceImpl;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -186,7 +187,9 @@ public class ServerMain {
             gadgetServerPath);
     ServletHolder proxyServletHolder = server.addServlet("/gadgets/*", proxyServlet);
     proxyServletHolder.setInitParameter("HostHeader", gadgetServerHostname);
-
+    
+    server.addServlet("/webclient/remote_logging",
+        injector.getInstance(RemoteLoggingServiceImpl.class));
     server.addServlet("/", injector.getInstance(WaveClientServlet.class));
   }
 
