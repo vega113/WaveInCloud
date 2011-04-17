@@ -21,8 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -88,9 +86,6 @@ import javax.servlet.http.HttpSession;
  */
 public class ServerRpcProvider {
   private static final Log LOG = Log.get(ServerRpcProvider.class);
-
-  // We can retrieve the injector from the context attributes via this attribute name
-  public static final String INJECTOR_ATTRIBUTE = Injector.class.getName();
 
   private final InetSocketAddress[] httpAddresses;
   private final Integer flashsocketPolicyPort;
@@ -334,7 +329,6 @@ public class ServerRpcProvider {
     final WebAppContext context = new WebAppContext();
 
     context.setParentLoaderPriority(true);
-    context.setAttribute(INJECTOR_ATTRIBUTE, injector);
 
     if (jettySessionManager != null) {
       context.getSessionHandler().setSessionManager(jettySessionManager);
@@ -345,26 +339,14 @@ public class ServerRpcProvider {
     addWebSocketServlets();
 
     try {
-      final Injector parentInjector;
-
-      // If we have a null injector at least bind the ServerRpcProvider for nested static classes
-      if(injector==null) {
-        parentInjector = Guice.createInjector(new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(ServerRpcProvider.class).toInstance(ServerRpcProvider.this);
-          }
-        });
-      } else {
-        parentInjector = injector;
-      }
+      final Injector parentInjector = injector;
 
       final ServletModule servletModule = getServletModule(parentInjector);
 
       ServletContextListener contextListener = new GuiceServletContextListener() {
-        
+
         private final Injector childInjector = parentInjector.createChildInjector(servletModule);
-        
+
         @Override
         protected Injector getInjector() {
           return childInjector;
@@ -614,7 +596,7 @@ public class ServerRpcProvider {
     servletRegistry.add(new Pair<String, ServletHolder>(urlPattern, servletHolder));
     return servletHolder;
   }
-  
+
   /**
    * Add a servlet to the servlet registry. This servlet will be attached to the
    * specified URL pattern when the server is started up.
