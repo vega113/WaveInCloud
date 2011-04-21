@@ -15,11 +15,13 @@
  *
  */
 
-package org.waveprotocol.box.server.robots.operations;
+package org.waveprotocol.box.server.waveserver;
 
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveletId;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.ObservableWaveletData;
+import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 
 import javax.annotation.Nullable;
@@ -29,9 +31,9 @@ import javax.annotation.Nullable;
  * 
  * @author vega113@gmail.com (Yuri Z.)
  */
-public final class SearchHelper {
+public final class WaveletUtil {
   
-  private SearchHelper() {
+  private WaveletUtil() {
     
   }
   
@@ -49,5 +51,22 @@ public final class SearchHelper {
       }
     }
     return false;
+  }
+  
+  /**
+   * Checks if the user has access to the wavelet.
+   * 
+   * @param snapshot the wavelet data.
+   * @param user the user that wants to access the wavelet.
+   * @param sharedDomainParticipantId the shared domain participant id.
+   * @return true if the user has access to the wavelet.
+   */
+  public static boolean checkAccessPermission(ReadableWaveletData snapshot, ParticipantId user,
+      ParticipantId sharedDomainParticipantId) {
+    return user != null
+    && (snapshot == null
+        || snapshot.getParticipants().contains(user)
+        || (sharedDomainParticipantId != null
+            && snapshot.getParticipants().contains(sharedDomainParticipantId)));
   }
 }
