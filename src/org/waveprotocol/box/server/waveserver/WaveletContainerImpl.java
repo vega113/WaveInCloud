@@ -64,7 +64,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
 
   private static final Log LOG = Log.get(WaveletContainerImpl.class);
 
-  private static final int AWAIT_LOAD_TIMEOUT_SECONDS = 10;
+  private static final int AWAIT_LOAD_TIMEOUT_SECONDS = 20;
 
   protected enum State {
     /** Everything is working fine. */
