@@ -225,14 +225,19 @@ public class OperationContextImpl implements OperationContext, OperationResults 
       }
 
       ObservableWaveletData obsWavelet = FACTORY.create(snapshot.snapshot);
-      if (!obsWavelet.getParticipants().contains(participant)) {
+      wavelet = new RobotWaveletData(obsWavelet, snapshot.committedVersion);
+    }
+    try {
+      if (!waveletProvider.checkAccessPermission(waveletName, participant)) {
         LOG.severe(
             participant + " tried to open " + waveletName + " which it isn't participating in");
         throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
       }
-      wavelet = new RobotWaveletData(obsWavelet, snapshot.committedVersion);
-      openedWavelets.put(waveletName, wavelet);
+    } catch (WaveServerException e) {
+      LOG.severe("Cannot access wavelet: " + waveletName.toString(), e);
+      throw new InvalidRequestException("Wavelet " + waveletName + " couldn't be retrieved");
     }
+    openedWavelets.put(waveletName, wavelet);
     return wavelet.getOpBasedWavelet(participant);
   }
 
