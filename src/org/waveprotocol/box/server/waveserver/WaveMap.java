@@ -359,17 +359,25 @@ public class WaveMap implements SearchProvider {
      *
      * @param queryParams the query params.
      * @param queryType the filter for the query , i.e. 'with'.
+     * @param localDomain the local domain of the logged in user.
      * @return the participants list for the filter.
      * @throws InvalidParticipantAddress if participant id passed to the query is invalid.
      */
     static List<ParticipantId> buildValidatedParticipantIds(
         Map<QueryHelper.TokenQueryType, Set<String>> queryParams,
-        QueryHelper.TokenQueryType queryType) throws InvalidParticipantAddress {
+        QueryHelper.TokenQueryType queryType, String localDomain) throws InvalidParticipantAddress {
       Set<String> tokenSet = queryParams.get(queryType);
       List<ParticipantId> participants = null;
       if (tokenSet != null) {
         participants = Lists.newArrayListWithCapacity(tokenSet.size());
         for (String token : tokenSet) {
+          if (!token.isEmpty() && token.indexOf("@") == -1) {
+            // If no domain was specified, assume that the participant is from the local domain.
+            token = token + "@" + localDomain;
+          } else if (token.equals("@")) {
+            // "@" is a shortcut for the shared domain participant.
+            token = "@" + localDomain;
+          }
           ParticipantId otherUser = ParticipantId.of(token);
           participants.add(otherUser);
         }
@@ -585,11 +593,14 @@ public class WaveMap implements SearchProvider {
     List<ParticipantId> withParticipantIds = null;
     List<ParticipantId> creatorParticipantIds = null;
     try {
+      String localDomain = user.getDomain();
       // Build and validate.
       withParticipantIds =
-          QueryHelper.buildValidatedParticipantIds(queryParams, QueryHelper.TokenQueryType.WITH);
+          QueryHelper.buildValidatedParticipantIds(queryParams, QueryHelper.TokenQueryType.WITH,
+              localDomain);
       creatorParticipantIds =
-          QueryHelper.buildValidatedParticipantIds(queryParams, QueryHelper.TokenQueryType.CREATOR);
+          QueryHelper.buildValidatedParticipantIds(queryParams, QueryHelper.TokenQueryType.CREATOR,
+              localDomain);
     } catch (InvalidParticipantAddress e) {
       // Invalid address - stop and return empty search results.
       LOG.warning("Invalid participantId: " + e.getAddress() + " in query: " + query);
