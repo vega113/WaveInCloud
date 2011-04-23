@@ -36,6 +36,7 @@ import com.google.inject.name.Named;
 import org.waveprotocol.box.common.ExceptionalIterator;
 import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.util.WaveletDataUtil;
 import org.waveprotocol.wave.model.id.IdUtil;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.id.WaveletId;
@@ -639,7 +640,7 @@ public class WaveMap implements SearchProvider {
         }
       }
       // Filter out waves without conversational root wavelet from search result.
-      if (WaveletUtil.hasConversationalRootWavelet(view)) {
+      if (WaveletDataUtil.hasConversationalRootWavelet(view)) {
         results.put(waveId, view);
       }
     }
@@ -692,7 +693,7 @@ public class WaveMap implements SearchProvider {
     // Or if it is an 'all' query - then either logged in user or shared domain
     // participant should be present in the wave.
     if (isAllQuery &&
-        !WaveletUtil.checkAccessPermission(wavelet, user, sharedDomainParticipantId)) {
+        !WaveletDataUtil.checkAccessPermission(wavelet, user, sharedDomainParticipantId)) {
       return false;
     }
     // If not returned 'false' above - then logged in user is either

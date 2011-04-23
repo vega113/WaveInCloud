@@ -262,7 +262,7 @@ abstract class WaveletContainerImpl implements WaveletContainer {
       // If the wavelet is empty, everyone has access (to write the first delta).
       // TODO(soren): determine if off-domain participants should be denied access if empty
       ReadableWaveletData snapshot = waveletState.getSnapshot();
-      return WaveletUtil.checkAccessPermission(snapshot, participantId, sharedDomainParticipantId);
+      return WaveletDataUtil.checkAccessPermission(snapshot, participantId, sharedDomainParticipantId);
     } finally {
       releaseReadLock();
     }
