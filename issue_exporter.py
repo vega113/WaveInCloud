@@ -102,11 +102,16 @@ while True:
         row = escape(issue.title.text) + ","
         # Id, e.g. http://code.google.com/feeds/issues/p/wave-protocol/issues/full/1
         row += escape(issue.id.text) + ","
-        # There are exactly two labels, Type (e.g. Type-Defect) and
-        # Priority (e.g. Priority-Medium)
-        assert len(issue.label) == 2  # NOTE(ohler): this assertion fails
-        for labels in issue.label:
-            row += escape(labels.text) + ","
+        type = "";
+        priority = ""; 
+        # There are any number of labels, but we are only interested in two.  Namely Type-* and Priority-*
+        for label in issue.label:
+            if label.text.startswith("Type-"):
+                type = label.text[5:]
+            elif label.text.startswith("Priority-"):
+                priority = label.text[9:]
+        row += escape(type) + ","
+        row += escape(priority) + ","
         # Status, e.g. Fixed
         row += escape(issue.status.text) + ","
         # TODO: figure out how to pull the relevant attributes out of Owner, Author
