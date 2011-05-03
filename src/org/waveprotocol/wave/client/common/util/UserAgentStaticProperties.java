@@ -40,7 +40,7 @@ public abstract class UserAgentStaticProperties {
   /**
    * Creates an instance of UserAgent.
    *
-   * NOTE(user): This method is designed to be statically evaluable by
+   * NOTE(danilatos): This method is designed to be statically evaluable by
    *                   the compiler, such that the compiler can determine that
    *                   only one subclass of UserAgent is ever used within a
    *                   given permutation. This is possible because
