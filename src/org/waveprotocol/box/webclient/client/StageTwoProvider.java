@@ -108,31 +108,33 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
       getConversations().createRoot().getRootThread().appendBlip();
       super.install();
       whenReady.use(StageTwoProvider.this);
+    } else {
+      // For an existing wave, while we're still using the old protocol,
+      // rendering must be delayed until the channel is opened, because the
+      // initial state snapshots come from the channel.
+      getConnector().connect(new Command() {
+        @Override
+        public void execute() {
+          // This code must be kept in sync with the default install()
+          // method, but excluding the connect() call.
+
+          // Install diff control before rendering, because logical diff state
+          // may
+          // need to be adjusted due to arbitrary UI policies.
+          getDiffController().install();
+
+          // Ensure the wave is rendered.
+          stageOne.getDomAsViewProvider().setRenderer(getRenderer());
+          ensureRendered();
+
+          // Install eager UI.
+          installFeatures();
+
+          // Rendering, and therefore the whole stage is now ready.
+          whenReady.use(StageTwoProvider.this);
+        }
+      });
     }
-    // For an existing wave, while we're still using the old protocol,
-    // rendering must be delayed until the channel is opened, because the
-    // initial state snapshots come from the channel.
-    getConnector().connect(new Command() {
-      @Override
-      public void execute() {
-        // This code must be kept in sync with the default install()
-        // method, but excluding the connect() call.
-
-        // Install diff control before rendering, because logical diff state may
-        // need to be adjusted due to arbitrary UI policies.
-        getDiffController().install();
-
-        // Ensure the wave is rendered.
-        stageOne.getDomAsViewProvider().setRenderer(getRenderer());
-        ensureRendered();
-
-        // Install eager UI.
-        installFeatures();
-
-        // Rendering, and therefore the whole stage is now ready.
-        whenReady.use(StageTwoProvider.this);
-      }
-    });
   }
 
   @Override
