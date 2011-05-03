@@ -47,6 +47,9 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
   // TODO: Remove this after WebClientBackend is deleted.
   private final IdGenerator idGenerator;
 
+  // shared across other client components
+  private final ProfileManager profiles;
+
   /**
    * Continuation to progress to the next stage. This will disappear with the
    * new protocol.
@@ -60,13 +63,14 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
    */
   public StageTwoProvider(StageOne stageOne, WaveId waveId, RemoteViewServiceMultiplexer channel,
       boolean isNewWave, IdGenerator idGenerator, ProfileManager profiles) {
-    super(stageOne, profiles);
+    super(stageOne);
     Preconditions.checkArgument(stageOne != null);
     Preconditions.checkArgument(waveId != null);
     this.waveId = waveId;
     this.channel = channel;
     this.isNewWave = isNewWave;
     this.idGenerator = idGenerator;
+    this.profiles = profiles;
   }
 
   @Override
@@ -129,6 +133,11 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
         whenReady.use(StageTwoProvider.this);
       }
     });
+  }
+
+  @Override
+  protected ProfileManager createProfileManager() {
+    return profiles;
   }
 
   @Override
