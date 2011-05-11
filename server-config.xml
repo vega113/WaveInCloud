@@ -16,6 +16,7 @@
   <property name="account_store_directory" value="_accounts" />
   <property name="delta_store_directory" value="_deltas" />
   <property name="use_socketio" value="true" />
+  <property name="admin_user" value="@${wave_server_domain}" />
   
   <!-- Properties for server.federation.config -->
   <property name="xmpp_server_secret" value="opensesame" />
@@ -69,6 +70,7 @@
                  value="${account_store_directory}" />
           <token key="DELTA_STORE_DIRECTORY" value="${delta_store_directory}" />
           <token key="USE_SOCKETIO" value="${use_socketio}" />
+          <token key="ADMIN_USER" value="${admin_user}" />
         </replacetokens>
       </filterchain>
     </copy>
