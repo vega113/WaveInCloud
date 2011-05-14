@@ -48,6 +48,7 @@
             <include name="*/*.jar"/>
           </fileset>
         </classpath>
+        <arg line="-s pst"/>
         <arg value="-d"/><arg value="@{outputdir}"/>
         <arg value="-f"/><arg value="@{proto}"/>
         <arg line="@{templates}"/>
