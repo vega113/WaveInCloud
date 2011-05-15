@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 public final class PasswordAdminRobot extends AbstractRobotAgent {
 
   private static final Logger LOG = Logger.getLogger(PasswordAdminRobot.class.getName());
+  public static final String ROBOT_URI = AGENT_PREFIX_URI + "/passwd/admin";
 
   /** The address of the admin user as defined in the server configuration. */
   private final String serverAdminId;
@@ -69,7 +70,7 @@ public final class PasswordAdminRobot extends AbstractRobotAgent {
     // Verify that the user that attempts to change the password has admin privileges.
     if (!adminId.equals(serverAdminId)) {
       robotMessage =
-          "User " + adminId + " is not authorized to use " + getCommandName() + " command.\n";
+          "User " + adminId + " is not authorized to use " + getCommandName() + " command.";
     } else {
       String userId = null;
       try {
@@ -140,5 +141,15 @@ public final class PasswordAdminRobot extends AbstractRobotAgent {
   @Override
   public String getRobotName() {
     return "PasswdAdmin-Bot";
+  }
+  
+  @Override
+  public String getRobotUri() {
+    return ROBOT_URI;
+  }
+  
+  @Override
+  public String getRobotId() {
+    return "passwdadmin-bot";
   }
 }

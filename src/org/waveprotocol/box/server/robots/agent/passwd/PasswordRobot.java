@@ -28,7 +28,6 @@ import com.google.inject.Singleton;
 import org.apache.commons.cli.CommandLine;
 import org.eclipse.jetty.util.MultiMap;
 import org.waveprotocol.box.server.authentication.HttpRequestBasedCallbackHandler;
-import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.robots.agent.AbstractRobotAgent;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
@@ -61,18 +60,15 @@ import javax.security.auth.login.LoginException;
 public final class PasswordRobot extends AbstractRobotAgent {
 
   private static final Logger LOG = Logger.getLogger(PasswordRobot.class.getName());
+  public static final String ROBOT_URI = AGENT_PREFIX_URI + "/passwd/user";
 
   /** Configuration for the LoginContext. */
   private final Configuration configuration;
   
-  /** Account store with user and robot accounts. */
-  private final AccountStore accountStore;
-
   @Inject
   public PasswordRobot(Injector injector) {
     super(injector);
     configuration = injector.getInstance(Configuration.class);
-    accountStore = injector.getInstance(AccountStore.class);
   }
 
   @Override
@@ -98,9 +94,9 @@ public final class PasswordRobot extends AbstractRobotAgent {
         String oldPassword = args[1];
         String newPassword = args[2];
         verifyCredentials(oldPassword, participantId);
-        changeUserPassword(newPassword, participantId, accountStore);
+        changeUserPassword(newPassword, participantId, getAccountStore());
         robotMessage =
-            String.format("Changed password for user %s, the new password is: %s\n", modifiedBy,
+            String.format("Changed password for user %s, the new password is: %s", modifiedBy,
                 newPassword);
         LOG.info(modifiedBy + " changed  password for user: " + modifiedBy);
       } catch (IllegalArgumentException e) {
@@ -182,5 +178,15 @@ public final class PasswordRobot extends AbstractRobotAgent {
   @Override
   public int getMaxNumOfArguments() {
     return 2;
+  }
+  
+  @Override
+  public String getRobotUri() {
+    return ROBOT_URI;
+  }
+  
+  @Override
+  public String getRobotId() {
+    return "passwd-bot";
   }
 }

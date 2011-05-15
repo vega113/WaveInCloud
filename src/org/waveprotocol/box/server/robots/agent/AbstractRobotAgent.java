@@ -20,8 +20,10 @@ package org.waveprotocol.box.server.robots.agent;
 import static org.waveprotocol.box.server.robots.agent.RobotAgentUtil.appendLine;
 import static org.waveprotocol.box.server.robots.agent.RobotAgentUtil.lastEnteredLineOf;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.wave.api.AbstractRobot;
 import com.google.wave.api.Blip;
@@ -37,9 +39,19 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.waveprotocol.box.server.CoreSettings;
+import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.robots.util.RobotsUtil;
+import org.waveprotocol.box.server.robots.util.RobotsUtil.RobotRegistrationException;
+import org.waveprotocol.wave.model.id.TokenGenerator;
+import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
+import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The base for robot agents that run on the WIAB server. Users interact with
@@ -50,6 +62,24 @@ import java.io.StringWriter;
 @SuppressWarnings("serial")
 public abstract class AbstractRobotAgent extends AbstractRobot {
 
+  static class ServerFrontendAddressHolder {
+
+    private final List<String> addresses;
+
+    @Inject
+    ServerFrontendAddressHolder(
+        @Named(CoreSettings.HTTP_FRONTEND_ADDRESSES) List<String> addresses) {
+      this.addresses = addresses;
+    }
+
+    List<String> getAddresses() {
+      return addresses;
+    }
+  }
+
+  public static final String AGENT_PREFIX_URI = "/agent";
+  private static final Logger LOG = Logger.getLogger(AbstractRobotAgent.class.getName());
+
   /** The wave server domain. */
   private final String waveDomain;
 
@@ -57,16 +87,61 @@ public abstract class AbstractRobotAgent extends AbstractRobot {
   private final Options options;
   private final CommandLineParser parser;
   private final HelpFormatter helpFormatter;
+  /** Account store with user and robot accounts. */
+  private final AccountStore accountStore;
 
   /**
+   * Constructor. Initializes the agent to serve on the URI provided by
+   * {@link #getRobotUri()} and ensures that the agent is registered in the
+   * Account store.
+   * 
    * @param injector the injector instance.
    */
   public AbstractRobotAgent(Injector injector) {
-    this.waveDomain =
-        injector.getInstance(Key.get(String.class, Names.named(CoreSettings.WAVE_SERVER_DOMAIN)));
+    this(injector.getInstance(Key.get(String.class, Names.named(CoreSettings.WAVE_SERVER_DOMAIN))),
+        injector.getInstance(AccountStore.class), injector.getInstance(TokenGenerator.class),
+        injector.getInstance(ServerFrontendAddressHolder.class));
+  }
+
+  /**
+   * Constructor. Initializes the agent to serve on the URI provided by
+   * {@link #getRobotUri()} and ensures that the agent is registered in the
+   * Account store.
+   */
+  AbstractRobotAgent(String waveDomain, AccountStore accountStore, TokenGenerator tokenGenerator,
+      ServerFrontendAddressHolder frontendAddressHolder) {
+    this.waveDomain = waveDomain;
+    this.accountStore = accountStore;
+    ensureRegistered(tokenGenerator, frontendAddressHolder.getAddresses().get(0));
     parser = new PosixParser();
     helpFormatter = new HelpFormatter();
     options = initOptions();
+  }
+
+  /**
+   * Ensures that the robot agent is registered in the {@link AccountStore}.
+   */
+  private void ensureRegistered(TokenGenerator tokenGenerator, String serverFrontendAddress) {
+    ParticipantId robotId = null;
+    try {
+      robotId = ParticipantId.of(getRobotId() + "@" + waveDomain);
+    } catch (InvalidParticipantAddress e) {
+      LOG.log(Level.SEVERE, "Failed to register the agent:" + getRobotId(), e);
+      return;
+    }
+    try {
+
+      // Register this agent in the account store. The registration is forced
+      // in order to re-register the agents if the server frontend address has
+      // changed.
+      RobotsUtil.registerRobotUri("http://" + serverFrontendAddress + getRobotUri(), robotId,
+          accountStore, tokenGenerator, true);
+    
+    } catch (RobotRegistrationException e) {
+      LOG.log(Level.SEVERE, "Failed to register the agent:" + getRobotId(), e);
+    } catch (PersistenceException e) {
+      LOG.log(Level.SEVERE, "Failed to register the agent:" + getRobotId(), e);
+    }
   }
 
   /**
@@ -93,7 +168,7 @@ public abstract class AbstractRobotAgent extends AbstractRobot {
     }
     if (commandLine != null) {
       if (commandLine.hasOption("help")
-          // Or if only options.
+      // Or if only options.
           || (commandLine.getArgs().length - commandLine.getOptions().length <= 1)) {
         appendLine(blip, getFullDescription());
       } else {
@@ -110,7 +185,8 @@ public abstract class AbstractRobotAgent extends AbstractRobot {
    * @return the command line {@link CommandLine} object with parsed data from
    *         the blip contents or null in case the content doesn't contain a
    *         command.
-   * @throws IllegalArgumentException if illegal arguments passed to the command.
+   * @throws IllegalArgumentException if illegal arguments passed to the
+   *         command.
    */
   protected CommandLine preprocessCommand(String blipContent) throws IllegalArgumentException {
     CommandLine commandLine = null;
@@ -196,6 +272,13 @@ public abstract class AbstractRobotAgent extends AbstractRobot {
   }
 
   /**
+   * Returns the account store.
+   */
+  protected AccountStore getAccountStore() {
+    return accountStore;
+  }
+
+  /**
    * Returns the command line parser.
    */
   protected CommandLineParser getParser() {
@@ -254,5 +337,15 @@ public abstract class AbstractRobotAgent extends AbstractRobot {
    * Returns the maximum number of arguments this command accepts.
    */
   public abstract int getMaxNumOfArguments();
+
+  /**
+   * Returns the robot URI.
+   */
+  public abstract String getRobotUri();
+
+  /**
+   * Returns the robot participant id.
+   */
+  public abstract String getRobotId();
 
 }

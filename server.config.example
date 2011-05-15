@@ -73,12 +73,6 @@ use_socketio = @USE_SOCKETIO@
 # Note: the default value for admin is an invalid user id that cannot be registered.
 # To become an admin: Register a user and set its address as the value below.
 # Admin has a privilege to change passwords of other users using an agent robot.
-# To register the password robot for admin:
-# 1. Navigate the browser to the robot registration page (http://example.com/robot/register/create).
-# 2. Enter the robot name, for example: passwdadmin-bot
-# 3. Enter the robot URL in the form: http://example.com:9898/agent/passwd/admin
-#	where example.com is the wave domain, and 9898 is the server port.
-# 4. Click on register.
 # Default value: @${wave_server_domain}
 admin_user = @ADMIN_USER@
 

@@ -15,20 +15,20 @@
  *
  */
 
-package org.waveprotocol.box.server.robots.agent.passwd;
+package org.waveprotocol.box.server.robots.agent;
 
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
+import com.google.common.collect.Lists;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.cli.CommandLine;
-import org.waveprotocol.box.server.CoreSettings;
-import org.waveprotocol.box.server.robots.agent.AbstractRobotAgent;
+import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.robots.agent.AbstractRobotAgent.ServerFrontendAddressHolder;
+import org.waveprotocol.wave.model.id.TokenGenerator;
 
 /**
  * Unit tests for the {@link AbstractRobotAgent}.
@@ -40,9 +40,9 @@ public class AbstractRobotAgentTest extends TestCase {
   @SuppressWarnings("serial")
   private class FakeRobotAgent extends AbstractRobotAgent {
 
-
-    public FakeRobotAgent(Injector injector) {
-      super(injector);
+    public FakeRobotAgent(String waveDomain, AccountStore accountStore,
+        TokenGenerator tokenGenerator, ServerFrontendAddressHolder frontendAddressHolder) {
+      super(waveDomain, accountStore, tokenGenerator, frontendAddressHolder);
     }
 
     @Override
@@ -94,19 +94,30 @@ public class AbstractRobotAgentTest extends TestCase {
     public String getCmdLineSyntax() {
       return "";
     }
+
+    @Override
+    public String getRobotUri() {
+      return "";
+    }
+
+    @Override
+    public String getRobotId() {
+      return "";
+    }
   };
 
   private static final String commandName = "agent";
 
-  private Injector injector;
   private FakeRobotAgent agent;
 
   @Override
   protected void setUp() throws Exception {
-    injector = mock(Injector.class);
-    when(injector.getInstance(Key.get(String.class, Names.named(CoreSettings.WAVE_SERVER_DOMAIN))))
-        .thenReturn("example.com");
-    agent = new FakeRobotAgent(injector);
+    ServerFrontendAddressHolder frontendAddressHolder = mock(ServerFrontendAddressHolder.class);
+    when(frontendAddressHolder.getAddresses()).thenReturn(Lists.newArrayList("localhost:9898"));
+    TokenGenerator tokenGenerator = mock(TokenGenerator.class);
+    when(tokenGenerator.generateToken(anyInt())).thenReturn("abcde");
+    AccountStore accountStore = mock(AccountStore.class);
+    agent = new FakeRobotAgent("example.com", accountStore, tokenGenerator, frontendAddressHolder);
   }
 
   public void testPreprocessCommandValidInput() throws Exception {
@@ -130,7 +141,7 @@ public class AbstractRobotAgentTest extends TestCase {
       // Expected.
     }
   }
-  
+
   public void testPreprocessCommandFailsOnTooFewArgs() throws Exception {
     String content = String.format("%s arg1 \n", commandName);
     try {

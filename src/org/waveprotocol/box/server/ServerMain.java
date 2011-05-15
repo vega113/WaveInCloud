@@ -231,10 +231,8 @@ public class ServerMain {
   }
   
   private static void initializeRobotAgents(Injector injector, ServerRpcProvider server) {
-    // NOTE: The robots should be registered manually.
-    // TODO (Yuri Z.) Make it possible to register the robots automatically on first server load.
-    server.addServlet("/agent/passwd/user/*", PasswordRobot.class);
-    server.addServlet("/agent/passwd/admin/*", PasswordAdminRobot.class);
+    server.addServlet(PasswordRobot.ROBOT_URI + "/*", PasswordRobot.class);
+    server.addServlet(PasswordAdminRobot.ROBOT_URI + "/*", PasswordAdminRobot.class);
   }
 
   private static void initializeFrontend(Injector injector, ServerRpcProvider server,
