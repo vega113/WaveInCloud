@@ -27,6 +27,7 @@ import static org.waveprotocol.box.server.robots.util.RobotsUtil.registerRobotUr
 import junit.framework.TestCase;
 
 import org.waveprotocol.box.server.account.AccountData;
+import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.robots.util.RobotsUtil;
@@ -41,7 +42,7 @@ import org.waveprotocol.wave.model.wave.ParticipantId;
  */
 public class RobotsUtilTest extends TestCase {
 
-  private final static String LOCATION = "http://example.com:9898/robot/";
+  private final static String LOCATION = "https://example.com:9898/robot/";
   private final static ParticipantId ROBOT_ID = ParticipantId.ofUnsafe("nicerobot@example.com");
 
   private AccountStore accountStore;
@@ -70,13 +71,21 @@ public class RobotsUtilTest extends TestCase {
   public void testRegisterRobotUriSuceedsOnExistingAccountWhenForced()
       throws RobotRegistrationException, PersistenceException {
     when(accountStore.getAccount(ROBOT_ID)).thenReturn(accountData);
-    when(tokenGenerator.generateToken(anyInt())).thenReturn("sometoken");
+    String consumerToken = "sometoken";
+    when(tokenGenerator.generateToken(anyInt())).thenReturn(consumerToken);
 
-    registerRobotUri(LOCATION, ROBOT_ID, accountStore, tokenGenerator, true);
+    AccountData resultAccountData =
+        registerRobotUri(LOCATION, ROBOT_ID, accountStore, tokenGenerator, true);
     verify(accountStore).getAccount(ROBOT_ID);
     verify(accountStore).removeAccount(ROBOT_ID);
     verify(accountStore).putAccount(any(AccountData.class));
     verify(tokenGenerator).generateToken(anyInt());
+    assertTrue(resultAccountData.isRobot());
+    RobotAccountData robotAccountData = resultAccountData.asRobot();
+    // Remove the last '/'.
+    assertEquals(LOCATION.substring(0, LOCATION.length() - 1), robotAccountData.getUrl());
+    assertEquals(ROBOT_ID, robotAccountData.getId());
+    assertEquals(consumerToken, robotAccountData.getConsumerSecret());
   }
 
   public void testRegisterRobotUriFailsOnExistingAccountWhenNotForced()

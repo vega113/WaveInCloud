@@ -112,12 +112,15 @@ public static class RobotRegistrationException extends Exception {
       String errorMessage = "Invalid Location specified, please specify a location in URI format.";
       throw new RobotRegistrationException(errorMessage + " " +  e.getLocalizedMessage(), e);
     }
-
+    String scheme = uri.getScheme();
+    if (scheme == null || (!scheme.equals("http") && !scheme.equals("https"))) {
+      scheme = "http";
+    }
     String robotLocation;
     if (uri.getPort() != -1) {
-      robotLocation = "http://" + uri.getHost() + ":" + uri.getPort() + uri.getPath();
+      robotLocation = scheme + "://" + uri.getHost() + ":" + uri.getPort() + uri.getPath();
     } else {
-      robotLocation = "http://" + uri.getHost() + uri.getPath();
+      robotLocation = scheme + "://" + uri.getHost() + uri.getPath();
     }
 
     if (robotLocation.endsWith("/")) {
