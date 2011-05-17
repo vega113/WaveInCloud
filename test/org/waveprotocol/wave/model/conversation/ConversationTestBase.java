@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 
 import org.mockito.InOrder;
 import org.waveprotocol.wave.model.conversation.Conversation.Anchor;
-import org.waveprotocol.wave.model.conversation.ConversationBlip.LocatableReplyThread;
+import org.waveprotocol.wave.model.conversation.ConversationBlip.LocatedReplyThread;
 import org.waveprotocol.wave.model.document.MutableDocument;
 import org.waveprotocol.wave.model.document.MutableDocument.Action;
 import org.waveprotocol.wave.model.document.util.DocHelper;
@@ -201,10 +201,6 @@ public abstract class ConversationTestBase extends TestCase {
     assertNull(target.getRootThread().getParentBlip());
   }
 
-  public void testRootThreadIsNotInline() {
-    ConversationThread root = target.getRootThread();
-  }
-
   public void testAppendBlipAppendsBlipsToThread() {
     ConversationThread thread = target.getRootThread();
     ConversationBlip b1 = thread.appendBlip();
@@ -260,7 +256,7 @@ public abstract class ConversationTestBase extends TestCase {
     ConversationThread thread = blip.appendInlineReplyThread(location);
 
     assertSame(blip, thread.getParentBlip());
-    assertEquals(Collections.singletonList(LocatableReplyThread.of(thread, location)),
+    assertEquals(Collections.singletonList(LocatedReplyThread.of(thread, location)),
         blip.locateReplyThreads());
     assertThreadChildrenConsistent(blip);
   }
@@ -281,7 +277,7 @@ public abstract class ConversationTestBase extends TestCase {
       }
     });
 
-    assertEquals(Collections.singletonList(LocatableReplyThread.of(thread, location)),
+    assertEquals(Collections.singletonList(LocatedReplyThread.of(thread, location)),
         blip.locateReplyThreads());
   }
 
@@ -352,12 +348,12 @@ public abstract class ConversationTestBase extends TestCase {
         E anchorToDelete = Point.elementAfter(doc, doc.locate(replyLocation));
         doc.deleteNode(anchorToDelete);
 
-        List<LocatableReplyThread<ConversationThread>> expected =
-            new ArrayList<LocatableReplyThread<ConversationThread>>();
-        expected.add(LocatableReplyThread.of(t2, replyLocation));
-        expected.add(LocatableReplyThread.of(t1, replyLocation + 2));
-        expected.add(LocatableReplyThread.of(t3, Blips.INVALID_INLINE_LOCATION));
-        List<LocatableReplyThread<? extends ConversationThread>> threads =
+        List<LocatedReplyThread<ConversationThread>> expected =
+            new ArrayList<LocatedReplyThread<ConversationThread>>();
+        expected.add(LocatedReplyThread.of(t2, replyLocation));
+        expected.add(LocatedReplyThread.of(t1, replyLocation + 2));
+        expected.add(LocatedReplyThread.of(t3, Blips.INVALID_INLINE_LOCATION));
+        List<LocatedReplyThread<? extends ConversationThread>> threads =
             CollectionUtils.newArrayList(blip.locateReplyThreads());
         assertEquals(expected, threads);
       }

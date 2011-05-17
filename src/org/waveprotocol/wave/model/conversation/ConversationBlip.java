@@ -42,17 +42,18 @@ public interface ConversationBlip {
    * class is designed to be subclassed to provide a concrete thread type.
    *
    * We can't use a simple Pair for this due to restrictions in Java's generic
-   * type matching.
+   * type matching.  It should be noted that this class only provides the threads location at the
+   * point in time the object was created.  It is not updated as the document changes.
    */
-  class LocatableReplyThread<T extends ConversationThread> {
+  class LocatedReplyThread<T extends ConversationThread> {
     private final T thread;
     private final int location;
 
-    public static <T extends ConversationThread> LocatableReplyThread<T> of(T thread, int location) {
-      return new LocatableReplyThread<T>(thread, location);
+    public static <T extends ConversationThread> LocatedReplyThread<T> of(T thread, int location) {
+      return new LocatedReplyThread<T>(thread, location);
     }
 
-    public LocatableReplyThread(T thread, int location) {
+    public LocatedReplyThread(T thread, int location) {
       this.thread = thread;
       this.location = location;
     }
@@ -79,8 +80,8 @@ public interface ConversationBlip {
       if (o == null) {
         return false;
       }
-      if (o instanceof LocatableReplyThread<?>) {
-        LocatableReplyThread<?> other = (LocatableReplyThread<?>) o;
+      if (o instanceof LocatedReplyThread<?>) {
+        LocatedReplyThread<?> other = (LocatedReplyThread<?>) o;
         return other.thread == thread && other.location == location;
       }
       return false;
@@ -116,7 +117,7 @@ public interface ConversationBlip {
    * Note that the reply locations are only valid for immediate use and must not
    * be stored.
    */
-  Iterable<? extends LocatableReplyThread<? extends ConversationThread>> locateReplyThreads();
+  Iterable<? extends LocatedReplyThread<? extends ConversationThread>> locateReplyThreads();
 
   /**
    * Gets all reply threads to this blip, in the order defined by history of

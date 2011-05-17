@@ -152,7 +152,7 @@ public final class ConversationRenderer {
   public void processBlip(ConversationBlip blip) {
     generator.startBlip(blip);
 
-    for (ConversationBlip.LocatableReplyThread<? extends ConversationThread> inlineReply : blip
+    for (ConversationBlip.LocatedReplyThread<? extends ConversationThread> inlineReply : blip
         .locateReplyThreads()) {
       processInlineThread(inlineReply.getThread());
     }

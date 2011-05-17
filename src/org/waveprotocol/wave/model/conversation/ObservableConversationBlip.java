@@ -37,7 +37,7 @@ public interface ObservableConversationBlip extends ConversationBlip {
   Iterable<? extends ObservableConversationThread> getReplyThreads();
 
   @Override
-  Iterable<? extends LocatableReplyThread<? extends ObservableConversationThread>>
+  Iterable<? extends LocatedReplyThread<? extends ObservableConversationThread>>
       locateReplyThreads();
 
   @Override

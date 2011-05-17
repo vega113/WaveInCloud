@@ -102,19 +102,19 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
 
 
   /**
-   * A locatable reply thread  which specializes the thread type to
+   * A located reply thread  which specializes the thread type to
    * WaveletBasedConversationThread.
    */
-  final class LocatableReplyThread
-      extends ConversationBlip.LocatableReplyThread<WaveletBasedConversationThread>
-      implements Comparable<LocatableReplyThread> {
+  final class LocatedReplyThread
+      extends ConversationBlip.LocatedReplyThread<WaveletBasedConversationThread>
+      implements Comparable<LocatedReplyThread> {
 
-    LocatableReplyThread(WaveletBasedConversationThread thread, int location) {
+    LocatedReplyThread(WaveletBasedConversationThread thread, int location) {
       super(thread, location);
     }
 
     @Override
-    public int compareTo(WaveletBasedConversationBlip.LocatableReplyThread o) {
+    public int compareTo(WaveletBasedConversationBlip.LocatedReplyThread o) {
       if (getLocation() == o.getLocation()) {
         return 0;
       } else if (getLocation() == Blips.INVALID_INLINE_LOCATION) {
@@ -223,19 +223,19 @@ final class WaveletBasedConversationBlip implements ObservableConversationBlip,
  
 
   @Override
-  public Iterable<LocatableReplyThread> locateReplyThreads() {
+  public Iterable<LocatedReplyThread> locateReplyThreads() {
     // NOTE(anorth): We must recalculate the anchor locations on each
     // call as the document does not provide stable elements. However, we
     // calculate the list of anchor locations on demand.
     Map<String, Integer> replyLocations = null;
-    List<LocatableReplyThread> inlineReplyThreads = CollectionUtils.newArrayList();
+    List<LocatedReplyThread> inlineReplyThreads = CollectionUtils.newArrayList();
     for (WaveletBasedConversationThread reply : getReplyThreads()) {
-        if (replyLocations == null) {
-          replyLocations = findAnchors();
-        }
-        Integer location = replyLocations.get(reply.getId());
-        inlineReplyThreads.add(new LocatableReplyThread(reply,
-            (location != null) ? location : Blips.INVALID_INLINE_LOCATION));
+      if (replyLocations == null) {
+        replyLocations = findAnchors();
+      }
+      Integer location = replyLocations.get(reply.getId());
+      inlineReplyThreads.add(new LocatedReplyThread(reply,
+          (location != null) ? location : Blips.INVALID_INLINE_LOCATION));
     }
     Collections.sort(inlineReplyThreads);
     return Collections.unmodifiableList(inlineReplyThreads);
