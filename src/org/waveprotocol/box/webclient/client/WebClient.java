@@ -28,6 +28,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
@@ -209,6 +210,9 @@ public class WebClient implements EntryPoint {
 
   private void setupConnectionIndicator() {
     ClientEvents.get().addNetworkStatusEventHandler(new NetworkStatusEventHandler() {
+
+      boolean isTurbulenceDetected = false;
+
       @Override
       public void onNetworkStatus(NetworkStatusEvent event) {
         Element element = Document.get().getElementById("netstatus");
@@ -218,10 +222,16 @@ public class WebClient implements EntryPoint {
             case RECONNECTED:
               element.setInnerText("Online");
               element.setClassName("online");
+              isTurbulenceDetected = false;
               break;
             case DISCONNECTED:
               element.setInnerText("Offline");
               element.setClassName("offline");
+              if (!isTurbulenceDetected) {
+                isTurbulenceDetected = true;
+                Window.alert("A turbulence detected!"
+                    + " Please save your last changes to somewhere and reload the wave.");
+              }
               break;
             case RECONNECTING:
               element.setInnerText("Connecting...");
