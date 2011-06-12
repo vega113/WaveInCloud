@@ -84,6 +84,8 @@ public class WebClient implements EntryPoint {
   // Please also see WebClientDemo.gwt.xml.
   private static final Logger REMOTE_LOG = Logger.getLogger("REMOTE_LOG");
 
+  // TODO (Yuri Z.) Change the implementation to RemoteProfileManagerImpl when
+  // it will be ready.
   private final ProfileManager profiles = new ProfileManagerImpl();
 
   @UiField
@@ -192,7 +194,7 @@ public class WebClient implements EntryPoint {
           }
         };
     Search search = SimpleSearch.create(RemoteSearchService.create(), waveStore);
-    SearchPresenter.create(search, searchPanel, selectHandler);
+    SearchPresenter.create(search, searchPanel, selectHandler, profiles);
   }
 
   private void setupWavePanel() {

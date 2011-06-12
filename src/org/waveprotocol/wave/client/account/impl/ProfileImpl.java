@@ -34,7 +34,7 @@ import java.util.List;
  */
 public final class ProfileImpl implements Profile {
 
-  private final ProfileManagerImpl manager;
+  private final AbstractProfileManager<? super ProfileImpl> manager;
   private final ParticipantId id;
 
   // Lazily loaded values
@@ -42,7 +42,7 @@ public final class ProfileImpl implements Profile {
   private String fullName;
   private String imageUrl;
 
-  public ProfileImpl(ProfileManagerImpl manager, ParticipantId id) {
+  public ProfileImpl(AbstractProfileManager<ProfileImpl> manager, ParticipantId id) {
     this.manager = manager;
     this.id = id;
   }
@@ -122,5 +122,11 @@ public final class ProfileImpl implements Profile {
     this.imageUrl = imageUrl != null ? imageUrl : this.imageUrl;
 
     manager.fireOnUpdated(this);
+  }
+
+  @Override
+  public String toString() {
+    return "ProfileImpl [id=" + id + ", firstName=" + firstName + ", fullName=" + fullName
+        + ", imageUrl=" + imageUrl + "]";
   }
 }

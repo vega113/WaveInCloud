@@ -185,6 +185,7 @@
     <mkdir dir="${gen.dir}/messages"/>
     <pstmessage proto="${build.proto.dir}/org/waveprotocol/box/common/comms/WaveClientRpc.class"/>
     <pstmessage proto="${build.proto.dir}/org/waveprotocol/box/search/SearchProto.class"/>
+    <pstmessage proto="${build.proto.dir}/org/waveprotocol/box/profile/ProfilesProto.class"/>
     <pstmessage proto="${build.proto.dir}/org/waveprotocol/box/server/rpc/Rpc.class"/>
     <pstmessage proto="${build.proto.dir}/org/waveprotocol/wave/federation/Proto.class"/>
     <pstmessage proto="${build.proto.dir}/org/waveprotocol/wave/concurrencycontrol/ClientServer.class"/>
