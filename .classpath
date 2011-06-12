@@ -54,7 +54,6 @@
 	<classpathentry kind="lib" path="third_party/runtime/oauth/oauth-provider.jar" sourcepath="third_party/runtime/oauth/oauth-provider-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/protobuf-format-java/protobuf-format-java-1.1.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/protobuf/protobuf-java-2.3.0.jar" sourcepath="third_party/runtime/protobuf/protobuf-2.3.0-src.jar"/>
-	<classpathentry kind="lib" path="third_party/runtime/socketio/socketio-java.jar" sourcepath="third_party/runtime/socketio/socketio-java-src.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/websocket/websocket.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/whack/whack.jar"/>
 	<classpathentry kind="lib" path="third_party/runtime/whack/xmpp.jar"/>
@@ -72,5 +71,6 @@
 	<classpathentry kind="lib" path="third_party/test/junit/src.jar"/>
 	<classpathentry kind="lib" path="third_party/test/mockito/mockito-all-1.8.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="third_party/runtime/socketio/socketio-java-20110114 .jar" sourcepath="third_party/runtime/socketio/socketio-java-20110114-src.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
