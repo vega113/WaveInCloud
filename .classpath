@@ -71,6 +71,6 @@
 	<classpathentry kind="lib" path="third_party/test/junit/src.jar"/>
 	<classpathentry kind="lib" path="third_party/test/mockito/mockito-all-1.8.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="third_party/runtime/socketio/socketio-java-20110114 .jar" sourcepath="third_party/runtime/socketio/socketio-java-20110114-src.jar"/>
+	<classpathentry kind="lib" path="third_party/runtime/socketio/socketio-java.jar" sourcepath="third_party/runtime/socketio/socketio-java-src.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
