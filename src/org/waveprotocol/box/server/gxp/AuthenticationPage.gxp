@@ -204,8 +204,16 @@
       </td>
     </tr>
   </table>
-  <br />
-  <br />
+  <div align="center" class="banner" id="banner">Search Shared waves @waveinabox.net</div>
+  <form action="http://www.google.com/cse" id="cse-search-box">
+  <div align="center">
+    <input type="hidden" name="cx" value="003357602236867382606:kksed_-tssg" />
+    <input type="hidden" name="ie" value="UTF-8" />
+    <input type="text" name="q" size="31" />
+    <input type="submit" name="sa" value="Search" />
+  </div>
+</form>
+<script type="text/javascript" src="http://www.google.com/cse/brand?form=cse-search-box&#38;lang=en"></script>
   <script type="text/javascript">
     var RESPONSE_STATUS_NONE = "NONE";
     var RESPONSE_STATUS_FAILED = "FAILED";

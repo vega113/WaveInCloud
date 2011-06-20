@@ -181,7 +181,7 @@ public class ServerRpcProvider {
       synchronized (provider.registeredServices) {
         for (RegisteredServiceMethod serviceMethod : provider.registeredServices.values()) {
           channel.expectMessage(serviceMethod.service.getRequestPrototype(serviceMethod.method));
-          LOG.fine("Expecting: " + serviceMethod.method.getFullName());
+          LOG.info("Expecting: " + serviceMethod.method.getFullName());
         }
       }
       channel.expectMessage(Rpc.CancelRpc.getDefaultInstance());
@@ -370,7 +370,7 @@ public class ServerRpcProvider {
     // Servlet where the websocket connection is served from.
     ServletHolder wsholder = addServlet("/socket", WaveWebSocketServlet.class);
     // TODO(zamfi): fix to let messages span frames.
-    wsholder.setInitParameter("bufferSize", "" + 1024 * 1024); // 1M buffer
+    wsholder.setInitParameter("bufferSize", "" + 1024 * 1024*4); // 1M buffer
 
     // Servlet where the websocket connection is served from.
     ServletHolder sioholder = addServlet("/socket.io/*", WaveSocketIOServlet.class );

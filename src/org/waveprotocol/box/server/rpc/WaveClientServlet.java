@@ -92,6 +92,8 @@ public class WaveClientServlet extends HttpServlet {
     // However, public waves aren't implemented yet. For now, we'll just redirect users
     // who haven't signed in to the sign in page.
     if (id == null) {
+      // Check if there's a valid waveref specified.
+      String path = request.getQueryString();
       response.sendRedirect(sessionManager.getLoginUrl("/"));
       return;
     }

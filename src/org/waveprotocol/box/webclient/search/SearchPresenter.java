@@ -156,7 +156,7 @@ public final class SearchPresenter
   private void initToolbarMenu() {
     GroupingToolbar.View toolbarUi = searchUi.getToolbar();
     ToolbarView group = toolbarUi.addGroup();
-    new ToolbarButtonViewBuilder().setText("New Wave").applyTo(
+    new ToolbarButtonViewBuilder().setText("New Wave").setTooltip("Create a new wave").applyTo(
         group.addClickButton(), new ToolbarClickButton.Listener() {
           @Override
           public void onClicked() {

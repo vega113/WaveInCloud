@@ -11,5 +11,6 @@
       to this blip from other blips</div>
     <g:TextBox ui:field="linkInfoBox" styleName="{style.link}"
       enabled="false"></g:TextBox>
+    <g:Label ui:field="waverefLink" styleName="{style.waverefLink}"></g:Label>
   </g:HTMLPanel>
 </ui:UiBinder>

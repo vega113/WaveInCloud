@@ -1,0 +1,9 @@
+<script>
+$(document).ready(
+    function(){
+      $("a").click(function(){
+        $("a").toggleClass(".digest.selected");
+      });
+    }
+  )
+</script>

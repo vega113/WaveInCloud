@@ -40,6 +40,7 @@ import org.waveprotocol.box.webclient.client.events.WaveCreationEvent;
 import org.waveprotocol.box.webclient.client.events.WaveCreationEventHandler;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEvent;
 import org.waveprotocol.box.webclient.client.events.WaveSelectionEventHandler;
+import org.waveprotocol.box.webclient.profile.RemoteProfileManagerImpl;
 import org.waveprotocol.box.webclient.search.RemoteSearchService;
 import org.waveprotocol.box.webclient.search.Search;
 import org.waveprotocol.box.webclient.search.SearchPanelRenderer;
@@ -52,7 +53,6 @@ import org.waveprotocol.box.webclient.widget.error.ErrorIndicatorPresenter;
 import org.waveprotocol.box.webclient.widget.frame.FramedPanel;
 import org.waveprotocol.box.webclient.widget.loading.LoadingIndicator;
 import org.waveprotocol.wave.client.account.ProfileManager;
-import org.waveprotocol.wave.client.account.impl.ProfileManagerImpl;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtml;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.common.util.AsyncHolder.Accessor;
@@ -84,9 +84,7 @@ public class WebClient implements EntryPoint {
   // Please also see WebClientDemo.gwt.xml.
   private static final Logger REMOTE_LOG = Logger.getLogger("REMOTE_LOG");
 
-  // TODO (Yuri Z.) Change the implementation to RemoteProfileManagerImpl when
-  // it will be ready.
-  private final ProfileManager profiles = new ProfileManagerImpl();
+  private final ProfileManager profiles = new RemoteProfileManagerImpl();
 
   @UiField
   SplitLayoutPanel splitPanel;
