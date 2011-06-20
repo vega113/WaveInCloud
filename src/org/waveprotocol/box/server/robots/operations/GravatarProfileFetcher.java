@@ -54,14 +54,16 @@ public class GravatarProfileFetcher implements ProfilesFetcher {
   private static final String EXCEPTION_FETCHING_PROFILE = "Exception while fetching profile for: ";
   private static final String GRAVATAR_BASIC_URL = "http://www.gravatar.com/";
   private static final String GRAVATAR_URL = "http://www.gravatar.com/avatar/";
-  private static final long EXPIRE_AFTER = 3;
+  private static final long EXPIRE_AFTER = 1;
 
   private static String ROBOT_APP_ID = "wavyemail";
 
   private static final ConcurrentMap<String, ParticipantProfile> PROFILES_CACHE = new MapMaker()
-      .expireAfterAccess(EXPIRE_AFTER, TimeUnit.HOURS).makeMap();
+      .expireAfterWrite(EXPIRE_AFTER, TimeUnit.HOURS).makeMap();
    
   private static final Map<String, ParticipantProfile> KNOWN_PROFILES_CACHE = Maps.newHashMap();
+
+  private static final String DEFAULT_WAVE_DOMAIN = "vegalabz.com";
   
   static {
     KNOWN_PROFILES_CACHE.put("@waveinabox.net", new ParticipantProfile("@waveinabox.net",
@@ -85,7 +87,7 @@ public class GravatarProfileFetcher implements ProfilesFetcher {
   private GravatarProfileFetcher() {
   }
 
-  public ParticipantProfile fetchFullProfile(String email, String address)
+  public ParticipantProfile fetchFullProfile(String email, String waveAddress)
       throws ProfileFetchException {
     String imageUrl = null;
     String name = null;
@@ -140,7 +142,7 @@ public class GravatarProfileFetcher implements ProfilesFetcher {
     } catch (JSONException e) {
       throw new ProfileFetchException(EXCEPTION_FETCHING_PROFILE + email, e);
     }
-    ParticipantProfile profile = new ParticipantProfile(address, name, imageUrl, profileUrl);
+    ParticipantProfile profile = new ParticipantProfile(waveAddress, name, imageUrl, profileUrl);
     PROFILES_CACHE.put(email, profile);
     return profile;
   }
@@ -155,37 +157,50 @@ public class GravatarProfileFetcher implements ProfilesFetcher {
     return GRAVATAR_URL + emailHash + ".jpg" + "?s=100&d=identicon";
   }
 
-  private ParticipantProfile fetchOnlyGravatarImage(String email) throws ProfileFetchException {
+  private ParticipantProfile fetchOnlyGravatarImage(String waveAddress, String email) throws ProfileFetchException {
     ParticipantProfile pTemp = null;
     pTemp = FetchProfilesService.ProfilesFetcher.SIMPLE_PROFILE_FETCHER.fetchProfile(email);
     ParticipantProfile profile =
-        new ParticipantProfile(email, pTemp.getName(), getImageUrl(email), pTemp.getProfileUrl());
-    PROFILES_CACHE.put(email, profile);
+        new ParticipantProfile(waveAddress, pTemp.getName(), getImageUrl(email), pTemp.getProfileUrl());
     return profile;
   }
 
   @Override
-  public ParticipantProfile fetchProfile(String address) {
-    Preconditions.checkNotNull(address);
-    if (PROFILES_CACHE.containsKey(address)) {
-      return PROFILES_CACHE.get(address);
-    } else if (KNOWN_PROFILES_CACHE.containsKey(address)) {
-      return KNOWN_PROFILES_CACHE.get(address);
+  public ParticipantProfile fetchProfile(String waveAddress) {
+    Preconditions.checkNotNull(waveAddress);
+    if (PROFILES_CACHE.containsKey(waveAddress)) {
+      return PROFILES_CACHE.get(waveAddress);
+    } else if (KNOWN_PROFILES_CACHE.containsKey(waveAddress)) {
+      return KNOWN_PROFILES_CACHE.get(waveAddress);
     }
     ParticipantProfile participantProfile = null;
-    String[] split = address.split("@");
-    String wavyEmailAddress = split[0] + "_" + split[1] + "@" + ROBOT_APP_ID + ".appspotmail.com";
-    try {
-      participantProfile = fetchFullProfile(wavyEmailAddress, address);
-    } catch (ProfileFetchException e) {
+    String[] split = waveAddress.split("@");
+    String wavyEmailAddress;
+    if (split[1].equals(DEFAULT_WAVE_DOMAIN)) {
+      wavyEmailAddress = split[0] + "@" + ROBOT_APP_ID + ".appspotmail.com";
       try {
-        LOG.log(Level.FINE, EXCEPTION_FETCHING_PROFILE + address, e);
-        participantProfile = fetchOnlyGravatarImage(address);
-      } catch (ProfileFetchException e1) {
-        LOG.log(Level.SEVERE, EXCEPTION_FETCHING_PROFILE + address, e);
-        participantProfile = new ParticipantProfile();
+        participantProfile = fetchFullProfile(wavyEmailAddress, waveAddress);
+      } catch (ProfileFetchException e) {
+        LOG.fine("Can't load full profile for: " + wavyEmailAddress);
       }
     }
+    if (!split[1].equals(DEFAULT_WAVE_DOMAIN) || participantProfile == null) {
+      wavyEmailAddress = split[0] + "_" + split[1] + "@" + ROBOT_APP_ID + ".appspotmail.com";
+      try {
+        participantProfile = fetchFullProfile(wavyEmailAddress, waveAddress);
+      } catch (ProfileFetchException e) {
+        LOG.fine("Can't load full profile for: " + wavyEmailAddress);
+        try {
+          wavyEmailAddress = split[0] + "@" + ROBOT_APP_ID + ".appspotmail.com";
+          LOG.fine("Trying to fetch only Gravatar image for: " + wavyEmailAddress);
+          participantProfile = fetchOnlyGravatarImage(waveAddress, wavyEmailAddress);
+        } catch (ProfileFetchException e1) {
+          LOG.log(Level.SEVERE, EXCEPTION_FETCHING_PROFILE + waveAddress + "wavyEmail: " + wavyEmailAddress, e1);
+          participantProfile = new ParticipantProfile();
+        }
+      }
+    }
+    PROFILES_CACHE.put(waveAddress, participantProfile);
     return participantProfile;
   }
 }
