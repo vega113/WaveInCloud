@@ -16,6 +16,17 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
   <title>Robot Successfully Registered</title>
   <link rel="shortcut icon" href="/static/favicon.ico" />
+  <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+        </script>
+        <script type="text/javascript">
+        try{
+        var pageTracker = _gat._getTracker("UA-13269470-9");
+        pageTracker._trackPageview();
+        } catch(err) {}
+        </script>
+  
   </head>
 
   <body>

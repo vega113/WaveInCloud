@@ -20,7 +20,17 @@
   <link type="text/css" rel="stylesheet" href="/static/auth.css" />
   <title>Register a New Account - Wave in a Box</title>
   <link rel="shortcut icon" href="/static/favicon.ico" />
-
+  <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+        </script>
+        <script type="text/javascript">
+        try{
+        var pageTracker = _gat._getTracker("UA-13269470-9");
+        pageTracker._trackPageview();
+        } catch(err) {}
+        </script>
+  
   </head>
   <body onload="init()">
   <table width="100%" border="0" align="center" cellpadding="0"
