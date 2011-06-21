@@ -33,12 +33,12 @@ import com.google.wave.api.impl.DocumentModifyQuery;
 
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.util.OperationUtil;
-import org.waveprotocol.wave.client.gadget.GadgetXmlUtil;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.document.Document;
 import org.waveprotocol.wave.model.document.RangedAnnotation;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
+import org.waveprotocol.wave.model.gadget.GadgetXmlUtil;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.opbased.OpBasedWavelet;
 
@@ -405,7 +405,10 @@ public class DocumentModifyService implements OperationService {
         if (element.isGadget()) {
           Gadget gadget = (Gadget) element;
           XmlStringBuilder xml =
-              GadgetXmlUtil.constructXml(gadget.getUrl(), "", gadget.getAuthor());
+              GadgetXmlUtil.constructXml(gadget.getUrl(), "", gadget.getAuthor(), null,
+                  gadget.getProperties());
+          // TODO (Yuri Z.) Make it possible to specify a location to insert the
+          // gadget and implement insertion at the specified location.
           LineContainers.appendLine(doc, xml);
         } else {
           // TODO(ljvderijk): Inserting other elements.
