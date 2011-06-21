@@ -19,6 +19,7 @@ package org.waveprotocol.wave.client.editor.toolbar;
 import org.waveprotocol.wave.client.editor.EditorContext;
 import org.waveprotocol.wave.client.editor.EditorUpdateEvent;
 import org.waveprotocol.wave.client.editor.EditorUpdateEvent.EditorUpdateListener;
+import org.waveprotocol.wave.client.editor.toolbar.ButtonUpdater.Controller;
 import org.waveprotocol.wave.model.document.util.Range;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 

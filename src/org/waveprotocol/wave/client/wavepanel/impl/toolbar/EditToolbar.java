@@ -18,6 +18,7 @@
 package org.waveprotocol.wave.client.wavepanel.impl.toolbar;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
@@ -39,15 +40,21 @@ import org.waveprotocol.wave.client.editor.toolbar.ParagraphTraversalController;
 import org.waveprotocol.wave.client.editor.toolbar.TextSelectionController;
 import org.waveprotocol.wave.client.editor.util.EditorAnnotationUtil;
 import org.waveprotocol.wave.client.gadget.GadgetXmlUtil;
+import org.waveprotocol.wave.client.wavepanel.impl.toolbar.attachment.AttachmentPopupWidget;
+import org.waveprotocol.wave.client.wavepanel.view.AttachmentPopupView;
+import org.waveprotocol.wave.client.wavepanel.view.AttachmentPopupView.Listener;
 import org.waveprotocol.wave.client.widget.toolbar.SubmenuToolbarView;
 import org.waveprotocol.wave.client.widget.toolbar.ToolbarButtonViewBuilder;
 import org.waveprotocol.wave.client.widget.toolbar.ToolbarView;
 import org.waveprotocol.wave.client.widget.toolbar.ToplevelToolbarWidget;
 import org.waveprotocol.wave.client.widget.toolbar.buttons.ToolbarClickButton;
 import org.waveprotocol.wave.client.widget.toolbar.buttons.ToolbarToggleButton;
+import org.waveprotocol.wave.media.model.AttachmentIdGenerator;
+import org.waveprotocol.wave.media.model.AttachmentIdGeneratorImpl;
 import org.waveprotocol.wave.model.document.util.FocusedRange;
 import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
+import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 /**
@@ -99,24 +106,26 @@ public class EditToolbar {
   private final EditorToolbarResources.Css css;
   private final ToplevelToolbarWidget toolbarUi;
   private final ParticipantId user;
+  private final AttachmentIdGenerator attachmentIdGenerator;
 
   private final EditorContextAdapter editor = new EditorContextAdapter(null);
   private final ButtonUpdater updater = new ButtonUpdater(editor);
 
   private EditToolbar(EditorToolbarResources.Css css, ToplevelToolbarWidget toolbarUi,
-      ParticipantId user) {
+      ParticipantId user, IdGenerator idGenerator) {
     this.css = css;
     this.toolbarUi = toolbarUi;
     this.user = user;
+    attachmentIdGenerator = new AttachmentIdGeneratorImpl(idGenerator);
   }
 
   /**
    * Attaches editor behaviour to a toolbar, adding all the edit buttons.
    */
-  public static EditToolbar create(ParticipantId user) {
+  public static EditToolbar create(ParticipantId user, IdGenerator idGenerator) {
     ToplevelToolbarWidget toolbarUi = new ToplevelToolbarWidget();
     EditorToolbarResources.Css css = EditorToolbarResources.Loader.res.css();
-    return new EditToolbar(css, toolbarUi, user);
+    return new EditToolbar(css, toolbarUi, user, idGenerator);
   }
 
   /** Constructs the initial set of actions in the toolbar. */
@@ -154,6 +163,12 @@ public class EditToolbar {
 
     group = toolbarUi.addGroup();
     createInsertGadgetButton(group, user);
+    
+    group = toolbarUi.addGroup();
+    createInsertAttachmentButton(group, user);
+    
+    group = toolbarUi.addGroup();
+    new ToolbarButtonViewBuilder().setText("").applyTo(group.addClickButton(),null);
   }
 
   private void createBoldButton(ToolbarView toolbar) {
@@ -294,6 +309,53 @@ public class EditToolbar {
           }
         });
   }
+  
+  private void createInsertAttachmentButton(ToolbarView toolbar, final ParticipantId user) {
+    new ToolbarButtonViewBuilder().setIcon(css.insertAttachment()).setTooltip("Insert attachment")
+        .applyTo(toolbar.addClickButton(), new ToolbarClickButton.Listener() {
+          @Override
+          public void onClicked() {
+            AttachmentPopupView attachmentView = new AttachmentPopupWidget();
+            attachmentView.init(new Listener() {
+
+              @Override
+              public void onShow() {
+              }
+
+              @Override
+              public void onHide() {
+              }
+
+              @Override
+              public void onDone(String id, String fullFileName) {
+                // Insert a file name linking to the attachment URL.
+                int lastSlashPos = fullFileName.lastIndexOf("/");
+                int lastBackSlashPos = fullFileName.lastIndexOf("\\");
+                String fileName = fullFileName;
+                if (lastSlashPos != -1) {
+                  fileName = fullFileName.substring(lastSlashPos + 1, fullFileName.length());
+                } else if (lastBackSlashPos != -1) {
+                  fileName = fullFileName.substring(lastBackSlashPos + 1, fullFileName.length());
+                }
+                int from = editor.getDocument().size();
+                LineContainers.appendLine(editor.getDocument(),
+                    XmlStringBuilder.createFromXmlString(fileName));
+                int to = editor.getDocument().size() - 1;
+                String linkValue =
+                    GWT.getHostPageBaseURL() + "attachment/" + id + "?fileName=" + fileName;
+                EditorAnnotationUtil.setAnnotationOverRange(editor.getDocument(),
+                    editor.getCaretAnnotations(), Link.MANUAL_KEY, linkValue, from, to);
+                EditorAnnotationUtil.setAnnotationOverRange(editor.getDocument(),
+                    editor.getCaretAnnotations(), "attachment/id", id, from, to);
+                EditorAnnotationUtil.setAnnotationOverRange(editor.getDocument(),
+                    editor.getCaretAnnotations(), "attachment/fileName", fileName, from, to);
+              }
+            });
+            attachmentView.setAttachmentId(attachmentIdGenerator.newAttachmentId());
+            attachmentView.show();
+          }
+        });
+}
 
   private void createInsertLinkButton(ToolbarView toolbar) {
     // TODO (Yuri Z.) use createTextSelectionController when the full

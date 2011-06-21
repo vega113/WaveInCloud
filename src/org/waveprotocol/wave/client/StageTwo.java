@@ -151,6 +151,9 @@ public interface StageTwo {
 
   /** @return the profile manager. */
   ProfileManager getProfileManager();
+  
+  /** return the id generator. */
+  IdGenerator getIdGenerator();
 
   /** @return the communication channel connector. */
   MuxConnector getConnector();
@@ -310,7 +313,8 @@ public interface StageTwo {
       return signedInuser == null ? signedInuser = createSignedInUser() : signedInuser;
     }
 
-    protected final IdGenerator getIdGenerator() {
+    @Override
+    public final IdGenerator getIdGenerator() {
       return idGenerator == null ? idGenerator = createIdGenerator() : idGenerator;
     }
 
