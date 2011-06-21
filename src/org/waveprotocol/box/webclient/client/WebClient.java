@@ -22,14 +22,16 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.UIObject;
@@ -56,8 +58,17 @@ import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtml;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.common.util.AsyncHolder.Accessor;
+import org.waveprotocol.wave.client.common.util.UserAgent;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
+import org.waveprotocol.wave.client.scheduler.ScheduleCommand;
+import org.waveprotocol.wave.client.scheduler.Scheduler;
 import org.waveprotocol.wave.client.widget.common.ImplPanel;
+import org.waveprotocol.wave.client.widget.popup.CenterPopupPositioner;
+import org.waveprotocol.wave.client.widget.popup.PopupChrome;
+import org.waveprotocol.wave.client.widget.popup.PopupChromeFactory;
+import org.waveprotocol.wave.client.widget.popup.PopupFactory;
+import org.waveprotocol.wave.client.widget.popup.RelativePopupPositioner;
+import org.waveprotocol.wave.client.widget.popup.UniversalPopup;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -83,6 +94,36 @@ public class WebClient implements EntryPoint {
   // server, nothing else in the client should use java.util.logging.
   // Please also see WebClientDemo.gwt.xml.
   private static final Logger REMOTE_LOG = Logger.getLogger("REMOTE_LOG");
+  
+  private static final UniversalPopup popup = createTurbulencePopup();
+  
+  private static UniversalPopup createTurbulencePopup() {
+    PopupChrome chrome = PopupChromeFactory.createPopupChrome();
+    UniversalPopup popup;
+    if (UserAgent.isFirefox()) {
+      popup =
+          PopupFactory.createPopup(null, new RelativePopupPositioner() {
+            
+            @Override
+            public void setPopupPositionAndMakeVisible(Element relative, final Element p) {
+              ScheduleCommand.addCommand(new Scheduler.Task() {
+                @Override
+                public void execute() {
+                  p.getStyle().setLeft((RootPanel.get().getOffsetWidth() - p.getOffsetWidth()) / 2, Unit.PX);
+                  p.getStyle().setTop(100, Unit.PX);
+                  p.getStyle().setVisibility(Visibility.VISIBLE);
+                }
+              });
+            }
+          }, chrome,
+              true);
+    } else {
+      popup = PopupFactory.createPopup(null, new CenterPopupPositioner(), chrome, true);
+    }
+    popup.add(new HTML("<div style='color: red; padding: 5px; text-align: center;'><b>A turbulence detected!<br></br>"
+        + " Please save your last changes to somewhere and reload the wave.</b></div>"));
+    return popup;
+  }
 
   private final ProfileManager profiles = new RemoteProfileManagerImpl();
 
@@ -229,8 +270,7 @@ public class WebClient implements EntryPoint {
               element.setClassName("offline");
               if (!isTurbulenceDetected) {
                 isTurbulenceDetected = true;
-                Window.alert("A turbulence detected!"
-                    + " Please save your last changes to somewhere and reload the wave.");
+                popup.show();
               }
               break;
             case RECONNECTING:
