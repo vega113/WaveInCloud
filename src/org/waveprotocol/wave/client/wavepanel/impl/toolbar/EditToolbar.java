@@ -41,6 +41,8 @@ import org.waveprotocol.wave.client.editor.toolbar.TextSelectionController;
 import org.waveprotocol.wave.client.editor.util.EditorAnnotationUtil;
 import org.waveprotocol.wave.client.gadget.GadgetXmlUtil;
 import org.waveprotocol.wave.client.wavepanel.impl.toolbar.attachment.AttachmentPopupWidget;
+import org.waveprotocol.wave.client.wavepanel.impl.toolbar.gadget.popup.GadgetPopupView;
+import org.waveprotocol.wave.client.wavepanel.impl.toolbar.gadget.popup.GadgetPopupWidget;
 import org.waveprotocol.wave.client.wavepanel.view.AttachmentPopupView;
 import org.waveprotocol.wave.client.wavepanel.view.AttachmentPopupView.Listener;
 import org.waveprotocol.wave.client.widget.toolbar.SubmenuToolbarView;
@@ -301,11 +303,27 @@ public class EditToolbar {
         .setIcon(css.insertGadget())
         .applyTo(toolbar.addClickButton(), new ToolbarClickButton.Listener() {
           @Override public void onClicked() {
-            String url = Window.prompt("Gadget URL", YES_NO_MAYBE_GADGET);
-            if (url != null && !url.isEmpty()) {
-              XmlStringBuilder xml = GadgetXmlUtil.constructXml(url, "", user.getAddress());
-              LineContainers.appendLine(editor.getDocument(), xml);
-            }
+            GadgetPopupView gadgetPopup = new GadgetPopupWidget();
+            gadgetPopup.init(new GadgetPopupWidget.Listener() {
+              
+              @Override
+              public void onShow() {
+              }
+              
+              @Override
+              public void onInsert(String url) {
+                if (url != null && !url.isEmpty()) {
+                  XmlStringBuilder xml = GadgetXmlUtil.constructXml(url, "", user.getAddress());
+                  LineContainers.appendLine(editor.getDocument(), xml);
+                }
+              }
+              
+              @Override
+              public void onHide() {
+                
+              }
+            });
+            gadgetPopup.show();
           }
         });
   }

@@ -1,0 +1,27 @@
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder" xmlns:g='urn:import:com.google.gwt.user.client.ui'
+  xmlns:w="urn:import:org.waveprotocol.wave.client.widget.common"
+  xmlns:my="urn:import:org.waveprotocol.wave.client.wavepanel.impl.toolbar.gadget.info"
+  >
+  <ui:with field='style'
+    type='org.waveprotocol.wave.client.wavepanel.impl.toolbar.gadget.popup.GadgetPopupWidget.Style' />
+  <ui:with field='res'
+    type='org.waveprotocol.wave.client.wavepanel.impl.toolbar.gadget.popup.GadgetPopupWidget.Resources' />
+    <g:VerticalPanel>
+   <g:HorizontalPanel spacing="4">
+      <g:VerticalPanel spacing="4">
+        <g:Label>Category</g:Label>
+        <g:ListBox ui:field="dropbox" styleName="{style.dropbox}"></g:ListBox>
+      </g:VerticalPanel>
+      <g:VerticalPanel spacing="4">
+        <g:Label>Name</g:Label>
+        <g:ListBox ui:field="multibox"></g:ListBox>
+      </g:VerticalPanel>
+      <g:VerticalPanel spacing="4">
+        <g:Label>Gadget name or URL</g:Label>
+        <g:SimplePanel ui:field="suggestPanel"></g:SimplePanel>
+      </g:VerticalPanel>
+      <g:Button ui:field="insertBtn" styleName="{style.insertBtn}">Insert gadget</g:Button>
+    </g:HorizontalPanel>
+    <my:GadgetInfoWidget ui:field="gadgetInfoBox"></my:GadgetInfoWidget>
+    </g:VerticalPanel>
+</ui:UiBinder>

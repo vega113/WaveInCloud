@@ -18,6 +18,9 @@ package org.waveprotocol.wave.client.wavepanel.impl.toolbar.attachment;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -38,7 +41,11 @@ import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RootPanel;
 
+import org.waveprotocol.wave.client.common.util.UserAgent;
+import org.waveprotocol.wave.client.scheduler.ScheduleCommand;
+import org.waveprotocol.wave.client.scheduler.Scheduler;
 import org.waveprotocol.wave.client.wavepanel.view.AttachmentPopupView;
 import org.waveprotocol.wave.client.widget.popup.CenterPopupPositioner;
 import org.waveprotocol.wave.client.widget.popup.PopupChrome;
@@ -46,6 +53,7 @@ import org.waveprotocol.wave.client.widget.popup.PopupChromeFactory;
 import org.waveprotocol.wave.client.widget.popup.PopupEventListener;
 import org.waveprotocol.wave.client.widget.popup.PopupEventSourcer;
 import org.waveprotocol.wave.client.widget.popup.PopupFactory;
+import org.waveprotocol.wave.client.widget.popup.RelativePopupPositioner;
 import org.waveprotocol.wave.client.widget.popup.UniversalPopup;
 import org.waveprotocol.wave.media.model.AttachmentId;
 
@@ -179,7 +187,27 @@ public final class AttachmentPopupWidget extends Composite implements Attachment
 
     // Wrap in a popup.
     PopupChrome chrome = PopupChromeFactory.createPopupChrome();
-    popup = PopupFactory.createPopup(null, new CenterPopupPositioner(), chrome, true);
+    if (UserAgent.isFirefox()) {
+      popup =
+          PopupFactory.createPopup(this.getElement(), new RelativePopupPositioner() {
+            
+            @Override
+            public void setPopupPositionAndMakeVisible(Element relative, final Element p) {
+              ScheduleCommand.addCommand(new Scheduler.Task() {
+                @Override
+                public void execute() {
+                  p.getStyle().setLeft((RootPanel.get().getOffsetWidth() - p.getOffsetWidth()) / 2, Unit.PX);
+                  int top = (RootPanel.get().getOffsetHeight() - p.getOffsetHeight()) / 4;
+                  p.getStyle().setTop(Math.max(top, 280), Unit.PX);
+                  p.getStyle().setVisibility(Visibility.VISIBLE);
+                }
+              });
+            }
+          }, chrome,
+              true);
+    } else {
+      popup = PopupFactory.createPopup(null, new CenterPopupPositioner(), chrome, true);
+    }
     popup.add(this);
     popup.addPopupEventListener(this);
   }

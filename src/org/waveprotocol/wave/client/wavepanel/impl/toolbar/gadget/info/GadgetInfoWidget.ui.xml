@@ -1,0 +1,46 @@
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder" xmlns:g='urn:import:com.google.gwt.user.client.ui'
+  xmlns:w="urn:import:org.waveprotocol.wave.client.widget.common">
+  <ui:with field='style'
+    type='org.waveprotocol.wave.client.wavepanel.impl.toolbar.gadget.info.GadgetInfoWidget.Style' />
+  <ui:with field='res'
+    type='org.waveprotocol.wave.client.wavepanel.impl.toolbar.gadget.info.GadgetInfoWidget.Resources' /> 
+    <g:CaptionPanel captionText="Gadget Info" height="125px">
+    <g:HorizontalPanel>
+      <g:VerticalPanel styleName="{style.textInfoPnl}" width="400px">
+        <g:HorizontalPanel>
+          <g:Label>Name:</g:Label>
+          <g:Label styleName="{style.valueTxt}" ui:field="name"></g:Label>
+        </g:HorizontalPanel>
+        <g:HorizontalPanel>
+          <g:Label>Description:</g:Label>
+          <g:Label styleName="{style.valueTxt}" ui:field="description"></g:Label>
+        </g:HorizontalPanel>
+            <g:HorizontalPanel>
+              <g:HorizontalPanel horizontalAlignment="ALIGN_LEFT">
+                <g:Label>Primary category:</g:Label>
+                <g:Label styleName="{style.valueTxt}" ui:field="primaryCategory"></g:Label>
+              </g:HorizontalPanel>
+              <g:HTML width="10px"></g:HTML>
+              <g:HorizontalPanel horizontalAlignment="ALIGN_RIGHT">
+                <g:Label>Secondary category:</g:Label>
+                <g:Label styleName="{style.valueTxt}" ui:field="secondaryCategory"></g:Label>
+              </g:HorizontalPanel>
+            </g:HorizontalPanel>
+           <g:HorizontalPanel>
+            <g:Label>URL:</g:Label>
+            <g:Label styleName="{style.urlStyle}" ui:field="gadgetUrl"></g:Label>
+          </g:HorizontalPanel>
+          <g:HorizontalPanel>
+            <g:Label>Author:</g:Label>
+            <g:Label styleName="{style.valueTxt}" ui:field="author"></g:Label>
+          </g:HorizontalPanel>
+          <g:HorizontalPanel visible="false">
+            <g:Label>Submitted by:</g:Label>
+            <g:Label styleName="{style.valueTxt}" ui:field="submittedby"></g:Label>
+          </g:HorizontalPanel>
+      </g:VerticalPanel>
+      <g:VerticalPanel styleName="{style.imgInfoPnl}" ui:field="gadgetImagePanel">
+      </g:VerticalPanel>
+    </g:HorizontalPanel>
+  </g:CaptionPanel>
+</ui:UiBinder>
