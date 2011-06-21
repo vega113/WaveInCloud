@@ -170,7 +170,7 @@ public class WebClient implements EntryPoint {
     // sticks inline styles on elements without permission. They must be
     // cleared.
     self.getElement().getStyle().clearPosition();
-    splitPanel.setWidgetMinSize(searchPanel, 300);
+    splitPanel.setWidgetMinSize(searchPanel, 330);
 
     if (LogLevel.showDebug()) {
       logPanel.enable();
