@@ -59,9 +59,9 @@ import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.supplement.ObservableSupplementedWave;
 import org.waveprotocol.wave.model.util.CollectionUtils;
+import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
 import org.waveprotocol.wave.model.util.ReadableStringSet;
 import org.waveprotocol.wave.model.util.StringMap;
-import org.waveprotocol.wave.model.util.ReadableStringMap.ProcV;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.Collection;
@@ -80,6 +80,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
     implements GadgetRpcListener, GadgetWaveletListener, GadgetUiListener {
 
   private static final String GADGET_RELAY_PATH = "gadgets/files/container/rpc_relay.html";
+  private static final long DEFAULT_HEIGHT = 100;
 
   /**
    * Helper class to analyze element changes in the gadget state and prefs.
@@ -918,9 +919,19 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
     if ("".equals(ui.getTitleLabelText()) && metadata.hasTitle()) {
       ui.setTitleLabelText(metadata.getTitle());
     }
-    long width = metadata.getPreferredWidth(view);
-    long height = metadata.getPreferredHeight(view);
+    int preferredWidth = (int)metadata.getPreferredWidth(view);
+    int preferredHeight = (int)metadata.getPreferredHeight(view);
+    int height = (int)(metadata.hasHeight() ? metadata.getHeight()  : preferredHeight);
+    int width = (int)(metadata.hasWidth() ? metadata.getWidth() : preferredWidth);
     registerWithController(url, width, height);
+    if (height > 0) {
+      setIframeHeight(String.valueOf(height));
+    } else {
+      setIframeHeight(String.valueOf(DEFAULT_HEIGHT));
+    }
+    if (width > 0){
+      setIframeWidth(String.valueOf(width));
+    }
   }
 
   /**
@@ -1014,6 +1025,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
     }
     GadgetDataStoreImpl.getInstance().getGadgetData(source, waveletName, getInstanceId(),
         new GadgetDataStore.DataCallback() {
+          @Override
           public void onError(String message, Throwable t) {
             if ((t != null) && (t.getMessage() != null)) {
               message += " " + t.getMessage();
@@ -1021,6 +1033,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
             showBrokenGadget(message);
           }
 
+          @Override
           public void onDataReady(GadgetMetadata metadata, String securityToken) {
             if (isActive()) {
               ReadableStringSet views = metadata.getViewSet();
@@ -1279,6 +1292,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
    */
   public void setGadgetPref(final String name, final String value) {
     ScheduleCommand.addCommand(new Task() {
+      @Override
       public void execute() {
         if (isActive()) {
           sendGadgetPrefRpc(getGadgetName(), name, value);
@@ -1945,6 +1959,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
      *
      * @return whether the blip is in edit state.
      */
+    @Override
     public boolean isEditing() {
       return (element != null)
           ? AnnotationPainter.isInEditingDocument(ContentElement.ELEMENT_MANAGER, element) : false;
