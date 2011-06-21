@@ -209,8 +209,8 @@
         bgcolor="#C3D9FF" dir="ltr">
         <tr>
           <td class="bubble"
-            style='font-family: arial; text-align: left; font-weight: bold; padding-right: 10px;'
-            dir="ltr"></td>
+            style='font-family: arial; text-align: center; font-weight: bold; padding-right: 10px;'
+            dir="ltr"> <div>Contact info - email: vega113@gmail.com wave: yuri@waveinabox.net Twitter: http://twitter.com/vega113t</div></td>
         </tr>
       </table>
       </td>
