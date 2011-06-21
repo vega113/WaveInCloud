@@ -125,6 +125,7 @@
       </table>
       </td>
       <td valign="top" align="center" style="padding-right: 30px">
+      <div style="text-align: center; align: center; font-size: smaller; padding-bottom: 5px;" ><i>Try </i> <a href="http://micro-box.appspot.com"><b>micro-box.appspot.com</b></a> <i>for mobile access</i></div>
       <form id="wiab_loginform" action="" method="post">
       <table class="form-noindent" style="padding: 1;" border="0"
         align="right">
