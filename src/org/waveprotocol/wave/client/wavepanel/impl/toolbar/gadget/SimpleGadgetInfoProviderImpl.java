@@ -282,7 +282,7 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
         GadgetInfoImpl
             .of("AccuWeather",
                 "The AccuWeather Wave Gadget is the perfect companion for trip planning. Select a location and date, and the gadget will return a forecast.",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/1sMZy",
+                GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/iODX9",
                 "AccuWeather.com", "Jeremy", "");
     GADGETS_CACHE.put(accuWeather.getName(), accuWeather);
 
