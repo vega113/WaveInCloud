@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 
 import org.apache.commons.cli.CommandLine;
 import org.waveprotocol.box.server.persistence.AccountStore;
-import org.waveprotocol.box.server.robots.agent.AbstractRobotAgent.ServerFrontendAddressHolder;
+import org.waveprotocol.box.server.robots.agent.AbstractBaseRobotAgent.ServerFrontendAddressHolder;
 import org.waveprotocol.wave.model.id.TokenGenerator;
 
 /**
@@ -38,7 +38,7 @@ import org.waveprotocol.wave.model.id.TokenGenerator;
 public class AbstractRobotAgentTest extends TestCase {
 
   @SuppressWarnings("serial")
-  private class FakeRobotAgent extends AbstractRobotAgent {
+  private class FakeRobotAgent extends AbstractCliRobotAgent {
 
     public FakeRobotAgent(String waveDomain, AccountStore accountStore,
         TokenGenerator tokenGenerator, ServerFrontendAddressHolder frontendAddressHolder) {

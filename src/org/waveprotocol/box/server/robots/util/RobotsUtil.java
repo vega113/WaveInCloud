@@ -17,6 +17,13 @@
 
 package org.waveprotocol.box.server.robots.util;
 
+import com.google.wave.api.Annotation;
+import com.google.wave.api.Blip;
+import com.google.wave.api.BlipContent;
+import com.google.wave.api.Range;
+import com.google.wave.api.Wavelet;
+
+import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.account.RobotAccountData;
 import org.waveprotocol.box.server.account.RobotAccountDataImpl;
 import org.waveprotocol.box.server.persistence.AccountStore;
@@ -96,7 +103,8 @@ public static class RobotRegistrationException extends Exception {
   public static RobotAccountData registerRobotUri(String location, ParticipantId robotId,
       AccountStore accountStore, TokenGenerator tokenGenerator, boolean isForced)
       throws RobotRegistrationException, PersistenceException {
-    if (accountStore.getAccount(robotId) != null) {
+    AccountData account = accountStore.getAccount(robotId);
+    if (account != null && !account.asRobot().getUrl().equals(location)) {
       if (isForced) {
         accountStore.removeAccount(robotId);
       } else {
@@ -137,6 +145,20 @@ public static class RobotRegistrationException extends Exception {
     return robotAccount;
   }
 
+  public static void copyWavelet(Wavelet fromWavelet, Wavelet toWavelet) {
+    // So far only contents of the root blip are copied.
+    Blip fromBlip = fromWavelet.getRootBlip();
+    Blip toBlip = toWavelet.getRootBlip();
+    for (BlipContent blipContent: fromBlip.all().values()) {
+      toBlip.append(blipContent);
+    }
+    for (Annotation annotation : fromBlip.getAnnotations()) {
+      Range range = annotation.getRange();
+      toBlip.range(range.getStart()+1, range.getEnd() + 1).annotate(annotation.getName(),
+          annotation.getValue());
+    }
+  }
+  
   private RobotsUtil() {
 
   }

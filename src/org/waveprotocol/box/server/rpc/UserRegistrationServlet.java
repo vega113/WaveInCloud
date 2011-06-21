@@ -19,6 +19,7 @@ package org.waveprotocol.box.server.rpc;
 
 import com.google.gxp.base.GxpContext;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
 import org.waveprotocol.box.server.CoreSettings;
@@ -28,6 +29,7 @@ import org.waveprotocol.box.server.authentication.PasswordDigest;
 import org.waveprotocol.box.server.gxp.UserRegistrationPage;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
+import org.waveprotocol.box.server.robots.agent.welcome.GreeterRobot;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.util.logging.Log;
@@ -45,18 +47,21 @@ import javax.servlet.http.HttpServletResponse;
  * 
  * @author josephg@gmail.com (Joseph Gentle)
  */
+@SuppressWarnings("serial")
 @Singleton
 public final class UserRegistrationServlet extends HttpServlet {
   private final AccountStore accountStore;
   private final String domain;
+  private final GreeterRobot greeter;
   
   private final Log LOG = Log.get(UserRegistrationServlet.class);
 
   @Inject
   public UserRegistrationServlet(AccountStore accountStore,
-      @Named(CoreSettings.WAVE_SERVER_DOMAIN) String domain) {
+      @Named(CoreSettings.WAVE_SERVER_DOMAIN) String domain, Injector injector) {
     this.accountStore = accountStore;
     this.domain = domain;
+    this.greeter = new GreeterRobot(injector);
   }
 
   @Override
@@ -64,7 +69,6 @@ public final class UserRegistrationServlet extends HttpServlet {
     writeRegistrationPage("", AuthenticationServlet.RESPONSE_STATUS_NONE, req.getLocale(), resp);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     req.setCharacterEncoding("UTF-8");
@@ -139,7 +143,12 @@ public final class UserRegistrationServlet extends HttpServlet {
       LOG.severe("Failed to create new account for " + id, e);
       return "An unexpected error occured while trying to create the account";
     }
-
+    // Create a welcome wave here.
+    try {
+      greeter.welcomeNewUser(account.getId());
+    } catch (IOException e) {
+      LOG.warning("Failed to create a welcome wavelet for " + id, e);
+    }
     return null;
   }
 

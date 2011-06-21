@@ -48,6 +48,7 @@ public class CoreSettings {
   public static final String GADGET_SERVER_PORT = "gadget_server_port";
   public static final String GADGET_SERVER_PATH = "gadget_server_path";
   public static final String ADMIN_USER = "admin_user";
+  public static final String  WELCOME_WAVE_ID = "welcome_wave_id";
   
   @Setting(name = WAVE_SERVER_DOMAIN)
   private static String waveServerDomain;
@@ -139,4 +140,8 @@ public class CoreSettings {
   @Setting(name = ADMIN_USER, description = "The admin user id for this server.",
       defaultValue = "@example.com")
   private static String adminUser;
+  
+  @Setting(name = WELCOME_WAVE_ID, description = "The welcome wave id.",
+      defaultValue = "UNDEFINED")
+  private static String welcomeWaveId;
 }

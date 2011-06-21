@@ -21,6 +21,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.inject.Injector;
+
 import junit.framework.TestCase;
 
 import org.mockito.Mock;
@@ -30,6 +32,7 @@ import org.waveprotocol.box.server.account.HumanAccountDataImpl;
 import org.waveprotocol.box.server.authentication.PasswordDigest;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
+import org.waveprotocol.box.server.robots.agent.welcome.GreeterRobot;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
@@ -51,13 +54,17 @@ public class UserRegistrationServletTest extends TestCase {
 
   @Mock private HttpServletRequest req;
   @Mock private HttpServletResponse resp;
+  
+  @Mock private GreeterRobot greeterRobot;
+  @Mock private Injector injector;
 
   @Override
   protected void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
     store = new MemoryStore();
     store.putAccount(account);
-    servlet = new UserRegistrationServlet(store, "example.com");
-    MockitoAnnotations.initMocks(this);
+    when(injector.getInstance(GreeterRobot.class)).thenReturn(greeterRobot);
+    servlet = new UserRegistrationServlet(store, "example.com", injector);
   }
 
   public void testRegisterNewUser() throws Exception {
