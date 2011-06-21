@@ -30,7 +30,9 @@ import org.waveprotocol.wave.client.doodad.link.Link.InvalidLinkException;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorContext;
 import org.waveprotocol.wave.client.editor.EditorContextAdapter;
+import org.waveprotocol.wave.client.editor.content.CMutableDocument;
 import org.waveprotocol.wave.client.editor.content.ContentElement;
+import org.waveprotocol.wave.client.editor.content.ContentNode;
 import org.waveprotocol.wave.client.editor.content.misc.StyleAnnotationHandler;
 import org.waveprotocol.wave.client.editor.content.paragraph.Paragraph;
 import org.waveprotocol.wave.client.editor.content.paragraph.Paragraph.LineStyle;
@@ -55,6 +57,7 @@ import org.waveprotocol.wave.media.model.AttachmentIdGenerator;
 import org.waveprotocol.wave.media.model.AttachmentIdGeneratorImpl;
 import org.waveprotocol.wave.model.document.util.FocusedRange;
 import org.waveprotocol.wave.model.document.util.LineContainers;
+import org.waveprotocol.wave.model.document.util.Point;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -303,6 +306,13 @@ public class EditToolbar {
         .setIcon(css.insertGadget())
         .applyTo(toolbar.addClickButton(), new ToolbarClickButton.Listener() {
           @Override public void onClicked() {
+            final int from;
+            int tmpFrom = -1;
+            FocusedRange focusedRange = editor.getSelectionHelper().getSelectionRange();
+            if (focusedRange != null) {
+              tmpFrom = focusedRange.getFocus();
+            }
+            from = tmpFrom;
             GadgetPopupView gadgetPopup = new GadgetPopupWidget();
             gadgetPopup.init(new GadgetPopupWidget.Listener() {
               
@@ -314,7 +324,13 @@ public class EditToolbar {
               public void onInsert(String url) {
                 if (url != null && !url.isEmpty()) {
                   XmlStringBuilder xml = GadgetXmlUtil.constructXml(url, "", user.getAddress());
-                  LineContainers.appendLine(editor.getDocument(), xml);
+                  if (from != -1) {
+                    CMutableDocument doc = editor.getDocument();
+                    Point<ContentNode> point = doc.locate(from);
+                    doc.insertXml(point, xml);
+                  } else {
+                    LineContainers.appendLine(editor.getDocument(), xml);
+                  }
                 }
               }
               
@@ -333,6 +349,13 @@ public class EditToolbar {
         .applyTo(toolbar.addClickButton(), new ToolbarClickButton.Listener() {
           @Override
           public void onClicked() {
+            final int from;
+            int tmpFrom = -1;
+            FocusedRange focusedRange = editor.getSelectionHelper().getSelectionRange();
+            if (focusedRange != null) {
+              tmpFrom = focusedRange.getFocus();
+            }
+            from = tmpFrom;
             AttachmentPopupView attachmentView = new AttachmentPopupWidget();
             attachmentView.init(new Listener() {
 
@@ -355,10 +378,18 @@ public class EditToolbar {
                 } else if (lastBackSlashPos != -1) {
                   fileName = fullFileName.substring(lastBackSlashPos + 1, fullFileName.length());
                 }
-                int from = editor.getDocument().size();
-                LineContainers.appendLine(editor.getDocument(),
-                    XmlStringBuilder.createFromXmlString(fileName));
-                int to = editor.getDocument().size() - 1;
+                XmlStringBuilder xml = XmlStringBuilder.createFromXmlString(fileName);
+                int to = -1;
+                int docSize = editor.getDocument().size();
+                if (from != -1) {
+                  CMutableDocument doc = editor.getDocument();
+                  Point<ContentNode> point = doc.locate(from);
+                  doc.insertXml(point, xml);
+                } else {
+                  LineContainers.appendLine(editor.getDocument(), xml);
+                }
+                to = from + editor.getDocument().size() - docSize;
+                
                 String linkValue =
                     GWT.getHostPageBaseURL() + "attachment/" + id + "?fileName=" + fileName;
                 EditorAnnotationUtil.setAnnotationOverRange(editor.getDocument(),
