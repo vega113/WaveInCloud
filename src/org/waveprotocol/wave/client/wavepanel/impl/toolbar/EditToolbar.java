@@ -78,10 +78,6 @@ public class EditToolbar {
     void onClicked(EditorContext context);
   }
 
-  /** The default gadget URL used in the insert-gadget prompt */
-  private static final String YES_NO_MAYBE_GADGET =
-      "http://wave-api.appspot.com/public/gadgets/areyouin/gadget.xml";
-
   /**
    * Container for a font family.
    */
