@@ -34,6 +34,7 @@
   <link type="text/css" rel="stylesheet" href="/static/auth.css" />
   <link rel="shortcut icon" href="static/favicon.ico" />
   <title>Wave in a Box login</title>
+  <script src="http://cdn.wibiya.com/Toolbars/dir_0389/Toolbar_389311/Loader_389311.js" type="text/javascript"></script><noscript><a href="http://www.wibiya.com/">Web Toolbar by Wibiya</a></noscript> 
   <script type="text/javascript">
         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
         document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
