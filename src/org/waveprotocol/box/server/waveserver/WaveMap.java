@@ -769,12 +769,10 @@ public class WaveMap implements SearchProvider {
           LOG.warning("Failed to access wavelet " + c.getWaveletName(), e);
         }
       }
-      if (view != null) {
-	  results.put(waveId, view);
+      // Filter out waves without conversational root wavelet from search result.
+      if (view != null && WaveletDataUtil.hasConversationalRootWavelet(view)) {
+        results.put(waveId, view);
       }
-      // TODO (Yuri Z.) Investigate if it worth to keep the waves views sorted
-      // by LMT so we can stop looping after we have (startAt + numResults)
-      // results.
     }
     List<WaveViewData> searchResultslist = null;
     int searchResultSize = results.values().size();
