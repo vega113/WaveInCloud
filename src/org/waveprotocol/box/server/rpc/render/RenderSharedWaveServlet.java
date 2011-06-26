@@ -30,6 +30,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * @author vega113@gmail.com (Yuri Zelikov)
+ */
 @SuppressWarnings("serial")
 @Singleton
 public class RenderSharedWaveServlet extends HttpServlet {
