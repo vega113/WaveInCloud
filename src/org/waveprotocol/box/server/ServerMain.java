@@ -57,6 +57,7 @@ import org.waveprotocol.box.server.rpc.SignOutServlet;
 import org.waveprotocol.box.server.rpc.UserRegistrationServlet;
 import org.waveprotocol.box.server.rpc.WaveClientServlet;
 import org.waveprotocol.box.server.rpc.render.RenderSharedWaveServlet;
+import org.waveprotocol.box.server.rpc.render.WaveRefServlet;
 import org.waveprotocol.box.server.rpc.render.WavelistRenderServlet;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveServerException;
@@ -218,6 +219,7 @@ public class ServerMain {
     server.addServlet("/profile/*", FetchProfilesServlet.class);
     server.addServlet("/render/wavelist", WavelistRenderServlet.class);
     server.addServlet("/render/wave/*", RenderSharedWaveServlet.class);
+    server.addServlet("/waveref/*", WaveRefServlet.class);
 
     String gadgetHostName =
         injector

@@ -26,7 +26,6 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTMLPanel;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 
 import org.waveprotocol.wave.client.common.util.WaveRefConstants;
@@ -85,7 +84,7 @@ public final class BlipLinkPopupWidget extends Composite
   @UiField
   TextBox linkInfoBox;
   @UiField
-  Label waverefLink;
+  TextBox waverefLink;
 
   /** Popup containing this widget. */
   private final UniversalPopup popup;
