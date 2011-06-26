@@ -33,7 +33,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <link type="text/css" rel="stylesheet" href="/static/auth.css" />
   <link rel="shortcut icon" href="static/favicon.ico" />
-  <title>Wave in a Box login</title>
+  <title>Communicate and Collaborate in real-time at <gxp:eval expr='domain' /></title>
   <script src="http://cdn.wibiya.com/Toolbars/dir_0389/Toolbar_389311/Loader_389311.js" type="text/javascript"></script><noscript><a href="http://www.wibiya.com/">Web Toolbar by Wibiya</a></noscript> 
   <script type="text/javascript">
         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
@@ -59,7 +59,7 @@
         <tr>
           <td class="bubble"
             style='font-family: arial; text-align: left; font-weight: bold; padding-right: 10px;'
-            dir="ltr"><b>Welcome to Wave in a Box </b> @<gxp:eval
+            dir="ltr"><b>Welcome to Wave in a Box demo server</b> @<gxp:eval
             expr='domain' /></td>
         </tr>
       </table>
@@ -74,7 +74,7 @@
         <td>
         <div style="margin: 0 75px 0 25px;">
           <span style="font-weight: bold; font-size: larger">
-           Apache Wave lets you communicate and collaborate in real time
+           Wave lets you communicate and collaborate in real time
           </span>
           <p>
             <img src="/static/document.png" class="icon" alt="Doc pic." />
@@ -89,7 +89,7 @@
           </p>
           <p>
             <img src="/static/microphone.png" class="icon" 
-                style="padding: 0 5px; height: 29px; width: 18px" alt="Microphone pic."/>
+                style="height: 29px;" alt="Microphone pic."/>
             <b>Wave is live.</b> 
             With live transmission as you type, participants on a wave can have faster
             conversations, see edits and interact with extensions in real-time. 
@@ -103,7 +103,7 @@
         <p style="width: 60%;">
           <ul>
             <li>
-              Apache Wave is a rich, distributed, real-time collaboration platform,
+              Wave is a rich, distributed, real-time collaboration platform,
               which allows users to work together in new and exciting ways.
             </li>
             <li>
@@ -211,7 +211,7 @@
         <tr>
           <td class="bubble"
             style='font-family: arial; text-align: center; font-weight: bold; padding-right: 10px;'
-            dir="ltr"> <div>Contact info - email: vega113@gmail.com wave: yuri@waveinabox.net Twitter: http://twitter.com/vega113t</div></td>
+            dir="ltr"></td>
         </tr>
       </table>
       </td>
