@@ -382,7 +382,7 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GadgetInfoImpl ratings =
         GadgetInfoImpl.of("Ratings",
             "Add your vote from 1-5 stars, and see the total votes from others.",
-            GadgetCategoryType.VOTING, GadgetCategoryType.OTHER, "http://goo.gl/uQ9vi", "Google",
+            GadgetCategoryType.VOTING, GadgetCategoryType.OTHER, "http://goo.gl/sC9yb", "Google",
             "Jeremy", "");
     GADGETS_CACHE.put(ratings.getName(), ratings);
 
