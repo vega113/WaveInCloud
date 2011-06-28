@@ -43,30 +43,25 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(mindMap.getName(), mindMap);
 
     GadgetInfoImpl mindMapConceptDraw =
-        GadgetInfoImpl
-            .of("MindMap ConceptDraw",
-                "ConceptDraw MINDMAP offers a variety of presentation, input, and output "
+        GadgetInfoImpl.of("MindMap ConceptDraw",
+            "ConceptDraw MINDMAP offers a variety of presentation, input, and output "
                 + "solutions that make creating and sharing map content simple and effective.",
-                GadgetCategoryType.PRODUCTIVITY, GadgetCategoryType.TEAM, "http://goo.gl/m7HXR",
-                "ConceptDraw", "Yuri", "");
+            GadgetCategoryType.PRODUCTIVITY, GadgetCategoryType.TEAM, "http://goo.gl/m7HXR",
+            "ConceptDraw", "Yuri", "");
     GADGETS_CACHE.put(mindMapConceptDraw.getName(), mindMapConceptDraw);
 
     GadgetInfoImpl map =
-        GadgetInfoImpl
-            .of("Map",
-                "Collaborate on a map of placemarks, paths, and shapes with other participants."
-                + "Great for planning events and trips.",
-                GadgetCategoryType.MAP, GadgetCategoryType.OTHER, "http://goo.gl/0YlHY", "Google",
-                "Jeremy", "");
+        GadgetInfoImpl.of("Map",
+            "Collaborate on a map of placemarks, paths, and shapes with other participants."
+                + "Great for planning events and trips.", GadgetCategoryType.MAP,
+            GadgetCategoryType.OTHER, "http://goo.gl/0YlHY", "Google", "Jeremy", "");
     GADGETS_CACHE.put(map.getName(), map);
 
     GadgetInfoImpl mapCluster =
-        GadgetInfoImpl
-            .of("Map Cluster",
-                "Add your location to the map, and see where everyone else is from, using a "
-                + "cluster visualization.",
-                GadgetCategoryType.MAP, GadgetCategoryType.OTHER, "http://goo.gl/TE5LJ", "Google",
-                "Jeremy", "");
+        GadgetInfoImpl.of("Map Cluster",
+            "Add your location to the map, and see where everyone else is from, using a "
+                + "cluster visualization.", GadgetCategoryType.MAP, GadgetCategoryType.OTHER,
+            "http://goo.gl/TE5LJ", "Google", "Jeremy", "");
     GADGETS_CACHE.put(mapCluster.getName(), mapCluster);
 
     GadgetInfoImpl yesNoMini =
@@ -83,21 +78,19 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(yesNoMaybePlus.getName(), yesNoMaybePlus);
 
     GadgetInfoImpl yesNoMaybe =
-        GadgetInfoImpl
-            .of("Yes/No/Maybe",
-                "Use this to ask friends if they want to join you for a party, to get their "
+        GadgetInfoImpl.of("Yes/No/Maybe",
+            "Use this to ask friends if they want to join you for a party, to get their "
                 + "opinion on a topic, or even to petition their support for a movement.",
-                GadgetCategoryType.VOTING, GadgetCategoryType.OTHER, "http://goo.gl/24YOf",
-                "everybodywave", "Jeremy", "");
+            GadgetCategoryType.VOTING, GadgetCategoryType.OTHER, "http://goo.gl/24YOf",
+            "everybodywave", "Jeremy", "");
     GADGETS_CACHE.put(yesNoMaybe.getName(), yesNoMaybe);
 
     GadgetInfoImpl codeSnippet =
-        GadgetInfoImpl
-            .of("Code Snippet",
-                "Paste and edit snippets of code within your waves, including syntax highlighting "
+        GadgetInfoImpl.of("Code Snippet",
+            "Paste and edit snippets of code within your waves, including syntax highlighting "
                 + "for over 20 languages. Uses SyntaxHighlighter by Alex Gorbatchev.",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/0cQcc",
-                " Harry Denholm, Ishani.org", "Jeremy", "");
+            GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/0cQcc",
+            " Harry Denholm, Ishani.org", "Jeremy", "");
     GADGETS_CACHE.put(codeSnippet.getName(), codeSnippet);
 
     GadgetInfoImpl image =
@@ -156,39 +149,33 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(wordCloud.getName(), wordCloud);
 
     GadgetInfoImpl trackerAgent =
-        GadgetInfoImpl
-            .of("Views tracker",
-                "A small gadget that when added to a wave tracks wave views. You can display"
-                + "the number of views with Views Display gadget.",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/wIQKU",
-                "Yuri Zelikov <yuri@waveinabox.net>", "Yuri", "");
+        GadgetInfoImpl.of("Views tracker",
+            "A small gadget that when added to a wave tracks wave views. You can display"
+                + "the number of views with Views Display gadget.", GadgetCategoryType.UTILITY,
+            GadgetCategoryType.OTHER, "http://goo.gl/wIQKU", "Yuri Zelikov <yuri@waveinabox.net>",
+            "Yuri", "");
     GADGETS_CACHE.put(trackerAgent.getName(), trackerAgent);
 
     GadgetInfoImpl trackerView =
-        GadgetInfoImpl
-            .of("Views display",
-                "A display for the views tracker gadget. When added to a wave with the tracker "
+        GadgetInfoImpl.of("Views display",
+            "A display for the views tracker gadget. When added to a wave with the tracker "
                 + "gadget - displays how many times the wave was viewed.",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/hPDJD",
-                "Yuri <yuri@waveinabox.net>", "Yuri", "");
+            GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/hPDJD",
+            "Yuri <yuri@waveinabox.net>", "Yuri", "");
     GADGETS_CACHE.put(trackerView.getName(), trackerView);
 
     GadgetInfoImpl remainingTime =
-        GadgetInfoImpl
-            .of("Remaining Time",
-                "Create an Event and see how much time remains. Import it in your calendar "
-                + "and Share it on twitter, in Blogs and by mail.",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/hwHu5",
-                "time-labs.com", "Jeremy", "");
+        GadgetInfoImpl.of("Remaining Time",
+            "Create an Event and see how much time remains. Import it in your calendar "
+                + "and Share it on twitter, in Blogs and by mail.", GadgetCategoryType.UTILITY,
+            GadgetCategoryType.OTHER, "http://goo.gl/hwHu5", "time-labs.com", "Jeremy", "");
     GADGETS_CACHE.put(remainingTime.getName(), remainingTime);
 
     GadgetInfoImpl likeButton =
-        GadgetInfoImpl
-            .of("Like Button",
-                "A like button similar to those in Google Reader, Google Buzz, and other Google "
-                + "products.",
-                GadgetCategoryType.VOTING, GadgetCategoryType.OTHER, "http://goo.gl/7wkly",
-                "Zachary 'Gamer_Z.' Yaro", "Jeremy", "");
+        GadgetInfoImpl.of("Like Button",
+            "A like button similar to those in Google Reader, Google Buzz, and other Google "
+                + "products.", GadgetCategoryType.VOTING, GadgetCategoryType.OTHER,
+            "http://goo.gl/7wkly", "Zachary 'Gamer_Z.' Yaro", "Jeremy", "");
     GADGETS_CACHE.put(likeButton.getName(), likeButton);
 
 
@@ -200,57 +187,48 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(pinwand.getName(), pinwand);
 
     GadgetInfoImpl approver =
-        GadgetInfoImpl
-            .of("Approver",
-                "Allow people to approve or disapprove by clicking a thumbs up or thumbs down. "
-                + "With 7 different themes.",
-                GadgetCategoryType.VOTING, GadgetCategoryType.OTHER, "http://goo.gl/qLtYT",
-                "cmdskp", "Jeremy", "");
+        GadgetInfoImpl.of("Approver",
+            "Allow people to approve or disapprove by clicking a thumbs up or thumbs down. "
+                + "With 7 different themes.", GadgetCategoryType.VOTING, GadgetCategoryType.OTHER,
+            "http://goo.gl/qLtYT", "cmdskp", "Jeremy", "");
     GADGETS_CACHE.put(approver.getName(), approver);
 
     GadgetInfoImpl iLikeIt =
-        GadgetInfoImpl
-            .of("I Like It!",
-                "Adds a favorites button to your wave, so that you and everyone else in the "
+        GadgetInfoImpl.of("I Like It!",
+            "Adds a favorites button to your wave, so that you and everyone else in the "
                 + "wave can indicate that they like the wave - with a cute smiley face!",
-                GadgetCategoryType.VOTING, GadgetCategoryType.OTHER, "http://goo.gl/aXybB",
-                "Jaken", "Jeremy", "");
+            GadgetCategoryType.VOTING, GadgetCategoryType.OTHER, "http://goo.gl/aXybB", "Jaken",
+            "Jeremy", "");
     GADGETS_CACHE.put(iLikeIt.getName(), iLikeIt);
 
     GadgetInfoImpl diagramEditor =
-        GadgetInfoImpl
-            .of("Diagram Editor",
-                "Create cool diagrams (UML, BPMN, EPC, FMC, etc.) together with your friends in "
-                + "Google Wave!",
-                GadgetCategoryType.PRODUCTIVITY, GadgetCategoryType.OTHER, "http://goo.gl/HvuA4",
-                "processWave.org", "Jeremy", "");
+        GadgetInfoImpl.of("Diagram Editor",
+            "Create cool diagrams (UML, BPMN, EPC, FMC, etc.) together with your friends in "
+                + "Google Wave!", GadgetCategoryType.PRODUCTIVITY, GadgetCategoryType.OTHER,
+            "http://goo.gl/HvuA4", "processWave.org", "Jeremy", "");
     GADGETS_CACHE.put(diagramEditor.getName(), diagramEditor);
 
     GadgetInfoImpl wordNetwork =
-        GadgetInfoImpl
-            .of("Word Network",
-                "Collaborate on a linking words together and organizing concepts. Double Click on "
+        GadgetInfoImpl.of("Word Network",
+            "Collaborate on a linking words together and organizing concepts. Double Click on "
                 + "any word to link it to another or double click on the background to c...",
-                GadgetCategoryType.PRODUCTIVITY, GadgetCategoryType.OTHER, "http://goo.gl/6vwxY",
-                "antimatter15", "Jeremy", "");
+            GadgetCategoryType.PRODUCTIVITY, GadgetCategoryType.OTHER, "http://goo.gl/6vwxY",
+            "antimatter15", "Jeremy", "");
     GADGETS_CACHE.put(wordNetwork.getName(), wordNetwork);
 
     GadgetInfoImpl googleFight =
-        GadgetInfoImpl
-            .of("Google Fight!",
-                "Google Fights - the title should explain it all. Another gadget by "
-                + "www.processWave.org.",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/Mg26y",
-                "Michael Goderbauer", "Jeremy", "");
+        GadgetInfoImpl.of("Google Fight!",
+            "Google Fights - the title should explain it all. Another gadget by "
+                + "www.processWave.org.", GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER,
+            "http://goo.gl/Mg26y", "Michael Goderbauer", "Jeremy", "");
     GADGETS_CACHE.put(googleFight.getName(), googleFight);
 
     GadgetInfoImpl poll =
-        GadgetInfoImpl
-            .of("Poll",
-                "Poll participants for their opinion. Supports both single and multiple selection "
+        GadgetInfoImpl.of("Poll",
+            "Poll participants for their opinion. Supports both single and multiple selection "
                 + "polls, and optionally allows votes to be changed after they're cast.",
-                GadgetCategoryType.VOTING, GadgetCategoryType.OTHER, "http://goo.gl/0G7qU",
-                "Eric Williams", "Jeremy", "");
+            GadgetCategoryType.VOTING, GadgetCategoryType.OTHER, "http://goo.gl/0G7qU",
+            "Eric Williams", "Jeremy", "");
     GADGETS_CACHE.put(poll.getName(), poll);
 
     GadgetInfoImpl chart =
@@ -290,12 +268,10 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(superMarioBros.getName(), superMarioBros);
 
     GadgetInfoImpl sudoku =
-        GadgetInfoImpl
-            .of("Sudoku",
-                "A cool game to share with your friends. Solve challenging Sudoku boards together"
-                + "and see who is the best Sudoku player!",
-                GadgetCategoryType.GAME, GadgetCategoryType.OTHER, "http://goo.gl/FxORa",
-                "LabPixies", "Jeremy", "");
+        GadgetInfoImpl.of("Sudoku",
+            "A cool game to share with your friends. Solve challenging Sudoku boards together"
+                + "and see who is the best Sudoku player!", GadgetCategoryType.GAME,
+            GadgetCategoryType.OTHER, "http://goo.gl/FxORa", "LabPixies", "Jeremy", "");
     GADGETS_CACHE.put(sudoku.getName(), sudoku);
 
     GadgetInfoImpl searchSharedWaves =
@@ -307,48 +283,41 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(searchSharedWaves.getName(), searchSharedWaves);
 
     GadgetInfoImpl accuWeather =
-        GadgetInfoImpl
-            .of("AccuWeather",
-                "The AccuWeather Wave Gadget is the perfect companion for trip planning. Select a "
+        GadgetInfoImpl.of("AccuWeather",
+            "The AccuWeather Wave Gadget is the perfect companion for trip planning. Select a "
                 + "location and date, and the gadget will return a forecast.",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/iODX9",
-                "AccuWeather.com", "Jeremy", "");
+            GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/iODX9",
+            "AccuWeather.com", "Jeremy", "");
     GADGETS_CACHE.put(accuWeather.getName(), accuWeather);
 
     GadgetInfoImpl decingGadget =
-        GadgetInfoImpl
-            .of("Decing",
-                "Need to make a decision? Arrange a secret vote inside of a wave. Participants' "
-                + "votes are not shared to others.",
-                GadgetCategoryType.VOTING, GadgetCategoryType.TEAM, "http://goo.gl/MghBe",
-                "Decing.com", "Jeremy", "");
+        GadgetInfoImpl.of("Decing",
+            "Need to make a decision? Arrange a secret vote inside of a wave. Participants' "
+                + "votes are not shared to others.", GadgetCategoryType.VOTING,
+            GadgetCategoryType.TEAM, "http://goo.gl/MghBe", "Decing.com", "Jeremy", "");
     GADGETS_CACHE.put(decingGadget.getName(), decingGadget);
 
     GadgetInfoImpl groceryList =
-        GadgetInfoImpl
-            .of("Grocery List",
-                "Use this for your grocery list needs - share with your family, sort the list "
+        GadgetInfoImpl.of("Grocery List",
+            "Use this for your grocery list needs - share with your family, sort the list "
                 + "automatically, print and take it to the store, and more!",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/kna0V",
-                "Quaker", "Jeremy", "");
+            GadgetCategoryType.UTILITY, GadgetCategoryType.OTHER, "http://goo.gl/kna0V", "Quaker",
+            "Jeremy", "");
     GADGETS_CACHE.put(groceryList.getName(), groceryList);
 
     GadgetInfoImpl likey =
-        GadgetInfoImpl
-            .of("Likey",
-                "A simple like/dislike Wave gadget that can be added to a blip for intuitive user"
-                + "rating.",
-                GadgetCategoryType.VOTING, GadgetCategoryType.PRODUCTIVITY, "http://goo.gl/KrlJE",
-                "Ben Griffiths", "Jeremy", "");
+        GadgetInfoImpl.of("Likey",
+            "A simple like/dislike Wave gadget that can be added to a blip for intuitive user"
+                + "rating.", GadgetCategoryType.VOTING, GadgetCategoryType.PRODUCTIVITY,
+            "http://goo.gl/KrlJE", "Ben Griffiths", "Jeremy", "");
     GADGETS_CACHE.put(likey.getName(), likey);
 
     GadgetInfoImpl paginatorGadget =
-        GadgetInfoImpl
-            .of("Paginator",
-                "The Paginator is a compact reading aid Gadget for Google Wave which paginates"
+        GadgetInfoImpl.of("Paginator",
+            "The Paginator is a compact reading aid Gadget for Google Wave which paginates"
                 + "large amounts of text and bookmarks the wave viewer's current location",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.PRODUCTIVITY, "http://goo.gl/Ol9GW",
-                "Dan Smith", "Jeremy", "");
+            GadgetCategoryType.UTILITY, GadgetCategoryType.PRODUCTIVITY, "http://goo.gl/Ol9GW",
+            "Dan Smith", "Jeremy", "");
     GADGETS_CACHE.put(paginatorGadget.getName(), paginatorGadget);
 
     GadgetInfoImpl piano =
@@ -364,12 +333,11 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(team.getName(), team);
 
     GadgetInfoImpl vectorEditor =
-        GadgetInfoImpl
-            .of("Vector Editor",
-                "This gadget is useful for creating graphics. Shapes can be added, resized, moved,"
+        GadgetInfoImpl.of("Vector Editor",
+            "This gadget is useful for creating graphics. Shapes can be added, resized, moved,"
                 + "and rotated. The application supports Lines, Freeform, Polygons, Rec...",
-                GadgetCategoryType.PRODUCTIVITY, GadgetCategoryType.OTHER, "http://goo.gl/VSkn5",
-                "antimatter15", "Jeremy", "");
+            GadgetCategoryType.PRODUCTIVITY, GadgetCategoryType.OTHER, "http://goo.gl/VSkn5",
+            "antimatter15", "Jeremy", "");
     GADGETS_CACHE.put(vectorEditor.getName(), vectorEditor);
 
     GadgetInfoImpl yourBrainStormer =
@@ -393,21 +361,19 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(drawBoard.getName(), drawBoard);
 
     GadgetInfoImpl colcrop =
-        GadgetInfoImpl
-            .of("Colcrop",
-                "Cover as many cells as possible, by choosing adjacent colors. Play against"
+        GadgetInfoImpl.of("Colcrop",
+            "Cover as many cells as possible, by choosing adjacent colors. Play against"
                 + "a participant or the computer. Computer Level 4 is pretty hard to defeat.",
-                GadgetCategoryType.GAME, GadgetCategoryType.OTHER, "http://goo.gl/Vh9ME",
-                "Alexis Vuillemin", "Jeremy", "");
+            GadgetCategoryType.GAME, GadgetCategoryType.OTHER, "http://goo.gl/Vh9ME",
+            "Alexis Vuillemin", "Jeremy", "");
     GADGETS_CACHE.put(colcrop.getName(), colcrop);
 
     GadgetInfoImpl bones =
-        GadgetInfoImpl
-            .of("Bones",
-                "Bones provides graphical dice that any participant in a wave can set up to be"
+        GadgetInfoImpl.of("Bones",
+            "Bones provides graphical dice that any participant in a wave can set up to be"
                 + "rolled by themselves or others. Results are shared with everyone.",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.TEAM, "http://goo.gl/GbhWR",
-                "10x10 Room", "Jeremy", "");
+            GadgetCategoryType.UTILITY, GadgetCategoryType.TEAM, "http://goo.gl/GbhWR",
+            "10x10 Room", "Jeremy", "");
     GADGETS_CACHE.put(bones.getName(), bones);
 
 
@@ -418,38 +384,19 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(lmnowave.getName(), lmnowave);
 
     GadgetInfoImpl flickrWave =
-        GadgetInfoImpl
-            .of("FlickrWave",
-                "Display individual Flickr photos or browse photos from a user's stream, "
-                + "favorites, a photoset or a group.",
-                GadgetCategoryType.IMAGE, GadgetCategoryType.VIDEO, "http://goo.gl/OSEZF",
-                "Mark Probst", "Yuri", "");
+        GadgetInfoImpl.of("FlickrWave",
+            "Display individual Flickr photos or browse photos from a user's stream, "
+                + "favorites, a photoset or a group.", GadgetCategoryType.IMAGE,
+            GadgetCategoryType.VIDEO, "http://goo.gl/OSEZF", "Mark Probst", "Yuri", "");
     GADGETS_CACHE.put(flickrWave.getName(), flickrWave);
 
     GadgetInfoImpl verbolVoiceChat =
-        GadgetInfoImpl
-            .of("Verbol VoiceChat",
-                "Lets you record any thoughts you have into the wave, listen to what others "
-                + "are saying or have said, and reply to them. V3.12.3.",
-                GadgetCategoryType.VOICE, GadgetCategoryType.PRODUCTIVITY, "http://goo.gl/Iklq2",
-                "Family Systems and PhoneFromHere", "Yuri", "");
+        GadgetInfoImpl.of("Verbol VoiceChat",
+            "Lets you record any thoughts you have into the wave, listen to what others "
+                + "are saying or have said, and reply to them. V3.12.3.", GadgetCategoryType.VOICE,
+            GadgetCategoryType.PRODUCTIVITY, "http://goo.gl/Iklq2",
+            "Family Systems and PhoneFromHere", "Yuri", "");
     GADGETS_CACHE.put(verbolVoiceChat.getName(), verbolVoiceChat);
-
-    // GadgetInfoImpl birthDayTracker =
-    // GadgetInfoImpl.of("BirthDay Tracker",
-    // "Participant add and look on their friends birthdates.",
-    // GadgetCategoryType.TIME,
-    // GadgetCategoryType.UTILITY, "http://goo.gl/6vyb5",
-    // "Love Sharma", "Yuri", "");
-    // GADGETS_CACHE.put(birthDayTracker.getName(), birthDayTracker);
-
-    // GadgetInfoImpl crazyMath =
-    // GadgetInfoImpl
-    // .of("CrazyMath",
-    // "Choose a level from beginner to expert and solve calculations as fast as you can. Compare your times with friends in the wave.",
-    // GadgetCategoryType.GAME, GadgetCategoryType.OTHER,
-    // "http://goo.gl/wXHCH", "Love Sharma", "Yuri", "");
-    // GADGETS_CACHE.put(crazyMath.getName(), crazyMath);
 
     GadgetInfoImpl scrumpoker =
         GadgetInfoImpl.of("Scrumpoker", "ScrumPoker for consensus-based estimation.",
@@ -458,21 +405,17 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(scrumpoker.getName(), scrumpoker);
 
     GadgetInfoImpl hostelWithMe =
-        GadgetInfoImpl
-            .of("Hostel WithMe",
-                "In partnership with HostelWorld.com. Find the best budget accommodation together"
-                + "with your friends.",
-                GadgetCategoryType.TRAVEL, GadgetCategoryType.SEARCH, "http://goo.gl/pXAkD",
-                "rucksack.com", "Yuri", "");
+        GadgetInfoImpl.of("Hostel WithMe",
+            "In partnership with HostelWorld.com. Find the best budget accommodation together"
+                + "with your friends.", GadgetCategoryType.TRAVEL, GadgetCategoryType.SEARCH,
+            "http://goo.gl/pXAkD", "rucksack.com", "Yuri", "");
     GADGETS_CACHE.put(hostelWithMe.getName(), hostelWithMe);
 
     GadgetInfoImpl takeOut =
-        GadgetInfoImpl
-            .of("Take-Out",
-                "Helps organize take-out orders for a group. Great for coordinating food or coffee"
-                + "runs for your office!",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.TEAM, "http://goo.gl/4yFIQ",
-                "Kip Holcomb", "Yuri", "");
+        GadgetInfoImpl.of("Take-Out",
+            "Helps organize take-out orders for a group. Great for coordinating food or coffee"
+                + "runs for your office!", GadgetCategoryType.UTILITY, GadgetCategoryType.TEAM,
+            "http://goo.gl/4yFIQ", "Kip Holcomb", "Yuri", "");
     GADGETS_CACHE.put(takeOut.getName(), takeOut);
 
     GadgetInfoImpl travelWithMe =
@@ -482,51 +425,35 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
             "rucksack.com", "Yuri", "");
     GADGETS_CACHE.put(travelWithMe.getName(), travelWithMe);
 
-    // GadgetInfoImpl waveChess =
-    // GadgetInfoImpl
-    // .of("Wave Chess",
-    // "Play Chess in Google Wave.",
-    // GadgetCategoryType.GAME,
-    // GadgetCategoryType.OTHER,
-    // "http://goo.gl/VSypt",
-    // "Google", "Yuri", "");
-    // GADGETS_CACHE.put(waveChess.getName(), waveChess);
-
-
     GadgetInfoImpl twitterSearch =
-        GadgetInfoImpl
-            .of("Twitter Search",
-                "Shows results from Twitter for a given search term. Users can edit to specify"
-                + "new term.",
-                GadgetCategoryType.SEARCH, GadgetCategoryType.OTHER, "http://goo.gl/1U79x",
-                "Google", "Yuri", "");
+        GadgetInfoImpl.of("Twitter Search",
+            "Shows results from Twitter for a given search term. Users can edit to specify"
+                + "new term.", GadgetCategoryType.SEARCH, GadgetCategoryType.OTHER,
+            "http://goo.gl/1U79x", "Google", "Yuri", "");
     GADGETS_CACHE.put(twitterSearch.getName(), twitterSearch);
 
     GadgetInfoImpl waffle =
-        GadgetInfoImpl
-            .of("Waffle",
-                "The easy way to plan an event. Just add a Waffle to your wave, choose a few dates"
-                + "- now, all wave participants can vote immediately!",
-                GadgetCategoryType.SEARCH, GadgetCategoryType.OTHER, "http://goo.gl/VsXSf",
-                "Mikkel Staunsholm (www.waffle.dk)", "Yuri", "");
+        GadgetInfoImpl.of("Waffle",
+            "The easy way to plan an event. Just add a Waffle to your wave, choose a few dates"
+                + "- now, all wave participants can vote immediately!", GadgetCategoryType.SEARCH,
+            GadgetCategoryType.OTHER, "http://goo.gl/VsXSf", "Mikkel Staunsholm (www.waffle.dk)",
+            "Yuri", "");
     GADGETS_CACHE.put(waffle.getName(), waffle);
 
     GadgetInfoImpl localTime =
-        GadgetInfoImpl
-            .of("Local Time",
-                "Share a time on common ground using this simple gadget. It allows anyone to enter"
+        GadgetInfoImpl.of("Local Time",
+            "Share a time on common ground using this simple gadget. It allows anyone to enter"
                 + "a time, and everyone else sees it as a time in their time zone.",
-                GadgetCategoryType.TIME, GadgetCategoryType.UTILITY, "http://goo.gl/V4SjC",
-                "David Goemans", "Yuri", "");
+            GadgetCategoryType.TIME, GadgetCategoryType.UTILITY, "http://goo.gl/V4SjC",
+            "David Goemans", "Yuri", "");
     GADGETS_CACHE.put(localTime.getName(), localTime);
 
     GadgetInfoImpl trippy =
-        GadgetInfoImpl
-            .of("Trippy",
-                "Co-create an itinerary: choose points of interest -- including Lonely Planet"
+        GadgetInfoImpl.of("Trippy",
+            "Co-create an itinerary: choose points of interest -- including Lonely Planet"
                 + "recommendations, organize, share, print, or export to My Maps!",
-                GadgetCategoryType.TRAVEL, GadgetCategoryType.TEAM, "http://goo.gl/HgDlU",
-                "Lonely Planet", "Yuri", "");
+            GadgetCategoryType.TRAVEL, GadgetCategoryType.TEAM, "http://goo.gl/HgDlU",
+            "Lonely Planet", "Yuri", "");
     GADGETS_CACHE.put(trippy.getName(), trippy);
 
     GadgetInfoImpl conference =
@@ -537,12 +464,11 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(conference.getName(), conference);
 
     GadgetInfoImpl timeBridgeConferencing =
-        GadgetInfoImpl
-            .of("TimeBridge Conferencing",
-                "Instantly add phone and web conferencing to your wave with the TimeBridge"
+        GadgetInfoImpl.of("TimeBridge Conferencing",
+            "Instantly add phone and web conferencing to your wave with the TimeBridge"
                 + "Conferencing Gadget. Just plug the gadget into your wave and go!",
-                GadgetCategoryType.VOICE, GadgetCategoryType.PRODUCTIVITY, "http://goo.gl/FPVh7",
-                "Ribbit Corporation", "Yuri", "");
+            GadgetCategoryType.VOICE, GadgetCategoryType.PRODUCTIVITY, "http://goo.gl/FPVh7",
+            "Ribbit Corporation", "Yuri", "");
     GADGETS_CACHE.put(timeBridgeConferencing.getName(), timeBridgeConferencing);
 
     GadgetInfoImpl plusOne =
@@ -559,12 +485,10 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(timeMe.getName(), timeMe);
 
     GadgetInfoImpl timemanager =
-        GadgetInfoImpl
-            .of("Time-manager",
-                "Insert a small timer into your waves. Click on it to start/stop counting."
-                + "Total time will be saved.",
-                GadgetCategoryType.TIME, GadgetCategoryType.OTHER, "http://goo.gl/48odp",
-                "Fedor Indutny", "Yuri", "");
+        GadgetInfoImpl.of("Time-manager",
+            "Insert a small timer into your waves. Click on it to start/stop counting."
+                + "Total time will be saved.", GadgetCategoryType.TIME, GadgetCategoryType.OTHER,
+            "http://goo.gl/48odp", "Fedor Indutny", "Yuri", "");
     GADGETS_CACHE.put(timemanager.getName(), timemanager);
 
     GadgetInfoImpl progressbar =
@@ -576,40 +500,38 @@ public class SimpleGadgetInfoProviderImpl implements GadgetInfoProvider<GadgetIn
     GADGETS_CACHE.put(progressbar.getName(), progressbar);
 
     GadgetInfoImpl whenDoWeMeet =
-        GadgetInfoImpl
-            .of("When do we meet?",
-                "Find a date for a business meeting, party, or vacation by collaboratively marking"
-                + "each participant's free days in a shared calendar.",
-                GadgetCategoryType.TIME, GadgetCategoryType.TEAM, "http://goo.gl/qQ7n0",
-                "Robert Bamler", "Yuri", "");
+        GadgetInfoImpl.of("When do we meet?",
+            "Find a date for a business meeting, party, or vacation by collaboratively marking"
+                + "each participant's free days in a shared calendar.", GadgetCategoryType.TIME,
+            GadgetCategoryType.TEAM, "http://goo.gl/qQ7n0", "Robert Bamler", "Yuri", "");
     GADGETS_CACHE.put(whenDoWeMeet.getName(), whenDoWeMeet);
 
     GadgetInfoImpl list =
-        GadgetInfoImpl
-            .of("List",
-                "Insert little tables inside your wavelet. You can extend the columns, make them "
-                + "sorted, etc...",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.PRODUCTIVITY, "http://goo.gl/O6swn",
-                "Teun Duynstee", "Yuri", "");
+        GadgetInfoImpl.of("List",
+            "Insert little tables inside your wavelet. You can extend the columns, make them "
+                + "sorted, etc...", GadgetCategoryType.UTILITY, GadgetCategoryType.PRODUCTIVITY,
+            "http://goo.gl/O6swn", "Teun Duynstee", "Yuri", "");
     GADGETS_CACHE.put(list.getName(), list);
 
     GadgetInfoImpl favJumpr =
-        GadgetInfoImpl
-            .of("FavJumpr",
-                "A little Flickr game where you have to jump from one's user's favorites to"
-                + "another's by selecting the one you like best.",
-                GadgetCategoryType.GAME, GadgetCategoryType.IMAGE, "http://goo.gl/DVySN",
-                "Mark Probst", "Yuri", "");
+        GadgetInfoImpl.of("FavJumpr",
+            "A little Flickr game where you have to jump from one's user's favorites to"
+                + "another's by selecting the one you like best.", GadgetCategoryType.GAME,
+            GadgetCategoryType.IMAGE, "http://goo.gl/DVySN", "Mark Probst", "Yuri", "");
     GADGETS_CACHE.put(favJumpr.getName(), favJumpr);
 
     GadgetInfoImpl carpool =
-        GadgetInfoImpl
-            .of("Carpool",
-                "Lets you setup the details of a car trip, and participants in the wave can select"
-                + "seats in the car for themself.",
-                GadgetCategoryType.UTILITY, GadgetCategoryType.TEAM, "http://goo.gl/FoKiv",
-                "Chris Landgraf and Robert Krawatzeck", "Yuri", "");
+        GadgetInfoImpl.of("Carpool",
+            "Lets you setup the details of a car trip, and participants in the wave can select"
+                + "seats in the car for themself.", GadgetCategoryType.UTILITY,
+            GadgetCategoryType.TEAM, "http://goo.gl/FoKiv", "Chris Landgraf and Robert Krawatzeck",
+            "Yuri", "");
     GADGETS_CACHE.put(carpool.getName(), carpool);
+
+    GadgetInfoImpl chess =
+        GadgetInfoImpl.of("Wave Chess", "Play Chess in Google Wave.", GadgetCategoryType.GAME,
+            GadgetCategoryType.OTHER, "http://wave-chess.appspot.com/wavechess/com.google.wave.chess.client.ChessGadget.gadget.xml", "Google", "Yuri", "");
+    GADGETS_CACHE.put(chess.getName(), chess);
   }
 
   public static SimpleGadgetInfoProviderImpl create() {
