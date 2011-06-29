@@ -26,10 +26,13 @@ import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.common.util.SignalEvent;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
 import org.waveprotocol.wave.client.doodad.selection.SelectionExtractor;
+import org.waveprotocol.wave.client.doodad.title.TitleAnnotationHandler;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorSettings;
 import org.waveprotocol.wave.client.editor.Editors;
+import org.waveprotocol.wave.client.editor.content.CMutableDocument;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
+import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.keys.KeyBindingRegistry;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.wave.DocumentRegistry;
@@ -40,6 +43,9 @@ import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.IntrinsicBlipMetaView.MenuOption;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
+import org.waveprotocol.wave.model.conversation.ConversationBlip;
+import org.waveprotocol.wave.model.document.util.DocHelper;
+import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 
 /**
@@ -78,6 +84,18 @@ public final class EditSession
   private BlipView editing;
   /** Editor control. */
   private Editor editor;
+  
+  
+  private static boolean hastTitleAnnotation(CMutableDocument mutable) {
+    int docSize = mutable.size();
+    int changeLoc = mutable.firstAnnotationChange(0, docSize, TitleAnnotationHandler.KEY, null);
+    return changeLoc != -1;
+  }
+
+  private static void computeAndSetWaveTitle(CMutableDocument mutable) {
+    mutable.setAnnotation(0, 1, TitleAnnotationHandler.KEY,
+        DocHelper.getTextForElement(mutable, LineContainers.LINE_TAGNAME));
+  }
 
   EditSession(ModelAsViewProvider views, DocumentRegistry<? extends InteractiveDocument> documents,
       LogicalPanel container, SelectionExtractor selectionExtractor) {
@@ -162,6 +180,16 @@ public final class EditSession
    */
   private void endSession() {
     if (isEditing()) {
+      
+      BlipView blipUi = getBlip();
+      if (blipUi != null) {
+        CMutableDocument mutable = getEditor().getDocument();
+        ConversationBlip editBlip = views.getBlip(blipUi);
+        if (editBlip.isRoot() || !hastTitleAnnotation(mutable)) {
+          computeAndSetWaveTitle(mutable);
+        }
+      }
+      
       selectionExtractor.stop(editor);
       container.doOrphan(editor.getWidget());
       editor.blur();

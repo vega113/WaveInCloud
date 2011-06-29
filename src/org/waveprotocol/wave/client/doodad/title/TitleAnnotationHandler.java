@@ -47,7 +47,7 @@ public class TitleAnnotationHandler implements AnnotationMutationHandler {
   private final static Map<String, String> PAINT_PROPERTIES = Collections.singletonMap(
       "fontWeight", "bold");
 
-  private static final String KEY = "conv/title";
+  public static final String KEY = "conv/title";
   private static final ReadableStringSet KEYS = CollectionUtils.newStringSet(KEY);
 
   private final AnnotationPainter painter;
