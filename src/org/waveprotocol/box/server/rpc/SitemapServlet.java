@@ -105,7 +105,7 @@ public class SitemapServlet extends HttpServlet {
       viewer = ParticipantId.ofUnsafe("@" + AccountStoreHolder.getDefaultDomain());
     }
     OperationQueue opQueue = new OperationQueue();
-    opQueue.search(query, 0, 25);
+    opQueue.search(query, 0, 1000);
     OperationRequest operationRequest = opQueue.getPendingOperations().get(0);
     String opId = operationRequest.getId();
     OperationUtil.executeOperation(operationRequest, operationRegistry, context, viewer);
