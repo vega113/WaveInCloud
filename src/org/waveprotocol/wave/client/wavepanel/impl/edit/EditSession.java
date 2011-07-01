@@ -32,7 +32,6 @@ import org.waveprotocol.wave.client.editor.EditorSettings;
 import org.waveprotocol.wave.client.editor.Editors;
 import org.waveprotocol.wave.client.editor.content.CMutableDocument;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
-import org.waveprotocol.wave.client.editor.content.ContentElement;
 import org.waveprotocol.wave.client.editor.keys.KeyBindingRegistry;
 import org.waveprotocol.wave.client.util.ClientFlags;
 import org.waveprotocol.wave.client.wave.DocumentRegistry;
@@ -88,10 +87,13 @@ public final class EditSession
   
   private static boolean hastTitleAnnotation(CMutableDocument mutable) {
     int docSize = mutable.size();
-    int changeLoc = mutable.firstAnnotationChange(0, docSize, TitleAnnotationHandler.KEY, null);
-    return changeLoc != -1;
+    return mutable.firstAnnotationChange(0, docSize, TitleAnnotationHandler.KEY, null) != -1;
   }
 
+  /**
+   * Sets or replaces an automatic title for the wave based on the first line of the root
+   * blip. 
+   */
   private static void computeAndSetWaveTitle(CMutableDocument mutable) {
     mutable.setAnnotation(0, 1, TitleAnnotationHandler.KEY,
         DocHelper.getTextForElement(mutable, LineContainers.LINE_TAGNAME));
