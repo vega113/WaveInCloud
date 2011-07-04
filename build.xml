@@ -512,7 +512,6 @@
       </fileset>
       <fileset dir="${lib.codegen}">
          <include name="gwt/gwt-user.jar"/>
-        <include name="gwt/gwt-dev.jar"/>
       </fileset>
     </unzip>
     <copy todir="${staging.dir}" preservelastmodified="true">
@@ -602,11 +601,9 @@
         <include name="org/apache/commons/codec/**/*" />
         <include name="org/apache/commons/collections/**/*" />
         <include name="org/apache/commons/configuration/**/*" />
-        <include name="org/apache/commons/fileupload/**/*" />
         <include name="org/apache/commons/httpclient/**/*" />
         <include name="org/apache/commons/lang/**/*" />
         <include name="org/apache/commons/logging/**/*" />
-        <include name="org/apache/commons/io/**/*" />
         <include name="org/bson/**/*" />
         <include name="org/codehaus/jackson/**/*" />
         <include name="org/dom4j/**/*" />
@@ -618,8 +615,28 @@
         <include name="org/waveprotocol/**/*" />
         <include name="org/xmlpull/**/*" />
         <include name="org/xmpp/**/*" />
-        <exclude name= "org/waveprotocol/box/webclient/**/*"/>
-        <exclude name= "org/waveprotocol/box/consoleclient/**/*"/>
+        <exclude name="org/waveprotocol/box/webclient/**/*"/>
+        <exclude name="org/waveprotocol/box/consoleclient/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/*"/>
+        <exclude name="org/waveprotocol/wave/client/account/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/autohide/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/clipboard/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/common/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/concurrencycontrol/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/debug/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/doodad/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/paging/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/render/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/scheduler/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/scroll/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/state/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/testing/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/uibuilder/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/uibuilder/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/util/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/wave/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/wavepanel/**/*"/>
+        <exclude name="org/waveprotocol/wave/client/widget/**/*"/>
       </fileset>
       <manifest>
         <!-- Application entry point -->
