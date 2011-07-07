@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ant clean
-ant compile-gwt
+ant compile-gwt-demo
 ant dist-server
 rm ./dist/publish/publish.zip
 mkdir ./dist/publish
