@@ -26,11 +26,9 @@ import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.common.util.SignalEvent;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
 import org.waveprotocol.wave.client.doodad.selection.SelectionExtractor;
-import org.waveprotocol.wave.client.doodad.title.TitleAnnotationHandler;
 import org.waveprotocol.wave.client.editor.Editor;
 import org.waveprotocol.wave.client.editor.EditorSettings;
 import org.waveprotocol.wave.client.editor.Editors;
-import org.waveprotocol.wave.client.editor.content.CMutableDocument;
 import org.waveprotocol.wave.client.editor.content.ContentDocument;
 import org.waveprotocol.wave.client.editor.keys.KeyBindingRegistry;
 import org.waveprotocol.wave.client.util.ClientFlags;
@@ -42,9 +40,6 @@ import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.IntrinsicBlipMetaView.MenuOption;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
-import org.waveprotocol.wave.model.conversation.ConversationBlip;
-import org.waveprotocol.wave.model.document.util.DocHelper;
-import org.waveprotocol.wave.model.document.util.LineContainers;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
 
 /**
@@ -58,6 +53,8 @@ public final class EditSession
   public interface Listener {
     void onSessionStart(Editor e, BlipView blipUi);
 
+    void onSessionPreEnd(Editor e, BlipView blipUi);
+    
     void onSessionEnd(Editor e, BlipView blipUi);
   }
 
@@ -78,26 +75,11 @@ public final class EditSession
   private final LogicalPanel container;
   private final CopyOnWriteSet<Listener> listeners = CopyOnWriteSet.create();
   private final SelectionExtractor selectionExtractor;
-
+  
   /** The UI of the document being edited. */
   private BlipView editing;
   /** Editor control. */
   private Editor editor;
-  
-  
-  private static boolean hastTitleAnnotation(CMutableDocument mutable) {
-    int docSize = mutable.size();
-    return mutable.firstAnnotationChange(0, docSize, TitleAnnotationHandler.KEY, null) != -1;
-  }
-
-  /**
-   * Sets or replaces an automatic title for the wave based on the first line of the root
-   * blip. 
-   */
-  private static void computeAndSetWaveTitle(CMutableDocument mutable) {
-    mutable.setAnnotation(0, 1, TitleAnnotationHandler.KEY,
-        DocHelper.getTextForElement(mutable, LineContainers.LINE_TAGNAME));
-  }
 
   EditSession(ModelAsViewProvider views, DocumentRegistry<? extends InteractiveDocument> documents,
       LogicalPanel container, SelectionExtractor selectionExtractor) {
@@ -182,16 +164,7 @@ public final class EditSession
    */
   private void endSession() {
     if (isEditing()) {
-      
-      BlipView blipUi = getBlip();
-      if (blipUi != null) {
-        CMutableDocument mutable = getEditor().getDocument();
-        ConversationBlip editBlip = views.getBlip(blipUi);
-        if (editBlip.isRoot() || !hastTitleAnnotation(mutable)) {
-          computeAndSetWaveTitle(mutable);
-        }
-      }
-      
+      fireOnSessionPreEnd(editor, editing);
       selectionExtractor.stop(editor);
       container.doOrphan(editor.getWidget());
       editor.blur();
@@ -271,11 +244,21 @@ public final class EditSession
       listener.onSessionStart(editor, blipUi);
     }
   }
+  
+  private void fireOnSessionPreEnd(Editor editor, BlipView blipUi) {
+    for (Listener listener : listeners) {
+      listener.onSessionPreEnd(editor, blipUi);
+    }
+  }
 
   private void fireOnSessionEnd(Editor editor, BlipView blipUi) {
     for (Listener listener : listeners) {
       listener.onSessionEnd(editor, blipUi);
     }
+  }
+
+  @Override
+  public void onLoad(BlipView blipUi, boolean isRootBlip) {
   }
 
 }

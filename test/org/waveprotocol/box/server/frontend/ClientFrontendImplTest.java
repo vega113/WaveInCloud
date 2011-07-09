@@ -246,7 +246,7 @@ public class ClientFrontendImplTest extends TestCase {
   // for the wavelet is empty, so the size of wavelets is 0 and
   // isDeltasStartingAt(0) is failing. It wasn't a problem before fix to issue
   // http://code.google.com/p/wave-protocol/issues/detail?id=231 was applied as
-  // authoorization in order to access a wavelet was not
+  // authorization in order to access a wavelet was not
   // enforced.
   /**
   public void testIndexContainsWaveFromStore() throws Exception {

@@ -87,4 +87,8 @@ public final class ToolbarSwitcher implements EditSession.Listener {
     panel.getContents().setToolbar(viewToolbar.getWidget().getElement());
     panel.getGwtPanel().doAdopt(viewToolbar.getWidget());
   }
+
+  @Override
+  public void onSessionPreEnd(Editor e, BlipView blipUi) {
+  }
 }

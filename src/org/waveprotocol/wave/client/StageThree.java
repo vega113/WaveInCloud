@@ -34,6 +34,7 @@ import org.waveprotocol.wave.client.wavepanel.impl.edit.ParticipantController;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.impl.indicator.ReplyIndicatorController;
 import org.waveprotocol.wave.client.wavepanel.impl.menu.MenuController;
+import org.waveprotocol.wave.client.wavepanel.impl.title.WaveTitleHandler;
 import org.waveprotocol.wave.client.wavepanel.impl.toolbar.EditToolbar;
 import org.waveprotocol.wave.client.wavepanel.impl.toolbar.ToolbarSwitcher;
 import org.waveprotocol.wave.client.wavepanel.impl.toolbar.ViewToolbar;
@@ -181,8 +182,8 @@ public interface StageThree {
       Actions actions = getEditActions();
       EditSession edit = getEditSession();
       MenuController.install(actions, panel);
-      ToolbarSwitcher.install(stageTwo.getStageOne().getWavePanel(), getEditSession(),
-          getViewToolbar(), getEditToolbar());
+      ToolbarSwitcher.install(panel, edit, getViewToolbar(), getEditToolbar());
+      WaveTitleHandler.install(edit, models);
       ReplyIndicatorController.install(actions, edit, panel);
       EditController.install(focus, actions, panel);
       ParticipantController.install(panel, models, profiles, getLocalDomain());

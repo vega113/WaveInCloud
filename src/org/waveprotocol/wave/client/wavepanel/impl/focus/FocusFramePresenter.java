@@ -20,6 +20,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.client.common.util.KeyCombo;
+import org.waveprotocol.wave.client.scheduler.Scheduler.IncrementalTask;
+import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
+import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
+import org.waveprotocol.wave.client.scheduler.TimerService;
 import org.waveprotocol.wave.client.scroll.SmartScroller;
 import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
@@ -34,20 +38,30 @@ import org.waveprotocol.wave.model.wave.SourcesEvents;
  */
 public final class FocusFramePresenter
     implements SourcesEvents<FocusFramePresenter.Listener>, WavePanelImpl.LifecycleListener {
-
+  
   public interface Listener {
     void onFocusMoved(BlipView oldUi, BlipView newUi);
   }
 
   public interface FocusOrder {
+    
     BlipView getNext(BlipView current);
 
     BlipView getPrevious(BlipView current);
+
+    BlipView findNewest(BlipView blipUi);
   }
 
   public interface FrameKeyHandler {
     boolean onKeySignal(KeyCombo key, BlipView context);
   }
+  
+  /** The delay to focus on the required blip after wave is loaded. */
+  private static final int FOCUS_ON_BLIP_DELAY_MS = 800;
+  
+  private final TimerService delayScheduler = SchedulerInstance.getLowPriorityTimer();
+  
+  private final TimerService focusLockScheduler = SchedulerInstance.getLowPriorityTimer();
 
   /** Focus frame UI. */
   private final FocusFrameView view;
@@ -66,7 +80,7 @@ public final class FocusFramePresenter
 
   /** Blip that currently has the focus frame. May be {@code null}. */
   private BlipView blip;
-
+  
   /**
    * Creates a focus-frame presenter.
    */
@@ -89,6 +103,41 @@ public final class FocusFramePresenter
   @Override
   public void onReset() {
     blip = null;
+  }
+  
+  @Override
+  public void onLoad(BlipView blipUi, boolean isRootBlip) {
+    if (blipUi != null) {
+      if (!isRootBlip) {
+        maybeScrollToNextAndFocus(blipUi);
+      } else {
+        if (order != null) {
+          BlipView newestUnreadUi =  order.getNext(blipUi);
+          if (newestUnreadUi != null) {
+            blipUi = newestUnreadUi;
+          } else {
+            blipUi = order.findNewest(blipUi);
+          }
+        }
+        maybeScrollToNextAndFocus(blipUi);
+      }
+    }
+  }
+
+  private void maybeScrollToNextAndFocus(final BlipView blipUi) {
+    BlipView next = order.getNext(blipUi);
+    if (next != null) {
+      // Scroll first to the next blip, so the blip in focus is in the
+      // middle of the screen.
+      scroller.moveTo(next);
+    }
+    delayScheduler.scheduleDelayed(new Task() {
+      
+      @Override
+      public void execute() {
+        focus(blipUi);
+      }
+    }, FOCUS_ON_BLIP_DELAY_MS);
   }
 
   //
@@ -156,7 +205,7 @@ public final class FocusFramePresenter
       fireOnFocusMoved(oldUi, newUi);
     }
   }
-
+  
   private void detachChrome() {
     if (this.blip != null) {
       this.blip.getMeta().removeFocusChrome(view);
@@ -197,7 +246,7 @@ public final class FocusFramePresenter
    * Moves to the next blip as defined by an attached
    * {@link #setOrder(FocusOrder) ordering}, if there is one.
    */
-  public void focusNext() {
+  public void focusNextUnread() {
     // Real condition is that blip != null implies scroller != null.
     Preconditions.checkState(blip == null || scroller != null);
     if (blip != null && order != null) {

@@ -169,36 +169,44 @@ public class StagesProvider extends Stages {
     blipQueue.flush();
     BlipView blipUi = views.getBlipView(wave.getRoot().getRootThread().getFirstBlip());
     three.getEditActions().startEditing(blipUi);
+    
+    three.getStageTwo().getStageOne().getWavePanel().fireOnLoad(blipUi, false);
   }
 
   private void handleExistingWave(StageThree three) {
     // If there's blip reference then focus on that blip.
     String documentId = waveRef.getDocumentId();
-    if (documentId != null) {
-      ModelAsViewProvider views = two.getModelAsViewProvider();
-      BlipQueueRenderer blipQueue = two.getBlipQueue();
-      ConversationView wave = two.getConversations();
-      blipQueue.flush();
-      // Find conversation
-      Conversation conversation;
-      if (waveRef.hasWaveletId()) {
-        String id = ModernIdSerialiser.INSTANCE.serialiseWaveletId(waveRef.getWaveletId());
-        conversation = wave.getConversation(id);
-      } else {
-        // Unspecified wavelet means root.
-        conversation = wave.getRoot();
-      }
-      if (conversation != null) {
-        // Find selected blip.
-        ConversationBlip blip = wave.getRoot().getBlip(documentId);
-        if (blip != null) {
-          BlipView blipUi = views.getBlipView(blip);
-          if (blipUi != null) {
-            two.getStageOne().getFocusFrame().focus(blipUi);
-          }
-        }
-      }
+    ModelAsViewProvider views = two.getModelAsViewProvider();
+    BlipQueueRenderer blipQueue = two.getBlipQueue();
+    ConversationView wave = two.getConversations();
+    blipQueue.flush();
+    // Find conversation
+    Conversation conversation;
+    if (waveRef.hasWaveletId()) {
+      String id = ModernIdSerialiser.INSTANCE.serialiseWaveletId(waveRef.getWaveletId());
+      conversation = wave.getConversation(id);
+    } else {
+      // Unspecified wavelet means root.
+      conversation = wave.getRoot();
     }
+    BlipView blipUi = null;
+    boolean isRootBlip = true;
+    if (conversation != null) {
+      ConversationBlip blip = null;
+      // Find selected blip.
+      if (documentId != null) {
+        blip = wave.getRoot().getBlip(documentId);
+        if (blip != null) {
+          blipUi = views.getBlipView(blip);
+          isRootBlip = true;
+        }
+      } else {
+        blip = wave.getRoot().getRootThread().getFirstBlip();
+        blipUi = views.getBlipView(blip);
+        isRootBlip = true;
+      }
+    } 
+    three.getStageTwo().getStageOne().getWavePanel().fireOnLoad(blipUi, isRootBlip);
   }
 
   public void destroy() {

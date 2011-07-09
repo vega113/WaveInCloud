@@ -26,6 +26,7 @@ import org.waveprotocol.wave.client.wavepanel.event.EventDispatcherPanel;
 import org.waveprotocol.wave.client.wavepanel.event.EventHandlerRegistry;
 import org.waveprotocol.wave.client.wavepanel.event.Focusable;
 import org.waveprotocol.wave.client.wavepanel.event.KeySignalRouter;
+import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
@@ -84,7 +85,7 @@ public final class WavePanelImpl implements WavePanel, Focusable {
     Element frameDom = panelDom.getFirstChildElement();
     if (frameDom != null) {
       panel.init(frameDom);
-    }
+    } 
     return panel;
   }
 
@@ -205,6 +206,12 @@ public final class WavePanelImpl implements WavePanel, Focusable {
   private void fireOnReset() {
     for (LifecycleListener listener : listeners) {
       listener.onReset();
+    }
+  }
+
+  public void fireOnLoad(BlipView blipUi, boolean isRootBlip) {
+    for (LifecycleListener listener : listeners) {
+      listener.onLoad(blipUi, isRootBlip);
     }
   }
 }

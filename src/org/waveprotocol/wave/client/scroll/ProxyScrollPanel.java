@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.WavePanel.LifecycleListener;
+import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 
 /**
@@ -64,6 +65,10 @@ public final class ProxyScrollPanel implements ScrollPanel<View>, LifecycleListe
   @Override
   public void onReset() {
     scroller = null;
+  }
+  
+  @Override
+  public void onLoad(BlipView blipUi, boolean isRootBlip) {
   }
 
   // Forward API to scroller.

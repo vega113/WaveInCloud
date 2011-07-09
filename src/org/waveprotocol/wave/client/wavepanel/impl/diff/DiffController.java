@@ -189,4 +189,8 @@ public final class DiffController extends ConversationListenerImpl implements Ed
   public void onThreadDeleted(ObservableConversationThread thread) {
     BlipMappers.depthFirst(remove, thread);
   }
+
+  @Override
+  public void onSessionPreEnd(Editor e, BlipView blipUi) {
+  }
 }
