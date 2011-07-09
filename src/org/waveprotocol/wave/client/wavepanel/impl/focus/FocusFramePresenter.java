@@ -125,7 +125,7 @@ public final class FocusFramePresenter
   }
 
   private void maybeScrollToNextAndFocus(final BlipView blipUi) {
-    BlipView next = order.getNext(blipUi);
+    final BlipView next = order.getNext(blipUi);
     if (next != null) {
       // Scroll first to the next blip, so the blip in focus is in the
       // middle of the screen.
@@ -138,6 +138,13 @@ public final class FocusFramePresenter
         focus(blipUi);
       }
     }, FOCUS_ON_BLIP_DELAY_MS);
+    delayScheduler.scheduleDelayed(new Task() {
+      
+      @Override
+      public void execute() {
+        scroller.moveTo(blipUi);
+      }
+    }, FOCUS_ON_BLIP_DELAY_MS + 4000);
   }
 
   //
