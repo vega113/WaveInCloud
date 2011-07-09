@@ -68,7 +68,7 @@ public final class PasswordAdminRobot extends AbstractCliRobotAgent {
     String robotMessage = null;
     String adminId = modifiedBy;
     // Verify that the user that attempts to change the password has admin privileges.
-    if (!adminId.equals(serverAdminId)) {
+    if (!adminId.equals(maybeCompleteUserId(serverAdminId))) {
       robotMessage =
           "User " + adminId + " is not authorized to use " + getCommandName() + " command.";
     } else {
@@ -78,7 +78,7 @@ public final class PasswordAdminRobot extends AbstractCliRobotAgent {
         userId = args[1];
         String newPassword = args[2];
         // Add domain to the user id if needed.
-        userId = userId + (userId.contains("@") ? "" : "@" + getWaveDomain());
+        userId = maybeCompleteUserId(userId);
         ParticipantId participantId = ParticipantId.of(userId);
         changeUserPassword(newPassword, participantId, accountStore);
         robotMessage =
@@ -97,6 +97,10 @@ public final class PasswordAdminRobot extends AbstractCliRobotAgent {
       }
     }
     return robotMessage;
+  }
+
+  private String maybeCompleteUserId(String userId) {
+    return userId + (userId.contains("@") ? "" : "@" + getWaveDomain());
   }
   
   @Override
