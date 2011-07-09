@@ -18,9 +18,6 @@ package org.waveprotocol.wave.client.wavepanel.impl.reader;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.waveprotocol.wave.client.scheduler.Scheduler.IncrementalTask;
-import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
-import org.waveprotocol.wave.client.scheduler.TimerService;
 import org.waveprotocol.wave.client.wave.DocumentRegistry;
 import org.waveprotocol.wave.client.wave.InteractiveDocument;
 import org.waveprotocol.wave.client.wave.LocalSupplementedWave;
