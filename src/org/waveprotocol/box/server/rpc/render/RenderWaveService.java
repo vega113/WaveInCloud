@@ -413,6 +413,7 @@ public class RenderWaveService implements OperationService {
       String htmlId = "[" + blip.getBlipId() + "]";
       html = html.replace(htmlId, blipHtml);
     }
+    html = html + "<!-- " + wavelet.getTitle() + " -->";
     return html;
   }
 

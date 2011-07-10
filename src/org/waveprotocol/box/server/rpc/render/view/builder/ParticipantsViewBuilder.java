@@ -109,29 +109,29 @@ public final class ParticipantsViewBuilder implements UiBuilder {
       {
         open(output, Components.CONTAINER.getDomId(id), null, null);
         {
-          participantUis.outputHtml(output);
+//          participantUis.outputHtml(output);
 
           // Overflow-mode panel.
           openSpan(output, null, css.extra(), null);
           {
             openSpanWith(output, null, css.toggleGroup(), null, "onclick=\"" + onClickJs() + "\"");
             {
-              appendSpan(output, null, css.expandButton(), null);
+//              appendSpan(output, null, css.expandButton(), null);
               openSpan(output, null, null, null);
               {
-                output.appendPlainText("more");
+//                output.appendPlainText("more");
               }
               closeSpan(output);
             }
             closeSpan(output);
-            appendSpan(output, null, css.addButton(), TypeCodes.kind(Type.ADD_PARTICIPANT));
+//            appendSpan(output, null, css.addButton(), TypeCodes.kind(Type.ADD_PARTICIPANT));
           }
           closeSpan(output);
 
           // Single-line mode panel.
           openSpan(output, null, css.simple(), null);
           {
-            appendSpan(output, null, css.addButton(), TypeCodes.kind(Type.ADD_PARTICIPANT));
+//            appendSpan(output, null, css.addButton(), TypeCodes.kind(Type.ADD_PARTICIPANT));
           }
           closeSpan(output);
         }

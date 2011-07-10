@@ -86,15 +86,23 @@ public class RenderSharedWaveServlet extends HttpServlet {
     WaveletId waveletId = waveRef.getWaveletId();
     String blipId = null; // TODO (Yuri Z.) Enable up to blip level referencing.
     String innerHtml = fetchRenderedWavelet(waveId, waveletId, blipId, user);
+    String title = "Communicate and Collaborate in real time";
     if (innerHtml == null) {
       innerHtml = NO_CONVERSATIONS;
+    } else {
+      int start = innerHtml.lastIndexOf("<!-- ");
+      int end = innerHtml.lastIndexOf(" -->");
+      title = innerHtml.substring(start + 5, end);
+      
+      start = innerHtml.indexOf("Log in to edit");
+      innerHtml = innerHtml.substring(0,start + 40) + innerHtml.substring(start + 40).replaceAll("Log in to edit", " ");
     }
     String userIdStr =
         user != null ? user.getAddress() : "@" + AccountStoreHolder.getDefaultDomain();
     String link = "http://" + httpAddress + req.getRequestURI();
     String indexLink = "http://" + httpAddress + "/render/index.html";
     String outerHtml =
-        templates.process(Templates.OUTER_TEMPLATE, new String[] {userIdStr, innerHtml, waveRefStringValue, Templates.GA_FRAGMENT, link, indexLink});
+        templates.process(Templates.OUTER_TEMPLATE, new String[] {userIdStr, innerHtml, title, Templates.GA_FRAGMENT, link, indexLink});
     out.append(outerHtml);
     w.print(out.toString());
     w.flush();

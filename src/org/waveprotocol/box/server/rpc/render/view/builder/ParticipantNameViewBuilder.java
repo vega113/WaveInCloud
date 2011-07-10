@@ -67,7 +67,7 @@ public final class ParticipantNameViewBuilder implements IntrinsicParticipantVie
   @Override
   public void outputHtml(SafeHtmlBuilder output) {
     open(output, id, css.participant(), TypeCodes.kind(Type.PARTICIPANT));
-    output.appendEscaped(name);
+//    output.appendEscaped(name);
     close(output);
   }
 }
