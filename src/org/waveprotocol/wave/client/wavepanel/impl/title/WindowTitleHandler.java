@@ -66,19 +66,21 @@ public final class WindowTitleHandler implements WavePanel.LifecycleListener {
 
   @Override
   public void onLoad(BlipView blipUi, boolean isRootBlip) {
-    ConversationBlip blip = views.getBlip(blipUi);
-    Document document = blip.getContent();
     String waveTitle = "";
-    int docSize = document.size();
-    int location = document.firstAnnotationChange(0, docSize, TitleAnnotationHandler.KEY, null);
-    if (location != -1) {
-      waveTitle = document.getAnnotation(location, TitleAnnotationHandler.KEY);
-    } else {
-      // Use the first line of the blip as title.
-      waveTitle =
-        DocHelper.getTextForElement(document, LineContainers.LINE_TAGNAME);
+    if (blipUi != null && isRootBlip) {
+      ConversationBlip blip = views.getBlip(blipUi);
+      Document document = blip.getContent();
+      int docSize = document.size();
+      int location = document.firstAnnotationChange(0, docSize, TitleAnnotationHandler.KEY, null);
+      if (location != -1) {
+        waveTitle = document.getAnnotation(location, TitleAnnotationHandler.KEY);
+      } else {
+        // Use the first line of the blip as title.
+        waveTitle =
+          DocHelper.getTextForElement(document, LineContainers.LINE_TAGNAME);
+      }
     }
-    if (waveTitle == null || waveTitle.isEmpty() || waveTitle.length() < 3) {
+    if (waveTitle.isEmpty() || waveTitle.length() < 3) {
       waveTitle = DEFAULT_TITLE;
     }
     Window.setTitle(waveTitle);
