@@ -109,7 +109,7 @@ public final class FocusFramePresenter
   public void onLoad(BlipView blipUi, boolean isRootBlip) {
     if (blipUi != null) {
       if (!isRootBlip) {
-        maybeScrollToNextAndFocus(blipUi);
+        scrollAndFocus(blipUi);
       } else {
         if (order != null) {
           BlipView newestUnreadUi =  order.getNext(blipUi);
@@ -119,32 +119,34 @@ public final class FocusFramePresenter
             blipUi = order.findNewest(blipUi);
           }
         }
-        maybeScrollToNextAndFocus(blipUi);
+        scrollAndFocus(blipUi);
       }
     }
   }
 
-  private void maybeScrollToNextAndFocus(final BlipView blipUi) {
-    final BlipView next = order.getNext(blipUi);
-    if (next != null) {
-      // Scroll first to the next blip, so the blip in focus is in the
-      // middle of the screen.
-      scroller.moveTo(next);
-    }
+  private void scrollAndFocus(final BlipView blipUi) {
+    scroller.moveTo(blipUi);
+    delayScheduler.scheduleRepeating(new IncrementalTask() {
+      int counter = 0;
+
+      @Override
+      public boolean execute() {
+        counter++;
+        if (counter > 300) {
+          return false;
+        }
+        scroller.moveTo(blipUi);
+        return true;
+      }
+    }, 0, 10);
+
     delayScheduler.scheduleDelayed(new Task() {
-      
+
       @Override
       public void execute() {
         focus(blipUi);
       }
     }, FOCUS_ON_BLIP_DELAY_MS);
-    delayScheduler.scheduleDelayed(new Task() {
-      
-      @Override
-      public void execute() {
-        scroller.moveTo(blipUi);
-      }
-    }, FOCUS_ON_BLIP_DELAY_MS + 4000);
   }
 
   //
