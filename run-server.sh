@@ -15,6 +15,9 @@ WAVEINABOX_VERSION=`sed "s/[\\t ]*=[\\t ]*/=/g" build.properties | grep ^waveina
 . process-script-args.sh
 
 exec java $DEBUG_FLAGS \
+  -server \
+  -XX:ErrorFile=fatalerror.log \
+  -XX:+HeapDumpOnOutOfMemoryError \
   -Dorg.eclipse.jetty.util.log.DEBUG=true \
   -Djava.security.auth.login.config=jaas.config \
   -Dwave.server.config=server.config \
