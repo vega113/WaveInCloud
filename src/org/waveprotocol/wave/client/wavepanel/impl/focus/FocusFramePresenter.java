@@ -61,8 +61,6 @@ public final class FocusFramePresenter
   
   private final TimerService delayScheduler = SchedulerInstance.getLowPriorityTimer();
   
-  private final TimerService focusLockScheduler = SchedulerInstance.getLowPriorityTimer();
-
   /** Focus frame UI. */
   private final FocusFrameView view;
 
@@ -132,7 +130,7 @@ public final class FocusFramePresenter
       @Override
       public boolean execute() {
         counter++;
-        if (counter > 300) {
+        if (counter > 100) {
           return false;
         }
         scroller.moveTo(blipUi);
