@@ -256,9 +256,4 @@ public final class EditSession
       listener.onSessionEnd(editor, blipUi);
     }
   }
-
-  @Override
-  public void onLoad(BlipView blipUi, boolean isRootBlip) {
-  }
-
 }

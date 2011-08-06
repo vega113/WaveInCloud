@@ -34,17 +34,17 @@ import org.waveprotocol.wave.model.wave.SourcesEvents;
 
 /**
  * Presents the focus frame, and exposes an API for controlling it.
- *
+ * 
  */
-public final class FocusFramePresenter
-    implements SourcesEvents<FocusFramePresenter.Listener>, WavePanelImpl.LifecycleListener {
-  
+public final class FocusFramePresenter implements SourcesEvents<FocusFramePresenter.Listener>,
+    WavePanelImpl.ExtendedLifecycleListener {
+
   public interface Listener {
     void onFocusMoved(BlipView oldUi, BlipView newUi);
   }
 
   public interface FocusOrder {
-    
+
     BlipView getNext(BlipView current);
 
     BlipView getPrevious(BlipView current);
@@ -126,7 +126,7 @@ public final class FocusFramePresenter
     scroller.moveTo(blipUi);
     delayScheduler.scheduleRepeating(new IncrementalTask() {
       int counter = 0;
-
+      
       @Override
       public boolean execute() {
         counter++;
