@@ -33,7 +33,7 @@ import org.waveprotocol.wave.model.document.util.LineContainers;
  *
  * @author yurize@apache.org (Yuri Zelikov)
  */
-public final class WindowTitleHandler implements WavePanel.LifecycleListener {
+public final class WindowTitleHandler implements WavePanel.ExtendedLifecycleListener {
 
   
   private static final String DEFAULT_TITLE = "Communicate and collaborate in real-time";

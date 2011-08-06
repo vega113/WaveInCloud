@@ -174,13 +174,14 @@ public class StagesProvider extends Stages {
   }
 
   private void handleExistingWave(StageThree three) {
-    // If there's blip reference then focus on that blip.
-    String documentId = waveRef.getDocumentId();
     ModelAsViewProvider views = two.getModelAsViewProvider();
     BlipQueueRenderer blipQueue = two.getBlipQueue();
     ConversationView wave = two.getConversations();
     blipQueue.flush();
-    // Find conversation
+    
+    // Determine if waveRef has a documentId in it - if so, the referenced blip
+    // should receive the focus on wave load.
+    // First find conversation
     Conversation conversation;
     if (waveRef.hasWaveletId()) {
       String id = ModernIdSerialiser.INSTANCE.serialiseWaveletId(waveRef.getWaveletId());
@@ -191,6 +192,8 @@ public class StagesProvider extends Stages {
     }
     BlipView blipUi = null;
     boolean isRootBlip = true;
+    // If there's blip reference then focus on that blip.
+    String documentId = waveRef.getDocumentId();
     if (conversation != null) {
       ConversationBlip blip = null;
       // Find selected blip.
@@ -198,14 +201,16 @@ public class StagesProvider extends Stages {
         blip = wave.getRoot().getBlip(documentId);
         if (blip != null) {
           blipUi = views.getBlipView(blip);
-          isRootBlip = true;
+          isRootBlip = false;
         }
       } else {
+        // If no blip was referenced, then just pass the root blip so it can be
+        // used as point of reference to find newest unread/modified blip.
         blip = wave.getRoot().getRootThread().getFirstBlip();
         blipUi = views.getBlipView(blip);
         isRootBlip = true;
       }
-    } 
+    }
     three.getStageTwo().getStageOne().getWavePanel().fireOnLoad(blipUi, isRootBlip);
   }
 

@@ -67,10 +67,6 @@ public final class ProxyScrollPanel implements ScrollPanel<View>, LifecycleListe
     scroller = null;
   }
   
-  @Override
-  public void onLoad(BlipView blipUi, boolean isRootBlip) {
-  }
-
   // Forward API to scroller.
   @Override
   public Extent extentOf(View measurable) {
