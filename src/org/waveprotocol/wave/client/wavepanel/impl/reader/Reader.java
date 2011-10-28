@@ -27,10 +27,6 @@ import org.waveprotocol.wave.client.wavepanel.impl.focus.ViewTraverser;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
-import org.waveprotocol.wave.model.util.CollectionUtils;
-
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * Inteprets focus-frame movement as reading actions, and also provides an
@@ -42,7 +38,7 @@ public final class Reader implements FocusFramePresenter.Listener, FocusOrder {
   private final ModelAsViewProvider models;
   private final ViewTraverser traverser;
   private final DocumentRegistry<? extends InteractiveDocument> documents;
-  
+
   @VisibleForTesting
   Reader(LocalSupplementedWave supplement, ModelAsViewProvider models,
       DocumentRegistry<? extends InteractiveDocument> documents, ViewTraverser traverser) {
@@ -100,9 +96,6 @@ public final class Reader implements FocusFramePresenter.Listener, FocusOrder {
 
   @Override
   public BlipView getNext(BlipView start) {
-    if (!isRead(start)) {
-      return start;
-    }
     BlipView blipUi = traverser.getNext(start);
     while (blipUi != null && isRead(blipUi)) {
       blipUi = traverser.getNext(blipUi);
@@ -117,18 +110,5 @@ public final class Reader implements FocusFramePresenter.Listener, FocusOrder {
       blipUi = traverser.getPrevious(blipUi);
     }
     return blipUi;
-  }
-
-  @Override
-  public BlipView findNewest(BlipView start) {
-    BlipView blipUi = start;
-    Map<Long, BlipView> blips = CollectionUtils.newHashMap();
-    while (blipUi != null) {
-      ConversationBlip blip = models.getBlip(blipUi);
-      blips.put(blip.getLastModifiedTime() , blipUi);
-      blipUi = traverser.getNext(blipUi);
-    }
-    long lmt = Collections.max(blips.keySet());
-    return blips.get(lmt);
   }
 }

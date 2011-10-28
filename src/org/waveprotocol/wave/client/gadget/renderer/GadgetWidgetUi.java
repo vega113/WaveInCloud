@@ -248,23 +248,20 @@ public class GadgetWidgetUi extends Composite implements Hoverable {
     switch (throbberState) {
       case SMALL:
         gadgetIframe.addStyleName(CSS.loadingGadgetSmallThrobber());
-        height = Resources.RESOURCES.loadingGadgetSmall().getHeight() + 2;
+        height = Resources.RESOURCES.loadingGadgetSmall().getHeight();
         break;
       case LARGE:
         gadgetIframe.addStyleName(CSS.loadingGadgetLargeThrobber());
-        height = Resources.RESOURCES.loadingGadgetLarge().getHeight() + 2;
+        height = Resources.RESOURCES.loadingGadgetLarge().getHeight();
         break;
     }
     
-    gadgetIframe.addStyleName(CSS.loadingGadgetSmallThrobber());
-    throbberState = ThrobberState.SMALL;
     IFrameElement iframe = getIframeElement();
     iframe.setAttribute("vspace", "0");
     iframe.setAttribute("hspace", "0");
     iframe.setAttribute("frameBorder", "no");
     iframe.setAttribute("moduleId", gadgetName);
     iframe.setAttribute("display", "block");
-    iframe.setAttribute("width", "98%");
     iframe.setAttribute("height", height + "px");
     // TODO(user): scrolling policy/settings for the wave gadgets.
     iframe.setScrolling("no");
@@ -399,8 +396,8 @@ public class GadgetWidgetUi extends Composite implements Hoverable {
         break;
     }
     throbberState = ThrobberState.DISABLED;
-    gadgetFrame.removeStyleName(CSS.loadingGadgetFrame());
     gadgetIframe.addStyleName(CSS.loadedGadget());
+    gadgetFrame.removeStyleName(CSS.loadingGadgetFrame());
     gadgetFrame.addStyleName(CSS.loadedGadgetFrame());
   }
 

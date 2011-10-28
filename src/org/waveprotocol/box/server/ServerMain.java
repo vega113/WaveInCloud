@@ -35,6 +35,7 @@ import org.waveprotocol.box.server.authentication.SessionManager;
 import org.waveprotocol.box.server.frontend.ClientFrontend;
 import org.waveprotocol.box.server.frontend.ClientFrontendImpl;
 import org.waveprotocol.box.server.frontend.WaveClientRpcImpl;
+import org.waveprotocol.box.server.frontend.WaveletInfo;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
 import org.waveprotocol.box.server.persistence.PersistenceModule;
@@ -44,6 +45,7 @@ import org.waveprotocol.box.server.robots.RobotRegistrationServlet;
 import org.waveprotocol.box.server.robots.active.ActiveApiServlet;
 import org.waveprotocol.box.server.robots.agent.passwd.PasswordAdminRobot;
 import org.waveprotocol.box.server.robots.agent.passwd.PasswordRobot;
+import org.waveprotocol.box.server.robots.agent.welcome.WelcomeRobot;
 import org.waveprotocol.box.server.robots.dataapi.DataApiOAuthServlet;
 import org.waveprotocol.box.server.robots.dataapi.DataApiServlet;
 import org.waveprotocol.box.server.robots.passive.RobotsGateway;
@@ -54,12 +56,9 @@ import org.waveprotocol.box.server.rpc.FetchServlet;
 import org.waveprotocol.box.server.rpc.SearchServlet;
 import org.waveprotocol.box.server.rpc.ServerRpcProvider;
 import org.waveprotocol.box.server.rpc.SignOutServlet;
-import org.waveprotocol.box.server.rpc.SitemapServlet;
 import org.waveprotocol.box.server.rpc.UserRegistrationServlet;
 import org.waveprotocol.box.server.rpc.WaveClientServlet;
-import org.waveprotocol.box.server.rpc.render.RenderSharedWaveServlet;
-import org.waveprotocol.box.server.rpc.render.WaveRefServlet;
-import org.waveprotocol.box.server.rpc.render.WavelistRenderServlet;
+import org.waveprotocol.box.server.rpc.WaveRefServlet;
 import org.waveprotocol.box.server.waveserver.WaveBus;
 import org.waveprotocol.box.server.waveserver.WaveServerException;
 import org.waveprotocol.box.server.waveserver.WaveletProvider;
@@ -114,7 +113,7 @@ public class ServerMain {
     public void init(ServletConfig config) throws ServletException {
       proxyServlet.init(config);
     }
-    
+
     @Override
     public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
       proxyServlet.service(req, res);
@@ -156,7 +155,7 @@ public class ServerMain {
 
     ServerRpcProvider server = injector.getInstance(ServerRpcProvider.class);
     WaveBus waveBus = injector.getInstance(WaveBus.class);
-    
+
     String domain =
       injector.getInstance(Key.get(String.class, Names.named(CoreSettings.WAVE_SERVER_DOMAIN)));
     if (!ParticipantIdUtil.isDomainAddress(ParticipantIdUtil.makeDomainAddress(domain))) {
@@ -218,10 +217,7 @@ public class ServerMain {
     server.addServlet("/robot/rpc", ActiveApiServlet.class);
     server.addServlet("/webclient/remote_logging", RemoteLoggingServiceImpl.class);
     server.addServlet("/profile/*", FetchProfilesServlet.class);
-    server.addServlet("/render/wavelist", WavelistRenderServlet.class);
-    server.addServlet("/render/wave/*", RenderSharedWaveServlet.class);
     server.addServlet("/waveref/*", WaveRefServlet.class);
-    server.addServlet("/sitemap.txt", SitemapServlet.class);
 
     String gadgetHostName =
         injector
@@ -239,19 +235,21 @@ public class ServerMain {
     RobotsGateway robotsGateway = injector.getInstance(RobotsGateway.class);
     waveBus.subscribe(robotsGateway);
   }
-  
+
   private static void initializeRobotAgents(Injector injector, ServerRpcProvider server) {
     server.addServlet(PasswordRobot.ROBOT_URI + "/*", PasswordRobot.class);
     server.addServlet(PasswordAdminRobot.ROBOT_URI + "/*", PasswordAdminRobot.class);
+    server.addServlet(WelcomeRobot.ROBOT_URI + "/*", WelcomeRobot.class);
   }
 
   private static void initializeFrontend(Injector injector, ServerRpcProvider server,
       WaveBus waveBus) throws WaveServerException {
     HashedVersionFactory hashFactory = injector.getInstance(HashedVersionFactory.class);
-   
+
     WaveletProvider provider = injector.getInstance(WaveletProvider.class);
+    WaveletInfo waveletInfo = WaveletInfo.create(hashFactory, provider);
     ClientFrontend frontend =
-        ClientFrontendImpl.create(hashFactory, provider, waveBus);
+        ClientFrontendImpl.create(provider, waveBus, waveletInfo);
 
     ProtocolWaveClientRpc.Interface rpcImpl = WaveClientRpcImpl.create(frontend, false);
     server.registerService(ProtocolWaveClientRpc.newReflectiveService(rpcImpl));

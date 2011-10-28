@@ -1,5 +1,5 @@
 /**
- * Copyright 2010 Google Inc.
+ * Copyright 2011 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,6 @@ package org.waveprotocol.wave.client.wavepanel.impl.toolbar.attachment;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -41,11 +38,7 @@ import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.RootPanel;
 
-import org.waveprotocol.wave.client.common.util.UserAgent;
-import org.waveprotocol.wave.client.scheduler.ScheduleCommand;
-import org.waveprotocol.wave.client.scheduler.Scheduler;
 import org.waveprotocol.wave.client.wavepanel.view.AttachmentPopupView;
 import org.waveprotocol.wave.client.widget.popup.CenterPopupPositioner;
 import org.waveprotocol.wave.client.widget.popup.PopupChrome;
@@ -53,13 +46,12 @@ import org.waveprotocol.wave.client.widget.popup.PopupChromeFactory;
 import org.waveprotocol.wave.client.widget.popup.PopupEventListener;
 import org.waveprotocol.wave.client.widget.popup.PopupEventSourcer;
 import org.waveprotocol.wave.client.widget.popup.PopupFactory;
-import org.waveprotocol.wave.client.widget.popup.RelativePopupPositioner;
 import org.waveprotocol.wave.client.widget.popup.UniversalPopup;
 import org.waveprotocol.wave.media.model.AttachmentId;
 
 /**
- * Widget implementation of a blip link info popup.
- * 
+ * Widget implementation of the {@link AttachmentPopupView}.
+ *
  * @author yurize@apache.org (Yuri Zelikov)
  */
 public final class AttachmentPopupWidget extends Composite implements AttachmentPopupView,
@@ -73,7 +65,7 @@ public final class AttachmentPopupWidget extends Composite implements Attachment
     /** CSS */
     @Source("AttachmentPopupWidget.css")
     Style style();
-    
+
     @Source("spinner.gif")
     ImageResource spinner();
   }
@@ -83,15 +75,15 @@ public final class AttachmentPopupWidget extends Composite implements Attachment
     String self();
 
     String title();
-    
+
     String spinnerPanel();
-    
+
     String spinner();
-    
+
     String status();
-    
+
     String error();
-    
+
     String done();
   }
 
@@ -118,12 +110,14 @@ public final class AttachmentPopupWidget extends Composite implements Attachment
   @UiField
   Hidden formAttachmentId;
   @UiField
+  Hidden formWaveRef;
+  @UiField
   HorizontalPanel spinnerPanel;
   @UiField
   Label status;
   @UiField
   Image spinnerImg;
-  
+
   /** Popup containing this widget. */
   private final UniversalPopup popup;
 
@@ -131,6 +125,7 @@ public final class AttachmentPopupWidget extends Composite implements Attachment
   private Listener listener;
 
   private AttachmentId attachmentId;
+  private String waveRefStr;
 
   /**
    * Creates link info popup.
@@ -146,9 +141,10 @@ public final class AttachmentPopupWidget extends Composite implements Attachment
     form.addSubmitHandler(new FormPanel.SubmitHandler() {
       @Override
       public void onSubmit(SubmitEvent event) {
-
+        // No implementation.
       }
     });
+
     form.addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
       @Override
       public void onSubmitComplete(SubmitCompleteEvent event) {
@@ -161,7 +157,7 @@ public final class AttachmentPopupWidget extends Composite implements Attachment
         if (results != null && results.contains("OK")) {
           status.setText("Done!");
           status.addStyleName(style.done());
-          listener.onDone(attachmentId.getId(), fileUpload.getFilename());
+          listener.onDone(waveRefStr, attachmentId.getId(), fileUpload.getFilename());
           hide();
         } else {
           status.setText("Error!");
@@ -176,10 +172,11 @@ public final class AttachmentPopupWidget extends Composite implements Attachment
       public void onClick(ClickEvent event) {
         String filename = fileUpload.getFilename();
         if (filename.length() == 0) {
-          Window.alert("Error!");
+          Window.alert("No file to upload!");
         } else {
           spinnerPanel.setVisible(true);
           formAttachmentId.setValue(attachmentId.getId());
+          formWaveRef.setValue(waveRefStr);
           form.submit();
         }
       }
@@ -187,27 +184,7 @@ public final class AttachmentPopupWidget extends Composite implements Attachment
 
     // Wrap in a popup.
     PopupChrome chrome = PopupChromeFactory.createPopupChrome();
-    if (UserAgent.isFirefox()) {
-      popup =
-          PopupFactory.createPopup(this.getElement(), new RelativePopupPositioner() {
-            
-            @Override
-            public void setPopupPositionAndMakeVisible(Element relative, final Element p) {
-              ScheduleCommand.addCommand(new Scheduler.Task() {
-                @Override
-                public void execute() {
-                  p.getStyle().setLeft((RootPanel.get().getOffsetWidth() - p.getOffsetWidth()) / 2, Unit.PX);
-                  int top = (RootPanel.get().getOffsetHeight() - p.getOffsetHeight()) / 4;
-                  p.getStyle().setTop(Math.max(top, 280), Unit.PX);
-                  p.getStyle().setVisibility(Visibility.VISIBLE);
-                }
-              });
-            }
-          }, chrome,
-              true);
-    } else {
-      popup = PopupFactory.createPopup(null, new CenterPopupPositioner(), chrome, true);
-    }
+    popup = PopupFactory.createPopup(null, new CenterPopupPositioner(), chrome, true);
     popup.add(this);
     popup.addPopupEventListener(this);
   }
@@ -255,5 +232,10 @@ public final class AttachmentPopupWidget extends Composite implements Attachment
   @Override
   public void setAttachmentId(AttachmentId id) {
     attachmentId = id;
+  }
+
+  @Override
+  public void setWaveRef(String waveRefStr) {
+    this.waveRefStr = waveRefStr;
   }
 }

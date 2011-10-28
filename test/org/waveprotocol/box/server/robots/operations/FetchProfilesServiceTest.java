@@ -22,7 +22,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.gwt.dev.util.collect.Lists;
+import com.google.common.collect.Lists;
 import com.google.wave.api.FetchProfilesRequest;
 import com.google.wave.api.FetchProfilesResult;
 import com.google.wave.api.InvalidRequestException;
@@ -50,10 +50,10 @@ import java.util.Map;
  */
 public class FetchProfilesServiceTest extends TestCase {
 
-  private static final String ADDRESS = "me@example.com";
+  private static final String ADDRESS = "john.smith@example.com";
   private static final String NAME = "John Smith";
-  private static final String PROFILE_URL = "http://some/profile.url";
-  private static final String IMAGE_URL = "http://some/image.url";
+  private static final String PROFILE_URL = "";
+  private static final String IMAGE_URL = "/static/images/unknown.jpg";
 
   private FetchProfilesService service;
   
@@ -64,7 +64,7 @@ public class FetchProfilesServiceTest extends TestCase {
   @Override
   protected void setUp() {
     MockitoAnnotations.initMocks(this);
-    FetchProfilesRequest request = new FetchProfilesRequest(Lists.create(ADDRESS));
+    FetchProfilesRequest request = new FetchProfilesRequest(Lists.newArrayList(ADDRESS));
     when(operation.getParameter(ParamsProperty.FETCH_PROFILES_REQUEST)).thenReturn(request);
     when(fakeProfilesFetcher.fetchProfile(ADDRESS)).thenReturn(
         new ParticipantProfile(ADDRESS, NAME, IMAGE_URL, PROFILE_URL));
@@ -74,11 +74,18 @@ public class FetchProfilesServiceTest extends TestCase {
   public void testFetchProfilesServiceWorks() throws InvalidRequestException {
     service.execute(operation, context, ParticipantId.ofUnsafe(ADDRESS));
     verify(context).constructResponse(eq(operation),
-        argThat(matchesSearchResult(ADDRESS, NAME, PROFILE_URL, IMAGE_URL)));
+        argThat(matchesFetchResult(ADDRESS, NAME, PROFILE_URL, IMAGE_URL)));
+  }
+  
+  public void testSimpleProfilesFetcherWorks() throws InvalidRequestException {
+    service = new FetchProfilesService(FetchProfilesService.ProfilesFetcher.SIMPLE_PROFILES_FETCHER);
+    service.execute(operation, context, ParticipantId.ofUnsafe(ADDRESS));
+    verify(context).constructResponse(eq(operation),
+        argThat(matchesFetchResult(ADDRESS, NAME, PROFILE_URL, IMAGE_URL)));
   }
 
   // *** Helper
-  public Matcher<Map<ParamsProperty, Object>> matchesSearchResult(final String address,
+  public Matcher<Map<ParamsProperty, Object>> matchesFetchResult(final String address,
       final String name, final String profileUrl, final String imageUrl) {
     return new BaseMatcher<Map<ParamsProperty, Object>>() {
       @SuppressWarnings("unchecked")

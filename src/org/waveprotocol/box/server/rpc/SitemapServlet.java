@@ -116,7 +116,7 @@ public class SitemapServlet extends HttpServlet {
     List<String> sharedWaveUris = Lists.newArrayListWithCapacity(digests.size() + 1);
     for (Digest digest : digests) {
       String digestId = digest.getWaveId().replace("!", "/");
-      String href = "http://" + httpAddress +  "/waveref/" + digestId;
+      String href = "http://" + httpAddress +  "/render/wave/" + digestId;
       sharedWaveUris.add(href);
     }
     return sharedWaveUris;

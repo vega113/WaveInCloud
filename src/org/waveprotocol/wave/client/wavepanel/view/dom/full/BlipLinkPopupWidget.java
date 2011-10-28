@@ -61,8 +61,6 @@ public final class BlipLinkPopupWidget extends Composite
     String explanation();
 
     String link();
-    
-    String waverefLink();
 
     String self();
 
@@ -121,7 +119,9 @@ public final class BlipLinkPopupWidget extends Composite
   @Override
   public void setLinkInfo(String url) {
     linkInfoBox.setText(url);
-    String path = GWT.getHostPageBaseURL() + "waveref/" + url.substring(WaveRefConstants.WAVE_URI_PREFIX.length());
+    String path =
+        GWT.getHostPageBaseURL() + "waveref/"
+            + url.substring(WaveRefConstants.WAVE_URI_PREFIX.length());
     waverefLink.setText(path);
   }
 

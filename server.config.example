@@ -6,7 +6,7 @@
 
 
 # Domain name of the wave server 
-# Default value: local
+# Default value: local.net
 wave_server_domain = @WAVE_SERVER_DOMAIN@
 
 # A comma separated list of address on which to listen for connections.
@@ -66,6 +66,11 @@ delta_store_type = @DELTA_STORE_TYPE@
 # Default value: _deltas
 delta_store_directory = @DELTA_STORE_DIRECTORY@
 
+# The location where user sessions are persisted on disk. This allow to restore user sessions
+# between restarts.
+# Default value: _sessions
+sessions_store_directory = @SESSIONS_STORE_DIRECTORY@
+
 # Set false to use raw WebSockets instead of Socket.IO (still a bit experimental) in the webclient
 # Default value: true
 use_socketio = @USE_SOCKETIO@
@@ -77,7 +82,8 @@ use_socketio = @USE_SOCKETIO@
 admin_user = @ADMIN_USER@
 
 # The wave id of the welcome template wave. (Without domain, for example: w+Fxjs_-ZPmmA).
-# If filled in then a copy of this wave will be automatically added to the inbox of every new user.
+# If filled in then a copy of this wave (actually only the root blip) will be 
+# automatically added to the inbox of every new user.
 # Default value: "" (empty)
 welcome_wave_id = @WELCOME_WAVE_ID@
 

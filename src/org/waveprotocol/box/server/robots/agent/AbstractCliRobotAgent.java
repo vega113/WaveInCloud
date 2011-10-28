@@ -37,15 +37,17 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.persistence.AccountStore;
+import org.waveprotocol.box.server.robots.register.RobotRegistrar;
+import org.waveprotocol.box.server.robots.register.RobotRegistrarImpl;
 import org.waveprotocol.wave.model.id.TokenGenerator;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
 /**
- * The base for robot agents that run on the WIAB server and interact with
- * users by entering commands as text in the blips.
- * 
+ * The base for robot agents that run on the WIAB server and interact with users
+ * by entering commands as text in the blips.
+ *
  * @author yurize@apache.org (Yuri Zelikov)
  */
 @SuppressWarnings("serial")
@@ -55,18 +57,19 @@ public abstract class AbstractCliRobotAgent extends AbstractBaseRobotAgent {
   private final Options options;
   private final CommandLineParser parser;
   private final HelpFormatter helpFormatter;
-  
+
   /**
    * Constructor. Initializes the agent to serve on the URI provided by
    * {@link #getRobotUri()} and ensures that the agent is registered in the
    * Account store.
-   * 
+   *
    * @param injector the injector instance.
    */
   public AbstractCliRobotAgent(Injector injector) {
     this(injector.getInstance(Key.get(String.class, Names.named(CoreSettings.WAVE_SERVER_DOMAIN))),
-        injector.getInstance(AccountStore.class), injector.getInstance(TokenGenerator.class),
-        injector.getInstance(ServerFrontendAddressHolder.class));
+        injector.getInstance(TokenGenerator.class), injector
+            .getInstance(ServerFrontendAddressHolder.class), injector
+            .getInstance(AccountStore.class), injector.getInstance(RobotRegistrarImpl.class));
   }
 
   /**
@@ -74,9 +77,10 @@ public abstract class AbstractCliRobotAgent extends AbstractBaseRobotAgent {
    * {@link #getRobotUri()} and ensures that the agent is registered in the
    * Account store.
    */
-  AbstractCliRobotAgent(String waveDomain, AccountStore accountStore, TokenGenerator tokenGenerator,
-      ServerFrontendAddressHolder frontendAddressHolder) {
-    super(waveDomain, accountStore, tokenGenerator, frontendAddressHolder);
+  AbstractCliRobotAgent(String waveDomain, TokenGenerator tokenGenerator,
+      ServerFrontendAddressHolder frontendAddressHolder, AccountStore accountStore,
+      RobotRegistrar robotRegistrar) {
+    super(waveDomain, tokenGenerator, frontendAddressHolder, accountStore, robotRegistrar);
     parser = new PosixParser();
     helpFormatter = new HelpFormatter();
     options = initOptions();
@@ -106,7 +110,7 @@ public abstract class AbstractCliRobotAgent extends AbstractBaseRobotAgent {
     }
     if (commandLine != null) {
       if (commandLine.hasOption("help")
-      // Or if only options.
+          // Or if only options.
           || (commandLine.getArgs().length - commandLine.getOptions().length <= 1)) {
         appendLine(blip, getFullDescription());
       } else {
@@ -118,7 +122,7 @@ public abstract class AbstractCliRobotAgent extends AbstractBaseRobotAgent {
 
   /**
    * Validates and parses the input for the command.
-   * 
+   *
    * @param blipContent the blip contents.
    * @return the command line {@link CommandLine} object with parsed data from
    *         the blip contents or null in case the content doesn't contain a
@@ -142,17 +146,18 @@ public abstract class AbstractCliRobotAgent extends AbstractBaseRobotAgent {
       int argsNum = args.length - commandLine.getOptions().length - 1;
       // If there are only options in the command - then it is also invalid and
       // have to display usage anyway.
-      if ((argsNum > 0) && (argsNum < getMinNumOfArguments() || argsNum > getMaxNumOfArguments())) {
+      if ((argsNum > 0)
+          && (argsNum < getMinNumOfArguments() || argsNum > getMaxNumOfArguments())) {
         String message = null;
         if (getMinNumOfArguments() == getMaxNumOfArguments()) {
           message =
-              String.format("Invalid number of arguments. Expected: %d , actual: %d %s",
-                  getMinNumOfArguments(), argsNum, getUsage());
+            String.format("Invalid number of arguments. Expected: %d , actual: %d %s",
+                getMinNumOfArguments(), argsNum, getUsage());
         } else {
           message =
-              String.format(
-                  "Invalid number of arguments. Expected between %d and %d, actual: %d. %s",
-                  getMinNumOfArguments(), getMaxNumOfArguments(), argsNum, getUsage());
+            String.format(
+                "Invalid number of arguments. Expected between %d and %d, actual: %d. %s",
+                getMinNumOfArguments(), getMaxNumOfArguments(), argsNum, getUsage());
         }
         throw new IllegalArgumentException(message);
       }
@@ -185,7 +190,7 @@ public abstract class AbstractCliRobotAgent extends AbstractBaseRobotAgent {
 
   /**
    * Initializes basic options. Override if more options needed.
-   * 
+   *
    * @return the command options.
    */
   protected Options initOptions() {
@@ -218,7 +223,7 @@ public abstract class AbstractCliRobotAgent extends AbstractBaseRobotAgent {
 
   /**
    * Attempts to execute the command.
-   * 
+   *
    * @param commandLine the commandLine with arguments and/or options entered by
    *        the user.
    * @param modifiedBy the user that entered the content.

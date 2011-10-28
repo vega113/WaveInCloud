@@ -225,8 +225,8 @@
   <target name="compile-dep">
     <uptodate targetfile="${dep}/compile" property="skip.compile">
       <srcfiles dir="${lib.dir}"/>
-      <srcfiles dir="${src.dir}" includes="**/*.java"/>
-      <srcfiles dir="${gen.dir}" includes="**/*.java"/>
+      <srcfiles dir="${src.dir}" includes="**"/>
+      <srcfiles dir="${gen.dir}" includes="**"/>
     </uptodate>
   </target>
   <target name="compile" depends="compile-proto, compile-gxp, compile-messages, compile-dep"
@@ -512,6 +512,7 @@
       </fileset>
       <fileset dir="${lib.codegen}">
          <include name="gwt/gwt-user.jar"/>
+         <include name="gwt/gwt-dev.jar"/>
       </fileset>
     </unzip>
     <copy todir="${staging.dir}" preservelastmodified="true">
@@ -601,10 +602,11 @@
         <include name="org/apache/commons/codec/**/*" />
         <include name="org/apache/commons/collections/**/*" />
         <include name="org/apache/commons/configuration/**/*" />
-      	<include name="org/apache/commons/fileupload/**/*" />
+        <include name="org/apache/commons/fileupload/**/*" />
         <include name="org/apache/commons/httpclient/**/*" />
         <include name="org/apache/commons/lang/**/*" />
         <include name="org/apache/commons/logging/**/*" />
+        <include name="org/apache/commons/io/**/*" />
         <include name="org/bson/**/*" />
         <include name="org/codehaus/jackson/**/*" />
         <include name="org/dom4j/**/*" />

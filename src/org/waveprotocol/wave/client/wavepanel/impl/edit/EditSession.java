@@ -53,8 +53,6 @@ public final class EditSession
   public interface Listener {
     void onSessionStart(Editor e, BlipView blipUi);
 
-    void onSessionPreEnd(Editor e, BlipView blipUi);
-    
     void onSessionEnd(Editor e, BlipView blipUi);
   }
 
@@ -74,8 +72,11 @@ public final class EditSession
   private final DocumentRegistry<? extends InteractiveDocument> documents;
   private final LogicalPanel container;
   private final CopyOnWriteSet<Listener> listeners = CopyOnWriteSet.create();
+  /** Writes caret annotations based on selection. */
+  // This is only a dependency, rather than being a listener of EditSession
+  // events, in order that the extractor can get the session-end event before
+  // the editor has been detached.
   private final SelectionExtractor selectionExtractor;
-  
   /** The UI of the document being edited. */
   private BlipView editing;
   /** Editor control. */
@@ -164,7 +165,6 @@ public final class EditSession
    */
   private void endSession() {
     if (isEditing()) {
-      fireOnSessionPreEnd(editor, editing);
       selectionExtractor.stop(editor);
       container.doOrphan(editor.getWidget());
       editor.blur();
@@ -244,16 +244,11 @@ public final class EditSession
       listener.onSessionStart(editor, blipUi);
     }
   }
-  
-  private void fireOnSessionPreEnd(Editor editor, BlipView blipUi) {
-    for (Listener listener : listeners) {
-      listener.onSessionPreEnd(editor, blipUi);
-    }
-  }
 
   private void fireOnSessionEnd(Editor editor, BlipView blipUi) {
     for (Listener listener : listeners) {
       listener.onSessionEnd(editor, blipUi);
     }
   }
+
 }

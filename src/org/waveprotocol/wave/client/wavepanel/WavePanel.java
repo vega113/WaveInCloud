@@ -19,7 +19,6 @@ package org.waveprotocol.wave.client.wavepanel;
 import org.waveprotocol.wave.client.common.util.LogicalPanel;
 import org.waveprotocol.wave.client.wavepanel.event.EventHandlerRegistry;
 import org.waveprotocol.wave.client.wavepanel.event.KeySignalRouter;
-import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
 import org.waveprotocol.wave.model.wave.SourcesEvents;
@@ -48,20 +47,6 @@ public interface WavePanel extends SourcesEvents<WavePanel.LifecycleListener> {
      * and has been discarded.
      */
     void onReset();
-  }
-  
-  public interface ExtendedLifecycleListener extends LifecycleListener {
-    /**
-     * Notifies this listener that the wave panel is now fully rendered.
-     * 
-     * @param blipUi the blip that was referenced in wave link or the root blip.
-     * @param isRootBlip if <code>true</code> - then the blipUi passed is just a
-     *        root blip that can be used to find next unread/modified blip. if
-     *        <code>false</code> then the blipUi that is passed was referenced
-     *        and should receive the focus with overriding other focus selection
-     *        strategies.
-     */
-    void onLoad(BlipView blipUi, boolean isRootBlip);
   }
 
   /**

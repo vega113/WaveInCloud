@@ -42,6 +42,7 @@ public class CoreSettings {
   public static final String ACCOUNT_STORE_DIRECTORY = "account_store_directory";
   public static final String DELTA_STORE_TYPE = "delta_store_type";
   public static final String DELTA_STORE_DIRECTORY = "delta_store_directory";
+  public static final String SESSIONS_STORE_DIRECTORY = "sessions_store_directory";
   public static final String FLASHSOCKET_POLICY_PORT = "flashsocket_policy_port";
   public static final String USE_SOCKETIO = "use_socketio";
   public static final String GADGET_SERVER_HOSTNAME = "gadget_server_hostname";
@@ -49,7 +50,7 @@ public class CoreSettings {
   public static final String GADGET_SERVER_PATH = "gadget_server_path";
   public static final String ADMIN_USER = "admin_user";
   public static final String  WELCOME_WAVE_ID = "welcome_wave_id";
-  
+
   @Setting(name = WAVE_SERVER_DOMAIN)
   private static String waveServerDomain;
 
@@ -116,6 +117,12 @@ public class CoreSettings {
       defaultValue = "_deltas")
   private static String deltaStoreDirectory;
 
+  @Setting(name = SESSIONS_STORE_DIRECTORY,
+      description = "Location on disk where the user sessions are persisted. Must be writeable by the "
+          + "wave-in-a-box process.",
+      defaultValue = "_sessions")
+  private static String sessionsStoreDirectory;
+
   @Setting(name = FLASHSOCKET_POLICY_PORT,
       description = "Port on which to listen for Flashsocket policy requests.",
       defaultValue = "843")
@@ -132,15 +139,15 @@ public class CoreSettings {
   @Setting(name = GADGET_SERVER_PORT, description = "The port of the gadget server.",
       defaultValue = "80")
   private static int gadgetServerPort;
-  
+
   @Setting(name = GADGET_SERVER_PATH, description = "The URL path of the gadget server.",
       defaultValue = "/gadgets")
   private static String gadgetServerPath;
-  
+
   @Setting(name = ADMIN_USER, description = "The admin user id for this server.",
       defaultValue = "@example.com")
   private static String adminUser;
-  
+
   @Setting(name = WELCOME_WAVE_ID, description = "The welcome wave id.",
       defaultValue = "UNDEFINED")
   private static String welcomeWaveId;

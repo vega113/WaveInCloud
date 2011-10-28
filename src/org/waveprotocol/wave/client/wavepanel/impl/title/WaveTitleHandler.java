@@ -17,75 +17,85 @@
 
 package org.waveprotocol.wave.client.wavepanel.impl.title;
 
-import org.waveprotocol.wave.client.doodad.title.TitleAnnotationHandler;
 import org.waveprotocol.wave.client.editor.Editor;
+import org.waveprotocol.wave.client.editor.EditorContext;
+import org.waveprotocol.wave.client.editor.EditorUpdateEvent;
+import org.waveprotocol.wave.client.editor.EditorUpdateEvent.EditorUpdateListener;
 import org.waveprotocol.wave.client.editor.content.CMutableDocument;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.EditSession;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.model.conversation.ConversationBlip;
-import org.waveprotocol.wave.model.document.util.DocHelper;
-import org.waveprotocol.wave.model.document.util.LineContainers;
+import org.waveprotocol.wave.model.conversation.TitleHelper;
+import org.waveprotocol.wave.model.document.util.Range;
 
 /**
- * Automatically sets the wave title to the first line of the root blip on the edit session end if:
+ * Handles automatic setting of the wave title if the following conditions are true:
  * <ol>
  * <li>The edited blip is a root blip.</li>
- * <li>Or the wave title is empty.</li>
+ * <li>The edited line is the first line.</li>
+ * <li>No explicit title for this wave is set.</li>
  * </ol>
  *
  * @author yurize@apache.org (Yuri Zelikov)
  */
-public final class WaveTitleHandler implements EditSession.Listener {
+public final class WaveTitleHandler implements EditorUpdateListener, EditSession.Listener {
 
   private final EditSession editSession;
   private final ModelAsViewProvider views;
-  
-  private static boolean hastTitleAnnotation(CMutableDocument mutable) {
-    int docSize = mutable.size();
-    return mutable.firstAnnotationChange(0, docSize, TitleAnnotationHandler.KEY, null) != -1;
-  }
 
-  /**
-   * Sets or replaces an automatic title for the wave based on the first line of the root
-   * blip. 
-   */
-  private static void computeAndSetWaveTitle(CMutableDocument mutable) {
-    // Sets or replaces the wave title.
-    mutable.setAnnotation(0, 1, TitleAnnotationHandler.KEY,
-        DocHelper.getTextForElement(mutable, LineContainers.LINE_TAGNAME));
-  }
-  
+  private BlipView blipUi;
+  private EditorContext editor;
+
   public static WaveTitleHandler install(EditSession editSession, ModelAsViewProvider views) {
     return new WaveTitleHandler(editSession, views);
   }
-  
+
   private WaveTitleHandler(EditSession editSession, ModelAsViewProvider views) {
     this.views = views;
     this.editSession = editSession;
     init();
   }
-  
+
   private void init() {
     editSession.addListener(this);
   }
 
+  // Listeners methods.
   @Override
-  public void onSessionStart(Editor e, BlipView blipUi) {
+  public void onSessionStart(Editor editor, BlipView blipUi) {
+    editor.addUpdateListener(this);
+    this.blipUi = blipUi;
   }
 
   @Override
   public void onSessionEnd(Editor editor, BlipView blipUi) {
+    editor.removeUpdateListener(this);
+    this.blipUi = null;
+    this.editor = null;
   }
 
   @Override
-  public void onSessionPreEnd(Editor editor, BlipView blipUi) {
-    // Set the wave title if needed.
-    if (blipUi != null) {
-      CMutableDocument mutable = editor.getDocument();
+  public void onUpdate(EditorUpdateEvent event) {
+    editor = event.context();
+    if (event.contentChanged() && editor.isEditing()) {
+      maybeSetOrUpdateTitle();
+    }
+  }
+
+  /**
+   * Sets or replaces an automatic title for the wave by annotating the first
+   * line of the root blip with <code>conv/title</code> annotation. Has
+   * effect only when the first line of the root blip is edited and no explicit
+   * title is set.
+   */
+  private void maybeSetOrUpdateTitle() {
+    if (blipUi != null && editor != null) {
+      CMutableDocument document = editor.getDocument();
       ConversationBlip editBlip = views.getBlip(blipUi);
-      if (editBlip.isRoot() || !hastTitleAnnotation(mutable)) {
-        computeAndSetWaveTitle(mutable);
+      if (editBlip.isRoot() && !TitleHelper.hasExplicitTitle(document)) {
+        Range titleRange = TitleHelper.findImplicitTitle(document);
+        TitleHelper.setImplicitTitle(document, titleRange.getStart(), titleRange.getEnd());
       }
     }
   }

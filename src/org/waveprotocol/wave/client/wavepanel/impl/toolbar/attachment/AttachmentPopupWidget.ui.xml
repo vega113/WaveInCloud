@@ -11,18 +11,18 @@
       </g:HorizontalPanel>
       <g:HorizontalPanel horizontalAlignment="ALIGN_RIGHT" ui:field="spinnerPanel"
         styleName="{res.style.spinnerPanel}">
-        <g:Image resource="{res.spinner}" title="Loading" styleName="{res.style.spinner}" ui:field="spinnerImg"/>
+        <g:Image resource="{res.spinner}" title="Loading" styleName="{res.style.spinner}"
+          ui:field="spinnerImg" />
         <g:Label ui:field="status" styleName="{res.style.status}">Loading...</g:Label>
       </g:HorizontalPanel>
     </g:HorizontalPanel>
     <g:FormPanel ui:field="form">
-      <g:VerticalPanel>
-        <g:HorizontalPanel>
-          <g:FileUpload ui:field="fileUpload" name="uploadFormElement"></g:FileUpload>
-          <g:Button ui:field="uploadBtn">Upload file</g:Button>
-          <g:Hidden ui:field="formAttachmentId" name="attachmentId"></g:Hidden>
-        </g:HorizontalPanel>
-      </g:VerticalPanel>
+      <g:HorizontalPanel>
+        <g:FileUpload ui:field="fileUpload" name="uploadFormElement"></g:FileUpload>
+        <g:Button ui:field="uploadBtn">Upload file</g:Button>
+        <g:Hidden ui:field="formAttachmentId" name="attachmentId"></g:Hidden>
+        <g:Hidden ui:field="formWaveRef" name="waveRef"></g:Hidden>
+      </g:HorizontalPanel>
     </g:FormPanel>
   </g:HTMLPanel>
 </ui:UiBinder>

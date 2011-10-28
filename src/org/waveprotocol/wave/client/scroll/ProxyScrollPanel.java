@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.client.wavepanel.WavePanel;
 import org.waveprotocol.wave.client.wavepanel.WavePanel.LifecycleListener;
-import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.View;
 
 /**
@@ -66,7 +65,7 @@ public final class ProxyScrollPanel implements ScrollPanel<View>, LifecycleListe
   public void onReset() {
     scroller = null;
   }
-  
+
   // Forward API to scroller.
   @Override
   public Extent extentOf(View measurable) {

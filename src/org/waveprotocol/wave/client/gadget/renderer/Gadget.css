@@ -35,8 +35,6 @@
 
 .loadedGadgetFrame {
   border: 1px solid transparent;
-  margin: 2px;
-  padding: 2px;
 }
 
 @sprite .loadingGadgetLargeThrobber {
@@ -44,7 +42,6 @@
   background-color: #e6ebf2;
   background-repeat: no-repeat;
   line-height: value('loadingGadgetLarge.getHeight', 'px');
-  width: 100%;
   background-position: center center;
   display: block;
 }
@@ -54,11 +51,8 @@
   background-color: #e6ebf2;
   background-repeat: no-repeat;
   line-height: value('loadingGadgetSmall.getHeight', 'px');
-  width: auto;
   background-position: center center;
   display: block;
-  margin: 2px;
-  padding: 2px;
 }
 
 @url brokenGadgetUrl brokenGadget;
@@ -68,8 +62,6 @@
   background-repeat: no-repeat;
   background-position: center center;
   display: block;
-  margin: 2px;
-  padding: 2px;
 }
 
 .loadedGadget {

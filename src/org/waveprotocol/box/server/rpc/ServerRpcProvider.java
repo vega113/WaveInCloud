@@ -36,12 +36,18 @@ import com.google.protobuf.Service;
 import com.google.protobuf.UnknownFieldSet;
 
 import com.glines.socketio.server.SocketIOInbound;
-import com.glines.socketio.server.SocketIOServlet;
+import com.glines.socketio.server.Transport;
 import com.glines.socketio.server.transport.FlashSocketTransport;
+import com.glines.socketio.server.transport.HTMLFileTransport;
+import com.glines.socketio.server.transport.JSONPPollingTransport;
+import com.glines.socketio.server.transport.XHRMultipartTransport;
+import com.glines.socketio.server.transport.XHRPollingTransport;
+import com.glines.socketio.server.transport.jetty.JettyWebSocketTransport;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.ResourceCollection;
@@ -52,6 +58,7 @@ import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolAuthenticate;
 import org.waveprotocol.box.common.comms.WaveClientRpc.ProtocolAuthenticationResult;
 import org.waveprotocol.box.server.CoreSettings;
 import org.waveprotocol.box.server.authentication.SessionManager;
+import org.waveprotocol.box.server.persistence.file.FileUtils;
 import org.waveprotocol.box.server.util.NetUtils;
 import org.waveprotocol.wave.model.util.Pair;
 import org.waveprotocol.wave.model.wave.ParticipantId;
@@ -60,6 +67,7 @@ import org.waveprotocol.wave.util.logging.Log;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,6 +76,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
+import javax.servlet.DispatcherType;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
@@ -100,6 +109,8 @@ public class ServerRpcProvider {
 
   // List of webApp source directories ("./war", etc)
   private final String[] resourceBases;
+
+  private final String sessionStoreDir;
 
   /**
    * Internal, static container class for any specific registered service
@@ -181,7 +192,7 @@ public class ServerRpcProvider {
       synchronized (provider.registeredServices) {
         for (RegisteredServiceMethod serviceMethod : provider.registeredServices.values()) {
           channel.expectMessage(serviceMethod.service.getRequestPrototype(serviceMethod.method));
-          LOG.info("Expecting: " + serviceMethod.method.getFullName());
+          LOG.fine("Expecting: " + serviceMethod.method.getFullName());
         }
       }
       channel.expectMessage(Rpc.CancelRpc.getDefaultInstance());
@@ -288,13 +299,14 @@ public class ServerRpcProvider {
    */
   public ServerRpcProvider(InetSocketAddress[] httpAddresses, Integer flashsocketPolicyPort,
       String[] resourceBases, ExecutorService threadPool, SessionManager sessionManager,
-      org.eclipse.jetty.server.SessionManager jettySessionManager) {
+      org.eclipse.jetty.server.SessionManager jettySessionManager, String sessionStoreDir) {
     this.httpAddresses = httpAddresses;
     this.flashsocketPolicyPort = flashsocketPolicyPort;
     this.resourceBases = resourceBases;
     this.threadPool = threadPool;
     this.sessionManager = sessionManager;
     this.jettySessionManager = jettySessionManager;
+    this.sessionStoreDir = sessionStoreDir;
   }
 
   /**
@@ -302,18 +314,18 @@ public class ServerRpcProvider {
    */
   public ServerRpcProvider(InetSocketAddress[] httpAddresses, Integer flashsocketPolicyPort,
       String[] resourceBases, SessionManager sessionManager,
-      org.eclipse.jetty.server.SessionManager jettySessionManager) {
+      org.eclipse.jetty.server.SessionManager jettySessionManager, String sessionStoreDir) {
     this(httpAddresses, flashsocketPolicyPort, resourceBases, Executors.newCachedThreadPool(),
-        sessionManager, jettySessionManager);
+        sessionManager, jettySessionManager, sessionStoreDir);
   }
 
   @Inject
   public ServerRpcProvider(@Named(CoreSettings.HTTP_FRONTEND_ADDRESSES) List<String> httpAddresses,
       @Named(CoreSettings.FLASHSOCKET_POLICY_PORT) Integer flashsocketPolicyPort,
       @Named(CoreSettings.RESOURCE_BASES) List<String> resourceBases,
-      SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager) {
+      SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager, @Named(CoreSettings.SESSIONS_STORE_DIRECTORY) String sessionStoreDir) {
     this(parseAddressList(httpAddresses), flashsocketPolicyPort, resourceBases
-        .toArray(new String[0]), sessionManager, jettySessionManager);
+        .toArray(new String[0]), sessionManager, jettySessionManager, sessionStoreDir);
   }
 
   public void startWebSocketServer(final Injector injector) {
@@ -327,6 +339,11 @@ public class ServerRpcProvider {
       httpServer.addConnector(connector);
     }
     final WebAppContext context = new WebAppContext();
+
+    // This disables JSessionIDs in URLs redirects
+    // see: http://stackoverflow.com/questions/7727534/how-do-you-disable-jsessionid-for-jetty-running-with-the-eclipse-jetty-maven-plu
+    // and: http://jira.codehaus.org/browse/JETTY-467?focusedCommentId=114884&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-114884
+    jettySessionManager.setSessionIdPathParameterName(null);
 
     context.setParentLoaderPriority(true);
 
@@ -354,10 +371,11 @@ public class ServerRpcProvider {
       };
 
       context.addEventListener(contextListener);
-      context.addFilter(GuiceFilter.class, "/*", 0);
+      context.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
       httpServer.setHandler(context);
 
       httpServer.start();
+      restoreSessions();
 
     } catch (Exception e) { // yes, .start() throws "Exception"
       LOG.severe("Fatal error starting http server.", e);
@@ -366,11 +384,22 @@ public class ServerRpcProvider {
     LOG.fine("WebSocket server running.");
   }
 
+  private void restoreSessions() {
+    try {
+      HashSessionManager hashSessionManager = (HashSessionManager) jettySessionManager;
+      hashSessionManager.setStoreDirectory(FileUtils.createDirIfNotExists(sessionStoreDir,
+          "Session persistence"));
+      hashSessionManager.setSavePeriod(60);
+      hashSessionManager.restoreSessions();
+    } catch (Exception e) {
+      LOG.warning("Cannot restore sessions");
+    }
+  }
   public void addWebSocketServlets() {
     // Servlet where the websocket connection is served from.
     ServletHolder wsholder = addServlet("/socket", WaveWebSocketServlet.class);
     // TODO(zamfi): fix to let messages span frames.
-    wsholder.setInitParameter("bufferSize", "" + 1024 * 1024*4); // 1M buffer
+    wsholder.setInitParameter("bufferSize", "" + 1024 * 1024); // 1M buffer
 
     // Servlet where the websocket connection is served from.
     ServletHolder sioholder = addServlet("/socket.io/*", WaveSocketIOServlet.class );
@@ -393,13 +422,13 @@ public class ServerRpcProvider {
         flashPolicyServerHost = "0.0.0.0";
       }
     }
-    sioholder.setInitParameter(FlashSocketTransport.FLASHPOLICY_SERVER_HOST_KEY,
+    sioholder.setInitParameter(FlashSocketTransport.PARAM_FLASHPOLICY_SERVER_HOST,
         flashPolicyServerHost);
-    sioholder.setInitParameter(FlashSocketTransport.FLASHPOLICY_SERVER_PORT_KEY,
+    sioholder.setInitParameter(FlashSocketTransport.PARAM_FLASHPOLICY_SERVER_PORT,
         ""+flashsocketPolicyPort);
     // TODO: Change to use the public http address and all other bound addresses.
-    sioholder.setInitParameter(FlashSocketTransport.FLASHPOLICY_DOMAIN_KEY, "*");
-    sioholder.setInitParameter(FlashSocketTransport.FLASHPOLICY_PORTS_KEY,
+    sioholder.setInitParameter(FlashSocketTransport.PARAM_FLASHPOLICY_DOMAIN, "*");
+    sioholder.setInitParameter(FlashSocketTransport.PARAM_FLASHPOLICY_PORTS,
         flashPolicyAllowedPorts.toString());
 
     // Serve the static content and GWT web client with the default servlet
@@ -419,9 +448,8 @@ public class ServerRpcProvider {
         // http://web.archiveorange.com/archive/v/d0LdlXf1kN0OXyPNyQZp
         for (Pair<String, ServletHolder> servlet : servletRegistry) {
           String url = servlet.getFirst();
-          @SuppressWarnings({"unchecked"})
-          Class<HttpServlet> clazz = servlet.getSecond().getHeldClass();
-          @SuppressWarnings({"unchecked"})
+          @SuppressWarnings("unchecked")
+          Class<HttpServlet> clazz = (Class<HttpServlet>) servlet.getSecond().getHeldClass();
           Map<String,String> params = servlet.getSecond().getInitParameters();
           serve(url).with(clazz,params);
           bind(clazz).in(Singleton.class);
@@ -487,7 +515,7 @@ public class ServerRpcProvider {
     }
 
     @Override
-    protected WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
+    public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
       ParticipantId loggedInUser =
           provider.sessionManager.getLoggedInUser(request.getSession(false));
 
@@ -508,9 +536,11 @@ public class ServerRpcProvider {
       this.provider = provider;
     }
 
-    SocketIOServlet socketIOServlet = new SocketIOServlet() {
+    AbstractWaveSocketIOServlet socketIOServlet = new AbstractWaveSocketIOServlet( new Transport[] {
+        new XHRMultipartTransport(), new XHRPollingTransport(), new FlashSocketTransport(),
+        new JettyWebSocketTransport(), new JSONPPollingTransport(), new HTMLFileTransport()}) {
       @Override
-      protected SocketIOInbound doSocketIOConnect(HttpServletRequest request, String[] strings) {
+      protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
         ParticipantId loggedInUser = provider.sessionManager.getLoggedInUser(
             request.getSession(false));
 

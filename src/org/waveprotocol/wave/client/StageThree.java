@@ -30,12 +30,12 @@ import org.waveprotocol.wave.client.wavepanel.impl.edit.Actions;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.ActionsImpl;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.EditController;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.EditSession;
+import org.waveprotocol.wave.client.wavepanel.impl.edit.KeepFocusInView;
 import org.waveprotocol.wave.client.wavepanel.impl.edit.ParticipantController;
 import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
 import org.waveprotocol.wave.client.wavepanel.impl.indicator.ReplyIndicatorController;
 import org.waveprotocol.wave.client.wavepanel.impl.menu.MenuController;
 import org.waveprotocol.wave.client.wavepanel.impl.title.WaveTitleHandler;
-import org.waveprotocol.wave.client.wavepanel.impl.title.WindowTitleHandler;
 import org.waveprotocol.wave.client.wavepanel.impl.toolbar.EditToolbar;
 import org.waveprotocol.wave.client.wavepanel.impl.toolbar.ToolbarSwitcher;
 import org.waveprotocol.wave.client.wavepanel.impl.toolbar.ViewToolbar;
@@ -169,6 +169,14 @@ public interface StageThree {
       return null;
     }
 
+    /**
+     * Installs parts of stage three that have dependencies.
+     * <p>
+     * This method is only called once all asynchronously loaded components of
+     * stage three are ready.
+     * <p>
+     * Subclasses may override this to change the set of installed features.
+     */
     protected void install() {
       EditorStaticDeps.setPopupProvider(PopupFactory.getProvider());
       EditorStaticDeps.setPopupChromeProvider(PopupChromeFactory.getProvider());
@@ -183,12 +191,13 @@ public interface StageThree {
       Actions actions = getEditActions();
       EditSession edit = getEditSession();
       MenuController.install(actions, panel);
-      ToolbarSwitcher.install(panel, edit, getViewToolbar(), getEditToolbar());
+      ToolbarSwitcher.install(stageTwo.getStageOne().getWavePanel(), getEditSession(),
+          getViewToolbar(), getEditToolbar());
       WaveTitleHandler.install(edit, models);
-      WindowTitleHandler.install(panel, models);
       ReplyIndicatorController.install(actions, edit, panel);
       EditController.install(focus, actions, panel);
       ParticipantController.install(panel, models, profiles, getLocalDomain());
+      KeepFocusInView.install(edit, panel);
       stageTwo.getDiffController().upgrade(edit);
     }
   }

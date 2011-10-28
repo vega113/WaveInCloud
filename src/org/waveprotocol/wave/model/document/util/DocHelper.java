@@ -273,14 +273,7 @@ public class DocHelper {
 
     T text = doc.asText(startNode);
     if (doc.isSameNode(startNode, endNode)) {
-      String out = "";
-      if (text != null) {
-        out = doc.getData(text);
-        if (startOffset != endOffset) {
-          out = out.substring(startOffset, endOffset);
-        }
-      }
-      return out;
+      return text == null ? "" : doc.getData(text).substring(startOffset, endOffset);
     }
 
     StringBuilder str = new StringBuilder();

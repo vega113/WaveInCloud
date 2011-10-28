@@ -1,17 +1,17 @@
 /**
  * Copyright 2011 Google Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
 
@@ -29,7 +29,6 @@ import com.google.wave.api.ParticipantProfile;
 
 import org.waveprotocol.box.server.robots.OperationContext;
 import org.waveprotocol.box.server.robots.util.OperationUtil;
-import org.waveprotocol.wave.model.util.CollectionUtils;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.util.List;
@@ -43,32 +42,24 @@ import java.util.Map;
 public class FetchProfilesService implements OperationService {
 
   public interface ProfilesFetcher {
+    
+    public static final String UNKNOWN_IMAGE = "/static/images/unknown.jpg";
+    public static final String UNKNOWN_PROFILE = "";
 
     ParticipantProfile fetchProfile(String address);
-    
-    
-    @SuppressWarnings("serial")
-    class ProfileFetchException extends Exception {
 
-      public ProfileFetchException(String msg, Throwable t) {
-        super(msg, t);
-      }
-
-      public ProfileFetchException(String msg) {
-        super(msg);
-      }
-      
-    }
-
-    static ProfilesFetcher SIMPLE_PROFILE_FETCHER = new ProfilesFetcher() {
+    /** A simple profiles fetcher implementation. */
+    static ProfilesFetcher SIMPLE_PROFILES_FETCHER = new ProfilesFetcher() {
 
       /**
        * Attempts to create the fragments of the participant's name from their
        * address, for example "john.smith@example.com" into ["John", "Smith"].
        */
       private String buildNames(String address) {
+        // TODO (user) This code replicates ProfileImpl and should be refactored
+        // so the two classes can share the code properly.
         String fullName;
-        List<String> names = CollectionUtils.newArrayList();
+        List<String> names = Lists.newArrayList();
         String nameWithoutDomain = address.split("@")[0];
         if (nameWithoutDomain != null && !nameWithoutDomain.isEmpty()) {
           // Include empty names from fragment, so split with a -ve.
@@ -83,28 +74,27 @@ public class FetchProfilesService implements OperationService {
           return fullName;
         } else {
           // Name can be empty in case of shared domain participant which has
-          // the the form:
-          // @example.com.
+          // the the form: @example.com.
           return address;
         }
       }
 
       private String capitalize(String s) {
-        return s.isEmpty() ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1);
+        return s.isEmpty() ? s : (Character.toUpperCase(s.charAt(0))) + s.substring(1);
       }
 
       @Override
       public ParticipantProfile fetchProfile(String address) {
         String name = buildNames(address);
-        return new ParticipantProfile(address, name, "/static/unknown.jpg", "");
+        return new ParticipantProfile(address, name, UNKNOWN_IMAGE, UNKNOWN_PROFILE);
       }
     };
-  };
-  
+  }
+
   private final ProfilesFetcher profilesFetcher;
-  
+
   public static FetchProfilesService create() {
-    return new FetchProfilesService(GravatarProfileFetcher.create());
+    return new FetchProfilesService(GravatarProfilesFetcher.create());
   }
 
   FetchProfilesService(ProfilesFetcher profilesFetcher) {
@@ -119,11 +109,8 @@ public class FetchProfilesService implements OperationService {
     List<String> requestAddresses = request.getParticipantIds();
     List<ParticipantProfile> profiles = Lists.newArrayListWithCapacity(requestAddresses.size());
     for (String address : requestAddresses) {
-      ParticipantProfile participantProfile = null;
-      participantProfile = profilesFetcher.fetchProfile(address);
-      if (participantProfile != null) {
-        profiles.add(participantProfile);
-      }
+      ParticipantProfile participantProfile = profilesFetcher.fetchProfile(address);
+      profiles.add(participantProfile);
     }
     FetchProfilesResult result = new FetchProfilesResult(profiles);
     Map<ParamsProperty, Object> data =

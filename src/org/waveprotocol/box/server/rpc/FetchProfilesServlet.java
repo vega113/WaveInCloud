@@ -142,7 +142,7 @@ public final class FetchProfilesServlet extends HttpServlet {
     }
     ProfileRequest profileRequest = parseProfileRequest(req, response);
     ProfileResponse profileResponse = fetchProfiles(profileRequest, user);
-    serializeObjectToServlet(profileResponse, response);
+    printJson(profileResponse, response);
   }
 
   /**
@@ -181,14 +181,19 @@ public final class FetchProfilesServlet extends HttpServlet {
   /**
    * Writes the json with profile results to Response.
    */
-  private void serializeObjectToServlet(MessageLite message, HttpServletResponse resp)
+  private void printJson(MessageLite message, HttpServletResponse resp)
       throws IOException {
     if (message == null) {
       resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
     } else {
       resp.setStatus(HttpServletResponse.SC_OK);
       resp.setContentType("application/json");
+      // This is to make sure the fetched data is fresh - since the w3c spec    
+      // is rarely respected.      
+      resp.setHeader("Cache-Control", "no-store");
       try {
+        // FIXME (user) Returning JSON directly from an HTTP GET is vulnerable   
+        // to XSSI attacks. Issue https://issues.apache.org/jira/browse/WAVE-135
         resp.getWriter().append(serializer.toJson(message).toString());
       } catch (SerializationException e) {
         throw new IOException(e);

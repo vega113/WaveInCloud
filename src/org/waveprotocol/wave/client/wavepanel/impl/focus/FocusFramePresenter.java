@@ -20,10 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import org.waveprotocol.wave.client.common.util.KeyCombo;
-import org.waveprotocol.wave.client.scheduler.Scheduler.IncrementalTask;
-import org.waveprotocol.wave.client.scheduler.Scheduler.Task;
-import org.waveprotocol.wave.client.scheduler.SchedulerInstance;
-import org.waveprotocol.wave.client.scheduler.TimerService;
 import org.waveprotocol.wave.client.scroll.SmartScroller;
 import org.waveprotocol.wave.client.wavepanel.impl.WavePanelImpl;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
@@ -34,33 +30,25 @@ import org.waveprotocol.wave.model.wave.SourcesEvents;
 
 /**
  * Presents the focus frame, and exposes an API for controlling it.
- * 
+ *
  */
-public final class FocusFramePresenter implements SourcesEvents<FocusFramePresenter.Listener>,
-    WavePanelImpl.ExtendedLifecycleListener {
+public final class FocusFramePresenter
+    implements SourcesEvents<FocusFramePresenter.Listener>, WavePanelImpl.LifecycleListener {
 
   public interface Listener {
     void onFocusMoved(BlipView oldUi, BlipView newUi);
   }
 
   public interface FocusOrder {
-
     BlipView getNext(BlipView current);
 
     BlipView getPrevious(BlipView current);
-
-    BlipView findNewest(BlipView blipUi);
   }
 
   public interface FrameKeyHandler {
     boolean onKeySignal(KeyCombo key, BlipView context);
   }
-  
-  /** The delay to focus on the required blip after wave is loaded. */
-  private static final int FOCUS_ON_BLIP_DELAY_MS = 800;
-  
-  private final TimerService delayScheduler = SchedulerInstance.getLowPriorityTimer();
-  
+
   /** Focus frame UI. */
   private final FocusFrameView view;
 
@@ -78,7 +66,7 @@ public final class FocusFramePresenter implements SourcesEvents<FocusFramePresen
 
   /** Blip that currently has the focus frame. May be {@code null}. */
   private BlipView blip;
-  
+
   /**
    * Creates a focus-frame presenter.
    */
@@ -101,50 +89,6 @@ public final class FocusFramePresenter implements SourcesEvents<FocusFramePresen
   @Override
   public void onReset() {
     blip = null;
-  }
-  
-  @Override
-  public void onLoad(BlipView blipUi, boolean isRootBlip) {
-    if (blipUi != null) {
-      if (!isRootBlip) {
-        scrollAndFocus(blipUi);
-      } else {
-        if (order != null) {
-          BlipView newestUnreadUi =  order.getNext(blipUi);
-          if (newestUnreadUi != null) {
-            blipUi = newestUnreadUi;
-          } else {
-            blipUi = order.findNewest(blipUi);
-          }
-        }
-        scrollAndFocus(blipUi);
-      }
-    }
-  }
-
-  private void scrollAndFocus(final BlipView blipUi) {
-    scroller.moveTo(blipUi);
-    delayScheduler.scheduleRepeating(new IncrementalTask() {
-      int counter = 0;
-      
-      @Override
-      public boolean execute() {
-        counter++;
-        if (counter > 100) {
-          return false;
-        }
-        scroller.moveTo(blipUi);
-        return true;
-      }
-    }, 0, 10);
-
-    delayScheduler.scheduleDelayed(new Task() {
-
-      @Override
-      public void execute() {
-        focus(blipUi);
-      }
-    }, FOCUS_ON_BLIP_DELAY_MS);
   }
 
   //
@@ -212,7 +156,7 @@ public final class FocusFramePresenter implements SourcesEvents<FocusFramePresen
       fireOnFocusMoved(oldUi, newUi);
     }
   }
-  
+
   private void detachChrome() {
     if (this.blip != null) {
       this.blip.getMeta().removeFocusChrome(view);
@@ -253,7 +197,7 @@ public final class FocusFramePresenter implements SourcesEvents<FocusFramePresen
    * Moves to the next blip as defined by an attached
    * {@link #setOrder(FocusOrder) ordering}, if there is one.
    */
-  public void focusNextUnread() {
+  public void focusNext() {
     // Real condition is that blip != null implies scroller != null.
     Preconditions.checkState(blip == null || scroller != null);
     if (blip != null && order != null) {

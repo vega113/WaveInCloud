@@ -22,8 +22,11 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.http.client.URL;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
+import org.waveprotocol.box.webclient.client.HistorySupport;
 import org.waveprotocol.wave.client.common.util.WaveRefConstants;
 import org.waveprotocol.wave.client.doodad.link.Link;
 import org.waveprotocol.wave.client.doodad.link.Link.InvalidLinkException;
@@ -43,10 +46,10 @@ import org.waveprotocol.wave.client.editor.toolbar.TextSelectionController;
 import org.waveprotocol.wave.client.editor.util.EditorAnnotationUtil;
 import org.waveprotocol.wave.client.gadget.GadgetXmlUtil;
 import org.waveprotocol.wave.client.wavepanel.impl.toolbar.attachment.AttachmentPopupWidget;
-import org.waveprotocol.wave.client.wavepanel.impl.toolbar.gadget.popup.GadgetPopupView;
-import org.waveprotocol.wave.client.wavepanel.impl.toolbar.gadget.popup.GadgetPopupWidget;
+import org.waveprotocol.wave.client.wavepanel.impl.toolbar.gadget.GadgetSelectorWidget;
 import org.waveprotocol.wave.client.wavepanel.view.AttachmentPopupView;
 import org.waveprotocol.wave.client.wavepanel.view.AttachmentPopupView.Listener;
+import org.waveprotocol.wave.client.widget.popup.UniversalPopup;
 import org.waveprotocol.wave.client.widget.toolbar.SubmenuToolbarView;
 import org.waveprotocol.wave.client.widget.toolbar.ToolbarButtonViewBuilder;
 import org.waveprotocol.wave.client.widget.toolbar.ToolbarView;
@@ -61,12 +64,14 @@ import org.waveprotocol.wave.model.document.util.Point;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.wave.ParticipantId;
+import org.waveprotocol.wave.model.waveref.WaveRef;
+import org.waveprotocol.wave.util.escapers.GwtWaverefEncoder;
 
 /**
  * Attaches actions that can be performed in a Wave's "edit mode" to a toolbar.
  * <p>
  * Also constructs an initial set of such actions.
- * 
+ *
  * @author kalman@google.com (Benjamin Kalman)
  */
 public class EditToolbar {
@@ -164,12 +169,9 @@ public class EditToolbar {
 
     group = toolbarUi.addGroup();
     createInsertGadgetButton(group, user);
-    
+
     group = toolbarUi.addGroup();
     createInsertAttachmentButton(group, user);
-    
-    group = toolbarUi.addGroup();
-    new ToolbarButtonViewBuilder().setText("").applyTo(group.addClickButton(),null);
   }
 
   private void createBoldButton(ToolbarView toolbar) {
@@ -302,56 +304,60 @@ public class EditToolbar {
         .setIcon(css.insertGadget())
         .applyTo(toolbar.addClickButton(), new ToolbarClickButton.Listener() {
           @Override public void onClicked() {
-            final int from;
-            int tmpFrom = -1;
-            FocusedRange focusedRange = editor.getSelectionHelper().getSelectionRange();
-            if (focusedRange != null) {
-              tmpFrom = focusedRange.getFocus();
-            }
-            from = tmpFrom;
-            GadgetPopupView gadgetPopup = new GadgetPopupWidget();
-            gadgetPopup.init(new GadgetPopupWidget.Listener() {
-              
-              @Override
-              public void onShow() {
-              }
-              
-              @Override
-              public void onInsert(String url) {
-                if (url != null && !url.isEmpty()) {
-                  XmlStringBuilder xml = GadgetXmlUtil.constructXml(url, "", user.getAddress());
-                  if (from != -1) {
-                    CMutableDocument doc = editor.getDocument();
-                    Point<ContentNode> point = doc.locate(from);
-                    doc.insertXml(point, xml);
-                  } else {
-                    LineContainers.appendLine(editor.getDocument(), xml);
-                  }
-                }
-              }
-              
-              @Override
-              public void onHide() {
-                
+            GadgetSelectorWidget selector = new GadgetSelectorWidget();
+            selector.addFeaturedOptions();
+            final UniversalPopup popup = selector.showInPopup();
+            selector.setListener(new GadgetSelectorWidget.Listener() {
+              @Override public void onSelect(String url) {
+                insertGadget(url);
+                popup.hide();
               }
             });
-            gadgetPopup.show();
           }
         });
   }
-  
+
+  private void insertGadget(String url) {
+    int from = -1;
+    FocusedRange focusedRange = editor.getSelectionHelper().getSelectionRange();
+    if (focusedRange != null) {
+      from = focusedRange.getFocus();
+    }
+    if (url != null && !url.isEmpty()) {
+      XmlStringBuilder xml = GadgetXmlUtil.constructXml(url, "", user.getAddress());
+      CMutableDocument document = editor.getDocument();
+      if (document == null) {
+        return;
+      }
+      if (from != -1) {
+        Point<ContentNode> point = document.locate(from);
+        document.insertXml(point, xml);
+      } else {
+        LineContainers.appendLine(document, xml);
+      }
+    }
+  }
+
   private void createInsertAttachmentButton(ToolbarView toolbar, final ParticipantId user) {
+    // Find the current wave id.
+    String encodedToken = History.getToken();
+    WaveRef waveRef = null;
+    if (encodedToken != null && !encodedToken.isEmpty()) {
+      waveRef = HistorySupport.waveRefFromHistoryToken(encodedToken);
+    }
+    Preconditions.checkState(waveRef != null);
+    final String waveRefToken = URL.encode(GwtWaverefEncoder.encodeToUriQueryString(waveRef));
+
     new ToolbarButtonViewBuilder().setIcon(css.insertAttachment()).setTooltip("Insert attachment")
         .applyTo(toolbar.addClickButton(), new ToolbarClickButton.Listener() {
           @Override
           public void onClicked() {
-            final int from;
-            int tmpFrom = -1;
+            int tmpCursor = -1;
             FocusedRange focusedRange = editor.getSelectionHelper().getSelectionRange();
             if (focusedRange != null) {
-              tmpFrom = focusedRange.getFocus();
+              tmpCursor = focusedRange.getFocus();
             }
-            from = tmpFrom;
+            final int cursorLoc = tmpCursor;
             AttachmentPopupView attachmentView = new AttachmentPopupWidget();
             attachmentView.init(new Listener() {
 
@@ -364,7 +370,7 @@ public class EditToolbar {
               }
 
               @Override
-              public void onDone(String id, String fullFileName) {
+              public void onDone(String encodedWaveRef, String attachmentId, String fullFileName) {
                 // Insert a file name linking to the attachment URL.
                 int lastSlashPos = fullFileName.lastIndexOf("/");
                 int lastBackSlashPos = fullFileName.lastIndexOf("\\");
@@ -377,26 +383,32 @@ public class EditToolbar {
                 XmlStringBuilder xml = XmlStringBuilder.createFromXmlString(fileName);
                 int to = -1;
                 int docSize = editor.getDocument().size();
-                if (from != -1) {
+                if (cursorLoc != -1) {
+                  // Insert the attachment at the cursor location.
                   CMutableDocument doc = editor.getDocument();
-                  Point<ContentNode> point = doc.locate(from);
+                  Point<ContentNode> point = doc.locate(cursorLoc);
                   doc.insertXml(point, xml);
                 } else {
                   LineContainers.appendLine(editor.getDocument(), xml);
                 }
-                to = from + editor.getDocument().size() - docSize;
-                
+                // Calculate the link length for the attachment.
+                to = cursorLoc + editor.getDocument().size() - docSize;
                 String linkValue =
-                    GWT.getHostPageBaseURL() + "attachment/" + id + "?fileName=" + fileName;
+                    GWT.getHostPageBaseURL() + "attachment/" + attachmentId + "?fileName="
+                        + fileName + "&waveRef=" + encodedWaveRef;
                 EditorAnnotationUtil.setAnnotationOverRange(editor.getDocument(),
-                    editor.getCaretAnnotations(), Link.MANUAL_KEY, linkValue, from, to);
+                    editor.getCaretAnnotations(), Link.KEY, linkValue, cursorLoc, to);
+                // Store the attachment information as annotations to allow
+                // robots detect and process them.
                 EditorAnnotationUtil.setAnnotationOverRange(editor.getDocument(),
-                    editor.getCaretAnnotations(), "attachment/id", id, from, to);
+                    editor.getCaretAnnotations(), "attachment/id", attachmentId, cursorLoc, to);
                 EditorAnnotationUtil.setAnnotationOverRange(editor.getDocument(),
-                    editor.getCaretAnnotations(), "attachment/fileName", fileName, from, to);
+                    editor.getCaretAnnotations(), "attachment/fileName", fileName, cursorLoc, to);
               }
             });
+
             attachmentView.setAttachmentId(attachmentIdGenerator.newAttachmentId());
+            attachmentView.setWaveRef(waveRefToken);
             attachmentView.show();
           }
         });
@@ -422,7 +434,7 @@ public class EditToolbar {
                 }
                 try {
                   String linkAnnotationValue = Link.normalizeLink(rawLinkValue);
-                  EditorAnnotationUtil.setAnnotationOverSelection(editor, Link.MANUAL_KEY,
+                  EditorAnnotationUtil.setAnnotationOverSelection(editor, Link.KEY,
                       linkAnnotationValue);
                 } catch (InvalidLinkException e) {
                   Window.alert(e.getLocalizedMessage());
@@ -540,7 +552,7 @@ public class EditToolbar {
 
   /**
    * Starts listening to editor changes.
-   * 
+   *
    * @throws IllegalStateException if this toolbar is already enabled
    * @throws IllegalArgumentException if the editor is <code>null</code>
    */
@@ -554,7 +566,7 @@ public class EditToolbar {
 
   /**
    * Stops listening to editor changes.
-   * 
+   *
    * @throws IllegalStateException if this toolbar is not currently enabled
    * @throws IllegalArgumentException if this toolbar is currently enabled for a
    *         different editor

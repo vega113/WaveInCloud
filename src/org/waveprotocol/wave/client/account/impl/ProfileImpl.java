@@ -107,7 +107,7 @@ public final class ProfileImpl implements Profile {
   }
 
   private static String capitalize(String s) {
-    return s.isEmpty() ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    return s.isEmpty() ? s : (Character.toUpperCase(s.charAt(0))) + s.substring(1);
   }
 
   /**

@@ -22,8 +22,6 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -50,7 +48,7 @@ import org.waveprotocol.box.webclient.search.SearchPanelWidget;
 import org.waveprotocol.box.webclient.search.SearchPresenter;
 import org.waveprotocol.box.webclient.search.SimpleSearch;
 import org.waveprotocol.box.webclient.search.WaveStore;
-import org.waveprotocol.box.webclient.util.Log;
+import org.waveprotocol.box.webclient.client.events.Log;
 import org.waveprotocol.box.webclient.widget.error.ErrorIndicatorPresenter;
 import org.waveprotocol.box.webclient.widget.frame.FramedPanel;
 import org.waveprotocol.box.webclient.widget.loading.LoadingIndicator;
@@ -58,16 +56,12 @@ import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtml;
 import org.waveprotocol.wave.client.common.safehtml.SafeHtmlBuilder;
 import org.waveprotocol.wave.client.common.util.AsyncHolder.Accessor;
-import org.waveprotocol.wave.client.common.util.UserAgent;
 import org.waveprotocol.wave.client.debug.logger.LogLevel;
-import org.waveprotocol.wave.client.scheduler.ScheduleCommand;
-import org.waveprotocol.wave.client.scheduler.Scheduler;
 import org.waveprotocol.wave.client.widget.common.ImplPanel;
 import org.waveprotocol.wave.client.widget.popup.CenterPopupPositioner;
 import org.waveprotocol.wave.client.widget.popup.PopupChrome;
 import org.waveprotocol.wave.client.widget.popup.PopupChromeFactory;
 import org.waveprotocol.wave.client.widget.popup.PopupFactory;
-import org.waveprotocol.wave.client.widget.popup.RelativePopupPositioner;
 import org.waveprotocol.wave.client.widget.popup.UniversalPopup;
 import org.waveprotocol.wave.model.id.IdGenerator;
 import org.waveprotocol.wave.model.id.WaveId;
@@ -94,38 +88,20 @@ public class WebClient implements EntryPoint {
   // server, nothing else in the client should use java.util.logging.
   // Please also see WebClientDemo.gwt.xml.
   private static final Logger REMOTE_LOG = Logger.getLogger("REMOTE_LOG");
-  
-  private static final UniversalPopup popup = createTurbulencePopup();
-  
+
+  /** Creates a popup that warns about network disconnects. */
   private static UniversalPopup createTurbulencePopup() {
     PopupChrome chrome = PopupChromeFactory.createPopupChrome();
-    UniversalPopup popup;
-    if (UserAgent.isFirefox()) {
-      popup =
-          PopupFactory.createPopup(null, new RelativePopupPositioner() {
-            
-            @Override
-            public void setPopupPositionAndMakeVisible(Element relative, final Element p) {
-              ScheduleCommand.addCommand(new Scheduler.Task() {
-                @Override
-                public void execute() {
-                  p.getStyle().setLeft((RootPanel.get().getOffsetWidth() - p.getOffsetWidth()) / 2, Unit.PX);
-                  p.getStyle().setTop(100, Unit.PX);
-                  p.getStyle().setVisibility(Visibility.VISIBLE);
-                }
-              });
-            }
-          }, chrome,
-              true);
-    } else {
-      popup = PopupFactory.createPopup(null, new CenterPopupPositioner(), chrome, true);
-    }
-    popup.add(new HTML("<div style='color: red; padding: 5px; text-align: center;'><b>A turbulence detected!<br></br>"
+    UniversalPopup popup =
+        PopupFactory.createPopup(null, new CenterPopupPositioner(), chrome, true);
+    popup.add(new HTML("<div style='color: red; padding: 5px; text-align: center;'>"
+        + "<b>A turbulence detected!<br></br>"
         + " Please save your last changes to somewhere and reload the wave.</b></div>"));
     return popup;
   }
 
   private final ProfileManager profiles = new RemoteProfileManagerImpl();
+  private final UniversalPopup turbulencePopup = createTurbulencePopup();
 
   @UiField
   SplitLayoutPanel splitPanel;
@@ -211,7 +187,7 @@ public class WebClient implements EntryPoint {
     // sticks inline styles on elements without permission. They must be
     // cleared.
     self.getElement().getStyle().clearPosition();
-    splitPanel.setWidgetMinSize(searchPanel, 330);
+    splitPanel.setWidgetMinSize(searchPanel, 300);
 
     if (LogLevel.showDebug()) {
       logPanel.enable();
@@ -224,16 +200,21 @@ public class WebClient implements EntryPoint {
   }
 
   private void setupSearchPanel() {
-    // On wave selection, fire an event.
-    SearchPresenter.WaveSelectionHandler selectHandler =
-        new SearchPresenter.WaveSelectionHandler() {
+    // On wave action fire an event.
+    SearchPresenter.WaveActionHandler actionHandler =
+        new SearchPresenter.WaveActionHandler() {
+          @Override
+          public void onCreateWave() {
+            ClientEvents.get().fireEvent(WaveCreationEvent.CREATE_NEW_WAVE);
+          }
+
           @Override
           public void onWaveSelected(WaveId id) {
             ClientEvents.get().fireEvent(new WaveSelectionEvent(WaveRef.of(id)));
           }
         };
     Search search = SimpleSearch.create(RemoteSearchService.create(), waveStore);
-    SearchPresenter.create(search, searchPanel, selectHandler, profiles);
+    SearchPresenter.create(search, searchPanel, actionHandler, profiles);
   }
 
   private void setupWavePanel() {
@@ -264,13 +245,14 @@ public class WebClient implements EntryPoint {
               element.setInnerText("Online");
               element.setClassName("online");
               isTurbulenceDetected = false;
+              turbulencePopup.hide();
               break;
             case DISCONNECTED:
               element.setInnerText("Offline");
               element.setClassName("offline");
               if (!isTurbulenceDetected) {
                 isTurbulenceDetected = true;
-                popup.show();
+                turbulencePopup.show();
               }
               break;
             case RECONNECTING:
@@ -289,7 +271,7 @@ public class WebClient implements EntryPoint {
   // XXX check formatting wrt GPE
   private native String getWebSocketBaseUrl(String moduleBase) /*-{return "ws" + /:\/\/[^\/]+/.exec(moduleBase)[0] + "/";}-*/;
 
-  private native boolean useSocketIO() /*-{ return !!$wnd.__useSocketIO }-*/;
+  private native boolean useSocketIO() /*-{ return !window.WebSocket }-*/;
 
   /**
    */

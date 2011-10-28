@@ -25,10 +25,9 @@ import com.google.inject.name.Names;
 import com.google.wave.api.AbstractRobot;
 
 import org.waveprotocol.box.server.CoreSettings;
-import org.waveprotocol.box.server.account.AccountData;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.PersistenceException;
-import org.waveprotocol.box.server.robots.util.RobotsUtil;
+import org.waveprotocol.box.server.robots.register.RobotRegistrar;
 import org.waveprotocol.box.server.robots.util.RobotsUtil.RobotRegistrationException;
 import org.waveprotocol.wave.model.id.TokenGenerator;
 import org.waveprotocol.wave.model.wave.InvalidParticipantAddress;
@@ -40,13 +39,13 @@ import java.util.logging.Logger;
 
 /**
  * The base for robot agents that run on the WIAB server.
- * 
+ *
  * @author yurize@apache.org (Yuri Zelikov)
  */
 @SuppressWarnings("serial")
 public abstract class AbstractBaseRobotAgent extends AbstractRobot {
 
-  static class ServerFrontendAddressHolder {
+  public static class ServerFrontendAddressHolder {
 
     private final List<String> addresses;
 
@@ -56,7 +55,7 @@ public abstract class AbstractBaseRobotAgent extends AbstractRobot {
       this.addresses = addresses;
     }
 
-    List<String> getAddresses() {
+    public List<String> getAddresses() {
       return addresses;
     }
   }
@@ -69,20 +68,24 @@ public abstract class AbstractBaseRobotAgent extends AbstractRobot {
 
   /** Account store with user and robot accounts. */
   private final AccountStore accountStore;
-  
+
+  /** The robot registrar. */
+  private final RobotRegistrar robotRegistrar;
+
   private final ServerFrontendAddressHolder frontendAddressHolder;
 
   /**
    * Constructor. Initializes the agent to serve on the URI provided by
    * {@link #getRobotUri()} and ensures that the agent is registered in the
    * Account store.
-   * 
+   *
    * @param injector the injector instance.
    */
   public AbstractBaseRobotAgent(Injector injector) {
     this(injector.getInstance(Key.get(String.class, Names.named(CoreSettings.WAVE_SERVER_DOMAIN))),
-        injector.getInstance(AccountStore.class), injector.getInstance(TokenGenerator.class),
-        injector.getInstance(ServerFrontendAddressHolder.class));
+        injector.getInstance(TokenGenerator.class), injector
+            .getInstance(ServerFrontendAddressHolder.class), injector
+            .getInstance(AccountStore.class), injector.getInstance(RobotRegistrar.class));
   }
 
   /**
@@ -90,11 +93,13 @@ public abstract class AbstractBaseRobotAgent extends AbstractRobot {
    * {@link #getRobotUri()} and ensures that the agent is registered in the
    * Account store.
    */
-  AbstractBaseRobotAgent(String waveDomain, AccountStore accountStore, TokenGenerator tokenGenerator,
-      ServerFrontendAddressHolder frontendAddressHolder) {
+  AbstractBaseRobotAgent(String waveDomain, TokenGenerator tokenGenerator,
+      ServerFrontendAddressHolder frontendAddressHolder, AccountStore accountStore,
+      RobotRegistrar robotRegistator) {
     this.waveDomain = waveDomain;
-    this.accountStore = accountStore;
     this.frontendAddressHolder = frontendAddressHolder;
+    this.robotRegistrar = robotRegistator;
+    this.accountStore = accountStore;
     ensureRegistered(tokenGenerator, getFrontEndAddress());
   }
 
@@ -111,14 +116,9 @@ public abstract class AbstractBaseRobotAgent extends AbstractRobot {
     }
     try {
       String location = "http://" + serverFrontendAddress + getRobotUri();
-      // Register this agent in the account store. The registration is forced
-      // in order to re-register the agents if the server frontend address has
-      // changed.
-      AccountData account = accountStore.getAccount(robotId);
-      if ((account == null || ( account != null && !account.asRobot().getUrl().equals(location)))) {
-        RobotsUtil.registerRobotUri(location, robotId, accountStore, tokenGenerator, true);
-      }
-    
+      // In order to re-register the agents if the server frontend address has changed.
+      robotRegistrar.registerOrUpdate(robotId, location);
+
     } catch (RobotRegistrationException e) {
       LOG.log(Level.SEVERE, "Failed to register the agent:" + getRobotId(), e);
     } catch (PersistenceException e) {
@@ -137,7 +137,10 @@ public abstract class AbstractBaseRobotAgent extends AbstractRobot {
   public String getWaveDomain() {
     return waveDomain;
   }
-  
+
+  /**
+   * Returns the front end address.
+   */
   public String getFrontEndAddress() {
     return frontendAddressHolder.getAddresses().get(0);
   }

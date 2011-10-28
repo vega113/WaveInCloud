@@ -1,6 +1,9 @@
 /*
- * CSS stylesheet for link info popups.
+ * CSS Stylesheet for the attachment popup.
+ *
+ * author: yurize@apache.org (Yuri Zelikov)
  */
+ 
 .self {
 	margin: 0px 2px 0px 2px;
 	line-height: 1.5;

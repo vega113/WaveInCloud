@@ -1,5 +1,5 @@
 /**
- * Copyright 2010 Google Inc.
+ * Copyright 2011 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ package org.waveprotocol.wave.client.wavepanel.view;
 import org.waveprotocol.wave.media.model.AttachmentId;
 
 /**
- * A link info popup.
+ * An attachment popup.
  *
- * @author vega113@gmail.com (Yuri Z.)
+ * @author yurize@apache.org (Yuri Zelikov)
  */
 public interface AttachmentPopupView {
 
@@ -32,8 +32,8 @@ public interface AttachmentPopupView {
     void onHide();
 
     void onShow();
-    
-    void onDone(String id, String fileName);
+
+    void onDone(String waveId, String id, String fileName);
   }
 
   /**
@@ -55,7 +55,8 @@ public interface AttachmentPopupView {
    * Hides the popup.
    */
   void hide();
-  
+
   void setAttachmentId(AttachmentId id);
 
+  void setWaveRef(String waveRefStr);
 }

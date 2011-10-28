@@ -102,8 +102,4 @@ public final class ReplyIndicatorController implements WaveMouseDownHandler, Lis
   public void onSessionEnd(Editor e, BlipView blipView) {
     blipView.getParent().getReplyIndicator().enable();
   }
-
-  @Override
-  public void onSessionPreEnd(Editor e, BlipView blipUi) {
-  }
 }

@@ -26,7 +26,6 @@ import org.waveprotocol.wave.client.wavepanel.event.EventDispatcherPanel;
 import org.waveprotocol.wave.client.wavepanel.event.EventHandlerRegistry;
 import org.waveprotocol.wave.client.wavepanel.event.Focusable;
 import org.waveprotocol.wave.client.wavepanel.event.KeySignalRouter;
-import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.TopConversationView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.DomAsViewProvider;
 import org.waveprotocol.wave.model.util.CopyOnWriteSet;
@@ -85,7 +84,7 @@ public final class WavePanelImpl implements WavePanel, Focusable {
     Element frameDom = panelDom.getFirstChildElement();
     if (frameDom != null) {
       panel.init(frameDom);
-    } 
+    }
     return panel;
   }
 
@@ -206,27 +205,6 @@ public final class WavePanelImpl implements WavePanel, Focusable {
   private void fireOnReset() {
     for (LifecycleListener listener : listeners) {
       listener.onReset();
-    }
-  }
-
-  /**
-   * Notifies listeners that the wave is fully loaded.
-   * 
-   * @param blipUi the blipUi that was referenced in the URL and therefore
-   *        should receive the focus or the root blip if nothing was referenced. 
-   *        If <code>null</code> then no blip will receive focus.
-   * @param isRootBlip if
-   *        <code>true</true> then the blipUi that is passed is just a root 
-   *        blip that will 
-   *        server as a reference to find newest unread/modified blip. if <code>false</code>
-   *        then the blipUi is the one referenced in the URL and should receive
-   *        the focus no matter what is newest unread/modified blip.
-   */
-  public void fireOnLoad(BlipView blipUi, boolean isRootBlip) {
-    for (LifecycleListener listener : listeners) {
-      if (listener instanceof ExtendedLifecycleListener) {
-        ((ExtendedLifecycleListener) listener).onLoad(blipUi, isRootBlip);
-      }
     }
   }
 }

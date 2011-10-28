@@ -29,7 +29,7 @@ import com.google.wave.api.impl.EventMessageBundle;
 import com.google.wave.api.impl.WaveletData;
 
 import org.waveprotocol.box.server.robots.OperationContext;
-import org.waveprotocol.box.server.robots.operations.GravatarProfileFetcher;
+import org.waveprotocol.box.server.robots.operations.GravatarProfilesFetcher;
 import org.waveprotocol.box.server.robots.operations.OperationService;
 import org.waveprotocol.box.server.rpc.render.FullHtmlWaveRenderer.DocRefRenderer;
 import org.waveprotocol.box.server.rpc.render.account.impl.ProfileImpl;
@@ -359,7 +359,7 @@ public class RenderWaveService implements OperationService {
     ObservableConversationView conversationView =
         context.getConversationUtil().buildConversation(opBasedWavelet);
     ProfileManagerImpl profileManagerImpl = new ProfileManagerImpl() {
-      GravatarProfileFetcher profileFetcher = GravatarProfileFetcher.create();
+      GravatarProfilesFetcher profileFetcher = GravatarProfilesFetcher.create();
 
       @Override
       public ProfileImpl getProfile(ParticipantId participantId) {

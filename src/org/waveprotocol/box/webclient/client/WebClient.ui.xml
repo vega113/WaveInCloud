@@ -14,7 +14,7 @@
       top: 0;
       left: 0;
       right: 0;
-      bottom: 24px;
+      bottom: 0;
     }
 
     .root2 {
@@ -67,7 +67,7 @@
         <g:south size="200">
           <d:DebugMessagePanel ui:field="logPanel" addStyleNames="{style.debugPanel}" />
         </g:south>
-        <g:west size="480">
+        <g:west size="400">
           <s:SearchPanelWidget ui:field="searchPanel" addStyleNames="{style.searchPanel}"/>
         </g:west>
         <g:center>

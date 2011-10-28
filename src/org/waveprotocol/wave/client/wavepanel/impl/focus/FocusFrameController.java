@@ -82,7 +82,7 @@ public final class FocusFrameController implements WaveMouseDownHandler, KeySign
         focus.moveDown();
         return true;
       case SPACE:
-        focus.focusNextUnread();
+        focus.focusNext();
         return true;
       case SHIFT_SPACE:
         focus.focusPrevious();

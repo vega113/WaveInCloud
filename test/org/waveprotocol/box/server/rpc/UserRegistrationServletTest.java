@@ -17,11 +17,10 @@
 
 package org.waveprotocol.box.server.rpc;
 
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Injector;
 
 import junit.framework.TestCase;
 
@@ -32,7 +31,7 @@ import org.waveprotocol.box.server.account.HumanAccountDataImpl;
 import org.waveprotocol.box.server.authentication.PasswordDigest;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.persistence.memory.MemoryStore;
-import org.waveprotocol.box.server.robots.agent.welcome.GreeterRobot;
+import org.waveprotocol.box.server.robots.agent.welcome.WelcomeRobot;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 
 import java.io.IOException;
@@ -54,26 +53,27 @@ public class UserRegistrationServletTest extends TestCase {
 
   @Mock private HttpServletRequest req;
   @Mock private HttpServletResponse resp;
-  
-  @Mock private GreeterRobot greeterRobot;
-  @Mock private Injector injector;
+
+  @Mock private WelcomeRobot welcomeBot;
 
   @Override
   protected void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     store = new MemoryStore();
     store.putAccount(account);
-    when(injector.getInstance(GreeterRobot.class)).thenReturn(greeterRobot);
-    servlet = new UserRegistrationServlet(store, "example.com", injector);
+    servlet = new UserRegistrationServlet(store, "example.com", welcomeBot);
+
   }
 
   public void testRegisterNewUser() throws Exception {
     attemptToRegister(req, resp, "foo@example.com", "internet");
 
     verify(resp).setStatus(HttpServletResponse.SC_OK);
-    AccountData account = store.getAccount(ParticipantId.ofUnsafe("foo@example.com"));
+    ParticipantId paraticipantId = ParticipantId.ofUnsafe("foo@example.com");
+    AccountData account = store.getAccount(paraticipantId);
     assertNotNull(account);
     assertTrue(account.asHuman().getPasswordDigest().verify("internet".toCharArray()));
+    verify(welcomeBot).greet(eq(paraticipantId));
   }
 
   public void testDomainInsertedAutomatically() throws Exception {
@@ -116,8 +116,8 @@ public class UserRegistrationServletTest extends TestCase {
   }
 
   public void attemptToRegister(
-      HttpServletRequest req, HttpServletResponse resp, String address, String password)
-      throws IOException {
+      HttpServletRequest req, HttpServletResponse resp, String address,
+      String password) throws IOException {
     when(req.getParameter("address")).thenReturn(address);
     when(req.getParameter("password")).thenReturn(password);
     when(req.getLocale()).thenReturn(Locale.ENGLISH);

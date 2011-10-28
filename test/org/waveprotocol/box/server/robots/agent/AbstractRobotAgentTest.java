@@ -28,11 +28,12 @@ import junit.framework.TestCase;
 import org.apache.commons.cli.CommandLine;
 import org.waveprotocol.box.server.persistence.AccountStore;
 import org.waveprotocol.box.server.robots.agent.AbstractBaseRobotAgent.ServerFrontendAddressHolder;
+import org.waveprotocol.box.server.robots.register.RobotRegistrar;
 import org.waveprotocol.wave.model.id.TokenGenerator;
 
 /**
  * Unit tests for the {@link AbstractRobotAgent}.
- * 
+ *
  * @author yurize@apache.org (Yuri Zelikov)
  */
 public class AbstractRobotAgentTest extends TestCase {
@@ -40,9 +41,10 @@ public class AbstractRobotAgentTest extends TestCase {
   @SuppressWarnings("serial")
   private class FakeRobotAgent extends AbstractCliRobotAgent {
 
-    public FakeRobotAgent(String waveDomain, AccountStore accountStore,
-        TokenGenerator tokenGenerator, ServerFrontendAddressHolder frontendAddressHolder) {
-      super(waveDomain, accountStore, tokenGenerator, frontendAddressHolder);
+    public FakeRobotAgent(String waveDomain, TokenGenerator tokenGenerator,
+        ServerFrontendAddressHolder frontendAddressHolder, AccountStore accountStore,
+        RobotRegistrar registrar) {
+      super(waveDomain, tokenGenerator, frontendAddressHolder, accountStore, registrar);
     }
 
     @Override
@@ -117,7 +119,10 @@ public class AbstractRobotAgentTest extends TestCase {
     TokenGenerator tokenGenerator = mock(TokenGenerator.class);
     when(tokenGenerator.generateToken(anyInt())).thenReturn("abcde");
     AccountStore accountStore = mock(AccountStore.class);
-    agent = new FakeRobotAgent("example.com", accountStore, tokenGenerator, frontendAddressHolder);
+    RobotRegistrar registar = mock(RobotRegistrar.class);
+    agent =
+        new FakeRobotAgent("example.com", tokenGenerator, frontendAddressHolder, accountStore,
+            registar);
   }
 
   public void testPreprocessCommandValidInput() throws Exception {

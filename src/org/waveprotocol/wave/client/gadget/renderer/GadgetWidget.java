@@ -55,6 +55,7 @@ import org.waveprotocol.wave.model.conversation.ConversationBlip;
 import org.waveprotocol.wave.model.conversation.ObservableConversation;
 import org.waveprotocol.wave.model.document.util.Point;
 import org.waveprotocol.wave.model.document.util.XmlStringBuilder;
+import org.waveprotocol.wave.model.gadget.GadgetXmlUtil;
 import org.waveprotocol.wave.model.id.ModernIdSerialiser;
 import org.waveprotocol.wave.model.id.WaveletName;
 import org.waveprotocol.wave.model.supplement.ObservableSupplementedWave;
@@ -80,7 +81,8 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
     implements GadgetRpcListener, GadgetWaveletListener, GadgetUiListener {
 
   private static final String GADGET_RELAY_PATH = "gadgets/files/container/rpc_relay.html";
-  private static final long DEFAULT_HEIGHT = 100;
+  private static final int DEFAULT_HEIGHT_PX = 100;
+  private static final int DEFAULT_WIDTH_PX = 600;
 
   /**
    * Helper class to analyze element changes in the gadget state and prefs.
@@ -720,7 +722,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
     if (titleElement == null) {
       onModifyingDocument();
       GadgetElementChild.create(element.getMutableDoc().insertXml(
-          Point.end((ContentNode) element), GadgetElementChild.constructTitleXml(newTitle)));
+          Point.end((ContentNode) element), GadgetXmlUtil.constructTitleXml(newTitle)));
       blipSubmitter.submit();
     } else {
       if (!title.equals(titleElement.getValue())) {
@@ -919,18 +921,20 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
     if ("".equals(ui.getTitleLabelText()) && metadata.hasTitle()) {
       ui.setTitleLabelText(metadata.getTitle());
     }
-    int preferredWidth = (int)metadata.getPreferredWidth(view);
-    int preferredHeight = (int)metadata.getPreferredHeight(view);
-    int height = (int)(metadata.hasHeight() ? metadata.getHeight()  : preferredHeight);
-    int width = (int)(metadata.hasWidth() ? metadata.getWidth() : preferredWidth);
+    int height =
+        (int) (metadata.hasHeight() ? metadata.getHeight() : metadata.getPreferredHeight(view));
+    int width =
+        (int) (metadata.hasWidth() ? metadata.getWidth() : metadata.getPreferredWidth(view));
     registerWithController(url, width, height);
     if (height > 0) {
       setIframeHeight(String.valueOf(height));
     } else {
-      setIframeHeight(String.valueOf(DEFAULT_HEIGHT));
+      setIframeHeight(String.valueOf(DEFAULT_HEIGHT_PX));
     }
     if (width > 0){
       setIframeWidth(String.valueOf(width));
+    } else {
+      setIframeWidth(String.valueOf(DEFAULT_WIDTH_PX));
     }
   }
 
@@ -1326,7 +1330,6 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
     }
   }
 
-  @Override
   public void setIframeWidth(String width) {
     if (!isActive()) {
       return;
@@ -1378,7 +1381,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
       log("New preference '", key, "'='", value, "'");
       onModifyingDocument();
       element.getMutableDoc().insertXml(
-          Point.end((ContentNode)element), GadgetElementChild.constructPrefXml(key, value));
+          Point.end((ContentNode)element), GadgetXmlUtil.constructPrefXml(key, value));
       blipSubmitter.submit();
     }
 
@@ -1562,7 +1565,7 @@ public class GadgetWidget extends ObservableSupplementedWave.ListenerImpl
       }  else {
         onModifyingDocument();
         element.getMutableDoc().insertXml(
-            Point.end((ContentNode)element), GadgetElementChild.constructStateXml(key, value));
+            Point.end((ContentNode)element), GadgetXmlUtil.constructStateXml(key, value));
       }
     }
   }

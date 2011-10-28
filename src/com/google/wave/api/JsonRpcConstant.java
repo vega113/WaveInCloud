@@ -19,8 +19,6 @@ import com.google.wave.api.impl.DocumentModifyAction;
 import com.google.wave.api.impl.DocumentModifyQuery;
 import com.google.wave.api.impl.WaveletData;
 
-import org.waveprotocol.box.server.robots.operations.FetchProfilesService.ProfilesFetcher;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +112,6 @@ public class JsonRpcConstant {
     ELEMENT("element", Element.class),
     FETCH_PROFILES_REQUEST("fetchProfilesRequest", FetchProfilesRequest.class),
     FETCH_PROFILES_RESULT("fetchProfilesResult", FetchProfilesResult.class),
-    PROFILES_FETCHER("profilesFetcher", ProfilesFetcher.class),
     INDEX("index", Integer.class),
     LANGUAGE("language", String.class),
     MESSAGE("message", String.class),
