@@ -53,3 +53,4 @@ TEST-*\.xml
 # Config backup files
 /*.old
 server.config
+/_sessions
