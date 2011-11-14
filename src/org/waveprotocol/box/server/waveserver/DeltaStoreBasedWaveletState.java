@@ -22,7 +22,9 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 
@@ -46,24 +48,24 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.concurrent.GuardedBy;
+
 /**
  * Simplistic {@link DeltaStore}-backed wavelet state implementation
- * which keeps the entire delta history in memory.
- *
- * TODO(soren): only keep in memory what's not persisted
+ * which goes to persistent storage to serve history requests.
  *
  * TODO(soren): rewire this class to be backed by {@link WaveletStore} and
  * read the snapshot from there instead of computing it in the
  * DeltaStoreBasedWaveletState constructor
- *
- * TODO(soren): refine the persist() logic to make it batch successive
- * writes to storage, when write latency exceeds the intervals between
- * calls to persist()
  *
  * @author soren@google.com (Soren Lassen)
  */
@@ -84,6 +86,18 @@ class DeltaStoreBasedWaveletState implements WaveletState {
           return record.getTransformedDelta();
         }
       };
+      
+  /**
+   * @return An entry keyed by a hashed version with the given version number,
+   *         if any, otherwise null.
+   */
+  private static <T> Map.Entry<HashedVersion, T> lookupCached(NavigableMap<HashedVersion, T> map,
+      long version) {
+    // Smallest key with version number >= version.
+    HashedVersion key = HashedVersion.unsigned(version);
+    Map.Entry<HashedVersion, T> entry = map.ceilingEntry(key);
+    return (entry != null && entry.getKey().getVersion() == version) ? entry : null;
+  }
 
   /**
    * Creates a new delta store based state.
@@ -99,11 +113,6 @@ class DeltaStoreBasedWaveletState implements WaveletState {
    */
   public static DeltaStoreBasedWaveletState create(DeltaStore.DeltasAccess deltasAccess,
       Executor persistExecutor) throws PersistenceException {
-    // Note that the logic in persist() depends on persistExecutor being single-threaded.
-    // TODO(soren): finesse the logic in persist() so it
-    // doesn't require it to be single-threaded, because it would be useful to be
-    // able to use a shared executor with a thread-count set to the appropriate level
-    // of write parallelism for the storage subsystem.
     if (deltasAccess.isEmpty()) {
       return new DeltaStoreBasedWaveletState(deltasAccess, ImmutableList.<WaveletDeltaRecord>of(),
           null, persistExecutor);
@@ -122,18 +131,27 @@ class DeltaStoreBasedWaveletState implements WaveletState {
   }
 
   /**
-   * Reads all deltas from
+   * Reads all deltas from persistent storage.
    */
   private static ImmutableList<WaveletDeltaRecord> readAll(WaveletDeltaRecordReader reader)
-      throws IOException{
-    Preconditions.checkArgument(!reader.isEmpty());
+      throws IOException {
+    long startVersion = 0;
+    long endVersion = reader.getEndVersion().getVersion();
+    return readDeltasInRange(reader, startVersion, endVersion);
+  }
+
+  private static ImmutableList<WaveletDeltaRecord> readDeltasInRange(
+      final WaveletDeltaRecordReader reader, final long startVersion, final long endVersion) throws IOException {
     ImmutableList.Builder<WaveletDeltaRecord> result = ImmutableList.builder();
-    HashedVersion endVersion = reader.getEndVersion();
-    long version = 0;
-    while (version < endVersion.getVersion()) {
-      WaveletDeltaRecord delta = reader.getDelta(version);
+    if (reader.isEmpty()) {
+      return result.build();
+    }
+    long i = startVersion;
+    while (i < endVersion) {
+      WaveletDeltaRecord delta;
+      delta = reader.getDelta(i);
       result.add(delta);
-      version = delta.getResultingVersion().getVersion();
+      i = delta.getResultingVersion().getVersion();
     }
     return result.build();
   }
@@ -142,25 +160,89 @@ class DeltaStoreBasedWaveletState implements WaveletState {
    * @return An entry keyed by a hashed version with the given version number,
    *         if any, otherwise null.
    */
-  private static <T> Map.Entry<HashedVersion, T> lookup(
-      NavigableMap<HashedVersion, T> map, long version) {
-    // Smallest key with version number >= version.
-    HashedVersion key = HashedVersion.unsigned(version);
-    Map.Entry<HashedVersion, T> entry = map.ceilingEntry(key);
-    return (entry != null && entry.getKey().getVersion() == version) ? entry : null;
+  private WaveletDeltaRecord lookup(long version) throws IOException {
+    return deltasAccess.getDelta(version);
+  }
+  
+  private WaveletDeltaRecord getDeltaRecordByEndVersion(HashedVersion endVersion) {
+    long version = endVersion.getVersion();
+    try {
+      return deltasAccess.getDeltaByEndVersion(version);
+    } catch (IOException e) {
+      throw new RuntimeIOException(e);
+    }
   }
 
   private final Executor persistExecutor;
   private final HashedVersion versionZero;
   private final DeltaStore.DeltasAccess deltasAccess;
+  
+  /** The lock to guard write access to {@link #lastPersistedVersion}. */
+  private Object persistLock = new Object();
+  
+  /**
+   * Indicates the version of the latest delta that was already requested to be
+   * persisted.
+   */
+  @GuardedBy("persistLock")
+  private HashedVersion latestVersionToPersist = null;
+  
+  /** The persist task that will be executed next. */
+  @GuardedBy("persistLock")
+  private ListenableFutureTask<Void> nextPersistTask = null;
+  
+  /**
+   * Processes the persist task and checks if there is another task to do when
+   * one task is done.
+   */
+  private final Callable<Void> persisterTask = new Callable<Void>() {
+    @Override
+    public Void call() throws PersistenceException {
+      HashedVersion last;
+      HashedVersion version;
+      synchronized (persistLock) {
+        last = lastPersistedVersion.get();
+        version = latestVersionToPersist;
+      }
+      if (last != null && version.getVersion() <= last.getVersion()) {
+        LOG.info("Attempt to persist version " + version
+            + " smaller than last persisted version " + last);
+        // Done, version is already persisted.                                                                                                                                                               
+        version = last;
+      } else {
+        ImmutableList.Builder<WaveletDeltaRecord> deltas = ImmutableList.builder();
+        HashedVersion v = (last == null) ? versionZero : last;
+        do {
+          WaveletDeltaRecord d =
+              new WaveletDeltaRecord(v, appliedDeltas.get(v), transformedDeltas.get(v));
+          deltas.add(d);
+          v = d.getResultingVersion();
+        } while (v.getVersion() < version.getVersion());
+        Preconditions.checkState(v.equals(version));
+        deltasAccess.append(deltas.build());
+      }
+      synchronized (persistLock) {
+        Preconditions.checkState(last == lastPersistedVersion.get(),
+            "lastPersistedVersion changed while we were writing to storage");
+        lastPersistedVersion.set(version);
+        if (nextPersistTask != null) {
+          persistExecutor.execute(nextPersistTask);
+          nextPersistTask = null;
+        } else {
+          latestVersionToPersist = null;
+        }
+      }
+      return null;
+    }
+};
 
-  /** Keyed by appliedAtVersion. */
-  private final NavigableMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>>
-      appliedDeltas = Maps.newTreeMap();
+/** Keyed by appliedAtVersion. */
+private final ConcurrentNavigableMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>> appliedDeltas =
+    new ConcurrentSkipListMap<HashedVersion, ByteStringMessage<ProtocolAppliedWaveletDelta>>();
 
-  /** Keyed by appliedAtVersion. */
-  private final NavigableMap<HashedVersion, TransformedWaveletDelta> transformedDeltas =
-      Maps.newTreeMap();
+/** Keyed by appliedAtVersion. */
+private final ConcurrentNavigableMap<HashedVersion, TransformedWaveletDelta> transformedDeltas =
+    new ConcurrentSkipListMap<HashedVersion, TransformedWaveletDelta>();
 
   /** Is null if the wavelet state is empty. */
   private WaveletData snapshot;
@@ -189,11 +271,6 @@ class DeltaStoreBasedWaveletState implements WaveletState {
     this.persistExecutor = persistExecutor;
     this.versionZero = HASH_FACTORY.createVersionZero(deltasAccess.getWaveletName());
     this.deltasAccess = deltasAccess;
-    for (WaveletDeltaRecord delta : deltas) {
-      HashedVersion hashedVersion = delta.getAppliedAtVersion();
-      appliedDeltas.put(hashedVersion, delta.getAppliedDelta());
-      transformedDeltas.put(hashedVersion, delta.getTransformedDelta());
-    }
     this.snapshot = snapshot;
     this.lastPersistedVersion = new AtomicReference<HashedVersion>(deltasAccess.getEndVersion());
   }
@@ -213,7 +290,7 @@ class DeltaStoreBasedWaveletState implements WaveletState {
     return (snapshot == null) ? versionZero : snapshot.getHashedVersion();
   }
 
-  @Override
+  
   public HashedVersion getLastPersistedVersion() {
     HashedVersion version = lastPersistedVersion.get();
     return (version == null) ? versionZero : version;
@@ -221,6 +298,8 @@ class DeltaStoreBasedWaveletState implements WaveletState {
 
   @Override
   public HashedVersion getHashedVersion(long version) {
+    final Entry<HashedVersion, TransformedWaveletDelta> cachedEntry =
+        lookupCached(transformedDeltas, version);
     if (version == 0) {
       return versionZero;
     } else if (snapshot == null) {
@@ -228,58 +307,122 @@ class DeltaStoreBasedWaveletState implements WaveletState {
     } else if (version == snapshot.getVersion()) {
       return snapshot.getHashedVersion();
     } else {
-      Map.Entry<HashedVersion, TransformedWaveletDelta> entry = lookup(transformedDeltas, version);
-      return (entry == null) ? null : entry.getKey();
+      WaveletDeltaRecord delta;
+      try {
+        delta = lookup(version);
+      } catch (IOException e) {
+        throw new RuntimeIOException(e);
+      }
+      if (delta == null && cachedEntry != null) {
+        return cachedEntry.getKey();
+      } else {
+       return delta != null ? delta.getAppliedAtVersion() : null;
+      }
     }
   }
 
   @Override
-  public TransformedWaveletDelta getTransformedDelta(HashedVersion beginVersion) {
-    return transformedDeltas.get(beginVersion);
+  public TransformedWaveletDelta getTransformedDelta(
+      final HashedVersion beginVersion) {
+    TransformedWaveletDelta delta = transformedDeltas.get(beginVersion);
+    if (delta != null) {
+      return delta;
+    } else {
+      WaveletDeltaRecord nowDelta;
+      try {
+        nowDelta = lookup(beginVersion.getVersion());
+      } catch (IOException e) {
+        throw new RuntimeIOException(e);
+      }
+      return nowDelta != null ? nowDelta.transformed : null;
+    }
   }
 
   @Override
-  public TransformedWaveletDelta getTransformedDeltaByEndVersion(HashedVersion endVersion) {
-    Preconditions.checkArgument(endVersion.getVersion() > 0,
-        "end version %s is not positive", endVersion);
+  public TransformedWaveletDelta getTransformedDeltaByEndVersion(
+      final HashedVersion endVersion) {
+    Preconditions.checkArgument(endVersion.getVersion() > 0, "end version %s is not positive",
+        endVersion);
+    final TransformedWaveletDelta cachedDelta = transformedDeltas.lowerEntry(endVersion).getValue();
     if (snapshot == null) {
       return null;
-    } else if (endVersion.equals(snapshot.getHashedVersion())) {
-      return transformedDeltas.lastEntry().getValue();
     } else {
-      TransformedWaveletDelta delta = transformedDeltas.lowerEntry(endVersion).getValue();
-      return delta.getResultingVersion().equals(endVersion) ? delta : null;
+      WaveletDeltaRecord deltaRecord = getDeltaRecordByEndVersion(endVersion);
+      TransformedWaveletDelta delta;
+      if (deltaRecord == null && cachedDelta.getResultingVersion().equals(endVersion)) {
+        delta = cachedDelta;
+      } else {
+        delta = deltaRecord != null ? deltaRecord.getTransformedDelta() : null;
+      }
+      return delta;
     }
   }
 
   @Override
-  public DeltaSequence getTransformedDeltaHistory(HashedVersion startVersion,
-      HashedVersion endVersion) {
+  public DeltaSequence getTransformedDeltaHistory(
+      final HashedVersion startVersion, final HashedVersion endVersion) {
     Preconditions.checkArgument(startVersion.getVersion() < endVersion.getVersion(),
         "Start version %s should be smaller than end version %s", startVersion, endVersion);
-    NavigableMap<HashedVersion, TransformedWaveletDelta> deltas =
-        transformedDeltas.subMap(startVersion, true, endVersion, false);
-    return
-        (!deltas.isEmpty() &&
-         deltas.firstKey().equals(startVersion) &&
-         deltas.lastEntry().getValue().getResultingVersion().equals(endVersion))
-        ? DeltaSequence.of(deltas.values())
-        : null;
+    // The history deltas can be either in the memory - waiting to be persisted,
+    // or already persisted. We take both and merge into one list.
+    final NavigableMap<HashedVersion, TransformedWaveletDelta> cachedDeltas = Maps.newTreeMap();
+    cachedDeltas.putAll(transformedDeltas.subMap(startVersion, true, endVersion, false));
+    ImmutableList<WaveletDeltaRecord> persistedDeltas;
+    try {
+      persistedDeltas = readDeltasInRange(deltasAccess, startVersion.getVersion(), endVersion.getVersion());
+    } catch (IOException e) {
+      throw new RuntimeIOException(e);
+    }
+    NavigableMap<HashedVersion, TransformedWaveletDelta> allTransformedDeltasMap = Maps.newTreeMap();
+    allTransformedDeltasMap.putAll(cachedDeltas);
+    for (WaveletDeltaRecord d : persistedDeltas) {
+      allTransformedDeltasMap.put(d.getAppliedAtVersion(), d.getTransformedDelta());
+    }
+    DeltaSequence nowDeltaSequence;
+    if (!allTransformedDeltasMap.isEmpty()
+        && allTransformedDeltasMap.firstKey().equals(startVersion)
+        && allTransformedDeltasMap.lastEntry().getValue().getResultingVersion()
+            .equals(endVersion)) {
+      List<TransformedWaveletDelta> cachedAndPersitentDeltasList =
+          Lists.newArrayList(allTransformedDeltasMap.values());
+      nowDeltaSequence = DeltaSequence.of(cachedAndPersitentDeltasList);
+    } else {
+      nowDeltaSequence = null;
+    }
+    return nowDeltaSequence;
   }
 
-  @Override
   public ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDelta(
       HashedVersion beginVersion) {
-    return appliedDeltas.get(beginVersion);
+    ByteStringMessage<ProtocolAppliedWaveletDelta> delta = appliedDeltas.get(beginVersion);
+    if (delta != null) {
+      return delta;
+    } else {
+      WaveletDeltaRecord record = null;
+      try {
+        record = lookup(beginVersion.getVersion());
+      } catch (IOException e) {
+        new RuntimeIOException(e);
+      }
+      return record != null ? record.applied : null;
+    }
   }
 
   @Override
   public ByteStringMessage<ProtocolAppliedWaveletDelta> getAppliedDeltaByEndVersion(
-      HashedVersion endVersion) {
+      final HashedVersion endVersion) {
     Preconditions.checkArgument(endVersion.getVersion() > 0,
         "end version %s is not positive", endVersion);
-    return isDeltaBoundary(endVersion) ? appliedDeltas.lowerEntry(endVersion).getValue() : null;
-
+    final ByteStringMessage<ProtocolAppliedWaveletDelta> cachedDelta =
+        appliedDeltas.lowerEntry(endVersion).getValue();
+    WaveletDeltaRecord deltaRecord = getDeltaRecordByEndVersion(endVersion);
+    ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta;
+    if (deltaRecord == null && isDeltaBoundary(endVersion)) {
+      appliedDelta = cachedDelta;
+    } else {
+      appliedDelta = deltaRecord != null ? deltaRecord.getAppliedDelta() : null;
+    }
+    return appliedDelta;
   }
 
   @Override
@@ -289,6 +432,30 @@ class DeltaStoreBasedWaveletState implements WaveletState {
     return (isDeltaBoundary(startVersion) && isDeltaBoundary(endVersion))
         ? appliedDeltas.subMap(startVersion, endVersion).values()
         : null;
+  }
+  
+  public Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> getAppliedDeltaHistory1(
+      final HashedVersion startVersion, final HashedVersion endVersion) {
+    Preconditions.checkArgument(startVersion.getVersion() < endVersion.getVersion());
+    final Set<ByteStringMessage<ProtocolAppliedWaveletDelta>> allDeltas = Sets.newHashSet();
+    allDeltas.addAll(appliedDeltas.subMap(startVersion, endVersion).values());
+    ImmutableList<WaveletDeltaRecord> persistedDeltas;
+    try {
+      persistedDeltas = readDeltasInRange(deltasAccess, startVersion.getVersion(), endVersion.getVersion());
+    } catch (IOException e) {
+      throw new RuntimeIOException(e);
+    }
+    for (WaveletDeltaRecord d : persistedDeltas) {
+      allDeltas.add(d.getAppliedDelta());
+    }
+    Collection<ByteStringMessage<ProtocolAppliedWaveletDelta>> deltaCollection =
+        Lists.newArrayList();
+    if (isDeltaBoundary(startVersion) && isDeltaBoundary(endVersion)) {
+      for (ByteStringMessage<ProtocolAppliedWaveletDelta> appliedDelta : allDeltas) {
+        deltaCollection.add(appliedDelta);
+      }
+    }
+    return deltaCollection;
   }
 
   @Override
@@ -319,37 +486,35 @@ class DeltaStoreBasedWaveletState implements WaveletState {
     Preconditions.checkArgument(isDeltaBoundary(version),
         "Version to persist %s matches no delta", version);
 
-    // The following logic relies on persistExecutor being single-threaded,
-    // so no two tasks execute in parallel.
-    ListenableFutureTask<Void> resultTask = new ListenableFutureTask<Void>(
-        new Callable<Void>() {
-          @Override
-          public Void call() throws PersistenceException {
-            HashedVersion last = lastPersistedVersion.get();
-            if (last != null && version.getVersion() <= last.getVersion()) {
-              LOG.info("Attempt to persist version " + version
-                  + " smaller than last persisted version " + last);
-              // done, version is already persisted
-            } else {
-              ImmutableList.Builder<WaveletDeltaRecord> deltas = ImmutableList.builder();
-              HashedVersion v = (last == null) ? versionZero : last;
-              do {
-                WaveletDeltaRecord d =
-                    new WaveletDeltaRecord(v, appliedDeltas.get(v), transformedDeltas.get(v));
-                deltas.add(d);
-                v = d.getResultingVersion();
-              } while (v.getVersion() < version.getVersion());
-              Preconditions.checkState(v.equals(version));
-              deltasAccess.append(deltas.build());
-              Preconditions.checkState(last == lastPersistedVersion.get(),
-                  "lastPersistedVersion changed while we were writing to storage");
-              lastPersistedVersion.set(version);
-            }
-            return null;
-          }
-        });
-    persistExecutor.execute(resultTask);
-    return resultTask;
+    synchronized (persistLock) {
+      if (latestVersionToPersist != null) {
+        // there's a persist task in flight                                                                                                                                                                     
+        if (version.getVersion() <= latestVersionToPersist.getVersion()) {
+          LOG.info("Attempt to persist version " + version
+              + " smaller than last version requested " + latestVersionToPersist);
+        } else {
+          latestVersionToPersist = version;
+        }
+        if (nextPersistTask == null) {
+          nextPersistTask = new ListenableFutureTask<Void>(persisterTask);
+        }
+        return nextPersistTask;
+      } else {
+        latestVersionToPersist = version;
+        ListenableFutureTask<Void> resultTask = new ListenableFutureTask<Void>(persisterTask);
+        persistExecutor.execute(resultTask);
+        return resultTask;
+      }
+    }
+  }
+  
+  @Override
+  public void flush(HashedVersion version) {
+    transformedDeltas.remove(version);
+    appliedDeltas.remove(version);
+    if (LOG.isFineLoggable()) {
+      LOG.fine("Flushed delta " + version);
+    }
   }
 
   @Override
