@@ -1,0 +1,47 @@
+<!--
+  GXP template for the Robot registration page.
+  Generate with "ant gen_gxp".
+  Author: ljvderijk@google.com (Lennard de Rijk)
+-->
+
+<gxp:template
+    name='org.waveprotocol.box.server.gxp.robots.RobotRegistrationPage'
+    xmlns='http://www.w3.org/1999/xhtml'
+    xmlns:gxp='http://google.com/2001/gxp'>
+
+  <gxp:param name='domain' type='String' />
+  <gxp:param name='message' type='String' />
+
+  <html>
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+      <title>Robot Registration</title>
+      <link rel="shortcut icon" href="/static/favicon.ico" />
+      <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+        </script>
+        <script type="text/javascript">
+        try{
+        var pageTracker = _gat._getTracker("UA-13269470-9");
+        pageTracker._trackPageview();
+        } catch(err) {}
+        </script>
+      
+    </head>
+
+    <body>
+
+      <gxp:if cond='!message.isEmpty()'>
+        <b><gxp:eval expr='message'/></b>
+      </gxp:if>
+
+      <form method="post" action="">
+        Robot Username: <input name="username" type="text"/>@<gxp:eval expr='domain'/><br/>
+        Robot URL: <input name="location" type="text"/><br/>
+        <input type="submit"/>
+      </form>
+
+    </body>
+  </html>
+</gxp:template>
