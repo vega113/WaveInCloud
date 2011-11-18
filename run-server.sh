@@ -21,6 +21,6 @@ exec java $DEBUG_FLAGS \
   -Dorg.eclipse.jetty.util.log.DEBUG=true \
   -Djava.security.auth.login.config=jaas.config \
   -Dwave.server.config=server.config \
-  -Xms2048M -Xmx2048M \
-  -Xss1024M \
+  -Xms5096M -Xmx5096 \
+  -Xss256K \
   -jar dist/waveinabox-server-$WAVEINABOX_VERSION.jar
