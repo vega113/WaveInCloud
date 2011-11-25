@@ -24,3 +24,4 @@ exec java $DEBUG_FLAGS \
   -Xms5096M -Xmx5096M \
   -Xss256K \
   -jar dist/waveinabox-server-$WAVEINABOX_VERSION.jar
+ 
