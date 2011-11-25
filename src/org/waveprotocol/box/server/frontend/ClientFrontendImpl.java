@@ -129,6 +129,10 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         waveletIds = Sets.newHashSet();
         LOG.warning("Failed to retrieve visible wavelets for " + loggedInUser, e1);
       }
+      if (waveletIds.isEmpty()) {
+        LOG.warning(String.format("No wavelets for user %, waveId: %.", loggedInUser.getAddress(),
+            waveId.serialise()));
+      }
       for (WaveletId waveletId : waveletIds) {
         WaveletName waveletName = WaveletName.of(waveId, waveletId);
         // Ensure that implicit participants will also receive updates.
