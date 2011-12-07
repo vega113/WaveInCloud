@@ -676,16 +676,14 @@ public class WaveMap implements SearchProvider {
   public void loadAllWavelets() throws WaveletStateException {
     try {
       ExceptionalIterator<WaveId, PersistenceException> itr = store.getWaveIdIterator();
-      while (itr.hasNext()) {
-        try {
+        while (itr.hasNext()) {
           WaveId waveId = itr.next();
           lookupWavelets(waveId);
-        } catch (java.lang.NegativeArraySizeException e) {
-          LOG.severe("Something bad happened while scanning for waves", e);
         }
-      }
     } catch (PersistenceException e) {
       throw new WaveletStateException("Failed to scan waves", e);
+    } catch (java.lang.NegativeArraySizeException e) {
+      LOG.severe("Something bad happened while scanning for waves", e);
     }
   }
 
