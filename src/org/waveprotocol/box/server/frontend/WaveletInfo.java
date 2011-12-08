@@ -37,6 +37,7 @@ import org.waveprotocol.wave.model.wave.data.ReadableWaveletData;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Provides services to manage and track wavelet participants and wavelet
@@ -46,6 +47,8 @@ import java.util.Set;
  * @see ClientFrontendImpl
  */
 public class WaveletInfo {
+  
+  private static Logger LOG = Logger.getLogger(WaveletInfo.class.getName());
 
   /** Information we hold in memory for each wavelet. */
   private static class PerWavelet {
@@ -121,6 +124,10 @@ public class WaveletInfo {
         perWavelet.get(subscription.getWaveId()).entrySet();
     for (Entry<WaveletId, PerWavelet> entry : entrySet) {
       WaveletName waveletName = WaveletName.of(subscription.getWaveId(), entry.getKey());
+      if (!subscription.includes(entry.getKey()) && waveletProvider.checkAccessPermission(waveletName, loggedInUser)) {
+        LOG.warning(String.format("%s has access to wavelet %s but not subscribed!!!",
+            loggedInUser.getAddress(), waveletName.toString()));
+      }
       if (subscription.includes(entry.getKey())
           && waveletProvider.checkAccessPermission(waveletName, loggedInUser)) {
         visible.add(entry.getKey());

@@ -166,13 +166,13 @@ class LocalWaveletContainerImpl extends WaveletContainerImpl implements LocalWav
       TransformedWaveletDelta dupDelta = lookupTransformedDelta(transformed.getTargetVersion());
       LOG.info("Duplicate delta " + dupDelta + " for wavelet " + getWaveletName());
       // TODO(anorth): Replace these comparisons with methods on delta classes.
-      if (dupDelta.getAuthor().equals(transformed.getAuthor())) {
+      if (!dupDelta.getAuthor().equals(transformed.getAuthor())) {
         String msg1 = String.format("Duplicate delta detected but mismatched author, expected %s found %s",
             transformed.getAuthor(), dupDelta.getAuthor());
         LOG.warning(msg1);
         Preconditions.checkState(dupDelta.getAuthor().equals(transformed.getAuthor()), msg1);
       }
-      if (Iterables.elementsEqual(dupDelta, transformed)) {
+      if (!Iterables.elementsEqual(dupDelta, transformed)) {
         String msg2 = String.format("Duplicate delta detected but mismatched ops, expected %s found %s",
             transformed, dupDelta);
         LOG.warning(msg2);
