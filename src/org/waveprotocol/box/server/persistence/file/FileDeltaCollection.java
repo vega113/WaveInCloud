@@ -507,6 +507,7 @@ public class FileDeltaCollection implements DeltasAccess {
    */
   private TransformedWaveletDelta readTransformedWaveletDelta(int transformedDeltaLength)
       throws IOException {
+    Preconditions.checkArgument(transformedDeltaLength >= 0, "negative length %d", transformedDeltaLength);
     byte[] bytes = new byte[transformedDeltaLength];
     file.readFully(bytes);
     ProtoTransformedWaveletDelta delta;

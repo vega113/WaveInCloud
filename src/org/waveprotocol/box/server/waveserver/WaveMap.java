@@ -859,6 +859,9 @@ public class WaveMap implements SearchProvider {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new WaveletStateException("Interrupted while looking up wave " + waveId, e);
+    } catch (Exception e) {
+      LOG.severe("Problem while looking up wavelets for " + waveId);
+      return ImmutableSet.of();
     }
   }
 
