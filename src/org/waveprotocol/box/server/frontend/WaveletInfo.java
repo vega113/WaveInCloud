@@ -18,6 +18,7 @@
 package org.waveprotocol.box.server.frontend;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
@@ -124,12 +125,24 @@ public class WaveletInfo {
         perWavelet.get(subscription.getWaveId()).entrySet();
     for (Entry<WaveletId, PerWavelet> entry : entrySet) {
       WaveletName waveletName = WaveletName.of(subscription.getWaveId(), entry.getKey());
-      if (!subscription.includes(entry.getKey()) && waveletProvider.checkAccessPermission(waveletName, loggedInUser)) {
-        LOG.warning(String.format("%s has access to wavelet %s but not subscribed!!!",
-            loggedInUser.getAddress(), waveletName.toString()));
+      // ======================================= Just for debugging, remove later.
+      String participants = Joiner.on(",").join(waveletProvider.getSnapshot(waveletName).snapshot.getParticipants());
+      // TODO (Yuri Z.) Remove this later.
+      if (!subscription.includes(entry.getKey())
+          && waveletProvider.checkAccessPermission(waveletName, loggedInUser)) {
+        LOG.warning(String.format("%s has access to wavelet %s but not subscribed!!! Wave participants: %s",
+            loggedInUser.getAddress(), waveletName.toString(), participants));
       }
       if (subscription.includes(entry.getKey())
+          && !waveletProvider.checkAccessPermission(waveletName, loggedInUser)) {
+        LOG.severe(String.format("User %s has subscription %s but no access!!! Wave participants: %s",
+            loggedInUser.getAddress(), subscription.toString(), participants));
+      }
+      // =======================
+      if (subscription.includes(entry.getKey())
           && waveletProvider.checkAccessPermission(waveletName, loggedInUser)) {
+        LOG.info(String.format("User %s has subcription to %s and access to wavelet %s",
+            loggedInUser.getAddress(), loggedInUser.toString(), waveletName.toString()));
         visible.add(entry.getKey());
       }
     }

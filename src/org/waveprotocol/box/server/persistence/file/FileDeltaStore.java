@@ -37,6 +37,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A flat file based implementation of DeltaStore.
@@ -52,6 +54,8 @@ import java.util.NoSuchElementException;
  * @author josephg@gmail.com (Joseph Gentle)
  */
 public class FileDeltaStore implements DeltaStore {
+  
+  private static Logger LOG = Logger.getLogger(FileDeltaStore.class.getName());
   /**
    * The directory in which the wavelets are stored
    */
@@ -158,7 +162,12 @@ public class FileDeltaStore implements DeltaStore {
 
       @Override
       public boolean hasNext() throws PersistenceException {
-        fetchNext();
+        try {
+          fetchNext();
+        } catch (Exception e) {
+          LOG.log(Level.WARNING, "", e);
+          return hasNext();
+        }
         return nextWaveId != null;
       }
 

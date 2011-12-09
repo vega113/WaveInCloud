@@ -55,9 +55,9 @@ import java.util.concurrent.Executors;
  */
 public class WaveServerModule extends AbstractModule {
   // TODO(soren): move to global config file
-  private static final int LISTENER_EXECUTOR_THREAD_COUNT = 2;
-  private static final int WAVELET_LOAD_EXECUTOR_THREAD_COUNT = 2;
-  private static final int DELTA__PERSIST_EXECUTOR_THREAD_COUNT = 2;
+  private static final int LISTENER_EXECUTOR_THREAD_COUNT = 1;
+  private static final int WAVELET_LOAD_EXECUTOR_THREAD_COUNT = 1;
+  private static final int DELTA_PERSIST_EXECUTOR_THREAD_COUNT = 1;
   private static final IdURIEncoderDecoder URI_CODEC =
       new IdURIEncoderDecoder(new JavaUrlCodec());
   private static final HashedVersionFactory HASH_FACTORY = new HashedVersionFactoryImpl(URI_CODEC);
@@ -65,7 +65,7 @@ public class WaveServerModule extends AbstractModule {
   private final Executor waveletLoadExecutor =
       Executors.newFixedThreadPool(WAVELET_LOAD_EXECUTOR_THREAD_COUNT);
   private final Executor persistExecutor =
-      Executors.newFixedThreadPool(DELTA__PERSIST_EXECUTOR_THREAD_COUNT);
+      Executors.newFixedThreadPool(DELTA_PERSIST_EXECUTOR_THREAD_COUNT);
   private final boolean enableFederation;
 
   public WaveServerModule(boolean enableFederation) {
