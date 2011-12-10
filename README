@@ -13,7 +13,6 @@ Wave in a Box uses Ant to build. To run the tests, run:
   ant test
 </code>
 
-To run tests and then build the server and client run:
 <code>
   ant
 </code>
@@ -22,7 +21,7 @@ To build the client and server without tests (faster) run:
 <code>
   ant compile-gwt dist-server
 </code>
- 
+
 
 It will be created in dist/waveinabox-X.Y.jar.
 
