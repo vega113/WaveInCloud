@@ -25,20 +25,14 @@ import org.waveprotocol.wave.client.StageOne;
 import org.waveprotocol.wave.client.StageTwo;
 import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
-import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusBlipSelector;
-import org.waveprotocol.wave.client.wavepanel.impl.focus.ViewTraverser;
-import org.waveprotocol.wave.client.wavepanel.impl.reader.Reader;
-import org.waveprotocol.wave.client.wavepanel.view.BlipView;
-import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.concurrencycontrol.channel.WaveViewService;
-import org.waveprotocol.wave.model.conversation.ConversationView;
 import org.waveprotocol.wave.model.id.IdGenerator;
+import org.waveprotocol.wave.model.id.WaveId;
 import org.waveprotocol.wave.model.schema.SchemaProvider;
 import org.waveprotocol.wave.model.schema.conversation.ConversationSchemas;
 import org.waveprotocol.wave.model.wave.ParticipantId;
 import org.waveprotocol.wave.model.wave.data.WaveViewData;
 import org.waveprotocol.wave.model.wave.data.impl.WaveViewDataImpl;
-import org.waveprotocol.wave.model.waveref.WaveRef;
 
 /**
  * Provides stage 2 of the staged loading of the wave panel
@@ -47,7 +41,7 @@ import org.waveprotocol.wave.model.waveref.WaveRef;
  */
 public class StageTwoProvider extends StageTwo.DefaultProvider {
 
-  private final WaveRef waveRef;
+  private final WaveId waveId;
   private final RemoteViewServiceMultiplexer channel;
   private final boolean isNewWave;
   // TODO: Remove this after WebClientBackend is deleted.
@@ -67,13 +61,12 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
    * @param channel communication channel
    * @param idGenerator
    */
-  public StageTwoProvider(StageOne stageOne, WaveRef waveRef, RemoteViewServiceMultiplexer channel,
+  public StageTwoProvider(StageOne stageOne, WaveId waveId, RemoteViewServiceMultiplexer channel,
       boolean isNewWave, IdGenerator idGenerator, ProfileManager profiles) {
     super(stageOne);
     Preconditions.checkArgument(stageOne != null);
-    Preconditions.checkArgument(waveRef != null);
-    Preconditions.checkArgument(waveRef.getWaveId() != null);
-    this.waveRef = waveRef;
+    Preconditions.checkArgument(waveId != null);
+    this.waveId = waveId;
     this.channel = channel;
     this.isNewWave = isNewWave;
     this.idGenerator = idGenerator;
@@ -102,7 +95,7 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
 
   @Override
   protected WaveViewService createWaveViewService() {
-    return new RemoteWaveViewService(waveRef.getWaveId(), channel, getDocumentRegistry());
+    return new RemoteWaveViewService(waveId, channel, getDocumentRegistry());
   }
 
   /**
@@ -136,12 +129,9 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
 
           // Install eager UI.
           installFeatures();
-          Reader reader = installReader();
 
           // Rendering, and therefore the whole stage is now ready.
           whenReady.use(StageTwoProvider.this);
-
-          selectAndFocusOnBlip(reader);
         }
       });
     }
@@ -165,22 +155,6 @@ public class StageTwoProvider extends StageTwo.DefaultProvider {
 
   @Override
   protected void fetchWave(final AsyncHolder.Accessor<WaveViewData> whenReady) {
-    whenReady.use(WaveViewDataImpl.create(waveRef.getWaveId()));
-  }
-
-  /**
-   * Finds the blip that should receive the focus and selects it.
-   */
-  private void selectAndFocusOnBlip(Reader reader) {
-    ModelAsViewProvider views = getModelAsViewProvider();
-    ConversationView wave = getConversations();
-    StageOne one = getStageOne();
-    FocusBlipSelector blipSelector =
-        FocusBlipSelector.create(waveRef, wave, views, reader, new ViewTraverser());
-    BlipView blipUi = blipSelector.select();
-    // Focus on the selected blip.
-    if (blipUi != null) {
-      one.getFocusFrame().focus(blipUi);
-    }
+    whenReady.use(WaveViewDataImpl.create(waveId));
   }
 }
