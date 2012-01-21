@@ -44,20 +44,7 @@
         var pageTracker = _gat._getTracker("UA-13269470-9");
         pageTracker._trackPageview();
         } catch(err) {}
-  </script>
-  <script type="text/javascript">
-  /* <![CDATA[ */
-    (function() {
-        var s = document.createElement('script'), t = document.getElementsByTagName('script')[0];
-
-        s.type = 'text/javascript';
-        s.async = true;
-        s.src = 'http://api.flattr.com/js/0.6/load.js?mode=auto';
-
-        t.parentNode.insertBefore(s, t);
-    })();
- /* ]]> */
- </script>
+        </script>
   
   </head>
   <body onload="init()">
@@ -212,11 +199,6 @@
         </tr>
       </table>
       </form>
-      </td>
-      <td>
-        <a class="FlattrButton" href="https://flattr.com/thing/461535" title="waveinabox.net" lang="en">
-          Support this this demo server!
-        </a>
       </td>
     </tr>
   </table>
