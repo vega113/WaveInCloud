@@ -31,6 +31,10 @@ import org.waveprotocol.wave.client.account.ProfileManager;
 import org.waveprotocol.wave.client.common.util.AsyncHolder;
 import org.waveprotocol.wave.client.common.util.AsyncHolder.Accessor;
 import org.waveprotocol.wave.client.common.util.LogicalPanel;
+import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusBlipSelector;
+import org.waveprotocol.wave.client.wavepanel.impl.focus.FocusFramePresenter;
+import org.waveprotocol.wave.client.wavepanel.impl.focus.ViewTraverser;
+import org.waveprotocol.wave.client.wavepanel.impl.reader.Reader;
 import org.waveprotocol.wave.client.wavepanel.view.BlipView;
 import org.waveprotocol.wave.client.wavepanel.view.dom.ModelAsViewProvider;
 import org.waveprotocol.wave.client.wavepanel.view.dom.full.BlipQueueRenderer;
@@ -172,32 +176,11 @@ public class StagesProvider extends Stages {
   }
 
   private void handleExistingWave(StageThree three) {
-    // If there's blip reference then focus on that blip.
-    String documentId = waveRef.getDocumentId();
-    if (documentId != null) {
-      ModelAsViewProvider views = two.getModelAsViewProvider();
+    if (waveRef.hasDocumentId()) {
       BlipQueueRenderer blipQueue = two.getBlipQueue();
-      ConversationView wave = two.getConversations();
       blipQueue.flush();
-      // Find conversation
-      Conversation conversation;
-      if (waveRef.hasWaveletId()) {
-        String id = ModernIdSerialiser.INSTANCE.serialiseWaveletId(waveRef.getWaveletId());
-        conversation = wave.getConversation(id);
-      } else {
-        // Unspecified wavelet means root.
-        conversation = wave.getRoot();
-      }
-      if (conversation != null) {
-        // Find selected blip.
-        ConversationBlip blip = wave.getRoot().getBlip(documentId);
-        if (blip != null) {
-          BlipView blipUi = views.getBlipView(blip);
-          if (blipUi != null) {
-            two.getStageOne().getFocusFrame().focus(blipUi);
-          }
-        }
-      }
+      selectAndFocusOnBlip(two.getReader(), two.getModelAsViewProvider(), two.getConversations(),
+          one.getFocusFrame(), waveRef);
     }
   }
 
@@ -219,6 +202,20 @@ public class StagesProvider extends Stages {
       one = null;
     }
     closed = true;
+  }
+
+  /**
+   * Finds the blip that should receive the focus and selects it.
+   */
+  private static void selectAndFocusOnBlip(Reader reader, ModelAsViewProvider views,
+      ConversationView wave, FocusFramePresenter focusFrame, WaveRef waveRef) {
+    FocusBlipSelector blipSelector =
+        FocusBlipSelector.create(wave, views, reader, new ViewTraverser());
+    BlipView blipUi = blipSelector.selectBlipByWaveRef(waveRef);
+    // Focus on the selected blip.
+    if (blipUi != null) {
+      focusFrame.focus(blipUi);
+    }
   }
 
   /**
