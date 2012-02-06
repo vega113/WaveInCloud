@@ -45,13 +45,15 @@ import com.glines.socketio.server.transport.XHRPollingTransport;
 import com.glines.socketio.server.transport.jetty.JettyWebSocketTransport;
 
 import org.eclipse.jetty.http.ssl.SslContextFactory;
+import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.bio.SocketConnector;
 import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.GzipFilter;
 import org.eclipse.jetty.util.resource.ResourceCollection;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.websocket.WebSocket;
@@ -353,11 +355,11 @@ public class ServerRpcProvider {
   public void startWebSocketServer(final Injector injector) {
     httpServer = new Server();
 
-    List<SelectChannelConnector> connectors = getSelectChannelConnectors(httpAddresses);
+    List<SocketConnector> connectors = getSocketConnectors(httpAddresses);
     if (connectors.isEmpty()) {
       LOG.severe("No valid http end point address provided!");
     }
-    for (SelectChannelConnector connector : connectors) {
+    for (SocketConnector connector : connectors) {
       httpServer.addConnector(connector);
     }
     final WebAppContext context = new WebAppContext();
@@ -394,6 +396,7 @@ public class ServerRpcProvider {
 
       context.addEventListener(contextListener);
       context.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+      context.addFilter(GzipFilter.class, "/webclient/*", EnumSet.allOf(DispatcherType.class));
       httpServer.setHandler(context);
 
       httpServer.start();
@@ -508,12 +511,12 @@ public class ServerRpcProvider {
   }
 
   /**
-   * @return a list of {@link SelectChannelConnector} each bound to a host:port
+   * @return a list of {@link SocketConnector} each bound to a host:port
    *         pair form the list addresses.
    */
-  private List<SelectChannelConnector> getSelectChannelConnectors(
+  private List<SocketConnector> getSocketConnectors(
       InetSocketAddress[] httpAddresses) {
-    List<SelectChannelConnector> list = Lists.newArrayList();
+    List<SocketConnector> list = Lists.newArrayList();
     String[] excludeCiphers = {"SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
                                "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_RSA_WITH_DES_CBC_SHA",
                                "SSL_DHE_RSA_WITH_DES_CBC_SHA", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
@@ -533,11 +536,11 @@ public class ServerRpcProvider {
     }
 
     for (InetSocketAddress address : httpAddresses) {
-      SelectChannelConnector connector;
+      SocketConnector connector;
       if (sslEnabled) {
-        connector = new SslSelectChannelConnector(sslContextFactory);
+        connector = new SslSocketConnector(sslContextFactory);
       } else {
-        connector = new SelectChannelConnector();
+        connector = new SocketConnector();
       }
       connector.setHost(address.getAddress().getHostAddress());
       connector.setPort(address.getPort());
