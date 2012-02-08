@@ -44,12 +44,15 @@ import com.glines.socketio.server.transport.XHRMultipartTransport;
 import com.glines.socketio.server.transport.XHRPollingTransport;
 import com.glines.socketio.server.transport.jetty.JettyWebSocketTransport;
 
+import org.eclipse.jetty.http.ssl.SslContextFactory;
+import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.GzipFilter;
 import org.eclipse.jetty.util.resource.ResourceCollection;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.websocket.WebSocket;
@@ -94,9 +97,13 @@ import javax.servlet.http.HttpSession;
  *
  */
 public class ServerRpcProvider {
-  private static final int BUFFER_SIZE = 64 * 1024;
-
   private static final Log LOG = Log.get(ServerRpcProvider.class);
+
+  /**
+   * The buffer size is passed to implementations of {@link AbstractWaveSocketIOServlet} as init
+   * param. It defines the response buffer size.
+   */
+  private static final int BUFFER_SIZE = 1024 * 1024;
 
   private final InetSocketAddress[] httpAddresses;
   private final Integer flashsocketPolicyPort;
@@ -104,6 +111,9 @@ public class ServerRpcProvider {
   private final SessionManager sessionManager;
   private final org.eclipse.jetty.server.SessionManager jettySessionManager;
   private Server httpServer = null;
+  private final boolean sslEnabled;
+  private final String sslKeystorePath;
+  private final String sslKeystorePassword;
 
   // Mapping from incoming protocol buffer type -> specific handler.
   private final Map<Descriptors.Descriptor, RegisteredServiceMethod> registeredServices =
@@ -301,7 +311,8 @@ public class ServerRpcProvider {
    */
   public ServerRpcProvider(InetSocketAddress[] httpAddresses, Integer flashsocketPolicyPort,
       String[] resourceBases, ExecutorService threadPool, SessionManager sessionManager,
-      org.eclipse.jetty.server.SessionManager jettySessionManager, String sessionStoreDir) {
+      org.eclipse.jetty.server.SessionManager jettySessionManager, String sessionStoreDir,
+      boolean sslEnabled, String sslKeystorePath, String sslKeystorePassword) {
     this.httpAddresses = httpAddresses;
     this.flashsocketPolicyPort = flashsocketPolicyPort;
     this.resourceBases = resourceBases;
@@ -309,6 +320,9 @@ public class ServerRpcProvider {
     this.sessionManager = sessionManager;
     this.jettySessionManager = jettySessionManager;
     this.sessionStoreDir = sessionStoreDir;
+    this.sslEnabled = sslEnabled;
+    this.sslKeystorePath = sslKeystorePath;
+    this.sslKeystorePassword = sslKeystorePassword;
   }
 
   /**
@@ -316,18 +330,25 @@ public class ServerRpcProvider {
    */
   public ServerRpcProvider(InetSocketAddress[] httpAddresses, Integer flashsocketPolicyPort,
       String[] resourceBases, SessionManager sessionManager,
-      org.eclipse.jetty.server.SessionManager jettySessionManager, String sessionStoreDir) {
+      org.eclipse.jetty.server.SessionManager jettySessionManager, String sessionStoreDir,
+      boolean sslEnabled, String sslKeystorePath, String sslKeystorePassword) {
     this(httpAddresses, flashsocketPolicyPort, resourceBases, Executors.newCachedThreadPool(),
-        sessionManager, jettySessionManager, sessionStoreDir);
+        sessionManager, jettySessionManager, sessionStoreDir, sslEnabled, sslKeystorePath,
+        sslKeystorePassword);
   }
 
   @Inject
   public ServerRpcProvider(@Named(CoreSettings.HTTP_FRONTEND_ADDRESSES) List<String> httpAddresses,
       @Named(CoreSettings.FLASHSOCKET_POLICY_PORT) Integer flashsocketPolicyPort,
       @Named(CoreSettings.RESOURCE_BASES) List<String> resourceBases,
-      SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager, @Named(CoreSettings.SESSIONS_STORE_DIRECTORY) String sessionStoreDir) {
+      SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager,
+      @Named(CoreSettings.SESSIONS_STORE_DIRECTORY) String sessionStoreDir,
+      @Named(CoreSettings.ENABLE_SSL) boolean sslEnabled,
+      @Named(CoreSettings.SSL_KEYSTORE_PATH) String sslKeystorePath,
+      @Named(CoreSettings.SSL_KEYSTORE_PASSWORD) String sslKeystorePassword) {
     this(parseAddressList(httpAddresses), flashsocketPolicyPort, resourceBases
-        .toArray(new String[0]), sessionManager, jettySessionManager, sessionStoreDir);
+        .toArray(new String[0]), sessionManager, jettySessionManager, sessionStoreDir,
+        sslEnabled, sslKeystorePath, sslKeystorePassword);
   }
 
   public void startWebSocketServer(final Injector injector) {
@@ -342,14 +363,14 @@ public class ServerRpcProvider {
     }
     final WebAppContext context = new WebAppContext();
 
-    // This disables JSessionIDs in URLs redirects
-    // see: http://stackoverflow.com/questions/7727534/how-do-you-disable-jsessionid-for-jetty-running-with-the-eclipse-jetty-maven-plu
-    // and: http://jira.codehaus.org/browse/JETTY-467?focusedCommentId=114884&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-114884
-    jettySessionManager.setSessionIdPathParameterName(null);
-
     context.setParentLoaderPriority(true);
 
     if (jettySessionManager != null) {
+      // This disables JSessionIDs in URLs redirects
+      // see: http://stackoverflow.com/questions/7727534/how-do-you-disable-jsessionid-for-jetty-running-with-the-eclipse-jetty-maven-plu
+      // and: http://jira.codehaus.org/browse/JETTY-467?focusedCommentId=114884&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-114884
+      jettySessionManager.setSessionIdPathParameterName(null);
+
       context.getSessionHandler().setSessionManager(jettySessionManager);
     }
     final ResourceCollection resources = new ResourceCollection(resourceBases);
@@ -374,6 +395,7 @@ public class ServerRpcProvider {
 
       context.addEventListener(contextListener);
       context.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+      context.addFilter(GzipFilter.class, "/webclient/*", EnumSet.allOf(DispatcherType.class));
       httpServer.setHandler(context);
 
       httpServer.start();
@@ -401,12 +423,12 @@ public class ServerRpcProvider {
     // Servlet where the websocket connection is served from.
     ServletHolder wsholder = addServlet("/socket", WaveWebSocketServlet.class);
     // TODO(zamfi): fix to let messages span frames.
-    wsholder.setInitParameter("bufferSize", String.valueOf(BUFFER_SIZE)); 
+    wsholder.setInitParameter("bufferSize", "" + BUFFER_SIZE);
 
     // Servlet where the websocket connection is served from.
     ServletHolder sioholder = addServlet("/socket.io/*", WaveSocketIOServlet.class );
     // TODO(zamfi): fix to let messages span frames.
-    sioholder.setInitParameter("bufferSize", String.valueOf(BUFFER_SIZE));
+    sioholder.setInitParameter("bufferSize", "" + BUFFER_SIZE);
     // Set flash policy server parameters
     String flashPolicyServerHost = "localhost";
     StringBuilder flashPolicyAllowedPorts = new StringBuilder();
@@ -494,8 +516,31 @@ public class ServerRpcProvider {
   private List<SelectChannelConnector> getSelectChannelConnectors(
       InetSocketAddress[] httpAddresses) {
     List<SelectChannelConnector> list = Lists.newArrayList();
+    String[] excludeCiphers = {"SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                               "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_RSA_WITH_DES_CBC_SHA",
+                               "SSL_DHE_RSA_WITH_DES_CBC_SHA", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+                               "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA", "TLS_DHE_RSA_WITH_AES_256_CBC_SHA"};
+    SslContextFactory sslContextFactory = null;
+
+    if (sslEnabled) {
+      Preconditions.checkState(sslKeystorePath != null && !sslKeystorePath.isEmpty(),
+          "SSL Keystore path left blank");
+      Preconditions.checkState(sslKeystorePassword != null && !sslKeystorePassword.isEmpty(),
+          "SSL Keystore password left blank");
+
+      sslContextFactory = new SslContextFactory(sslKeystorePath);
+      sslContextFactory.setKeyStorePassword(sslKeystorePassword);
+      sslContextFactory.setAllowRenegotiate(false);
+      sslContextFactory.setExcludeCipherSuites(excludeCiphers);
+    }
+
     for (InetSocketAddress address : httpAddresses) {
-      SelectChannelConnector connector = new SelectChannelConnector();
+      SelectChannelConnector connector;
+      if (sslEnabled) {
+        connector = new SslSelectChannelConnector(sslContextFactory);
+      } else {
+        connector = new SelectChannelConnector();
+      }
       connector.setHost(address.getAddress().getHostAddress());
       connector.setPort(address.getPort());
       connector.setMaxIdleTime(0);
