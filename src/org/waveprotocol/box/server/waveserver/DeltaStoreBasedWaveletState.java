@@ -179,18 +179,18 @@ class DeltaStoreBasedWaveletState implements WaveletState {
   
   /** The lock to guard write access to {@link #lastPersistedVersion}. */
   private Object persistLock = new Object();
-  
+
   /**
    * Indicates the version of the latest delta that was already requested to be
    * persisted.
    */
   @GuardedBy("persistLock")
   private HashedVersion latestVersionToPersist = null;
-  
+
   /** The persist task that will be executed next. */
   @GuardedBy("persistLock")
   private ListenableFutureTask<Void> nextPersistTask = null;
-  
+
   /**
    * Processes the persist task and checks if there is another task to do when
    * one task is done.
@@ -510,10 +510,10 @@ private final ConcurrentNavigableMap<HashedVersion, TransformedWaveletDelta> tra
   
   @Override
   public void flush(HashedVersion version) {
-    transformedDeltas.remove(version);
-    appliedDeltas.remove(version);
+    transformedDeltas.remove(transformedDeltas.lowerKey(version));
+    appliedDeltas.remove(appliedDeltas.lowerKey(version));
     if (LOG.isFineLoggable()) {
-      LOG.fine("Flushed delta " + version);
+      LOG.fine("Flushed deltas up to version " + version);
     }
   }
 
