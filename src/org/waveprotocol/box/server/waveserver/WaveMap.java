@@ -37,6 +37,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A collection of wavelets, local and remote, held in memory.
@@ -62,6 +64,8 @@ public class WaveMap {
     lookupExecutor.execute(task);
     return task;
   }
+
+  private static Logger LOG = Logger.getLogger(WaveMap.class.getName());
 
   private final ConcurrentMap<WaveId, Wave> waves;
   private final WaveletStore<?> store;
@@ -105,7 +109,7 @@ public class WaveMap {
     } catch (PersistenceException e) {
       throw new WaveletStateException("Failed to scan waves", e);
     } catch (java.lang.NegativeArraySizeException e) {
-      LOG.severe("Something bad happened while scanning for waves", e);
+      LOG.log(Level.SEVERE, "Something bad happened while scanning for waves", e);
     }
   }
 
