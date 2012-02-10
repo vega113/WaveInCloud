@@ -45,11 +45,11 @@ import com.glines.socketio.server.transport.XHRPollingTransport;
 import com.glines.socketio.server.transport.jetty.JettyWebSocketTransport;
 
 import org.eclipse.jetty.http.ssl.SslContextFactory;
-import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.server.session.HashSessionManager;
+import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.ResourceCollection;
@@ -110,6 +110,9 @@ public class ServerRpcProvider {
   private final SessionManager sessionManager;
   private final org.eclipse.jetty.server.SessionManager jettySessionManager;
   private Server httpServer = null;
+  private final boolean sslEnabled;
+  private final String sslKeystorePath;
+  private final String sslKeystorePassword;
 
   // Mapping from incoming protocol buffer type -> specific handler.
   private final Map<Descriptors.Descriptor, RegisteredServiceMethod> registeredServices =
@@ -307,7 +310,8 @@ public class ServerRpcProvider {
    */
   public ServerRpcProvider(InetSocketAddress[] httpAddresses, Integer flashsocketPolicyPort,
       String[] resourceBases, ExecutorService threadPool, SessionManager sessionManager,
-      org.eclipse.jetty.server.SessionManager jettySessionManager, String sessionStoreDir) {
+      org.eclipse.jetty.server.SessionManager jettySessionManager, String sessionStoreDir,
+      boolean sslEnabled, String sslKeystorePath, String sslKeystorePassword) {
     this.httpAddresses = httpAddresses;
     this.flashsocketPolicyPort = flashsocketPolicyPort;
     this.resourceBases = resourceBases;
@@ -315,6 +319,9 @@ public class ServerRpcProvider {
     this.sessionManager = sessionManager;
     this.jettySessionManager = jettySessionManager;
     this.sessionStoreDir = sessionStoreDir;
+    this.sslEnabled = sslEnabled;
+    this.sslKeystorePath = sslKeystorePath;
+    this.sslKeystorePassword = sslKeystorePassword;
   }
 
   /**
@@ -322,18 +329,25 @@ public class ServerRpcProvider {
    */
   public ServerRpcProvider(InetSocketAddress[] httpAddresses, Integer flashsocketPolicyPort,
       String[] resourceBases, SessionManager sessionManager,
-      org.eclipse.jetty.server.SessionManager jettySessionManager, String sessionStoreDir) {
+      org.eclipse.jetty.server.SessionManager jettySessionManager, String sessionStoreDir,
+      boolean sslEnabled, String sslKeystorePath, String sslKeystorePassword) {
     this(httpAddresses, flashsocketPolicyPort, resourceBases, Executors.newCachedThreadPool(),
-        sessionManager, jettySessionManager, sessionStoreDir);
+        sessionManager, jettySessionManager, sessionStoreDir, sslEnabled, sslKeystorePath,
+        sslKeystorePassword);
   }
 
   @Inject
   public ServerRpcProvider(@Named(CoreSettings.HTTP_FRONTEND_ADDRESSES) List<String> httpAddresses,
       @Named(CoreSettings.FLASHSOCKET_POLICY_PORT) Integer flashsocketPolicyPort,
       @Named(CoreSettings.RESOURCE_BASES) List<String> resourceBases,
-      SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager, @Named(CoreSettings.SESSIONS_STORE_DIRECTORY) String sessionStoreDir) {
+      SessionManager sessionManager, org.eclipse.jetty.server.SessionManager jettySessionManager,
+      @Named(CoreSettings.SESSIONS_STORE_DIRECTORY) String sessionStoreDir,
+      @Named(CoreSettings.ENABLE_SSL) boolean sslEnabled,
+      @Named(CoreSettings.SSL_KEYSTORE_PATH) String sslKeystorePath,
+      @Named(CoreSettings.SSL_KEYSTORE_PASSWORD) String sslKeystorePassword) {
     this(parseAddressList(httpAddresses), flashsocketPolicyPort, resourceBases
-        .toArray(new String[0]), sessionManager, jettySessionManager, sessionStoreDir);
+        .toArray(new String[0]), sessionManager, jettySessionManager, sessionStoreDir,
+        sslEnabled, sslKeystorePath, sslKeystorePassword);
   }
 
   public void startWebSocketServer(final Injector injector) {
