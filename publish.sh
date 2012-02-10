@@ -1,8 +1,6 @@
 #!/bin/bash
 
-ant clean
-ant compile-gwt-demo
-ant dist-server
+ant clean compile-gwt-demo dist-server
 rm ./dist/publish/publish.zip
 mkdir ./dist/publish
 zip -r ./dist/publish/publish.zip -xi ./dist/waveinabox-server-0.3.jar ./war/* ./*.properties ./*.sh
