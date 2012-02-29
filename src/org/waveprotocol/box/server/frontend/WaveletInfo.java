@@ -48,7 +48,7 @@ import java.util.logging.Logger;
  * @see ClientFrontendImpl
  */
 public class WaveletInfo {
-  
+
   private static Logger LOG = Logger.getLogger(WaveletInfo.class.getName());
 
   /** Information we hold in memory for each wavelet. */
@@ -71,6 +71,13 @@ public class WaveletInfo {
 
     synchronized void setCurrentVersion(HashedVersion version) {
       this.currentVersion = version;
+    }
+
+    @Override
+    public String toString() {
+      return "PerWavelet [version0=" + version0 + ", explicitParticipants=" + explicitParticipants
+          + ", implicitParticipants=" + implicitParticipants + ", currentVersion=" + currentVersion
+          + "]";
     }
   }
 
@@ -99,6 +106,7 @@ public class WaveletInfo {
               @Override
               public PerWavelet apply(WaveletId waveletId) {
                 WaveletName waveletName = WaveletName.of(waveId, waveletId);
+                LOG.info("Created PerWavelet " + waveletName.toString());
                 return new PerWavelet(waveletName, hashedVersionFactory
                     .createVersionZero(waveletName));
               }
@@ -141,10 +149,14 @@ public class WaveletInfo {
       // =======================
       if (subscription.includes(entry.getKey())
           && waveletProvider.checkAccessPermission(waveletName, loggedInUser)) {
-        LOG.info(String.format("User %s has subcription to %s and access to wavelet %s",
-            loggedInUser.getAddress(), loggedInUser.toString(), waveletName.toString()));
+        LOG.info(String.format("User %s has subcription and access to wavelet %s",
+            loggedInUser.getAddress(), waveletName.toString()));
         visible.add(entry.getKey());
       }
+    }
+    if (visible.isEmpty()) {
+      LOG.warning(String.format("perWavelet(%s) = %s, ", subscription.getWaveId().toString(),
+          perWavelet.get(subscription.getWaveId())));
     }
     return visible;
   }
@@ -155,17 +167,24 @@ public class WaveletInfo {
   public void initialiseWave(WaveId waveId) throws WaveServerException {
     if (!perWavelet.containsKey(waveId)) {
       Map<WaveletId, PerWavelet> wavelets = perWavelet.get(waveId);
-      for (WaveletId waveletId : waveletProvider.getWaveletIds(waveId)) {
+      ImmutableSet<WaveletId> waveletIds = waveletProvider.getWaveletIds(waveId);
+
+      LOG.warning("No wavelets in waveletprovider for " + waveId);
+
+      for (WaveletId waveletId : waveletIds) {
+        WaveletName waveletName = WaveletName.of(waveId, waveletId);
         ReadableWaveletData wavelet =
-            waveletProvider.getSnapshot(WaveletName.of(waveId, waveletId)).snapshot;
+            waveletProvider.getSnapshot(waveletName).snapshot;
         // Wavelets is a computing map, so get() initializes the entry.
         PerWavelet waveletInfo = wavelets.get(waveletId);
         synchronized (waveletInfo) {
           waveletInfo.currentVersion = wavelet.getHashedVersion();
           waveletInfo.explicitParticipants.addAll(wavelet.getParticipants());
         }
+        LOG.info("Initialized wavelet " + waveletName);
       }
     }
+    LOG.info("Initialized wave" + waveId);
   }
 
   /**

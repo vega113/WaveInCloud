@@ -130,8 +130,8 @@ public class ClientFrontendImpl implements ClientFrontend, WaveBus.Subscriber {
         LOG.warning("Failed to retrieve visible wavelets for " + loggedInUser, e1);
       }
       if (waveletIds.isEmpty()) {
-        LOG.warning(String.format("No wavelets for user %s, waveId: %s.", loggedInUser.getAddress(),
-            waveId.serialise()));
+        LOG.warning(String.format("No wavelets for user %s, waveId: %s, subscription: %s.", loggedInUser.getAddress(),
+            waveId.serialise(), String.valueOf(subscription)));
       }
       for (WaveletId waveletId : waveletIds) {
         WaveletName waveletName = WaveletName.of(waveId, waveletId);
