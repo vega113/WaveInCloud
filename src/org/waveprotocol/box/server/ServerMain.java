@@ -54,6 +54,7 @@ import org.waveprotocol.box.server.rpc.AuthenticationServlet;
 import org.waveprotocol.box.server.rpc.FetchProfilesServlet;
 import org.waveprotocol.box.server.rpc.FetchServlet;
 import org.waveprotocol.box.server.rpc.GadgetProviderServlet;
+import org.waveprotocol.box.server.rpc.NotificationServlet;
 import org.waveprotocol.box.server.rpc.SearchServlet;
 import org.waveprotocol.box.server.rpc.ServerRpcProvider;
 import org.waveprotocol.box.server.rpc.SignOutServlet;
@@ -223,6 +224,7 @@ public class ServerMain {
     server.addServlet("/auth/register", UserRegistrationServlet.class);
     server.addServlet("/fetch/*", FetchServlet.class);
     server.addServlet("/search/*", SearchServlet.class);
+    server.addServlet("/notification/*", NotificationServlet.class);
 
     server.addServlet("/robot/dataapi", DataApiServlet.class);
     server.addServlet(DataApiOAuthServlet.DATA_API_OAUTH_PATH + "/*", DataApiOAuthServlet.class);
