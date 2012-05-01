@@ -67,8 +67,6 @@ public class WaveMap {
     return task;
   }
 
-  private static Logger LOG = Logger.getLogger(WaveMap.class.getName());
-
   private final ConcurrentMap<WaveId, Wave> waves;
   private final WaveletStore<?> store;
 
@@ -79,12 +77,11 @@ public class WaveMap {
       final LocalWaveletContainer.Factory localFactory,
       final RemoteWaveletContainer.Factory remoteFactory,
       @Named(CoreSettings.WAVE_SERVER_DOMAIN) final String waveDomain,
-      WaveDigester digester) {
+      @LookupExecutor final Executor lookupExecutor) {
     // NOTE(anorth): DeltaAndSnapshotStore is more specific than necessary, but
     // helps Guice out.
     // TODO(soren): inject a proper executor (with a pool of configurable size)
     this.store = waveletStore;
-    final Executor lookupExecutor = Executors.newSingleThreadExecutor();
     waves = new MapMaker().makeComputingMap(new Function<WaveId, Wave>() {
       @Override
       public Wave apply(WaveId waveId) {
@@ -104,14 +101,12 @@ public class WaveMap {
   public void loadAllWavelets() throws WaveletStateException {
     try {
       ExceptionalIterator<WaveId, PersistenceException> itr = store.getWaveIdIterator();
-        while (itr.hasNext()) {
-          WaveId waveId = itr.next();
-          lookupWavelets(waveId);
-        }
+      while (itr.hasNext()) {
+        WaveId waveId = itr.next();
+        lookupWavelets(waveId);
+      }
     } catch (PersistenceException e) {
       throw new WaveletStateException("Failed to scan waves", e);
-    } catch (java.lang.NegativeArraySizeException e) {
-      LOG.log(Level.SEVERE, "Something bad happened while scanning for waves", e);
     }
   }
 
@@ -136,9 +131,6 @@ public class WaveMap {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new WaveletStateException("Interrupted while looking up wave " + waveId, e);
-    } catch (Exception e) {
-      LOG.severe("Problem while looking up wavelets for " + waveId);
-      return ImmutableSet.of();
     }
   }
 
