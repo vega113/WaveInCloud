@@ -83,19 +83,19 @@ import java.util.Set;
 
 /**
  * {@link OperationService} for the "fetchWave" operation.
- * 
+ *
  * @author yurize@apache.org (Yuri Zelikov)
  */
 public class RenderWaveService implements OperationService {
 
 
   private static final WavePanelResources RESOURCES = new WavePanelResources() {
-    
+
 
     @Override
     public org.waveprotocol.box.server.rpc.render.view.builder.RootThreadViewBuilder.Resources getRootThread() {
       return new org.waveprotocol.box.server.rpc.render.view.builder.RootThreadViewBuilder.Resources() {
-        
+
         @Override
         public RootThreadViewBuilder.Css css() {
           return makeCssProxy(RootThreadViewBuilder.Css.class);
@@ -106,7 +106,7 @@ public class RenderWaveService implements OperationService {
     @Override
     public org.waveprotocol.box.server.rpc.render.view.builder.ReplyBoxViewBuilder.Resources getReplyBox() {
       return new org.waveprotocol.box.server.rpc.render.view.builder.ReplyBoxViewBuilder.Resources() {
-        
+
         @Override
         public org.waveprotocol.box.server.rpc.render.view.builder.ReplyBoxViewBuilder.Css css() {
           return makeCssProxy(ReplyBoxViewBuilder.Css.class);
@@ -117,22 +117,22 @@ public class RenderWaveService implements OperationService {
     @Override
     public org.waveprotocol.box.server.rpc.render.view.builder.ParticipantsViewBuilder.Resources getParticipants() {
       return new org.waveprotocol.box.server.rpc.render.view.builder.ParticipantsViewBuilder.Resources() {
-        
+
         @Override
         public WaveImageResource expandButton() {
           return null;
         }
-        
+
         @Override
         public org.waveprotocol.box.server.rpc.render.view.builder.ParticipantsViewBuilder.Css css() {
           return makeCssProxy(ParticipantsViewBuilder.Css.class);
         }
-        
+
         @Override
         public WaveImageResource collapseButton() {
           return null;
         }
-        
+
         @Override
         public WaveImageResource addButton() {
           return null;
@@ -143,12 +143,12 @@ public class RenderWaveService implements OperationService {
     @Override
     public org.waveprotocol.box.server.rpc.render.view.builder.TopConversationViewBuilder.Resources getConversation() {
       return new org.waveprotocol.box.server.rpc.render.view.builder.TopConversationViewBuilder.Resources() {
-        
+
         @Override
         public WaveImageResource emptyToolbar() {
           return null;
         }
-        
+
         @Override
         public org.waveprotocol.box.server.rpc.render.view.builder.TopConversationViewBuilder.Css css() {
           return makeCssProxy(TopConversationViewBuilder.Css.class);
@@ -159,12 +159,12 @@ public class RenderWaveService implements OperationService {
     @Override
     public org.waveprotocol.box.server.rpc.render.view.builder.ContinuationIndicatorViewBuilder.Resources getContinuationIndicator() {
       return new org.waveprotocol.box.server.rpc.render.view.builder.ContinuationIndicatorViewBuilder.Resources() {
-        
+
         @Override
         public org.waveprotocol.box.server.rpc.render.view.builder.ContinuationIndicatorViewBuilder.Css css() {
           return makeCssProxy(ContinuationIndicatorViewBuilder.Css.class);
         }
-        
+
         @Override
         public WaveImageResource continuationIcon() {
           return null;
@@ -175,32 +175,32 @@ public class RenderWaveService implements OperationService {
     @Override
     public org.waveprotocol.box.server.rpc.render.view.builder.CollapsibleBuilder.Resources getCollapsible() {
       return new org.waveprotocol.box.server.rpc.render.view.builder.CollapsibleBuilder.Resources() {
-        
+
         @Override
         public WaveImageResource expandedUnread() {
           return null;
         }
-        
+
         @Override
         public WaveImageResource expandedRead() {
           return null;
         }
-        
+
         @Override
         public org.waveprotocol.box.server.rpc.render.view.builder.CollapsibleBuilder.Css css() {
           return makeCssProxy(CollapsibleBuilder.Css.class);
         }
-        
+
         @Override
         public WaveImageResource collapsedUnread() {
           return null;
         }
-        
+
         @Override
         public WaveImageResource collapsedRead() {
           return null;
         }
-        
+
         @Override
         public WaveImageResource callout() {
           return null;
@@ -211,7 +211,7 @@ public class RenderWaveService implements OperationService {
     @Override
     public BlipViewBuilder.Resources getBlip() {
       return new org.waveprotocol.box.server.rpc.render.view.builder.BlipViewBuilder.Resources() {
-        
+
         @Override
         public org.waveprotocol.box.server.rpc.render.view.builder.BlipViewBuilder.Css css() {
           return makeCssProxy(BlipViewBuilder.Css.class);
@@ -350,7 +350,7 @@ public class RenderWaveService implements OperationService {
 
   private RenderWaveService() {
   }
-  
+
   public String exec(WaveId waveId, WaveletId waveletId, String blipId, ParticipantId participant,
       OperationContext context) throws InvalidRequestException {
 
@@ -359,7 +359,7 @@ public class RenderWaveService implements OperationService {
     ObservableConversationView conversationView =
         context.getConversationUtil().buildConversation(opBasedWavelet);
     ProfileManagerImpl profileManagerImpl = new ProfileManagerImpl() {
-      GravatarProfilesFetcher profileFetcher = GravatarProfilesFetcher.create();
+      GravatarProfilesFetcher profileFetcher = new GravatarProfilesFetcher(false);
 
       @Override
       public ProfileImpl getProfile(ParticipantId participantId) {
@@ -389,7 +389,7 @@ public class RenderWaveService implements OperationService {
       ConversationBlip blip = conversation.getBlip(blipId);
       html = renderer.render(blip);
     }
-    
+
     EventMessageBundle messages =
       mapWaveletToMessageBundle(context.getConverter(), participant, opBasedWavelet, conversation);
 
@@ -397,14 +397,14 @@ public class RenderWaveService implements OperationService {
     Map<String, BlipThread> threads = new HashMap<String, BlipThread>();
     WaveletData waveletData = context.getConverter().toWaveletData(opBasedWavelet, conversation, messages);
     com.google.wave.api.Wavelet wavelet = com.google.wave.api.Wavelet.deserialize(null, blips, threads,  waveletData);
-    
+
     threads.putAll(messages.getThreads());
     for (Map.Entry<String, BlipData> entry : messages.getBlipData().entrySet()) {
       BlipData blipData = context.getConverter().toBlipData(conversation.getBlip(entry.getKey()), opBasedWavelet, messages);
       Blip tempBlip = Blip.deserialize(null, wavelet, blipData);
       blips.put(tempBlip.getBlipId(), tempBlip);
     }
-    
+
     ContentRenderer contentRenderer = new ContentRenderer();
     for (Map.Entry<java.lang.String,com.google.wave.api.Blip> entry : wavelet.getBlips().entrySet()) {
       com.google.wave.api.Blip blip = entry.getValue();
@@ -454,7 +454,7 @@ public class RenderWaveService implements OperationService {
 //    context.constructResponse(operation, data);
 
   }
-  
+
   /**
    * Maps a wavelet and its conversation to a new {@link EventMessageBundle}.
    *
